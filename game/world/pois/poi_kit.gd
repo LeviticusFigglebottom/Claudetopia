@@ -113,6 +113,125 @@ func _init(node: Node3D, at: Vector3, pad_radius: float, region_id: String, silh
 	rng.seed = abs(seed_text.hash())
 	provider = terrain if terrain != null else World.terrain()
 	roads = road_lines
+	_t0 = Time.get_ticks_usec()
+
+
+## Masonry committed later, off the main thread (PoiMasonry.commit): set on a place raised while the
+## world is drawn (PoiDressing.defer_meshes); [MeshInstance3D, SurfaceTool] pairs waiting.
+var deferred := false
+var pending: Array = []
+
+
+## Gives `mi` the mesh `st` makes (its normals generated): now, or on the worker thread with the
+## masonry when the place's meshes are made there (`deferred`).
+func finish_mesh(mi: MeshInstance3D, st: SurfaceTool) -> void:
+	if deferred:
+		pending.append([mi, st])
+		return
+	st.generate_normals()
+	mi.mesh = st.commit()
+
+
+# --- a place raised a step at a time --------------------------------------------------------------
+
+## Set on a place raised while the world is drawn (PoiDressing.stepwise): the builders `await step()`
+## before each thing they set down or lay, and once the frame's budget (WorldPace) is spent the build
+## waits for a later frame, so a place is many small pieces rather than one of 20-150 ms (TRIAGE item
+## 36's second pass). Not set, `step()` never waits and a place is built in one go, as it always was:
+## what is built, and in what order, is the same either way.
+var stepwise := false
+## Waits at every step, whatever is left of the frame (a test builds a place in the most pieces).
+var every_step := false
+## The steps taken, and the main thread's time the build has taken between its waits.
+var steps := 0
+var build_us := 0
+var _t0 := 0
+var _waited := false
+## The frame a place last went on in: a place waiting for the budget goes on anyway in a frame no
+## place has, so one is always building (as the streamer builds at least one piece a frame).
+static var stepped_frame := -1
+
+
+## Between two pieces of a place. Stepwise, the time since the last is spent from the frame's budget,
+## and the build waits for the dressing to say go on (PoiDressing.resumed) when the budget is gone. A
+## stepwise build waits at its first step, so the frame it is raised in holds none of it.
+func step() -> void:
+	steps += 1
+	if not stepwise:
+		return
+	var now := Time.get_ticks_usec()
+	var used := now - _t0
+	if _waited:
+		build_us += used
+		WorldPace.spend(used)
+		WorldPace.count("place:" + str(root.get("kind")), used)
+	if used >= long_step_us:
+		_note_long(used)
+	if trace_steps:
+		_at = _caller()
+	if every_step or not _waited or WorldPace.left_usec() <= 0:
+		_waited = true
+		root.set("waiting", true)
+		await Signal(root, &"resumed")
+	_t0 = Time.get_ticks_usec()
+
+
+## Stepwise, a fabric's meshes' arrays gathered on a worker thread (FabricMesh.gather_start) while
+## frames go on; its `commit`s then only make the meshes. Not stepwise, nothing: they are made in
+## `commit` as they always were.
+func gather(fabric: FabricMesh) -> void:
+	await step()
+	if not stepwise:
+		return
+	var job := fabric.gather_start()
+	while not FabricMesh.gather_done(job):
+		_waited = true
+		root.set("waiting", true)
+		await Signal(root, &"resumed")
+	fabric.gather_finish(job)
+	_t0 = Time.get_ticks_usec()
+
+
+## The last piece of a stepwise build, after its last step.
+func end_steps() -> void:
+	if not stepwise or not _waited:
+		return
+	var used := Time.get_ticks_usec() - _t0
+	build_us += used
+	WorldPace.spend(used)
+	WorldPace.count("place:" + str(root.get("kind")), used)
+	if used >= long_step_us:
+		_note_long(used)
+
+
+## For the CPU probe: the pieces of a stepwise build that took `long_step_us` or more, by where they
+## began and ended in the builders (line numbers where the engine keeps them: a debug build).
+## "from -> to" -> [pieces, longest ms].
+static var long_step_us := 12000
+static var long_steps: Dictionary = {}
+var _at := "begin"
+
+
+## The builder's line that took this step: [0] is this, [1] _note_long or step, [2] step or
+## end_steps, [3] the builder (an empty stack in a release build).
+static func _caller() -> String:
+	var stack := get_stack()
+	for i in range(1, stack.size()):
+		var f := str(stack[i]["function"])
+		if f in ["step", "end_steps", "_note_long", "_caller"]:
+			continue
+		return "%s:%d %s" % [str(stack[i]["source"]).get_file().get_basename(), int(stack[i]["line"]), f]
+	return "?"
+
+
+## Whether each step notes where it is, so a long one says where it began (the probe turns it on).
+static var trace_steps := false
+
+
+func _note_long(used: int) -> void:
+	var key := "%s -> %s" % [_at, _caller()]
+	var st: Array = long_steps.get(key, [0, 0.0])
+	long_steps[key] = [int(st[0]) + 1, maxf(float(st[1]), snappedf(used / 1000.0, 0.1))]
 
 
 static func library() -> PropLibrary:
@@ -228,23 +347,17 @@ func road_direction(max_m := 40.0) -> Vector2:
 	var best := INF
 	var dir := Vector2.ZERO
 	var here := Vector2(origin.x, origin.z)
-	for line_v in roads:
-		if typeof(line_v) != TYPE_ARRAY:
+	for s in roads_near(max_m):
+		var pa := s[0]
+		var pb := s[1]
+		var seg := pb - pa
+		if seg.length() < 0.5:
 			continue
-		var line: Array = line_v
-		for i in range(line.size() - 1):
-			var a: Array = line[i]
-			var b: Array = line[i + 1]
-			var pa := Vector2(float(a[0]), float(a[1]))
-			var pb := Vector2(float(b[0]), float(b[1]))
-			var seg := pb - pa
-			if seg.length() < 0.5:
-				continue
-			var t := clampf((here - pa).dot(seg) / seg.length_squared(), 0.0, 1.0)
-			var d := (pa + seg * t).distance_to(here)
-			if d < best and d <= max_m:
-				best = d
-				dir = seg.normalized()
+		var t := clampf((here - pa).dot(seg) / seg.length_squared(), 0.0, 1.0)
+		var d := (pa + seg * t).distance_to(here)
+		if d < best and d <= max_m:
+			best = d
+			dir = seg.normalized()
 	return dir
 
 
@@ -364,7 +477,9 @@ static func scene(path: String) -> PackedScene:
 		return _scenes[path]
 	var packed: PackedScene = null
 	if path != "" and ResourceLoader.exists(path):
-		packed = load(path) as PackedScene
+		# read ahead on the loader's threads where a world stands up while it is drawn
+		# (World._ready: WorldStreamer.prefetch_paths), else from disk now
+		packed = WorldStreamer.load_asset(path) as PackedScene
 		# a rock's stone is painted (world/rock_paint.gd) the first time its scene is loaded
 		RockPaint.paint_scene(packed, path)
 	_scenes[path] = packed
@@ -471,6 +586,11 @@ func dry_spot(path: String, at: Vector3) -> Vector3:
 	var clear := _road_clear_of(path)
 	if _clear(at, wet, clear):
 		return at
+	# something set up off the ground (a beacon's fire-bowl in its crown, a lamp on a bracket) is not
+	# standing in the road under it: moved "off the road" it was set down on the ground beside the
+	# tower, and the upturned bell went into the hill (the seat audit's sunk bells)
+	if at.y > on_ground(at.x, at.z).y + 1.5:
+		return at
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
 		for i in 16:
@@ -500,6 +620,79 @@ func _road_clear_of(path: String) -> float:
 var _near_roads: Array = []   # [PackedVector2Array] of local segments' ends, near the pad
 var _near_roads_read := false
 
+## Every road's segments bucketed by square of the world (ROAD_GRID_M), made once for a road list:
+## asking of every segment of every road how near it runs was 4-5 ms each time a place did it
+## (`road_direction`, `grain`, `road_distance`, a ruin keeping off the road), several times a place
+## (TRIAGE item 36's second pass). A segment is listed in every square its bounds touch, so every
+## segment within `reach` of a point is among those of the squares round it; they are handed back in
+## the roads' own order, so the nearest found (and a tie) is the one a walk of every road finds.
+const ROAD_GRID_M := 64.0
+
+
+class RoadGrid:
+	extends RefCounted
+	var roads: Array = []                    # the road list this is of (the same Array, not an equal one)
+	var cells: Dictionary = {}               # Vector2i -> PackedInt32Array of segment indices
+	var segs: Array[PackedVector2Array] = [] # [a, b] in world xz, in the roads' order
+
+	func _init(road_lines: Array) -> void:
+		roads = road_lines
+		for line_v in road_lines:
+			if typeof(line_v) != TYPE_ARRAY:
+				continue
+			var line: Array = line_v
+			for i in range(line.size() - 1):
+				var a := Vector2(float(line[i][0]), float(line[i][1]))
+				var b := Vector2(float(line[i + 1][0]), float(line[i + 1][1]))
+				var n := segs.size()
+				segs.append(PackedVector2Array([a, b]))
+				var lo := Vector2i((a.min(b) / ROAD_GRID_M).floor())
+				var hi := Vector2i((a.max(b) / ROAD_GRID_M).floor())
+				for gz in range(lo.y, hi.y + 1):
+					for gx in range(lo.x, hi.x + 1):
+						var key := Vector2i(gx, gz)
+						# a packed array is a value: taken out, added to and put back
+						var list: PackedInt32Array = cells.get(key, PackedInt32Array())
+						list.append(n)
+						cells[key] = list
+
+	## The segments that may pass within `reach` of world xz `at`, in the roads' order.
+	func near(at: Vector2, reach: float) -> Array[PackedVector2Array]:
+		var lo := Vector2i(((at - Vector2.ONE * reach) / ROAD_GRID_M).floor())
+		var hi := Vector2i(((at + Vector2.ONE * reach) / ROAD_GRID_M).floor())
+		var found := {}
+		for gz in range(lo.y, hi.y + 1):
+			for gx in range(lo.x, hi.x + 1):
+				for n in cells.get(Vector2i(gx, gz), PackedInt32Array()):
+					found[n] = true
+		var order: Array = found.keys()
+		order.sort()
+		var out: Array[PackedVector2Array] = []
+		for n in order:
+			out.append(segs[int(n)])
+		return out
+
+
+## The grids of the last few road lists (the world's, the skyline's, a test's).
+static var _grids: Array[RoadGrid] = []
+
+
+static func road_grid(road_lines: Array) -> RoadGrid:
+	for g in _grids:
+		if is_same(g.roads, road_lines):
+			return g
+	var g := RoadGrid.new(road_lines)
+	_grids.push_front(g)
+	if _grids.size() > 4:
+		_grids.resize(4)
+	return g
+
+
+## The road segments ([a, b], world xz) that may pass within `reach` of this place's middle, in the
+## roads' own order: what a walk over every road would find within `reach`, and some more.
+func roads_near(reach: float) -> Array[PackedVector2Array]:
+	return road_grid(roads).near(Vector2(origin.x, origin.z), reach)
+
 
 ## The distance from local xz `at` to the nearest road's line (INF where none runs near the pad).
 func road_distance(at: Vector2) -> float:
@@ -507,15 +700,11 @@ func road_distance(at: Vector2) -> float:
 		_near_roads_read = true
 		var here := Vector2(origin.x, origin.z)
 		var reach := radius + DRY_SEARCH_M + 10.0
-		for line_v in roads:
-			if typeof(line_v) != TYPE_ARRAY:
-				continue
-			var line: Array = line_v
-			for i in range(line.size() - 1):
-				var a := Vector2(float(line[i][0]), float(line[i][1])) - here
-				var b := Vector2(float(line[i + 1][0]), float(line[i + 1][1])) - here
-				if Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b).length() < reach:
-					_near_roads.append(PackedVector2Array([a, b]))
+		for seg in roads_near(reach):
+			var a := seg[0] - here
+			var b := seg[1] - here
+			if Geometry2D.get_closest_point_to_segment(Vector2.ZERO, a, b).length() < reach:
+				_near_roads.append(PackedVector2Array([a, b]))
 	var best := INF
 	for seg_v in _near_roads:
 		var seg: PackedVector2Array = seg_v
@@ -681,6 +870,9 @@ func _collide(inst: Node3D, path: String, scale: float) -> void:
 ## `convex` and `trimesh` come off the LOD0 mesh; a `*_col.glb` is the forge's own simplified
 ## mesh; `capsule` is the trunk of a tree or the shaft of a post, never the crown the meta
 ## measured, because a player should bump into a trunk and walk under branches.
+static var _unscaled: Dictionary = {}
+
+
 static func shapes_for(path: String, scale := 1.0) -> Array:
 	var key := "%s@%.2f" % [path, scale]
 	if _shapes.has(key):
@@ -689,11 +881,18 @@ static func shapes_for(path: String, scale := 1.0) -> Array:
 	var info := meta(path)
 	var kind := str(info.get("collision", "none"))
 	var m := mesh(path)
-	if kind == "convex" and m != null:
-		var shape := m.create_convex_shape(true, false)
-		out.append({"shape": _scaled(shape, scale), "xform": Transform3D.IDENTITY})
-	elif kind == "trimesh" and m != null:
-		out.append({"shape": _scaled(m.create_trimesh_shape(), scale), "xform": Transform3D.IDENTITY})
+	if kind in ["convex", "trimesh"] and m != null:
+		# the hull or the faces made once an asset, at its own size, and scaled for each use: made
+		# afresh at every scale (a camp's crates, each a little different) it was most of what
+		# raising a place cost (TRIAGE item 36)
+		var base: Shape3D = _unscaled.get(path, null)
+		if base == null:
+			if kind == "convex":
+				base = m.create_convex_shape(true, false)
+			else:
+				base = m.create_trimesh_shape()
+			_unscaled[path] = base
+		out.append({"shape": _scaled(base, scale), "xform": Transform3D.IDENTITY})
 	elif kind == "capsule":
 		var b: Dictionary = info.get("bounds", {})
 		var h := float(b.get("height", 2.0)) * scale
@@ -918,6 +1117,25 @@ func puffs(at: Vector3, spread: Vector3, rise: float, amount: int, colour: Color
 	p.preprocess = life
 	p.visibility_aabb = AABB(Vector3(-spread.x - size, -1.0, -spread.z - size),
 			Vector3(spread.x * 2.0 + size * 2.0, spread.y + rise * life + size * 2.0, spread.z * 2.0 + size * 2.0))
+	# the materials are shared by every puff of the same look: a ParticleProcessMaterial made afresh
+	# compiled its shader again whenever none of its kind was standing, 5-6 ms a place here (TRIAGE
+	# item 36's second pass), and the look of each is the same either way
+	var key := var_to_str([spread, rise, colour, size])
+	var looks: Array = _puff_looks.get(key, [])
+	if looks.is_empty():
+		looks = [_puff_process(spread, rise, colour), _puff_quad(size)]
+		_puff_looks[key] = looks
+	p.process_material = looks[0]
+	p.draw_pass_1 = looks[1]
+	p.name = "Puffs"
+	root.add_child(p)
+	return p
+
+
+static var _puff_looks: Dictionary = {}
+
+
+static func _puff_process(spread: Vector3, rise: float, colour: Color) -> ParticleProcessMaterial:
 	var mat := ParticleProcessMaterial.new()
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	mat.emission_box_extents = spread
@@ -935,7 +1153,10 @@ func puffs(at: Vector3, spread: Vector3, rise: float, amount: int, colour: Color
 	var ramp_tex := GradientTexture1D.new()
 	ramp_tex.gradient = ramp
 	mat.color_ramp = ramp_tex
-	p.process_material = mat
+	return mat
+
+
+static func _puff_quad(size: float) -> QuadMesh:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(size, size)
 	var qm := StandardMaterial3D.new()
@@ -946,10 +1167,7 @@ func puffs(at: Vector3, spread: Vector3, rise: float, amount: int, colour: Color
 	qm.albedo_texture = _soft_disc()
 	qm.no_depth_test = false
 	quad.material = qm
-	p.draw_pass_1 = quad
-	p.name = "Puffs"
-	root.add_child(p)
-	return p
+	return quad
 
 
 static var _disc: Texture2D = null
@@ -979,6 +1197,19 @@ static func _soft_disc() -> Texture2D:
 func hearthstone(at: Vector3, yaw: float, id: String, display_name: String) -> Hearthstone:
 	if far:
 		return null
+	# never in a road's way: a shrine by a road put its stone on the carriageway (the seat audit)
+	if not roads.is_empty() and road_distance(Vector2(at.x, at.z)) < ROAD_CLEAR_M:
+		var r := 1.5
+		var found := false
+		while r <= DRY_SEARCH_M and not found:
+			for i in 16:
+				var a := TAU * float(i) / 16.0
+				var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
+				if road_distance(Vector2(g.x, g.z)) >= ROAD_CLEAR_M and not in_water(g):
+					at = g
+					found = true
+					break
+			r += 1.5
 	var packed := load(HEARTHSTONE_SCENE) as PackedScene
 	var stone: Hearthstone = packed.instantiate() as Hearthstone if packed != null else Hearthstone.new()
 	stone.hearthstone_id = id

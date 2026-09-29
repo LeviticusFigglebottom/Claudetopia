@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.088,
+  -0.092,
+  1.5981,
+  0.0873,
+  0.1183,
+  1.7909
+ ],
+ "card_tris": 3859,
+ "cards": "cropped_curls_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "cropped_curls": "hair",
+  "cropped_curls_cards": "hair_cards"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 9822,
+ "slot_hint": "attachment",
+ "textures": [
+  "cropped_curls_normal.png",
+  "cropped_curls_albedo.png",
+  "cropped_curls_orm.png"
+ ],
+ "tris": [
+  4600,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -17,6 +17,10 @@ const BASE_DECAY := 0.22
 const MEMORY := 6.0
 ## Group a summoned ally joins: hostiles hunt it, and it hunts them (DESIGN §5.3, Calling).
 const ALLY_GROUP := "summon_ally"
+## Group the road's own armed people join (RoadEvent: a caravan's guards, a patrol): the road's foes
+## hunt them and they hunt the road's foes, by the faction rule; they leave the player be until the
+## player strikes one of them (their `provoked` meta), and a summoned ally leaves them be likewise.
+const ROAD_GROUP := "road_folk"
 ## How often the candidate sweep runs. Between sweeps the current quarry is kept if it lives.
 const SCAN_INTERVAL := 0.4
 
@@ -127,6 +131,10 @@ func _find_target() -> Node3D:
 		groups.append(ALLY_GROUP)
 		if owner_actor.is_in_group(ALLY_GROUP):
 			groups.append("enemy")
+	if not tree.get_nodes_in_group(ROAD_GROUP).is_empty():
+		groups.append(ROAD_GROUP)
+		if owner_actor.is_in_group(ROAD_GROUP) and not groups.has("enemy"):
+			groups.append("enemy")
 	var best: Node3D = null
 	var best_d := INF
 	for group: String in groups:
@@ -157,6 +165,15 @@ func _is_live_quarry(n: Variant, group: String) -> bool:
 		return false
 	if node.has_method("is_alive") and not node.is_alive():
 		return false
+	# a foe hidden in an ambush (RoadEvent) is not there to be found until it springs
+	if group != "player" and not node.is_visible_in_tree():
+		return false
+	# the road's people hunt the player only once struck, and the player's allies leave them be
+	var on_road := owner_actor.is_in_group(ROAD_GROUP)
+	if group == "player" and on_road:
+		return bool(owner_actor.get_meta("provoked", false))
+	if node.is_in_group(ROAD_GROUP) and owner_actor.is_in_group(ALLY_GROUP) and not bool(node.get_meta("provoked", false)):
+		return false
 	if group == "player" and not owner_actor.is_in_group(ALLY_GROUP):
 		return true
 	if owner_actor.has_method("is_hostile_to") and not owner_actor.is_hostile_to(node):
@@ -168,7 +185,7 @@ func can_see(t: Node3D) -> bool:
 	if t == null or not is_instance_valid(t):
 		return false
 	var origin := eye_position()
-	var point: Vector3 = t.global_position + Vector3.UP
+	var point: Vector3 = Stealth.sight_point(t)
 	var forward := -owner_actor.global_transform.basis.z
 	var vis: float = float(t.get("stealth_visibility")) if t.get("stealth_visibility") != null else 1.0
 	var effective_range := sight_range * clampf(vis, 0.15, 1.5)

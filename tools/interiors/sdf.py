@@ -123,5 +123,12 @@ def smooth_union(a: np.ndarray, b: np.ndarray, k: float) -> np.ndarray:
 
 
 def smooth_subtract(a: np.ndarray, b: np.ndarray, k: float) -> np.ndarray:
+    """`a` with `b` taken out of it, blended over `k`: max(a, -b) with a fillet.
+
+    The two terms of the blend were the wrong way round, (-b) where h is 0 and a where it is 1,
+    which is max(a, -b) only inside the fillet: everywhere else it answered -b, so every column,
+    rubble heap and stalactite turned all the rock round it into open space -- in Hollin Barrow
+    88% of the field was air, and the bottom layer of the grid was open over three quarters of
+    the plan."""
     h = np.clip(0.5 - 0.5 * (b + a) / k, 0.0, 1.0)
-    return (-b) * (1.0 - h) + a * h + k * h * (1.0 - h)
+    return a * (1.0 - h) + (-b) * h + k * h * (1.0 - h)

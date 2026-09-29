@@ -50,6 +50,11 @@ var _prompt: PanelContainer
 var _prompt_label: Label
 var _prompt_glyph: Label
 var _reticle: TextureRect
+## The aim's mark at the middle of the view while a bow is drawn or a saying aimed (triage 55).
+var _crosshair: Crosshair
+## The sneak read (_update_sneak_eye): while crouched, how much the most watchful near has of you.
+var _eye: Label
+var _eye_left := 0.0
 var _region_card: VBoxContainer
 var _region_name: Label
 var _region_tagline: Label
@@ -66,6 +71,13 @@ var _subtitle_tween: Tween = null
 ## The line under the compass that says what to do next when it changes.
 var _objective: Label
 var _objective_tween: Tween
+## Over the objective line when a quest moves: "NEW OBJECTIVE · MAIN QUEST" in the quest's colour;
+## under it, the stage's first journal line, which says why (triage, fourth playtest: "going onto
+## next stage of quest without clear direction why").
+var _notice_head: Label
+var _notice_why: Label
+## Quests started this moment: their first stage is a new quest, not a new objective.
+var _started_ms: Dictionary = {}
 
 var _lock_target: Node3D = null
 var _boss_id := ""
@@ -83,6 +95,7 @@ const MARKERS_EVERY_MS := 1000
 ## The tracked quest's objectives where the world has them now (Waymarks.locate), looked up again a
 ## few times a second on the wall clock; the strip reads bearings off them every frame.
 var _tracker: QuestTracker
+var _hints: Control
 var _waymarks: Array[Dictionary] = []   # [{key, at: Vector3, radius, ok, text, detail}]
 var _waymarks_at_ms := -1000000
 const WAYMARKS_EVERY_MS := 250
@@ -99,6 +112,8 @@ func _ready() -> void:
 	process_priority = 100
 	_build()
 	_connect_world()
+	get_viewport().size_changed.connect(_fit_to_canvas)
+	_fit_to_canvas()
 	EventBus.region_entered.connect(_on_region_entered)
 	# Every one of these is a method reference and not a closure, deliberately. A lambda
 	# connected to an autoload's signal is not disconnected when the node that made it is
@@ -110,8 +125,9 @@ func _ready() -> void:
 	EventBus.status_applied.connect(_on_status_applied)
 	EventBus.damage_dealt.connect(_on_damage_dealt)
 	EventBus.player_spawned.connect(_on_player_spawned)
+	EventBus.menu_opened.connect(_on_menu_opened)
 	EventBus.item_equipped.connect(_on_item_equipped)
-	EventBus.quest_started.connect(_on_quest_moved)
+	EventBus.quest_started.connect(_on_quest_started)
 	EventBus.quest_stage_changed.connect(_on_quest_moved)
 	EventBus.quest_completed.connect(_on_quest_ended)
 	UI.input_device_changed.connect(_on_input_device_changed)
@@ -168,14 +184,22 @@ func _build() -> void:
 	_objective.anchor_right = 0.5
 	_objective.offset_left = -300.0
 	_objective.offset_right = 300.0
-	_objective.offset_top = 74.0
-	_objective.offset_bottom = 100.0
+	_objective.offset_top = 90.0
+	_objective.offset_bottom = 116.0
 	_objective.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
 	_objective.add_theme_constant_override("shadow_offset_x", 1)
 	_objective.add_theme_constant_override("shadow_offset_y", 1)
 	_objective.modulate.a = 0.0
 	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_objective)
+	_notice_head = _notice_label("Tiny", 72.0, 90.0, 300.0)
+	_notice_head.name = "NoticeHead"
+	_notice_why = _notice_label("Small", 116.0, 160.0, 260.0)
+	_notice_why.name = "NoticeWhy"
+	_notice_why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notice_why.max_lines_visible = 2
+	_notice_why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_notice_why.add_theme_color_override("font_color", Color(0.93, 0.9, 0.82, 0.92))
 
 	# the tracked quest, top left: the compass has the top middle and the toasts the top right
 	_tracker = QuestTracker.new()
@@ -360,6 +384,26 @@ func _build() -> void:
 	_reticle.modulate = Color(1, 1, 1, 0.85)
 	add_child(_reticle)
 
+	# the aim's mark, under the middle of the view
+	_crosshair = Crosshair.new()
+	add_child(_crosshair)
+
+	# the sneak read, under the middle of the screen, only while crouched
+	_eye = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_CENTER)
+	_eye.set_anchors_preset(Control.PRESET_CENTER)
+	_eye.anchor_left = 0.5
+	_eye.anchor_right = 0.5
+	_eye.offset_left = -120.0
+	_eye.offset_right = 120.0
+	_eye.offset_top = 64.0
+	_eye.offset_bottom = 88.0
+	_eye.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
+	_eye.add_theme_constant_override("shadow_offset_x", 1)
+	_eye.add_theme_constant_override("shadow_offset_y", 1)
+	_eye.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_eye.visible = false
+	add_child(_eye)
+
 	# subtitles, above the bars
 	_subtitle = UiKit.label("", "Body", HORIZONTAL_ALIGNMENT_CENTER)
 	_subtitle.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -386,6 +430,56 @@ func _build() -> void:
 	hints.offset_bottom = -116.0
 	hints.grow_horizontal = Control.GROW_DIRECTION_BOTH      # wider than its rect, still centred
 	add_child(hints)
+	_hints = hints
+
+
+## The HUD on the canvas the UI's size leaves (triage 28). At 1280x720 and wider everything sits
+## where _build puts it. A large UI narrows the canvas (914x514 at 1.4 on 1280x720), and there the
+## compass's strip ran under the tracked quest, the first minutes' controls across the bars and
+## the saying's plate, and the prompt down among them. Narrow: a shorter compass with the tracked
+## quest under it, the controls over the bars (the saying's plate a little narrower beside them), the subtitle
+## over those, and the prompt kept above
+## the subtitle. Follows the canvas as the setting changes.
+func _fit_to_canvas() -> void:
+	if _compass == null or not is_inside_tree():
+		return
+	var canvas := get_viewport_rect().size
+	var narrow := canvas.x < 1100.0
+	var half := 200.0 if narrow else 260.0
+	_compass.offset_left = -half
+	_compass.offset_right = half
+	_tracker.offset_top = 78.0 if narrow else 18.0
+	_tracker.offset_bottom = _tracker.offset_top
+	if _hints != null:
+		if narrow:
+			# over the bars, from their left edge (clear of the saying's plate on the right)
+			_hints.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+			_hints.grow_horizontal = Control.GROW_DIRECTION_END
+			_hints.offset_left = 26.0
+			_hints.offset_right = minf(canvas.x * 0.5, 660.0)
+			_hints.offset_top = -172.0
+			_hints.offset_bottom = -140.0
+		else:
+			_hints.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+			_hints.anchor_left = 0.5
+			_hints.anchor_right = 0.5
+			_hints.grow_horizontal = Control.GROW_DIRECTION_BOTH
+			_hints.offset_left = -330.0
+			_hints.offset_right = 330.0
+			_hints.offset_top = -148.0
+			_hints.offset_bottom = -116.0
+	# the saying in hand, bottom right, a little narrower beside the controls
+	_saying_plate.offset_left = -250.0 if narrow else -300.0
+	var sub_half := minf(420.0, canvas.x * 0.5 - 24.0)
+	_subtitle.offset_left = -sub_half
+	_subtitle.offset_right = sub_half
+	_subtitle.offset_top = -216.0 if narrow else -176.0
+	_subtitle.offset_bottom = -180.0 if narrow else -140.0
+	# the prompt a little below the middle, but never down among the subtitle and the bars
+	var lowest := canvas.y * 0.5 + (-224.0 if narrow else -184.0)
+	var lift := maxf(126.0 - lowest, 0.0)
+	_prompt.offset_top = 76.0 - lift
+	_prompt.offset_bottom = 126.0 - lift
 
 
 func _make_quick_slot(number: int) -> Control:
@@ -439,6 +533,11 @@ func _connect_world() -> void:
 		var interactor := _find_interactor(_player)
 		if interactor and not interactor.is_connected("prompt_changed", _on_prompt_changed):
 			interactor.connect("prompt_changed", _on_prompt_changed)
+		# A new body (a load, a respawn) brings a new Interactor: what the last one had up is not
+		# on offer any more, and the new one says only what it finds (playtest 09-27, prompts
+		# that stuck).
+		var held: Variant = interactor.get("prompt") if interactor != null else null
+		set_prompt(str(held) if held is String else "")
 		# The belt's counts are the bag's: a draught drunk or a swallow taken changes what the slot
 		# says without anything being equipped, and the slot only ever listened for equipping.
 		var bag := _player.get_node_or_null(NodePath("Inventory"))
@@ -593,8 +692,13 @@ func _on_tracked_changed(_quest_id: String) -> void:
 	_waymarks_at_ms = -1000000
 
 
-func _on_quest_ended(_quest_id: String, _outcome: String) -> void:
+func _on_quest_ended(quest_id: String, outcome: String) -> void:
 	_waymarks_at_ms = -1000000
+	if _notice_head == null or quest_id == "" or str(_quest_def(quest_id).get("layer", "")) == "radiant" and outcome == "failed":
+		return
+	var name_of := str(_quest_def(quest_id).get("name", ""))
+	if name_of != "":
+		show_quest_notice(quest_id, "Quest complete", name_of)
 
 
 ## Where the player is, for the waymarks: the body's feet, else the camera; INF with neither.
@@ -702,6 +806,8 @@ func _process(delta: float) -> void:
 	_update_waymarks()
 	_update_compass(delta)
 	_update_reticle()
+	_update_crosshair(delta)
+	_update_sneak_eye(delta)
 	_update_statuses(delta)
 	_update_boss()
 	_update_breath(delta)
@@ -771,6 +877,82 @@ func _update_reticle() -> void:
 	_reticle.position = cam.unproject_position(at) - _reticle.size * 0.5
 
 
+## The aim's mark (Crosshair) as the player's aim has it (Player.crosshair), through the view's own
+## field of view; hidden without a player that aims, or with a menu over the world.
+func _update_crosshair(delta: float) -> void:
+	var state := {}
+	var who: Node = _player if _player != null and is_instance_valid(_player) and not _player.is_queued_for_deletion() else null
+	if who == null:
+		# a player put in the place of one being freed: the group can still name the old one first
+		for p in get_tree().get_nodes_in_group("player"):
+			if not p.is_queued_for_deletion():
+				who = p
+				break
+	if who != null and who.has_method("crosshair"):
+		state = who.call("crosshair")
+	var cam := get_viewport().get_camera_3d()
+	_crosshair.show_state(state, cam.fov if cam != null else 70.0, delta)
+
+
+## What the crosshair shows now: {visible, gap (px), on_target}, for tests.
+func crosshair_shown() -> Dictionary:
+	return {"visible": _crosshair.visible, "gap": _crosshair.gap, "on_target": _crosshair.on_target}
+
+
+## The sneak read (DESIGN 5.13's detection state): while crouched, what the most watchful of those
+## near has of you, in the detection meter's own thresholds (DetectionMeter). Stealth had every
+## number and the player none: crouched in the dark and upright in plain sight looked the same from
+## the inside, and a stealth start could not teach the one thing it is about.
+const EYE_RANGE_M := 40.0
+const EYE_EVERY_S := 0.15
+const EYE_WORDS := {"unaware": "Unseen", "suspicious": "Noticed", "alert": "Seen", "detected": "Found"}
+const EYE_TINTS := {"unaware": Color(0.72, 0.8, 0.74, 0.85), "suspicious": Color(0.95, 0.82, 0.45, 0.95),
+		"alert": Color(0.98, 0.58, 0.32, 1.0), "detected": Color(0.95, 0.35, 0.28, 1.0)}
+
+
+## The read for a detection level: unaware | suspicious | alert | detected.
+static func eye_state(level: float) -> String:
+	if level >= DetectionMeter.DETECTED:
+		return "detected"
+	if level >= DetectionMeter.WITNESS:
+		return "alert"
+	if level >= DetectionMeter.SUSPICIOUS:
+		return "suspicious"
+	return "unaware"
+
+
+## The highest detection of the player among foes and people within EYE_RANGE_M of `at`.
+static func watched_level(tree: SceneTree, at: Vector3) -> float:
+	var most := 0.0
+	for group: String in ["enemy", "npc"]:
+		for n in tree.get_nodes_in_group(group):
+			if not (n is Node3D) or not (n as Node3D).is_inside_tree():
+				continue
+			if (n as Node3D).global_position.distance_to(at) > EYE_RANGE_M:
+				continue
+			if n.has_method("is_alive") and not bool(n.call("is_alive")):
+				continue
+			if group == "npc" and not ("detection" in n):
+				continue
+			most = maxf(most, Stealth.awareness_of(n))
+	return most
+
+
+func _update_sneak_eye(delta: float) -> void:
+	var crouched := _player != null and is_instance_valid(_player) and _player is Node3D and Stealth.is_crouched(_player)
+	if not crouched:
+		_eye.visible = false
+		return
+	_eye_left -= delta
+	if _eye.visible and _eye_left > 0.0:
+		return
+	_eye_left = EYE_EVERY_S
+	var state := eye_state(watched_level(get_tree(), (_player as Node3D).global_position))
+	_eye.text = str(EYE_WORDS[state])
+	_eye.modulate = EYE_TINTS[state]
+	_eye.visible = true
+
+
 func _update_statuses(delta: float) -> void:
 	var changed := false
 	for i in range(_statuses.size() - 1, -1, -1):
@@ -793,7 +975,7 @@ func _update_boss() -> void:
 
 
 func _update_idle_fade(_delta: float) -> void:
-	var busy := _lock_target != null or _boss_box.visible or _prompt.visible
+	var busy := _lock_target != null or _boss_box.visible or _prompt.visible or _crosshair.visible
 	if not busy and _bars.has("health"):
 		busy = (_bars["health"] as StatBar).fraction() < 0.6
 	# Stamina being spent or coming back is worth seeing: holding sprint sends no input events, so
@@ -828,6 +1010,12 @@ func _on_lock_on(target: Node3D) -> void:
 
 func _on_prompt_changed(text: String) -> void:
 	set_prompt(text)
+
+
+## Nothing in the world is offered from under a menu; the Interactor offers it again when the
+## world runs again.
+func _on_menu_opened(_menu_id: String) -> void:
+	set_prompt("")
 
 
 ## The interaction prompt on the screen now ("[E] Talk to Wren Tallow"), or "" when none is up.
@@ -930,10 +1118,84 @@ func _update_held_card() -> void:
 ## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
 ## the player learns it from the screen and not from the journal, and the smudge on the strip
 ## above it says which way. Nothing is shown for a stage with nothing left to do.
-func _on_quest_moved(quest_id: String, _stage: Variant = null) -> void:
+func _on_quest_moved(quest_id: String, stage: Variant = null) -> void:
+	# the tracker's rows now, not at its next look
+	_waymarks_at_ms = -1000000
 	var line := objective_line(quest_id)
-	if not line.is_empty():
-		show_objective(line)
+	if line.is_empty():
+		return
+	# the stage a quest starts at is the quest's news, not a new objective
+	var started: Dictionary = _started_ms.get(quest_id, {})
+	var is_new := not started.is_empty() and Time.get_ticks_msec() - int(started["ms"]) < 1500 \
+			and (stage == null or int(stage) == int(started["stage"]))
+	show_quest_notice(quest_id, "New quest" if is_new else "New objective", line, stage_reason(quest_id))
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	if _tracker != null and log_node != null and log_node.has_method("tracked_quest") \
+			and str(log_node.call("tracked_quest")) == quest_id:
+		_tracker.announce()
+
+
+func _on_quest_started(quest_id: String) -> void:
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	var at := int(log_node.call("stage_of", quest_id)) if log_node != null and log_node.has_method("stage_of") else 0
+	_started_ms[quest_id] = {"ms": Time.get_ticks_msec(), "stage": at}
+	_on_quest_moved(quest_id)
+
+
+## A label of the notice under the compass, `half` either side of the middle.
+func _notice_label(variation: String, top: float, bottom: float, half: float) -> Label:
+	var l := UiKit.label("", variation, HORIZONTAL_ALIGNMENT_CENTER)
+	l.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	l.anchor_left = 0.5
+	l.anchor_right = 0.5
+	l.offset_left = -half
+	l.offset_right = half
+	l.offset_top = top
+	l.offset_bottom = bottom
+	l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
+	l.add_theme_constant_override("shadow_offset_x", 1)
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.modulate.a = 0.0
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(l)
+	return l
+
+
+## Why the quest's current stage is asked of you: the first line of its journal (the stage's
+## journal says, first, what has happened and why this is next), cut at a sentence when long.
+func stage_reason(quest_id: String) -> String:
+	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
+			else get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("stage_def") or not log_node.has_method("journal_of"):
+		return ""
+	var stage: Dictionary = log_node.call("stage_def", quest_id, int(log_node.call("stage_of", quest_id)))
+	return QuestCues.first_line(str(log_node.call("journal_of", stage)))
+
+
+## The notice under the compass: a head ("NEW OBJECTIVE · SIDE QUEST", in the quest's colour),
+## the objective line, and why.
+func show_quest_notice(quest_id: String, head: String, line: String, why := "") -> void:
+	var tier := QuestCues.tier_of(quest_id, _quest_def(quest_id))
+	_notice_head.text = ("%s  ·  %s" % [head, QuestCues.tier_word(tier)]).to_upper()
+	_notice_head.add_theme_color_override("font_color", QuestCues.tier_colour(tier))
+	_notice_why.text = why
+	show_objective(line, OBJECTIVE_SECONDS + (2.0 if why != "" else 0.0), true)
+
+
+func _quest_def(quest_id: String) -> Dictionary:
+	if _quest_log != null and is_instance_valid(_quest_log) and _quest_log.has_method("definition"):
+		return _quest_log.call("definition", quest_id)
+	return ContentDB.get_or_empty(quest_id)
+
+
+## What the notice shows now, while it is up: {head, line, why}; {} when it is not.
+func quest_notice_shown() -> Dictionary:
+	var fading_in := _objective_tween != null and _objective_tween.is_valid() and _objective_tween.is_running()
+	if _objective == null or _objective.text == "" or (_objective.modulate.a <= 0.05 and not fading_in):
+		return {}
+	return {"head": _notice_head.text, "line": _objective.text, "why": _notice_why.text}
 
 
 ## "The Naming: Speak to the Warden at her fire" -- the quest's name and its first objective not
@@ -945,23 +1207,32 @@ func objective_line(quest_id: String) -> String:
 		return ""
 	for o in log_node.call("objectives_of", quest_id):
 		var obj: Dictionary = o
-		if bool(obj.get("done", false)) or bool(obj.get("optional", false)):
+		if bool(obj.get("done", false)) or bool(obj.get("optional", false)) or bool(obj.get("veiled", false)):
 			continue
-		var name_of := str(ContentDB.get_or_empty(quest_id).get("name", ""))
+		var name_of := str(_quest_def(quest_id).get("name", ""))
 		var text := str(obj.get("text", ""))
 		return text if name_of.is_empty() else "%s: %s" % [name_of, text]
 	return ""
 
 
-func show_objective(text: String, seconds := OBJECTIVE_SECONDS) -> void:
+func show_objective(text: String, seconds := OBJECTIVE_SECONDS, with_notice := false) -> void:
 	_objective.text = text
+	if not with_notice:
+		_notice_head.text = ""
+		_notice_why.text = ""
 	if _objective_tween != null and _objective_tween.is_valid():
 		_objective_tween.kill()
-	_objective.modulate = Color(1, 1, 1, 0.0)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		l.modulate = Color(1, 1, 1, 0.0)
 	_objective_tween = create_tween()
-	_objective_tween.tween_property(_objective, "modulate:a", 1.0, 0.5)
+	_objective_tween.set_parallel(true)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		_objective_tween.tween_property(l, "modulate:a", 1.0, 0.5)
+	_objective_tween.set_parallel(false)
 	_objective_tween.tween_interval(seconds)
-	_objective_tween.tween_property(_objective, "modulate:a", 0.0, 1.2)
+	_objective_tween.set_parallel(true)
+	for l: Label in [_objective, _notice_head, _notice_why]:
+		_objective_tween.tween_property(l, "modulate:a", 0.0, 1.2)
 	# the whole HUD is woken, so the line is not read through the idle fade
 	_idle = 0.0
 

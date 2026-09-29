@@ -211,9 +211,10 @@ def _content(pack_dir: str) -> tuple:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return data if isinstance(data, list) else [data]
+    from . import content as CONTENT
     regions = read("regions", "regions.json")
     places = read("places", "places.json")
-    pois = read("pois", "pois.json")
+    pois = CONTENT.poi_registry(pack_dir)
     return regions, places, pois
 
 

@@ -3,8 +3,8 @@ extends Node
 ## Lock component for doors and containers. Add it as a child named exactly "DoorLock" of a
 ## Door (res://systems/interiors/door.tscn) or of a chest; the parent's `interact(actor)`
 ## forwards here through the contracted pair `is_locked()` / `try_open(actor)`. A key opens
-## it outright; otherwise `try_open` starts the lockpick minigame (the UI stream shows the
-## timing bar and calls `attempt(actor, timing_accuracy)` per try) and returns false so the
+## it outright; otherwise `try_open` starts the lockpick minigame (the UI's lockpick screen shows
+## the timing bar and calls `attempt(actor, timing_accuracy)` per try) and returns false so the
 ## door stays shut. Picking something owned by someone else is the crime "lockpicking".
 ## Ownership comes from this node's exports, or from the parent Door's own
 ## `owner_faction`/`owner_npc` fields when they are set there.
@@ -88,32 +88,21 @@ func interact(actor: Node) -> Dictionary:
 		return {"ok": false, "state": "no_pick", "lock_level": lock_level, "window": window}
 	picking = true
 	lockpick_started.emit(self)
+	EventBus.lockpick_requested.emit(self, actor)
 	return {"ok": false, "state": "locked", "lock_level": lock_level, "window": window}
 
 
-## One pick attempt. timing_accuracy 0 = perfect. Consumes a pick on a snap.
+## One pick attempt. timing_accuracy 0 = perfect. Consumes a pick on a snap (Lockpicking).
 func attempt(actor: Node, timing_accuracy: float) -> Dictionary:
 	if not locked:
 		return {"success": true, "broke": false, "window": 1.0, "margin": 1.0}
-	var skill := Peers.skill_level("sneak")
-	var r := Stealth.lockpick_attempt(skill, lock_level, timing_accuracy)
 	attempts += 1
-	Foley.play("lockpick_break" if r["broke"] else "lockpick_click")
+	var r := Lockpicking.attempt(target(), actor, lock_level, timing_accuracy, lockpick_item_id(), xp_per_level)
 	if r["broke"]:
-		var pick := lockpick_item_id()
-		if not pick.is_empty():
-			Peers.take_item(actor, pick, 1)
 		pick_broken.emit()
-		EventBus.notify.emit("Your pick snaps.", "info")
 		if not has_pick(actor):
 			picking = false
 	if r["success"]:
-		EventBus.skill_used.emit("sneak", 5.0 + xp_per_level * lock_level)
-		var t := target()
-		var ledger := Bounty.ensure()
-		if t != null and ledger != null and Ownership.is_owned_by_other(t):
-			var pos := (t as Node3D).global_position if t is Node3D else Vector3.ZERO
-			ledger.commit("lockpicking", pos, {"target": str(t.get_path())})
 		unlock(actor)
 	attempt_made.emit(r)
 	return r

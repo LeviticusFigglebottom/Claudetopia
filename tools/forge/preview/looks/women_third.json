@@ -1,0 +1,10 @@
+[
+  {"height": 1.68, "build": 0.45, "feminine": 1.0, "skin": "fair", "hair_colour": "chestnut", "culture": "vale",
+   "parts": {"head": "round", "hair": "crown_braid", "torso": "kirtle", "feet": "shoes", "belt": "belt", "back": "shawl"}},
+  {"height": 1.72, "build": 0.6, "feminine": 1.0, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "boots", "belt": "belt_knife"}},
+  {"height": 1.67, "build": 0.4, "feminine": 1.0, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "hawk", "hair": "shoulder", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "boots", "belt": "belt_knife"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "chignon", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}}
+]

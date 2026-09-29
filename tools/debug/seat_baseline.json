@@ -1,0 +1,45 @@
+{
+ "briarwold": {
+  "buried": 8.0,
+  "fence_gap": 38.0,
+  "fence_lone": 1.0,
+  "floating": 1.0,
+  "on_road": 8.0,
+  "overlap": 12.0,
+  "sunk": 4.0
+ },
+ "brightwater": {
+  "fence_gap": 88.0,
+  "floating": 3.0,
+  "lamp_unhung": 2.0,
+  "light_unhung": 1.0,
+  "on_road": 4.0,
+  "overlap": 2.0
+ },
+ "cinderlea": {
+  "fence_gap": 58,
+  "floating": 4,
+  "on_road": 9
+ },
+ "hearthvale": {
+  "fence_gap": 35.0,
+  "floating": 7.0,
+  "on_road": 4.0,
+  "overlap": 1.0
+ },
+ "sedgemire": {
+  "fence_gap": 219.0,
+  "floating": 14.0,
+  "light_unhung": 5.0,
+  "overlap": 1.0
+ },
+ "skerrow": {
+  "buried": 12.0,
+  "fence_gap": 2825.0,
+  "fence_lone": 3.0,
+  "floating": 1.0,
+  "on_road": 7.0,
+  "overlap": 17.0,
+  "sunk": 11.0
+ }
+}

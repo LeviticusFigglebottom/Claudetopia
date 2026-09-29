@@ -29,7 +29,7 @@
       "leash": 30.0,
       "spread": 1.7,
       "strafe_speed": 0.8,
-      "aggression": 0.95,
+      "aggression": 0.8,
       "flank": true
     },
     "attacks": [
@@ -43,7 +43,7 @@
         "telegraph": 0.5,
         "hit_window": 0.14,
         "recovery": 0.5,
-        "cooldown": 2.0,
+        "cooldown": 3.4,
         "gcd": 0.45,
         "weight": 4.0,
         "lunge": 1.8
@@ -52,7 +52,7 @@
         "name": "the_clutch",
         "clip": "Attack_Unarmed_2",
         "weapon_class": "unarmed",
-        "damage": 21.0,
+        "damage": 17.0,
         "poise_damage": 16.0,
         "range": 2.1,
         "telegraph": 0.82,

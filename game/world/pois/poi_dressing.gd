@@ -41,6 +41,9 @@ const KINDS := {
 	## a cairn, a tally post, a grave, a gibbet, a fold, a well, a lantern post
 	"cairn": true, "tally_post": true, "grave": true, "gibbet": true, "fold": true, "well": true,
 	"lantern_post": true, "hut": true, "crossroads": true, "peat_cut": true, "beacon": true,
+	## the large sites (world/sites, docs/WORLD_LIFE_INTERIORS.md): a way down into a site's inside,
+	## and the fortified places you walk round and climb
+	"delve": true, "fort": true, "stockade": true, "watchtower": true, "castle_ruin": true, "walled_camp": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -51,7 +54,7 @@ const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
 		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
 		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
-		"beacon"]
+		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp"]
 
 var poi_id := ""
 var kind := ""
@@ -59,6 +62,10 @@ var region := ""
 var display_name := ""
 var brief := ""
 var encounter := ""
+## A builder of the region's own for this one place (the def's `builder`): a static function of that
+## name in res://world/pois/regions/<region>.gd, called with this dressing in place of the kind's
+## builder (it may call the kind's itself: `REGIONS.base().ruins(d)`). docs/WORLD_LIFE.md.
+var builder := ""
 var pad_radius := 25.0
 var far := false
 ## Where in the world this stands; `position` is relative to whatever cell node holds it.
@@ -104,6 +111,7 @@ static func raise(entry: Dictionary, def: Dictionary, silhouette := false,
 	d.display_name = str(def.get("name", Ids.name_of(d.poi_id).capitalize()))
 	d.brief = str(def.get("unique_feature", ""))
 	d.encounter = str(def.get("encounter", ""))
+	d.builder = str(def.get("builder", ""))
 	d.pad_radius = float(entry.get("radius_flat_m", 25.0))
 	d.level_radius = float(entry.get("radius_level_m", d.pad_radius * 0.7))
 	var step: Variant = entry.get("fall", {})
@@ -178,7 +186,61 @@ static func dressable(id: String, def: Dictionary) -> bool:
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	set_process(false)
 	build()
+
+
+## The kinds' builders (poi_builders.gd), for a region's builder that builds on its kind's:
+## `await PoiDressing.kind_builders().ruins(d)`.
+static func kind_builders() -> GDScript:
+	if _builders == null:
+		_builders = load(BUILDERS_PATH)
+	return _builders
+
+
+## Where a region's own builders are: one script a region, so its author edits nothing another
+## region's author edits (docs/WORLD_LIFE.md).
+const REGIONAL_DIR := "res://world/pois/regions"
+
+
+## The region's script when this place's def names a `builder` it has, else null (and said, once).
+func regional_builder() -> GDScript:
+	if builder == "":
+		return null
+	var at := "%s/%s.gd" % [REGIONAL_DIR, region.get_slice("/", 1)]
+	var script := load(at) as GDScript if ResourceLoader.exists(at) else null
+	var has := false
+	if script != null:
+		for m: Dictionary in script.get_script_method_list():
+			has = has or str(m.get("name", "")) == builder
+	if not has:
+		Log.warn("PoiDressing", "%s: no builder %s in %s; built as its kind (%s)" % [poi_id, builder, at, kind])
+		return null
+	return script
+
+
+static var _builders: GDScript = null
+## Whether the masonry's meshes are made on a worker thread after the builder has run
+## (PoiKit.deferred): a place raised while the world is drawn. Ask `meshes_ready` until it is true.
+var defer_meshes := false
+var _mesh_task := -1
+var _mesh_out: Array = []
+var _mesh_insts: Array = []
+
+## Raised a step at a time within the frame's budget (PoiKit.stepwise): a place raised while the world
+## is drawn (WorldPois.raise_item, for the streamer). Set before it enters the tree. `meshes_ready` is
+## false until the last step is done.
+var stepwise := false
+## Stepwise, waits at every step (a test's way of raising it in the most pieces: PoiKit.every_step).
+var step_every := false
+## Everything the builder does is done (at once, unless stepwise).
+var finished := false
+signal built_all
+## A stepwise build waiting for its next frame (PoiKit.step), and the word to go on.
+var waiting := false
+signal resumed
+## What the build is counted as in `WorldPois.raise_ms` once it is done (stepwise only).
+var raise_key := ""
 
 
 func build() -> void:
@@ -186,12 +248,31 @@ func build() -> void:
 		return
 	built = true
 	kit = PoiKit.new(self, world_position, pad_radius, region, far, poi_id, _provider, _roads)
+	kit.deferred = defer_meshes
+	kit.stepwise = stepwise
+	kit.every_step = step_every
 	masonry = PoiMasonry.new(kit)
-	var builders: GDScript = load(BUILDERS_PATH)
+	var builders: GDScript = _builders
+	if builders == null:
+		# read on a loader's thread when a world began to stand up (World._ready), or here
+		if ResourceLoader.load_threaded_get_status(BUILDERS_PATH) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			builders = ResourceLoader.load_threaded_get(BUILDERS_PATH) as GDScript
+		if builders == null:
+			builders = load(BUILDERS_PATH)
+		_builders = builders
 	if builders == null:
 		Log.error("PoiDressing", "%s: the builders did not load from %s" % [poi_id, BUILDERS_PATH])
+		finished = true
 		return
-	builders.build(self)
+	if stepwise:
+		set_process(true)
+	# stepwise, the frame it is raised in holds none of the builder: it goes on in a later one
+	await kit.step()
+	var own := regional_builder()
+	if own != null:
+		await own.call(builder, self)
+	else:
+		await builders.build(self)
 	if kind == "waterfall" and not far:
 		# a fall no river draws: its water drawn as the rivers' falls are, over the dressing's rock
 		RiverFalls.dress_place(self)
@@ -202,6 +283,88 @@ func build() -> void:
 		# pad's centre, off the exact middle so nothing spawning there stands inside it
 		var g := kit.grain()
 		kit.hearthstone(kit.on_ground(g.x * 3.0, g.y * 3.0), PoiKit.yaw_of(g) + PI, poi_id, display_name)
+	kit.end_steps()
+	_start_meshes()
+	finished = true
+	set_process(false)
+	if stepwise and raise_key != "":
+		var st: Array = WorldPois.raise_ms.get(raise_key, [0, 0.0, 0.0])
+		var ms := kit.build_us / 1000.0
+		WorldPois.raise_ms[raise_key] = [int(st[0]), snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]
+	built_all.emit()
+
+
+## A stepwise build goes on when this frame's budget has room, or when no place has gone on this
+## frame (PoiKit.stepped_frame), so the builds waiting share the budget and one always moves.
+func _process(_delta: float) -> void:
+	if not waiting:
+		return
+	var f := Engine.get_process_frames()
+	if WorldPace.left_usec() <= 0 and PoiKit.stepped_frame == f:
+		return
+	waiting = false
+	PoiKit.stepped_frame = f
+	resumed.emit()
+
+
+## The masonry the builder left to be made (PoiKit.pending), made on a worker thread: the surface
+## tools are this place's own and nothing else touches them until `meshes_ready` takes them.
+func _start_meshes() -> void:
+	if kit == null or kit.pending.is_empty():
+		return
+	var tools: Array = []
+	var tangents: Array[bool] = []
+	for pair in kit.pending:
+		_mesh_insts.append(pair[0])
+		tools.append(pair[1])
+		# the obsidian's glass is drawn along its tangents (ObsidianGlass.commit)
+		tangents.append((pair as Array).size() > 2 and bool(pair[2]))
+	kit.pending = []
+	_mesh_out.resize(tools.size())
+	var out := _mesh_out
+	_mesh_task = WorkerThreadPool.add_task(func() -> void:
+		for i in tools.size():
+			var st: SurfaceTool = tools[i]
+			st.generate_normals()
+			if tangents[i]:
+				st.generate_tangents()
+			out[i] = st.commit_to_arrays(), true, "wm_poi_masonry")
+
+
+## Whether the meshes are all on (at once for a place that made them itself); gives the finished
+## ones to their MeshInstance3Ds on the main thread when the worker is done.
+func meshes_ready() -> bool:
+	if not finished:
+		return false
+	if _mesh_task < 0:
+		return true
+	if not WorkerThreadPool.is_task_completed(_mesh_task):
+		return false
+	WorkerThreadPool.wait_for_task_completion(_mesh_task)
+	_mesh_task = -1
+	for i in _mesh_insts.size():
+		var mi: MeshInstance3D = _mesh_insts[i]
+		var arrays: Variant = _mesh_out[i]
+		if not is_instance_valid(mi):
+			continue
+		var verts: Variant = (arrays as Array)[Mesh.ARRAY_VERTEX] if arrays is Array and not (arrays as Array).is_empty() else null
+		if verts == null or (verts as PackedVector3Array).is_empty():
+			# nothing was laid in it: made at once, no mesh and no node would have stood
+			mi.queue_free()
+			continue
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		mi.mesh = mesh
+	_mesh_insts.clear()
+	_mesh_out = []
+	return true
+
+
+func _exit_tree() -> void:
+	# a place unloaded while its meshes are made: the worker is waited for, not left holding it
+	if _mesh_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_mesh_task)
+		_mesh_task = -1
 
 
 # --- what got built, for the tests and the tools ------------------------------------------------
@@ -403,27 +566,25 @@ func _local_of(n: Node3D) -> Transform3D:
 
 ## Where somebody is set down at the POI `id`, in the world: the arrival of its dressing where it
 ## stands, or of one raised for the asking and taken down again. INF where there is no such POI.
-static func arrival_for(id: String) -> Vector3:
+## `terrain` and `roads` are the ground and roads a dressing raised for the asking is laid on
+## (the running world's by default: raised on no ground, it knew no water and no slope).
+static func arrival_for(id: String, terrain: TerrainProvider = null, roads: Array = []) -> Vector3:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree == null:
 		return Vector3.INF
 	for n in tree.get_nodes_in_group(GROUP):
 		var standing := n as PoiDressing
-		if standing != null and standing.poi_id == id and not standing.far and standing.built:
+		if standing != null and standing.poi_id == id and not standing.far and standing.finished:
 			return standing.to_global(standing.arrival())
-	var entry: Dictionary = {}
-	var pois_path := "res://world/generated/pois.json"
-	if FileAccess.file_exists(pois_path):
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(pois_path))
-		if typeof(parsed) == TYPE_ARRAY:
-			for e in parsed:
-				if typeof(e) == TYPE_DICTIONARY and str((e as Dictionary).get("place_id", "")) == id:
-					entry = e
-					break
+	var entry: Dictionary = TravelPlaces.entries().get(id, {})
 	var def := ContentDB.get_or_empty(id)
 	if entry.is_empty() or not dressable(id, def):
 		return Vector3.INF
-	var d := PoiDressing.raise(entry, def, false, null, WorldPois.roads_from_disk())
+	if terrain == null:
+		terrain = World.terrain()
+	if roads.is_empty():
+		roads = WorldPois.roads_from_disk()
+	var d := PoiDressing.raise(entry, def, false, terrain, roads)
 	d.position = d.world_position
 	var host := Node3D.new()
 	host.name = "ArrivalScratch"

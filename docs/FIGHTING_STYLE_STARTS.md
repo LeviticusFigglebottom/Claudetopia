@@ -7,7 +7,42 @@ rewritten from it once it is approved. Sources:
 - WORLD_BIBLE §1.5, §3, §4 and §6;
 - docs/ATLAS.md (settlements and roads);
 - `core:quest/the_naming` in quests/main.json, and `core:opening/new_game` in opening.json;
-- the NPC defs of the four teachers, who already live where their starts are.
+- the NPC defs of the four teachers, who already live where their starts are;
+- the opening agent's notes on its own code, folded into §4, §5.2, §5.3, §5.5 and §5.6.
+
+## 0. As built, after the fourth playtest (triage 51-52, 2026-09-28)
+
+The user, having played all four: "The class intro quest line is still convoluted, especially the
+rogue's ... it's not really explained why you're doing what you're doing", and "need to get the horse
+early for each intro". So each start now keeps to these rules, and §3 below is written to them:
+- **One goal, said at once.** The teacher's first words say what the day is for and why: the Stair
+  Head's pay goes south with whichever recruit can fight; the thornhounds at Wold Force are killing
+  the lodge's deer and are cleared this evening; the smugglers come for the Lamp's stone at dusk;
+  the collector's tithe-book goes before the count and nobody is to know it was Moreva. Every lesson
+  is a step to that goal. Steps that were not (the Warrior's boar, the Ranger's weaver, the Mage's
+  gutter drakes, the Rogue's walk to the traps before there was anything to carry) are cut or put
+  in the order the goal needs them.
+- **Four or five stages, each said as it happens.** Every change of stage is said out loud by the
+  teacher (a `say` bark) or told by a notice, and each journal entry opens on why this is the next
+  thing, then says what to do and where ("Go to X. Do Y."), then how. Journal text and a quest's
+  description say only what the player knows at that point: a description is a short hook, and no
+  stage names what a later one holds.
+- **The horse early.** Each teacher hands over the mount after the first lesson (the first stage's
+  `on_complete`: `give_mount` with a tether `spot` of the quest's own, so the horse stands a few
+  paces from the lesson on clear, dry ground), with a line saying what it is for; getting up on it
+  is an objective (`act: mount`, told by the Rider, `against` the mount's id). It rides with the
+  player through the tutorial and on south: every tie-in's first objective is the ride.
+- **A real target for every objective**, for the objective marker: `against: "prop:<kind>"` for the
+  lesson props (pells `prop:pell`, butts, braziers, the sack, the strongbox `prop:strongbox`),
+  `against: <enemy id>` in fights, `against: <mount id>` for the horse, `where`/a person/a place
+  otherwise.
+
+| Style | The goal (the teacher's first words) | Stages | The horse, and when |
+|---|---|---|---|
+| Warrior | carry the Stair Head's pay south; Dole sends whoever can fight | the yard, the ring, the ditch, the report | Hollin, after the yard; ridden to the ditch |
+| Ranger | clear the thornhounds from Wold Force this evening | the butts, the Briar, the Force, the report (and the grey hart) | Nettle, after the butts; ridden out to the Briar |
+| Mage | keep the Lamp's sul-stone from the smugglers at dusk | the braziers, the Ward and Mend (and Hush-Frost), the boat, the bell | Kettle, after the braziers; got up on once on the shingle |
+| Rogue | the collector's tithe-book gone before the count, and nobody the wiser | the box, the book carried past the watch to Sauve's punt, the sack, the bravo, the report | Tally (Sauve's own mare now), after the box; not ridden on the boards that night; mounted to follow the courier |
 
 ## 1. The shape of a new game
 
@@ -88,7 +123,8 @@ he is kind only by accident:
 > "You swung twice. The bandit swung once and meant it. Mean it."
 > "Good. Now do it tired."
 
-**The tutorial (about 12 minutes).**
+**The tutorial (about 12 minutes; as built: the yard, the ring, the ditch, the report, and the boar
+cut, §0).**
 1. *The yard (3 min).* Dole's pells and a straw man:
    - the light swing, then the heavy (charged) swing;
    - stamina, and why the heavy costs it;
@@ -112,9 +148,10 @@ he is kind only by accident:
    You carry the milestone back to the verge. The find's own hook already says the milestone
    keeps walking back, which is a nice echo.
 
-**The horse.** Dole signs Hollin out of the Wardens' stable to you, because Wren is short of a
-cob at the Stair and "you'll ride it there, and she'll ride it back". `give_mount` on Dole's
-last line, homed at Wardens' Rest. From then on, *The Toll Hums* does not hand over a second
+**The horse.** Dole signs Hollin out of the Wardens' stable to you after the yard, because
+whoever carries the pay rides her, and Wren is short of a cob at the Stair ("you ride Hollin down
+and she rides Hollin back"). `give_mount` on the_yard's `on_complete`, tied across the yard
+(`hollin_tether`); the ditch stage asks you to get up on her and ride there. From then on, *The Toll Hums* does not hand over a second
 cob (§5.4).
 
 **The tie-in: "The Relief".** Dole gives you the Stair Head's month's pay and the Roll's new
@@ -128,6 +165,60 @@ page, for Wren. Tam is to ride with you.
 **What stays down there.** Tam Hobb. His name goes on the Roll at Wardens' Rest as one of the
 quiet. It is a thread for the Wardens' questline, *The Roll of Names* (WORLD_BIBLE §4.1), and
 for the Tolling Order's "escort a pilgrim into the Hushline and bring back what she leaves".
+
+### 3.1a Warrior: the ground, measured (cartographer)
+
+Measured on the built world w4096d, with waves 5 and 6 and the signposts in the pack. The capture
+plan is `tools/capture/plans/starts_warrior_ranger.json`.
+
+**The Wynstead Ditch Camp and the tutorial.**
+- **Where it is.** 665 m from the fort, on a bearing of 121° (east-south-east), and 39 m lower.
+  The way down is open, dry down, and passes 21 m from the Old Sheepwash, an empty ruin.
+- **Its foes.** Two roadside bandits, by day only, standing on the pad's rim about 9 m from its
+  centre. The first fight has to be by day. The camp is 30 m off the Wynstead-Fallowfold road.
+- **It is off the ride.** The camp is 309 m from the ride's road at its closest, so the ride south
+  does not wake it.
+- **Keep the yard and the down clear of the Watchtower.** The Tumbled Watchtower is 372 m
+  west-north-west of the fort (306°). It stands five bandits and a smuggler-Sayer. Country
+  bristlebacks root 422 m west, and the Wolf Holt's three down-wolves are 804 m out on the same
+  side.
+- **Put the boar's down south of the fort,** at about (-700, 1800), 160 m out. The ground there is
+  open (slope 0.08). It is 484 m from any encounter, 210 m from any other thing and 114 m off the
+  road. The tutorial should stand its own bristleback there, not borrow the country's.
+- **One more foe nearby.** A country hedge-wight stands 338 m east-north-east, at (-399, 1486).
+  It is not within 80 m of the ride.
+
+**The ride to the Stair Head: 4.7 km, about 11 minutes at a canter.**
+- **The way.** Wardens' Rest, then Merrowby (1.2 km), Wynstead (1.8), Ashwell (2.4), Pilgrim's Ash
+  (3.1), the Sunken Choir (4.2) and the Stair Head (4.7).
+- **Threats within 80 m of the road:**
+  - the Larkbourne Ford (0.85 km): two bandits, at night only;
+  - the Glass Bridge (3.2 km, 3 m off the road): four ash-wights under the arch, always;
+  - the Glass Falls (3.8 km, 23 m off): a bell-bearer on the lip.
+  The last two are on all four rides, since they share the last 1.6 km, and §3.5 does not cover
+  them. Either stand them only from the Naming's stage after the wake, or accept that a rider
+  crosses over the wights' arch. No country spawn is within 80 m of the ride.
+- **Fingerposts passed:**
+  - Ashwell's junction, 2.1 km: Ashwell ¼ | Wynstead ¼ | The Hare and Hurdle 1;
+  - east of Pilgrim's Ash, 3.2 km;
+  - the Glass Bridge, 3.3 km: The Glass Bridge ¼ | The Sunken Choir ½ | Greyfold 1¼;
+  - under the Choir, 4.2 km: The Stair Head ¼ | The Last Camp ½ | Pilgrim's Ash ¾;
+  - the Stair Head's own.
+- **Town stones passed:** Wardens' Rest, and both ways into Merrowby, Wynstead, Ashwell and
+  Pilgrim's Ash.
+- **Thin road.** One stretch, 4.2 to 4.6 km: the Choir to the Stair Head, the Naming's way, which
+  is kept quiet.
+- **The Hearthstone stop is the Wellspring,** at 2.7 km, 42 m off the road: the stone nearest
+  the ride's midpoint (2.35 km), as the user asked for a stop halfway (§3.6). Merrowby, at
+  1.2 km, stays a sight on the way for the Toll teaser of §3.5. The Pilgrims' Bell (2.85 km, on
+  the road) is the next nearest.
+
+**The three captures.**
+- `warrior_first_view`: from the fort's yard, 16 m north-west of its centre, across the down to
+  the ditch camp. 09:00.
+- `warrior_first_fight`: a body 19 m from the camp on the fort's side, turned to the bandits.
+  11:00.
+- `warrior_ride_glass_bridge_post`: the Glass Bridge fingerpost from the road, 5 m off. 14:00.
 
 ### 3.2 Ranger: Fernhold
 
@@ -150,7 +241,8 @@ she is quick to be proud of you and slow to say it:
 > "Wind's in your face. Good. It can't smell you. It can hear you, so stop talking."
 > "Don't chase it. Let it come round. Everything comes round."
 
-**The tutorial (about 13 minutes).**
+**The tutorial (about 13 minutes; as built: the butts, the Briar, the Force, the report, and the
+weaver cut, §0).**
 1. *The butts behind the antler hall (3 min).*
    - Draw, hold and loose.
    - Arrow drop over 20, 40 and 60 m.
@@ -171,8 +263,10 @@ she is quick to be proud of you and slow to say it:
    - the third closes, and you learn the knife (the hunting knife) and the roll back to range;
    - Rosen does not shoot unless you are hurt, and says afterwards that she nearly did.
 
-**The horse.** Rosen's old forest pony, a sure-footed grey-dun she rode as a girl. It is too
-small for her now, she says, which is not true. The mount is new: kin of the cob, smaller, with a
+**The horse.** Rosen's old forest pony, Nettle, a sure-footed grey-dun she rode as a girl. It is
+too small for her now, she says, which is not true. She gives it after the butts ("the Force is a
+long walk"), tied behind the shooting line (`nettle_tether`), and you ride it out to the Briar.
+The grey hart is shown on her report at the lodge, and The Grey Hart begins with the ride after it. The mount is new: kin of the cob, smaller, with a
 Woodfolk saddle-cloth. It is homed at Fernhold.
 
 **The tie-in: "The Grey Hart".** At dawn the hart whose slots you read is out on the Wold, and it
@@ -188,6 +282,54 @@ from you.
 
 **What stays down there.** The grey hart. It is a thread for *The Briar's Purpose*: the Briar
 is failing, and its creatures are walking south.
+
+### 3.2a Ranger: the ground, measured (cartographer)
+
+**The tutorial's ground.**
+- Wold Force is 431 m due south of the lodge (184°). Its three thornhounds are always there.
+- The Silence Stones' two thornhounds stand by day, 315 m from the lodge.
+- The weavers are on Fern Gully's bridges.
+- The fall's lip, where Rosen puts you, is the high ground about 27 m east-south-east of the pool,
+  17 m above it. The waterfall builder's `lip` marker is the exact spot, and the first-fight
+  capture takes the bearing from it.
+
+**The ride, as §3.2 draws it, is 11.9 km and passes the boss.** Its way is by Grandfather Hollow,
+the Standing Moot and Hazelcombe, then Hollin Barrow, the Hare and Hurdle and Bramcombe.
+- At the Standing Moot (3.6 km) the Hart of Thorns stands in the circle, 1 m off the road. A
+  level-one ranger would ride into the main quest's boss.
+- It also passes the Antler Chapel's Hart-Knight (5.5 km, 2 m off) and the Hunter's Stand poachers
+  (2.9 km, 40 m off). The Sentinels and the Burnt Lodge have Wardens at dusk. The Lamb's Bottom
+  down-wolves are 60 m off at 8.9 km.
+
+**The recommended ride: 10.1 km, about 24 minutes at a canter.** Fernhold, then Grandfather
+Hollow (2.0 km), Tamwick (5.4), Merrowby (6.6), Wynstead (7.2), Ashwell (7.8), Pilgrim's Ash
+(8.5) and the Stair Head (10.1). It is the shortest road, and it does not touch the Moot. Keeping
+Hound Down instead (by Tamwick and Hollin Barrow, 10.8 km) passes a down-wolf pack 15 m off the
+road at 5.6 km, and Lamb's Bottom.
+- **The hart's trail.** Say that it goes round the Moot, which is where the Briar's failing and
+  the Hart of Thorns meet.
+- **Foes near the road by day:**
+  - the Silence Stones' thornhounds (1.3 km, 9 m off), the tutorial's own ground;
+  - Wenna's House's weaver (3.4 km, 11 m off, always);
+  - country spawns: a Hart-Knight (3.3 km, 31 m off), a thornhound pack of five (4.4 km, 43 m) and
+    two bristlebacks (4.75 km).
+  The Webbed Lodge, Root Hollow, Sawyer's Bench and the Hart Snares come out only at night. The
+  Glass Bridge and the Glass Falls are as on the Warrior's ride.
+- **Fingerposts:** the Greatwood junction (3.5 km: Hazelcombe ½ | Grandfather Hollow 1 |
+  Tamwick 1¼), and the Warrior's last four.
+- **Town stones:** Fernhold, Grandfather Hollow, Tamwick, Merrowby, Wynstead, Ashwell and
+  Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **The Hearthstone stop is Ansel's Hedge Shrine,** at 6.0 km, 14 m off the road: the stone
+  nearest the ride's midpoint (5.05 km, §3.6). The Oiled Stone (2.6 km) comes before it.
+  Merrowby (6.6 km) carries the same Toll teaser as the Warrior's ride.
+
+**The three captures.**
+- `ranger_first_view`: from the lodge's north side, south over the Wold to Wold Force. 07:30.
+- `ranger_first_fight`: a body on the lip, 27 m east-south-east of the pool, turned to the pack.
+  18:12, dusk.
+- `ranger_ride_greatwood_post`: the Greatwood fingerpost from the road, 5 m off, with Wenna's
+  House beyond. 10:30.
 
 ### 3.3 Mage: Gullhithe and the Lamp
 
@@ -207,7 +349,8 @@ Her voice is a busy, wry woman's who talks while she works and teaches by chores
 > "The Sayers charge by the hour for that. I charge by the eel-rack. Turn those."
 > "There. You're a lamp now. Try not to set the racks on fire."
 
-**The tutorial (about 12 minutes).**
+**The tutorial (about 12 minutes; as built: the braziers, the Ward and Mend on Jory's shingle with
+Hush-Frost taught at its end, the boat, the bell, and the drakes cut, §0).**
 1. *Waking the stone (3 min).* At the Lamp's top, Tamsin teaches:
    - casting from the hand;
    - the Saying's pool (magicka) and its regeneration;
@@ -226,8 +369,11 @@ Her voice is a busy, wry woman's who talks while she works and teaches by chores
    - you are never meant to be in reach.
    If you do end up in reach, the lesson is to back off and re-cast.
 
-**The horse.** The Wicks' old cart-horse, which pulled the eel-cart to Tollmere until the
-Tallymen priced the barrow off the Row. That is Jory's grievance, already in his def. The
+**The horse.** Kettle, the Wicks' old cart-horse, which pulled the eel-cart to Tollmere until the
+Tallymen priced the barrow off the Row. Tamsin gives her after the braziers ("after tonight you'll
+want to be somewhere the Circle isn't asking after you"), tied at the Lamp's foot
+(`kettle_tether`). The bell is found in the smugglers' boat and heard on the report, and The Note
+Under the Water begins with the ride. That is Jory's grievance, already in his def. The
 mount is new: kin of the cob, heavier, with a draught horse's feathers. It is homed at Gullhithe.
 
 **The tie-in: "The Note Under the Water".** The smugglers carried a Sayers' listening-bell, a
@@ -243,6 +389,65 @@ points south.
 **What stays down there.** The note. The bell comes back silent, and the Hush has the note.
 This is a thread for *Louder Than Books* and *The Held Note*, where "the Cantor's Seat is
 holding something" (WORLD_BIBLE §10).
+
+### 3.3a Mage: the ground, measured (cartographer)
+
+Measured on the built world w4096d, with waves 5 and 6 and the signposts in the pack. The capture
+plan is `tools/capture/plans/starts_mage_rogue.json`.
+
+**The tutorial's ground: the Lamp.**
+- **Where it is.** The Lamp stands on a headland 283 m east-south-east of Gullhithe's centre. The
+  Mere is 90 to 110 m off on every side but the west, where the land runs back to the village.
+  The tower is 34 m to its gallery (the forge's meta).
+- **The smugglers row in from the south.** The water there is 90 m off, and the sector from
+  150° to 210° is clear of any foe for 450 m. Land them on that shore, so the stair between you
+  and them is the Lamp's own.
+- **Keep the fight off the north side.** The Three Rights' two cutpurses stand 354 m north of
+  the Lamp, at night only. A dusk fight is on the edge of their hour, so the smugglers' landing
+  and the stair should face away from them.
+- **The Gullhithe Wreck is the start's one real danger.** It has five gutter drakes, always, in
+  the hull 81 m south of the village's centre and 343 m from the Lamp, and it is 27 m off the
+  road the ride leaves by. A level-one mage walks out of the village past five drakes.
+  - Recommendation: stand the wreck's drakes only from the Naming's stage after the wake, as the
+    Glass Bridge wights and the Glass Falls bell-bearer are.
+  - Or make the wreck the tutorial's optional last lesson, Kindle Bolt from the shore at range,
+    with two drakes and not five.
+- **Other foes nearby.** Two country smuggler-Sayers are 560 m south-south-east of the Lamp, over
+  the water. North Cliff Beacon's Sayer and two cutpurses are 613 m north-east. Neither is in
+  reach of the tutorial.
+
+**The ride to the Stair Head: 7.4 km, about 17 minutes at a canter.**
+- **The way.** Gullhithe, then the Eelweir (0.8 km), Sedgehithe (1.3), Stride's Foot (3.1),
+  Merrowby (3.9), Wynstead (4.5), Ashwell (5.1), Pilgrim's Ash (5.7), the Sunken Choir (6.9) and
+  the Stair Head (7.4). This is the shortest road, and it is §3.3's way round the Mere's west
+  shore.
+- **Threats within 80 m of the road:**
+  - by day: the Laundry Punt's cutpurse (2.0 km, 16 m off) and the Dodger's Stone's two
+    cutpurses (2.5 km, 3 m off);
+  - at night only: the Eelweir's three leech-hounds (0.8 km, 3 m off), the Tallyman's Folly's
+    three cutpurses (1.75 km), and the False-Light House's smuggler-Sayer (3.2 km, 38 m off);
+  - the Glass Bridge and the Glass Falls, as on every ride (gated after the wake).
+  The mage should set out in the morning, after the dusk fight and a night at the Wicks'. The
+  False-Light House's smuggler-Sayer is the same trade as the tutorial's, a sight on the way.
+  No country spawn is within 80 m of the ride.
+- **Fingerposts passed:**
+  - the Eelweir, 0.8 km: Nauve's Landing ¼ | Sedgehithe ¼ | Gullhithe ½;
+  - west of Stride's Foot, 3.0 km: Stride's Foot ¼ | Pennywort's Mill ½ | Sedgehithe 1;
+  - east of Stride's Foot, 3.2 km: Stride's Foot ¼ | Merrowby ½ | The Rafters' Camp 1¼;
+  - then the Warrior's last five, from Ashwell's junction to the Stair Head's own.
+- **Town stones passed:** Gullhithe, and both ways into Sedgehithe, Stride's Foot, Merrowby,
+  Wynstead, Ashwell and Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **The Hearthstone stop is Merrowby,** at 3.9 km, on the road: the stone nearest the ride's
+  midpoint (3.7 km, §3.6), with the Toll teaser of §3.5. The Sedge Hearth (1.1 km) comes before.
+
+**The three captures.**
+- `mage_first_view`: from the Lamp's gallery, 31 m up on its west side, over Gullhithe and the
+  Mere. 16:30.
+- `mage_first_fight`: a body 16 m south of the Lamp, on the smugglers' shore, turned to them.
+  18:18, dusk.
+- `mage_ride_strides_foot_post`: the fingerpost west of Stride's Foot, from the road, 5 m off.
+  10:00.
 
 ### 3.4 Rogue: Moreva
 
@@ -264,37 +469,50 @@ being behind you:
 > "They look where it's loud. Be where it isn't."
 > "Once. From behind. Then gone. Twice is a fight, and you don't fight."
 
-**The tutorial (about 14 minutes).**
-1. *The traps before dawn (4 min).* Sauve lifts the North Channel traps, and you follow him
-   without being seen by the Reed Council's night-watch. You learn:
-   - sneak, and the eye, the detection state;
-   - light and shadow, and fog;
-   - boards against mud against water;
-   - hiding in the reeds.
-2. *The collector's stilt-house (3 min).* Before the tithe-day, Sauve teaches the lock and the
-   purse, and the Tallymen's rule that a lock picked is a crime and a crime is a bounty
-   (`systems/crime`):
-   - lockpicking a strongbox;
-   - pickpocketing the sleeping collector's key.
-3. *The dagger (2 min).* Sauve hands you an iron dagger and shows what a blade from behind does
-   to a sack of eels. That is the sneak-dagger crit (DamageModel `sneak_dagger` x6), and the
-   backstab facing test.
-4. *The first real fight (5 min).* Tithe-day, in the fog. The collector's bravo, the Tallymen's
-   elite hire, walks his round of the landing. It should feel like the rogue:
+**The tutorial (about 14 minutes).** One goal runs through it (rewritten for triage 44, after
+a playtest found the first quest made no sense, and put in a thief's order for triage 51 when the
+next playtest still could not see why): tomorrow is tithe-day, the collector sleeps on the south
+boards beside the strongbox that holds his tithe-book, and the book says Moreva owes forty baskets
+it never caught. Sauve means to have the book before the collector wakes, and nobody is to know it
+was Moreva. **As built:** (1) the box: crouch, pick it, take the book, the pocket if you like, and
+Tally is handed over; (2) carry the book down to Sauve's punt at his traps past the night-watch,
+because a stranger coming away from the box on tithe-eve is somebody Tella must name at the count;
+(3) the sack, because (4) the bravo's round ends at the empty box and he must be stopped once, from
+behind; (5) the report: the unsaid page and the courier. The list below is the plan's order.
+1. *The traps before dawn (4 min).* First Sauve wants to see you move unseen. You get down to
+   his South Channel traps past the Reed Council's night-watch, who knows him but not you (a
+   stranger on the boards on tithe-eve is somebody she has to report). You learn:
+   - sneak, and the eye, the detection state (Unseen, Noticed, Seen), by the watch's lantern;
+   - cover: the lane down the way's east side, behind stacked traps, crates and an upturned boat;
+   - the dark and the mist (sight cut in weather, light from the sun's height);
+   - seen, back into the lane's shelter, and again.
+2. *The strongbox (3 min).* Back up to the sleeping collector: the lock and the purse, and the
+   Tallymen's rule that a lock picked is a crime and a crime is a bounty (`systems/crime`):
+   - lockpicking the strongbox, and taking the tithe-book out of it;
+   - pickpocketing the sleeping collector (optional).
+3. *The dagger (2 min).* At first grey the collector's bravo walks his round, and it ends at the
+   box. Before that, Sauve shows what a blade from behind does to a sack of eels: the
+   sneak-dagger crit (DamageModel `sneak_dagger` x6), and the backstab facing test.
+4. *The first real fight (5 min).* First grey, in the fog. The bravo, the Tallymen's elite
+   hire, walks his round of the landing towards the box. It should feel like the rogue:
    - you stalk him along the stilts;
    - one blow from behind in the fog (x6) ends it, or nearly ends it;
-   - if he turns, the lesson is to break line of sight, drop into the reeds, and come again;
+   - if he turns, the lesson is to break line of sight and come again;
    - a straight fight with a bravo is meant to go badly.
+5. *The report.* The book to Sauve, who keeps it; folded into its back is the unsaid page.
 
-**The horse.** The bravo's own horse, tethered at the landing's end with the Tallymen's
-charter-brand on its flank.
-- Sauve says a horse with no rider is nobody's.
-- It is a theft that no one reports, because the one witness is the collector, and he is now
-  in the reeds with a very good reason to say nothing.
-- The mount is new: kin of the cob, a leggy bay under a brass-studded Tollmere saddle. It is
-  homed at Moreva, and Sauve keeps it.
+**The horse.** Tally, Sauve's own mare, bought at a Tallymen's auction with the Charter's brand
+still on her flank (as built; the plan gave the rogue the bravo's horse, which could only be had
+at the end, and the user asked for the horse early).
+- Sauve gives her after the box: "By noon a stranger who was on the boards on tithe-eve will want
+  to be somewhere else. Not tonight, mind; hooves on boards wake the dead."
+- She is tied on the landing's south-east boards (`tally_tether`), and getting up on her is the
+  first objective of The Unsaid Page.
+- The mount is new: kin of the cob, a leggy bay under a brass-studded Tollmere saddle.
 
-**The tie-in: "The Unsaid Page".** The collector's satchel holds a Tallymen's ledger page. It
+**The tie-in: "The Unsaid Page".** (As built, Sauve's report shows the courier and the tie-in
+begins with the ride after him.) The collector's tithe-book holds, folded into its back, a
+Tallymen's ledger page. It
 lists a village's debt, and "UNSAY" is written across it: somebody has paid to have a
 village's name struck.
 - Sauve's man in Gullhithe wants the page. So does the collector's courier, who runs south at
@@ -307,6 +525,54 @@ village's name struck.
 **What stays down there.** The courier and his copy of the page. The village is not unsaid,
 because the Hush got the page and not the Circle. That leaves a thread for *The Unsaid Ledger*,
 and the player has the only other copy.
+
+### 3.4a Rogue: the ground, measured (cartographer)
+
+**The tutorial's ground: Moreva.**
+- **Where it is.** Moreva's landing is 41 m across. Water lies 80 to 150 m off to the south and
+  south-west, and 220 to 250 m to the north. The east is dry for 250 m.
+- **The traps are the South Channel's.** §3.4 first said the North Channel. The north is not
+  safe before dawn:
+  - two country sallowjaws are 362 m north-north-west, and two more 371 m north-east;
+  - five country bog-drowned are 581 m north;
+  - the south, from 150° to 210°, is clear of any foe for 600 m, with the water 90 to 150 m off.
+  Keep the traps within about 200 m of the landing, between 160° and 200°.
+- **Keep off the Wisp Hollow and the Settled House.**
+  - The Wisp Hollow's three wisps stand always, 272 m south-west (216°), on the South Channel's
+    west edge.
+  - The Settled House's two bog-drowned stand at night, 287 m east-south-east (124°), which is
+    the hour of the traps.
+  - The Stair of Isse's three bog-drowned stand always, 376 m west-north-west.
+  None is in reach of a route that keeps within 200 m.
+- **The tithe-day fight is on the landing itself,** by day and in fog. Nothing stands up within
+  270 m of it by day, and the bravo's round is the tutorial's own.
+
+**The ride to the Stair Head: 8.2 km, about 19 minutes at a canter.**
+- **The way.** Moreva, then Nauve's Landing (1.1 km), the Eelweir (1.6), Sedgehithe (2.2),
+  Stride's Foot (3.9), Merrowby (4.7), Wynstead (5.3), Ashwell (6.0), Pilgrim's Ash (6.6), the
+  Sunken Choir (7.7) and the Stair Head (8.2). It is the shortest road and §3.4's way. From the
+  Eelweir on, it is the Mage's ride.
+- **Threats within 80 m of the road:**
+  - the Settled House's two bog-drowned (0.3 km, 30 m off), at night only;
+  - the rest of the Mage's ride: the Eelweir, the Tallyman's Folly, the Laundry Punt, the
+    Dodger's Stone, the False-Light House, and the Glass Bridge and the Glass Falls.
+  The courier "a field ahead" leaves at dawn, so the ride is by day, and only the Laundry Punt's
+  and the Dodger's Stone's cutpurses are up. They are the Tallymen's own trade, as the courier
+  and the collector are: a sight on the way. No country spawn is within 80 m of the ride.
+- **Fingerposts passed:** the Eelweir (1.6 km), and then the Mage's: west and east of Stride's
+  Foot, Ashwell's junction, and the Warrior's last four.
+- **Town stones passed:** Moreva, and both ways into Nauve's Landing, Sedgehithe, Stride's Foot,
+  Merrowby, Wynstead, Ashwell and Pilgrim's Ash.
+- **Thin road.** Only the Choir to the Stair Head.
+- **The Hearthstone stop is Merrowby,** at 4.7 km, on the road: the stone nearest the ride's
+  midpoint (4.1 km, §3.6). The Sedge Hearth, at 2.0 km, is 2 km from halfway.
+
+**The three captures.**
+- `rogue_first_view`: from the landing's south edge, 30 m out, down the South Channel in the
+  fog before dawn. 05:24.
+- `rogue_first_fight`: a body on the landing's boards, 14 m south-south-east of its centre, in
+  fog, turned to the bravo. 10:00.
+- `rogue_ride_eelweir_post`: the Eelweir fingerpost from the road, 5 m off, in mist. 09:00.
 
 ### 3.5 What the rides pass on the way
 
@@ -323,14 +589,36 @@ passes the Naming's later places before the descent. This is kept, and handled:
   Hums* starts there. It is a teaser. Nothing in Merrowby moves until the main quest's stage
   does.
 
+### 3.6 The Hearthstone stop on each ride
+
+The user asked for a stop halfway. Each ride's stop is the Hearthstone nearest its midpoint,
+along the road, measured on w4096d:
+
+| Start | Ride | Midpoint | The stop | Where on the ride |
+|---|---|---|---|---|
+| Warrior, Wardens' Rest | 4.7 km | 2.35 km | the Wellspring | 2.7 km, 42 m off the road |
+| Ranger, Fernhold | 10.1 km | 5.05 km | Ansel's Hedge Shrine | 6.0 km, 14 m off |
+| Mage, Gullhithe | 7.4 km | 3.7 km | Merrowby | 3.9 km, on the road |
+| Rogue, Moreva | 8.2 km | 4.1 km | Merrowby | 4.7 km, on the road |
+
+Merrowby is the Mage's and the Rogue's stop, and a sight on the way for the Warrior and the
+Ranger. In every case it carries the Toll teaser of §3.5.
+
 ## 4. The Stair Head: the descent and the wake
 
 This is shared by all four and built once.
-- **The meeting.** The player reaches the camp by the tie-in's road. Wren is at her fire, and
-  she greets them as whoever sent them: Dole's recruit, Alder's tracker, Tamsin's girl or boy,
-  or nobody she wants to know. That is one line of hers per style, keyed on the style flag. She
-  does not give her name ("I'm the Warden. That's all the name the Stair needs."), so the
-  cinematic's "The Warden" label still holds.
+- **The approach.** The Stair Head's dressing is laid out from the POI's position towards the
+  Choir. A rider arriving from the north, down the waystones, meets the camp from behind the
+  tents and comes to the Stair past the two Oroth piers. The opening agent says this is a fine
+  approach. Capture it before the descent's shots are designed.
+- **The meeting.** Wren is at her fire; the opening agent's advice is that an empty camp reads as
+  the "test ground" the user complained about. She greets them as whoever sent them: Dole's
+  recruit, Alder's tracker, Tamsin's girl or boy, or nobody she wants to know. That is one line of
+  hers per style, keyed on the style.
+  - **This exchange stays nameless.** She shouts, and does not introduce herself ("I'm the
+    Warden. That's all the name the Stair needs."). So the cinematic's "The Warden" label, and its
+    "she has not told you her name yet", still hold. Her dialogue gives her name at the wake, as
+    it does now.
 - **The thing goes down.** It walks past her fire and down the stair: Tam, the hart, the
   courier, or the note in the bell. Wren shouts: "Nobody comes back up!"
 - **The descent (player control, 20-40 s).**
@@ -392,13 +680,25 @@ This is shared by all four and built once.
   - its own place, region, quest (the style's tutorial quest) and greeter (the teacher);
   - an optional short cinematic of its own: three or four shots of its region and town in the
     same style, 30-40 s, and skippable.
-- `GameServices.begin_new_game()` picks the opening whose `style` matches the character.
+- **`GameServices.begin_new_game()` is split in two.** Today it is one call, gated on the
+  `new_game` flag: it plays the cinematic, clears the flag and starts `the_naming`.
+  - *The new game* picks the opening whose `style` matches the character. `PlayerSpawn` stands
+    the body at `opening.place` (the start town), from the manifest's `start` pose or the
+    opening's own. It starts the style's tutorial quest, and raises a flag of its own,
+    `style_start`.
+  - *The wake* is the second half. It is fired by the descent's trigger at the fortieth step, as
+    an effect at the end of the tie-in quest. It fades to grey, raises `new_game` (or a `wake`
+    flag), plays `CinematicPlayer.play_opening` as now, then clears the flag and starts
+    `the_naming` at `wake`.
+  - The split is the opening agent's reading of its own code: its note is that "everything else
+    keyed on `new_game`" must not stay up through a 15-minute tutorial. `SaveSystem.hold_saves`
+    blocks saving while the opening plays, and a slot saved before the hand-over "gets the story
+    and not the pictures". So `new_game` goes up only at the descent, and the tutorial and ride
+    can be saved like any other play.
 - The current `core:opening/new_game` stays, as the fallback for a pack with no styles and for
   tests.
-- The Stair Head opening cinematic is no longer played by `begin_new_game`. It is played by an
-  effect, `{"play_cinematic": "core:cinematic/opening"}`, on the descent's trigger. The skip, the
-  setting that turns it off, and the pause menu's *How it began* keep working, because they are
-  the player's and not the new game's.
+- The skip, the setting that turns the cinematic off, and the pause menu's *How it began* keep
+  working, because they belong to the player and not to the new game.
 
 ### 5.3 The Naming and Wren's lines
 
@@ -425,15 +725,18 @@ This is shared by all four and built once.
     carrying paper.", "You were listening for something. Did you hear it?");
   - her `the_hush` line ("nineteen years ... watching grey people walk *down*"), unchanged,
     because it is now what the player just saw.
-  - Her `holds` move from "from the moment a new game is named" to "from `down_the_stair` until
-    the Choir".
+  - **Her hold** (npcs/merrowby.json) keeps her at `wren_stair_head` while `new_game` is set,
+    or while the_naming is at `wake` or `the_choir`. It gains `style_start` and `down_the_stair`,
+    so she is at her fire from the moment a new game begins until the player reaches the Choir.
+    That covers the whole tutorial and ride, for the meeting.
 - **The Toll Hums:** `arrive`'s `give_mount` of the Wardens' cob becomes conditional on having
   no mount, which is only the fallback opening.
 
 ### 5.4 Each style's own content
 
 Each start adds its own content:
-- a tutorial quest, `core:quest/first_<style>`, with 4-5 stages;
+- a tutorial quest, `core:quest/first_<style>`, with 4-5 stages, the horse handed over after the
+  first (§0);
 - a tie-in quest, `core:quest/<tie_in>`, with 3-4 stages ending in `start_quest the_naming` at
   `down_the_stair`;
 - the teacher's lessons in their dialogue file;
@@ -451,9 +754,10 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
 
 ### 5.5 The save
 
-- `style` goes in the character record. The current opening's `holds` state and the new
-  descent's progress are quest stages and flags like any other, so they save and load with no
-  new machinery.
+- `style` goes in the character record. The tutorial, the ride and the descent's progress are
+  quest stages and flags like any other, so they save and load with no new machinery. Saving is
+  held only while the wake's cinematic plays, as it is now, because only then is `new_game` up.
+  A save made on the stair above the fortieth step resumes there.
 - **Old saves:**
   - a save made after the Naming is untouched;
   - a save made during the old Naming (at `wake` or `the_choir`, with no `style`) loads as the
@@ -471,8 +775,14 @@ shows. A lesson's stage completes on the act itself (`block`, `parry`, `backstab
   from New Game: the teacher greets, the first lesson completes, the first fight stands up its
   foes, and the horse is given.
 - **The start:**
-  - test_the_start splits into the Stair Head's own checks (the camp, the stair, the waystones,
-    nothing floating), which stay;
+  - test_the_start keeps its Stair Head checks, run from the wake rather than from New Game:
+    - the Foundling at the POI's own position;
+    - Wren 4-10 m in front, facing them;
+    - the first view up the waystones to the Choir;
+    - the HUD objective "Walk the waystones north to the Sunken Choir";
+    - the camp, the stair and the waystones on the ground.
+    The opening agent confirms that all of these still hold if the wake is where the_naming
+    starts, whatever came before.
   - one check per start town: the teacher's spot, the tutorial markers on the ground, the first
     fight's foes within reach and off the tutorial's route, and nothing floating.
 - **The descent:** colour at the fortieth step, the cinematic starts on the trigger and hands

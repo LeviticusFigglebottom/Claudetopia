@@ -1,14 +1,16 @@
 {
  "bounds": [
   -0.3303,
-  -0.1421,
+  -0.1422,
   1.2783,
   0.3303,
   0.1383,
   1.5477
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
@@ -27,7 +29,7 @@
   "shoulder_cape_orm.png"
  ],
  "tris": [
-  2599,
+  2597,
   0,
   0
  ],

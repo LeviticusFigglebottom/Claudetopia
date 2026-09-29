@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -39,6 +39,10 @@ class BodyStyle:
     # seen from far off; in the Naming at portrait distance it read as a paddle.
     hands: float = 1.0
     feet: float = 0.97
+    # a woman's bust, as a scale of its linear size (item 46): the body is built at 1 and carries
+    # the 1.2 end as the morph target `bust` (-1 is towards 0.8), and so does every garment fitted
+    # to her (`woman_bust`)
+    bust: float = 1.0
 
     @staticmethod
     def from_dict(d: Optional[dict]) -> "BodyStyle":
@@ -85,6 +89,169 @@ class HeadStyle:
 # body
 # --------------------------------------------------------------------------------------
 
+def bust_shape(skel: Skeleton, sx: int, td: float, fem: float, size: float = 1.0) -> dict:
+    """One side of a woman's bust (Blender space), for the body and for the drape a garment is
+    fitted over (`garment_drape`). Item 46: it had been one ball each side, centred high, close to
+    the midline and blended into the chest over 5 cm -- which with a blend that wide stands 1.2 cm
+    prouder than the ball and fills the cleavage, so the two read as one shelf. Now:
+
+    * the apex (the bust point) at the height anatomy puts it, about 0.72 of the stature, and
+      8 cm either side of the midline;
+    * the lower pole a full, round mass under and a little outside it, sitting on the ribs down to
+      the fold beneath (the inframammary fold, some 5 cm under the apex);
+    * the upper pole a long, gentle slope from high on the chest (the second rib) down to the apex,
+      so the top is a curve into the ribcage and never a ledge;
+    * each side turned out a little (a bust points out and slightly down), and the two apart:
+      between them the breastbone stays a valley.
+
+    `size` scales the whole: projection, width and height (0.8 to 1.2 is the slider's range)."""
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    chest_z = float(skel.J["Chest"][2])
+    B = max(size, 0.3)
+    f = fem * B
+
+    def wall(x):
+        # the chest wall's front at the bust point's height, before the bust is on it: the torso
+        # loft with the chest's muscle over it, measured (11.7 cm before the spine at the midline,
+        # a centimetre further back under the bust point)
+        return -0.1115 * td * s + 0.010 * s * (x / (0.086 * s)) ** 2
+    ax = sx * (0.080 + 0.006 * f) * s
+    az = chest_z + (0.014 - 0.006 * (B - 1.0)) * s
+    # apex in front of the wall: a modest average at 1 (1.6 cm), 1.1 cm at the slider's 0.8, 2.2 at
+    # 1.2. It was 3.4 cm at first, then 2.1, and under cloth (which adds its own) every woman in the
+    # engine read as two balls, most of all from the side.
+    proj = (0.014 * fem * B ** 1.6 + 0.002 * fem) * s
+    ay = wall(ax) - proj
+    low_r = np.array([0.050 * (0.85 + 0.15 * B), 0.018 * (0.60 + 0.40 * B), 0.040 * (0.80 + 0.20 * B)]) * s
+    # the lower pole's centre: behind the apex by its depth, a little below and outside it
+    low_c = np.array([ax + sx * 0.004 * s, ay + low_r[1] * 0.98, az - 0.010 * s * B])
+    # the upper pole: from a point on the chest high above down to the lower pole, a tapered cone
+    top = np.array([ax * 0.80, wall(ax * 0.80) + 0.018 * s, az + (0.074 + 0.012 * B) * s])
+    # turned out and a little down: the lower pole's axes
+    yaw = math.radians(12.0 * sx)
+    R = np.array([[math.cos(yaw), -math.sin(yaw), 0.0], [math.sin(yaw), math.cos(yaw), 0.0], [0.0, 0.0, 1.0]])
+    return {"apex": np.array([ax, ay, az]), "low_c": low_c, "low_r": low_r, "rot": R,
+            "top": top, "wall_y": wall(ax), "k": 0.032 * s}
+
+
+def bust_prims(skel: Skeleton, td: float, fem: float, size: float = 1.0) -> List["sdf.Prim"]:
+    """Both sides of the bust, each its lower pole and its upper slope in one group (so a side
+    blends into the chest as one shape, over the blend `bust_shape` gives it)."""
+    s = skel.props.height / rig.DEFAULT_HEIGHT
+    out = []
+    for sx in (1, -1):
+        b = bust_shape(skel, sx, td, fem, size)
+        low = sdf.ellipsoid(b["low_c"], b["low_r"], rot=b["rot"])
+        # the upper pole: a wedge from a broad, thin edge high on the chest down into the lower
+        # pole (an elliptic cone, wide across and shallow), so the top is a slope, not a stalk
+        lr = b["low_r"]
+        up = sdf.elliptic_cone(b["top"], b["low_c"] + np.array([0.0, -0.002 * s, 0.008 * s]),
+                               0.036 * s, 0.006 * s, lr[0] * 0.80, lr[1] * 0.80, np.array([1.0, 0.0, 0.0]))
+        out.append(sdf.group([low, up], k=b["k"], internal_k=0.020 * s))
+    return out
+
+
+def garment_drape(skel: Skeleton, style: Optional[BodyStyle] = None) -> List["sdf.Prim"]:
+    """What cloth lies over that the skin does not: across the bust, from one side to the other
+    and straight down from it, as a shirt hangs rather than as paint. A garment is fitted to the
+    body plus this (cloth.fit_field); fitted to the skin alone, its triangles -- a few centimetres
+    across where the chest they were cut for is flat -- dipped into the cleavage and under each
+    side, and the skin came through at the top of both. Nothing for a man's body."""
+    p = skel.props
+    fem = p.feminine
+    if fem <= 0.05:
+        return []
+    st = style or BodyStyle()
+    s = p.height / rig.DEFAULT_HEIGHT
+    td = p.bulk * (0.88 + 0.34 * p.build)
+    # Item 46: cloth goes over the bust as over a hull, not into it. A garment's triangles are a few
+    # centimetres across -- a tunic has eight vertices within 3 cm of the bust point -- and laid
+    # flat from one to the next over a rounded bust they cut into it between their corners, so the
+    # cloth is fitted to one broad mass: its front 6 mm before the bust points and flat across from
+    # one to the other (bridging the valley between), as wide as the bust's outer sides, falling
+    # from the line of the bust points to below the fold rather than following the lower curve in.
+    b = bust_shape(skel, 1, td, fem, st.bust)
+    ax, ay, az = b["apex"]
+    B = max(st.bust, 0.8)
+    rx = abs(ax) + 0.058 * s * B
+    depth = (b["wall_y"] - ay) + 0.025 * s
+    front = ay
+    hull = sdf.ellipsoid([0.0, front + depth, az - 0.012 * s], [rx, depth, 0.086 * s * max(B, 0.8)])
+    # and from the line of the bust points the cloth falls straight down, over the fold and the
+    # hollow under it, to the ribs below, rather than following each side in underneath: a front
+    # of cloth, as wide as the bust, from the bust points to 8 cm under them, blended into the
+    # body below so a drawn-in waist is still drawn in
+    # (a wedge: a stack of flat masses, full depth at the bust points and thinning to nothing on the
+    # ribs 10 cm down, so it ends in the body instead of in a step)
+    drop = 0.100 * s
+    front_low = -0.089 * td * s + 0.002 * s   # the ribs' front 10 cm under the bust points (measured)
+    back = b["wall_y"] + 0.010 * s
+    parts = [hull]
+    for i in range(1, 6):
+        t = i / 5.0
+        f = front + (front_low - front) * t * t
+        half_d = max(0.5 * (back - f), 0.004 * s)
+        parts.append(sdf.ellipsoid([0.0, f + half_d, az - drop * t], [rx * (0.86 - 0.16 * t), half_d, 0.028 * s]))
+    curtain = sdf.group(parts[1:], internal_k=0.020 * s)
+    return [sdf.group([hull, curtain], internal_k=0.020 * s, k=0.03 * s)]
+
+
+# A man's chest (the review of item 46's sheet: "every tunic shows two domes"). It was the torso's
+# barrel -- an ellipse in every section, 1.9 cm further forward at the breastbone than 9 cm out to
+# either side -- with a pectoral ellipsoid blended on at each side, and every garment is an offset
+# of it, so each tunic, coat and plate showed two rounded masses lit from above. A man's chest is a
+# broad, nearly flat plane from one side to the other that turns round a corner to the ribs, with
+# the lower edge of the pectorals as its only line. `chest_flatten` moves the torso's field forward
+# by as much as the barrel falls away across the front (x squared, easing out round the corner),
+# over the height of the pectorals: fading in over a few centimetres at their lower edge and out
+# slowly above towards the collarbones. The breastbone is where it was, so the chest is no deeper;
+# its sides come forward to it. Metres at 1.78 m (the width by the chest's own width).
+WARP = dict(amount=0.0125, xm=0.085, fade=0.35, z_lo=-0.030, soft_lo=0.045, z_hi=0.110, soft_hi=0.080,
+            y_front=0.040)
+
+
+def chest_flatten(skel: Skeleton, torso: "sdf.Prim", td: float, fem: float = 0.0, chw: float = 0.0,
+                  **kw) -> "sdf.Prim":
+    """The torso with a man's chest flattened across its front (WARP): its field read at points moved
+    back by `shift`, so the surface stands that much further forward. Moving the field rather than
+    adding a mass keeps it smooth -- a flat plate blended on, or the barrel cut by a plane, showed its
+    edge all round as a raised pad. The shift is at most 1.3 cm and its slope under 0.4, so the field
+    stays near enough a distance for the garments' offsets."""
+    c = dict(WARP, **kw)
+    p = skel.props
+    s = p.height / rig.DEFAULT_HEIGHT
+    w = (chw / (0.182 * s)) if chw > 0 else 1.0
+    cz = float(skel.J["Chest"][2])
+    A = c["amount"] * td * s * (1 - fem)
+    xm = c["xm"] * w * s
+    fade = c["fade"]
+    z_lo, z_hi = cz + c["z_lo"] * s, cz + c["z_hi"] * s
+    soft_lo, soft_hi = c["soft_lo"] * s, c["soft_hi"] * s
+    y_front = c["y_front"] * s
+
+    def ss(x):
+        x = np.clip(x, 0.0, 1.0)
+        return x * x * (3 - 2 * x)
+
+    def shift(P):
+        u = np.abs(P[:, 0]) / xm
+        # rising as the barrel falls away (x squared), easing over its peak just past xm and gone
+        # round the corner to the side: one smooth bump, so the flat front has no edge
+        g = u * u * np.exp(-fade * u ** 4) / 0.725
+        wz = ss((P[:, 2] - (z_lo - soft_lo)) / soft_lo) * (1.0 - ss((P[:, 2] - z_hi) / soft_hi))
+        wy = ss(-P[:, 1] / y_front)
+        return A * g * wz * wy
+
+    fn0 = torso.fn
+
+    def fn(P):
+        Q = P.copy()
+        Q[:, 1] = Q[:, 1] + shift(P)
+        return fn0(Q)
+    return sdf.Prim(fn, torso.lo - np.array([0.0, A, 0.0]), torso.hi, torso.op, torso.k)
+
+
 def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bool = True,
                hands: bool = True) -> Scene:
     """The naked body as an SDF scene (Blender space, feet at z=0).
@@ -115,10 +282,13 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
 
     # A ribcage is wider than the waist and the waist narrower than the hips; that contrast
     # is the whole silhouette.  Half-widths in metres at 1.78 m.
+    # A woman's (triage 22): the shoulder shelf a tenth narrower on the same joints, the ribcage
+    # a little, the waist drawn in and the hips out -- at game distance the whole read is that
+    # the hips are as wide as the shoulders, where a man's shoulders are the wider by a hand.
     hipw = (0.122 + 0.022 * fem) * (0.9 + 0.2 * p.hip_width) * tw * s
-    waistw = (0.104 - 0.014 * fem + 0.042 * heavy) * tw * s
-    chw = (0.172 + 0.016 * st.chest) * (1 - 0.03 * fem) * tw * s
-    shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.06 * fem) * tw * s
+    waistw = (0.104 - 0.019 * fem + 0.042 * heavy) * tw * s
+    chw = (0.172 + 0.016 * st.chest) * (1 - 0.05 * fem) * tw * s
+    shw = (0.182 + 0.020 * st.shoulders) * (0.86 + 0.28 * p.shoulder_width) * (1 - 0.10 * fem) * tw * s
 
     # -- torso: pelvis, waist, ribcage -----------------------------------------------------
     stations = [
@@ -142,21 +312,26 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
                                          [(0.064 + 0.030 * belly_amt) * s, (0.028 + 0.052 * belly_amt) * s,
                                           (0.074 + 0.022 * belly_amt) * s], k=0.030 * s))
     if fem > 0.05:
-        for sx in (1, -1):
-            torso_parts.append(sdf.ellipsoid([sx * 0.062 * s, -(0.092 + 0.020 * fem) * td * s, chest_z + 0.038 * s],
-                                             [(0.046 + 0.020 * fem) * s, (0.030 + 0.026 * fem) * s,
-                                              (0.044 + 0.020 * fem) * s], k=0.04 * s))
+        # The bust: two soft masses a little below the chest's widest station, set close and
+        # blended well into the chest, so it reads as a woman's figure under a tunic from across
+        # a street and not as two balls. It stood out 7.7 cm at first, and every garment fitted
+        # over it split at the top of each.
+        torso_parts.extend(bust_prims(skel, td, fem, st.bust))
     if mus > 0.25:
-        for sx in (1, -1):
-            torso_parts.append(sdf.ellipsoid([sx * 0.074 * s, -0.066 * td * s, chest_z + 0.044 * s],
-                                             [0.074 * s, 0.017 * s, 0.036 * s], k=0.05 * s))
+        # (a man's pectorals were two ellipsoids here, blended on at each side of the chest: they
+        # read as two domes under every garment. His chest is flattened below, `chest_flatten`;
+        # a woman's has neither, it lies under her bust)
         # lats: width, not depth -- a broad flat sheet is what makes a back read as a back
         torso_parts.append(sdf.ellipsoid([0.0, 0.050 * td * s, chest_z + 0.020 * s],
                                          [0.158 * s, 0.026 * s, 0.084 * s], k=0.06 * s))
-    sc.union(sdf.group(torso_parts), k=0.02 * s)
+    torso = sdf.group(torso_parts)
+    if mus > 0.25 and fem < 0.95:
+        torso = chest_flatten(skel, torso, td, fem, chw)
+    sc.union(torso, k=0.02 * s)
 
     # -- neck: a column with the trapezius flaring into the shoulders ----------------------
-    nr = (0.050 + 0.009 * mus - 0.007 * fem - 0.004 * old) * b * s
+    # (a woman's slighter: the head's own neck is cut to the same, `head_scene`)
+    nr = (0.050 + 0.009 * mus - 0.0105 * fem - 0.004 * old) * b * s
     sc.union(sdf.round_cone(J["Neck"] + np.array([0.0, 0.010 * s, -0.036 * s]),
                             J["Head"] + np.array([0.0, 0.004 * s, 0.010 * s]), nr * 1.16, nr * 0.94), k=0.030 * s)
 
@@ -198,10 +373,10 @@ def body_scene(skel: Skeleton, style: Optional[BodyStyle] = None, ground_cut: bo
         wr = J[f"Hand.{side}"]
         d = sdf._unit(el - sh)
         fwd, up = _arm_frame(d, sx)
-        ua = (0.041 + 0.010 * mus + 0.009 * heavy - 0.004 * fem) * lb * s
+        ua = (0.041 + 0.010 * mus + 0.009 * heavy - 0.006 * fem) * lb * s
         el_r = (0.032 + 0.004 * mus + 0.004 * heavy) * lb * s
-        fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.003 * fem) * lb * s
-        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.002 * fem) * lb * s
+        fa = (0.039 + 0.009 * mus + 0.007 * heavy - 0.005 * fem) * lb * s
+        wrist = (0.026 + 0.004 * mus + 0.004 * heavy - 0.003 * fem) * lb * s
         ua_len = float(np.linalg.norm(el - sh))
         fa_len = float(np.linalg.norm(wr - el))
         parts = [
@@ -493,18 +668,29 @@ def _face_stations(s: float, V: float, chin_z: float, hs: "HeadStyle", fem: floa
     # A preset's numbers are its intent (`broad` is jaw_width 1.14); the gains here are what
     # make a 14% wider jaw read as a different person on a 400-pixel preview rather than as
     # the same face measured twice.
-    jw = (1.0 + 1.5 * (hs.jaw_width - 1.0)) * (1 - 0.07 * fem) * (1 + 0.05 * heavy)
+    # A woman's lower face (`fem`): the jaw narrower from the mouth down and tapering to a small
+    # chin that stands less far forward, and the whole of it a little shorter -- the chin's stations
+    # rise, so the face is a softer heart below the cheekbones rather than a man's face made
+    # smaller. Above the cheekbones nothing moves (the hair is built against the brow).
+    jw = (1.0 + 1.5 * (hs.jaw_width - 1.0) * (1 - 0.35 * fem)) * (1 - 0.10 * fem) * (1 + 0.05 * heavy)
     cw = 1.0 + 1.0 * (hs.skull_width - 1.0) + 0.30 * (hs.cheeks - 1.0)
-    ch = 1.0 + 1.5 * (hs.chin - 1.0)
+    ch = 1.0 + 1.5 * (hs.chin - 1.0) * (1 - 0.40 * fem)
+    taper = 1.0 - 0.16 * fem                       # the chin itself, narrower again
     return [
         # the bottom station is small and set up by its own cap radius, so the cap of the sweep
         # IS the underside of the chin rather than hanging two centimetres below it
-        (0.012 * s / V + 0.002, 0.016 * jw * s, -0.062 * s, -0.038 * s),  # under the chin
-        (0.075, 0.034 * jw * s, (-0.083 - 0.008 * (ch - 1)) * s, -0.004 * s),   # the chin
-        (0.135, 0.049 * jw * s, -0.081 * s, 0.014 * s),                  # mandible below the lip
-        (0.205, 0.058 * jw * s, -0.086 * s, 0.028 * s),                  # the mouth
-        (0.290, 0.062 * cw * s, -0.088 * s, 0.036 * s),                  # upper lip / nose base
-        (0.390, 0.065 * cw * s, -0.084 * s, 0.040 * s),                  # cheekbones
+        (0.012 * s / V + 0.002 + 0.018 * fem, 0.016 * jw * taper * s, (-0.062 + 0.004 * fem) * s,
+         -0.038 * s),                                                    # under the chin
+        (0.075 + 0.016 * fem, 0.034 * jw * taper * s, (-0.083 - 0.008 * (ch - 1) + 0.004 * fem) * s,
+         -0.004 * s),                                                    # the chin
+        (0.135 + 0.008 * fem, 0.049 * jw * (1 - 0.04 * fem) * s, (-0.081 + 0.002 * fem) * s,
+         0.014 * s),                                                     # mandible below the lip
+        # (item 45) the mouth's and the nose's sections a little narrower and deeper: the front
+        # of the face turns back from the muzzle to the cheeks rather than lying as one flat dish
+        # from cheek to cheek, which was most of what read as blocky from three-quarters
+        (0.205, 0.055 * jw * (1 - 0.05 * fem) * s, -0.086 * s, 0.040 * s),  # the mouth
+        (0.290, 0.059 * cw * (1 - 0.02 * fem) * s, -0.088 * s, 0.046 * s),  # upper lip / nose base
+        (0.390, 0.064 * cw * s, -0.084 * s, 0.046 * s),                  # cheekbones
         # the eye line and the brow are the same on every face: hair and its sideburns are
         # built once against them, so a preset changes the face below the eyes and not above
         (0.500, 0.066 * s, -0.080 * s, 0.036 * s),                       # the eye line
@@ -545,7 +731,8 @@ def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
     eye_z = chin_z + V * eye_st[0]
     face_y = eye_st[2]                                 # the front of the face at the eye line
     eye_x = 0.0322 * hs.eye_spacing * s
-    eye_r = 0.0158 * hs.eye_size * s
+    # a woman's eye reads larger: a little larger in fact, and the paint's lash line does the rest
+    eye_r = 0.0158 * hs.eye_size * (1 + 0.05 * fem) * s
     eye_surf = _station_front(eye_st, eye_x)
     skull_c = np.array([0.0, 0.012 * s, chin_z + V * 0.60])
     skull_r = np.array([0.079 * s, 0.103 * s, V * 0.40])
@@ -562,12 +749,16 @@ def head_landmarks(skel: Skeleton, hs: Optional[HeadStyle] = None) -> dict:
         "brow_z": chin_z + V * 0.575,
         "nose_root_z": chin_z + V * 0.530,
         "nose_base_z": chin_z + V * 0.300,
-        "nose_tip": np.array([0.0, face_y - (0.020 + 0.016 * (hs.nose - 1.0)) * s, chin_z + V * 0.335]),
-        "mouth_z": chin_z + V * 0.195, "mouth_w": 0.0250 * hs.mouth_width * s,
+        # a woman's nose is shorter and projects less, its tip a little raised
+        "nose_tip": np.array([0.0, face_y - (0.020 - 0.0045 * fem + 0.016 * (hs.nose - 1.0) * (1 - 0.3 * fem)) * s,
+                              chin_z + V * (0.335 + 0.012 * fem)]),
+        "mouth_z": chin_z + V * (0.195 + 0.006 * fem), "mouth_w": 0.0250 * hs.mouth_width * (1 - 0.04 * fem) * s,
         "chin_z": chin_z, "jaw_z": chin_z + V * 0.120,
         "cheek_z": chin_z + V * 0.400,
-        "gonion": np.array([0.054 * (1.0 + 1.5 * (hs.jaw_width - 1.0)) * (1 - 0.07 * fem) * s, 0.010 * s,
-                            chin_z + V * 0.150]),
+        # the angle of the jaw: in a woman narrower, higher and less of a corner
+        "gonion": np.array([0.054 * (1.0 + 1.5 * (hs.jaw_width - 1.0) * (1 - 0.35 * fem)) * (1 - 0.12 * fem) * s,
+                            (0.010 - 0.004 * fem) * s, chin_z + V * (0.150 + 0.030 * fem)]),
+        "feminine": fem,
         "ear_c": np.array([0.069 * s, 0.020 * s, chin_z + V * 0.445]),
         "ear_r": np.array([0.0055 * s, 0.0165 * hs.ears * s, V * 0.118 * hs.ears]),
         "hairline_z": chin_z + V * 0.800,
@@ -622,14 +813,25 @@ def _ear(L: dict, sx: float, s: float, ears: float) -> Tuple[List[sdf.Prim], Lis
                       rot=np.stack([out, fwd, up], axis=1), k=0.003 * s),
         # the tragus, the small flap in front of the canal
         sdf.ellipsoid(P(0.55, -0.12, 0.000), [0.0040 * s, 0.0045 * s, 0.0055 * s], k=0.003 * s),
+        # (item 45) the antihelix: the Y-shaped ridge inside the rim, from over the lobe up the
+        # back of the bowl, splitting into its two crura under the top of the rim; and the
+        # antitragus, the small bump across the notch from the tragus
+        sdf.tube_path([P(-0.30, -0.52, 0.006), P(-0.52, -0.10, 0.007), P(-0.46, 0.30, 0.007),
+                       P(-0.22, 0.60, 0.006)], [0.0020 * s, 0.0024 * s, 0.0022 * s, 0.0016 * s], k=0.0016 * s),
+        sdf.tube_path([P(-0.44, 0.34, 0.007), P(-0.05, 0.40, 0.006), P(0.20, 0.38, 0.004)],
+                      [0.0018 * s, 0.0015 * s, 0.0012 * s], k=0.0014 * s),
+        sdf.ellipsoid(P(-0.22, -0.52, 0.006), [0.0030 * s, 0.0035 * s, 0.0030 * s], k=0.0020 * s),
     ]
     carve = [
         # the concha: the bowl behind the tragus, deepest low and forward
         sdf.ellipsoid(P(0.05, -0.18, 0.009), [0.0060 * s, 0.0085 * s, 0.0115 * s],
                       rot=np.stack([out, fwd, up], axis=1)),
         # the scapha: the groove just inside the rim at the back
-        sdf.tube_path([P(-0.10, 0.70, 0.010), P(-0.60, 0.55, 0.010), P(-0.72, 0.05, 0.010),
-                       P(-0.55, -0.40, 0.009)], 0.0022 * s),
+        sdf.tube_path([P(-0.10, 0.78, 0.010), P(-0.66, 0.62, 0.010), P(-0.80, 0.05, 0.010),
+                       P(-0.62, -0.46, 0.009)], 0.0020 * s),
+        # the triangular fossa between the antihelix's crura
+        sdf.ellipsoid(P(-0.12, 0.54, 0.010), [0.0030 * s, 0.0040 * s, 0.0024 * s],
+                      rot=np.stack([out, fwd, up], axis=1)),
     ]
     return masses, carve
 
@@ -660,7 +862,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
     mass: List[sdf.Prim] = list(cranium_prims(skel))
     face = sdf.loft([(np.array([0.0, 0.5 * (f + b), Z(fz)]), hw, 0.5 * (b - f)) for fz, hw, f, b in st],
                     LEFT, axis=UP)
-    mass.append(sdf.Prim(face.fn, face.lo, face.hi, "union", 0.020 * s))
+    mass.append(sdf.Prim(face.fn, face.lo, face.hi, "union", 0.028 * s))
 
     def front_at(fz: float, x: float) -> float:
         """Face surface y at height fraction fz and lateral x, interpolating the stations."""
@@ -670,106 +872,230 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                 return (1 - t) * _station_front(a, x) + t * _station_front(b, x)
         return _station_front(st[-1] if fz > st[-1][0] else st[0], x)
 
+    def surf_y(xz, upto: Optional[List[sdf.Prim]] = None) -> np.ndarray:
+        """The front of the face built so far, seen straight on, at each (x, z): where a detail is
+        laid on the skin rather than at a guessed depth (item 45; a guessed depth is how the
+        philtrum's ridges came to hang below the nose as a drop).
+
+        And a smooth union of two surfaces that touch raises them by a quarter of its blend: a
+        mass set level with the skin and blended over 2.4 cm stood 6 mm proud (the cheeks' lumps).
+        So a mass meant to lift the skin by `lift` is set in behind it by `0.25 k - lift`."""
+        prims = mass if upto is None else upto
+        xz = np.asarray(xz, float).reshape(-1, 2)
+        ys = np.linspace(face_y - 0.070 * s, face_y + 0.050 * s, 481)
+        P = np.stack([np.repeat(xz[:, 0], len(ys)), np.tile(ys, len(xz)), np.repeat(xz[:, 1], len(ys))], axis=1)
+        d = np.full(len(P), 1e6)
+        for pr in prims:
+            d = sdf.smin(d, pr.fn(P), pr.k or 0.014 * s)
+        d = d.reshape(len(xz), len(ys))
+        i = np.clip(np.argmax(d < 0.0, axis=1), 1, len(ys) - 1)
+        r = np.arange(len(xz))
+        d0, d1 = d[r, i - 1], d[r, i]
+        t = np.clip(d0 / np.maximum(d0 - d1, 1e-9), 0.0, 1.0)
+        return ys[i - 1] + t * (ys[i] - ys[i - 1])
+
+    def surf_x(yz, sx: float) -> np.ndarray:
+        """The side of the head built so far, seen from side `sx`, at each (y, z)."""
+        yz = np.asarray(yz, float).reshape(-1, 2)
+        xs = sx * np.linspace(0.110 * s, 0.020 * s, 361)
+        P = np.stack([np.tile(xs, len(yz)), np.repeat(yz[:, 0], len(xs)), np.repeat(yz[:, 1], len(xs))], axis=1)
+        d = np.full(len(P), 1e6)
+        for pr in mass:
+            d = sdf.smin(d, pr.fn(P), pr.k or 0.014 * s)
+        d = d.reshape(len(yz), len(xs))
+        i = np.clip(np.argmax(d < 0.0, axis=1), 1, len(xs) - 1)
+        r = np.arange(len(yz))
+        d0, d1 = d[r, i - 1], d[r, i]
+        t = np.clip(d0 / np.maximum(d0 - d1, 1e-9), 0.0, 1.0)
+        return xs[i - 1] + t * (xs[i] - xs[i - 1])
+
     # brow ridge: one bar across both eyes with the glabella between, the outer ends dropping
     # and running back to the temple -- the shelf that puts the eyes in shadow
-    br = (0.0072 + 0.0100 * (hs.brow - 1.0) + 0.0026 * (1 - fem)) * s
+    # A woman's brow is hardly a ridge at all: the forehead runs down into the brow and the eye
+    # sits under a soft bone, not a shelf; and the glabella between the eyes goes almost flat.
+    br = (0.0072 - 0.0034 * fem + 0.0100 * (hs.brow - 1.0) * (1 - 0.55 * fem) + 0.0026 * (1 - fem)) * s
     bz = L["brow_z"]
     brow_pts, brow_r = [], []
     for fx in (-1.00, -0.72, -0.38, 0.0, 0.38, 0.72, 1.00):
         x = fx * 0.056 * s
         droop = 0.006 * s * fx * fx
-        y = front_at(0.575, x) + (0.004 - 0.006 * fx * fx - 0.008 * (hs.brow - 1.0)) * s
-        brow_pts.append([x, y, bz + 0.002 * s - droop])
+        y = front_at(0.575, x) + (0.004 - 0.006 * fx * fx - 0.008 * (hs.brow - 1.0) * (1 - 0.55 * fem)
+                                  + 0.0012 * fem * (1.0 - 0.5 * fx * fx)) * s
+        brow_pts.append([x, y, bz + (0.002 + 0.0015 * fem) * s - droop * (1 - 0.3 * fem)])
         brow_r.append(br * (1.0 - 0.34 * fx * fx))
     mass.append(sdf.tube_path(brow_pts, brow_r, k=0.010 * s))
     # cheekbones: the malar prominence under the outer eye and the arch running back to the ear
     for sx in (1, -1):
         mx = sx * 0.047 * s
         my = front_at(0.40, mx) + 0.004 * s
-        ck = 1.0 + 1.6 * (hs.cheeks - 1.0)
-        mass.append(sdf.ellipsoid([mx, my - 0.004 * (ck - 1.0) * s, L["cheek_z"] + 0.004 * s],
-                                  [0.018 * ck * s, 0.012 * ck * s, 0.014 * ck * s], k=0.016 * s))
-        mass.append(sdf.tube_path([[mx, my + 0.008 * s, L["cheek_z"] + 0.006 * s],
-                                   [sx * 0.062 * s, -0.020 * s, L["cheek_z"] + 0.010 * s],
-                                   [sx * 0.066 * s, 0.006 * s, L["cheek_z"] + 0.012 * s]],
-                                  [0.0056 * s * hs.cheeks, 0.0046 * s, 0.0038 * s], k=0.014 * s))
+        # a woman's cheekbones stand higher and rounder, the apple of the cheek over them
+        ck = (1.0 + 1.6 * (hs.cheeks - 1.0)) * (1 + 0.14 * fem)
+        # (item 45) set against the skin it lifts: ~4 mm, not the 11 mm its blend gave it
+        mz = L["cheek_z"] + (0.004 + 0.006 * fem) * s
+        rm, km = np.array([0.020 * ck, 0.0110 * ck, 0.0135 * ck]) * s, 0.018 * s
+        ym = float(surf_y([[mx, mz]])[0])
+        mass.append(sdf.ellipsoid([mx, ym + rm[1] + 0.25 * km - (0.0040 + 0.0030 * (ck - 1.0)) * s, mz], rm, k=km))
+        # (item 45: the arch is the malar's own back end now, laid on the side; a tube to the ear
+        # drew a rope across the side of the face and a slab under it)
+        ya = surf_x([[-0.018 * s, L["cheek_z"] + 0.009 * s]], sx)
+        ra, ka = np.array([0.0045, 0.018, 0.0060]) * s, 0.012 * s
+        mass.append(sdf.ellipsoid([float(ya[0]) - sx * (ra[0] + 0.25 * ka - 0.0012 * s), -0.012 * s,
+                                   L["cheek_z"] + 0.009 * s], ra, k=ka))
     # the masseter and the soft tissue in front of the ear: without it the side of the face is
     # a channel between the cheekbone and the jaw, which is a skull, not a head
+    # (a woman's jaw muscle is the lesser, and sits in under the cheekbone)
+    # (item 45: set against the side it lifts, ~3 mm; blended over 3 cm and level with the skin it
+    # stood 7 mm out, a slab down the side of the face with a channel in front of it)
     for sx in (1, -1):
-        mass.append(sdf.ellipsoid([sx * 0.053 * s, 0.010 * s, Z(0.330)],
-                                  [0.0180 * s, 0.034 * s, 0.066 * s], k=0.026 * s))
+        zm = Z(0.330 + 0.025 * fem)
+        rmas = np.array([(0.0150 - 0.0045 * fem), 0.026, (0.056 - 0.014 * fem)]) * s
+        kmas = 0.022 * s
+        xm = float(surf_x([[-0.002 * s, zm]], sx)[0])
+        mass.append(sdf.ellipsoid([xm - sx * (rmas[0] + 0.25 * kmas - (0.0008 - 0.0004 * fem) * s), 0.002 * s, zm],
+                                  rmas, k=kmas))
     # the jaw: a definite line from the chin round to the angle, then the ramus up to the ear.
     # This edge is what a face is read by at thirty pixels; soft tissue alone rounds it away.
     gon = L["gonion"]
     jaw_pts, jaw_r = [], []
     for sx in (1, -1):
         g = gon * np.array([sx, 1, 1])
-        ramus = [g + np.array([0.0, 0.004 * s, 0.050 * s]), g + np.array([0.0, 0.002 * s, 0.020 * s]), g]
+        ramus = [g + np.array([0.0, 0.004 * s, 0.034 * s]), g + np.array([0.0, 0.002 * s, 0.016 * s]), g]
         body = [np.array([sx * 0.036 * s, front_at(0.10, 0.036 * s) + 0.010 * s, Z(0.085)])]
         pts = ramus + body if sx == 1 else list(reversed(ramus + body))
-        rr = [0.0070 * s, 0.0082 * s, 0.0086 * s, 0.0080 * s]
+        # a woman's jaw is a finer bone: the edge is there, but it is a line, not a ledge
+        # (item 45) a little finer and blended wider: at 0.012 the edge stood as a rope from the
+        # ear to the chin in profile; the jaw is a turn from the side plane to the underside
+        rr = [r_ * (1 - 0.28 * fem) * s for r_ in (0.0056, 0.0070, 0.0080, 0.0074)]
         jaw_pts.append(pts)
         jaw_r.append(rr if sx == 1 else list(reversed(rr)))
-    chin_pt = np.array([0.0, front_at(0.055, 0.0) + 0.009 * s, Z(0.050)])
+    chin_z_f = 0.050 + 0.016 * fem
+    chin_pt = np.array([0.0, front_at(chin_z_f + 0.005, 0.0) + 0.009 * s, Z(chin_z_f)])
+    chin_k = hs.chin ** (1 - 0.4 * fem) * (1 - 0.30 * fem)
     mass.append(sdf.tube_path(jaw_pts[0] + [chin_pt] + jaw_pts[1],
-                              jaw_r[0] + [0.0105 * s * hs.chin] + jaw_r[1], k=0.012 * s))
-    # the chin's own mound, and a little fullness each side of the mouth
-    mass.append(sdf.ellipsoid([0.0, front_at(0.06, 0.0) + 0.006 * s, Z(0.065)],
-                              [0.017 * s, 0.009 * s * hs.chin, 0.015 * s * hs.chin], k=0.012 * s))
+                              jaw_r[0] + [0.0105 * s * chin_k] + jaw_r[1], k=0.016 * s))
+    # the chin's own mound, and a little fullness each side of the mouth: a woman's small and round
+    mass.append(sdf.ellipsoid([0.0, front_at(chin_z_f + 0.010, 0.0) + 0.006 * s, Z(chin_z_f + 0.015)],
+                              [0.017 * (1 - 0.25 * fem) * s, 0.009 * s * chin_k, 0.015 * s * chin_k], k=0.012 * s))
     # the cheek's soft tissue under the malar: fuller with weight and round faces, thinner
     # with age, and never a hollow -- a hollow cheek on a clay head is a skull
-    cheek_amt = 0.16 + 0.26 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0)
+    # A woman's is carried higher -- the apple of the cheek under the eye, not the jowl beside
+    # the mouth -- and the lower face below it is left lean.
+    cheek_amt = 0.16 + 0.26 * heavy - 0.22 * old + 0.9 * (hs.cheeks - 1.0) + 0.06 * fem
     if cheek_amt > 0.05:
+        cz = 0.27 + 0.07 * fem
         for sx in (1, -1):
-            x = sx * 0.042 * s
-            mass.append(sdf.ellipsoid([x, front_at(0.27, x) + 0.012 * s, Z(0.27)],
-                                      [0.018 * s, 0.013 * s, 0.022 * s * (0.8 + 0.5 * cheek_amt)], k=0.018 * s))
+            x = sx * (0.042 - 0.002 * fem) * s
+            # (item 45) broader, flatter and blended wider: at 12 mm proud with an 18 mm blend it was
+            # a ball each side of the nose, the lump that read as a blocky cheek from the front
+            # (the face's widest is at the cheekbones: set further out, the cheek made the lower face
+            # the widest part of it, a jowly look in the engine)
+            rc, kc = np.array([0.018, 0.014, 0.024 * (0.8 + 0.5 * cheek_amt) * (1 - 0.25 * fem)]) * s, 0.018 * s
+            yc = float(surf_y([[x * 0.98, Z(cz)]])[0])
+            mass.append(sdf.ellipsoid([x * 0.98, yc + rc[1] + 0.25 * kc - (0.0012 + 0.0060 * cheek_amt) * s, Z(cz)],
+                                      rc, k=kc))
     # eye mounds (the lids sit on the eyeball)
     er = L["eye_r"]
     for sx in (1, -1):
         ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
         mass.append(sdf.ellipsoid(ec, [er * 1.22, er * 1.00, er * 0.92], k=0.012 * s))
-    # nose: bridge, tip and wings, projecting past the lips so the profile has a nose in it
+    # -- the nose (item 45) ------------------------------------------------------------------
+    # A dorsum narrow at the root and a little wider over the cartilage, a tip lobule, two wings
+    # (alae) that wrap the sides of the tip and meet the cheek in a crease, a columella under the
+    # tip, and nostrils cut from below so that they open downwards and are not seen from the front.
+    # It was a round tube with a ball each side, and the ends of the wings read as a ring.
     root = np.array([0.0, face_y + 0.004 * s, L["nose_root_z"]])
     tip = L["nose_tip"]
-    bridge_r = (0.0074 + 0.0034 * hs.nose_bridge) * s
+    # a woman's nose: a narrower bridge, a smaller tip and narrower wings, and less of a hump
+    nf = 1 - 0.17 * fem
+    nw = hs.nose * nf
+    bridge_r = (0.0074 + 0.0034 * hs.nose_bridge) * nf * s
+    tip_r = (0.0088 + 0.0026 * hs.nose) * nf * s
     # a bridge above 1 grows a hump, which is the whole of a hawkish profile
-    mid = root + (tip - root) * 0.55 + np.array([0.0, (-0.002 - 0.014 * (hs.nose_bridge - 1.0)) * s, 0.0])
-    mass.append(sdf.tube_path([root, mid, tip],
-                              [bridge_r * 0.95, bridge_r * 1.02, (0.0088 + 0.0026 * hs.nose) * s], k=0.0060 * s))
+    mid = root + (tip - root) * 0.55 + np.array([0.0, (-0.002 - 0.014 * (hs.nose_bridge - 1.0) * (1 - 0.4 * fem)
+                                                      + 0.0015 * fem) * s, 0.0])
+    # the dorsum's front line is where the old round bridge's front was; the section behind it is
+    # an upright ellipse, so the nose has sides that fall away to the cheeks rather than a pipe
+    f_root = root - np.array([0.0, bridge_r * 0.95, 0.0])
+    f_mid = mid - np.array([0.0, bridge_r * 1.02, 0.0])
+    f_tip = tip - np.array([0.0, tip_r, 0.0])
+    f_sup = f_mid + (f_tip - f_mid) * 0.72 + np.array([0.0, 0.0008 * s, 0.0])      # the supratip
+    # where the wings will stand, and the face behind them before there is a nose on it: each wing
+    # spans from the side of the tip back to the cheek, however far the nose projects
+    lob_rx = (0.0086 + 0.0016 * (hs.nose - 1.0)) * nf * s
+    ala_rad = np.array([0.0052, 0.0, 0.0060]) * (1 - 0.10 * fem) * s
+    ala_x = lob_rx + 0.0014 * s + 0.0006 * (hs.nose - 1.0) * s
+    ala_z = tip[2] - 0.0052 * nf * s
+    ala_face_y = float(surf_y([[ala_x, ala_z]])[0])
+    dor = []
+    for f_, ru, rv in ((f_root, 0.0060, 0.0092), (f_mid, 0.0068, 0.0100), (f_sup, 0.0076, 0.0094)):
+        rv_ = rv * nf * s
+        dor.append((f_ + np.array([0.0, rv_, 0.0]), ru * (0.85 + 0.15 * hs.nose) * nf * s, rv_))
+    mass.append(sdf.sweep(dor, LEFT, k=0.0090 * s))
+    # the tip: a lobule a little wider than it is tall, its front where the tip always was
+    lob_r = np.array([(0.0086 + 0.0016 * (hs.nose - 1.0)) * nf, 0.0082 * nf, 0.0074 * nf]) * s
+    lob_c = f_tip + np.array([0.0, lob_r[1], -0.0010 * s])
+    mass.append(sdf.ellipsoid(lob_c, lob_r, k=0.0050 * s))
+    # the wings: long front to back, turned in towards the tip, low on the sides of it
+    alae = []
+    y_front = float(tip[1]) - 0.0010 * s
+    ala_len = max(0.5 * (ala_face_y - y_front) + 0.0024 * s, 0.0070 * s)
+    ala_r = np.array([ala_rad[0], ala_len, ala_rad[2]])
     for sx in (1, -1):
-        mass.append(sdf.ellipsoid(tip + np.array([sx * 0.0118 * hs.nose * s, 0.0100 * s, -0.0040 * s]),
-                                  [0.0074 * hs.nose * s, 0.0080 * s, 0.0064 * s], k=0.0050 * s))
-    # lips, following the dental arch so the corners sit back and a little low
+        c_a = np.array([sx * ala_x, 0.5 * (y_front + ala_face_y) + 0.0012 * s, ala_z])
+        ya = np.array([sx * 0.30, 1.0, 0.10]); ya /= np.linalg.norm(ya)
+        xa = np.cross(ya, UP); xa /= np.linalg.norm(xa)
+        za = np.cross(xa, ya)
+        rot_a = np.stack([xa, ya, za], axis=1)
+        alae.append((sx, c_a, rot_a))
+        mass.append(sdf.ellipsoid(c_a, ala_r, rot=rot_a, k=0.0060 * s))
+    # the nose's lower sides, between the bridge and the wings: a nose is a pyramid, wide at its
+    # base on the face, and a long one left a gap between a narrow bridge and its wings
+    base_c = np.array([0.0, 0.5 * (y_front + ala_face_y) + 0.0034 * s, ala_z + 0.0078 * s])
+    mass.append(sdf.ellipsoid(base_c, [ala_x * 0.80, ala_len * 0.92, 0.0112 * s], k=0.0060 * s))
+    # the columella, from under the tip back to the lip
+    sub_y = float(surf_y([[0.0, L["nose_base_z"]]])[0])
+    mass.append(sdf.round_cone(lob_c + np.array([0.0, 0.0010 * s, -0.0050 * s]),
+                               np.array([0.0, sub_y + 0.0010 * s, L["nose_base_z"] + 0.0012 * s]),
+                               0.0026 * nf * s, 0.0030 * nf * s, k=0.0030 * s))
+
+    # -- the mouth (item 45) ----------------------------------------------------------------
+    # Each lip is a swept ellipse along the dental arch: the red of the upper lip a narrow band
+    # turned down to the mouth, the lower fuller and set back under it, with the vermilion's edge
+    # (the white roll and the Cupid's bow) a fine ridge along the top of the upper. They were round
+    # tubes eight millimetres through, which is a sausage and not a lip.
     mw = L["mouth_w"]
     lip_y = front_at(0.195, 0.0)
-    lip = 0.55 + 0.62 * hs.lips + 0.22 * fem
-
-    def lip_arc(z_off: float, half_w: float, r: float, back: float, drop: float):
-        pts, rr = [], []
-        for f in (-1.0, -0.55, 0.0, 0.55, 1.0):
-            pts.append([f * half_w, lip_y + back * (f * f) * s, mouth_z + z_off - drop * (f * f) * s])
-            rr.append(r * (0.55 + 0.45 * (1.0 - f * f)))
-        return sdf.tube_path(pts, rr, k=0.0070 * s)
-    mass.append(lip_arc(0.0068 * s, mw * 0.84, 0.0068 * lip * s, 0.0085, 0.0030))
-    mass.append(lip_arc(-0.0078 * s, mw * 0.74, 0.0066 * lip * s, 0.0080, 0.0018))
-    # The upper lip's outline: the Cupid's bow, two peaks either side of the philtrum's dip, and
-    # the edge of the red of the lip standing a little proud of the skin above it. A plain arc of
-    # lip read as a rubber band; this line is most of what makes a mouth a shaped thing.
-    bow, bow_r = [], []
-    for f, lift in ((-1.0, -0.0030), (-0.62, 0.0006), (-0.26, 0.0030), (0.0, 0.0016),
-                    (0.26, 0.0030), (0.62, 0.0006), (1.0, -0.0030)):
-        bow.append([f * mw * 0.86, lip_y - 0.0020 * s + 0.0086 * (f * f) * s, mouth_z + (0.0118 + lift) * s])
-        bow_r.append((0.0018 + 0.0008 * (1.0 - f * f)) * s * lip)
-    mass.append(sdf.tube_path(bow, bow_r, k=0.0024 * s))
-    # the philtrum's two ridges, from the base of the nose down to the peaks of the bow
+    lip = 0.55 + 0.62 * hs.lips + 0.20 * fem
+    FS = (-1.0, -0.66, -0.33, 0.0, 0.33, 0.66, 1.0)
+    upper, lower, up_front = [], [], []
+    for f in FS:
+        ru = 0.0034 * lip * (1.0 - 0.55 * f * f) * s
+        rv = 0.0034 * lip * (1.0 - 0.35 * f * f) * s
+        yf = lip_y - 0.0044 * lip * s + 0.0128 * f * f * s
+        upper.append((np.array([f * mw * 0.94, yf + rv, mouth_z + (0.0034 - 0.0026 * f * f) * s]), ru, rv))
+        up_front.append((f * mw * 0.94, yf, mouth_z + (0.0034 - 0.0026 * f * f) * s + ru))
+        ru = 0.0046 * lip * (1.0 - 0.60 * f * f) * s
+        rv = 0.0038 * lip * (1.0 - 0.40 * f * f) * s
+        yf = lip_y - 0.0020 * lip * s + 0.0112 * f * f * s
+        lower.append((np.array([f * mw * 0.80, yf + rv, mouth_z - (0.0046 * lip * (1.0 - f * f) + 0.0010) * s]), ru, rv))
+    mass.append(sdf.sweep(upper, UP, k=0.0026 * s))
+    mass.append(sdf.sweep(lower, UP, k=0.0040 * s))
+    # the peaks of the bow, where the philtrum's columns meet the red of the lip (the groove
+    # between them is cut below): the upper lip's top edge is the sweep's, blended in sharply
+    bow_top = up_front[3][2]
+    # the orbit's outer rim: the bone from the end of the brow down to the cheekbone, which the
+    # side of a face turns on
     for sx in (1, -1):
-        mass.append(sdf.tube_path([[sx * 0.0040 * s, lip_y - 0.0008 * s, L["nose_base_z"] - 0.004 * s],
-                                   [sx * 0.0054 * s, lip_y - 0.0016 * s, mouth_z + 0.0135 * s]],
-                                  [0.0009 * s, 0.0012 * s], k=0.0012 * s))
+        zs = np.array([L["brow_z"] - 0.004 * s, eye_z + 0.001 * s, L["cheek_z"] + 0.014 * s])
+        xs = np.array([0.056, 0.0605, 0.057]) * sx * s
+        ys = surf_y(np.stack([xs, zs], axis=1))
+        rr, kr = 0.0070 * s, 0.010 * s
+        mass.append(sdf.tube_path([[x_, y_ + rr + 0.25 * kr - 0.0012 * s * (1 - 0.3 * fem), z_]
+                                   for x_, y_, z_ in zip(xs, ys, zs)], rr, k=kr))
     # the floor of the mouth: fills under the jaw between the chin and the throat, so the
     # jawline is an edge over a plane and not a wire over a hollow
-    mass.append(sdf.ellipsoid([0.0, -0.022 * s, Z(0.090)], [0.036 * s, 0.036 * s, 0.028 * s], k=0.020 * s))
+    mass.append(sdf.ellipsoid([0.0, -0.022 * s, Z(0.090 + 0.014 * fem)],
+                              [0.036 * (1 - 0.12 * fem) * s, 0.036 * s, 0.028 * s], k=0.020 * s))
     # ears
     ear_carve: List[sdf.Prim] = []
     for sx in (1, -1):
@@ -778,7 +1104,7 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         ear_carve.extend(c_)
     if with_neck:
         bs = p.height / rig.DEFAULT_HEIGHT
-        nr = (0.0500 - 0.007 * fem - 0.004 * old) * p.bulk * bs
+        nr = (0.0500 - 0.0105 * fem - 0.004 * old) * p.bulk * bs
         mass.append(sdf.round_cone(L["head"] + np.array([0.0, 0.012 * bs, -0.090 * bs]),
                                    L["head"] + np.array([0.0, 0.020 * bs, 0.012 * bs]), nr * 1.12, nr * 0.92, k=0.022 * s))
     if flat:
@@ -800,34 +1126,74 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
         # The socket: the hollow between the brow ridge and the upper lid, where the orbit's rim
         # stands over the eye. The eye mounds filled it level with the brow, so every eye sat on
         # the face like a button; set in under the ridge, it is shadowed as an eye is.
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.52, er * 1.00]),
-                                  [er * 1.04, er * 0.42, er * 0.36], rot=tilt), k=0.006 * s)
-        # upper lid crease under the brow
-        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
-                                  [er * 0.98, er * 0.26, er * 0.20], rot=tilt), k=0.006 * s)
-        sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.06, -er * 0.60, -0.001 * s]), er * 0.20), k=0.004 * s)
+        # A woman's socket is a shallow hollow over the lid, not a cave under the brow: the man's
+        # (and a crease cut 13 mm in under it) is an overhang, and on her softer brow it showed as
+        # a dark slot, a heavy line over the eye that read as a frown in the engine. Hers is a
+        # broad ellipsoid set forward so that its back is about 5 mm under the lid's surface and
+        # misses the side of the face altogether, level rather than tilted up at the outer end
+        # (inner end down is the line of a frown); the paint draws her crease.
+        lid_tilt = rig.rot_axis(FWD, math.radians((7.0 - 9.0 * fem) * sx))
+        sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * (0.52 + 1.28 * fem), er * (1.00 - 0.18 * fem)]),
+                                  [er * 1.04, er * (0.42 + 0.18 * fem), er * (0.36 + 0.04 * fem)], rot=lid_tilt),
+                    k=0.006 * s)
+        # upper lid crease under the brow (his)
+        if fem < 0.95:
+            sc.subtract(sdf.ellipsoid(ec + np.array([0.0, -er * 0.40, er * 0.98]),
+                                      [er * 0.98, er * 0.26 * (1 - fem), er * 0.20], rot=tilt), k=0.006 * s)
+        # the inner corner: a small pit the caruncle sits in (laid on below)
+        sc.subtract(sdf.sphere(ec + np.array([-sx * er * 1.08, -er * 0.62, -0.001 * s]), er * 0.17), k=0.004 * s)
         # under the lower lid: the fold where the lid meets the cheek, which comes with years
         if old > 0.35:
             sc.subtract(sdf.tube_path([ec + np.array([-sx * er * 0.70, -er * 0.84, -er * 1.00]),
                                        ec + np.array([0.0, -er * 0.90, -er * 1.16]),
                                        ec + np.array([sx * er * 0.80, -er * 0.82, -er * 0.98])],
                                       er * 0.10 * (old - 0.35) / 0.65), k=0.006 * s)
-    # mouth line, philtrum, nostrils
+    # the mouth's line between the lips, deepest at the corners, where it turns in to a small pit
     line_pts, line_r = [], []
-    for f in (-1.0, -0.5, 0.0, 0.5, 1.0):
-        line_pts.append([f * mw * 0.88, lip_y - 0.008 * s + 0.0078 * (f * f) * s, mouth_z - 0.0028 * (f * f) * s])
-        line_r.append(0.0018 * s)
-    sc.subtract(sdf.tube_path(line_pts, line_r), k=0.0034 * s)
-    sc.subtract(sdf.capsule([0.0, lip_y - 0.003 * s, mouth_z + 0.012 * s],
-                            [0.0, lip_y - 0.002 * s, mouth_z + 0.020 * s], 0.0022 * s), k=0.005 * s)
-    for sx in (1, -1):
-        sc.subtract(sdf.ellipsoid(tip + np.array([sx * 0.0074 * s, 0.0086 * s, -0.0082 * s]),
-                                  [0.0036 * s, 0.0050 * s, 0.0026 * s]), k=0.0022 * s)
-        # the crease round the nose wing, which is what attaches a nose to a face
-        sc.subtract(sdf.tube_path([tip + np.array([sx * 0.0140 * s, 0.0060 * s, 0.0040 * s]),
-                                   tip + np.array([sx * 0.0190 * s, 0.0120 * s, -0.0030 * s]),
-                                   tip + np.array([sx * 0.0150 * s, 0.0150 * s, -0.0110 * s])],
-                                  0.0016 * s), k=0.003 * s)
+    for f in (-1.0, -0.66, -0.33, 0.0, 0.33, 0.66, 1.0):
+        line_pts.append([f * mw * 0.90, lip_y - 0.0026 * lip * s + 0.0118 * (f * f) * s,
+                         mouth_z - 0.0008 * s - 0.0016 * (f * f) * s])
+        line_r.append((0.0011 + 0.0005 * f * f) * s)
+    sc.subtract(sdf.tube_path(line_pts, line_r), k=0.0022 * s)
+    # the philtrum's groove, between its columns, from the columella down to the bow's dip
+    zz = np.array([L["nose_base_z"] - 0.0020 * s, bow_top - 0.0004 * s])
+    yy = surf_y(np.stack([np.zeros(2), zz], axis=1))
+    sc.subtract(sdf.elliptic_cone([0.0, yy[0] - 0.0036 * s, zz[0]], [0.0, yy[1] - 0.0036 * s, zz[1]],
+                                  0.0034 * s, 0.0040 * s, 0.0044 * s, 0.0040 * s, LEFT), k=0.0022 * s)
+    # the groove under the lower lip, over the pad of the chin
+    xs = np.array([-0.016, -0.008, 0.0, 0.008, 0.016]) * s
+    zs = mouth_z - (0.0046 * lip + 0.0105) * s + 0.0020 * (xs / (0.016 * s)) ** 2 * s
+    ys = surf_y(np.stack([xs, zs], axis=1))
+    sc.subtract(sdf.tube_path([[x_, y_ - 0.0022 * s + 0.0020 * s * (x_ / (0.016 * s)) ** 2, z_]
+                               for x_, y_, z_ in zip(xs, ys, zs)], 0.0030 * s), k=0.0040 * s)
+    for sx, c_a, rot_a in alae:
+        # the nostril, cut from below, long front to back and turned in with its wing; and its
+        # hollow inside, up into the nose, so a nostril is a shadow and not a painted spot
+        c_n = np.array([sx * (0.0052 * nw * s), c_a[1] - 0.20 * ala_len, tip[2] - 0.0076 * nf * s])
+        sc.subtract(sdf.ellipsoid(c_n, np.array([0.0026, 0.0054, 0.0026]) * nf * s, rot=rot_a), k=0.0014 * s)
+        sc.subtract(sdf.ellipsoid(c_n + np.array([sx * 0.0004 * s, 0.0016 * s, 0.0036 * s]),
+                                  np.array([0.0020, 0.0040, 0.0034]) * nf * s, rot=rot_a), k=0.0012 * s)
+        # the crease round the back of the wing where it meets the cheek: what sets a nose on a face
+        R = rot_a
+        rx, ry, rz = ala_r
+        pts = [c_a + R @ np.array([0.55 * rx, -0.35 * ry, 1.20 * rz]),
+               c_a + R @ np.array([1.10 * rx, 0.25 * ry, 0.75 * rz]),
+               c_a + R @ np.array([1.15 * rx, 0.75 * ry, -0.05 * rz]),
+               c_a + R @ np.array([0.60 * rx, 1.00 * ry, -0.85 * rz])]
+        sc.subtract(sdf.tube_path(pts, 0.0012 * s), k=0.0022 * s)
+    # the naso-labial fold: from the wing of the nose to beside the corner of the mouth, the edge
+    # of the cheek over the lip. Young, it is the paint's and the normal map's; the years cut it
+    # (and the age slider reads the builder's own old face, so it deepens there too). A groove laid
+    # tangent to the skin cuts a quarter of its blend deeper than its own depth: the blend is small.
+    if old > 0.30:
+        depth = 0.0026 * (old - 0.30) / 0.70 * s
+        for sx in (1, -1):
+            xs = np.array([sx * 0.0200 * nw * s, sx * 0.0270 * s, sx * mw * 1.10, sx * mw * 1.18])
+            zs = np.array([tip[2] - 0.0005 * s, mouth_z + 0.0120 * s, mouth_z - 0.0020 * s, mouth_z - 0.0110 * s])
+            ys = surf_y(np.stack([xs, zs], axis=1))
+            rr = np.array([0.0040, 0.0050, 0.0050, 0.0044]) * s
+            sc.subtract(sdf.tube_path([[x_, y_ - r_ + depth * w_, z_] for x_, y_, z_, r_, w_ in
+                                       zip(xs, ys, zs, rr, (0.8, 1.0, 0.6, 0.0))], list(rr)), k=0.0024 * s)
     for c in ear_carve:
         sc.subtract(c, k=0.0030 * s)
     # The lids, laid over the opening the lens cut: a roll of skin along each margin, lying on the
@@ -852,13 +1218,12 @@ def head_scene(skel: Skeleton, hs: Optional[HeadStyle] = None, with_neck: bool =
                 pts.append(ec + np.array([x, y, z]))
                 rr.append(r)
             sc.union(sdf.tube_path(pts, rr, k=0.0022 * s))
-    # the naso-labial fold, with age
-    if old > 0.40:
-        amt = (old - 0.40) / 0.60
-        for sx in (1, -1):
-            sc.subtract(sdf.round_cone([sx * (mw * 0.60), lip_y - 0.004 * s, mouth_z + 0.030 * s],
-                                       [sx * (mw * 1.18), lip_y + 0.006 * s, mouth_z - 0.010 * s],
-                                       0.0028 * amt * s, 0.0040 * amt * s), k=0.005 * s)
+    # the caruncle: the small pink mound in the inner corner of each eye, which a face without it
+    # stares out of as if its eyes were set in holes
+    for sx in (1, -1):
+        ec = np.array([sx * L["eye_x"], L["eye_c_y"], eye_z])
+        sc.union(sdf.ellipsoid(ec + np.array([-sx * er * 1.04, -er * 0.60, -er * 0.03]),
+                               [er * 0.13, er * 0.11, er * 0.12]), k=0.0012 * s)
     return sc
 
 
@@ -884,7 +1249,9 @@ def face_asymmetry(skel: Skeleton, hs: Optional[HeadStyle], V: np.ndarray) -> Di
 
 def head_mesh(skel: Skeleton, hs: Optional[HeadStyle] = None, spacing: float = 0.0032,
               smooth: int = 4) -> Tuple[np.ndarray, np.ndarray]:
-    sc = head_scene(skel, hs)
+    # flat: the same field (every mass carries its own blend), but the grid evaluates each mass
+    # only near itself -- the whole group at every point took minutes a head at the finer spacing
+    sc = head_scene(skel, hs, flat=True)
     s = skel.props.height / rig.DEFAULT_HEIGHT * skel.props.head_size
     return sdf.mesh_from_scene(sc, spacing * s, smooth_iters=smooth, project=1)
 
@@ -937,15 +1304,21 @@ def head_angle(P: np.ndarray, L: dict) -> np.ndarray:
 
 
 def hairline_height(theta: np.ndarray, L: dict, front: float = 1.0, sides: float = 1.0,
-                    back: float = 1.0) -> np.ndarray:
+                    back: float = 1.0, recede: float = 0.0) -> np.ndarray:
     """World height of the hairline at angle `theta` (degrees). `front` < 1 raises the front
-    (a receding line), `sides` > 1 brings the sideburns lower, `back` > 1 takes it down the neck."""
+    (a receding line), `sides` > 1 brings the sideburns lower, `back` > 1 takes it down the neck.
+    `recede` (0..1) takes the temples back further than the middle, the M of a man's hairline
+    going with the years, so a forelock is left standing between two bays."""
     t, h = zip(*HAIRLINE)
     f = np.interp(np.clip(theta, 0.0, 180.0), t, h)
     w_front = 1.0 - np.clip((theta - 28.0) / 24.0, 0.0, 1.0)
     w_side = np.exp(-0.5 * ((theta - 70.0) / 9.0) ** 2)
     w_back = np.clip((theta - 110.0) / 40.0, 0.0, 1.0)
     f = f + (1.0 - front) * 0.06 * w_front - (sides - 1.0) * 0.07 * w_side - (back - 1.0) * 0.08 * w_back
+    if recede > 0.0:
+        # the bays at the temples, and a little of the whole front with them
+        w_bay = np.exp(-0.5 * ((theta - 30.0) / 11.0) ** 2)
+        f = f + recede * (0.105 * w_bay + 0.035 * w_front)
     return L["chin_z"] + L["V"] * f
 
 
@@ -962,12 +1335,12 @@ def ear_clearance(P: np.ndarray, L: dict, margin: float = 0.004) -> np.ndarray:
 
 
 def scalp_field(verts: np.ndarray, skel: Skeleton, hs: Optional[HeadStyle] = None, front: float = 1.0,
-                sides: float = 1.0, back: float = 1.0) -> np.ndarray:
+                sides: float = 1.0, back: float = 1.0, recede: float = 0.0) -> np.ndarray:
     """Signed hair coverage over the head surface, in metres: >0 is scalp, the value is how far
     above the hairline (and clear of the ears) a point is."""
     L = head_landmarks(skel, hs)
     th = head_angle(verts, L)
-    above = verts[:, 2] - hairline_height(th, L, front, sides, back)
+    above = verts[:, 2] - hairline_height(th, L, front, sides, back, recede)
     return np.minimum(above, ear_clearance(verts, L))
 
 
@@ -1547,16 +1920,21 @@ def custom_weights(ob, W: np.ndarray, arm, bones: Sequence[str] = rig.DEFORM_NAM
 
 
 def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.060,
-                  fade: float = 0.030, iters: int = 3, max_step: float = 0.03) -> np.ndarray:
+                  fade: float = 0.030, iters: int = 3, max_step: float = 0.03,
+                  snug: Optional[Callable[[np.ndarray, np.ndarray], np.ndarray]] = None) -> np.ndarray:
     """Where each vertex of a part built on one surface goes to sit on another.
 
     Each vertex keeps the distance it had from the surface it was built on, measured now from
     the new one, found by stepping along the new field's gradient. A tunic built on the
     default body lands on the heavy body the same 11 mm off it; a beard built on the default
     jaw lands on a broad one. Past `reach` from the body the move fades out over `fade`,
-    because the sampled fields end there and a cloak's hem does not follow the ribs."""
+    because the sampled fields end there and a cloak's hem does not follow the ribs.
+
+    `snug` (vertices, distances on the first body) -> the distances to keep on the new one, for
+    a body that wears its clothes closer than the body they were built on (cloth.womans_snug)."""
     V = np.asarray(verts, float)
     d0 = base_field.eval(V)
+    keep = d0 if snug is None else np.where(np.abs(d0) < 0.5, snug(V, d0), d0)
     P = V.copy()
     # A sampled field reads 1e6 in any cell no primitive's bounds reached, and a Newton step on
     # that flung a dress's hem and a plaid's corner a thousand kilometres: never step on a
@@ -1565,7 +1943,7 @@ def fit_positions(verts: np.ndarray, base_field, target_field, reach: float = 0.
     for _ in range(iters):
         d = target_field.eval(P)
         ok = sane & (np.abs(d) < 0.5)
-        step = np.clip(d - d0, -max_step, max_step) * ok
+        step = np.clip(d - keep, -max_step, max_step) * ok
         P = P - target_field.gradient(P) * step[:, None]
     w = (1.0 - np.clip((d0 - reach) / max(fade, 1e-6), 0.0, 1.0)) * sane
     return V + (P - V) * w[:, None]

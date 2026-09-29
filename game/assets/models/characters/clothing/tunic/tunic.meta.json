@@ -5,10 +5,12 @@
   0.7838,
   0.5743,
   0.1361,
-  1.5531
+  1.5527
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",

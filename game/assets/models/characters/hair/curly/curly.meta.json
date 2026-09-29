@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.1025,
+  -0.1117,
+  1.5163,
+  0.101,
+  0.1306,
+  1.7988
+ ],
+ "card_tris": 10527,
+ "cards": "curly_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "curly": "hair",
+  "curly_cards": "hair_cards"
+ },
+ "params": {
+  "bone": null,
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 57814,
+ "slot_hint": "attachment",
+ "textures": [
+  "curly_normal.png",
+  "curly_albedo.png",
+  "curly_orm.png"
+ ],
+ "tris": [
+  5997,
+  0,
+  0
+ ],
+ "version": 1
+}

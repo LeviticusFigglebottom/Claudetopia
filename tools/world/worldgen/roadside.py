@@ -19,6 +19,7 @@ import os
 
 import numpy as np
 
+from . import hedges as HG
 from .grid import Grid
 
 ## metres between milestones along a road, and how far off the centre line they stand
@@ -74,15 +75,30 @@ def _yaw_facing(dx: float, dz: float) -> float:
 
 
 def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, scale: float,
-         asset: str, tint: str = "#ffffff") -> bool:
+         asset: str, tint: str = "#ffffff", stretch=None) -> bool:
     from .grid import sample_bilinear
     # the ground under it, not the nearest texel's: on a 1 in 3 bank that was up to a third of a
     # texel's run out, and a rail stood in the air or in the bank
     y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
     key = grid.written_cell(x, z)
-    out.setdefault(key, {}).setdefault(asset, []).append(
-        [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])
+    row = [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint]
+    if stretch is not None:
+        row += [0.0, 0.0, stretch]                  # the ninth field: its length along its run
+    out.setdefault(key, {}).setdefault(asset, []).append(row)
     return True
+
+
+def _offset_line(pts: np.ndarray, off: float) -> tuple:
+    """The line `off` metres to the left of the polyline `pts` [n, 2] (right where negative), each
+    point pushed out along the line's smoothed normal there, so a bend is a bend and not a step."""
+    pts = np.asarray(pts, dtype=np.float64)
+    if pts.shape[0] < 2:
+        return pts[:, 0].copy(), pts[:, 1].copy()
+    tx = np.gradient(pts[:, 0])
+    tz = np.gradient(pts[:, 1])
+    L = np.maximum(np.hypot(tx, tz), 1e-9)
+    tx, tz = tx / L, tz / L
+    return pts[:, 0] - tz * off, pts[:, 1] + tx * off
 
 
 ## A road's frontage is a field's edge, not a stretch of rail laid at random: playtest 6 had "fences
@@ -287,28 +303,32 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
     # Along the fields the road passes whose frontage is railed (`frontages`, `frontage_kind`): from
     # one boundary of the field to the next, one distance off the road for the whole run.
     shape_of = {r.art_short: r.shape for r in regions}
+    # The frontage is found walking the road a metre at a time (the verge's step), not a rail's
+    # length: at 2.35 m the one-step inset and the step itself left a run's end up to 6.4 m short
+    # of the field's boundary, a gap the field's own hedge did not meet. The pieces are spaced
+    # along the run's line by pieces_along whatever step found it.
     for road in roads:
-        pts, tans, dist = _resample(np.asarray(road.points), RAIL_EVERY_M)
+        pts, tans, dist = _resample(np.asarray(road.points), VERGE_STEP_M)
         if pts.shape[0] == 0:
             continue
         for side in (1.0, -1.0):
             off = float(rng.uniform(3.2, 4.0))
-            for label, a, b in frontages(grid, field_labels, pts, tans, RAIL_EVERY_M, off, side,
+            for label, a, b in frontages(grid, field_labels, pts, tans, VERGE_STEP_M, off, side,
                                          lambda x, z: clear_at(x, z)):
                 shape = shape_of.get(region_short_at(float(pts[a][0]), float(pts[a][1])), "")
                 if frontage_kind(label, shape) != "rail":
                     continue
                 kit = (FRONTAGE.get(shape) if by_region else RAIL_KIT) or RAIL_KIT
-                for k in range(a, b + 1):
-                    tx, tz = float(tans[k][0]), float(tans[k][1])
-                    nx, nz = -tz * side, tx * side
-                    x = float(pts[k][0]) + nx * off
-                    z = float(pts[k][1]) + nz * off
-                    rails = assets_for(index, kit["asset"], region_short_at(x, z))
-                    if rails:
-                        # along the road exactly and at the module's own size, so each meets the next
-                        _put(out, grid, H, x, z, _yaw_along(tx, tz), 1.0,
-                             rails[int(rng.integers(0, len(rails)))])
+                # the run's line, off the road by `off`, and the rail laid end to end along it: each
+                # module stretched to its stretch of the line and overlapping the next, so a bend
+                # opens no daylight between two lengths (the seat audit's gaps on w4096d)
+                xs, zs = _offset_line(pts[a:b + 1], off * side)
+                rails = assets_for(index, kit["asset"], region_short_at(float(xs[0]), float(zs[0])))
+                if not rails:
+                    continue
+                for mx, mz, yaw, sx in HG.pieces_along(xs, zs, RAIL_EVERY_M):
+                    _put(out, grid, H, mx, mz, yaw, 1.0, rails[int(rng.integers(0, len(rails)))],
+                         stretch=[round(sx, 3), 1.0, 1.0])
     return out
 
 
@@ -416,11 +436,13 @@ def planting(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
             good &= d > clear_m
         return good
 
-    def put(x: float, z: float, yaw: float, scale: float, asset: str, tint: str) -> None:
+    def put(x: float, z: float, yaw: float, scale: float, asset: str, tint: str, stretch=None) -> None:
         y = float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0])
         key = grid.written_cell(x, z)
-        out.setdefault(key, {}).setdefault(asset, []).append(
-            [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])
+        row = [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint]
+        if stretch is not None:
+            row += [0.0, 0.0, stretch]
+        out.setdefault(key, {}).setdefault(asset, []).append(row)
 
     def tint_for(asset: str, region) -> str:
         idx, strength, _ = tint_of.get(asset, (1, 0.45, None))
@@ -484,14 +506,14 @@ def planting(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, wa
                 if not got:
                     continue
                 back = float(rng.uniform(*kit["back"]))
-                step = max(int(round(float(kit["spacing_m"]) / VERGE_STEP_M)), 1)
-                for i in range(a, b + 1, step):
-                    x = p[i, 0] + side * nx[i] * (half + back)
-                    z = p[i, 1] + side * nz[i] * (half + back)
-                    if "max_height_m" in kit and float(sample_bilinear(H, grid, np.array([x]), np.array([z]))[0]) >= kit["max_height_m"]:
+                # laid end to end along the frontage's own line, as a field boundary's wall is
+                xs, zs = _offset_line(p[a:b + 1], side * (half + back))
+                for mx, mz, yaw, sx in HG.pieces_along(xs, zs, float(kit["spacing_m"])):
+                    if "max_height_m" in kit and float(sample_bilinear(H, grid, np.array([mx]), np.array([mz]))[0]) >= kit["max_height_m"]:
                         continue
-                    yaw = _yaw_along(float(t[i, 0]), float(t[i, 1])) + float(rng.normal(0.0, 3.0))
-                    put(x, z, yaw, float(rng.uniform(0.9, 1.15)), got[int(rng.integers(0, len(got)))], "#ffffff")
+                    sc = float(rng.uniform(0.9, 1.15))
+                    put(mx, mz, yaw, sc, got[int(rng.integers(0, len(got)))], "#ffffff",
+                        stretch=[round(sx, 3), round(sc, 3), round(sc, 3)])
         # --- the odd tree ---------------------------------------------------------------------
         s = float(rng.uniform(10.0, 80.0))
         while dist.size and s < float(dist[-1]):

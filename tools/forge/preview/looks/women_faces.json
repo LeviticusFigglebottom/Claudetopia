@@ -1,0 +1,18 @@
+[
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "long_loose", "torso": "kirtle", "feet": "shoes"}},
+  {"height": 1.78, "build": 0.5, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "braid", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "shoes"}},
+  {"height": 1.78, "build": 0.5, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "hawk", "hair": "tousled", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "olive", "hair_colour": "soot", "culture": "woodfolk",
+   "parts": {"head": "hawk", "hair": "crown_braid", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "shoes"}},
+  {"height": 1.78, "build": 0.5, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "soft", "hair": "bun", "torso": "shirt", "legs": "trousers", "feet": "shoes"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "soft", "hair": "chignon", "torso": "coat", "legs": "long_skirt", "feet": "shoes"}}
+]

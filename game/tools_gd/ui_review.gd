@@ -5,7 +5,8 @@ extends Node
 ##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
 ##       --audio-driver Dummy --resolution 1280x720 res://tools_gd/ui_review.tscn -- --out=<dir>
 ##
-## Arguments (after --): --out=<dir>  --only=<name[,name]>  --frames=<n>
+## Arguments (after --): --out=<dir>  --only=<name[,name]>  --frames=<n>  --ui-scale=<0.8-1.4>
+## (--ui-scale sets the "Size of the UI" for the run, not in the player's settings file)
 ##
 ## Where it can, the harness uses the real systems (Inventory, Equipment, Progression,
 ## Crafting, QuestLog) loaded with real content, so a screenshot is evidence the screen works
@@ -37,6 +38,9 @@ func _ready() -> void:
 			only = a.substr(7).split(",")
 		elif a.begins_with("--settle="):
 			settle_seconds = float(a.substr(9))
+		elif a.begins_with("--ui-scale="):
+			Settings.persist = false
+			Settings.set_value("accessibility", "ui_scale", float(a.substr(11)))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
@@ -82,6 +86,9 @@ func _plan() -> Array[Dictionary]:
 	var all: Array[Dictionary] = [
 		{"name": "main_menu", "scene": "res://ui/menus/main_menu.tscn"},
 		{"name": "naming", "scene": "res://ui/character/naming.tscn"},
+		{"name": "naming_styles", "scene": "res://ui/character/naming.tscn", "state": "styles"},
+		{"name": "naming_face", "scene": "res://ui/character/naming.tscn", "state": "face"},
+		{"name": "naming_adorn", "scene": "res://ui/character/naming.tscn", "state": "adorn"},
 		{"name": "hud", "hud": true},
 		{"name": "hud_combat", "hud": true, "state": "combat"},
 		{"name": "dialogue", "dialogue": true},
@@ -116,6 +123,7 @@ func _plan() -> Array[Dictionary]:
 		{"name": "deed", "menu": "deed", "args": {"property_id": "core:property/merrowby_cottage", "name": "The Cottage by the Toll", "place": "Merrowby", "price": 980}},
 		{"name": "container", "menu": "container", "state": "chest"},
 		{"name": "map", "menu": "map"},
+		{"name": "map_travel", "menu": "map", "args": {"choose": "core:place/merrowby"}},
 	]
 	if only.is_empty():
 		return all
@@ -158,7 +166,7 @@ func _setup(shot: Dictionary) -> void:
 		_current = (load(path) as PackedScene).instantiate()
 		_host.add_child(_current)
 		if _current.has_method("review_state"):
-			_current.call("review_state")
+			_current.call("review_state", state)
 	elif shot.get("hud", false):
 		UI.show_hud()
 		# the HUD has to exist before the world talks to it, or it misses the signals

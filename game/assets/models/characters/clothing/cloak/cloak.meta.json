@@ -8,7 +8,9 @@
   1.5842
  ],
  "collision": "none",
- "fits": [],
+ "fits": [
+  "woman"
+ ],
  "generator": "character_forge",
  "kind": "clothing",
  "material": "cloth",
@@ -27,7 +29,7 @@
   "cloak_orm.png"
  ],
  "tris": [
-  4400,
+  4399,
   0,
   0
  ],

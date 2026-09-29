@@ -16,7 +16,7 @@
   {"id": "core:calling/reedborn", "name": "Reedborn", "culture": "Reedfolk", "home_region": "core:region/sedgemire",
    "skill_bonuses": {"alchemy": 10, "hush": 10, "athletics": 10},
    "signature_item": "core:item/lantern",
-   "starting_items": [{"item": "core:item/eel_pie", "count": 2}, {"item": "core:item/marsh_marigold", "count": 3}, {"item": "core:item/sundew", "count": 2}, {"item": "core:item/rope", "count": 1}],
+   "starting_items": [{"item": "core:item/hunting_knife", "count": 1}, {"item": "core:item/eel_pie", "count": 2}, {"item": "core:item/marsh_marigold", "count": 3}, {"item": "core:item/sundew", "count": 2}, {"item": "core:item/rope", "count": 1}],
    "starting_reputation": {"core:faction/reed_council": 15},
    "starting_spells": ["core:spell/hush_frost"],
    "starting_marks": 20,

@@ -1,6 +1,8 @@
 extends Node
 ## WorldClock: game time. One game day defaults to 48 real minutes (Settings gameplay/day_length_minutes).
 ## time_hours runs 0..24; day counts from 1. Emits EventBus.hour_changed and EventBus.new_day.
+## The night runs faster than the day: it lasts a third as long as the day in real time (the
+## user's call, 2026-09-27), and the whole day still takes day_length_minutes (36 + 12 of 48).
 
 signal tick(time_hours: float)
 
@@ -13,6 +15,15 @@ var running := true
 var time_scale := 1.0
 var _last_hour := 8
 
+## Game hours of night (is_night: 20:30 to 05:30) and of day, and the rates that make the night a
+## third of the day in real time while the two together keep the day's length: of 24 units of
+## real time the day takes 18 and the night 6, so the day runs at 15/18 and the night at 9/6.
+const NIGHT_HOURS := 9.0
+const DAY_HOURS := 15.0
+const NIGHT_SHARE := 1.0 / 3.0
+const DAY_RATE := DAY_HOURS / (24.0 / (1.0 + NIGHT_SHARE))
+const NIGHT_RATE := NIGHT_HOURS / (24.0 * NIGHT_SHARE / (1.0 + NIGHT_SHARE))
+
 
 func _ready() -> void:
 	SaveSystem.register("clock", self)
@@ -22,7 +33,7 @@ func _process(delta: float) -> void:
 	if not running:
 		return
 	var day_len: float = float(Settings.get_value("gameplay", "day_length_minutes", 48.0)) * 60.0
-	advance_hours(delta * 24.0 / maxf(day_len, 1.0) * time_scale)
+	advance_hours(delta * 24.0 / maxf(day_len, 1.0) * time_scale * (NIGHT_RATE if is_night() else DAY_RATE))
 
 
 func advance_hours(hours: float) -> void:

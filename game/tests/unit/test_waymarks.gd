@@ -88,7 +88,7 @@ func test_a_marker_overrides_the_target() -> void:
 
 
 func test_a_talk_points_at_the_person() -> void:
-	var a := _anchor(NAMING, "the_cart", 0)
+	var a := _anchor("core:quest/the_toll_hums", "arrive", 0)
 	assert_eq(str(a["kind"]), "npc")
 	assert_eq(str(a["npc"]), WREN)
 	assert_ne(Waymarks.map_xz_of(a), Vector2.INF, "she lives somewhere on the map")
@@ -230,7 +230,7 @@ func test_a_v4_save_says_what_is_followed() -> void:
 ## Naming after the first talk points at a real position, and the one that sends you to Pilgrim's
 ## Ash points there, on the strip, on the chart and in the tracker.
 func test_a_new_game_s_objectives_after_the_naming_point_at_real_places() -> void:
-	log_node.call("start", NAMING)
+	log_node.call("start", NAMING, "wake")
 	var hud := _hud_at(STAIR_HEAD)
 	EventBus.dialogue_ended.emit(WREN)
 	assert_eq(str(log_node.call("stage_id_of", NAMING)), "the_choir")

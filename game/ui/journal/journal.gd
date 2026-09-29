@@ -38,11 +38,8 @@ func _ready() -> void:
 	var page := UiKit.page("The Journal")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 90.0
-	frame.offset_top = 46.0
-	frame.offset_right = -90.0
-	frame.offset_bottom = -46.0
 	add_child(frame)
+	UiFit.inset(frame, 90.0, 46.0)
 
 	var body: VBoxContainer = page["body"]
 	var tabs := UiKit.row(6)
@@ -286,34 +283,65 @@ func _rebuild_detail() -> void:
 
 func _detail_quest(e: Dictionary) -> void:
 	_detail_box.add_child(UiKit.wrapped(str(e.get("name", "")), "Title"))
-	var layer := str(e.get("layer", ""))
-	if layer != "":
-		_detail_box.add_child(UiKit.label(layer.capitalize() + (" · finished" if e.get("done", false) else ""), "Small"))
+	var quest_id := str(e.get("id", ""))
+	var tier := QuestCues.tier_of(quest_id)
+	var kind := UiKit.label(QuestCues.tier_word(tier) + ("  ·  finished" if e.get("done", false) else ""), "Small")
+	kind.add_theme_color_override("font_color", QuestCues.tier_ink(tier))
+	_detail_box.add_child(kind)
 	if not bool(e.get("done", false)):
-		_detail_box.add_child(_follow_row(str(e.get("id", ""))))
+		_detail_box.add_child(_follow_row(quest_id))
 	_detail_box.add_child(UiKit.divider())
+	for part in quest_page(e):
+		var p: Dictionary = part
+		match str(p["kind"]):
+			"now":
+				_detail_box.add_child(UiKit.wrapped(str(p["text"]), "Journal"))
+				_detail_box.add_child(UiKit.spacer(6, true))
+			"step":
+				var done := bool(p.get("done", false))
+				var row := UiKit.row(8)
+				row.add_child(UiKit.icon_rect("quest" if not done else "bell", 20, Color(1, 1, 1, 0.5 if done else 1.0)))
+				var text := UiKit.wrapped(str(p["text"]), "Body")
+				if done:
+					text.modulate = Color(1, 1, 1, 0.5)
+				row.add_child(text)
+				_detail_box.add_child(row)
+			"earlier":
+				_detail_box.add_child(UiKit.spacer(8, true))
+				_detail_box.add_child(UiKit.divider())
+				_detail_box.add_child(UiKit.label("Earlier", "Small"))
+			"log":
+				var entry := UiKit.wrapped(str(p["text"]), "Small")
+				entry.modulate = Color(1, 1, 1, 0.65)
+				_detail_box.add_child(entry)
 
-	for o in e.get("objectives", []):
-		if typeof(o) != TYPE_DICTIONARY:
-			continue
-		var done := bool(o.get("done", false))
-		var row := UiKit.row(8)
-		row.add_child(UiKit.icon_rect("quest" if not done else "bell", 20,
-				Color(1, 1, 1, 0.5 if done else 1.0)))
-		var text := UiKit.wrapped(str(o.get("text", "")), "Body")
-		if done:
-			text.modulate = Color(1, 1, 1, 0.5)
-		row.add_child(text)
-		_detail_box.add_child(row)
 
-	_detail_box.add_child(UiKit.divider())
+## What a quest's page says, in order, from what the player has reached and nothing further
+## (fourth playtest: "objectives/info spoiled early by its journal tab"): [{kind, text, done?}]
+##   now      the journal of the stage you are at (for a finished quest, how it ended)
+##   step     each of that stage's objectives, done or to do, but none still `veiled` (an objective
+##            whose `after` step is not done yet)
+##   earlier  the heading of the log, then
+##   log      each stage before it, the first line of its journal, newest first
+## Never a later stage, the quest's `description`, `summary` or designer `notes`: the log only
+## holds the journals of stages entered (QuestLog._enter_stage).
+static func quest_page(e: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	var journal: Array = e.get("journal", [])
-	for i in journal.size():
-		var entry := UiKit.wrapped(str(journal[i]), "Journal")
-		entry.modulate = Color(1, 1, 1, 0.65 if i < journal.size() - 1 else 1.0)
-		_detail_box.add_child(entry)
-		if i < journal.size() - 1:
-			_detail_box.add_child(UiKit.spacer(6, true))
+	if not journal.is_empty():
+		out.append({"kind": "now", "text": str(journal[journal.size() - 1])})
+	for o in e.get("objectives", []):
+		if typeof(o) != TYPE_DICTIONARY or bool((o as Dictionary).get("veiled", false)):
+			continue
+		var text := str(o.get("text", ""))
+		if bool(o.get("optional", false)):
+			text += " (if you like)"
+		out.append({"kind": "step", "text": text, "done": bool(o.get("done", false))})
+	if journal.size() > 1:
+		out.append({"kind": "earlier", "text": ""})
+		for i in range(journal.size() - 2, -1, -1):
+			out.append({"kind": "log", "text": QuestCues.first_line(str(journal[i]), 140)})
+	return out
 
 
 ## The quest followed now, "" for none.

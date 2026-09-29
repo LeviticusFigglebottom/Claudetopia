@@ -10,8 +10,9 @@ extends Node
 ## apart. The world is never paused: the villages it flies over go on with their day.
 ##
 ## Each shot is resolved against the live ground when the cinematic starts (`CinematicPath`), the
-## streamer follows the camera, and the next shot's places are loaded while this one plays. A shot
-## whose cells have not arrived is not shown: the last frame holds, then the picture goes to black
+## streamer follows the camera, and every cell a shot's camera will see along its path is asked for
+## when it begins (ShotSight), with what the next one opens on, so the far ground is not bare while
+## it is watched. A shot whose opening's cells have not arrived is not shown: the last frame holds, then the picture goes to black
 ## with a caption and the music waits, and the shot plays when the country is there -- or after
 ## HOLD_CAP_SECONDS, with what has come. The pictures keep real time, as the music does, and
 ## OVERALL_CAP_SECONDS after the first shot it hands over as a skip would: however slow the machine,
@@ -70,11 +71,17 @@ const DUCK_DB := {"Ambience": -10.0, "SFX": -24.0}
 ## Where the camera rig rests when nobody has moved it (CameraRig's own default).
 const PLAYER_PITCH := -0.18
 const DEFAULT_HOLD_LINE := "The Warden waits for you to catch her up."
+## A shot is shown once the cells its first OPENING_U of playing sees are in (ShotSight); the rest
+## come while it plays.
+const OPENING_U := 0.3
 
 ## A headless run (the unit suite, the journey, the smoke run) never plays one unless a test
 ## asks for it here: a cutscene taking the camera for ninety seconds is not something a
 ## scripted run expects.
 static var headless_allowed := false
+## Off, a shot asks only for the rings round its camera and what it looks at, as it did before
+## ShotSight: for a capture (`--no-sight`) to show the difference on one build.
+static var sight_streaming := true
 
 var def: Dictionary = {}
 var mode := Mode.OPENING
@@ -101,6 +108,10 @@ var _phase := Phase.STARTING
 var _waited := 0.0
 var _settle := 0
 var _need: Array[Vector3] = []
+## The cells the current picture's opening sees (ShotSight.rings), which must be standing to show it.
+var _need_cells: Dictionary = {}
+## What each shot's camera sees along its path, worked out when it is first wanted.
+var _sights: Dictionary = {}
 var _held_music := false
 var _curtain_target := 1.0
 var _curtain_rate := 1.0
@@ -137,6 +148,14 @@ var _shot_frames := 0
 var _shot_began_ms := 0
 var _shot_engine_s := 0.0
 var _shot_slowest_s := 0.0
+## Whether this player has stopped the viewport drawing 3D while a hold covers the screen.
+var _holding_3d := false
+## The frames since the film's first picture began to be drawn (World.warm_layers), or -1: its first
+## use of the ground's, the water's and the trees' shaders is paid a layer a frame under the curtain,
+## as the title's is. Once a film: warming every shot cost each hold three frames, seconds apiece on
+## the software renderer, for shaders already compiled.
+var _warm_step := -1
+var _warmed := false
 
 
 # --- the ways in -----------------------------------------------------------------------------------
@@ -241,7 +260,6 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	_subtitles = bool(Settings.get_value("gameplay", "subtitles", true))
 	_overlay = CinematicOverlay.new()
 	_overlay.letterbox = float(def.get("letterbox", CinematicDef.DEFAULT_LETTERBOX))
-	_overlay.text_scale = clampf(float(Settings.get_value("accessibility", "ui_scale", 1.0)), 0.8, 1.4)
 	add_child(_overlay)
 	# The menus' fade is held until the country round the body is in (UI's wait for the country),
 	# with the streaming on the body and the body's hands held. Nothing is borrowed until that
@@ -276,6 +294,7 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 		if not is_inside_tree():
 			return
 	_resolve_all()
+	_see_ahead()
 	if mode == Mode.SCRUB:
 		_overlay.set_curtain(0.0)
 		_overlay.set_bars(1.0)
@@ -328,6 +347,8 @@ func _save_state() -> void:
 		"target": streamer.target if streamer != null else null,
 		"report_regions": streamer.report_regions if streamer != null else true,
 		"also_around": streamer.also_around.duplicate() if streamer != null else [],
+		"also_cells": streamer.also_cells.duplicate() if streamer != null else {},
+		"hurry": streamer.hurry if streamer != null else false,
 		"time": WorldClock.time_hours, "day": WorldClock.day, "running": WorldClock.running,
 		"sky": atm.call("to_save") if atm != null else {},
 		"sky_region": str(atm.get("region_id")) if atm != null else "",
@@ -442,6 +463,8 @@ func _restore_world() -> void:
 		var target: Variant = _saved.get("target", null)
 		streamer.target = target if target is Node3D and is_instance_valid(target) else _player
 		streamer.report_regions = bool(_saved.get("report_regions", true))
+		streamer.also_cells = (_saved.get("also_cells", {}) as Dictionary).duplicate()
+		streamer.hurry = bool(_saved.get("hurry", false))
 		streamer.set_also_around(_saved.get("also_around", []))
 	var terrain_camera: Variant = _saved.get("terrain_camera", null)
 	if _world.terrain_node != null and terrain_camera is Camera3D and is_instance_valid(terrain_camera):
@@ -478,6 +501,10 @@ func _restore_world() -> void:
 ## What belongs to the autoloads, which outlive the world: put back even if the world is torn down
 ## halfway through, or the next scene inherits a stopped clock and a quiet mix.
 func _restore_globals() -> void:
+	_draw_3d(true)
+	if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+		_world.warm_layers(99)
+	_warm_step = -1
 	var handover_hour: float = float((def.get("handover", {}) as Dictionary).get("time", _saved.get("time", WorldClock.time_hours)))
 	if mode == Mode.OPENING:
 		WorldClock.set_time(handover_hour)
@@ -505,6 +532,9 @@ func _restore_globals() -> void:
 
 
 func _exit_tree() -> void:
+	for i in _sight_tasks:
+		WorkerThreadPool.wait_for_task_completion(int(_sight_tasks[i]))
+	_sight_tasks.clear()
 	# torn down mid-play (a test dropping its world, the game quitting): the autoloads must not
 	# keep what was lent to them
 	if not _restored and not _saved.is_empty():
@@ -591,16 +621,46 @@ func _enter_shot(index: int) -> void:
 	var shot: Dictionary = _shots[index]
 	var picture := _picture_for(index)
 	_need.clear()
-	if picture >= 0:
-		var path := path_of(picture)
-		_set_conditions(picture, 0.0)
-		_pose(path, 0.0, picture == _handover)
-		_need.append(path.position_at(0.0))
-		for p in path.looks:
-			_need.append(p)
-	_stream_ahead(picture)
+	_need_cells = {}
+	_entering = [func() -> void: _enter_conditions(picture), func() -> void: _enter_sight(picture),
+			func() -> void: _stream_ahead(picture)]
+	if index == 0 or mode == Mode.SCRUB or not WorldPace.paced():
+		# at once: the first shot (under the opening's curtain), a scrub, or where nothing is paced
+		while not _entering.is_empty():
+			_enter_step()
 	_begin_hold()
 	shot_started.emit(index, str(shot.get("id", "")))
+
+
+## What entering a shot does, a piece a frame at the start of its hold (the still or the black covers
+## the screen): its time, weather and place's light; where it sees; what to stream. Done in the frame
+## the last shot ended it was up to 80 ms of one watched frame here (TRIAGE item 36's second pass).
+var _entering: Array = []
+
+
+func _enter_step() -> void:
+	var step: Callable = _entering.pop_front()
+	var t0 := Time.get_ticks_usec()
+	step.call()
+	_counted("film_enter", t0)
+
+
+func _enter_conditions(picture: int) -> void:
+	if picture < 0:
+		return
+	var path := path_of(picture)
+	_set_conditions(picture, 0.0)
+	_pose(path, 0.0, picture == _handover)
+	_need.append(path.position_at(0.0))
+	for p in path.looks:
+		_need.append(p)
+
+
+func _enter_sight(picture: int) -> void:
+	if picture < 0:
+		return
+	# the near ground its opening sees; the far comes while it plays
+	_need_cells = ShotSight.near_only(ShotSight.rings(sight_of(picture), OPENING_U))
 
 
 ## Loads what the current picture looks at and where the next one starts while this one plays.
@@ -619,7 +679,58 @@ func _stream_ahead(picture: int) -> void:
 		points.append(ahead.position_at(0.0))
 		for p in ahead.looks:
 			points.append(p)
+	# everything this shot will see, and what the next opens on, so it is in before the cut
+	streamer.also_cells = ShotSight.merged(ShotSight.rings(sight_of(picture)),
+			ShotSight.rings(sight_of(next), OPENING_U)) if sight_streaming else {}
 	streamer.set_also_around(points)
+
+
+## The cells shot `index`'s camera sees along its path (ShotSight.seen); {} for a black one.
+func sight_of(index: int) -> Dictionary:
+	if index < 0:
+		return {}
+	if _sights.has(index):
+		return _sights[index]
+	if _sight_tasks.has(index):
+		# worked out on a worker thread since the film began (`_see_ahead`): waited for, if not done
+		WorkerThreadPool.wait_for_task_completion(int(_sight_tasks[index]))
+		_sight_tasks.erase(index)
+		_sights[index] = _sight_out[index]
+		return _sights[index]
+	var path := path_of(index)
+	var streamer := _world.streamer if _world != null else null
+	var seen := {}
+	if path != null and streamer != null:
+		var r := get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(16.0, 9.0)
+		seen = ShotSight.seen(path, streamer, Callable(self, "_surface"), 0.0, 1.0,
+				r.x / maxf(r.y, 1.0), ShotSight.REACH_M * maxf(streamer.view_range, 0.5))
+	_sights[index] = seen
+	return seen
+
+
+## What every shot after the first will see, worked out on worker threads, one task a shot, as the
+## film begins (ShotSight reads only the path and the ground's maps): tens of milliseconds a shot,
+## which a cut paid in the frame it was wanted (TRIAGE item 36).
+var _sight_tasks: Dictionary = {}
+var _sight_out: Array = []
+
+
+func _see_ahead() -> void:
+	if mode == Mode.SCRUB or _world == null or _world.streamer == null or not WorldPace.paced():
+		return
+	var streamer := _world.streamer
+	var r := get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(16.0, 9.0)
+	var aspect := r.x / maxf(r.y, 1.0)
+	var reach := ShotSight.REACH_M * maxf(streamer.view_range, 0.5)
+	var ground := Callable(self, "_surface")
+	_sight_out.resize(_shots.size())
+	var out := _sight_out
+	for i in range(1, _shots.size()):
+		var path := path_of(i)
+		if path == null or _sights.has(i):
+			continue
+		_sight_tasks[i] = WorkerThreadPool.add_task(func() -> void:
+			out[i] = ShotSight.seen(path, streamer, ground, 0.0, 1.0, aspect, reach), true, "wm_shot_sight")
 
 
 func _cells_ready() -> bool:
@@ -629,7 +740,22 @@ func _cells_ready() -> bool:
 	for p in _need:
 		if not streamer.is_loaded_around(p):
 			return false
-	return true
+	# the towns where it opens, which a world standing up while it is drawn raises a piece at a time
+	if not _need.is_empty():
+		var towns := WorldDoors.towns_near(get_tree(), _need[0], ShotSight.TOWNS_M)
+		if towns.x < towns.y:
+			return false
+	if not sight_streaming:
+		return true
+	var seen := streamer.standing_of(_need_cells)
+	return seen.x >= seen.y
+
+
+## Of the cells the current moment sees (ShotSight), how many are standing: Vector2i(standing, of).
+## What a still shows bare is the difference.
+func sight_standing() -> Vector2i:
+	var streamer := _world.streamer if _world != null else null
+	return streamer.standing_of(_need_cells) if streamer != null else Vector2i.ZERO
 
 
 ## The time, the weather and the light of the place a shot is in.
@@ -678,7 +804,29 @@ func _highest_ground(p: Vector3) -> float:
 
 # --- the frame loop ----------------------------------------------------------------------------------
 
+## Counts what a piece of the film's frame took (the CPU probe's accounts) and returns the time now.
+func _counted(what: String, t0: int) -> int:
+	var now := Time.get_ticks_usec()
+	WorldPace.count(what, now - t0)
+	return now
+
+
 func _process(_delta: float) -> void:
+	var t0 := Time.get_ticks_usec()
+	_process_film(_delta)
+	WorldPace.count("film_process", Time.get_ticks_usec() - t0)
+
+
+func _process_film(_delta: float) -> void:
+	if _phase == Phase.HOLD and mode != Mode.SCRUB:
+		# while a hold covers the screen, what the shots ahead will see is worked out, one a frame
+		# (ShotSight: tens of milliseconds each), so a cut does not pay for it in a watched frame
+		for i in range(maxi(_index, 0), _shots.size()):
+			if path_of(i) != null and not _sights.has(i):
+				var ts := Time.get_ticks_usec()
+				sight_of(i)
+				WorldPace.count("film_sight", Time.get_ticks_usec() - ts)
+				break
 	if _under_the_fade and not UI.is_loading_shown() and not UI.is_faded_out():
 		_under_the_fade = false
 		_overlay.layer = CinematicOverlay.LAYER
@@ -696,11 +844,17 @@ func _process(_delta: float) -> void:
 	if _phase in [Phase.HOLD, Phase.PLAY] and not gave_up and _began_ms > 0 \
 			and Time.get_ticks_msec() - _began_ms > int(overall_cap_seconds * 1000.0):
 		_give_up()
+	if _holding_3d and _phase != Phase.HOLD:
+		_draw_3d(true)
 	match _phase:
 		Phase.HOLD:
+			var th := Time.get_ticks_usec()
 			_tick_hold(real)
+			_counted("film_tick_hold", th)
 		Phase.PLAY:
+			var tp := Time.get_ticks_usec()
 			_tick_play(dt)
+			_counted("film_tick_play", tp)
 		Phase.SKIPPING:
 			if _overlay.curtain() >= 0.999:
 				_arrive_at_the_end()
@@ -725,6 +879,23 @@ func _animate(dt: float) -> void:
 		_overlay.set_caption_progress(_progress_text())
 
 
+func _draw_3d(on: bool) -> void:
+	if mode == Mode.SCRUB or not is_inside_tree():
+		return
+	var vp := get_viewport()
+	if not on and not _holding_3d and not vp.disable_3d:
+		vp.disable_3d = true
+		_holding_3d = true
+	elif on and _holding_3d:
+		vp.disable_3d = false
+		_holding_3d = false
+
+
+func _hurry(on: bool) -> void:
+	if mode != Mode.SCRUB and _world != null and is_instance_valid(_world) and _world.streamer != null:
+		_world.streamer.hurry = on
+
+
 func _fade_curtain(to: float, seconds: float) -> void:
 	_curtain_target = to
 	_curtain_rate = 1.0 / maxf(seconds, 0.01)
@@ -746,6 +917,8 @@ func _real_delta() -> float:
 
 func _begin_hold() -> void:
 	_phase = Phase.HOLD
+	# nothing new is watched while a shot holds (the last frame, or the black): the country hurries
+	_hurry(true)
 	_waited = 0.0
 	_settle = SETTLE_FRAMES
 	_hold_began_ms = Time.get_ticks_msec()
@@ -754,6 +927,13 @@ func _begin_hold() -> void:
 
 func _tick_hold(delta: float) -> void:
 	_waited += delta
+	if not _entering.is_empty():
+		# the shot is still being entered, a piece a frame (`_enter_shot`)
+		_enter_step()
+		return
+	# while the black or the last frame covers the screen nothing 3D is seen, and on a slow machine a
+	# frame of it is seconds the country could have been built in: none is drawn until it is in
+	_draw_3d(not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
 	var held_ms := Time.get_ticks_msec() - _hold_began_ms
@@ -770,6 +950,19 @@ func _tick_hold(delta: float) -> void:
 			shown_early.append(str(shot.get("id", "")))
 			shown = true
 	if shown:
+		# the settling frames draw the new place, under the curtain or the still; a place that was
+		# not being drawn is drawn a layer a frame first
+		if _holding_3d and not black and not _warmed:
+			_warm_step = 0
+			_warmed = true
+		_draw_3d(true)
+		if _warm_step >= 0 and _world != null and is_instance_valid(_world):
+			var tw := Time.get_ticks_usec()
+			var done := _world.warm_layers(_warm_step)
+			_counted("film_warm_layers", tw)
+			_warm_step = -1 if done else _warm_step + 1
+			if not done:
+				return
 		if _settle > 0 and not black and held_ms < cap_ms:
 			_settle -= 1
 			return
@@ -803,6 +996,7 @@ func _reveal(black: bool) -> void:
 	if _index == _handover:
 		_stand_people_up()
 	_phase = Phase.PLAY
+	_hurry(false)
 	_shot_frames = 0
 	_shot_began_ms = Time.get_ticks_msec()
 	_shot_engine_s = 0.0
@@ -825,12 +1019,17 @@ func _tick_play(dt: float) -> void:
 	_t += minf(dt, duration * 0.5)
 	var u := clampf(_t / duration, 0.0, 1.0)
 	var path := path_of(_index)
+	var t0 := Time.get_ticks_usec()
 	if path != null:
 		_pose(path, u, _index == _handover)
+		t0 = _counted("film_play_pose", t0)
 		_set_conditions(_index, maxf(u, 0.0001))
+		t0 = _counted("film_play_conditions", t0)
 	_update_words(shot)
+	t0 = _counted("film_play_words", t0)
 	if _t >= duration:
 		_end_shot()
+		_counted("film_end_shot", t0)
 
 
 func _end_shot() -> void:
@@ -840,9 +1039,12 @@ func _end_shot() -> void:
 		return
 	var next := _index + 1
 	if CinematicDef.dissolve_into(def, next) > 0.0:
+		var tg := Time.get_ticks_usec()
 		var still := _grab_frame()
+		WorldPace.count("film_grab", Time.get_ticks_usec() - tg)
 		if still != null:
 			_overlay.freeze(still)
+		_counted("film_freeze", tg)
 	_enter_shot(next)
 
 
@@ -1035,6 +1237,7 @@ func scrub(index: int, u: float) -> void:
 	var at := 0.0 if black else u
 	var path := path_of(shown)
 	_need.clear()
+	_need_cells = {}
 	if path != null:
 		_set_conditions(shown, 0.0)
 		_set_conditions(shown, maxf(at, 0.0001))
@@ -1042,7 +1245,13 @@ func scrub(index: int, u: float) -> void:
 		_need.append(_camera.global_position)
 		for p in path.looks:
 			_need.append(p)
+		# what this moment of the shot sees (a still is taken of it)
+		var r := get_viewport().get_visible_rect().size
+		_need_cells = ShotSight.rings(ShotSight.seen(path, _world.streamer, Callable(self, "_surface"),
+				at, at, r.x / maxf(r.y, 1.0)))
 	_stream_ahead(shown)
+	if sight_streaming and _world.streamer != null and not _need_cells.is_empty():
+		_world.streamer.set_also_cells(ShotSight.merged(_world.streamer.also_cells, _need_cells))
 	_overlay.set_curtain(1.0 if black else 0.0)
 	# a scrub jumps; whatever was said at the last moment it showed is not said at this one
 	_line_key = "?"
@@ -1071,9 +1280,11 @@ func waiting_for() -> String:
 	for c: Vector2i in missing:
 		words.append("%d_%d %s" % [c.x, c.y, streamer.cell_state(c)])
 	var queue := streamer.queue()
-	return "%d of %d cells in%s; the streamer follows %s, %d loaded, %d asked for, %d parsed" % [
+	var seen := streamer.standing_of(_need_cells)
+	return "%d of %d cells in%s, %d of the %d its opening sees; the streamer follows %s, %d loaded, %d asked for, %d parsed" % [
 			cells.size() - missing.size(), cells.size(),
 			(" (missing: %s)" % ", ".join(words)) if not words.is_empty() else "",
+			seen.x, seen.y,
 			str(streamer.target.name) if streamer.target != null else "nothing",
 			int(queue["loaded"]), int(queue["pending"]), int(queue["parsed"])]
 

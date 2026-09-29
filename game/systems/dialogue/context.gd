@@ -43,6 +43,8 @@ var rng := RandomNumberGenerator.new()
 var end_requested := false
 var gesture_replies: Array[String] = []
 var notifications: Array[String] = []
+## Lines said out loud by an effect (`say`): {npc, text, delay, seconds}, said by Barks.flush.
+var lines: Array[Dictionary] = []
 var work_offered: Array[String] = []    # places whose work the speaker has offered (offer_work)
 var problems: Array[String] = []        # content problems seen (also logged)
 
@@ -72,6 +74,7 @@ func reset_conversation() -> void:
 	end_requested = false
 	gesture_replies.clear()
 	notifications.clear()
+	lines.clear()
 	work_offered.clear()
 
 
@@ -108,6 +111,14 @@ func has_flag(key: String) -> bool:
 
 func get_flag(key: String, default: Variant = null) -> Variant:
 	return _call("flags", "get_flag", [key, default], default)
+
+
+## Whether the character owns any horse at all (a `give_mount` of any mount in the pack).
+func owns_a_mount() -> bool:
+	for def in ContentDB.all("mount"):
+		if has_flag(MOUNT_FLAG_PREFIX + str(def.get("id", ""))):
+			return true
+	return false
 
 
 func set_flag(key: String, value: Variant = true) -> void:
@@ -190,10 +201,12 @@ func quest_outcome(quest: String) -> String:
 	return str(_call("quests", "outcome_of", [quest], ""))
 
 
-func start_quest(quest: String) -> bool:
+func start_quest(quest: String, at: Variant = null) -> bool:
 	if not _has("quests", "start"):
 		problem("start_quest '%s' lost: no quests provider" % quest)
 		return false
+	if at != null:
+		return bool(_call("quests", "start", [quest, at], false))
 	return bool(_call("quests", "start", [quest], false))
 
 
@@ -629,4 +642,26 @@ func substitute(text: String) -> String:
 	if out.find("{region}") >= 0:
 		var r := content_def(region_id())
 		out = out.replace("{region}", str(r.get("name", "these parts")))
+	if out.find("{key:") >= 0:
+		out = keys_in(out)
+	return out
+
+
+static var _key_token: RegEx = null
+
+
+## `{key:block}` as the key or button the action is bound to now, in brackets ("[RMB]"): a lesson
+## says what to press the way the foot of the screen does (ControlHints), on a pad as on keys.
+static func keys_in(text: String) -> String:
+	if _key_token == null:
+		_key_token = RegEx.new()
+		_key_token.compile("\\{key:([a-z0-9_]+)\\}")
+	var pad := bool(UI.get("using_gamepad")) if UI != null and "using_gamepad" in UI else false
+	var out := text
+	for m in _key_token.search_all(text):
+		var action := m.get_string(1)
+		var key := str(Settings.prompt_for(action, pad)) if Settings != null and InputMap.has_action(action) else action
+		if action == "dodge" and Player.sprint_taps_roll_setting():
+			key = "tap " + str(Settings.prompt_for("sprint", pad))
+		out = out.replace(m.get_string(0), "[%s]" % key)
 	return out

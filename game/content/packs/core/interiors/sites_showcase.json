@@ -1,0 +1,64 @@
+[
+  {
+    "id": "core:interior/the_kilnway",
+    "name": "The Kilnway",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_kilnway",
+    "danger": 3,
+    "formed_by": "creature",
+    "resident": "the Kiln-Warden, a bell-bearer the Order sent down after the Ash Winter, and the ash-wights who followed the warmth in",
+    "story": "A lava tube the Builders paved and walked as a road, down to a toll-hall where the tube opens into a chamber the size of a church. The fire came back into it after the Ash Winter, and the Order sent a bearer down with a bell to keep the wights from following the warmth up to the heath. He is still keeping it.",
+    "unique_object": "a paved Builders' road running through a tube of black glass, the paving warm underfoot",
+    "site": {
+      "kind": "lava_tube",
+      "seed": 3117,
+      "region": "core:region/cinderlea",
+      "size": "large",
+      "set_pieces": ["lava_chasm", "daylight_shaft", "obsidian_grotto"],
+      "boss": "core:boss/kiln_warden",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/ash_wight"],
+        "archers": ["core:enemy/chorister"],
+        "heavy": ["core:enemy/tolling_knight"]
+      },
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "bedroll", "note": "a pilgrim who came this far and no further"},
+        {"kind": "prop", "room": "mouth", "prop": "lantern_hand"}
+      ]
+    }
+  },
+  {
+    "id": "core:interior/scathe_undercroft",
+    "name": "Scathe Undercroft",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/scathe_fort",
+    "danger": 2,
+    "formed_by": "builder",
+    "resident": "Captain Hobb Wendle and the pick of his crew, and the fort's old forge, lit again",
+    "story": "Under Scathe's keep the Wardens cut a vaulted undercroft into the chalk: stores, a forge, a barracks for the winter, and a sally-way out to the ditch. The bruisers have made it their counting-house. The tithe is down here, and so is the man who set it.",
+    "unique_object": "the Wardens' tally-wall, a hundred years of the down's traffic scratched in chalk, with the bandits' tithe tallied over it in charcoal",
+    "site": {
+      "kind": "keep",
+      "seed": 811,
+      "region": "core:region/hearthvale",
+      "size": "medium",
+      "set_pieces": ["forge_hall", "barracks", "cellar_store"],
+      "boss": "core:boss/scathe_captain",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/tithe_strongbox",
+      "foes": {
+        "rank": ["core:enemy/roadside_bandit", "core:enemy/cutpurse"],
+        "archers": ["core:enemy/poacher"],
+        "heavy": ["core:enemy/larkbourne_bruiser"]
+      },
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "table_trestle"},
+        {"kind": "prop", "room": "mouth", "prop": "paper_stack"}
+      ]
+    }
+  }
+]

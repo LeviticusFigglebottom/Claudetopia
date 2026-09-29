@@ -91,6 +91,9 @@ var parry_pressed_at: float = -100.0
 var riposte_open_until: float = -100.0
 var invulnerable_from: float = -100.0
 var invulnerable_until: float = -100.0
+## A dodge counted from one swinger is not counted again for this long (s): one blow, one dodge.
+const DODGE_COUNTED_FOR_S := 0.8
+var _dodges_counted: Dictionary = {}     # swinger's instance id -> when its dodge was counted
 var stunned_until: float = -100.0
 var last_attacker: Node = null
 ## The skill behind the last blow that reached this body ("kindling" for a Kindling saying): a foe
@@ -342,6 +345,28 @@ func is_riposte_open() -> bool:
 	return now() < riposte_open_until
 
 
+## Whether this body is rolling, or has just come out of a roll (a Player's is_rolling). Only a
+## body that rolls says so.
+func is_rolling() -> bool:
+	return false
+
+
+## A swing that went live at this body while it rolled: a dodge, as a lesson counts it
+## (EventBus.act_done "dodge"), once for each blow. It used to be counted only when the swing's
+## hitbox touched the body inside its i-frames, so a roll that carried the body out of the swing's
+## reach, the roll a lesson means by "roll through his swing", never counted, nor did one that
+## rolled into a riposte a moment early (playtest 2026-09-27, 5). The swinger calls this as its
+## blow goes live (Enemy._open_hitbox) and take_hit when the blow finds the body in its i-frames;
+## the second of the two for one blow is not counted again.
+func count_dodge(attacker: Node) -> void:
+	var t := now()
+	var key := attacker.get_instance_id() if attacker != null and is_instance_valid(attacker) else 0
+	if t - float(_dodges_counted.get(key, -100.0)) < DODGE_COUNTED_FOR_S:
+		return
+	_dodges_counted[key] = t
+	EventBus.act_done.emit("dodge", self, attacker, "")
+
+
 func is_invulnerable() -> bool:
 	var t := now()
 	return t >= invulnerable_from and t < invulnerable_until
@@ -404,6 +429,7 @@ func take_hit(hit: HitData) -> String:
 	var t := now()
 	if hit.dodgeable and is_invulnerable():
 		hit_taken.emit(hit, "dodged")
+		count_dodge(hit.attacker)
 		return "dodged"
 	var to_origin := hit.origin - global_position
 	_blow_from = hit.origin
@@ -420,6 +446,7 @@ func take_hit(hit: HitData) -> String:
 		Foley.play("parry_clang", _struck_at())
 		Impact.land(self, hit, "parried")
 		hit_taken.emit(hit, "parried")
+		EventBus.act_done.emit("parry", self, hit.attacker, "")
 		return "parried"
 	if hit.blockable and is_blocking and facing:
 		var raw := hit.amount * hit.crit_mult
@@ -440,6 +467,7 @@ func take_hit(hit: HitData) -> String:
 		Foley.play("block_clang", _struck_at())
 		Impact.land(self, hit, "blocked")
 		hit_taken.emit(hit, "blocked")
+		EventBus.act_done.emit("block", self, hit.attacker, "")
 		return "blocked"
 	var raw_full := hit.amount * hit.crit_mult
 	var dmg := DamageModel.apply_defence(raw_full, armour_flat, resist_to(hit.kind))
@@ -483,6 +511,9 @@ func _apply_damage(amount: float, kind: String, attacker: Node, label: String) -
 		shield_hp -= absorbed
 		dealt -= absorbed
 		shield_changed.emit(shield_hp)
+		# a Ward that took a blow is a lesson learned (a mage's `ward` act)
+		if absorbed > 0.0:
+			EventBus.act_done.emit("ward", self, attacker, "")
 	if dealt > 0.0:
 		health = health - dealt
 	EventBus.damage_dealt.emit(attacker, self, amount, kind)
@@ -578,6 +609,9 @@ func stagger(duration: float = 0.8) -> void:
 	anim.play_intent(clip, {"length": duration})
 	Foley.play("stagger_thud", _struck_at())
 	staggered.emit()
+	# whoever's blow did it, when it was a blow (a lesson's "a heavy swing staggers the other")
+	if now() - _blow_at <= BLOW_REMEMBERED_S and last_attacker != null and is_instance_valid(last_attacker):
+		EventBus.act_done.emit("stagger", last_attacker, self, "")
 
 
 func knock_down(direction: Vector3) -> void:

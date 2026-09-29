@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   0.0083,
+   0.00172,
+   0.00069
+  ],
+  "min": [
+   -0.0083,
+   -0.01472,
+   -0.00069
+  ]
+ },
+ "fit": null,
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "hoop",
+ "tris": 264,
+ "vertices": 132
+}

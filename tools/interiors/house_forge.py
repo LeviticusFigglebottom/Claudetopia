@@ -64,7 +64,7 @@ TRADE_PLANS = {
                "wear": {"mill_floor": 0.85}},
     "brewer": {"rooms": ["brewhouse", "cellar", "hearth_room", "bed"], "workshop_area": 24, "noise": "quiet",
                "fixtures": {"brewhouse": ["mash_tun", "copper", "cooling_trays", "hop_sacks"],
-                            "cellar": ["barrel_rack", "barrel", "tap_bench"]},
+                            "cellar": ["barrel_rack", "barrel", "tap_bench", "barrel", "sack", "shelf"]},
                "wear": {"brewhouse": 0.7, "cellar": 0.5}},
     "alchemist": {"rooms": ["stillroom", "shop_front", "hearth_room", "bed"], "workshop_area": 18, "noise": "quiet",
                   "fixtures": {"stillroom": ["mortar_bench", "alembic", "drying_rack", "ingredient_shelf"],
@@ -72,8 +72,8 @@ TRADE_PLANS = {
                   "wear": {"stillroom": 0.6}},
     "innkeeper": {"rooms": ["tap_room", "kitchen", "cellar", "guest_room", "bed"], "workshop_area": 40, "noise": "loud",
                   "fixtures": {"tap_room": ["hearth", "bar", "long_table", "bench", "bench", "board", "table", "stool", "stool", "barrel"],
-                               "kitchen": ["cook_hearth", "prep_table", "pot_rack"],
-                               "cellar": ["barrel_rack", "barrel"],
+                               "kitchen": ["cook_hearth", "prep_table", "pot_rack", "shelf", "sack", "bucket", "barrel"],
+                               "cellar": ["barrel_rack", "barrel", "barrel", "sack", "crate", "shelf"],
                                "guest_room": ["bed", "chest", "washstand"]},
                   "wear": {"tap_room": 0.95, "kitchen": 0.8}},
     "farmer": {"rooms": ["hearth_room", "byre", "store", "bed"], "workshop_area": 20, "noise": "quiet",
@@ -146,7 +146,7 @@ STRIP = 1.25             # landing floor beside the stairwell
 FOOT = CLEAR             # clear floor before the first step
 # The dressing's grid, and the gap a piece of furniture keeps from a wall and from its neighbour.
 RES = 0.05
-WALL_GAP = 0.03
+WALL_GAP = 0.06          # clear of the timber framing, which stands 0.04 proud of the plaster
 GAP = 0.03
 # A thing lower than this, or smaller than this across, is clutter: it is walked through, it has
 # no collider, and it is never in anybody's way.
@@ -187,6 +187,11 @@ def _placeholder_sizes(path: str) -> tuple[dict, tuple]:
     return sizes, default
 
 
+# Kinds the forge names for their place in a room, drawn as a prop of another kind (the placement
+# carries the exact asset, so the game draws what was measured).
+FORGE_ALIAS = {"bedside": "stool", "washstand": "table_round"}
+
+
 class Props:
     """PropLibrary.resolve, in Python, with every candidate's measured bounds. The forge writes the
     exact asset into each placement, so what is drawn is what was measured and laid out."""
@@ -220,7 +225,7 @@ class Props:
         """(asset path, ((minx, miny, minz), (maxx, maxy, maxz))) for a kind in a region. A kind
         nothing answers for keeps its own name as the path, and the placeholder's size, which is
         exactly the labelled box the game draws for it."""
-        for candidate in (kind, self.stand_in.get(kind, "")):
+        for candidate in (kind, FORGE_ALIAS.get(kind, ""), self.stand_in.get(kind, "")):
             by_region = self.index.get(candidate)
             if not candidate or not by_region:
                 continue
@@ -998,6 +1003,7 @@ FIXTURE = {
     "stool": ("seat", "table"), "cupboard": ("wall", "table"), "table": ("centre", "hearth"),
     "settle": ("wall", "hearth"), "cradle": ("wall", "bed"), "loom": ("wall", None),
     "spinning_wheel": ("open", "hearth"), "basket": ("wall", "hearth"), "bucket": ("wall", "hearth"),
+    "sack": ("corner", None), "bedside": ("wall", "bed"),
 }
 # Built into the house rather than stood in it: a fireplace is masonry, part of the wall it is
 # against. Its footprint takes in the hearthstone before it (nothing stands there); it collides as
@@ -1006,6 +1012,28 @@ BUILT = {"hearth": "fireplace", "cook_hearth": "fireplace"}
 FP_W, FP_D, FP_STONE = 1.8, 0.6, 0.42
 BUILT_FOOTPRINT = {"fireplace": ((-FP_W * 0.5, 0.0, -FP_D * 0.5), (FP_W * 0.5, STOREY_H - 0.01, FP_D * 0.5 + FP_STONE))}
 BUILT_COLLIDER = {"fireplace": ((-FP_W * 0.5, 0.0, -FP_D * 0.5), (FP_W * 0.5, STOREY_H - 0.01, FP_D * 0.5))}
+# What a room of each kind is filled with, once its fixtures stand.
+FILLERS = {
+    "hearth_room": ["shelf", "basket", "bucket", "sack", "chest"],
+    "shop_front": ["shelf", "barrel", "crate", "basket", "sack"],
+    "stillroom": ["shelf", "basket", "sack", "barrel", "crate"],
+    "workshop": ["crate", "barrel", "sack", "bucket"],
+    "bakehouse": ["sack", "barrel", "basket", "shelf"],
+    "brewhouse": ["barrel", "sack", "bucket", "crate"],
+    "cellar": ["barrel", "crate", "sack"],
+    "store": ["sack", "crate", "barrel", "basket"],
+    "kitchen": ["barrel", "sack", "basket", "bucket"],
+    "tap_room": ["barrel", "table", "stool", "stool"],
+    "hall": ["chest", "shelf", "barrel", "table"],
+    "study": ["shelf", "chest", "basket"],
+    "muster_room": ["crate", "barrel", "chest", "shelf"],
+    "net_room": ["barrel", "crate", "basket", "sack"],
+    "byre": ["sack", "barrel", "bucket", "basket"],
+    "bed": ["basket", "chest", "shelf"],
+    "guest_room": ["basket", "shelf"],
+    "landing": [],
+    "_": ["barrel", "crate", "basket"],
+}
 # What a seat is drawn up to, in order of preference.
 SEAT_FOR = {"stool": ("table", "roll_desk", "kneading_table", "prep_table", "long_table", "writing_desk"),
             "chair": ("writing_desk", "long_table", "table", "roll_desk"),
@@ -1018,7 +1046,7 @@ CONTAINERS = ("chest", "deed_chest", "strongbox", "coffer", "cupboard", "crate",
 WORKABLE = ("anvil", "alembic", "name_table")
 
 # Every hearth room gets these, and the purse adds to them: this is what "lived in" means.
-HOME_FIXTURES = ["hearth", "table", "stool", "stool", "cupboard", "settle", "basket"]
+HOME_FIXTURES = ["hearth", "table", "stool", "stool", "cupboard", "settle", "basket", "shelf", "sack"]
 
 # What sits on a surface, grouped the way a person would group it.
 SURFACE_GROUPS = {
@@ -1035,7 +1063,9 @@ SURFACE_GROUPS = {
     "tap_bench": [["mug", "funnel", "bung_mallet"]],
     "washstand": [["basin", "ewer", "cloth"]],
     "sideboard": [["plate_stack", "jug"], ["candlestick"]],
-    "shelf": [["book_stack", "book_single"], ["phial", "phial"]],
+    "shelf": [["jar", "jar", "bowl"], ["book_stack", "book_single"], ["plate_stack", "jug"]],
+    "bedside": [["candlestick"], ["cold_tea"]],
+    "chest": [["cloth"]],
     "ingredient_shelf": [["jar", "jar", "jar"], ["herb_bundle", "herb_bundle"]],
     "bottle_shelf": [["phial", "phial", "phial", "phial"]],
     "bread_shelf": [["loaf", "loaf", "loaf"]],
@@ -1043,7 +1073,6 @@ SURFACE_GROUPS = {
     "weapon_rack": [["spear", "spear", "shield"]],
     "pot_rack": [["pot", "pan", "ladle"]],
     "cupboard": [["jug", "bowl"]],
-    "chest": [["candle_stub"]],
 }
 
 # A habit is a sentence about the resident that becomes an object in the house. `where` says what
@@ -1248,11 +1277,14 @@ def dress(rooms, doors, stair, recipe, props: Props, rng) -> tuple[list[dict], d
             wanted = HOME_FIXTURES + (["loom"] if wealth["comfort"] > 0.3 and rng.random() < 0.3 else []) \
                 + (["spinning_wheel"] if rng.random() < 0.4 else []) + (["bucket"] if rng.random() < 0.6 else [])
         elif kind in ("bed", "guest_room"):
-            wanted = ["bed", "chest"] + (["washstand"] if wealth["comfort"] > 0.4 else []) + (["stool"] if rng.random() < 0.5 else [])
+            # a trunk at the bed's foot and a stool beside it to put the candle on
+            wanted = ["bed", "chest", "bedside"] + (["washstand"] if wealth["comfort"] > 0.4 else []) + ["basket"]
             if int(recipe.get("children", 0)) > 0 and kind == "bed":
                 wanted.append("cradle")
         elif kind == "store" and not wanted:
-            wanted = ["crate", "barrel", "chest"]
+            wanted = ["crate", "barrel", "chest", "sack", "sack", "shelf"]
+        elif kind == "store":
+            wanted += ["sack", "shelf"]
         elif kind == "landing":
             wanted = ["chest"] if rng.random() < 0.5 else []
         wanted += recipe.get("extra_fixtures", {}).get(kind, [])
@@ -1263,6 +1295,22 @@ def dress(rooms, doors, stair, recipe, props: Props, rng) -> tuple[list[dict], d
                 report["dropped"].append(f"{room['id']}:{name}")
                 continue
             p["wear"] = round(min(1.0, room["wear"] + rng.uniform(-0.1, 0.1)), 2)
+            placed_here.append(p)
+            placements.append(p)
+        # A room is furnished for its use, not left with one thing in it: fill toward one standing
+        # piece per three square metres from what a room like this keeps, while there is room and
+        # the ways stay open.
+        pool = FILLERS.get(kind, FILLERS["_"])
+        area = room["w"] * room["d"]
+        tries = 0
+        while pool and sum(1 for p in placed_here if p.get("collider")) < area / 3.0 and tries < 6:
+            name = pool[tries % len(pool)]
+            tries += 1
+            p = place_fixture(g, name, placed_here, props, region, rng)
+            if p is None:
+                continue
+            p["wear"] = round(min(1.0, room["wear"] + rng.uniform(-0.1, 0.1)), 2)
+            p["filler"] = True
             placed_here.append(p)
             placements.append(p)
         # Things on surfaces, kept in their groups, not scattered evenly.
@@ -1649,6 +1697,248 @@ def item_spot(g: Room) -> list[float]:
     return [round(best[0], 3), g.r["floor_y"], round(best[1], 3)]
 
 
+# ---------------------------------------------------------------------------------------
+# The walls dressed: timber framing and a dado rail on plaster, stone linings in the rooms that
+# work with fire and damp, cloth on the floors and walls, lanterns over the tables.
+# ---------------------------------------------------------------------------------------
+
+STONE_ROOMS = ("cellar", "workshop", "store", "brewhouse", "bakehouse")
+POST_W, POST_PROUD, DADO_Y = 0.15, 0.04, 1.05
+# Dyed wool for rugs and hangings, by culture: (ground, stripe, border).
+CLOTH_COLOURS = {
+    "vale": [("#7a3b2e", "#c49a5a", "#3d2a22"), ("#3f5266", "#b8a47a", "#2a2a2e"), ("#6b6a3a", "#9a5a3a", "#3a3326")],
+    "lakefolk": [("#51606e", "#c9bda2", "#2e3640"), ("#7d6a4a", "#d0c3a4", "#3a3226")],
+    "reedfolk": [("#5d4a2e", "#a8804a", "#2c2418"), ("#44533c", "#b39a62", "#262a1e")],
+    "clans": [("#6b2f28", "#c2b8a0", "#2e2420"), ("#3c4a3a", "#a89a78", "#22271f")],
+    "woodfolk": [("#4f5a3a", "#8a6a3e", "#2a2c1e"), ("#6a4a32", "#a89468", "#2e2419")],
+    "pilgrims": [("#6e6a64", "#b8ad96", "#3a3834"), ("#5a3e34", "#a89478", "#2e2622")],
+}
+
+
+def _face(room: dict, side: str):
+    """The inner face of one of a room's walls: (axis 'x' or 'z' along it, fixed coordinate,
+    lo, hi along it, inward unit (dx, dz))."""
+    x0, z0, x1, z1 = rect_of(room)
+    return {"N": ("x", z0, x0, x1, (0.0, 1.0)), "S": ("x", z1, x0, x1, (0.0, -1.0)),
+            "W": ("z", x0, z0, z1, (1.0, 0.0)), "E": ("z", x1, z0, z1, (-1.0, 0.0))}[side]
+
+
+def _openings(room: dict, side: str, doors: list[dict], windows: list[dict]) -> list[tuple]:
+    """(lo, hi, y0, y1) of every door and window in one face of a room."""
+    along, fixed, lo, hi, _ = _face(room, side)
+    out = []
+    y = room["floor_y"]
+    for d in doors:
+        if room["id"] not in d["between"]:
+            continue
+        x, _, z = d["at"]
+        if along == "x" and d["axis"] == "z" and abs(z - fixed) < WALL_T and lo <= x <= hi:
+            out.append((x - DOOR_W * 0.5 - 0.1, x + DOOR_W * 0.5 + 0.1, y, y + DOOR_H + 0.13))
+        if along == "z" and d["axis"] == "x" and abs(x - fixed) < WALL_T and lo <= z <= hi:
+            out.append((z - DOOR_W * 0.5 - 0.1, z + DOOR_W * 0.5 + 0.1, y, y + DOOR_H + 0.13))
+    for w in windows:
+        if w["room"] != room["id"] or w["side"] != side:
+            continue
+        x, yc, z = w["at"]
+        c = x if along == "x" else z
+        out.append((c - WINDOW_W * 0.5 - 0.1, c + WINDOW_W * 0.5 + 0.1, yc - WINDOW_H * 0.5 - 0.08, yc + WINDOW_H * 0.5 + 0.1))
+    return out
+
+
+def _slab(room: dict, side: str, a: float, b: float, y0: float, y1: float, off0: float, off1: float) -> trimesh.Trimesh:
+    """A box against a room's wall face, from `a` to `b` along it, `off0`..`off1` out from it."""
+    along, fixed, _, _, (ix, iz) = _face(room, side)
+    if along == "x":
+        z0, z1 = sorted((fixed + iz * off0, fixed + iz * off1))
+        return box((a, y0, z0), (b, y1, z1))
+    x0, x1 = sorted((fixed + ix * off0, fixed + ix * off1))
+    return box((x0, y0, a), (x1, y1, b))
+
+
+def _blocked_by(placements: list[dict], room: dict) -> list[tuple]:
+    """Plan rects of what stands tall against the walls (a fireplace breast, a cupboard)."""
+    out = []
+    for p in placements:
+        if p.get("room") != room["id"] or p.get("on"):
+            continue
+        fp = turned(p["bounds"], p["yaw"])
+        out.append((p["at"][0] + fp[0], p["at"][2] + fp[1], p["at"][0] + fp[2], p["at"][2] + fp[3],
+                    p["bounds"][1][1], bool(p.get("built"))))
+    return out
+
+
+def dress_walls(rooms, doors, windows, placements, stair, recipe, rng):
+    """(timber parts, masonry parts, cloths, lanterns) for every room."""
+    timber, masonry, cloths = [], [], []
+    culture = recipe.get("culture", "vale")
+    palette = CLOTH_COLOURS.get(culture, CLOTH_COLOURS["vale"])
+    for room in rooms:
+        y = room["floor_y"]
+        top = y + STOREY_H - 0.18
+        stone = room["kind"] in STONE_ROOMS
+        standing = _blocked_by(placements, room)
+        bays_for_cloth = []
+        for side in ("N", "S", "E", "W"):
+            along, fixed, lo, hi, (ix, iz) = _face(room, side)
+            opens = _openings(room, side, doors, windows)
+            if stair is not None and room["id"] == stair["room"] and side == stair["side"]:
+                sr = stair_rect(stair, -0.05, RUN + 0.05, 0.0, STAIR_W)
+                a, b = (sr[0], sr[2]) if along == "x" else (sr[1], sr[3])
+                opens.append((a, b, y, y + STOREY_H))       # the flight runs up this stretch
+            # a built fireplace owns its stretch of wall
+            for x0, z0, x1, z1, h, built in standing:
+                if built:
+                    a, b = (x0, x1) if along == "x" else (z0, z1)
+                    near = (z0 if iz > 0 else z1) if along == "x" else (x0 if ix > 0 else x1)
+                    if abs(near - fixed) < 0.2:
+                        opens.append((a - 0.05, b + 0.05, y, y + STOREY_H))
+            if stone:
+                # a lining of coursed stone over the wall, round every opening
+                for (a, b, y0, y1) in _rect_minus([(lo, y, hi, y + STOREY_H)], [(o[0], o[2], o[1], o[3]) for o in opens]):
+                    if b - a > 0.02 and y1 - y0 > 0.02:
+                        masonry.append(_slab(room, side, a, b, y0, y1, 0.0, 0.03))
+                continue
+            # posts at the corners and every metre and a half, never in an opening
+            n = max(1, int(math.ceil((hi - lo) / 1.6)))
+            posts = []
+            for k in range(n + 1):
+                c = lo + (hi - lo) * k / n
+                c = min(max(c, lo + POST_W * 0.5), hi - POST_W * 0.5)
+                if any(o[0] - 0.05 < c < o[1] + 0.05 for o in opens):
+                    continue
+                posts.append(c)
+                timber.append(_slab(room, side, c - POST_W * 0.5, c + POST_W * 0.5, y, top, 0.0, POST_PROUD))
+            # the dado rail, broken by doors
+            for (a, b, y0, y1) in _rect_minus([(lo, DADO_Y + y, hi, DADO_Y + y + 0.08)],
+                                             [(o[0], o[2], o[1], o[3]) for o in opens]):
+                if b - a > 0.05:
+                    timber.append(_slab(room, side, a, b, y0, y1, 0.0, POST_PROUD * 0.8))
+            # braces in the upper panel of whole bays, and whole bays for cloth
+            posts.sort()
+            for a, b in zip(posts, posts[1:]):
+                if b - a < 0.8 or any(o[0] < b and a < o[1] for o in opens):
+                    continue
+                if rng.random() < 0.45:
+                    y0, y1 = DADO_Y + y + 0.08, top
+                    L = math.hypot(b - a - POST_W, y1 - y0)
+                    brace = trimesh.creation.box(extents=(L, 0.1, POST_PROUD * 0.9))
+                    ang = math.atan2(y1 - y0, b - a - POST_W) * (1 if rng.random() < 0.5 else -1)
+                    brace.apply_transform(trimesh.transformations.rotation_matrix(ang, (0, 0, 1)))
+                    # built along +x in the xy plane; turn it onto the wall
+                    mid = (a + b) * 0.5
+                    if along == "x":
+                        brace.apply_translation((mid, (y0 + y1) * 0.5, fixed + iz * POST_PROUD * 0.45))
+                    else:
+                        brace.apply_transform(trimesh.transformations.rotation_matrix(math.pi * 0.5, (0, 1, 0)))
+                        brace.apply_translation((fixed + ix * POST_PROUD * 0.45, (y0 + y1) * 0.5, mid))
+                    timber.append(brace)
+                else:
+                    tall = [t for t in standing if t[4] > DADO_Y + 0.1]
+                    bays_for_cloth.append((side, a, b, tall))
+        # a hanging in a bay no tall thing stands in front of, in a room people sit in
+        if room["kind"] in ("hearth_room", "hall", "tap_room", "bed", "guest_room", "study", "muster_room") and bays_for_cloth:
+            rng.shuffle(bays_for_cloth)
+            for side, a, b, tall in bays_for_cloth:
+                along, fixed, _, _, (ix, iz) = _face(room, side)
+                w = min(b - a - POST_W - 0.2, 1.3)
+                if w < 0.7:
+                    continue
+                c = (a + b) * 0.5
+                if along == "x":
+                    band = (c - w * 0.5, min(fixed, fixed + iz * 0.8), c + w * 0.5, max(fixed, fixed + iz * 0.8))
+                else:
+                    band = (min(fixed, fixed + ix * 0.8), c - w * 0.5, max(fixed, fixed + ix * 0.8), c + w * 0.5)
+                if any(overlap(band, (t[0], t[1], t[2], t[3])) for t in tall):
+                    continue
+                mesh = _slab(room, side, c - w * 0.5, c + w * 0.5, y + DADO_Y + 0.3, y + STOREY_H - 0.35, 0.005, 0.02)
+                cloths.append({"kind": "hanging", "mesh": mesh, "colors": list(palette[len(cloths) % len(palette)]),
+                               "unit": round(float(rng.uniform(0.07, 0.12)), 3)})
+                break
+    return timber, masonry, cloths
+
+
+def _rect_minus(rects: list, holes: list) -> list:
+    """Axis-aligned rects (a, y0, b, y1) minus holes of the same form, as (a, b, y0, y1)."""
+    out = rects
+    for h in holes:
+        nxt = []
+        for r in out:
+            nxt += subtract(r, h)
+        out = nxt
+    return [(r[0], r[2], r[1], r[3]) for r in out]
+
+
+def rugs_and_lanterns(rooms, placements, grids, recipe, props, region, rng, stair=None):
+    """A rug before the fire and beside each bed, and a lantern hung over each table."""
+    cloths, hung = [], []
+    culture = recipe.get("culture", "vale")
+    palette = CLOTH_COLOURS.get(culture, CLOTH_COLOURS["vale"])
+    for room in rooms:
+        g = grids[room["id"]]
+        here = [p for p in placements if p.get("room") == room["id"] and not p.get("on")]
+        anchors = [p for p in here if p.get("fixture") in HEARTHS or p.get("fixture") == "bed"]
+        for a in anchors:
+            fp = turned(a["bounds"], a["yaw"])
+            rect = (a["at"][0] + fp[0], a["at"][2] + fp[1], a["at"][0] + fp[2], a["at"][2] + fp[3])
+            band = bed_band(rect, g) if a.get("fixture") == "bed" else g.front_band(rect, a["yaw"], 1.2)
+            # the side of the thing the rug lies along, and which way is out from it
+            bx0, bz0, bx1, bz1 = band
+            horizontal = (bx1 - bx0) >= (bz1 - bz0)
+            if horizontal:
+                edge = bz0 if abs(bz0 - rect[3]) < 0.01 else bz1
+                out = 1.0 if edge == bz0 else -1.0
+                lo, hi = rect[0] - 0.4, rect[2] + 0.4
+            else:
+                edge = bx0 if abs(bx0 - rect[2]) < 0.01 else bx1
+                out = 1.0 if edge == bx0 else -1.0
+                lo, hi = rect[1] - 0.4, rect[3] + 0.4
+            placed = None
+            for length, depth in ((1.7, 1.05), (1.4, 0.85), (1.1, 0.7)):
+                mid = (lo + hi) * 0.5
+                for off in sorted(np.arange(lo + length * 0.5, hi - length * 0.5 + 1e-6, 0.1), key=lambda c: abs(c - mid)):
+                    if horizontal:
+                        d0, d1 = sorted((edge + out * 0.05, edge + out * (0.05 + depth)))
+                        r = (off - length * 0.5, d0, off + length * 0.5, d1)
+                    else:
+                        d0, d1 = sorted((edge + out * 0.05, edge + out * (0.05 + depth)))
+                        r = (d0, off - length * 0.5, d1, off + length * 0.5)
+                    if not g.inside(r, 0.1):
+                        continue
+                    su, sv = g.cells(r)
+                    if g.solid[su, sv].any() or g.solid_walls[su, sv].any() or g.keep[su, sv].any():
+                        continue
+                    placed = r
+                    break
+                if placed:
+                    break
+            if placed is None:
+                continue
+            x0, z0, x1, z1 = placed
+            mesh = box((x0, room["floor_y"] + 0.002, z0), (x1, room["floor_y"] + 0.014, z1))
+            cloths.append({"kind": "rug", "mesh": mesh, "colors": list(palette[(len(cloths) + 1) % len(palette)]),
+                           "unit": round(float(rng.uniform(0.1, 0.18)), 3)})
+        for t in [p for p in here if p.get("fixture") in ("table", "long_table", "bar", "writing_desk", "roll_desk", "kneading_table", "prep_table")]:
+            asset, bounds = props.resolve("lantern_hanging", region, rng)
+            h = bounds[1][1] - bounds[0][1]
+            y = room["floor_y"] + STOREY_H - 0.25 - h
+            fp = turned(t["bounds"], t["yaw"])
+            cx, cz = t["at"][0] + (fp[0] + fp[2]) * 0.5, t["at"][2] + (fp[1] + fp[3]) * 0.5
+            hung.append(_prop_entry("lantern_hanging", room, (cx, y, cz), float(rng.uniform(0, 360)), asset, bounds,
+                                    fixture=False, on="ceiling"))
+        # A room with no fire and no table still has a lantern to see by: the cellar, the store,
+        # the landing, a bedroom.
+        lit = any(p.get("fixture") in HEARTHS for p in here) or any(h["room"] == room["id"] for h in hung)
+        if not lit:
+            asset, bounds = props.resolve("lantern_hanging", region, rng)
+            h = bounds[1][1] - bounds[0][1]
+            cx, cz = room["x"] + room["w"] * 0.5, room["z"] + room["d"] * 0.5
+            if room["kind"] == "landing" and stair is not None:
+                cx, cz = stair_point(stair, RUN + ARRIVE * 0.5, STAIR_W * 0.5)
+            hung.append(_prop_entry("lantern_hanging", room, (cx, room["floor_y"] + STOREY_H - 0.25 - h, cz),
+                                    float(rng.uniform(0, 360)), asset, bounds, fixture=False, on="ceiling"))
+    return cloths, hung
+
+
 def lights_for(rooms: list[dict], placements: list[dict], recipe: dict) -> list[dict]:
     """Hearths, candles and lanterns, warm and low, one strong source per lived-in room."""
     out = []
@@ -1665,11 +1955,14 @@ def lights_for(rooms: list[dict], placements: list[dict], recipe: dict) -> list[
             out.append({"room": room["id"], "at": [round(v, 3) for v in at],
                         "color": "#ff9a42" if hearth["fixture"] != "forge" else "#ff7b2a",
                         "energy": 4.2 if hearth["fixture"] == "forge" else 3.0, "range": 9.0, "flicker": 0.4, "shadow": True})
+        for lamp in [p for p in placements if p.get("prop") == "lantern_hanging" and p["room"] == room["id"]]:
+            out.append({"room": room["id"], "at": [lamp["at"][0], round(lamp["at"][1] + 0.15, 3), lamp["at"][2]],
+                        "color": "#ffb866", "energy": 1.6, "range": 5.5, "flicker": 0.2, "shadow": False})
         candles = [p for p in placements if p.get("prop") in ("candlestick", "candle_stub", "lantern") and p["room"] == room["id"]]
         for c in candles[:2]:
             out.append({"room": room["id"], "at": [c["at"][0], round(c["at"][1] + 0.25, 3), c["at"][2]],
                         "color": "#ffca7a", "energy": 1.1, "range": 4.5, "flicker": 0.35, "shadow": False})
-        if not hearth and not candles:
+        if not hearth and not candles and not any(p.get("prop") == "lantern_hanging" and p["room"] == room["id"] for p in placements):
             out.append({"room": room["id"], "at": [room["centre"][0], round(room["floor_y"] + 2.2, 3), room["centre"][2]],
                         "color": "#ffd9a0", "energy": 0.8, "range": 6.0, "flicker": 0.0, "shadow": False})
     return out
@@ -1775,7 +2068,19 @@ def build(recipe: dict, out_root: str, quiet: bool = False, props: Props | None 
     if not shelved:
         shelve(recipe, placements, props, rooms, rng)      # raises, saying which room
     shell, timber, col = build_shell(rooms, doors, windows, stair)
-    masonry, embers = [], []
+    region = REGION_BY_CULTURE.get(recipe.get("culture", ""), "")
+    w_timber, masonry, cloths = dress_walls(rooms, doors, windows, placements, stair, recipe, rng)
+    rugs, hung = rugs_and_lanterns(rooms, placements, report["grids"], recipe, props, region, rng, stair)
+    cloths += rugs
+    placements += hung
+    for lamp in hung:
+        top = lamp["at"][1] + lamp["bounds"][1][1]
+        room = next(r for r in rooms if r["id"] == lamp["room"])
+        w_timber.append(box((lamp["at"][0] - 0.012, top, lamp["at"][2] - 0.012),
+                            (lamp["at"][0] + 0.012, room["floor_y"] + STOREY_H, lamp["at"][2] + 0.012)))
+    if w_timber:
+        timber = trimesh.util.concatenate(([timber] if timber is not None else []) + w_timber)
+    embers = []
     for p in placements:
         if p.get("built") == "fireplace":
             m, e, t = fireplace(p)
@@ -1792,6 +2097,14 @@ def build(recipe: dict, out_root: str, quiet: bool = False, props: Props | None 
     if timber is not None:
         timber.export(os.path.join(folder, f"{name}_timber.glb"))
     col.export(os.path.join(folder, f"{name}_col.glb"))
+    cloth_meta = []
+    if cloths:
+        cs = trimesh.Scene()
+        for i, c in enumerate(cloths):
+            node = "%s_%d" % (c["kind"], i)
+            cs.add_geometry(c["mesh"], node_name=node, geom_name=node)
+            cloth_meta.append({"node": node, "kind": c["kind"], "colors": c["colors"], "unit": c["unit"]})
+        cs.export(os.path.join(folder, f"{name}_cloth.glb"))
     if masonry:
         scene = trimesh.Scene()
         scene.add_geometry(trimesh.util.concatenate(masonry), node_name="masonry", geom_name="masonry")
@@ -1821,7 +2134,7 @@ def build(recipe: dict, out_root: str, quiet: bool = False, props: Props | None 
         "unique_object": recipe.get("unique_object", ""), "habits": recipe.get("habits", []),
         "culture": recipe.get("culture", ""), "place": recipe.get("place", ""),
         "tris": int(len(shell.faces)) + (int(len(timber.faces)) if timber is not None else 0),
-        "has_timber": timber is not None, "has_masonry": bool(masonry),
+        "has_timber": timber is not None, "has_masonry": bool(masonry), "cloths": cloth_meta,
         "rooms": [{k: v for k, v in r.items() if k not in ("depth",)} for r in rooms],
         "doors": doors, "door_zones": zones, "windows": windows, "stairs": stairs,
         "floors": floors_for(rooms, stair), "placements": placements, "lights": lights,

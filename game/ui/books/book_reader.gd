@@ -35,11 +35,8 @@ func _ready() -> void:
 func _build() -> void:
 	var frame := UiKit.panel("OakPanel")
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 110.0
-	frame.offset_top = 40.0
-	frame.offset_right = -110.0
-	frame.offset_bottom = -40.0
 	add_child(frame)
+	UiFit.inset(frame, 110.0, 40.0)
 
 	var col := UiKit.column(8)
 	frame.add_child(col)

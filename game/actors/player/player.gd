@@ -92,12 +92,38 @@ const CLIMB_OUT_ABOVE := 1.0
 const CLIMB_OUT_BELOW := 0.4
 ## How far ahead of the body the bank's top is looked for (m, scaled with the body).
 const CLIMB_OUT_AHEAD := [0.6, 1.0, 1.4, 1.9]
-const BOW_MIN_DRAW := 0.3
+## A bow looses no sooner than this share of its draw: Bow_Draw has the arrow on the string at 0.30
+## (triage 55), and a snap shot is that arrow loosed with a little pull on it.
+const BOW_MIN_DRAW := 0.34
+## A snap shot scatters up to this far (radians) off the aim at BOW_MIN_DRAW, and not at all drawn
+## full. Held at full draw past BOW_STEADY_S the arm tires: it trembles up to BOW_TREMBLE_MOST over
+## BOW_TIRE_S (the body shakes with it, HumanoidModel.aim_tremble, and the arrow scatters as much),
+## and the hold costs BOW_HOLD_STAMINA a second; with no stamina left it trembles its most.
+const BOW_SPREAD_QUICK := deg_to_rad(4.0)
+const BOW_STEADY_S := 2.5
+const BOW_TIRE_S := 3.0
+const BOW_TREMBLE_MOST := deg_to_rad(1.8)
+const BOW_HOLD_STAMINA := 6.0
+## The aim: a ray from the view along its middle, as far as this, onto the world, the ground and
+## what can be hit (the crosshair's point, where arrows and bolts are sent: aim_point).
+const AIM_REACH := 150.0
+const AIM_MASK := (1 << 0) | (1 << 10) | (1 << 5)
+## An aimed saying's crosshair is as wide as this (radians): a bolt flies true, but it is not a pin.
+const SPELL_SPREAD := deg_to_rad(0.8)
+## A roll still counts as rolled through a blow this long after it ends (s): long enough for a roll
+## cancelled into a riposte, not so long that a blow long after the roll counts.
+const ROLL_COUNTS_AFTER_S := 0.3
 ## Seconds after the last act of a fight before the weapon goes back in its sheath.
 const SHEATHE_AFTER_S := 8.0
 const RIPOSTE_RANGE := 2.4
 ## How close you must be to a foe's back for the light to become a backstab.
 const BACKSTAB_RANGE := 1.8
+## Crouched, a little further: a rogue following a foe who walks on (the Rogue's bravo, at 1.15 m/s
+## to a crouch's 1.5) pressed at 1.7 m and was at 1.9 when the press was read, and the plain light
+## blow that took its place fell short of his back and woke him. The backstab's step closes it.
+const BACKSTAB_RANGE_CROUCHED := 2.5
+## The backstab's and the riposte's step in, m/s.
+const RIPOSTE_STEP := 3.5
 ## The body's own poise before any stance is learned (Hafted Poise adds to it).
 const BASE_POISE := 40.0
 ## Load is what is worn and wielded over 20 + 1.5·Endurance (the character's own Endurance): at the
@@ -168,7 +194,9 @@ var weapon_drawn := false
 var _last_fight_act := -INF
 var _attack_clip: String = ""
 var _chain_open: bool = false
+var _swing_began_at := INF              ## when this swing began (_after_the_blow keeps presses since)
 var _charging: bool = false
+var _rolling_until := -100.0             ## is_rolling until then
 var _charge_start: float = 0.0
 var _charge_ratio: float = 0.0
 var _dodge_params: Dictionary = {}
@@ -179,6 +207,10 @@ var _mantle_to: Vector3 = Vector3.ZERO
 var _mantle_t: float = 0.0
 var _mantle_time := MANTLE_TIME
 var _bow_draw_start: float = -1.0
+var _bow_full_at: float = -1.0           ## when the draw came to full, while it is held there
+var _aim_hit: Dictionary = {}            ## this physics frame's aim ray (_refresh_aim)
+var _aim_frame: int = -1
+var _bow_rng := RandomNumberGenerator.new()
 var _riposte_target: Actor = null
 ## The swallow in progress (drink_flask): elapsed, length, takes_at, restore, taken.
 var _drink: Dictionary = {}
@@ -195,6 +227,8 @@ var _free_tick: int = -2
 var _terrain_held: bool = false
 var _noise_timer: float = 0.0
 var _was_on_floor: bool = true
+## How fast the body was coming down on its last tick in the air (m/s), for the landing's dip.
+var _fall_speed := 0.0
 ## Seconds until a pressed jump's feet leave the ground, or -1; and whether the body is in a jump's
 ## air (from the take-off to the landing).
 var _jump_in := -1.0
@@ -283,17 +317,49 @@ func _take_the_naming() -> void:
 	if not name.is_empty():
 		display_name = name
 	apply_appearance(_look_from_the_naming())
-	if not GameState.has_flag("new_game"):
+	# a new game's first frame: the fallback's `new_game`, or a styled character the Naming has just
+	# written (Openings). A style start's tutorial is saved and loaded like any play, and a load
+	# never gets here with either flag up, so the kit is handed over once.
+	if not Openings.begin_due():
 		return
 	# Every new character carries a Hearth Flask, on the belt from the first fight (DESIGN §5.5).
-	Flask.ensure(get_node_or_null("Inventory") as Inventory, get_node_or_null("Equipment") as Equipment)
+	var bag := get_node_or_null("Inventory") as Inventory
+	var worn := get_node_or_null("Equipment") as Equipment
+	Flask.ensure(bag, worn)
 	var calling := str(GameState.get_flag("player_calling", ""))
 	var prog := get_node_or_null("Progression")
-	if calling.is_empty() or prog == null or not prog.has_method("apply_calling"):
+	if prog == null or not prog.has_method("apply_calling"):
 		return
-	if str(prog.get("calling_id")) == calling:
-		return
-	prog.call("apply_calling", calling, get_node_or_null("Inventory") as Inventory)
+	if not calling.is_empty() and str(prog.get("calling_id")) != calling:
+		prog.call("apply_calling", calling, bag)
+	# the fighting style's kit, skills and sayings, on top of the Calling's (DESIGN §5.1)
+	var style := StyleDef.of_character()
+	if not style.is_empty() and str(prog.get("style_id")) != style and prog.has_method("apply_style"):
+		prog.call("apply_style", style, bag, worn)
+		_ready_style_sayings(style)
+
+
+## A style's sayings on the free quick keys in the kit's order, and the first one readied: a mage's
+## first lesson is saying it, not finding it.
+func _ready_style_sayings(style: String) -> void:
+	var spells: Array = (ContentDB.get_or_empty(style).get("kit", {}) as Dictionary).get("spells", [])
+	var eq := _doll()
+	var slot := 0
+	var first := ""
+	for spell_v in spells:
+		var spell := str(spell_v)
+		if not knows_spell(spell) or quick_slots.has(spell):
+			continue
+		if first.is_empty():
+			first = spell
+		while slot < quick_slots.size() and (not str(quick_slots[slot]).is_empty()
+				or (eq != null and not str(eq.call("quick_item", "quick_%d" % (slot + 1))).is_empty())):
+			slot += 1
+		if slot >= quick_slots.size():
+			break
+		set_quick_slot(slot, spell)
+	if not first.is_empty():
+		equip_spell(first)
 
 
 ## The record the Naming wrote, or, when nothing wrote one (a `--new-game` run, an old save), a
@@ -339,7 +405,8 @@ func worn_look() -> CharacterAppearance:
 		if typeof(wear) != TYPE_DICTIONARY:
 			continue
 		for part_slot in wear:
-			worn.set_part(str(part_slot), str(wear[part_slot]))
+			# a woman wears her cut of it (the pack's wool tunic is her long belted one)
+			worn.set_part(str(part_slot), worn.cut_for_body(str(wear[part_slot])))
 	return worn
 
 
@@ -418,7 +485,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			lock.handle_wheel(1, lock_point(), camera_rig.forward_flat())
 		elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	# Escape in a conversation leaves it (the dialogue page's own key) and the view stays the player's
+	if event.is_action_pressed("pause") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not in_conversation():
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
@@ -438,6 +506,12 @@ func _read_input() -> void:
 		if _just[a]:
 			_buffer_action = a
 			_buffer_at = now()
+	# The guard's press is the parry's clock whatever the body is doing: it used to be read only
+	# while the body was free (_update_block), so a block pressed in the last frames of a swing or a
+	# roll, just as the foe's blow came, parried nothing (playtest 2026-09-27, 9).
+	if _just["block"] and weapon != null and not weapon.is_ranged() and can_parry_with_equipment() \
+			and stamina_comp.current > 0.0:
+		parry_pressed_at = now()
 	_read_sprint_tap()
 
 
@@ -488,6 +562,7 @@ func _physics_process(delta: float) -> void:
 	camera_rig.sneak_low = is_sneaking
 	camera_rig.swimming = state == State.SWIM
 	interactor.update_aim(camera_rig.aim_direction())
+	_update_first_person()
 	if shield_hp > 0.0 and now() >= shield_until:
 		shield_hp = 0.0
 		shield_changed.emit(0.0)
@@ -522,6 +597,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			apply_gravity(delta)
 		integrate_shove(delta)
+		if not _on_ground():
+			_fall_speed = maxf(-velocity.y, 0.0)
 		move_and_slide()
 		_terrain_held = snap_to_terrain()
 		_read_water()
@@ -532,6 +609,7 @@ func _physics_process(delta: float) -> void:
 	# a guard dropped by an attack or a roll must not leave regen halved behind it.
 	stamina_comp.regen_multiplier = (0.5 if is_blocking else 1.0) * DamageModel.load_regen_mult(load_ratio)
 	_update_locomotion_anim(delta)
+	_update_bow_aim()
 	_noise_timer -= delta
 
 
@@ -612,6 +690,7 @@ func _tick_free(delta: float) -> void:
 	_move(delta)
 	if _on_ground() and not _was_on_floor:
 		_jumping = false
+		camera_rig.land(_fall_speed)
 		if not anim.is_busy():
 			anim.play_intent("Jump_Land")
 	_was_on_floor = _on_ground()
@@ -635,6 +714,7 @@ func _update_common_toggles() -> void:
 		is_sneaking = not is_sneaking
 		if is_sneaking:
 			is_sprinting = false
+			EventBus.act_done.emit("sneak", self, null, "")
 	if _just["lock_on"]:
 		lock.handle_toggle(lock_point(), camera_rig.forward_flat())
 	if _just["cycle_target"]:
@@ -648,7 +728,7 @@ func _update_common_toggles() -> void:
 func _update_block() -> void:
 	var parry_item := can_parry_with_equipment()
 	if _just["block"] and parry_item and stamina_comp.current > 0.0 and not weapon.is_ranged():
-		parry_pressed_at = now()
+		# (parry_pressed_at is set as the press is read: _read_input)
 		if not anim.is_busy():
 			anim.play_intent("Parry")
 	var want := bool(_held["block"]) and not weapon.is_ranged() and stamina_comp.current > 0.0 and _on_ground()
@@ -1151,7 +1231,6 @@ func _update_locomotion_anim(_delta: float) -> void:
 				anim.play_intent(air)
 		elif anim.is_playing("Fall_Loop") or anim.is_playing("Jump_Loop"):
 			anim.stop()
-	model.visible = not camera_rig.first_person
 
 
 # --- ATTACK -------------------------------------------------------------------------------------
@@ -1168,6 +1247,7 @@ func _start_attack(kind: String, index: int, charging: bool) -> bool:
 	_attack_index = index
 	_attack_phase = "windup"
 	_chain_open = false
+	_swing_began_at = now()
 	_charging = charging
 	_charge_start = now()
 	_charge_ratio = 0.0
@@ -1229,10 +1309,56 @@ func _tick_attack(delta: float) -> void:
 		weapon.end_attack()
 		if _start_dodge():
 			return
-	if _chain_open and _attack_kind == "light" and _attack_index + 1 < weapon.chain_length() and _peek_buffer(["attack_light"]) != "":
-		_consume_buffer(["attack_light"])
+	if _chain_open:
+		_after_the_blow()
+
+
+## Once a swing's recovery may be cut short (cancel_ok), the next thing the player asked for comes
+## at once: the next light of the chain, or a new chain after the last one, a heavy, or, with a
+## direction held, the body's own feet. Only the next light of a chain, and a roll, used to cut a
+## swing short; everything else waited out the clip to its last frame, a third of a second after the
+## blow for a sword's light and a quarter for its heavy, and the fight felt stuck between blows
+## (playtest 2026-09-27, 7). An attack pressed at any time since this swing began is kept for it,
+## not only for the last INPUT_BUFFER: a press made during the blow, as the eye asks for the next
+## one, was forgotten by the time the chain opened. (The press that began the swing was spent on
+## it, so a press still waiting is a new one.)
+func _after_the_blow() -> void:
+	var next := _peek_attack_press()
+	if next == "attack_light":
+		_clear_buffer()
 		weapon.end_attack()
-		_start_attack("light", _attack_index + 1, false)
+		var chained := _attack_kind == "light" and _attack_index + 1 < weapon.chain_length()
+		if _start_attack("light", _attack_index + 1 if chained else 0, false):
+			return
+		_set_state(State.FREE)
+	elif next == "attack_heavy":
+		_clear_buffer()
+		weapon.end_attack()
+		if _start_attack("heavy", 0, true):
+			return
+		_set_state(State.FREE)
+	elif _wish_direction().length() > 0.2 or bool(_held["block"]):
+		# a direction to go, or the guard to raise (a parry's press is already counted: _read_input)
+		weapon.end_attack()
+		poise_comp.clear_hyper_armour()
+		anim.stop()
+		_set_state(State.FREE)
+
+
+## The attack pressed for after this swing: a press still in the buffer, or one made since the
+## swing began.
+func _peek_attack_press() -> String:
+	var a := _peek_buffer(["attack_light", "attack_heavy"])
+	if a != "":
+		return a
+	if _buffer_action in ["attack_light", "attack_heavy"] and _buffer_at >= _swing_began_at - 0.00001:
+		return _buffer_action
+	return ""
+
+
+func _clear_buffer() -> void:
+	_buffer_action = ""
+	_buffer_at = -1.0
 
 
 func _release_charge() -> void:
@@ -1277,10 +1403,19 @@ func _on_clip_finished(clip: String) -> void:
 			pass
 
 
-func _on_weapon_hit(_victim: Node, hit: HitData, outcome: String) -> void:
+func _on_weapon_hit(victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
-		EventBus.skill_used.emit(hit.skill_id, 4.0 if hit.heavy else 2.0)
+		# a post teaches the swing and little of the fight: a quarter of what a foe is worth
+		var worth := 0.25 if victim != null and victim.is_in_group("pell") else 1.0
+		EventBus.skill_used.emit(hit.skill_id, (4.0 if hit.heavy else 2.0) * worth)
 		_emit_action_noise(0.6)
+		# what a lesson counts (QuestLog `act`): the blow, and the crit it carried
+		EventBus.act_done.emit("hit_heavy" if hit.heavy else "hit_light", self, victim, hit.crit_kind)
+		if outcome == "hit" and hit.crit_kind in ["riposte", "backstab", "sneak"]:
+			EventBus.act_done.emit("sneak_attack" if hit.crit_kind == "sneak" else hit.crit_kind, self, victim, "")
+			if hit.crit_kind == "sneak" and _attack_kind == "backstab":
+				# a backstab that was a sneak attack too is both lessons
+				EventBus.act_done.emit("backstab", self, victim, "")
 
 
 # --- RIPOSTE ------------------------------------------------------------------------------------
@@ -1306,15 +1441,18 @@ func _riposte_candidate() -> Actor:
 ## A foe with its back to you, within arm's reach and in front of you: the light becomes a
 ## backstab. DESIGN §5.3 lists it beside the riposte as a crit, `DamageModel.is_behind` was written
 ## for it, and nothing ever made one. A boss is too aware of its own back to be taken this way.
+##
+## The rogue's sack of eels (a Pell of kind `sack`) has a back too, so Moreva can teach this on
+## something that does not fight back.
 func _backstab_candidate() -> Actor:
-	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy")
+	var pool: Array = [lock.target] if lock.is_locked() else get_tree().get_nodes_in_group("enemy") + get_tree().get_nodes_in_group("pell")
 	var best: Actor = null
-	var best_d := BACKSTAB_RANGE
+	var best_d := BACKSTAB_RANGE_CROUCHED if is_sneaking else BACKSTAB_RANGE
 	for n in pool:
-		if not (n is Enemy) or not is_hostile_to(n):
+		if not (n is Enemy or _is_sack(n)) or not is_hostile_to(n):
 			continue
-		var e := n as Enemy
-		if e.is_dead() or e.is_boss or e.is_stunned():
+		var e := n as Actor
+		if e.is_dead() or (e is Enemy and (e as Enemy).is_boss) or e.is_stunned():
 			continue
 		var to := e.global_position - global_position
 		var d := Vector3(to.x, 0.0, to.z).length()
@@ -1333,9 +1471,19 @@ func _sneak_crit() -> String:
 	if not is_sneaking:
 		return ""
 	var victim: Node = lock.target if lock.is_locked() else _foe_in_reach()
-	if victim is Enemy and (victim as Enemy).is_unaware():
-		return "sneak"
-	return ""
+	return "sneak" if _unaware(victim) else ""
+
+
+## Whether `victim` has not noticed you: a foe that has not (Enemy.is_unaware), or the rogue's sack
+## of eels (a Pell), which never sees anybody coming: the dagger lesson is on it.
+static func _unaware(victim: Node) -> bool:
+	if victim is Enemy:
+		return (victim as Enemy).is_unaware()
+	return _is_sack(victim)
+
+
+static func _is_sack(n: Variant) -> bool:
+	return n is Pell and is_instance_valid(n) and (n as Pell).kind == "sack"
 
 
 func _foe_in_reach() -> Node:
@@ -1361,8 +1509,18 @@ func _start_riposte(target: Actor, kind := "riposte") -> void:
 	_attack_kind = kind
 	_attack_index = 0
 	_attack_phase = "windup"
-	_attack_crit = kind
-	weapon.begin_attack(weapon.build_hit(kind, 0, 0.0, get_skill(weapon.skill_id), kind))
+	# From behind something that never knew you were there, crouched, the backstab is the sneak
+	# attack too and carries its crit (a dagger's x6, DESIGN 5.3, over the backstab's x3), and stays
+	# the committed, unblockable blow it was. The backstab took the press before the sneak attack was
+	# asked, so a dagger's x6 could be struck from anywhere but behind, which is where a rogue is.
+	var sneak := kind == "backstab" and is_sneaking and _unaware(target)
+	_attack_crit = "sneak" if sneak else kind
+	var hit := weapon.build_hit(kind, 0, 0.0, get_skill(weapon.skill_id), _attack_crit)
+	if sneak:
+		hit.blockable = false
+		hit.parryable = false
+		hit.dodgeable = false
+	weapon.begin_attack(hit)
 	anim.play_intent("Riposte" if kind == "riposte" else "Backstab", weapon.timing_for(kind))
 	_set_state(State.RIPOSTE)
 	attack_started.emit(kind, 0)
@@ -1372,11 +1530,14 @@ func _tick_riposte(delta: float) -> void:
 	if is_stunned():
 		_enter_stunned()
 		return
-	if _attack_phase == "active" and is_instance_valid(_riposte_target):
+	# the step in starts with the wind-up: a backstab offered at its full range (BACKSTAB_RANGE, 1.8 m)
+	# stepped only once the blade was already out, and a dagger's reach missed the back it was
+	# offered at, woke him, and a rogue's first fight began face to face (test_rogue_plays)
+	if _attack_phase in ["windup", "active"] and is_instance_valid(_riposte_target):
 		var to := _riposte_target.global_position - global_position
 		to.y = 0.0
-		if to.length() > 1.2:
-			var step := to.normalized() * 2.5
+		if to.length() > 1.1:
+			var step := to.normalized() * RIPOSTE_STEP
 			velocity.x = step.x
 			velocity.z = step.z
 			return
@@ -1413,6 +1574,7 @@ func _start_dodge() -> bool:
 		snap_facing(_dodge_dir)
 	var t := now()
 	set_invulnerable_window(t + float(_dodge_params["iframe_start"]), t + float(_dodge_params["iframe_end"]))
+	_rolling_until = t + float(_dodge_params["duration"]) + ROLL_COUNTS_AFTER_S
 	anim.play_intent(clip, {"length": float(_dodge_params["duration"])})
 	_set_state(State.DODGE)
 	dodge_started.emit(_dodge_dir)
@@ -1485,6 +1647,12 @@ func _tick_dodge(delta: float) -> void:
 	if _dodge_elapsed >= duration:
 		clear_invulnerability()
 		_set_state(State.FREE)
+
+
+## Rolling, or out of a roll by no more than ROLL_COUNTS_AFTER_S: a blow that goes live at the body
+## then was rolled through (Actor.count_dodge), even if the roll ended in a swing of its own.
+func is_rolling() -> bool:
+	return not dead and now() <= _rolling_until
 
 
 func is_in_iframes() -> bool:
@@ -1605,7 +1773,8 @@ func _tick_cast(delta: float) -> void:
 	_damp_horizontal(delta, 16.0)
 
 
-func _on_cast_released(_spell_id: String) -> void:
+func _on_cast_released(spell_id: String) -> void:
+	EventBus.act_done.emit("cast", self, lock.target if lock != null else null, spell_id)
 	if state == State.CAST:
 		_set_state(State.FREE)
 
@@ -1621,11 +1790,159 @@ func _on_cast_failed(_spell_id: String, reason: String) -> void:
 		_set_state(State.FREE)
 
 
+## Where a shot from the body goes: from aim_origin to the point under the view's middle (aim_point),
+## so a bolt from the hands meets what the crosshair is on, near or far. It went to a point 40 m
+## down the view, which from the shoulder missed anything nearer or further by the shoulder's offset.
 func aim_direction() -> Vector3:
 	if camera_rig.first_person:
 		return camera_rig.aim_direction()
-	var far := camera_rig.camera_position() + camera_rig.aim_direction() * 40.0
-	return (far - aim_origin()).normalized()
+	var d := aim_point() - aim_origin()
+	return d.normalized() if d.length() > 0.5 else camera_rig.aim_direction()
+
+
+## The point the view's middle is on (the crosshair's): the first thing the aim ray meets past the
+## body -- the world, the ground, a foe -- or the ray's end, AIM_REACH out.
+func aim_point() -> Vector3:
+	_refresh_aim()
+	return _aim_hit.get("point", camera_rig.camera_position() + camera_rig.aim_direction() * AIM_REACH)
+
+
+## What the aim ray met this physics frame: {point, distance (from the body), collider, actor (a
+## living body it would hit, not this one, or null)}. Cast once a frame, when asked.
+func aim_hit() -> Dictionary:
+	_refresh_aim()
+	return _aim_hit
+
+
+func _refresh_aim() -> void:
+	var frame := Engine.get_physics_frames()
+	if frame == _aim_frame and not _aim_hit.is_empty():
+		return
+	_aim_frame = frame
+	var from := camera_rig.camera_position()
+	var dir := camera_rig.aim_direction()
+	# from the body on, not the view: a third-person view looks over a shoulder, and a ray from the
+	# lens would find the body's own back, or a branch between the lens and the head
+	var chest := global_position + Vector3.UP * 1.4
+	var start := from + dir * maxf((chest - from).dot(dir), 0.0)
+	var to := from + dir * AIM_REACH
+	var out := {"point": to, "distance": start.distance_to(to), "collider": null, "actor": null}
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	if space != null:
+		var exclude: Array[RID] = [get_rid()]
+		if hurtbox != null:
+			exclude.append(hurtbox.get_rid())
+		var q := PhysicsRayQueryParameters3D.create(start, to, AIM_MASK, exclude)
+		q.collide_with_areas = true
+		var r := space.intersect_ray(q)
+		if not r.is_empty():
+			out["point"] = r["position"]
+			out["distance"] = start.distance_to(r["position"])
+			out["collider"] = r.get("collider")
+			var hb := r.get("collider") as Hurtbox
+			if hb != null and hb.actor != null and hb.actor != self and is_instance_valid(hb.actor) \
+					and (not hb.actor.has_method("is_alive") or bool(hb.actor.call("is_alive"))):
+				out["actor"] = hb.actor
+	_aim_hit = out
+
+
+## The direction to launch at `speed` (m/s) from `from` under `gravity` (m/s²) to come down on `to`:
+## the flat arc of the two, or 45 degrees when `to` is out of reach.
+static func ballistic_direction(from: Vector3, to: Vector3, speed: float, gravity_accel: float) -> Vector3:
+	var d := to - from
+	var flat := Vector3(d.x, 0.0, d.z)
+	var x := flat.length()
+	if x < 0.01 or gravity_accel <= 0.0:
+		return d.normalized()
+	var v2 := speed * speed
+	var disc := v2 * v2 - gravity_accel * (gravity_accel * x * x + 2.0 * d.y * v2)
+	var angle := PI * 0.25
+	if disc >= 0.0:
+		angle = atan((v2 - sqrt(disc)) / (gravity_accel * x))
+	return (flat / x * cos(angle) + Vector3.UP * sin(angle)).normalized()
+
+
+## How far the bow is drawn (0..1), 0 when it is not.
+func bow_draw() -> float:
+	if state != State.BOW or weapon == null:
+		return 0.0
+	return clampf((now() - _bow_draw_start) / weapon.draw_time(), 0.0, 1.0)
+
+
+## The tremble of a draw held past BOW_STEADY_S (radians at its widest), 0 otherwise.
+func bow_tremble() -> float:
+	if state != State.BOW or _bow_full_at < 0.0:
+		return 0.0
+	if stamina_comp.current <= 0.0:
+		return BOW_TREMBLE_MOST
+	return BOW_TREMBLE_MOST * clampf((now() - _bow_full_at - BOW_STEADY_S) / BOW_TIRE_S, 0.0, 1.0)
+
+
+## How far (radians) an arrow loosed now may go off the aim: a snap shot's scatter, less as the draw
+## comes to full, and a tired arm's tremble.
+func bow_spread() -> float:
+	if state != State.BOW:
+		return 0.0
+	return BOW_SPREAD_QUICK * (1.0 - smoothstep(BOW_MIN_DRAW, 1.0, bow_draw())) + bow_tremble()
+
+
+## The equipped saying, when it is one that is aimed and loosed (a projectile).
+func _aimed_saying() -> Dictionary:
+	if equipped_spell.is_empty():
+		return {}
+	var def := ContentDB.get_or_empty(equipped_spell)
+	return def if str(def.get("cast_type", "")) == "projectile" else {}
+
+
+## What the HUD's crosshair shows (triage 55): {visible, spread (radians), draw (0..1), on_target
+## (the aim is on a living body within reach), reach (m)}. Up while a bow is drawn, and for an aimed
+## saying while it is said or while the weapon is out for a fight and nothing is locked on (a lock
+## sends the saying at its target, not along the view).
+func crosshair() -> Dictionary:
+	var out := {"visible": false, "spread": 0.0, "draw": 0.0, "on_target": false, "reach": 0.0}
+	if dead or not input_enabled or (rider != null and rider.riding()):
+		return out
+	var saying := _aimed_saying()
+	if state == State.BOW:
+		out["visible"] = true
+		out["draw"] = bow_draw()
+		out["spread"] = bow_spread()
+		out["reach"] = float(weapon.ranged.get("range", 60.0)) if weapon != null else 60.0
+	elif not saying.is_empty() and (state == State.CAST or (weapon_drawn and state == State.FREE)) \
+			and not lock.is_locked():
+		out["visible"] = true
+		out["draw"] = 1.0
+		out["spread"] = SPELL_SPREAD
+		out["reach"] = SpellRuntime.range_of(saying)
+	if bool(out["visible"]):
+		var hit := aim_hit()
+		out["on_target"] = hit.get("actor") != null and float(hit.get("distance", INF)) <= float(out["reach"])
+	return out
+
+
+## The body turned to the aim while a bow is up (HumanoidModel.aim_pitch and aim_yaw, from the chest
+## to aim_point), a tired draw's tremble, and the view drawn in with the draw.
+func _update_bow_aim() -> void:
+	var drawing := state == State.BOW
+	camera_rig.aim_draw = bow_draw() if drawing else 0.0
+	if weapon == null or not weapon.is_ranged() or anim == null or anim.model == null:
+		return
+	var m := anim.model
+	if not ("aim_pitch" in m):
+		return
+	var tremble := bow_tremble()
+	m.set("aim_tremble", tremble)
+	var busy := drawing or str(m.call("current_stance")) == "Bow_Release"
+	if not busy:
+		return
+	var chest := global_position + Vector3.UP * 1.45
+	var to := aim_point() - chest
+	var flat := Vector3(to.x, 0.0, to.z)
+	if flat.length() < 0.5:
+		return
+	m.set("aim_pitch", atan2(to.y, flat.length()))
+	var ahead := Vector3(forward().x, 0.0, forward().z).normalized()
+	m.set("aim_yaw", ahead.signed_angle_to(flat.normalized(), Vector3.UP))
 
 
 func aim_origin() -> Vector3:
@@ -1698,6 +2015,7 @@ func _start_bow() -> bool:
 		EventBus.notify.emit("Still winding.", "warning")
 		return false
 	_bow_draw_start = now()
+	_bow_full_at = -1.0
 	var draw_time := weapon.draw_time()
 	anim.play_intent("Bow_Draw", {"length": draw_time})
 	Foley.play("bow_draw", attack_origin.global_position)
@@ -1718,6 +2036,12 @@ func _tick_bow(delta: float) -> void:
 	var drawn := clampf((now() - _bow_draw_start) / draw_time, 0.0, 1.0)
 	if drawn >= 1.0 and not anim.is_playing("Bow_Aim") and not anim.is_busy():
 		anim.play_intent("Bow_Aim")
+	if drawn >= 1.0:
+		if _bow_full_at < 0.0:
+			_bow_full_at = now()
+		# a draw held past its steady time is paid for, and shakes (bow_tremble)
+		if now() - _bow_full_at > BOW_STEADY_S:
+			stamina_comp.spend(BOW_HOLD_STAMINA * delta)
 	if _peek_buffer(["dodge"]) != "":
 		camera_rig.set_aiming(false)
 		_consume_buffer(["dodge"])
@@ -1731,6 +2055,32 @@ func _tick_bow(delta: float) -> void:
 		else:
 			anim.stop()
 		_set_state(State.FREE)
+
+
+## Where an arrow leaves from: the bow in the hand, just ahead of its grip, when the body is the
+## forge's and holds one (the arrow is seen to leave the string); aim_origin otherwise.
+func bow_launch_origin() -> Vector3:
+	var m: Node = anim.model if anim != null else null
+	if m != null and "bow_hands" in m:
+		var bh := m.get("bow_hands") as BowHands
+		if bh != null and bh.bow != null and is_instance_valid(bh.bow) and bh.bow.is_inside_tree():
+			var b := bh.bow.global_transform
+			return b.origin + b.basis.y.normalized() * 0.08
+	return aim_origin()
+
+
+## `dir` turned off its line by up to `spread` radians, evenly over the cone.
+static func scatter(dir: Vector3, spread: float, rng: RandomNumberGenerator) -> Vector3:
+	if spread <= 0.0:
+		return dir
+	var side := dir.cross(Vector3.UP)
+	if side.length() < 0.01:
+		side = dir.cross(Vector3.RIGHT)
+	side = side.normalized()
+	var up := side.cross(dir).normalized()
+	var r := spread * sqrt(rng.randf())
+	var a := rng.randf() * TAU
+	return (dir + (side * cos(a) + up * sin(a)) * tan(r)).normalized()
 
 
 ## The arrow this bow would loose: the kind it names if the quiver has it, else any of its tag.
@@ -1776,7 +2126,13 @@ func _fire_arrow(drawn: float) -> void:
 	hit.label = "arrow"
 	hit.parryable = false
 	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
-	arrow.launch(aim_origin(), aim_direction(), speed, hit, float(proj.get("gravity", gravity)))
+	var fall := float(proj.get("gravity", gravity))
+	var from := bow_launch_origin()
+	# sent to where the crosshair is (aim_point), on the arc that comes down there, then scattered
+	# by the draw's spread (a snap shot, a tired arm)
+	var dir := Player.ballistic_direction(from, aim_point(), speed, fall)
+	dir = Player.scatter(dir, bow_spread(), _bow_rng)
+	arrow.launch(from, dir, speed, hit, fall)
 	arrow.impact_sound = "arrow_hit"
 	arrow.recover_item = shot
 	arrow.recover_chance = arrow_recovery_chance()
@@ -1803,9 +2159,10 @@ func arrow_recovery_chance() -> float:
 	return clampf(DamageModel.ARROW_RECOVERY + stat_add("arrow_recovery"), 0.0, 1.0)
 
 
-func _on_arrow_struck(_victim: Node, hit: HitData, outcome: String) -> void:
+func _on_arrow_struck(victim: Node, hit: HitData, outcome: String) -> void:
 	if outcome == "hit" or outcome == "blocked":
 		EventBus.skill_used.emit(hit.skill_id, 3.0)
+		EventBus.act_done.emit("arrow_hit", self, victim, "")
 
 
 # --- MANTLE -------------------------------------------------------------------------------------
@@ -2132,8 +2489,31 @@ func use_quick_slot(index: int) -> void:
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
 		return
+	if str(ContentDB.get_or_empty(id).get("category", "")) == "weapon":
+		swap_to(id)
+		return
 	if not quick_slot_handler.is_valid() or not bool(quick_slot_handler.call(index, id)):
 		EventBus.notify.emit("None left.", "info")
+
+
+## The weapon a quick key keeps taken into the hand, or, when it is there already, the one it was
+## taken instead of put back: a bow and a knife on one key and the hand (a ranger's close work).
+var _swapped_from := ""
+
+
+func swap_to(id: String) -> void:
+	var eq := _doll()
+	if eq == null or not eq.has_method("equip"):
+		return
+	var held: Variant = eq.call("get_slot", "main_hand")
+	var held_id := str((held as Object).get("id")) if held is Object else ""
+	if held_id == id:
+		if _swapped_from != "" and bool(eq.call("equip", _swapped_from, "main_hand")):
+			EventBus.act_done.emit("swap", self, null, _swapped_from)
+		return
+	if bool(eq.call("equip", id, "main_hand")):
+		_swapped_from = held_id
+		EventBus.act_done.emit("swap", self, null, id)
 
 
 ## The noise of the body moving (a sprint's footfalls, a jump), which Quiet Step quiets by 30%.
@@ -2157,11 +2537,71 @@ func movement_noise_mult() -> float:
 
 func _on_lock_changed(target: Node3D) -> void:
 	lock_on_changed.emit(target)
+	if target != null:
+		EventBus.act_done.emit("lock_on", self, target, "")
 
 
 func _on_camera_mode_changed(fp: bool) -> void:
-	model.visible = not fp
+	# the body is drawn in both: in first person it is seen from its own eyes, head hidden
+	# (_update_first_person), and it had been hidden outright for a box and a bar on the camera
+	model.visible = true
+	_update_first_person()
 	camera_mode_changed.emit(fp)
+
+
+# --- FIRST PERSON (triage 57) -------------------------------------------------------------------
+
+## The upper body's share of the view's pitch in first person (HumanoidModel.view_follow): the
+## spine and chest turn this much of it, up to these many degrees, the head the rest. Looking down
+## at the feet does not fold the body over them.
+const FP_FOLLOW_UP := 0.75
+const FP_FOLLOW_DOWN := 0.6
+const FP_FOLLOW_UP_MOST := deg_to_rad(50.0)
+const FP_FOLLOW_DOWN_MOST := deg_to_rad(38.0)
+## The states in which the upper body turns to the view in first person. Not a roll, a stagger, a
+## fall or a climb, whose clips own the whole body.
+const FP_FOLLOWS: Array[int] = [State.FREE, State.ATTACK, State.CAST, State.BOW, State.RIPOSTE, State.DRINK]
+
+
+## What first person asks of the body, every tick (CameraRig says why): the head hidden once the
+## camera is at the eyes; the upper body turned to the view's pitch; and a drawn weapon carried up in
+## the guard (HumanoidModel.carry), so the hands and the blade are in the picture, walking as standing.
+## In the saddle the rider's clips keep the hands on the reins, and swimming the stroke has them.
+func _update_first_person() -> void:
+	var m := body_model()
+	if m == null or not ("first_person" in m):
+		return
+	var fp := camera_rig.first_person
+	var riding := rider != null and rider.riding()
+	m.set("first_person", camera_rig.eye_view())
+	m.set("carry", 1.0 if fp and weapon_drawn and not riding and state != State.SWIM else 0.0)
+	var follow := fp and not riding and state in FP_FOLLOWS
+	m.set("view_follow", 1.0 if follow else 0.0)
+	m.set("view_pitch", camera_rig.pitch)
+	if follow:
+		var p := camera_rig.pitch
+		var shaped := minf(p * FP_FOLLOW_UP, FP_FOLLOW_UP_MOST) if p > 0.0 else maxf(p * FP_FOLLOW_DOWN, -FP_FOLLOW_DOWN_MOST)
+		# a drawn bow aims the body at the aim point itself (_update_bow_aim, after this)
+		m.set("aim_pitch", shaped)
+		m.set("aim_yaw", 0.0)
+
+
+## Where the eyes are, as the body is drawn this frame (the first-person camera's place): the
+## model's eyes, carried from the physics tick's transform onto the interpolated one.
+func first_person_eye() -> Vector3:
+	var drawn := get_global_transform_interpolated()
+	var m := body_model()
+	if m == null or not m.has_method("eye_point"):
+		return drawn.origin + Vector3.UP * (CameraRig.FP_HEIGHT_SNEAK if is_sneaking else CameraRig.FP_HEIGHT)
+	return drawn * (global_transform.affine_inverse() * (m.call("eye_point") as Vector3))
+
+
+## True while the body's clip throws the head about -- a roll, a stagger or a knockdown, a death, a
+## climb, getting on or off a horse -- and the first-person view follows it only a little way down.
+func first_person_steady() -> bool:
+	if state in [State.DODGE, State.STUNNED, State.DEAD, State.MANTLE]:
+		return true
+	return anim != null and anim.current_clip in ["Knockdown", "Get_Up", "Mount_Horse", "Dismount_Horse"]
 
 
 # --- save ---------------------------------------------------------------------------------------

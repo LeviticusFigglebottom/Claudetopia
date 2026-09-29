@@ -6,11 +6,13 @@
     "bio": "The Warden who walked you out of the Hush and has not yet decided whether that was wise.",
     "unique_habit": "Touches every small bell in Merrowby's trees at dusk and counts them under her breath, every day, whether or not the count has changed.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 1101, "build": "lean", "age": 44, "hair": "cropped_brown_greying", "notes": "grey-green Warden cloak, a wooden bell-token at the throat, boots that are always muddy"},
+    "appearance": {"feminine": 1.0, "seed": 1101, "build": "lean", "age": 44, "hair": "cropped_brown_greying", "notes": "grey-green Warden cloak, a wooden bell-token at the throat, boots that are always muddy"},
+    "known_as": [{"when": [{"flag": "style_start"}], "name": "The Warden",
+                  "notes": "A styled character meets her before the wake, and she does not give her name: 'I'm the Warden. That's all the name the Stair needs.' Her dialogue gives it at the wake (DESIGN 5.1a)."}],
     "holds": [
-      {"when": [{"any": [{"flag": "new_game"}, {"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}],
+      {"when": [{"any": [{"flag": "new_game"}, {"flag": "style_start"}, {"quest_at": ["core:quest/the_naming", "down_the_stair"]}, {"quest_at": ["core:quest/the_naming", "wake"]}, {"quest_at": ["core:quest/the_naming", "the_choir"]}]}],
        "place": "core:poi/stair_head", "activity": "idle", "spot": "wren_stair_head",
-       "notes": "At her fire at the Stair Head from the moment a new game is named until the Foundling has spoken to her and walked to the Choir (DESIGN 5.1a); then back to her own days."}
+       "notes": "At her fire at the Stair Head from the moment a new game begins (style_start through a style's tutorial and ride, or new_game on the fallback) through the descent and the wake, until the Foundling has spoken to her and walked to the Choir (DESIGN 5.1a); then back to her own days."}
     ],
     "schedule": [
       {"days": "weekdays", "hour": 5, "place": "core:place/merrowby", "activity": "eat", "spot": "warden_post"},
@@ -33,7 +35,7 @@
     "bio": "Fourth Pennywort to grind at the mill and the first to grind without water.",
     "unique_habit": "Taps the millstone twice before every grind, 'for Grandfather', and will not start if interrupted between the taps.",
     "personality": {"traits": ["timid", "generous", "pious", "gossip", "proud"]},
-    "appearance": {"seed": 1102, "build": "stocky", "age": 51, "hair": "flour_white_thinning", "notes": "blue miller's apron, flour in the eyebrows, a blue door"},
+    "appearance": {"feminine": 0.0, "seed": 1102, "build": "stocky", "age": 51, "hair": "flour_white_thinning", "notes": "blue miller's apron, flour in the eyebrows, a blue door"},
     "schedule": [
       {"days": "weekdays", "hour": 5, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_blue_door"},
       {"days": "weekdays", "hour": 6, "place": "core:place/pennywort_mill", "activity": "work", "spot": "millstone", "notes": "two taps, then the grind"},
@@ -52,7 +54,7 @@
     "bio": "Nine, the miller's daughter, and the only person in Merrowby who has counted the Toll's cracks (forty-one, she says; forty-three on wet days).",
     "unique_habit": "Runs snail races on the lip of the well every morning and keeps a league table scratched into the well-stone.",
     "personality": {"traits": ["brave", "generous", "gossip", "kind", "proud"]},
-    "appearance": {"seed": 1103, "build": "child_small", "age": 9, "hair": "brown_plaits", "notes": "blue ribbon, scabbed knees, a pocket of snails"},
+    "appearance": {"feminine": 1.0, "seed": 1103, "build": "child_small", "age": 9, "hair": "brown_plaits", "notes": "blue ribbon, scabbed knees, a pocket of snails"},
     "schedule": [
       {"days": "weekdays", "hour": 7, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_blue_door"},
       {"days": "weekdays", "hour": 8, "place": "core:place/merrowby", "activity": "idle", "spot": "well", "notes": "snail races"},
@@ -73,7 +75,7 @@
     "bio": "Shoes horses, mends ploughs, and has made exactly one sword, which he keeps under the bed and does not discuss.",
     "unique_habit": "Every Tollday hangs a new horseshoe on the forge lintel and takes the oldest one down; there are always seven.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "proud", "kind"]},
-    "appearance": {"seed": 1104, "build": "broad", "age": 39, "hair": "black_short", "notes": "red smith's door, burn-freckled forearms, a leather apron older than he is"},
+    "appearance": {"feminine": 0.0, "seed": 1104, "build": "broad", "age": 39, "hair": "black_short", "notes": "red smith's door, burn-freckled forearms, a leather apron older than he is"},
     "merchant": {"stock": "core:table/stock_smith", "marks": 300, "buys": ["weapon", "armour", "material", "tool"]},
     "schedule": [
       {"days": "weekdays", "hour": 5, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_red_door"},
@@ -94,7 +96,7 @@
     "bio": "Baker, widow of an unreliable huntsman, and the well through which every piece of news in Hearthvale must pass to be counted as true.",
     "unique_habit": "Sets the first loaf of every morning on the Toll's rim-stone 'for whoever', and never watches to see who takes it.",
     "personality": {"traits": ["brave", "generous", "pious", "gossip", "humble", "kind"]},
-    "appearance": {"seed": 1105, "build": "round", "age": 56, "hair": "grey_under_a_cloth", "notes": "flour to the elbows, a chalk-dust handprint on the hip of every apron"},
+    "appearance": {"feminine": 1.0, "seed": 1105, "build": "round", "age": 56, "hair": "grey_under_a_cloth", "notes": "flour to the elbows, a chalk-dust handprint on the hip of every apron"},
     "merchant": {"stock": "core:table/stock_general", "marks": 120, "buys": ["consumable", "ingredient"]},
     "schedule": [
       {"days": "all", "hour": 3, "place": "core:place/merrowby", "activity": "work", "spot": "oven"},
@@ -115,7 +117,7 @@
     "bio": "Keeps the Toll's Lip, an inn whose cellar is the inside of a forty-metre bell, and charges accordingly.",
     "unique_habit": "Closes the bar by ringing a tiny bronze cousin of the Toll, and has never once rung it at the same hour two nights running.",
     "personality": {"traits": ["timid", "generous", "cynical", "gossip", "humble", "kind"]},
-    "appearance": {"seed": 1106, "build": "tall_soft", "age": 47, "hair": "sandy_receding", "notes": "a bar-cloth over the shoulder, a brass bell on a cord at the belt"},
+    "appearance": {"feminine": 0.0, "seed": 1106, "build": "tall_soft", "age": 47, "hair": "sandy_receding", "notes": "a bar-cloth over the shoulder, a brass bell on a cord at the belt"},
     "merchant": {"stock": "core:table/stock_innkeeper", "marks": 200, "buys": ["consumable"]},
     "roles": ["innkeeper", "rents_rooms"],
     "schedule": [
@@ -135,7 +137,7 @@
     "bio": "Merrowby's hedge-witch: cures fevers, sells salves, and refuses to be called anything with 'wise' in it.",
     "unique_habit": "Consults her bees before every decision and reports their answers as if they had been given in words.",
     "personality": {"traits": ["brave", "generous", "cynical", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 1107, "build": "wiry", "age": 63, "hair": "white_loose", "notes": "green-stained fingers, a veil pushed up on the forehead, a smell of thyme and smoke"},
+    "appearance": {"feminine": 1.0, "seed": 1107, "build": "wiry", "age": 63, "hair": "white_loose", "notes": "green-stained fingers, a veil pushed up on the forehead, a smell of thyme and smoke"},
     "merchant": {"stock": "core:table/stock_alchemist", "marks": 150, "buys": ["ingredient", "consumable"]},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/merrowby", "activity": "idle", "spot": "hives", "notes": "consulting the bees"},
@@ -155,7 +157,7 @@
     "bio": "Brews the Lip's ale under a yellow door and considers the Tamwick cider a personal insult delivered annually.",
     "unique_habit": "Names each cask after a villager and drinks them in order of who has most recently annoyed him.",
     "personality": {"traits": ["brave", "greedy", "cynical", "gossip", "proud", "kind"]},
-    "appearance": {"seed": 1108, "build": "barrel", "age": 49, "hair": "red_beard_grey_streaks", "notes": "yellow brewer's door, hop-stained sleeves, a voice built for cellars"},
+    "appearance": {"feminine": 0.0, "seed": 1108, "build": "barrel", "age": 49, "hair": "red_beard_grey_streaks", "notes": "yellow brewer's door, hop-stained sleeves, a voice built for cellars"},
     "schedule": [
       {"days": "weekdays", "hour": 6, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_yellow_door"},
       {"days": "weekdays", "hour": 7, "place": "core:place/merrowby", "activity": "work", "spot": "brewhouse"},
@@ -175,7 +177,7 @@
     "bio": "Keeps the Tamwick orchards and the only cider press in Wickmere, and brings both opinions to Merrowby market every Tollday.",
     "unique_habit": "Grafts a twig from every tree that dies onto one particular tree that lives; the Grafted Tree now bears eleven kinds of apple and she can name the dead by taste.",
     "personality": {"traits": ["brave", "generous", "cynical", "gossip", "proud", "kind"]},
-    "appearance": {"seed": 1109, "build": "strong", "age": 45, "hair": "dark_tied_back", "notes": "green grower's door, forearms scratched by branches, a knife for grafting worn on a cord"},
+    "appearance": {"feminine": 1.0, "seed": 1109, "build": "strong", "age": 45, "hair": "dark_tied_back", "notes": "green grower's door, forearms scratched by branches, a knife for grafting worn on a cord"},
     "merchant": {"stock": "core:table/stock_general", "marks": 90, "buys": ["ingredient", "consumable"]},
     "schedule": [
       {"days": "weekdays", "hour": 6, "place": "core:place/tamwick", "activity": "idle", "spot": "grafted_tree", "notes": "checking the grafts"},
@@ -197,7 +199,7 @@
     "bio": "Eight, the smith's son, owner of a dog called Bramble who is owned by nobody when there are hares about.",
     "unique_habit": "Whistles for Bramble at the top of every hour whether or not the dog is there, and has done since the dog went missing.",
     "personality": {"traits": ["timid", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 1110, "build": "child_small", "age": 8, "hair": "black_cowlick", "notes": "a leather cord where a whistle hangs, soot on one cheek always"},
+    "appearance": {"feminine": 0.0, "seed": 1110, "build": "child_small", "age": 8, "hair": "black_cowlick", "notes": "a leather cord where a whistle hangs, soot on one cheek always"},
     "schedule": [
       {"days": "weekdays", "hour": 7, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_red_door"},
       {"days": "weekdays", "hour": 8, "place": "core:place/merrowby", "activity": "idle", "spot": "forge", "notes": "watching his father"},
@@ -217,7 +219,7 @@
     "bio": "Merrowby's steward: keeps the deeds, the weights and the grudges, in that order.",
     "unique_habit": "Polishes the town's one brass key at the well at noon every day, whether or not it needs it, so that everyone can see that it is still his to polish.",
     "personality": {"traits": ["timid", "greedy", "cynical", "quiet", "proud"]},
-    "appearance": {"seed": 1111, "build": "narrow", "age": 58, "hair": "grey_oiled", "notes": "a chain of office nobody asked him to wear, ink on the right cuff, a brass key"},
+    "appearance": {"feminine": 0.0, "seed": 1111, "build": "narrow", "age": 58, "hair": "grey_oiled", "notes": "a chain of office nobody asked him to wear, ink on the right cuff, a brass key"},
     "roles": ["deed_seller", "weights_and_measures"],
     "sells_deeds": true,
     "schedule": [
@@ -237,7 +239,7 @@
     "bio": "A bard who has written verses about everyone in Merrowby except, so far, you.",
     "unique_habit": "Tunes his fiddle to the Toll's hum every morning at the crater rim and complains, every morning, that the hum has changed.",
     "personality": {"traits": ["timid", "generous", "cynical", "gossip", "proud", "kind"]},
-    "appearance": {"seed": 1112, "build": "slight", "age": 31, "hair": "long_fair_ribboned", "notes": "a fiddle case patched with a Long Table banner, boots too good for the road"},
+    "appearance": {"feminine": 0.0, "seed": 1112, "build": "slight", "age": 31, "hair": "long_fair_ribboned", "notes": "a fiddle case patched with a Long Table banner, boots too good for the road"},
     "schedule": [
       {"days": "all", "hour": 9, "place": "core:place/merrowby", "activity": "eat", "spot": "toll_lip_bar"},
       {"days": "all", "hour": 10, "place": "core:place/merrowby", "activity": "idle", "spot": "crater_rim", "notes": "tuning to the hum, complaining"},
@@ -255,7 +257,7 @@
     "bio": "Keeps the seventeen small bells of Merrowby, one for each family; the eighteenth hangs in her kitchen and belongs to nobody now.",
     "unique_habit": "Polishes each tree-bell every dawn with her late husband's shirt-cuff and has not rung one since the day he died.",
     "personality": {"traits": ["timid", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 1113, "build": "small", "age": 66, "hair": "white_coiled", "notes": "black ribbon on a grey shawl, a cuff of blue linen in the apron pocket"},
+    "appearance": {"feminine": 1.0, "seed": 1113, "build": "small", "age": 66, "hair": "white_coiled", "notes": "black ribbon on a grey shawl, a cuff of blue linen in the apron pocket"},
     "schedule": [
       {"days": "all", "hour": 6, "place": "core:place/merrowby", "activity": "pray", "spot": "bell_trees", "notes": "polishing the bells"},
       {"days": "all", "hour": 8, "place": "core:place/merrowby", "activity": "eat", "spot": "kitchen_hollins"},
@@ -276,7 +278,7 @@
     "bio": "Kept the Wardens' Roll for forty years and still says the quiet villages' names to the Toll every dawn so they will not go.",
     "unique_habit": "Recites the roll of quiet hamlets to the Cracked Toll at first light, then listens for a while as if expecting an answer.",
     "personality": {"traits": ["brave", "generous", "pious", "quiet", "humble", "kind"]},
-    "appearance": {"seed": 1114, "build": "stooped", "age": 81, "hair": "white_wisps", "notes": "a Warden's cloak gone soft with washing, a stick of yew, eyes clouded but turned to whoever speaks"},
+    "appearance": {"feminine": 0.0, "seed": 1114, "build": "stooped", "age": 81, "hair": "white_wisps", "notes": "a Warden's cloak gone soft with washing, a stick of yew, eyes clouded but turned to whoever speaks"},
     "schedule": [
       {"days": "all", "hour": 5, "place": "core:place/merrowby", "activity": "pray", "spot": "crater_rim", "notes": "saying the names"},
       {"days": "all", "hour": 7, "place": "core:place/merrowby", "activity": "eat", "spot": "toll_lip_bar", "notes": "Tobin feeds him and pretends he paid"},

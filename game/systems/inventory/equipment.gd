@@ -278,7 +278,9 @@ func bind_quick(slot: String, item: String) -> bool:
 	if def.is_empty():
 		return false
 	var cat := str(def.get("category", ""))
-	if cat != "consumable" and cat != "ingredient":
+	# a one-handed weapon may be kept on a quick key too, to take into the hand (a ranger's knife)
+	var swappable := cat == "weapon" and not (def.get("tags", []) as Array).has("two_handed") and not (def.get("tags", []) as Array).has("shield")
+	if cat != "consumable" and cat != "ingredient" and not swappable:
 		return false
 	_quick[slot] = item
 	changed.emit(slot)

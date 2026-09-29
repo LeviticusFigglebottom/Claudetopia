@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.0986,
+  -0.0826,
+  1.5999,
+  0.0968,
+  0.1457,
+  1.7928
+ ],
+ "card_tris": 7383,
+ "cards": "crown_braid_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "crown_braid": "hair",
+  "crown_braid_cards": "hair_cards"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 71376,
+ "slot_hint": "attachment",
+ "textures": [
+  "crown_braid_normal.png",
+  "crown_braid_albedo.png",
+  "crown_braid_orm.png"
+ ],
+ "tris": [
+  5200,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -22,7 +22,11 @@ const EXILE_FLAG := "exiled_from_"
 @export var law_faction := ""
 
 var confronting := false
+## Seconds a patrol stands at each point, least and most.
+const PATROL_PAUSE_S := Vector2(2.0, 6.0)
+
 var _patrol_index := 0
+var _patrol_wait := 0.0
 var _confront_cooldown := 0.0
 
 
@@ -73,7 +77,12 @@ func _physics_process(delta: float) -> void:
 	if confronting or not alive:
 		return
 	if activity == "patrol" and not has_target:
-		_next_patrol_point()
+		# a pause at each point, looking about (Npc's life beats), before the next leg: a patrol
+		# used to set straight off again the frame it arrived, round and round without a stop
+		_patrol_wait -= delta
+		if _patrol_wait <= 0.0:
+			_patrol_wait = randf_range(PATROL_PAUSE_S.x, PATROL_PAUSE_S.y)
+			_next_patrol_point()
 	if should_confront():
 		var player := Peers.player()
 		if player is Node3D and global_position.distance_to((player as Node3D).global_position) <= CONFRONT_M and can_see(player as Node3D):

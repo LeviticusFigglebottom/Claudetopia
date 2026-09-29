@@ -33,6 +33,29 @@ EYE_M = 1.7
 SIGHT_SPARE_M = 0.4
 
 
+## what a camera may not stand in, and how near (metres, times the plant's scale): a tree's crown
+## (the whole of it: at 3.5 m the w4096d review's frame 07 was still shot from under a canopy),
+## a bush, a hedge; and how far along its sight line it must be clear of them
+PLANT_REACH = (("/trees/", 6.0), ("hedge", 2.5), ("bracken", 1.2), ("fern", 1.2), ("briar", 1.5),
+               ("foxglove", 1.0), ("reeds", 1.2), ("bulrush", 1.0), ("heather", 0.9), ("gorse", 1.5))
+PLANT_SIGHT_M = 14.0
+
+
+def _plants(path: str):
+    """Every tree and bush of a built world's cells: their (x, z) and how near a camera may come."""
+    pts, reach = [], []
+    for fn in sorted(glob.glob(os.path.join(path, "cells", "*.json"))):
+        d = json.load(open(fn))
+        for a, rows in d["instances"].items():
+            r = next((m for k, m in PLANT_REACH if k in a and "_impostor" not in a), None)
+            if r is None:
+                continue
+            for row in rows:
+                pts.append((row[0], row[2]))
+                reach.append(r * max(float(row[4]), 0.5))
+    return np.asarray(pts, dtype=np.float64).reshape(-1, 2), np.asarray(reach, dtype=np.float64)
+
+
 class World:
     """The runtime maps of a built world (what the game reads): heights, water and regions."""
 
@@ -49,6 +72,8 @@ class World:
         self.W = np.fromfile(os.path.join(path, rt["water"]), dtype=np.uint8).reshape(self.n, self.n)
         self.R = np.fromfile(os.path.join(path, rt["regions"]), dtype=np.uint8).reshape(self.n, self.n)
         self.regions = m["regions"]
+        self._plants = None
+        self._plant_tree = None
 
     def _ij(self, x, z, off=0.0):
         j = np.clip((np.asarray(x, dtype=np.float64) - self.x0 - off) / self.sp, 0, self.n - 1.001)
@@ -78,7 +103,41 @@ class World:
         x = cam[0] + (look[0] - cam[0]) * t
         z = cam[2] + (look[2] - cam[2]) * t
         y = cam[1] + (look[1] - cam[1]) * t
-        return bool(np.all(self.h(x, z) < y - SIGHT_SPARE_M))
+        return bool(np.all(self.h(x, z) < y - SIGHT_SPARE_M) and not self.leafy(cam, look))
+
+    def trees_near(self, x: float, z: float, r: float) -> int:
+        """How many trees and bushes stand within `r` metres of (x, z)."""
+        if self._plants is None:
+            self._plants = _plants(self.path)
+        if len(self._plants[0]) == 0:
+            return 0
+        from scipy.spatial import cKDTree
+        if self._plant_tree is None:
+            self._plant_tree = cKDTree(self._plants[0])
+        return len(self._plant_tree.query_ball_point((x, z), r))
+
+    def leafy(self, cam, look) -> bool:
+        """A tree or a bush stands at the camera, or across the first metres of its sight line.
+
+        The w4096d ground review's frames 01, 05, 11 and 21 were shot from inside a hawthorn, a
+        wood's understorey and a bush: the ground under them was clear, the plants on it were not.
+        """
+        if self._plants is None:
+            self._plants = _plants(self.path)
+        pts, reach = self._plants
+        if len(pts) == 0:
+            return False
+        from scipy.spatial import cKDTree
+        if self._plant_tree is None:
+            self._plant_tree = cKDTree(pts)
+        d = math.hypot(look[0] - cam[0], look[2] - cam[2])
+        t = np.linspace(0.0, min(1.0, PLANT_SIGHT_M / max(d, 1e-3)), 9)
+        probe = np.stack([cam[0] + (look[0] - cam[0]) * t, cam[2] + (look[2] - cam[2]) * t], axis=1)
+        for q, near in zip(probe, self._plant_tree.query_ball_point(probe, float(reach.max()))):
+            for k in near:
+                if math.hypot(pts[k, 0] - q[0], pts[k, 1] - q[1]) < reach[k]:
+                    return True
+        return False
 
 
 def frame(w: World, label: str, look, bearing: float, dist: float, above: float, fov: float = 60.0):
@@ -335,11 +394,20 @@ def slopes(w: World) -> list:
 REVIEW_REGIONS = ("hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea")
 
 
+def lit_hour(cam, look) -> float:
+    """An hour whose sun is behind the camera, so the face it looks at is lit: the game's sun runs
+    from +x at dawn to -x at dusk (Atmosphere: theta = pi * (hour - 6) / 12), so a camera looking
+    east wants the afternoon and one looking west the morning. (The w4096d review's bank and face
+    shots were of faces in their own shade: a dark wall filling the frame.)"""
+    return 15.5 if float(look[0]) - float(cam[0]) > 0.0 else 8.5
+
+
 def review(w: World) -> list:
     """The ground, region by region, at eye height: a steep bank and face (`slopes`), the rock on a
     crag or a cliff (a ledge, a face piece or a crest boulder), a point of interest's pad from 18 m,
     and the roughest hillside, for terraces and odd ridges."""
-    out = [dict(s, label=s["label"].replace("slope_", "rv_")) for s in slopes(w)]
+    out = [dict(s, label=s["label"].replace("slope_", "rv_"), time=lit_hour(s["pos"], s["look_at"]))
+           for s in slopes(w)]
     by_region: dict = {}
     # the rock: one piece of each kind a region has, its biggest, looked at from across its slope
     for a, r in _rows(w, "/rocks/"):
@@ -360,15 +428,20 @@ def review(w: World) -> list:
         shot = frame(w, "rv_%s_rock%s" % (region, kind.rstrip("_")), look, yaw + 0.5, 22.0, EYE_M)
         if shot:
             out.append(shot)
-    # a point of interest's pad, from 18 m off on the downhill side
+    # a point of interest's pad, from 18 m off on the downhill side: in each region the most open
+    # one (the fewest trees within 25 m), since a pad deep in a wood photographs as the wood's
+    # shade (the w4096d review's frame 21, Mossbridge in the Greatwood, was black)
     pads: dict = {}
     for e in json.load(open(os.path.join(w.path, "pois.json"))):
         if "fall" in e or "cave" in e or ":place/" in e["place_id"]:
             continue
         x, _y, z = e["pos"]
         region = w.region(x, z).split("/")[-1]
-        if region in REVIEW_REGIONS and region not in pads and not w.wet(x, z):
-            pads[region] = e
+        if region in REVIEW_REGIONS and not w.wet(x, z):
+            cover = w.trees_near(x, z, 25.0)
+            if region not in pads or cover < pads[region][0]:
+                pads[region] = (cover, e)
+    pads = {k: v[1] for k, v in pads.items()}
     for region, e in sorted(pads.items()):
         x, y, z = e["pos"]
         gx = float(w.h(x + 10.0, z) - w.h(x - 10.0, z))

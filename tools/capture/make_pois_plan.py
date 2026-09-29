@@ -398,7 +398,9 @@ def main() -> int:
         scatter.coarse = Ground(world, runtime=True)
     pois = load_json(os.path.join(world, "pois.json"))
     roads = load_json(os.path.join(world, "roads.json"))
-    defs = {p["id"]: p for p in load_json(os.path.join(PACK, "pois", "pois.json"))}
+    sys.path.insert(0, os.path.join(REPO, "tools", "world"))
+    from worldgen import content as CONTENT  # every pois/*.json, one a region
+    defs = {p["id"]: p for p in CONTENT.poi_registry(PACK)}
     places = {p["id"]: p for p in load_json(os.path.join(PACK, "places", "places.json"))}
     kinds = {k for k in args.kinds.split(",") if k}
     only = [s for s in args.only.split(",") if s]

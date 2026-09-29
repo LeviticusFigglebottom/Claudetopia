@@ -310,7 +310,9 @@ def limiter(x: np.ndarray, ceiling_db: float = -1.0, lookahead_ms: float = 5.0, 
     k = np.exp(-1.0 / max(release_ms * 0.001 * SR, 1.0))
     g = np.empty_like(need)
     # attack instantly (min filter already gives lookahead), release with a one-pole toward 1
-    g = signal.lfilter([1.0 - k], [1.0, -k], need)
+    # from the gain the first sample needs, not from zero: a zero start faded in the first 80 ms
+    # of anything that begins on its first sample (a single drip came out 20 dB down)
+    g = signal.lfilter([1.0 - k], [1.0, -k], need, zi=[need[0] * k])[0] if len(need) else need
     g = np.minimum(g, need)
     return (x.T * g).T
 

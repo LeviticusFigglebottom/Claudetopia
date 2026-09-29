@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.7193,
+  -0.1322,
+  0.9281,
+  0.721,
+  0.1315,
+  1.5377
+ ],
+ "collision": "none",
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "bodice": "cloth",
+  "bodice_laced": "leather"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 18363,
+ "slot_hint": "torso",
+ "textures": [
+  "bodice_albedo.png",
+  "bodice_orm.png",
+  "bodice_laced_albedo.png",
+  "bodice_laced_orm.png"
+ ],
+ "tris": [
+  5999,
+  0,
+  0
+ ],
+ "version": 1
+}

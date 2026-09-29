@@ -48,13 +48,19 @@ const ANTLER_BONE := "#d9ccb0"
 
 
 ## Dresses `model` (a HumanoidModel) for the foe `def` describes. Does nothing to a body that is
-## not the rig.
-static func dress(model: Node3D, def: Dictionary) -> void:
+## not the rig. With a `slice` (WorldPace) the clothes go on a few parts a frame.
+static func dress(model: Node3D, def: Dictionary, slice: WorldPace.Slice = null) -> void:
 	if model == null or not model.has_method("apply_appearance"):
 		return
 	var look := look_for(def)
 	if not look.is_empty():
-		model.call("apply_appearance", look)
+		if slice != null and model is HumanoidModel:
+			# stood up while the world is drawn: a few parts a frame, within the frame's budget
+			await (model as HumanoidModel).apply_appearance(look, slice)
+			if not is_instance_valid(model):
+				return
+		else:
+			model.call("apply_appearance", look)
 	var held: Variant = def.get("held", null)
 	if typeof(held) == TYPE_DICTIONARY:
 		hold(model, held)
@@ -86,10 +92,23 @@ static func look_for(def: Dictionary) -> Dictionary:
 	for row in OUTFITS:
 		if tags.has(row[0]):
 			var look_seed := absi(str(def.get("id", "")).hash())
-			return {"seed": look_seed, "culture": "vale", "parts": (row[1] as Dictionary).duplicate(),
+			# a third of the outlaws, poachers and dead are women, as a third of any band would be
+			var woman := (look_seed >> 7) % 3 == 0
+			var parts := (row[1] as Dictionary).duplicate()
+			if woman:
+				# her hair is a woman's cut, as her people wear it (a hood's close crop stays), and a
+				# plain tunic is her long belted one; armour is armour, fitted to her
+				var hair := str(parts.get("hair", ""))
+				if hair != "" and hair != "hood_friendly":
+					parts["hair"] = str(CharacterAppearance.HAIR_ACROSS.get(hair, hair))
+				var torso := str(parts.get("torso", ""))
+				if CharacterAppearance.WOMANS_CUT_OF.has(torso) and CharacterAppearance.garment_built(str(CharacterAppearance.WOMANS_CUT_OF[torso])):
+					parts["torso"] = str(CharacterAppearance.WOMANS_CUT_OF[torso])
+			return {"seed": look_seed, "culture": "vale", "parts": parts,
 					"palette": (row[2] as Dictionary).duplicate(), "skin": ["fair", "wheat", "olive", "amber"][look_seed % 4],
 					"hair_colour": ["dark_brown", "black", "auburn", "grey"][(look_seed >> 3) % 4],
-					"build": 0.6 + float((look_seed >> 5) % 4) * 0.1}
+					"build": 0.6 + float((look_seed >> 5) % 4) * 0.1,
+					"feminine": 1.0 if woman else 0.0, "height": 1.72 if woman else 1.78}
 	return {}
 
 

@@ -51,6 +51,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 from worldgen import atlas as ATLAS  # noqa: E402
+from worldgen import content as CONTENT  # noqa: E402
 from worldgen.roads import pad_radius  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -85,9 +86,10 @@ STONE_CLEAR_M = 1.5
 STONE_SHARE_M = 25.0
 ## ...when the shared stone stands this near the other road's line too
 STONE_PASSED_M = 10.0
-## The town stone's model: the Vale's milestone until settlements' town_stone scene, which cuts
-## the place's name on its face, replaces it here (one path; test_signposts checks it exists)
-TOWN_STONE_SCENE = "res://assets/models/props/hearthvale_milestone_a/hearthvale_milestone_a.glb"
+## The town stone: settlements' scene (world/pois/town_stone.gd), which reads {"place_id"} through
+## configure() and cuts the place's name on both faces, its base at the ground and its face (-Z)
+## toward the road (one path; test_signposts checks it exists)
+TOWN_STONE_SCENE = "res://world/pois/town_stone.tscn"
 
 
 def is_street(rid: str) -> bool:
@@ -112,7 +114,7 @@ def load(world: str = GEN, pack: str = PACK) -> dict:
     places = []
     defs = json.load(open(os.path.join(pack, "places", "places.json"), encoding="utf-8"))
     # a point of interest is a place a road can end at too (world/road_network.gd)
-    defs += json.load(open(os.path.join(pack, "pois", "pois.json"), encoding="utf-8"))
+    defs += CONTENT.poi_registry(pack)
     for p in defs:
         pos = p.get("position")
         if not pos:

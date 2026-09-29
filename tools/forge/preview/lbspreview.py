@@ -23,9 +23,23 @@ _N = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
 
 def acc(g, b, i):
     a = g["accessors"][i]
-    bv = g["bufferViews"][a["bufferView"]]
     n = _N[a["type"]]
     dt = _COMP[a["componentType"]]
+    if "bufferView" not in a:
+        # a sparse accessor with no base: zeros, and the listed elements set (a morph target's
+        # normals, written by glb.set_morph_target)
+        arr = np.zeros((a["count"], n))
+        sp = a.get("sparse")
+        if sp:
+            ia, va = sp["indices"], sp["values"]
+            ibv, vbv = g["bufferViews"][ia["bufferView"]], g["bufferViews"][va["bufferView"]]
+            idx = np.frombuffer(b, dtype=_COMP[ia["componentType"]], count=sp["count"],
+                                offset=ibv.get("byteOffset", 0) + ia.get("byteOffset", 0)).astype(int)
+            val = np.frombuffer(b, dtype=dt, count=sp["count"] * n,
+                                offset=vbv.get("byteOffset", 0) + va.get("byteOffset", 0)).reshape(-1, n)
+            arr[idx] = val
+        return arr
+    bv = g["bufferViews"][a["bufferView"]]
     stride = bv.get("byteStride")
     off = bv.get("byteOffset", 0) + a.get("byteOffset", 0)
     if stride and stride != n * np.dtype(dt).itemsize:

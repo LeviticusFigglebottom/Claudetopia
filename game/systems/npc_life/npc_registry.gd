@@ -397,7 +397,7 @@ func simulate(npc_id: String, weather := "") -> Dictionary:
 	# their talk ended, when a loaded run had unloaded her cell during it.
 	var told := changed or after_talk or bool(entry["travelling"]) or spot_marker(npc_id) != null
 	if node != null and told and node.has_method("apply_schedule_state"):
-		node.call("apply_schedule_state", entry)
+		node.call("apply_schedule_state", entry, _story_placing and changed and not _in_view(node))
 	if node != null:
 		steer_traveller(npc_id)
 	return s
@@ -427,8 +427,23 @@ static func _now_hours() -> float:
 	return float(WorldClock.day) * 24.0 + WorldClock.time_hours
 
 
+## A hold the story has just begun puts its person where it says at once, if the player cannot see
+## them go: a warrior's new game starts First Blood as the film ends, and Sergeant Dole, stood at
+## the gate by his day, walked 28 m to the yard while the recruit waited (flow, 2026-09-27).
+var _story_placing := false
+
 func _on_story_moved(_quest_id: String = "", _detail: Variant = null) -> void:
+	_story_placing = true
 	simulate_all()
+	_story_placing = false
+
+
+## Whether the player's camera could see this body now.
+func _in_view(node: Node) -> bool:
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() and get_viewport() != null else null
+	if cam == null or not (node is Node3D):
+		return false
+	return cam.is_position_in_frustum((node as Node3D).global_position + Vector3(0.0, 1.0, 0.0))
 
 
 func _on_new_day(day: int) -> void:
@@ -664,8 +679,47 @@ func _on_cell_loaded(cell: Vector2i) -> void:
 		if is_alive(id) and cell_of(id) == cell and not is_gone(id):
 			if is_spawned(id):
 				_settle_on_marker(id)
+			elif WorldPace.paced():
+				# a town's cell holds a dozen people, and standing them all up in the frame the cell
+				# came in was a frame of most of a second (TRIAGE item 36): one at a time, within the
+				# frame's budget (WorldPace), shared with the building of the world
+				if not _to_spawn.has(id):
+					_to_spawn.append(id)
 			else:
 				spawn(id)
+	if not _to_spawn.is_empty() and not _spawning:
+		# not inside the frame's building of the cell: after it, a piece of its own
+		_spawning = true
+		_spawn_queued.call_deferred()
+
+
+## Who a loaded cell holds and has not yet been stood up (paced: `_on_cell_loaded`).
+var _to_spawn: Array = []
+var _spawning := false
+
+
+func _spawn_queued() -> void:
+	_spawning = true
+	var slice := WorldPace.Slice.new()
+	while not _to_spawn.is_empty() and is_inside_tree():
+		if not spawning_enabled or abstract_only:
+			_to_spawn.clear()
+			break
+		# while a film's pictures are watched, the people wait for its next hold (black, or the last
+		# frame held): a person stood up is a frame of a tenth of a second on its own
+		while is_inside_tree() and not WorldPace.curtained() \
+				and get_tree().get_first_node_in_group(CinematicPlayer.GROUP) != null \
+				and (get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer).is_playing():
+			await WorldPace.next_frame()
+			slice.t0 = Time.get_ticks_usec()
+		if _to_spawn.is_empty() or not is_inside_tree():
+			break
+		var id: String = str(_to_spawn.pop_front())
+		# still wanted: their cell is loaded, they are where it is, and nothing stood them up meanwhile
+		if loaded_cells.has(cell_of(id)) and not is_spawned(id) and is_alive(id) and not is_gone(id):
+			spawn(id, WorldPace.Slice.new())
+			await slice.pace("npc")
+	_spawning = false
 
 
 ## Somebody stood up before the place they work was built — a far cell coming into the near
@@ -678,7 +732,9 @@ func _settle_on_marker(npc_id: String) -> void:
 	var marker := spot_marker(npc_id)
 	var body := actor(npc_id)
 	if marker != null and body is Node3D and (body as Node3D).global_position.distance_to(marker.global_position) > 2.0:
-		(body as Node3D).global_position = marker.global_position
+		(body as Node3D).global_position = marker.global_position + gather_offset(npc_id, marker)
+		if body.has_method("make_room"):
+			body.call("make_room")
 
 
 func _on_cell_unloaded(cell: Vector2i) -> void:
@@ -718,7 +774,7 @@ func actor(npc_id: String) -> Node:
 	return spawned.get(npc_id) if is_spawned(npc_id) else null
 
 
-func spawn(npc_id: String) -> Node:
+func spawn(npc_id: String, slice: WorldPace.Slice = null) -> Node:
 	if is_spawned(npc_id) or not is_alive(npc_id) or is_gone(npc_id):
 		return null
 	if not ResourceLoader.exists(NPC_SCENE):
@@ -729,6 +785,8 @@ func spawn(npc_id: String) -> Node:
 	if _is_guard(def) and ResourceLoader.exists(GUARD_SCRIPT):
 		node.set_script(load(GUARD_SCRIPT))
 	node.set("npc_id", npc_id)
+	if slice != null and "pace_slice" in node:
+		node.set("pace_slice", slice)
 	var parent := _spawn_parent()
 	if parent == null:
 		node.free()
@@ -805,19 +863,99 @@ func spot_marker(npc_id: String) -> Node3D:
 
 ## Where in a shared spot one person stands. A settlement's well, green and inn door are marked
 ## `gather`, because half a village is sent to each of them at some hour: they stand round it,
-## each in a place of their own that is the same every time, rather than all in one point. A
-## spot a dressing made for one person (the toll-keeper's stool) holds them exactly on it.
-static func gather_offset(npc_id: String, marker: Node3D) -> Vector3:
+## each in a place of their own, rather than all in one point. A spot a dressing made for one
+## person (the toll-keeper's stool) holds them exactly on it.
+##
+## The places round a shared spot are slots on rings (`gather_slots`), round what the spot is at
+## (the marker's `gather_from`: the well, not the marker beside it) from `gather_r` out, a body and
+## a gap apart. Each person holds one slot at a time (`_held`): the one their name gives them when
+## it is free (the same place every day), otherwise the free one nearest it, or with `near`, the
+## free one nearest there (a walker held up in the crowd settles where it is). A slot is free when
+## nobody holds it or its holder's hour has sent them elsewhere. `clear` (a Callable taking the
+## slot's place in the world) says a body can stand there: the well itself, a bench, a wall. With
+## a dozen sent to one well, the old random offsets (0.9-2.6 m round the marker, some in the
+## well) put two in one place and a queue formed that never cleared (triage 32).
+const GATHER_R_M := 1.1
+const GATHER_RING_STEP_M := 0.95
+const GATHER_GAP_M := 1.05
+const GATHER_RINGS := 3
+
+## npc_id -> [marker instance id, slot index]
+static var _held: Dictionary = {}
+
+
+## The slots round a shared spot, as offsets from its marker, the inner ring first.
+static func gather_slots(marker: Node3D) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	# (set in the marker's own frame, which is its settlement's)
+	var from: Vector3 = marker.global_transform.basis * (marker.get_meta("gather_from", Vector3.ZERO) as Vector3)
+	from.y = 0.0
+	var r0 := float(marker.get_meta("gather_r", GATHER_R_M))
+	for k in GATHER_RINGS:
+		var r := r0 + float(k) * GATHER_RING_STEP_M
+		var n := maxi(3, int(floor(TAU * r / GATHER_GAP_M)))
+		# each ring turned half a slot on the last, so the outer stand between the inner
+		var phase := float(k) * 0.5 * TAU / float(n) + float(marker.name.hash() % 97) * 0.07
+		for i in n:
+			var a := phase + TAU * float(i) / float(n)
+			out.append(from + Vector3(cos(a) * r, 0.0, sin(a) * r))
+	return out
+
+
+static func gather_offset(npc_id: String, marker: Node3D, near := Vector3.INF, clear := Callable()) -> Vector3:
 	if marker == null or not bool(marker.get_meta("gather", false)):
 		return Vector3.ZERO
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("gather:" + npc_id)
-	var a := rng.randf() * TAU
-	var r := rng.randf_range(0.9, 2.6)
-	return Vector3(cos(a) * r, 0.0, sin(a) * r)
+	var slots := gather_slots(marker)
+	var mid := marker.get_instance_id()
+	var held: Array = _held.get(npc_id, [])
+	if near == Vector3.INF and held.size() == 2 and int(held[0]) == mid and int(held[1]) < slots.size():
+		return slots[int(held[1])]
+	var taken := {}
+	for who: String in _held.keys():
+		var h: Array = _held[who]
+		if who != npc_id and int(h[0]) == mid and _still_at(who, marker):
+			taken[int(h[1])] = true
+	# the slot their name gives them on the inner ring, and from there (or from `near`) outward
+	var inner := maxi(3, int(floor(TAU * float(marker.get_meta("gather_r", GATHER_R_M)) / GATHER_GAP_M)))
+	var own := int(hash("gather:" + npc_id)) % inner
+	own = absi(own)
+	var from := slots[own] if near == Vector3.INF else near - marker.global_position
+	var order: Array = range(slots.size())
+	order.sort_custom(func(a: int, b: int) -> bool:
+		return Vector2(slots[a].x - from.x, slots[a].z - from.z).length_squared() < Vector2(slots[b].x - from.x, slots[b].z - from.z).length_squared())
+	for i: int in order:
+		if taken.has(i):
+			continue
+		if clear.is_valid() and not bool(clear.call(marker.global_position + slots[i])):
+			continue
+		_held[npc_id] = [mid, i]
+		return slots[i]
+	_held[npc_id] = [mid, own]
+	return slots[own]
+
+
+## Whether `npc_id`'s hour still has them at `marker` (their slot is theirs while it does).
+static func _still_at(npc_id: String, marker: Node3D) -> bool:
+	if instance == null:
+		return true
+	var st := instance.states.get(npc_id, {}) as Dictionary
+	if st.is_empty():
+		# somebody the registry does not keep (a test's person): theirs until they let it go
+		return true
+	if str(st.get("spot", "")) != str(marker.name):
+		return false
+	var owner_place := str(marker.get_meta("place", ""))
+	return owner_place == "" or owner_place == instance.place_of(npc_id)
+
+
+## The shared spot's middle, what its people stand round (the well, for the well's marker).
+static func gather_centre(marker: Node3D) -> Vector3:
+	var from: Vector3 = marker.global_transform.basis * (marker.get_meta("gather_from", Vector3.ZERO) as Vector3)
+	return marker.global_position + Vector3(from.x, 0.0, from.z)
 
 
 func despawn(npc_id: String) -> void:
+	_held.erase(npc_id)
 	if not spawned.has(npc_id):
 		return
 	var node: Node = spawned[npc_id]

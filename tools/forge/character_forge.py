@@ -262,7 +262,10 @@ def bake_all_clips(arm, skel: Skeleton, only: Optional[Sequence[str]] = None) ->
 
 BODY_TRIS = 7800
 HAND_TRIS = 1800             # both hands, on top of BODY_TRIS
-HEAD_TRIS = 6400   # a face is looked at from a hand away in the Naming; the lids and lips need it
+# A face is looked at from a hand away in the Naming; the lids and lips need it. Item 45 took it from
+# 6 400 to 16 000 with the finer anatomy (nose wings and nostrils, the lips' red and their edge, the
+# philtrum, the ear's antihelix): the importer's LODs cut it back at a distance.
+HEAD_TRIS = 16000
 BODY_TEX = 1024
 HEAD_TEX = 1024
 
@@ -292,7 +295,7 @@ def add_grip_keys(ob, skel: Skeleton, hands: float = 1.0) -> List[str]:
 
 
 def build_head(skel: Skeleton, hs: bodylib.HeadStyle, name: str = "Head",
-               spacing: float = 0.0026, target_tris: int = HEAD_TRIS):
+               spacing: float = 0.0018, target_tris: int = HEAD_TRIS):
     verts, quads = bodylib.head_mesh(skel, hs, spacing=spacing)
     ob = bodylib.to_object(mesh_object_name(name), verts, quads)
     bodylib.decimate(ob, target_tris)
@@ -321,7 +324,7 @@ def build_eyes(skel: Skeleton, hs: bodylib.HeadStyle) -> List:
 
 
 def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: str, appearance: dict,
-               size: int = BODY_TEX, scene=None) -> Tuple[str, str, str]:
+               size: int = BODY_TEX, scene=None, albedo_only: bool = False) -> Tuple[str, str, str]:
     """Bake albedo / ORM / normal for a skin mesh and return their paths.
 
     `scene` is the SDF the mesh came from.  Handing it over is what makes the bake painted
@@ -332,9 +335,10 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
     head = bool(appearance.get("face", True))
     # a head is cut into many small islands (bodylib.head_uv), and a wider bleed round each keeps
     # the lower mips from mixing in what lies between them
-    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4, tangents=head and isinstance(scene, sdf.Scene))
+    maps = paint.surface_maps(ob, size=size, pad=8 if head else 4,
+                              tangents=head and isinstance(scene, sdf.Scene) and not albedo_only)
     detail_field = detail_box = None
-    if head and isinstance(scene, sdf.Scene):
+    if head and isinstance(scene, sdf.Scene) and not albedo_only:
         # the face's field sampled at 1 mm over the face alone: the lids, the nostrils and the
         # lips are a few millimetres, and the exact field at every texel took twenty minutes a head
         s_ = L["s"]
@@ -356,8 +360,13 @@ def paint_body(ob, skel: Skeleton, hs: bodylib.HeadStyle, out_dir: str, stem: st
         freckles=float(appearance.get("freckles", 0.0)), stubble=float(appearance.get("stubble", 0.0)),
         beard_colour=appearance.get("beard_colour"),
         scene=scene, occ_radius=occ_r,
-        warm_points=None if head else paint.warm_points_for(skel, L))
+        warm_points=None if head else paint.warm_points_for(skel, L),
+        feminine=float(L.get("feminine", 0.0)))
     albedo = paint.paint(maps, fn, background=(0.72, 0.58, 0.48))
+    if albedo_only:
+        # the face repainted on a part already built (face_textures.py): its ORM and normal stand
+        a_path = paint.save_png(albedo, os.path.join(out_dir, "%s_albedo.png" % stem))
+        return a_path, os.path.join(out_dir, "%s_orm.png" % stem), os.path.join(out_dir, "%s_normal.png" % stem)
     occ_fn, rough_fn = paint.skin_orm(L, seed=int(appearance.get("seed", 0)),
                                       age=float(appearance.get("age", 0.3)),
                                       scene=scene, occ_radius=occ_r)
@@ -393,6 +402,17 @@ def paint_marks(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 102
     rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
     a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
     return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_marks.png" % stem))
+
+
+def paint_zones(ob, skel: Skeleton, hs, out_dir: str, stem: str, size: int = 512) -> str:
+    """<stem>_zones.png beside a head's albedo: where the skin is warmer, cooler, oilier and
+    thinner (paint.face_zones), which skin.gdshader lays over the bake."""
+    L = bodylib.head_landmarks(skel, hs)
+    maps = paint.surface_maps(ob, size=size, pad=4)
+    rgb_fn, a_fn = paint.face_zones(L, seed=zlib.crc32(stem.encode("utf-8")) % 99991)
+    rgb = paint.paint(maps, rgb_fn, background=(0.0, 0.0, 0.0))
+    a = paint.paint(maps, a_fn, background=(0.0, 0.0, 0.0))[..., :1]
+    return paint.save_png_rgba(np.concatenate([rgb, a], axis=-1), os.path.join(out_dir, "%s_zones.png" % stem))
 
 
 def paint_eyes(out_dir: str, stem: str, appearance: dict, size: int = 256) -> str:
@@ -454,6 +474,7 @@ def cmd_rig(args) -> None:
                             scene=bodylib.head_scene(skel, hs, flat=True))
     ea = paint_eyes(out_dir, "%s_eye" % name, app)
     paint_marks(head_ob, skel, hs, out_dir, "%s_head" % name)
+    paint_zones(head_ob, skel, hs, out_dir, "%s_head" % name)
     body_ob.data.materials.append(make_material("WM_Skin_Body", ba, bo, bnp, roughness=0.65))
     head_ob.data.materials.append(make_material("WM_Skin_Head", ha, ho, hn, roughness=0.62))
     eye_mat = make_material("WM_Eye", ea, roughness=0.18)
@@ -464,6 +485,8 @@ def cmd_rig(args) -> None:
     sidecar = bake_all_clips(arm, skel, only=args.clips)
     objs = [arm, body_ob, head_ob] + eyes
     glb = export_glb(os.path.join(out_dir, "%s.glb" % name), objs, with_animation=True)
+    # the body's rest position, for tattoos placed in bone space (body_coords.py, triage 48)
+    _body_coords().write(glb)
     with open(os.path.join(out_dir, "%s.clips.json" % name), "w") as f:
         json.dump(sidecar, f, indent=1, sort_keys=True)
     tris = bodylib.tri_count(body_ob) + bodylib.tri_count(head_ob) + sum(bodylib.tri_count(e) for e in eyes)
@@ -502,11 +525,50 @@ BODY_VARIANTS: Dict[str, dict] = {
     "heavy": {"bulk": 1.12, "build": 0.85, "hip_width": 1.10},
     "child": {"height": 1.30, "head_size": 1.18, "limb_length": 0.90, "bulk": 0.92, "build": 0.45,
               "shoulder_width": 0.88},
+    # A woman's body on the man's bones: the hips, the waist, the bust, the narrower shoulder
+    # shelf and the lighter limbs are all mesh (body_scene's `feminine`), and the joints stay
+    # where every clip and every garment was made for them (MESH_ONLY). The build slider widens
+    # her as it widens him, so one body covers the range as `default` does.
+    "woman": {"feminine": 1.0},
 }
+# Shape knobs beyond the proportions, per variant (bodylib.BodyStyle): a woman's hands and feet a
+# little smaller. (Not less `muscle`: under 0.25 the body has no lats at all, her back came in
+# 9 cm under the arms, and every padded coat fitted to her was pulled in with it.)
+BODY_STYLES: Dict[str, dict] = {
+    "woman": {"hands": 0.93, "feet": 0.93},
+}
+
+
+def variant_style(name: str) -> bodylib.BodyStyle:
+    return bodylib.BodyStyle.from_dict(BODY_STYLES.get(name, {}))
+
+
+# Proportions a variant's mesh is shaped by but its skeleton is not. `feminine` also moves the
+# hips out 12 % and the shoulders in 9 % in joint_positions -- 18 mm at the shoulder, which would
+# make the body a skeleton of its own like the child's -- so a woman's body keeps the default
+# joints and takes her shape from the mesh alone.
+MESH_ONLY = ("feminine",)
+# Every face is built again as `<name>_f` with a woman's jaw, brow and lips (head_scene's
+# `feminine`); HumanoidModel wears it on a woman's body. The vault is the same for every head,
+# so hair, hoods and helms fit both.
+FEMININE_HEAD = "_f"
 
 
 # What a child is dressed in: the plain garments of each slot, cut again on the child.
 CHILD_GARMENTS = ["tunic", "shirt", "trousers", "dress", "shoes", "boots", "belt"]
+
+
+# The bodies every garment carries a fit for whether or not `--fits` is given.
+ALWAYS_FITTED = ("woman",)
+
+
+def _head_builds():
+    """(part name, HeadStyle params, feminine) for every head the forge makes: each preset, and
+    each again with a woman's face."""
+    for name, params in HEAD_PRESETS.items():
+        yield name, params, 0.0
+    for name, params in HEAD_PRESETS.items():
+        yield name + FEMININE_HEAD, params, 1.0
 
 
 def part_dir(kind: str, name: str) -> str:
@@ -531,9 +593,24 @@ def export_part(name: str, kind: str, objs: Sequence, arm, params: dict, seed: i
 def _fresh_rig(props: Optional[rig.Proportions] = None):
     """A scene holding only the armature, for building one part against."""
     reset_scene()
-    skel = Skeleton(props or rig.Proportions())
+    skel = variant_skeleton(props or rig.Proportions())
     arm = rig.build_armature(skel, name="Armature")
     return skel, arm
+
+
+def _snug(body: str, skel: Skeleton):
+    """How much closer than the default body a variant wears its clothes (cloth.BODY_SNUG)."""
+    fn = clothlib.BODY_SNUG.get(body)
+    return fn(skel) if fn else None
+
+
+def variant_skeleton(props: rig.Proportions) -> Skeleton:
+    """The skeleton for `props`, its joints laid out without the MESH_ONLY proportions and the
+    body then shaped with them: the bones are the default rig's, the mesh is the variant's."""
+    bones = rig.Proportions.from_dict({k: v for k, v in props.to_dict().items() if k not in MESH_ONLY})
+    skel = Skeleton(bones)
+    skel.props = props
+    return skel
 
 
 def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None, skel: Optional[Skeleton] = None):
@@ -670,7 +747,7 @@ def _part_object(g, skel: Skeleton, arm, bW, seed: int, out_dir: str,
     fitted: List[str] = []
     if fits:
         v, _, _ = bodylib.mesh_arrays(ob)
-        fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_)
+        fitted = bodylib.add_shape_keys(ob, {name: bodylib.fit_positions(v, a_, b_, snug=_snug(name, skel))
                                              for name, (a_, b_) in fits.items()})
     if getattr(g, "grip", False):
         # gloves close with the hands in them
@@ -733,17 +810,22 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     if getattr(g, "pattern", None) is not None:
         # woven in its own colours: HumanoidModel leaves it untinted
         extra["tint"] = "none"
-    return export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
-                       seed=seed, extra=extra)
+    glb = export_part(g.name, kind, objs, arm, {"material": g.material, "bone": g.bone},
+                      seed=seed, extra=extra)
+    if g.material == "hair" and glb:
+        # which way its strands run, fine strands and root to tip, read by hair.gdshader
+        import face_textures
+        face_textures.repaint_hair(g.name, kind, glb, out_dir)
+    return glb
 
 
 def _slot_hint(name: str) -> str:
     if name.endswith("_child"):
         name = name[:-len("_child")]
     if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron",
-                "coat", "wrap_torso"):
+                "coat", "wrap_torso", "kirtle", "fitted_tunic", "bodice"):
         return "torso"
-    if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps"):
+    if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps", "long_skirt"):
         return "legs"
     if name in ("boots", "shoes", "greaves"):
         return "feet"
@@ -751,7 +833,7 @@ def _slot_hint(name: str) -> str:
         return "hands"
     if name in ("belt", "belt_knife", "sash", "cord_beads", "belt_satchel"):
         return "belt"
-    if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape"):
+    if name in ("cloak", "hooded_cloak", "ragged_cloak", "torn_cloak", "plaid", "shoulder_cape", "shawl"):
         return "back"
     if name in ("helm", "hood", "pauldrons"):
         return "headgear" if name in ("helm", "hood") else "torso"
@@ -771,6 +853,22 @@ def _guarded(name: str, build, failed: List[str]) -> None:
         failed.append(name)
 
 
+def _face_morphs():
+    """tools/forge/face_morphs.py, which imports this module (so not at the top)."""
+    import face_morphs
+    return face_morphs
+
+
+def _fit_parts():
+    """tools/forge/fit_parts.py, which imports this module (so not at the top)."""
+    import fit_parts
+    return fit_parts
+def _body_coords():
+    """tools/forge/body_coords.py: a body's rest position as extra UVs, for tattoos (triage 48)."""
+    import body_coords
+    return body_coords
+
+
 def cmd_parts(args) -> None:
     only = set(args.only) if getattr(args, "only", None) else None
     t0 = time.time()
@@ -780,10 +878,10 @@ def cmd_parts(args) -> None:
         return only is None or n in only
 
     # -- heads ---------------------------------------------------------------------------
-    for name, params in HEAD_PRESETS.items():
-        if not want(name) and not want("heads"):
+    for name, params, fem in _head_builds():
+        if not want(name) and not want("heads") and not (fem and want("feminine_heads")):
             continue
-        skel, arm = _fresh_rig()
+        skel, arm = _fresh_rig(rig.Proportions(feminine=fem))
         hs = bodylib.HeadStyle.from_dict(params)
         ob = build_head(skel, hs)
         eyes = build_eyes(skel, hs)
@@ -796,12 +894,15 @@ def cmd_parts(args) -> None:
                                 scene=bodylib.head_scene(skel, hs, flat=True))
         ea = paint_eyes(out_dir, "%s_eye" % name, app)
         paint_marks(ob, skel, hs, out_dir, name)
+        paint_zones(ob, skel, hs, out_dir, name)
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.62))
         em = make_material("WM_Eye_%s" % name, ea, roughness=0.18)
         for e in eyes:
             e.data.materials.append(em)
-        export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict()}, seed=1,
-                    extra={"slot_hint": "head"})
+        glb_path = export_part(name, "head", [ob] + eyes, arm, {"head": hs.to_dict(), "feminine": fem}, seed=1,
+                               extra={"slot_hint": "head"})
+        # the face's sliders and its face coordinates, written into the file (face_morphs.py)
+        _face_morphs().write_head(glb_path, name)
 
     # -- body variants --------------------------------------------------------------------
     for name, params in BODY_VARIANTS.items():
@@ -809,7 +910,7 @@ def cmd_parts(args) -> None:
             continue
         props = rig.Proportions.from_dict(params)
         skel, arm = _fresh_rig(props)
-        style = bodylib.BodyStyle()
+        style = variant_style(name)
         ob = build_body(skel, style)
         bodylib.skin_to_armature(ob, arm, skel)
         out_dir = part_dir("body", name)
@@ -818,8 +919,12 @@ def cmd_parts(args) -> None:
                                 scene=bodylib.body_scene(skel, style))
         ob.data.materials.append(make_material("WM_Skin_%s" % name, a, o, nmap, roughness=0.65))
         add_grip_keys(ob, skel, style.hands)
-        export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
-                    extra={"slot_hint": "body"})
+        body_glb = export_part(name, "body", [ob], arm, {"proportions": props.to_dict()}, seed=1,
+                               extra={"slot_hint": "body"})
+        if name == "woman":
+            # her bust slider, written into the file (fit_parts.py --bust)
+            _fit_parts().write_bust(body=True, clothes=False)
+        _body_coords().write(body_glb)
 
     # -- everything that is built against the default body --------------------------------
     garments = [n for n in clothlib.CLOTHING_BUILDERS if want(n) or want("clothing")]
@@ -844,11 +949,18 @@ def cmd_parts(args) -> None:
         # is skin through the cloth at the heavy end of the build slider; unfitted, the game
         # wears the default body under them and widens the rig, which shows no skin. `--fits`
         # builds them for the next attempt.
+        #
+        # The woman's body is always fitted: it is on the default bones and a few centimetres
+        # from the default body at most (the bust, the hips), and a woman's clothes are the
+        # same clothes. `fit_parts.py` adds the same target to parts already built.
         body_fits = {}
-        if garments and getattr(args, "fits", False):
-            for vname in ("heavy", "slight"):
-                vskel = Skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
-                body_fits[vname] = (field, clothlib.body_field(vskel, style))
+        if garments:
+            # the default body measured as the others are (cloth.fit_field): a distance out to
+            # where a fit fades, not the build field read off each primitive's bounds
+            fit_base = clothlib.fit_field(skel, style)
+            for vname in ALWAYS_FITTED + (("heavy", "slight") if getattr(args, "fits", False) else ()):
+                vskel = variant_skeleton(rig.Proportions.from_dict(BODY_VARIANTS[vname]))
+                body_fits[vname] = (fit_base, clothlib.fit_field(vskel, variant_style(vname)))
                 log("fit field for the %s body" % vname)
         # a beard lies on a jaw, and the faces' jaws differ: one morph target per face
         face_fits = {}
@@ -873,6 +985,22 @@ def cmd_parts(args) -> None:
             g = clothlib.build_beard(skel, name, body=field)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="beard",
                                fits=face_fits)
+        # a garment fitted to her follows her bust slider too (fit_parts.py --bust)
+        fitted_now = [n for n in garments if os.path.exists(os.path.join(part_dir("clothing", n), n + ".glb"))]
+        if fitted_now and "woman" in ALWAYS_FITTED:
+            _fit_parts().write_bust(set(fitted_now), body=False)
+        # hair and beards as strand cards beside the shells just built (hair_cards.py, triage 47);
+        # it writes the face's sliders on them itself
+        if hairs or beards:
+            import hair_cards
+            hair_cards.build(list(hairs) + list(beards))
+        # what lies over the face goes with its sliders (face_morphs.py, OVER_THE_FACE)
+        over = set(hairs) | set(beards) | {n for n in garments if n in _face_morphs().OVER_THE_FACE[2][1]}
+        if over:
+            fm = _face_morphs()
+            hv, moves = fm.default_moves()
+            for kind, pname, path in fm.parts(over):
+                fm.write_part(path, hv, moves)
         for name in attachments:
             g = clothlib.ATTACHMENT_BUILDERS[name](skel)
             build_garment_part(g, skel, arm, None, bW, seed=clothlib.stable_seed(name), kind="attachment")
@@ -964,7 +1092,7 @@ def cmd_presets(args) -> None:
          "back": "hooded_cloak"},
         skin="amber", hair_colour="soot", eye_colour="grey", build=0.38, age=0.44)
     add("player_lantern_clerk", "lakefolk",
-        {"head": "soft", "hair": "bun", "torso": "coat", "legs": "trousers", "feet": "shoes",
+        {"head": "soft", "hair": "chignon", "torso": "coat", "legs": "long_skirt", "feet": "shoes",
          "belt": "belt_satchel", "hands": "gloves"},
         skin="porcelain", hair_colour="ash_blond", eye_colour="pale_blue", build=0.40, age=0.28,
         feminine=1.0, height=1.66)
@@ -1016,7 +1144,7 @@ def cmd_presets(args) -> None:
         skin="amber", hair_colour="grey", eye_colour="grey", build=0.66, bulk=1.10,
         shoulder_width=1.14, height=1.84, age=0.58)
     add("sayer", "lakefolk",
-        {"head": "soft", "hair": "long", "torso": "robe", "feet": "shoes", "back": "cloak"},
+        {"head": "soft", "hair": "long_loose", "torso": "robe", "feet": "shoes", "back": "shawl"},
         skin="porcelain", hair_colour="white", eye_colour="pale_blue", build=0.34, age=0.80,
         feminine=1.0, height=1.63)
     add("merchant", "lakefolk",
@@ -1034,15 +1162,33 @@ def cmd_presets(args) -> None:
         skin="porcelain", hair_colour="soot", eye_colour="red", build=0.48, age=0.40,
         hollow=0.85, veins=0.9)
     add("hearth_touched", "vale",
-        {"head": "soft", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes"},
+        {"head": "soft", "hair": "long_loose", "torso": "kirtle", "feet": "shoes", "belt": "belt"},
         skin="wheat", hair_colour="flax", eye_colour="amber", build=0.45, age=0.28,
         hearth=0.85, feminine=1.0, height=1.68)
+
+    # -- women of each people, in their own cuts (triage 22) --------------------------------
+    add("vale_goodwife", "vale",
+        {"head": "round", "hair": "crown_braid", "torso": "kirtle", "feet": "shoes", "belt": "belt",
+         "back": "shawl"},
+        skin="fair", hair_colour="chestnut", eye_colour="hazel", build=0.50, age=0.40,
+        feminine=1.0, height=1.66, freckles=0.3)
+    add("clans_woman", "clans",
+        {"head": "broad", "hair": "twin_braids", "torso": "bodice", "legs": "long_skirt", "feet": "boots",
+         "belt": "belt_knife", "back": "plaid"},
+        skin="fair", hair_colour="ginger", eye_colour="green", build=0.60, age=0.32,
+        feminine=1.0, height=1.70)
+    add("woodfolk_woman", "woodfolk",
+        {"head": "hawk", "hair": "long_loose", "torso": "fitted_tunic", "legs": "leg_wraps", "feet": "boots",
+         "belt": "belt_knife", "back": "torn_cloak"},
+        skin="olive", hair_colour="soot", eye_colour="grey_green", build=0.40, age=0.30,
+        feminine=1.0, height=1.67)
 
     data = {
         "generator": GENERATOR, "version": VERSION, "rig": rig.RIG_ID,
         "callings": CALLINGS,
         "culture_palettes": pal,
         "head_presets": sorted(HEAD_PRESETS.keys()),
+        "feminine_heads": sorted(n + FEMININE_HEAD for n in HEAD_PRESETS),
         "body_variants": sorted(BODY_VARIANTS.keys()),
         "hair_styles": sorted(clothlib.HAIR_STYLES.keys()),
         "beard_styles": sorted(clothlib.BEARD_STYLES.keys()),

@@ -28,6 +28,8 @@ extends RefCounted
 ##   {"discovered": place_id}                 place discovered
 ##   {"wearing_tag": tag}                     an equipped item carries the tag
 ##   {"random": p}                            true with probability p (context rng; deterministic in tests)
+##   {"style": style_id}                      the character was named with that fighting style
+##   {"has_mount": true}                      the character owns a horse (false: owns none)
 ## Further supported (documented in the README; the same shapes, mirrored):
 ##   flag_not, flag_equals, quest_active, quest_done, quest_not_done, quest_min_stage,
 ##   quest_outcome, rep_max, renown_max, morality_max, member_of, not_member_of, has_no_item,
@@ -43,7 +45,7 @@ const KNOWN := [
 	"flag_not", "flag_equals", "quest_active", "quest_done", "quest_not_done", "quest_min_stage",
 	"quest_outcome", "rep_max", "renown_max", "morality_max", "member_of", "not_member_of",
 	"has_no_item", "marks_min", "is_night", "knows_deed", "book_read", "in_region", "at_place",
-	"npc_is", "witnessed_crime", "disposition_min", "true", "false",
+	"npc_is", "witnessed_crime", "disposition_min", "true", "false", "style", "has_mount",
 ]
 
 
@@ -103,6 +105,10 @@ static func _one(key: String, arg: Variant, ctx: SocialContext) -> bool:
 			return ctx.has_flag(str(arg))
 		"flag_not":
 			return not ctx.has_flag(str(arg))
+		"style":
+			return str(ctx.get_flag(StyleDef.FLAG, "")) == str(arg)
+		"has_mount":
+			return ctx.owns_a_mount() == bool(arg)
 		"flag_equals":
 			var pair := _pair(arg, ctx, "flag_equals")
 			if pair.is_empty():

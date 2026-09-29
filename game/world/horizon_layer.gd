@@ -96,13 +96,22 @@ func _ready() -> void:
 
 
 ## Builds every stand-in. `pois` is pois.json; `dressings` the WorldPois entries ({entry, def}),
-## and `roads` what the dressings lay their paths along.
-func build(pois: Array, dressings: Array, roads: Array = []) -> int:
+## and `roads` what the dressings lay their paths along. Given a `slice` (a world standing up while it
+## is drawn), it is paced by the frame's budget (WorldPace) between one stand-in and the next, and
+## takes as many frames as that needs: await it.
+func build(pois: Array, dressings: Array, roads: Array = [], slice: WorldPace.Slice = null) -> int:
 	for p in proxies:
 		if is_instance_valid(p.node):
 			p.node.queue_free()
 	proxies.clear()
 	var seen := {}
+	if slice != null:
+		# the landmarks' models, read on the loader's threads while the first are stood up
+		var models: Array = []
+		for e_v in pois:
+			if typeof(e_v) == TYPE_DICTIONARY:
+				models.append(str((e_v as Dictionary).get("scene", "")))
+		WorldStreamer.prefetch_paths(models)
 	for e_v in pois:
 		if typeof(e_v) != TYPE_DICTIONARY:
 			continue
@@ -127,9 +136,14 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 			if seen.has(key):
 				continue
 			seen[key] = true
+			while slice != null and WorldStreamer.still_reading(str(s.get("scene", ""))):
+				await WorldPace.next_frame()
+				slice.t0 = Time.get_ticks_usec()
 			var p := _landmark(id, s)
 			if p != null:
 				proxies.append(p)
+			if slice != null:
+				await slice.pace("horizon_landmark")
 	for item_v in dressings:
 		var item: Dictionary = item_v
 		var entry: Dictionary = item.get("entry", {})
@@ -137,9 +151,11 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 		var id := str(entry.get("place_id", ""))
 		if id in LEAVE_OFF or not (PoiDressing.kind_of(id, def) in TALL_KINDS):
 			continue
-		var p := _dressing(entry, def, roads)
+		var p := _dressing(entry, def, roads, slice != null)
 		if p != null:
 			proxies.append(p)
+		if slice != null:
+			await slice.pace("horizon_" + PoiDressing.kind_of(id, def) + ":" + id)
 	# a lit thing's light, and every camp's fire
 	for p in proxies:
 		if LIT.has(p.id) and (p.tier == "B" or p.light_at == Vector3.INF):
@@ -170,20 +186,53 @@ func build(pois: Array, dressings: Array, roads: Array = []) -> int:
 
 ## Builds from the world: its pois.json, the dressings WorldPois would raise, the roads.
 func build_from(world: World) -> int:
+	var t0 := Time.get_ticks_msec()
+	# (nothing paces it without a slice: this returns with everything built)
+	var n: int = await _build_places(world)
+	_build_edges()
+	_say_built(n, t0)
+	return n
+
+
+## `build_from` for a world standing up while it is drawn (World.stand_up_in_steps): a stand-in at a
+## time within the frame's budget (WorldPace), then the Thornmarch's trees and the Hushline. In one go
+## it was a frame of 1.5 s behind the title's chart and under the loading caption; in two, two
+## frames of most of a second (TRIAGE item 36).
+func build_from_in_steps(world: World) -> void:
+	var t0 := Time.get_ticks_msec()
+	var slice := WorldPace.Slice.new()
+	var n: int = await _build_places(world, slice)
+	await slice.pace("horizon_places")
+	if not is_inside_tree():
+		return
+	await WorldPace.next_frame()
+	if not is_inside_tree():
+		return
+	_build_edges()
+	_say_built(n, t0)
+
+
+func _build_places(world: World, slice: WorldPace.Slice = null) -> int:
 	streamer = world.streamer
 	provider = world.provider
 	var pois := world.pois()
 	var dressings := WorldPois.candidates(pois + WorldPois.unbuilt_entries(pois, provider))
-	var t0 := Time.get_ticks_msec()
-	var n := build(pois, dressings, WorldPois.roads_from_disk())
+	if slice != null:
+		await slice.pace("horizon_list")
+	return await build(pois, dressings, WorldPois.roads_from_disk(), slice)
+
+
+func _build_edges() -> void:
 	edges = HorizonBands.new()
 	edges.name = "Edges"
 	add_child(edges)
 	edges.build(provider, streamer)
 	edges.set_reach(reach("A"))
+
+
+func _say_built(n: int, t0: int) -> void:
 	Log.info("Horizon", "%d on the skyline (%d landmark models, %d tall places, %d camp fires), the Thornmarch's %d trees and the Hushline, in %d ms"
 			% [n, count("A"), count("B"), count("L"), edges.wall_trees(), Time.get_ticks_msec() - t0])
-	return n
 
 
 ## How many of a landmark model its builder stands round the place (the meta's `ring_count`).
@@ -273,6 +322,7 @@ func _apply_terrain() -> void:
 	var size := Graphics.terrain_mesh_size({"view_distance": setting})
 	if int(world.terrain_node.get("mesh_size")) != size:
 		world.terrain_node.set("mesh_size", size)
+		World.share_clipmap(world.terrain_node)
 
 
 func _on_setting_changed(section: String, key: String, value: Variant) -> void:
@@ -352,7 +402,7 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 	var path := str(s.get("scene", ""))
 	if not ResourceLoader.exists(path):
 		return null
-	var packed := load(path) as PackedScene
+	var packed := WorldStreamer.load_asset(path) as PackedScene
 	if packed == null:
 		return null
 	# a landmark drawn in the painted stone near is drawn in it on the skyline too
@@ -403,9 +453,13 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 
 
 ## A tall point of interest's stand-in: its dressing's own far silhouette.
-func _dressing(entry: Dictionary, def: Dictionary, roads: Array) -> Proxy:
+func _dressing(entry: Dictionary, def: Dictionary, roads: Array, defer := false) -> Proxy:
 	var d := PoiDressing.raise(entry, def, true, provider, roads)
+	# paced, its masonry is made on a worker thread and put on when it is done (`_finish_meshes`)
+	d.defer_meshes = defer
 	add_child(d)          # builds in _ready
+	if defer:
+		_finish_meshes(d)
 	d.remove_from_group(PoiDressing.GROUP)
 	d.name = "B_" + Ids.name_of(d.poi_id)
 	# a stand-in is a picture: nothing in it may be walked into, found, or counted as the place
@@ -423,6 +477,11 @@ func _dressing(entry: Dictionary, def: Dictionary, roads: Array) -> Proxy:
 	p.top_m = PlaceDiscovery.landmark_height(d.poi_id)
 	p.cell = _cell_of(d.world_position)
 	return p
+
+
+func _finish_meshes(d: PoiDressing) -> void:
+	while is_instance_valid(d) and not d.meshes_ready():
+		await WorldPace.next_frame()
 
 
 func _geometry(root: Node) -> Array:

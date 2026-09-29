@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import struct
 from pathlib import Path
+from typing import Optional
 
 GLB_MAGIC = 0x46546C67
 CHUNK_JSON = 0x4E4F534A
@@ -350,6 +351,74 @@ def prune(gltf: dict, bin_chunk: bytes) -> bytes:
     return bytes(out)
 
 
+def read_accessor(gltf: dict, bin_chunk: bytes, index: int) -> list:
+    """A float or integer accessor's values as a list of rows (sparse accessors are not read)."""
+    acc = gltf["accessors"][index]
+    fmt = {5126: "f", 5123: "H", 5125: "I", 5121: "B"}[acc["componentType"]]
+    width = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}[acc["type"]]
+    view = gltf["bufferViews"][acc["bufferView"]]
+    size = struct.calcsize("<" + fmt)
+    stride = view.get("byteStride", size * width)
+    start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+    return [list(struct.unpack_from("<%d%s" % (width, fmt), bin_chunk, start + i * stride))
+            for i in range(acc["count"])]
+
+
+def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, deltas: list,
+                     normals: Optional[list] = None) -> bytes:
+    """Give every primitive of mesh `mesh_index` the morph target `name`: `deltas` are POSITION
+    offsets, one row per vertex of each primitive in turn. A target of that name already there is
+    written over in place; a new one goes after the others. Where the mesh's other targets carry a
+    NORMAL, the new one carries a zero NORMAL, so every target has the same attributes -- or
+    `normals`, NORMAL offsets row for row like `deltas`, when given (a fit that moves cloth over a
+    bust has to turn its normals too, or it is lit as the chest it was built on). Returns the new BIN
+    chunk (the glTF dict is edited in place)."""
+    mesh = gltf["meshes"][mesh_index]
+    extras = mesh.setdefault("extras", {})
+    names = list(extras.get("targetNames", []))
+    out = bytearray(bin_chunk)
+    at = 0
+    for p in mesh["primitives"]:
+        count = gltf["accessors"][p["attributes"]["POSITION"]]["count"]
+        rows = [[float(c) for c in r] for r in deltas[at:at + count]]
+        nrows = None if normals is None else [[float(c) for c in r] for r in normals[at:at + count]]
+        at += count
+        if len(rows) != count:
+            raise ValueError("set_morph_target: %d deltas for a primitive of %d vertices" % (len(rows), count))
+        targets = p.setdefault("targets", [])
+        if name in names and names.index(name) < len(targets):
+            t = targets[names.index(name)]
+            if nrows is not None:
+                # written fresh: an old zero NORMAL may be an accessor with no data of its own
+                t["NORMAL"] = _append_accessor(gltf, out, nrows, "VEC3", 5126, 34962)
+            acc = gltf["accessors"][t["POSITION"]]
+            if "bufferView" not in acc:
+                # the exporter writes a target that moves nothing as an accessor with no data at
+                # all (every row zero); it gets data of its own now
+                t["POSITION"] = _append_accessor(gltf, out, rows, "VEC3", 5126, 34962, with_bounds=True)
+                continue
+            view = gltf["bufferViews"][acc["bufferView"]]
+            flat = [v for r in rows for v in r]
+            struct.pack_into("<%df" % len(flat), out, view.get("byteOffset", 0) + acc.get("byteOffset", 0), *flat)
+            acc["min"] = [min(r[i] for r in rows) for i in range(3)]
+            acc["max"] = [max(r[i] for r in rows) for i in range(3)]
+            continue
+        target = {"POSITION": _append_accessor(gltf, out, rows, "VEC3", 5126, 34962, with_bounds=True)}
+        if nrows is not None or any("NORMAL" in t for t in targets):
+            target["NORMAL"] = _append_accessor(gltf, out, nrows or [[0.0, 0.0, 0.0]] * count, "VEC3", 5126, 34962)
+        targets.append(target)
+    if at != len(deltas):
+        raise ValueError("set_morph_target: %d deltas for %d vertices" % (len(deltas), at))
+    if name not in names:
+        names.append(name)
+    extras["targetNames"] = names
+    if "weights" in mesh:
+        mesh["weights"] = (list(mesh["weights"]) + [0.0] * len(names))[:len(names)]
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
 def mesh_triangles(path: str | Path) -> int:
     """Triangles across every mesh in a GLB; 0 for a file that is only a skeleton."""
     return sum(m["tris"] for m in summary(path)["meshes"])
@@ -374,3 +443,223 @@ def summary(path: str | Path) -> dict:
         "images": [i.get("uri", "<embedded>") for i in gltf.get("images", [])],
         "materials": [m.get("name", "") for m in gltf.get("materials", [])],
     }
+
+
+# -- sparse morph targets and extra attributes (triage 39: the face sliders) --------------------
+
+def read_array(gltf: dict, bin_chunk: bytes, index: int):
+    """An accessor as a float numpy array (count, width), sparse substitutions applied; an accessor
+    with no buffer view is zeros."""
+    import numpy as np
+    acc = gltf["accessors"][index]
+    dt = {5126: "<f4", 5123: "<u2", 5125: "<u4", 5121: "u1"}[acc["componentType"]]
+    width = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}[acc["type"]]
+    n = acc["count"]
+    if "bufferView" in acc:
+        view = gltf["bufferViews"][acc["bufferView"]]
+        size = np.dtype(dt).itemsize * width
+        stride = view.get("byteStride", size)
+        start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        if stride == size:
+            out = np.frombuffer(bin_chunk, dtype=dt, count=n * width, offset=start).reshape(n, width).astype(float)
+        else:
+            out = np.stack([np.frombuffer(bin_chunk, dtype=dt, count=width, offset=start + i * stride)
+                            for i in range(n)]).astype(float)
+    else:
+        out = np.zeros((n, width))
+    sp = acc.get("sparse")
+    if sp:
+        iv = gltf["bufferViews"][sp["indices"]["bufferView"]]
+        idt = {5123: "<u2", 5125: "<u4", 5121: "u1"}[sp["indices"]["componentType"]]
+        idx = np.frombuffer(bin_chunk, dtype=idt, count=sp["count"],
+                            offset=iv.get("byteOffset", 0) + sp["indices"].get("byteOffset", 0)).astype(int)
+        vv = gltf["bufferViews"][sp["values"]["bufferView"]]
+        vals = np.frombuffer(bin_chunk, dtype=dt, count=sp["count"] * width,
+                             offset=vv.get("byteOffset", 0) + sp["values"].get("byteOffset", 0)).reshape(-1, width)
+        out = out.copy()
+        out[idx] = vals
+    return out
+
+
+def _sparse_vec3(gltf: dict, out: bytearray, count: int, idx, vals) -> int:
+    """A VEC3 float accessor of `count` rows that is zero but at `idx`, where it is `vals`."""
+    import numpy as np
+    idx = np.asarray(idx, dtype="<u4")
+    vals = np.asarray(vals, dtype="<f4").reshape(-1, 3)
+    acc = {"componentType": 5126, "count": int(count), "type": "VEC3"}
+    if len(idx):
+        iv = _append_view(gltf, out, idx.tobytes())
+        vv = _append_view(gltf, out, vals.tobytes())
+        acc["sparse"] = {"count": int(len(idx)), "indices": {"bufferView": iv, "componentType": 5125},
+                         "values": {"bufferView": vv}}
+        acc["min"] = [float(min(0.0, v)) for v in vals.min(axis=0)]
+        acc["max"] = [float(max(0.0, v)) for v in vals.max(axis=0)]
+    else:
+        acc["min"] = [0.0, 0.0, 0.0]
+        acc["max"] = [0.0, 0.0, 0.0]
+    gltf.setdefault("accessors", []).append(acc)
+    return len(gltf["accessors"]) - 1
+
+
+def morph_target_names(gltf: dict, mesh_index: int) -> list:
+    return list((gltf["meshes"][mesh_index].get("extras") or {}).get("targetNames", []))
+
+
+def drop_morph_targets(gltf: dict, mesh_index: int, keep) -> None:
+    """Take the targets whose names fail `keep(name)` off every primitive of a mesh (their data is
+    left in the buffer until `compact`)."""
+    mesh = gltf["meshes"][mesh_index]
+    extras = mesh.setdefault("extras", {})
+    names = list(extras.get("targetNames", []))
+    kept = [i for i, n in enumerate(names) if keep(n)]
+    for p in mesh["primitives"]:
+        if "targets" in p:
+            p["targets"] = [p["targets"][i] for i in kept if i < len(p["targets"])]
+            if not p["targets"]:
+                del p["targets"]
+    extras["targetNames"] = [names[i] for i in kept]
+    if not extras["targetNames"]:
+        del extras["targetNames"]
+    if not extras:
+        del mesh["extras"]
+    if "weights" in mesh:
+        w = list(mesh["weights"])
+        mesh["weights"] = [w[i] if i < len(w) else 0.0 for i in kept]
+        if not mesh["weights"]:
+            del mesh["weights"]
+
+
+def add_sparse_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, pos, nrm=None,
+                            eps: float = 2e-5) -> bytes:
+    """A morph target on a mesh of one primitive, stored sparse: only rows that move more than `eps`
+    are written. `pos` and `nrm` are (count, 3) deltas in the glTF frame. If this or any other target
+    carries NORMAL, all of them do (zero where there is none), as glTF asks. A target of the same
+    name is replaced. Returns the new BIN chunk."""
+    import numpy as np
+    drop_morph_targets(gltf, mesh_index, lambda n: n != name)
+    mesh = gltf["meshes"][mesh_index]
+    if len(mesh["primitives"]) != 1:
+        raise ValueError("add_sparse_morph_target: %s has %d primitives" % (mesh.get("name"), len(mesh["primitives"])))
+    p = mesh["primitives"][0]
+    count = gltf["accessors"][p["attributes"]["POSITION"]]["count"]
+    pos = np.asarray(pos, float)
+    if pos.shape != (count, 3):
+        raise ValueError("add_sparse_morph_target: %s deltas for %d vertices" % (pos.shape, count))
+    moved = np.linalg.norm(pos, axis=1) > eps
+    if nrm is not None:
+        nrm = np.asarray(nrm, float)
+        moved &= True
+        moved |= np.linalg.norm(nrm, axis=1) > 2e-3
+    idx = np.nonzero(moved)[0]
+    out = bytearray(bin_chunk)
+    targets = p.setdefault("targets", [])
+    with_normals = nrm is not None or any("NORMAL" in t for t in targets)
+    t = {"POSITION": _sparse_vec3(gltf, out, count, idx, pos[idx])}
+    if with_normals:
+        n_ = nrm if nrm is not None else np.zeros((count, 3))
+        t["NORMAL"] = _sparse_vec3(gltf, out, count, idx, n_[idx])
+        for other in targets:
+            if "NORMAL" not in other:
+                other["NORMAL"] = _sparse_vec3(gltf, out, count, [], np.zeros((0, 3)))
+    targets.append(t)
+    extras = mesh.setdefault("extras", {})
+    extras["targetNames"] = list(extras.get("targetNames", [])) + [name]
+    if "weights" in mesh:
+        mesh["weights"] = list(mesh["weights"]) + [0.0]
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
+def set_attribute(gltf: dict, bin_chunk: bytes, mesh_index: int, attr: str, rows) -> bytes:
+    """Give the one primitive of a mesh the float attribute `attr` (TEXCOORD_1, say), replacing it."""
+    import numpy as np
+    mesh = gltf["meshes"][mesh_index]
+    p = mesh["primitives"][0]
+    rows = np.asarray(rows, dtype="<f4")
+    kind = {1: "SCALAR", 2: "VEC2", 3: "VEC3", 4: "VEC4"}[rows.shape[1]]
+    out = bytearray(bin_chunk)
+    view = _append_view(gltf, out, rows.tobytes(), 34962)
+    gltf.setdefault("accessors", []).append({"bufferView": view, "componentType": 5126,
+                                             "count": int(rows.shape[0]), "type": kind})
+    p["attributes"][attr] = len(gltf["accessors"]) - 1
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)
+
+
+def compact(gltf: dict, bin_chunk: bytes) -> bytes:
+    """Drop the accessors and buffer views nothing refers to any more and pack the buffer: what
+    replacing a morph target or an attribute leaves behind. Skins, animations, sparse accessors
+    and images are followed. Returns the new BIN chunk."""
+    accessors = gltf.get("accessors", [])
+    used = set()
+    for m in gltf.get("meshes", []):
+        for p in m.get("primitives", []):
+            used.update(p.get("attributes", {}).values())
+            if "indices" in p:
+                used.add(p["indices"])
+            for t in p.get("targets", []):
+                used.update(t.values())
+    for sk in gltf.get("skins", []):
+        if "inverseBindMatrices" in sk:
+            used.add(sk["inverseBindMatrices"])
+    for an in gltf.get("animations", []):
+        for smp in an.get("samplers", []):
+            used.update((smp["input"], smp["output"]))
+    amap, kept = {}, []
+    for i, a in enumerate(accessors):
+        if i in used:
+            amap[i] = len(kept)
+            kept.append(a)
+    views_used = set()
+    for a in kept:
+        if "bufferView" in a:
+            views_used.add(a["bufferView"])
+        if "sparse" in a:
+            views_used.update((a["sparse"]["indices"]["bufferView"], a["sparse"]["values"]["bufferView"]))
+    for img in gltf.get("images", []):
+        if "bufferView" in img:
+            views_used.add(img["bufferView"])
+    vmap, new_views = {}, []
+    out = bytearray()
+    for i, v in enumerate(gltf.get("bufferViews", [])):
+        if i not in views_used:
+            continue
+        while len(out) % 4:
+            out.append(0)
+        nv = dict(v)
+        start = v.get("byteOffset", 0)
+        nv["byteOffset"] = len(out)
+        out.extend(bin_chunk[start:start + v["byteLength"]])
+        vmap[i] = len(new_views)
+        new_views.append(nv)
+    for a in kept:
+        if "bufferView" in a:
+            a["bufferView"] = vmap[a["bufferView"]]
+        if "sparse" in a:
+            a["sparse"]["indices"]["bufferView"] = vmap[a["sparse"]["indices"]["bufferView"]]
+            a["sparse"]["values"]["bufferView"] = vmap[a["sparse"]["values"]["bufferView"]]
+    for img in gltf.get("images", []):
+        if "bufferView" in img:
+            img["bufferView"] = vmap[img["bufferView"]]
+    gltf["accessors"] = kept
+    gltf["bufferViews"] = new_views
+    for m in gltf.get("meshes", []):
+        for p in m.get("primitives", []):
+            p["attributes"] = {k: amap[v] for k, v in p.get("attributes", {}).items()}
+            if "indices" in p:
+                p["indices"] = amap[p["indices"]]
+            if "targets" in p:
+                p["targets"] = [{k: amap[v] for k, v in t.items()} for t in p["targets"]]
+    for sk in gltf.get("skins", []):
+        if "inverseBindMatrices" in sk:
+            sk["inverseBindMatrices"] = amap[sk["inverseBindMatrices"]]
+    for an in gltf.get("animations", []):
+        for smp in an.get("samplers", []):
+            smp["input"], smp["output"] = amap[smp["input"]], amap[smp["output"]]
+    while len(out) % 4:
+        out.append(0)
+    if gltf.get("buffers"):
+        gltf["buffers"][0]["byteLength"] = len(out)
+    return bytes(out)

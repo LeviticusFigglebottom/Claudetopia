@@ -129,7 +129,10 @@ def seat(buckets: dict, grid: Grid, H: np.ndarray) -> dict:
             kind = _kind(asset)
             if kind is None or isinstance(rows, Rows) or not rows:
                 continue
-            arr = np.array([(float(r[0]), float(r[2]), float(r[3]), float(r[4])) for r in rows], dtype=np.float64)
+            # a piece's length is its run's own scale: the ninth field's x where a run was laid
+            # stretched to its line (hedges._lay_runs), else its uniform scale
+            arr = np.array([(float(r[0]), float(r[2]), float(r[3]),
+                             float(r[8][0]) if len(r) > 8 else float(r[4])) for r in rows], dtype=np.float64)
             a = np.radians(arr[:, 2])
             ux, uz = np.cos(a), -np.sin(a)          # the piece's own +X on the ground
             h = HALF_M[kind] * arr[:, 3]
@@ -157,7 +160,7 @@ def seat(buckets: dict, grid: Grid, H: np.ndarray) -> dict:
                     if bk[j] > CLIFF_BURIED_M:
                         counts["on_cliffs"] += 1
                         continue
-                    piece = list(r[:6])
+                    piece = list(r)
                     piece[0], piece[2] = round(float(sx[j]), 2), round(float(sz[j]), 2)
                     got = _row(piece, float(yk[j]), float(pk[j]), float(gk[j]), ux[i], uz[i], 1.0 / k)
                     home = grid.written_cell(got[0], got[2])
@@ -180,11 +183,13 @@ def _row(r: list, y: float, pitch: float, sign: float, ux: float, uz: float, alo
     +X), and stretched `along` its run where it is one of a stepped piece's parts."""
     out = list(r[:6])
     out[1] = round(y, 2)
-    if pitch < PITCH_MIN_DEG and along is None:
+    stretched = len(r) > 8
+    if pitch < PITCH_MIN_DEG and along is None and not stretched:
         return out
     toward = math.degrees(math.atan2(sign * uz, sign * ux)) if pitch >= PITCH_MIN_DEG else 0.0
     out += [round(pitch, 2) if pitch >= PITCH_MIN_DEG else 0.0, round(toward, 1)]
-    if along is not None:
+    if along is not None or stretched:
         s = float(r[4])
-        out.append([round(s * along, 3), s, s])
+        sx, sy, sz = (float(v) for v in r[8]) if stretched else (s, s, s)
+        out.append([round(sx * (along if along is not None else 1.0), 3), sy, sz])
     return out

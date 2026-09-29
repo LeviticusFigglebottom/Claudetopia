@@ -81,12 +81,11 @@ func _build() -> void:
 	var page := UiKit.page("What You Can Say")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 60.0
-	frame.offset_top = 34.0
-	frame.offset_right = -60.0
-	frame.offset_bottom = -34.0
 	add_child(frame)
+	UiFit.inset(frame, 60.0, 34.0)
 	var body: VBoxContainer = page["body"]
+	# a large UI (triage 28) leaves a narrower canvas: both columns give up some width
+	var narrow := UiFit.narrow(self)
 
 	# what is in the mouth right now, on its own small plate rather than behind another rule
 	var plate_holder := CenterContainer.new()
@@ -104,14 +103,14 @@ func _build() -> void:
 
 	# wide enough that the list's own scrollbar and the rule between the columns read as two
 	# things rather than one thick edge
-	_columns = UiKit.row(26)
+	_columns = UiKit.row(14 if narrow else 26)
 	_columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(_columns)
 
 	# --- what you have been taught ---------------------------------------------------------
 	_list_box = UiKit.column(4)
 	var list_scroll := UiKit.scroll(_list_box)
-	list_scroll.custom_minimum_size = Vector2(430, 0)
+	list_scroll.custom_minimum_size = Vector2(350 if narrow else 430, 0)
 	list_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_columns.add_child(list_scroll)
 
@@ -126,7 +125,7 @@ func _build() -> void:
 	# inset from the frame by the same margin the list's own scrollbar sits at, so the two
 	# bars read as a pair of column edges rather than one of them clinging to the brass
 	var detail_inset := UiKit.margins(detail_col, 0, 0, 14, 0)
-	detail_inset.custom_minimum_size = Vector2(574, 0)
+	detail_inset.custom_minimum_size = Vector2(420 if narrow else 574, 0)
 	detail_inset.size_flags_horizontal = Control.SIZE_FILL
 	_columns.add_child(detail_inset)
 	_detail_head = UiKit.row(12)
@@ -146,7 +145,7 @@ func _build() -> void:
 	_empty_box.visible = false
 	body.add_child(_empty_box)
 	var empty_col := UiKit.column(10)
-	empty_col.custom_minimum_size = Vector2(620, 0)
+	empty_col.custom_minimum_size = Vector2(520 if narrow else 620, 0)
 	_empty_box.add_child(empty_col)
 	empty_col.add_child(UiKit.label("Nobody has taught you anything yet.", "Heading", HORIZONTAL_ALIGNMENT_CENTER))
 	var empty_note := UiKit.wrapped(
@@ -314,14 +313,15 @@ func _make_row(s: Dictionary) -> Button:
 	var name_label := UiKit.label(str(s["name"]), "Emphasis" if readied else "Body")
 	# a clipped Label reports no minimum width at all, so it is given one by hand or it
 	# collapses to nothing the moment anything beside it wants room
-	name_label.custom_minimum_size = Vector2(180, 0)
+	var narrow := UiFit.narrow(self)
+	name_label.custom_minimum_size = Vector2(124 if narrow else 180, 0)
 	name_label.clip_text = true
 	line.add_child(name_label)
 	# what kind of saying it is, kept beside the name: both describe the saying, and the
 	# leader space belongs between the words and the figures, as it does in any ledger.
 	# The cell expands and the word sits at its left, so the space falls before the numbers.
 	var kind := UiKit.label(str(CAST_TYPE_SHORT.get(str(s["cast_type"]), "")), "Tiny")
-	kind.custom_minimum_size = Vector2(100, 0)
+	kind.custom_minimum_size = Vector2(64 if narrow else 100, 0)
 	kind.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	kind.clip_text = true
 	kind.modulate = Color(1, 1, 1, 0.7)

@@ -60,6 +60,13 @@ static func _build() -> void:
 	for def in ContentDB.all("loot"):
 		for item in _items_in(def):
 			_note(_rolled, item, str(def.get("id", "")))
+		# a table's `guaranteed` items are a promise, not a chance: the collector's strongbox always
+		# holds the tithe-book the Rogue's lesson sends you for (triage 44)
+		var promised: Variant = def.get("guaranteed", [])
+		if typeof(promised) == TYPE_ARRAY:
+			for g in promised:
+				if typeof(g) == TYPE_DICTIONARY and str((g as Dictionary).get("item", "")) != "":
+					_note(_given, str(g["item"]), "loot:%s" % str(def.get("id", "")))
 	for def in ContentDB.all("item"):
 		var book := str(def.get("reads", ""))
 		if book == "" and str(def.get("category", "")) == "book":

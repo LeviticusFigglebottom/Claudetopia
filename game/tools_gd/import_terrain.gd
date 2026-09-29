@@ -54,6 +54,11 @@ const SLOTS: Array = [
 	{"name": "orchard_grass", "tile_m": 2.4, "value": 0.44, "roughness_mod": 0.0},
 	{"name": "lake_bed", "tile_m": 2.8, "value": 0.42, "roughness_mod": 0.1},
 	{"name": "sand_flats", "tile_m": 3.0, "value": 0.50, "roughness_mod": 0.0},
+	# the ground round the cliff pieces and between them (tools/world/worldgen/rock_paint.py): pale
+	# neutral rock and rubble that the colour map tints to the pieces' own rock, and as bright as
+	# it (a third in linear light on the Skerrow, where the granite and limestone draw at a tenth)
+	{"name": "crag", "tile_m": 3.8, "value": 0.75, "roughness_mod": 0.0},
+	{"name": "talus", "tile_m": 2.4, "value": 0.80, "roughness_mod": 0.0},
 ]
 
 

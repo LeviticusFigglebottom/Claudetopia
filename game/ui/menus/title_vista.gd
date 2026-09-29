@@ -3,13 +3,20 @@ extends Node
 ## The country behind the title's menu: held, slowly moving shots of the world, each at its own hour
 ## and weather, dipped to dark between them, round and round (`core:cinematic/title`).
 ##
-## The menu is drawn and takes input before any of this starts. The world is stood up a few frames
-## later, without a body, without the game's services and without telling the game it has entered a
-## region (`World.vista`), so nothing the title shows reaches a new game, a load or a continue. Its
-## own camera leads the streamer. While a shot plays, the next shot's cells are asked for beside it
-## (`WorldStreamer.set_also_around`); a shot is never shown before its cells have arrived, and the
-## one before holds its last frame, at most NEXT_WAIT_CAP_S, while they come. The first shot fades
-## in over the drawn chart the menu has always had, so the menu is never waiting for the country.
+## The menu is drawn and takes input before any of this starts. The world's scene is read on a worker
+## thread, and the world is stood up a step a frame (`World.stand_up_in_steps`, its terrain read on
+## worker threads too), without a body, without the game's services and without telling the game it
+## has entered a region (`World.vista`), so nothing the title shows reaches a new game, a load or a
+## continue. Until the first shot's country is in, nothing 3D is drawn at all (`Viewport.disable_3d`):
+## the chart drifts and the menu answers at the speed it always did, instead of standing still on
+## the chart while the world stood up behind it in one go (TRIAGE item 24).
+##
+## Its own camera leads the streamer, and each shot asks for what its camera will see along its
+## whole path (ShotSight), with the next shot's opening beside it; a shot is never shown before the
+## cells its opening sees have arrived, and the one before holds its last frame under the dip, at
+## most NEXT_WAIT_CAP_S, while they come. While the chart or the dip covers the screen the streamer
+## hurries; while a shot is watched it builds a few milliseconds a frame. The first shot fades in over
+## the drawn chart, so the menu is never waiting for the country.
 ##
 ## It borrows the clock (stopped, and set to each shot's hour) and gives it back in `_exit_tree`, which
 ## is also where the world goes: the scene the menu changes to never meets it. The shots are data:
@@ -30,11 +37,19 @@ const FIRST_SHOT_CAP_S := 40.0
 const NEXT_WAIT_CAP_S := 8.0
 ## Frames drawn at a new place, under the dark, before the dip lifts: Terrain3D's clipmap re-centres.
 const SETTLE_FRAMES := 3
+## What the first frames of 3D draw: one more of the world's layers a frame (World.warm_layers).
+## Frames drawn with every layer up before the first shot fades in over the chart.
+const FIRST_SETTLE_FRAMES := 2
 const REVEAL_S := 2.2
 const DIP_OUT_S := 1.0
 const DIP_IN_S := 1.4
-## One long frame moves the pictures on no more than this.
-const MAX_STEP_S := 0.1
+## The pictures keep the wall clock, as the opening's do (CinematicPlayer._real_delta): one long
+## frame after quick ones is a hitch and moves them on no more than this; a long frame after a long
+## one is the machine, and counts.
+const MAX_STEP_S := 0.25
+## A shot is shown once the cells its first OPENING_U of playing sees are in; the rest of what it
+## will see comes while it plays, asked for when it begins.
+const OPENING_U := 0.3
 ## The camera never goes nearer the ground than this, however the land is rebuilt.
 const CLEARANCE := 2.0
 
@@ -42,6 +57,9 @@ enum Phase { IDLE, LOADING, FIRST, PLAY, DIP_OUT, WAIT_NEXT, DIP_IN, GONE }
 
 ## A headless run never stands a world up behind a menu unless a test asks for it here.
 static var headless_allowed := false
+## Off, a shot asks only for the rings round its camera, as it did before ShotSight: for the title's
+## film (`--no-sight`) to show the difference on one build.
+static var sight_streaming := true
 
 ## Tests run the pictures faster; the waits for the country stay in real seconds.
 var time_scale := 1.0
@@ -67,6 +85,12 @@ var _settle := 0
 var _last_us := 0
 var _clock_saved: Dictionary = {}
 var _frames := 0
+var _last_raw := 0.0
+## What each shot's camera sees along its path (ShotSight.seen), worked out when it is first wanted.
+var _sights: Dictionary = {}
+## Whether the root viewport drew 3D before the vista stopped it, to give it back.
+var _had_3d := true
+var _holding_3d := false
 ## The fade running on each item, so a stop or a new fade takes over from it rather than fighting it.
 var _tweens: Dictionary = {}
 
@@ -97,6 +121,8 @@ func _ready() -> void:
 		return
 	phase = Phase.LOADING
 	_last_us = Time.get_ticks_usec()
+	# the world's scene is read while the menu's first frames are drawn
+	ResourceLoader.load_threaded_request(WORLD_SCENE)
 
 
 func is_showing() -> bool:
@@ -110,7 +136,9 @@ func current_shot_id() -> String:
 func _process(_delta: float) -> void:
 	var now := Time.get_ticks_usec()
 	# the pictures move by `dt`; the dips and the waits for the country keep real time (`raw`)
-	var raw := minf(float(now - _last_us) / 1000000.0, MAX_STEP_S)
+	var d := float(now - _last_us) / 1000000.0
+	var raw := minf(d, maxf(MAX_STEP_S, _last_raw * 2.0))
+	_last_raw = d
 	var dt := raw * time_scale
 	_last_us = now
 	if phase != Phase.GONE and not switched_on():
@@ -120,19 +148,26 @@ func _process(_delta: float) -> void:
 	match phase:
 		Phase.LOADING:
 			_frames += 1
-			if _frames == START_DELAY_FRAMES:
+			if _frames >= START_DELAY_FRAMES and world == null \
+					and ResourceLoader.load_threaded_get_status(WORLD_SCENE) != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+				phase = Phase.IDLE
 				_stand_world_up()
 		Phase.FIRST:
 			_phase_t += raw
-			if _cells_ready(index):
+			if _settle > 0 or _cells_ready(index):
+				# the country is in: drawn from here, under the chart, so what the first frames cost
+				# (every shader's first use, the cells' first draw) is paid before it shows, and a
+				# layer a frame (`_warm`), so it is paid in several short frames and not one long one
+				_warm(_settle)
 				_settle += 1
-			if _settle >= SETTLE_FRAMES:
+			if _settle >= World.WARM_LAYERS.size() + FIRST_SETTLE_FRAMES:
 				_show(index, true)
 				_fade(chart, 0.0, REVEAL_S)
 				_fade(dip, 0.0, REVEAL_S)
 				phase = Phase.PLAY
+				_hurry(false)
 				showing_changed.emit(true)
-			elif _phase_t > FIRST_SHOT_CAP_S:
+			elif _settle == 0 and _phase_t > FIRST_SHOT_CAP_S:
 				Log.warn("TitleVista", "the first shot's country did not come in %.0f s; the chart stays" % FIRST_SHOT_CAP_S)
 				stop()
 		Phase.PLAY:
@@ -143,6 +178,7 @@ func _process(_delta: float) -> void:
 				phase = Phase.DIP_OUT
 				_phase_t = 0.0
 				_fade(dip, 1.0, DIP_OUT_S)
+				_hurry(true)
 		Phase.DIP_OUT, Phase.WAIT_NEXT:
 			_t += dt
 			_phase_t += raw
@@ -164,13 +200,16 @@ func _process(_delta: float) -> void:
 				_show(index, _cells_ready(index))
 				_fade(dip, 0.0, DIP_IN_S)
 				phase = Phase.PLAY
+				_hurry(false)
 
 
 # --- the world --------------------------------------------------------------------------------------
 
 func _stand_world_up() -> void:
-	var packed := load(WORLD_SCENE) as PackedScene
+	var packed := ResourceLoader.load_threaded_get(WORLD_SCENE) as PackedScene
 	if packed == null:
+		packed = load(WORLD_SCENE) as PackedScene
+	if packed == null or phase == Phase.GONE:
 		stop()
 		return
 	_clock_saved = {"time": WorldClock.time_hours, "day": WorldClock.day, "running": WorldClock.running}
@@ -178,6 +217,8 @@ func _stand_world_up() -> void:
 	var w := packed.instantiate() as World
 	w.name = "TitleWorld"
 	w.vista = true
+	# a step a frame, so the chart and the menu go on being drawn while it stands up
+	w.stand_up_in_steps = true
 	var spawn := w.get_node_or_null("PlayerSpawn")
 	if spawn != null:
 		spawn.set("enabled", false)
@@ -189,11 +230,21 @@ func _stand_world_up() -> void:
 	camera.near = 0.25
 	camera.far = 6500.0
 	camera.add_to_group("streamer_target")
+	# moved once per drawn frame, so it is not smeared between physics ticks (DECISIONS 2026-09-23)
+	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	w.add_child(camera)
 	var first_place := _first_place()
 	if not first_place.is_empty():
 		w.spawn_place = first_place
+		# where it will first look from, so what the world stands up first (the cells round its eye,
+		# the towns there) is what the first shot shows, not the middle of the map
+		var xz := PlaceRef.xz(first_place)
+		if xz != Vector2.INF:
+			camera.position = Vector3(xz.x, 120.0, xz.y)
 	world = w
+	# nothing 3D is drawn until the first shot's country is in: under the opaque chart it was all
+	# cost and no picture, and it held every frame of the menu to the world's
+	_draw_3d(false)
 	add_child(w)
 	camera.make_current()
 	if not w.is_world_ready:
@@ -206,6 +257,7 @@ func _stand_world_up() -> void:
 	if first < 0:
 		stop()
 		return
+	_hurry(true)
 	_enter(first)
 	phase = Phase.FIRST
 	_phase_t = 0.0
@@ -259,7 +311,8 @@ func _next(i: int) -> int:
 	return -1
 
 
-## Where a shot needs the country: where its camera starts and what it looks at.
+## Where a shot needs the full-detail ring: where its camera starts and ends. What it looks at is
+## in its sight (`sight_of`), at the detail its distance deserves.
 func need_of(i: int) -> Array[Vector3]:
 	var out: Array[Vector3] = []
 	var path := path_of(i)
@@ -267,11 +320,36 @@ func need_of(i: int) -> Array[Vector3]:
 		return out
 	out.append(path.position_at(0.0))
 	out.append(path.position_at(1.0))
-	for p in path.looks:
-		out.append(p)
 	return out
 
 
+## The cells shot `i`'s camera sees along its path (ShotSight.seen), worked out once.
+func sight_of(i: int) -> Dictionary:
+	if _sights.has(i):
+		return _sights[i]
+	var path := path_of(i)
+	var streamer := world.streamer if world != null else null
+	var seen := {}
+	if path != null and streamer != null:
+		var t0 := Time.get_ticks_usec()
+		seen = ShotSight.seen(path, streamer, Callable(self, "_surface"), 0.0, 1.0, _aspect(), _reach(streamer))
+		Log.info("TitleVista", "%s sees %d cells (%.0f ms)" % [path.shot_id, seen.size(), (Time.get_ticks_usec() - t0) / 1000.0])
+	_sights[i] = seen
+	return seen
+
+
+func _aspect() -> float:
+	var r := get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(16.0, 9.0)
+	return r.x / maxf(r.y, 1.0)
+
+
+## How far a shot's cells are wanted: as far as the far ring's trees are drawn at this view range.
+func _reach(streamer: WorldStreamer) -> float:
+	return ShotSight.REACH_M * maxf(streamer.view_range, 0.5)
+
+
+## Whether shot `i` may be shown: the ring round where its camera starts and ends, and every cell its
+## opening sees.
 func _cells_ready(i: int) -> bool:
 	var streamer := world.streamer if world != null else null
 	if streamer == null:
@@ -279,7 +357,17 @@ func _cells_ready(i: int) -> bool:
 	for p in need_of(i):
 		if not streamer.is_loaded_around(p):
 			return false
-	return true
+	# the towns where it opens, raised a piece at a time behind the menu (WorldDoors)
+	var need := need_of(i)
+	if not need.is_empty():
+		var towns := WorldDoors.towns_near(get_tree(), need[0], ShotSight.TOWNS_M)
+		if towns.x < towns.y:
+			return false
+	if not sight_streaming:
+		return true
+	# the near ground its opening sees; the far ring's cells come while it plays
+	var opening := streamer.standing_of(ShotSight.near_only(ShotSight.rings(sight_of(i), OPENING_U)))
+	return opening.x >= opening.y
 
 
 ## Goes to shot `i` under the dark: its hour, its weather and its region's light, the camera at its
@@ -306,11 +394,14 @@ func _enter(i: int) -> void:
 	var ahead: Array = []
 	for p in need_of(i):
 		ahead.append(p)
-	for p in need_of(_next(i)):
+	var next := _next(i)
+	for p in need_of(next):
 		ahead.append(p)
 	if world.streamer != null:
+		# all this shot will see, and what the next one opens on, so it is in by the dip
+		world.streamer.also_cells = ShotSight.merged(ShotSight.rings(sight_of(i)),
+				ShotSight.rings(sight_of(next), OPENING_U)) if sight_streaming else {}
 		world.streamer.set_also_around(ahead)
-		world.streamer.refresh()
 
 
 func _pose(i: int, t: float) -> void:
@@ -338,6 +429,36 @@ func _show(i: int, came: bool) -> void:
 	shot_started.emit(i, id)
 
 
+## The `step`th frame of 3D: on it, the ground and the sky with the layers after it hidden; each
+## frame after, one more layer.
+func _warm(step: int) -> void:
+	if world == null or not is_instance_valid(world):
+		return
+	if step == 0:
+		_draw_3d(true)
+	world.warm_layers(step)
+
+
+## The streamer hurries while nothing it builds is watched (the chart or the dip covers the screen).
+func _hurry(on: bool) -> void:
+	if world != null and is_instance_valid(world) and world.streamer != null:
+		world.streamer.hurry = on
+
+
+## Whether the screen draws the 3D world; given back as it was when the vista stops.
+func _draw_3d(on: bool) -> void:
+	if not is_inside_tree():
+		return
+	var vp := get_viewport()
+	if not on and not _holding_3d:
+		_had_3d = not vp.disable_3d
+		_holding_3d = true
+		vp.disable_3d = true
+	elif on and _holding_3d:
+		_holding_3d = false
+		vp.disable_3d = not _had_3d
+
+
 func _fade(item: CanvasItem, to: float, seconds: float) -> void:
 	if item == null or not is_instance_valid(item):
 		return
@@ -363,6 +484,7 @@ func scrub(i: int, u: float) -> void:
 		return
 	if phase != Phase.GONE:
 		phase = Phase.IDLE
+	_draw_3d(true)
 	for item: CanvasItem in [dip, chart]:
 		if item != null and is_instance_valid(item):
 			_stop_fade(item)
@@ -377,6 +499,26 @@ func cells_in() -> bool:
 	return index >= 0 and _cells_ready(index)
 
 
+## What the current shot is waiting for, in words, for a log or a film's report.
+func waiting_for() -> String:
+	var streamer := world.streamer if world != null else null
+	if streamer == null or index < 0:
+		return "nothing"
+	var missing: Array[String] = []
+	var opening := ShotSight.rings(sight_of(index), OPENING_U)
+	for c: Vector2i in opening:
+		if not streamer.is_loaded(c):
+			missing.append("%d_%d %s" % [c.x, c.y, streamer.cell_state(c)])
+	for p in need_of(index):
+		for c in streamer.missing_around(p):
+			missing.append("%d_%d %s (round the camera)" % [c.x, c.y, streamer.cell_state(c)])
+	var q := streamer.queue()
+	return "%d of the %d cells its opening sees are in%s; %d loaded, %d asked for" % [
+			opening.size() - missing.size(), opening.size(),
+			" (missing: %s)" % ", ".join(missing.slice(0, 8)) if not missing.is_empty() else "",
+			int(q["loaded"]), int(q["pending"])]
+
+
 # --- going ------------------------------------------------------------------------------------------
 
 ## Ends the vista: the chart comes back, the world and everything it streamed go, and the clock is
@@ -386,6 +528,7 @@ func stop() -> void:
 		return
 	var was_showing := is_showing()
 	phase = Phase.GONE
+	_draw_3d(true)
 	for item: CanvasItem in [chart, dip]:
 		if item != null and is_instance_valid(item):
 			_stop_fade(item)
@@ -411,4 +554,8 @@ func _give_clock_back() -> void:
 func _exit_tree() -> void:
 	# the scene the menu changes to must not meet the title's world: it goes with the title
 	phase = Phase.GONE
+	_draw_3d(true)
 	_give_clock_back()
+	# a scene read on a thread and never taken is taken here, so it is not left in the loader
+	if world == null and ResourceLoader.load_threaded_get_status(WORLD_SCENE) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		ResourceLoader.load_threaded_get(WORLD_SCENE)

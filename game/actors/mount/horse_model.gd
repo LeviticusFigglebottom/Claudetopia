@@ -36,8 +36,18 @@ var speed := 0.0          # forward ground speed, m/s (negative backs)
 var turn_rate := 0.0      # rad/s, + to the left
 var gait := ""            # the gait asked for, one of GAITS ("" when standing)
 var grazing := false
+## What a start town's horse is painted over the cob's own coat and the Wardens' cloth: multiplied
+## into the body's and the tack's albedo (white leaves them as the forge made them).
+var coat_tint := Color.WHITE
+var cloth_tint := Color.WHITE
+
+## A jump (Mount's leap): 1 leaving the ground .. -1 landing, and how much of the leap's pose is on
+## (HorseLeapPose). While it is, the gait's legs all but stop: the legs are the leap's.
+var leap := 0.0
+var leap_weight := 0.0
 
 var _root: Node3D = null
+var _leap_pose: HorseLeapPose = null
 var _playing := ""        # the loop now playing
 var _action := ""         # a one-shot now playing
 var _sockets: Dictionary = {}
@@ -69,7 +79,12 @@ func build() -> void:
 				a.loop_mode = want
 		anim_player.animation_finished.connect(_on_finished)
 		anim_player.playback_default_blend_time = 0.0
+	if skeleton != null:
+		_leap_pose = HorseLeapPose.new()
+		_leap_pose.name = "LeapPose"
+		skeleton.add_child(_leap_pose)
 	_set_up_lods()
+	_tint()
 	_play_loop("Idle", 0.0)
 
 
@@ -83,6 +98,23 @@ static func _load_clips(path: String) -> Dictionary:
 			out = parsed
 	_clip_cache[path] = out
 	return out
+
+
+func _tint() -> void:
+	if coat_tint == Color.WHITE and cloth_tint == Color.WHITE:
+		return
+	for mi in _root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var tack := String(m.name).to_lower().contains("tack")
+		var tint := cloth_tint if tack else coat_tint
+		if m.mesh == null:
+			continue
+		for i in m.mesh.get_surface_count():
+			var mat := m.get_active_material(i)
+			if mat is BaseMaterial3D:
+				var own := (mat as BaseMaterial3D).duplicate() as BaseMaterial3D
+				own.albedo_color = own.albedo_color * tint
+				m.set_surface_override_material(i, own)
 
 
 ## Each mesh drawn only in its own band of distance: the body and tack near, a joined LOD1 in the
@@ -161,6 +193,9 @@ func _on_finished(clip: StringName) -> void:
 
 
 func _process(_delta: float) -> void:
+	if _leap_pose != null:
+		_leap_pose.leap = leap
+		_leap_pose.weight = leap_weight
 	if anim_player == null or not _action.is_empty():
 		return
 	var want := "Idle"
@@ -182,7 +217,7 @@ func _process(_delta: float) -> void:
 	if want != _playing:
 		var blend := GAIT_BLEND_S if (want in GAITS and _playing in GAITS) else IDLE_BLEND_S
 		_play_loop(want, blend)
-	anim_player.speed_scale = clampf(rate, 0.05, 3.0)
+	anim_player.speed_scale = lerpf(clampf(rate, 0.05, 3.0), 0.15, clampf(leap_weight, 0.0, 1.0))
 
 
 func _play_loop(clip: String, blend: float) -> void:

@@ -50,11 +50,14 @@ func _on_npc_spawned(npc_id: String, node: Node) -> void:
 	var body := node as Node3D
 	if not body.is_inside_tree():
 		return
-	body.global_position = global_position
+	# a spot a few share (the well, the green) holds each in a place of their own round it
+	body.global_position = global_position + NpcRegistry.gather_offset(npc_id, self)
 	if "velocity" in body:
 		body.set("velocity", Vector3.ZERO)
 	if body.has_method("stop"):
 		body.call("stop")
+	if body.has_method("make_room"):
+		body.call("make_room")
 	# the marker's forward (-Z) is the way they face; an Npc turns its model, anything else itself
 	var facing := -global_transform.basis.z
 	if body.has_method("face_direction"):

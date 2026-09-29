@@ -69,7 +69,11 @@ func index(pois: Array, terrain: TerrainProvider, road_lines: Array) -> int:
 		_by_cell.get_or_add(cell, []).append(item)
 		_entries.append(item)
 	indexed = true
-	Log.info("WorldPois", "indexed %d points of interest to dress" % _entries.size())
+	# the roads' segments by square, for every place's questions of the roads (PoiKit.road_grid)
+	var t0 := Time.get_ticks_usec()
+	PoiKit.road_grid(roads)
+	Log.info("WorldPois", "indexed %d points of interest to dress (the roads' grid in %.1f ms)" \
+			% [_entries.size(), (Time.get_ticks_usec() - t0) / 1000.0])
 	return _entries.size()
 
 
@@ -126,31 +130,86 @@ func entries() -> Array:
 	return _entries
 
 
-## The dressings of one cell, parented to `parent` (the cell node, so they unload with it).
-## Called by the streamer as it builds the cell; `far` asks for silhouettes only.
+## What raising the places has cost, by kind: kind -> [raised, total ms, longest ms] (the CPU probe,
+## tools_gd/cpu_probe.gd).
+static var raise_ms: Dictionary = {}
+
+
+## The dressings of one cell, parented to `parent` (the cell node, so they unload with it); `far`
+## asks for silhouettes only. The streamer raises them a place at a time instead (`items_in_cell`,
+## `raise_item`, `finish_cell`), so a cell of several places is not one long frame.
 func raise_in_cell(parent: Node3D, cell: Vector2i, far: bool) -> Array[PoiDressing]:
 	var out: Array[PoiDressing] = []
-	if not enabled or not indexed:
-		return out
-	for item_v in _by_cell.get(cell, []):
-		var item: Dictionary = item_v
-		var d := PoiDressing.raise(item["entry"], item["def"], far, provider, roads)
-		d.position = d.world_position - parent.position
-		parent.add_child(d)
-		out.append(d)
-		raised.append(d)
-	_forget_the_freed()
-	if not far:
-		# what each place's encounter sentence says stands there, on the dressing's own markers
-		if encounters:
-			for d in out:
-				PoiEncounters.stand_up(d)
-		# what the quests say lies here (the tine at the Toll, the hand-bell in the fallen stair),
-		# after the dressing so a thing can lie on the marker its dressing put down
-		var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
-		if items != null and items.has_method("raise_in_cell"):
-			items.call("raise_in_cell", parent, cell)
+	for item in items_in_cell(cell):
+		out.append(raise_item(parent, item, far))
+	finish_cell(parent, cell, far, out)
 	return out
+
+
+## The places a cell raises ({entry, def}), in order; none when the dressings are off.
+func items_in_cell(cell: Vector2i) -> Array:
+	if not enabled or not indexed:
+		return []
+	return _by_cell.get(cell, [])
+
+
+## One place's dressing, raised under `parent`.
+## Whether `raise_item` leaves a place's masonry to a worker thread (PoiDressing.defer_meshes); the
+## streamer, which asks `meshes_ready` of each, turns it on. `raise_in_cell` never does.
+var defer_meshes := false
+
+
+func raise_item(parent: Node3D, item: Dictionary, far: bool) -> PoiDressing:
+	var t0 := Time.get_ticks_usec()
+	var d := PoiDressing.raise(item["entry"], item["def"], far, provider, roads)
+	d.position = d.world_position - parent.position
+	# where the world is drawn, its masonry is made on a worker thread (the streamer waits for it),
+	# and it is raised a step at a time within the frame's budget (the streamer waits for that too)
+	d.defer_meshes = defer_meshes
+	d.stepwise = defer_meshes
+	var k := "%s%s %s" % [str((item["def"] as Dictionary).get("kind", "?")), " (far)" if far else "", d.poi_id.get_file()]
+	d.raise_key = k
+	parent.add_child(d)
+	raised.append(d)
+	var st: Array = raise_ms.get(k, [0, 0.0, 0.0])
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0
+	# stepwise, the steps' own time is added when the last is done (PoiDressing.build)
+	raise_ms[k] = [int(st[0]) + 1, snappedf(float(st[1]) + ms, 0.1), snappedf(maxf(float(st[2]), ms), 0.1)]
+	return d
+
+
+## `finish_cell` a piece at a time: step `k` (from 0) stands up who is at one place, and the last
+## what the quests say lies there. True when that last step is done.
+func finish_step(parent: Node3D, cell: Vector2i, far: bool, out: Array, k: int) -> bool:
+	if k == 0:
+		_forget_the_freed()
+	if far or not enabled or not indexed:
+		return true
+	if k < out.size():
+		if encounters and is_instance_valid(out[k]):
+			PoiEncounters.stand_up(out[k])
+		return false
+	var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+	if items != null and items.has_method("raise_in_cell"):
+		items.call("raise_in_cell", parent, cell)
+	return true
+
+
+## Once a cell's places are raised: who stands at them, and what the quests say lies there.
+func finish_cell(parent: Node3D, cell: Vector2i, far: bool, out: Array) -> void:
+	_forget_the_freed()
+	if far or not enabled or not indexed:
+		return
+	# what each place's encounter sentence says stands there, on the dressing's own markers
+	if encounters:
+		for d in out:
+			if is_instance_valid(d):
+				PoiEncounters.stand_up(d)
+	# what the quests say lies here (the tine at the Toll, the hand-bell in the fallen stair),
+	# after the dressing so a thing can lie on the marker its dressing put down
+	var items := get_tree().get_first_node_in_group("quest_items") if is_inside_tree() else null
+	if items != null and items.has_method("raise_in_cell"):
+		items.call("raise_in_cell", parent, cell)
 
 
 ## One POI by id, for a tool or a test; parented here unless told otherwise.

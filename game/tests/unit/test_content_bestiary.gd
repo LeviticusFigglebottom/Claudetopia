@@ -47,7 +47,8 @@ const BESTIARY := {
 func _enemies() -> Array:
 	var out: Array = []
 	for def in ContentDB.all("enemy"):
-		if not bool(def.get("summon_only", false)):
+		# a teacher stood up only for a lesson (the ring's sparring partner) lives nowhere either
+		if not bool(def.get("summon_only", false)) and not bool(def.get("training", false)):
 			out.append(def)
 	return out
 

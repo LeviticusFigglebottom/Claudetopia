@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.0886,
+  -0.0827,
+  1.4246,
+  0.0885,
+  0.1627,
+  1.7926
+ ],
+ "card_tris": 6381,
+ "cards": "ponytail_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "ponytail": "hair",
+  "ponytail_cards": "hair_cards"
+ },
+ "params": {
+  "bone": null,
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 43550,
+ "slot_hint": "attachment",
+ "textures": [
+  "ponytail_normal.png",
+  "ponytail_albedo.png",
+  "ponytail_orm.png"
+ ],
+ "tris": [
+  5199,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -61,8 +61,14 @@ func display_name() -> String:
 	return shown
 
 
+## An item's text can change with the story: `"description_after": {"flag": f, "text": t}` reads t
+## once the flag is set (the listening-bell hums until the wake and is silent after it).
 func description() -> String:
-	return str(def().get("description", ""))
+	var d := def()
+	var after: Variant = d.get("description_after")
+	if after is Dictionary and GameState.has_flag(str(after.get("flag", ""))):
+		return str(after.get("text", d.get("description", "")))
+	return str(d.get("description", ""))
 
 
 func max_stack() -> int:

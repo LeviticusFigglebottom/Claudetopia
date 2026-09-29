@@ -157,7 +157,9 @@
       {
         "poi": "core:poi/bell_of_the_pilgrims",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_bell_of_the_pilgrims"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -184,7 +186,9 @@
       {
         "poi": "core:poi/bell_wood_stone",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_bell_wood_stone"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -783,7 +787,9 @@
       },
       {
         "poi": "core:poi/dodgers_stone",
-        "quests": [],
+        "quests": [
+          "core:quest/the_unsaid_page"
+        ],
         "finds": [
           "core:item/wayside_dodgers_stone"
         ],
@@ -1272,7 +1278,9 @@
       },
       {
         "poi": "core:poi/glass_bridge",
-        "quests": [],
+        "quests": [
+          "core:quest/the_relief"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/glass_bridge"
@@ -1282,7 +1290,9 @@
       {
         "poi": "core:poi/glass_falls",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_glass_falls"
+        ],
         "encounters": [
           "core:encounter/glass_falls"
         ],
@@ -1587,8 +1597,10 @@
       {
         "poi": "core:poi/hedge_shrine_of_ansel",
         "quests": [
+          "core:quest/the_grey_hart",
           "core:quest/the_lane_that_isnt",
-          "core:quest/the_reading"
+          "core:quest/the_reading",
+          "core:quest/the_unsaid_page"
         ],
         "finds": [],
         "encounters": [],
@@ -2032,7 +2044,9 @@
       {
         "poi": "core:poi/last_hearth",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/wayside_last_hearth"
+        ],
         "encounters": [],
         "hearthstone": true
       },
@@ -3156,6 +3170,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/scathe_fort",
+        "quests": [
+          "core:quest/the_scathe_tithe"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/scavengers_cold_camp",
         "quests": [],
         "finds": [
@@ -3456,7 +3479,12 @@
       },
       {
         "poi": "core:poi/stair_head",
-        "quests": [],
+        "quests": [
+          "core:quest/the_grey_hart",
+          "core:quest/the_note_under_the_water",
+          "core:quest/the_relief",
+          "core:quest/the_unsaid_page"
+        ],
         "finds": [],
         "encounters": [],
         "hearthstone": true
@@ -3637,6 +3665,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_kilnway",
+        "quests": [
+          "core:quest/ring_the_warden_down"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_last_field",
         "quests": [
           "core:quest/the_grey_on_the_green"
@@ -3741,6 +3778,8 @@
         "poi": "core:poi/the_wellspring",
         "quests": [
           "core:quest/the_notch_on_the_post",
+          "core:quest/the_note_under_the_water",
+          "core:quest/the_relief",
           "core:quest/would_anybody_say_it"
         ],
         "finds": [],
@@ -4195,7 +4234,9 @@
       },
       {
         "poi": "core:poi/wold_force",
-        "quests": [],
+        "quests": [
+          "core:quest/first_ranger"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/wold_force"
@@ -4235,7 +4276,9 @@
       },
       {
         "poi": "core:poi/wynstead_ditch_camp",
-        "quests": [],
+        "quests": [
+          "core:quest/first_warrior"
+        ],
         "finds": [
           "core:item/wayside_wynstead_ditch_camp"
         ],

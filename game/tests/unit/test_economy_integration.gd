@@ -196,7 +196,7 @@ func test_pickpocketing_a_real_bag() -> void:
 	assert_false(their_bag.is_in_group("inventory"), "only the player's bag joins the group")
 	assert_eq(Peers.inventory_of(victim), their_bag, "an NPC's own bag, not the player's")
 	assert_eq(Peers.inventory_of(Node3D.new()), null, "and an NPC with no bag has nothing to steal")
-	var chance := Stealth.pickpocket_chance(Peers.skill_level("sneak"), 1.0, 6)
+	var chance := Stealth.pickpocket_chance(Peers.skill_level("sneak"), 1.0, 6, 0.0, float(ContentDB.get_or_empty(ROPE).get("weight", 0.0)))
 	assert_true(chance > 0.0)
 	var r := st.pickpocket(_player, victim, ROPE, _rng_rolling(chance, true))
 	assert_true(r["ok"])

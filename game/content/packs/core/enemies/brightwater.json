@@ -136,6 +136,7 @@
       "spread": 1.5,
       "strafe_speed": 1.1,
       "aggression": 0.95,
+      "turn_gap": 1.2,
       "flank": true
     },
     "attacks": [
@@ -207,11 +208,11 @@
     "lore": "A charter says a duel is lawful if both parties consent and a Tallyman witnesses it. What the charter does not say is that consent can be bought, so the guilds buy it: a bravo waits at the end of the Long Stride, takes offence at your face, and is duly witnessed. He will turn the first three things you try aside to find out what you are. The fourth thing he does is the one you should have been watching for.",
     "region": "core:region/brightwater",
     "stats": {
-      "hp": 105,
+      "hp": 115,
       "stamina": 130,
       "poise": 34,
       "armour": 4,
-      "speed": 3.9
+      "speed": 4.3
     },
     "perception": {
       "sight_range": 28.0,
@@ -226,7 +227,7 @@
       "patience": 5.0,
       "leash": 36.0,
       "strafe_speed": 1.15,
-      "aggression": 0.7,
+      "aggression": 0.8,
       "parries": true,
       "parry_chance": 0.4,
       "parry_delay": 0.3,

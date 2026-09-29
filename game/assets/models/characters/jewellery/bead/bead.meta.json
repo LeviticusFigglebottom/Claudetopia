@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   1.25,
+   1.0,
+   0.86603
+  ],
+  "min": [
+   -1.25,
+   -1.0,
+   -0.86603
+  ]
+ },
+ "fit": "strung",
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "bead",
+ "tris": 72,
+ "vertices": 42
+}

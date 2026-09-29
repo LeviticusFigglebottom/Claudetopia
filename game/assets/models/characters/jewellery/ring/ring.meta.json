@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   1.16,
+   0.13856,
+   1.16
+  ],
+  "min": [
+   -1.16,
+   -0.13856,
+   -1.16
+  ]
+ },
+ "fit": "finger",
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "ring",
+ "tris": 192,
+ "vertices": 96
+}

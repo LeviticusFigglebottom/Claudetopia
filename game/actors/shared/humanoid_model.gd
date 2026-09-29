@@ -39,6 +39,33 @@ const IRIS_SHADER := preload("res://assets/shaders/eye_iris.gdshader")
 const SKIN_SHADER := preload("res://assets/shaders/skin.gdshader")
 ## Cloth, leather and metal: a grain that tiles over the bake, mottling, dirt from the ground.
 const GARMENT_SHADER := preload("res://assets/shaders/garment.gdshader")
+## A person's brows, scar, moles and face paint, drawn over the head's skin (triage 39).
+const FACE_MARKS_SHADER := preload("res://assets/shaders/face_marks.gdshader")
+## The morph targets on a head, and on what is worn over the face, that are the face's sliders
+## (the forge's lib/face_morphs.py): `face_<slider>` and `face_age`.
+const FACE_TARGET := "face_"
+## A woman's bust (item 46): the woman's body carries `bust`, each garment fitted to her
+## `woman_bust`, both at the full end (CharacterAppearance.bust_weight).
+const BUST_TARGETS := ["bust", "woman_bust"]
+## Hair and beards: a band of shine across the strands, fine strands over the painted clumps and
+## a broken outline, off each style's flow map (tools/forge/face_textures.py; see the shader).
+const HAIR_SHADER := preload("res://assets/shaders/hair.gdshader")
+const STUBBLE_SHADER := preload("res://assets/shaders/stubble.gdshader")
+## Hair and beards as strand cards (triage 47): each style's GLB carries `<name>_cards` beside its
+## shell (tools/forge/hair_cards.py), drawn with the shared strand atlas and the cap's grain. The
+## cards are worn within CARDS_RANGE metres of the camera, the shell beyond it: past a few metres
+## a head of hair is a handful of pixels and the shell is the cheaper draw.
+const HAIR_CARDS_SHADER := preload("res://assets/shaders/hair_cards.gdshader")
+const HAIR_STRANDS := "hair_strands.png"
+const HAIR_GRAIN := "hair_grain.png"
+const CARDS_RANGE := 10.0
+const CARDS_RANGE_MARGIN := 1.0
+const CARDS_LOD_BIAS := 100.0
+## Skin's pores and fine creases, tiled over the UVs (skin.gdshader `detail_normal`): so many
+## repeats over a head's UV square (the face has most of it) and over a body's.
+const SKIN_DETAIL := "skin_detail_normal.png"
+const SKIN_DETAIL_SCALE_HEAD := 44.0
+const SKIN_DETAIL_SCALE_BODY := 90.0
 const DETAIL_DIR := "res://assets/textures/characters/"
 ## kind -> [shader kind, detail normal map, repeats over the UV square, normal depth]
 const GARMENT_KINDS := {
@@ -105,13 +132,74 @@ const MOVING_FULL := 0.7
 ## Stances held over whatever the legs are doing: the upper body takes the clip, the hips and legs
 ## keep walking. Played as a whole-body state, a raised guard froze the legs in its stance and the
 ## body glided across the ground at 1.56 m/s with its feet still.
-const STANCE_CLIPS: Array[String] = ["Block_Idle"]
+##
+## The bow's clips are stances too (triage 55): an archer walks, strafes and creeps with the bow
+## drawn. Held as a stance, a clip is played from its start each time it is asked for
+## (`stance_seek`), at the AnimationDriver's pace (`stance_rate`, as a one-shot is), and one of
+## STANCE_ENDS lets the upper body go back to the legs' when it has played through.
+const STANCE_CLIPS: Array[String] = ["Block_Idle", "Bow_Draw", "Bow_Aim", "Bow_Release"]
+const STANCE_ENDS: Array[String] = ["Bow_Release"]
+## What a stance leaves to the legs, and a hand-over between stances leaves as the legs have it.
+const LEGS: Array[String] = ["Root", "Hips", "UpperLeg.L", "LowerLeg.L", "Foot.L", "Toe.L",
+		"UpperLeg.R", "LowerLeg.R", "Foot.R", "Toe.R"]
+## Stances played at the timeline's pace (the others are loops, at their own).
+const STANCE_TIMED: Array[String] = ["Bow_Draw", "Bow_Release"]
+## The bow's stances, which turn the upper body to the aim (aim_pitch) and work the bow (BowHands).
+const BOW_STANCES: Array[String] = ["Bow_Draw", "Bow_Aim", "Bow_Release"]
+## How far the aim turns the spine and chest (the rest is the head's), and how fast it comes and goes.
+const AIM_SPINE := 0.45
+const AIM_CHEST := 0.55
+const AIM_MOST := deg_to_rad(65.0)
+const AIM_BLEND_S := 0.15
+## First person (triage 57; see `first_person`): the slots drawn into the shadows only, the carry's
+## clip and the bones it holds, and how fast the carry comes and goes.
+const FP_HEAD_SLOTS: Array[String] = ["head", "hair", "beard", "headgear"]
+const CARRY_CLIP := "Idle_Combat"
+const CARRY_BONES: Array[String] = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R"]
+const CARRY_BLEND_S := 0.16
+## Where the eyes are in the Head bone's frame when the rig's eyeballs cannot say (m), and how far
+## ahead of the eyeballs the first-person camera stands, clear of a hood's rim and a collar.
+const EYE_IN_HEAD := Vector3(0.0, 0.105, 0.061)
+const EYE_AHEAD := 0.04
+## Where the carry holds the hands in the view (_hold_in_view), metres from the eyes: across to the
+## right, up, ahead. The right hand with a weapon; a shield's or a lantern's left hand; a bow's left
+## hand, and an empty right beside it. The blade's way in the view (across, up, ahead) and a carried
+## bow's. A swing, a saying, a parry and a guard have both arms turned up FP_LIFT_DEG, in and out
+## over FP_LIFT_S.
+const FP_HOLD_R := Vector3(0.2, -0.25, 0.42)
+const FP_HOLD_L := Vector3(-0.24, -0.3, 0.4)
+const FP_HOLD_BOW := Vector3(-0.14, -0.24, 0.46)
+const FP_HOLD_FREE_R := Vector3(0.19, -0.3, 0.36)
+const FP_BLADE := Vector3(-0.32, 0.74, 0.6)
+const FP_BOW_AXIS := Vector3(0.18, 0.95, 0.25)
+## The guard raised in first person (Block_Idle): the weapon hand up and to the right, the blade
+## across the view and a little up; a shield's hand up before the left of the view.
+const FP_GUARD_R := Vector3(0.2, -0.12, 0.44)
+const FP_GUARD_BLADE := Vector3(-0.9, 0.38, 0.22)
+const FP_GUARD_L := Vector3(-0.1, -0.16, 0.4)
+const FP_LIFT_DEG := 12.0
+const FP_LIFT_S := 0.12
+## In a swing each hand is kept within this share of the view's half-width across, and between these
+## shares of its half-height down and up, and at least FP_NEAREST ahead of the eyes, so the arc the
+## clip draws wide and low is drawn where it is seen; a left hand within FP_TWO_HANDS_M of the right
+## hand's weapon is gripping it and goes with it.
+const FP_ACROSS := 0.62
+const FP_BELOW := 0.5
+const FP_ABOVE := 0.4
+const FP_NEAREST := 0.4
+const FP_TWO_HANDS_M := 0.13
+const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw", "Interact", "Pick_Up"]
 ## The bones a stance owns: everything above the hips, and what hangs off it.
 const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
 		"Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
 		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R",
 		"Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL", "Socket.Back", "Socket.Head", "Socket.Lantern"]
 const STANCE_BLEND_S := 0.12
+## The bones a swing from the legs does not blend in: they take the swing's pose at once
+## (_begin_handover says why).
+const SWING_ARMS: Array[String] = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L",
+		"Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R", "Socket.WeaponR", "Socket.WeaponL", "Socket.ShieldL"]
 ## The gait and the idle hand over across this long, from the moment the body's own speed says
 ## so. Read off the smoothed speed, a stop from a jog held the legs split mid-stride for a tenth
 ## of a second after the body stood (the smoothing still thought it was moving) and then snapped
@@ -215,6 +303,47 @@ var _move_w := 0.0                       ## gait against idle, eased over MOVE_B
 var _stance := ""                        ## a STANCE_CLIPS clip held over the legs, or ""
 var _stance_w := 0.0                     ## ...eased over STANCE_BLEND_S
 var _has_stance_layer := false
+var _stance_time := 0.0                  ## seconds into the stance's clip, at its own pace
+var _stance_node: AnimationNodeAnimation = null
+## Where the body aims while a bow is up (triage 55): radians up (+) and to the left (+) of the way
+## it faces, set by whoever aims it (Player). The spine and chest turn that way over the legs.
+var aim_pitch := 0.0
+var aim_yaw := 0.0
+## A held draw's tremble, radians at its widest (Player: a bow held past its steady time).
+var aim_tremble := 0.0
+var _aim_w := 0.0
+var _tremble_t := 0.0
+var _pre_aim := {}                       ## bone -> its rotation before the aim was laid on, this frame
+## First person (triage 57): the player's own body seen from its own eyes (Player, CameraRig). While
+## it is on, the head and what is worn on it (FP_HEAD_SLOTS, the eyes) are drawn into the shadows
+## only -- the camera is inside it, and its shadow still falls -- and the body carries the two
+## things below. Off for everyone else.
+var first_person := false:
+	set(value):
+		if first_person != value:
+			first_person = value
+			_apply_first_person_look()
+## How much of aim_pitch the spine and chest follow without a bow up (0..1), eased over AIM_BLEND_S:
+## in first person the upper body turns to the view, so a swing's arc and what the hands hold stay
+## where the eyes look, up or down.
+var view_follow := 0.0
+## How much the arms are held in the carry (0..1, eased over CARRY_BLEND_S): in first person, a
+## drawn weapon is held up before the body in Idle_Combat's guard over whatever the legs do, so the
+## hands and the weapon are in the picture. Only while nothing else has the arms (no one-shot, no
+## stance, not swimming).
+var carry := 0.0
+var _carry_w := 0.0
+var _carry_t := 0.0
+var _carry_tracks := {}                  ## bone -> its rotation track in CARRY_CLIP
+## The view's pitch in first person (radians, up +: CameraRig.pitch), for placing the carry, and how
+## far a swing's lift is in.
+var view_pitch := 0.0
+var _lift_w := 0.0
+var _guard_w := 0.0
+## The eyes' place in the Head bone's frame (eye_point), from the rig's own eyeballs at rest.
+var _eye_in_head := Vector3.INF
+## The bow in the left hand, worked: its string to the draw hand, its limbs bent, the arrow on it.
+var bow_hands: BowHands = null
 var _way := Way.AHEAD                    ## the way the legs are going (Way)
 var _way_w := {"fb": 0.0, "lr": 1.0, "dir": 0.0}   ## the blends between the ways, eased
 var _hips_turn := 0.0                    ## rad the hips are turned toward the way the body goes, eased
@@ -236,6 +365,7 @@ var _has_turns := false
 var _handovers := {}                     ## "from>to" one-shot edges that hand over (_add_handovers)
 var _handover_from: Array = []           ## each bone's [rotation, position] as the last clip left it
 var _handover_t := -1.0                  ## seconds into a hand-over's blend, or -1
+var _handover_len := ONE_SHOT_HANDOVER   ## how long this hand-over blends (s)
 var _gait_points: Array = []             ## [[clip, ground speed m/s, point name], ...] ascending
 var _clip_speed: Dictionary = {}         ## clip -> authored ground speed (sidecar `speed`)
 var _clip_cycle: Dictionary = {}         ## clip -> seconds per stride cycle
@@ -292,17 +422,43 @@ func _notification(what: int) -> void:
 func build() -> void:
 	if _rig_root != null:
 		return
-	var packed: PackedScene = load(RIG_PATH)
+	if _build_rig():
+		_build_rest()
+
+
+## `build` a piece at a time within the frame's budget (a person stood up while the world is drawn).
+func _build_paced(slice: WorldPace.Slice) -> void:
+	if _rig_root != null:
+		return
+	if _build_rig():
+		await slice.pace("npc_rig")
+		_build_rest()
+
+
+## The rig's scene, kept: loaded again for every person stood up once the last had gone (a person's
+## rig freed takes the scene's last reference), 20-30 ms of a frame here (TRIAGE item 36's second pass).
+static var _rig_packed: PackedScene = null
+
+
+func _build_rig() -> bool:
+	var packed: PackedScene = _rig_packed
+	if packed == null:
+		packed = load(RIG_PATH)
+		_rig_packed = packed
 	if packed == null:
 		push_error("HumanoidModel: cannot load %s" % RIG_PATH)
-		return
+		return false
 	_rig_root = packed.instantiate() as Node3D
 	add_child(_rig_root)
 	skeleton = _rig_root.find_child("Skeleton3D", true, false) as Skeleton3D
 	anim_player = _rig_root.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if skeleton == null or anim_player == null:
 		push_error("HumanoidModel: %s has no Skeleton3D/AnimationPlayer" % RIG_PATH)
-		return
+		return false
+	return true
+
+
+func _build_rest() -> void:
 	for mi in _rig_root.find_children("*", "MeshInstance3D", true, false):
 		var m := mi as MeshInstance3D
 		var logical := _logical_name(m.name)
@@ -515,9 +671,18 @@ func attach_to_socket(name: String, node: Node3D, clear_existing: bool = true) -
 # appearance
 # ---------------------------------------------------------------------------------------
 
-func apply_appearance(d: Variant) -> void:
+## Given a `slice` (a person stood up while the world is drawn: NpcRegistry), the parts are put on
+## a few at a time within the frame's budget (WorldPace), and it takes several frames: await it.
+## Without one it is all done at once, as it always was.
+func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 	if _rig_root == null:
-		build()
+		if slice != null:
+			# not in the frame the person is stood up in, when that frame's budget is spent
+			await slice.pace("npc")
+			await _build_paced(slice)
+			await slice.pace("npc_rig")
+		else:
+			build()
 	if skeleton == null:
 		return
 	appearance = d as CharacterAppearance if d is CharacterAppearance else CharacterAppearance.new(d as Dictionary)
@@ -533,15 +698,30 @@ func apply_appearance(d: Variant) -> void:
 		var child := _child_body_ready()
 		for slot in CharacterAppearance.SLOTS:
 			var part_name := hair_worn if slot == "hair" else appearance.part(slot)
-			if slot == "head" and part_name.is_empty():
-				part_name = "default"
+			if slot == "head":
+				part_name = head_to_wear(part_name)
 			if child:
 				part_name = _child_cut(slot, part_name)
 			if part_name.is_empty():
 				continue
+			if slice != null:
+				# read on the loader's thread, the frames going on meanwhile, not in this frame
+				var path := _part_path(slot, part_name)
+				WorldStreamer.prefetch_paths([path])
+				while WorldStreamer.still_reading(path):
+					await WorldPace.next_frame()
+					slice.t0 = Time.get_ticks_usec()
 			_add_part(slot, part_name)
+			if slice != null:
+				await slice.pace("npc_part")
 		_apply_morality_parts()
+		if slice != null:
+			await slice.pace("npc_part")
+			# the body's part read on the loader's thread, as the others are
+			await _read_ahead(slice, [_part_path("body", CHILD_BODY if appearance.body_variant() == CHILD_BODY else appearance.body_variant())])
 		_apply_body_variant()
+		if slice != null:
+			await slice.pace("npc_body")
 		# The head is always a part now, "default" included, and the rig's own head and eyes
 		# stay hidden: the head parts carry the skull and the rig's copy is the old one. It
 		# comes back only if the head part cannot be loaded at all.
@@ -553,21 +733,130 @@ func apply_appearance(d: Variant) -> void:
 		_colour_signature = ""
 	var colours := _colour_signature_now()
 	if colours != _colour_signature:
-		_apply_colours()
+		if slice != null:
+			# a face's marks and zones read on the loader's thread; then a slot's colours a piece
+			await _read_ahead(slice, _marks_paths())
+			await _apply_colours(slice)
+		else:
+			await _apply_colours()
 		_colour_signature = colours
+	if slice != null:
+		await _apply_jewellery(slice)
+		await slice.pace("npc_jewellery")
+	else:
+		await _apply_jewellery()
 	_apply_fits()
 	_apply_proportions()
 	if arm_room != null:
 		arm_room.degrees = arm_room_for(appearance.part("torso"), body_variant_worn)
 		# a child's head is sized by ChildProportions
 		arm_room.head_scale = 1.0 if body_variant_worn == "child" else HEAD_SCALE
+		# a grown woman's bearing: narrower shoulders, arms carried closer, a narrower stance and
+		# her hips in the stride (ArmRoom.carriage)
+		arm_room.carriage = 1.0 if appearance.is_woman() and appearance.body_variant() != CHILD_BODY else 0.0
+		# the width of the shoulders, on the joints, so every sleeve and pauldron goes with them
+		arm_room.shoulder_out = shoulders_out_for(appearance) if appearance.body_variant() != CHILD_BODY else 0.0
 	_cloak_hold = arm_hold_for(appearance.part("back"))
+	if first_person:
+		_apply_first_person_look()
 	appearance_changed.emit()
+
+
+## Asks for `paths` on the loader's threads and waits, a frame at a time, until they are in.
+func _read_ahead(slice: WorldPace.Slice, paths: Array) -> void:
+	var wanted: Array = []
+	for p in paths:
+		if str(p) != "" and ResourceLoader.exists(str(p)):
+			wanted.append(str(p))
+	if wanted.is_empty():
+		return
+	WorldStreamer.prefetch_paths(wanted)
+	for p in wanted:
+		while WorldStreamer.still_reading(str(p)):
+			await WorldPace.next_frame()
+			slice.t0 = Time.get_ticks_usec()
+
+
+## The face marks and zones the heads worn now are coloured with (`_face_marks`).
+func _marks_paths() -> Array:
+	var out: Array = []
+	var heads: Array = []
+	for mi in _part_meshes.get("head", []):
+		if is_instance_valid(mi):
+			heads.append(_part_path("head", str((mi as Node).get_meta("part", ""))).replace(".glb", "_marks.png"))
+	heads.append(RIG_PATH.replace(".glb", "_head_marks.png"))
+	for m in heads:
+		if not out.has(m):
+			out.append(m)
+			out.append(str(m).replace("_marks.png", "_zones.png"))
+	return out
+
+
+## The skinned mesh a slot is worn as now ("head", "body", "hair"): the part's (its biggest mesh that
+## is not an eye), or the rig's own head or body where no part stands in; null for none.
+func worn_mesh(slot: String) -> MeshInstance3D:
+	var best: MeshInstance3D = null
+	for mi in _part_meshes.get(slot, []):
+		var m := mi as MeshInstance3D
+		if m == null or not is_instance_valid(m) or m.mesh == null or _is_eye(m):
+			continue
+		if best == null or _vertex_count(m) > _vertex_count(best):
+			best = m
+	if best == null and slot in ["head", "body"] and _default_meshes.has(slot):
+		var own := _default_meshes[slot] as MeshInstance3D
+		if own != null and own.visible:
+			best = own
+	return best
+
+
+static func _vertex_count(mi: MeshInstance3D) -> int:
+	return (mi.mesh as ArrayMesh).surface_get_array_len(0) if mi.mesh is ArrayMesh and mi.mesh.get_surface_count() > 0 else 0
+
+
+## True when something covers the crown (a helm, a hood, a hood up): what is worn at the ears and in
+## the hair is under it.
+func head_covered() -> bool:
+	for slot in COVERS_HEAD:
+		if appearance.part(slot) in COVERS_HEAD[slot]:
+			return true
+	return false
+
+
+## The jewellery (Adornment): one merged mesh of everything the record wears, built again when what
+## it wears or what it is worn on changes. It is a part like any other (Adornment.SLOT), so the face's
+## sliders and the grip reach its morph targets.
+var _jewel_signature := ""
+
+
+func _apply_jewellery(slice: WorldPace.Slice = null) -> void:
+	var sig := "%s|%s|%s" % [_worn_signature, str(appearance.jewellery), body_variant_worn]
+	if sig == _jewel_signature and (appearance.jewellery.is_empty() or _part_meshes.has(Adornment.SLOT)):
+		return
+	_jewel_signature = sig
+	for mi in _part_meshes.get(Adornment.SLOT, []):
+		if is_instance_valid(mi):
+			mi.queue_free()
+	_part_meshes.erase(Adornment.SLOT)
+	var built: MeshInstance3D = await Adornment.build(self, slice)
+	if built != null:
+		_part_meshes[Adornment.SLOT] = [built]
+
+
+## The head part a record wears for the face it chose: "default" for none, and a woman's cut of
+## the face (`<face>_f`) on a woman when the forge has built it. The Naming offers one list of
+## faces; the body chosen decides whose.
+func head_to_wear(face: String) -> String:
+	var chosen := face if not face.is_empty() else "default"
+	if appearance.is_woman():
+		var hers := chosen + CharacterAppearance.FEMININE_HEAD
+		if ResourceLoader.exists(_part_path("head", hers)):
+			return hers
+	return chosen
 
 
 ## Everything that decides which meshes are on the body.
 func _parts_signature() -> String:
-	var bits: Array[String] = [hair_worn, appearance.body_variant(),
+	var bits: Array[String] = [hair_worn, appearance.body_variant(), str(appearance.is_woman()),
 		"hollow%d" % int(appearance.hollow >= 0.66) + str(int(appearance.hollow >= 0.33)),
 		"hearth%d" % int(appearance.hearth >= 0.66)]
 	for slot in CharacterAppearance.SLOTS:
@@ -578,14 +867,16 @@ func _parts_signature() -> String:
 ## Everything that decides what colour those meshes are.
 func _colour_signature_now() -> String:
 	# a face's marks are laid on with the skin, so a record that only grows older is recoloured
-	return "%s|%s|%s|%s|%s" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
-		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance))]
+	return "%s|%s|%s|%s|%s|%s|%s|%s|%.3f|%s|%.3f" % [appearance.skin, appearance.hair_colour, appearance.eye_colour,
+		str(appearance.to_dict().get("palette", {})), str(face_marks_for(appearance)), appearance.brows,
+		appearance.scar, appearance.paint, appearance.moles, str(appearance.is_woman()), appearance.hair_grey()] \
+		+ str(appearance.tattoos)
 
 
 ## The hair the record chose, unless something is covering the crown.
 func _hair_to_wear() -> String:
 	var chosen := appearance.part("hair")
-	if chosen.is_empty():
+	if chosen.is_empty() or chosen in CharacterAppearance.CLOSE_HAIR:
 		return chosen
 	for slot in COVERS_HEAD:
 		if appearance.part(slot) in COVERS_HEAD[slot]:
@@ -648,7 +939,7 @@ func _add_part(slot: String, part_name: String) -> bool:
 		return false
 	var packed: PackedScene = _part_cache.get(path, null)
 	if packed == null:
-		packed = load(path)
+		packed = WorldStreamer.load_asset(path, false) as PackedScene
 		_part_cache[path] = packed
 	if packed == null:
 		return false
@@ -674,6 +965,7 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
 		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
 		copy.set_meta("tint", str(meta.get("tint", "")))
+		_hair_lod(copy, meta)
 		added.append(copy)
 	inst.queue_free()
 	if added.is_empty():
@@ -684,21 +976,41 @@ func _add_part(slot: String, part_name: String) -> bool:
 	return true
 
 
+## A style with cards (triage 47) wears them close and its shell far: the cards to CARDS_RANGE, the
+## shell from there on, with a metre of overlap either side so neither flickers at the line.
+func _hair_lod(mi: MeshInstance3D, meta: Dictionary) -> void:
+	var cards := str(meta.get("cards", ""))
+	if cards.is_empty():
+		return
+	if str(mi.get_meta("material", "")) == "hair_cards":
+		mi.visibility_range_end = CARDS_RANGE
+		mi.visibility_range_end_margin = CARDS_RANGE_MARGIN
+	elif str(mi.get_meta("material", "")) == "hair":
+		mi.visibility_range_begin = CARDS_RANGE
+		mi.visibility_range_begin_margin = CARDS_RANGE_MARGIN
+
+
 ## Every rig, head, hair shell and garment is baked once, in one colour: the record's skin,
 ## eyes and hair are tints relative to those bakes, and cloth takes the palette's colour for
 ## its role. Skin used to be applied only when a palette spelled out `skin_tint`, so the tone
 ## the record named was never seen on a body, and a head part fell through to the cloth
 ## palette's primary.
-func _apply_colours() -> void:
+func _apply_colours(slice: WorldPace.Slice = null) -> void:
 	var pal := appearance.palette
 	var skin := appearance.skin_tint()
 	for slot in _part_meshes:
+		if slice != null:
+			await slice.pace("npc_colours")
 		for mi in _part_meshes[slot]:
 			# A body variant is skin, not cloth. Without this it falls through to
 			# `_colour_key_for`, which has no key for it, and a heavy villager keeps the
 			# bake's own default tone while his face takes the record's.
 			if slot == "body":
 				_skin(mi, skin)
+				Adornment.dress_body(mi, appearance, skeleton)
+				continue
+			if slot == Adornment.SLOT:
+				# lit by what each piece is made of (Adornment), not dressed
 				continue
 			if slot == "head":
 				if _is_eye(mi):
@@ -706,6 +1018,7 @@ func _apply_colours() -> void:
 				else:
 					_skin(mi, skin)
 					_face_marks(mi, _part_path(slot, str(mi.get_meta("part", ""))).replace(".glb", "_marks.png"))
+					_face_overlay(mi)
 				continue
 			var key := _colour_key_for(slot)
 			var kind := str(mi.get_meta("material", ""))
@@ -713,6 +1026,9 @@ func _apply_colours() -> void:
 				_dress(mi, appearance.hair_tint() if not pal.has("hair") else pal["hair"] as Color, "hair")
 				if slot == "beard" and str(mi.get_meta("part", "")) == STUBBLE:
 					_as_stubble(mi)
+				elif slot == "hair" and str(mi.get_meta("part", "")) in CharacterAppearance.SHADOW_HAIR:
+					# a shaven head is a shadow on the scalp, as stubble is on the jaw
+					_as_stubble(mi, SHAVEN_ALPHA)
 				continue
 			if str(mi.get_meta("tint", "")) == "none":
 				_dress(mi, Color.WHITE, kind, true)
@@ -726,9 +1042,13 @@ func _apply_colours() -> void:
 				colour_key = "leather"
 			if pal.has(colour_key):
 				_dress(mi, pal[colour_key] as Color, kind)
+	if slice != null:
+		await slice.pace("npc_colours")
 	for logical in ["body", "head"]:
 		if _default_meshes.has(logical):
 			_skin(_default_meshes[logical], skin)
+	if _default_meshes.has("body"):
+		Adornment.dress_body(_default_meshes["body"], appearance, skeleton)
 	if _default_meshes.has("head"):
 		_face_marks(_default_meshes["head"], RIG_PATH.replace(".glb", "_head_marks.png"))
 	for eye in _default_eyes:
@@ -755,6 +1075,11 @@ func _skin(mi: MeshInstance3D, tint: Color) -> void:
 			m.set_shader_parameter("normal_tex", base.normal_texture)
 			m.set_shader_parameter("use_normal", base.normal_texture != null)
 		m.set_shader_parameter("tint", Vector3(tint.r, tint.g, tint.b))
+		var detail := _detail(SKIN_DETAIL)
+		m.set_shader_parameter("detail_normal", detail)
+		m.set_shader_parameter("use_detail", detail != null)
+		var is_body := str(mi.get_meta("slot", "")) == "body" or mi.name.to_lower().begins_with("body")
+		m.set_shader_parameter("detail_scale", SKIN_DETAIL_SCALE_BODY if is_body else SKIN_DETAIL_SCALE_HEAD)
 		mi.set_surface_override_material(i, m)
 
 
@@ -802,16 +1127,59 @@ static func face_asymmetry_for(a: CharacterAppearance) -> Dictionary:
 
 
 func _face_marks(mi: MeshInstance3D, marks_path: String) -> void:
-	var tex: Texture2D = load(marks_path) if ResourceLoader.exists(marks_path) else null
+	var tex: Texture2D = WorldStreamer.load_asset(marks_path) as Texture2D if ResourceLoader.exists(marks_path) else null
+	# and where its skin is warmer, cooler, oilier and thinner, beside the marks (paint.face_zones)
+	var zones_path := marks_path.replace("_marks.png", "_zones.png")
+	var zones: Texture2D = WorldStreamer.load_asset(zones_path) as Texture2D if ResourceLoader.exists(zones_path) else null
 	var marks := face_marks_for(appearance)
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
 		var m := mi.get_surface_override_material(i) as ShaderMaterial
 		if m == null or m.shader != SKIN_SHADER:
 			continue
 		m.set_shader_parameter("marks_tex", tex)
+		m.set_shader_parameter("zones_tex", zones)
 		for key in marks:
 			var param: String = "freckle_amount" if key == "freckles" else "%s_amount" % key
 			m.set_shader_parameter(param, float(marks[key]) if tex != null else 0.0)
+
+
+## The person's brows, scar, moles and face paint, drawn over the head (assets/shaders/face_marks):
+## the head's material_overlay, in the face coordinates the forge wrote as its UV2. Only a head with
+## one of them has it, so a plain face costs no second pass.
+func _face_overlay(mi: MeshInstance3D) -> void:
+	var a := appearance
+	var params := face_overlay_params(a)
+	if not bool(params["any"]):
+		mi.material_overlay = null
+		return
+	var m := mi.material_overlay as ShaderMaterial
+	if m == null or m.shader != FACE_MARKS_SHADER:
+		m = ShaderMaterial.new()
+		m.shader = FACE_MARKS_SHADER
+		mi.material_overlay = m
+	for key in params:
+		if key != "any":
+			m.set_shader_parameter(key, params[key])
+
+
+## What the face overlay is drawn with for this record (the tests ask it too).
+static func face_overlay_params(a: CharacterAppearance) -> Dictionary:
+	var brow := CharacterAppearance.BROW_STYLES.find(a.brows)
+	var scar := CharacterAppearance.SCARS.find(a.scar)
+	var paint := CharacterAppearance.PAINTS.find(a.paint)
+	var hair := a.hair_worn_colour()
+	# brows are the hair's colour, a little darker, and grey more slowly than the head
+	var brow_col := CharacterAppearance.hair_colour_value(a.hair_colour).lerp(hair, 0.6).darkened(0.18)
+	var out := {
+		"any": brow > 0 or scar > 0 or paint > 0 or a.moles > 0.01 or not a.face_tattoos().is_empty(),
+		"brow_style": maxi(brow, 0), "brow_colour": brow_col, "brow_lift": 0.003 if a.is_woman() else 0.0,
+		"scar": maxi(scar, 0), "skin_colour": CharacterAppearance.skin_colour(a.skin),
+		"moles": a.moles, "mole_seed": float(absi(a.seed) % 997),
+		"paint": maxi(paint, 0),
+	}
+	# and its tattoos (triage 48)
+	out.merge(Adornment.face_tattoo_params(a), true)
+	return out
 
 
 ## What a skin's tint is, from whichever material it is wearing (the tests and the probes ask).
@@ -840,15 +1208,17 @@ static func skin_tint_of(mi: MeshInstance3D) -> Color:
 ## it was a full short beard. Seen through, it is a shadow on the skin, which is what stubble is.
 const STUBBLE := "stubble"
 const STUBBLE_ALPHA := 0.42
+const SHAVEN_ALPHA := 0.55
 
 
-func _as_stubble(mi: MeshInstance3D) -> void:
+func _as_stubble(mi: MeshInstance3D, alpha := STUBBLE_ALPHA) -> void:
 	for i in (mi.mesh.get_surface_count() if mi.mesh != null else 0):
-		var m := mi.get_surface_override_material(i) as BaseMaterial3D
-		if m == null:
-			continue
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.albedo_color.a = STUBBLE_ALPHA
+		var m := mi.get_surface_override_material(i)
+		if m is ShaderMaterial:
+			(m as ShaderMaterial).set_shader_parameter("alpha", alpha)
+		elif m is BaseMaterial3D:
+			(m as BaseMaterial3D).transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			(m as BaseMaterial3D).albedo_color.a = alpha
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
@@ -861,6 +1231,15 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 			_set_dress_colour(worn, c)
 			continue
 		var base := mi.mesh.surface_get_material(i) as BaseMaterial3D
+		if kind == "hair" and str(mi.get_meta("material", "")) == "hair_cards":
+			mi.set_surface_override_material(i, _hair_cards_material(c))
+			continue
+		if kind == "hair":
+			# a shaven head is drawn as stubble is: a shadow of hair on the skin (triage 39)
+			var stubble := str(mi.get_meta("part", "")) == STUBBLE \
+					or str(mi.get_meta("part", "")) in CharacterAppearance.SHADOW_HAIR
+			mi.set_surface_override_material(i, _hair_material(base, c, STUBBLE_SHADER if stubble else HAIR_SHADER))
+			continue
 		if garment:
 			var spec: Array = GARMENT_KINDS.get(kind, GARMENT_KINDS["cloth"])
 			var sm := ShaderMaterial.new()
@@ -892,6 +1271,43 @@ func _dress(mi: MeshInstance3D, c: Color, kind: String, woven := false) -> void:
 		mi.set_surface_override_material(i, m)
 
 
+## Hair wears the hair shader, carrying the bake's maps across, and the style's flow map from
+## beside its normal map when the style has one (a style built before them is lit without the
+## strand direction, as hair falling down the head).
+func _hair_material(base: BaseMaterial3D, c: Color, shader: Shader) -> ShaderMaterial:
+	var sm := ShaderMaterial.new()
+	sm.shader = shader
+	sm.set_meta("dressed", true)
+	if base != null:
+		sm.set_shader_parameter("albedo_tex", base.albedo_texture)
+		var orm: Texture2D = base.roughness_texture if base.roughness_texture != null else base.ao_texture
+		sm.set_shader_parameter("orm_tex", orm)
+		sm.set_shader_parameter("use_orm", orm != null)
+		sm.set_shader_parameter("normal_tex", base.normal_texture)
+		sm.set_shader_parameter("use_normal", base.normal_texture != null)
+		var flow: Texture2D = null
+		if base.normal_texture != null:
+			var flow_path := base.normal_texture.resource_path.replace("_normal.png", "_flow.png")
+			if flow_path.ends_with("_flow.png") and ResourceLoader.exists(flow_path):
+				flow = load(flow_path)
+		sm.set_shader_parameter("flow_tex", flow)
+		sm.set_shader_parameter("use_flow", flow != null)
+	_set_dress_colour(sm, c)
+	return sm
+
+
+## The cards' material: the shared strand atlas and grain, and the person's colour as the shell's
+## tint is (a ratio against the bake's brown).
+func _hair_cards_material(c: Color) -> ShaderMaterial:
+	var sm := ShaderMaterial.new()
+	sm.shader = HAIR_CARDS_SHADER
+	sm.set_meta("dressed", true)
+	sm.set_shader_parameter("strand_tex", _detail(HAIR_STRANDS))
+	sm.set_shader_parameter("grain_tex", _detail(HAIR_GRAIN))
+	_set_dress_colour(sm, c)
+	return sm
+
+
 func _set_dress_colour(m: Material, c: Color) -> void:
 	if m is ShaderMaterial:
 		(m as ShaderMaterial).set_shader_parameter("tint", Vector3(c.r, c.g, c.b))
@@ -920,9 +1336,9 @@ static func dressed_colour_of(mi: MeshInstance3D) -> Color:
 	return Color(-1, -1, -1)
 
 
-## Every garment is built on the default body and carries the heavy and slight bodies as
-## morph targets, fitted by the forge, so a heavy villager's tunic is cut for him instead of
-## the body standing through it. Beards carry one target per face, because a beard lies on a
+## Every garment is built on the default body and carries the other bodies it has been cut for
+## as morph targets, fitted by the forge (FITTED_BODIES), so a heavy villager's tunic is cut for
+## him and a woman's for her instead of the body standing through it. Beards carry one target per face, because a beard lies on a
 ## jaw and the faces' jaws are not one jaw.
 func _apply_fits() -> void:
 	var head := appearance.part("head")
@@ -932,6 +1348,21 @@ func _apply_fits() -> void:
 			var m := mi as MeshInstance3D
 			if m == null or m.mesh == null or not (m.mesh is ArrayMesh):
 				continue
+			# The importer's LODs were cut on the garment as built, on the default body. Fitted to
+			# another, a coarse LOD no longer follows the fit: across a street a woman's tunic
+			# dropped to one that lay flat over the chest, and her bust came through it in two
+			# patches that the full mesh covers. A fitted garment keeps its detail further out.
+			# The same holds on the body a garment was built on: a coarse LOD's flat facets cut in
+			# across the curve of a chest or a thigh further than a close garment stands off it, and
+			# a man's tunic showed skin at the waist across a street (triage 29). Measured on every
+			# garment's LODs (the body's vertices a LOD leaves outside it), the torso's, the legs' and
+			# the back's did it at 15-30 m, belts, boots, gloves and hoods not at all.
+			m.lod_bias = FITTED_LOD_BIAS if (slot in FITTED_SLOTS and body_variant_worn in FITTED_BODIES) \
+					or slot in CLOSE_LOD_SLOTS else 1.0
+			if str(m.get_meta("material", "")) == "hair_cards":
+				# the importer's decimated LODs of a card mesh are cards with their tips welded
+				# together; the cards keep their detail and give way to the shell (_hair_lod)
+				m.lod_bias = CARDS_LOD_BIAS
 			var shapes := (m.mesh as ArrayMesh).get_blend_shape_count()
 			for b in shapes:
 				var shape := str((m.mesh as ArrayMesh).get_blend_shape_name(b))
@@ -940,13 +1371,26 @@ func _apply_fits() -> void:
 					# the hands' own morphs, kept at what set_grip has them at
 					m.set_blend_shape_value(b, float(_grip.get(shape.substr(5), 0.0)))
 					continue
+				if shape.begins_with(FACE_TARGET):
+					# the face's sliders and its years, on the head, its eyes, and whatever lies over
+					# the face (a beard, the hair's fringe, a hood's opening) so it goes with it
+					m.set_blend_shape_value(b, appearance.face_weight(shape.substr(FACE_TARGET.length())))
+					continue
+				if shape in BUST_TARGETS:
+					m.set_blend_shape_value(b, appearance.bust_weight()
+							if body_variant_worn == CharacterAppearance.WOMAN_BODY else 0.0)
+					continue
 				if slot == "head":
 					# a face's own asymmetry, by the person
 					m.set_blend_shape_value(b, float(asym.get(shape, 0.0)))
 					continue
-				if shape == "heavy" or shape == "slight":
+				if slot == Adornment.SLOT and asym.has(shape):
+					# a piece on the face goes with the face's own asymmetry, as its skin does
+					m.set_blend_shape_value(b, float(asym[shape]))
+					continue
+				if shape in FITTED_BODIES:
 					on = shape == body_variant_worn
-				elif slot == "beard" or slot == "hair":
+				elif slot == "beard" or slot == "hair" or slot == Adornment.SLOT:
 					on = shape == head
 				m.set_blend_shape_value(b, 1.0 if on else 0.0)
 
@@ -1061,9 +1505,18 @@ func _colour_key_for(slot: String) -> String:
 ## `child` is a different skeleton: its hips sit at 0.646 m against 0.980, its upper arm is
 ## 192 mm against 292, and its worst joint is 476 mm from the adult's, 9.2 m summed over
 ## 29 bones. Draping that mesh on adult bones would stretch a child back into an adult, so it
-## is not worn like these two: `_apply_child` re-proportions the rig itself (see
+## is not worn like the others: `_apply_child` re-proportions the rig itself (see
 ## ChildProportions) and the child body goes on that.
-const WEARABLE_BODIES := ["slight", "heavy"]
+##
+## `woman` is shape too, and less than either: the forge keeps a woman's body on the default
+## joints exactly (character_forge MESH_ONLY), her hips, waist and bust in the mesh alone.
+const WEARABLE_BODIES := ["slight", "heavy", "woman"]
+## The morph targets on a garment that are a body's fit, named after the body.
+const FITTED_BODIES := ["slight", "heavy", "woman"]
+## How much longer a garment worn in its fit keeps its full detail (MeshInstance3D.lod_bias).
+const FITTED_LOD_BIAS := 4.0
+## Slots whose garments keep that detail on any body: the ones lying close over the trunk and the legs.
+const CLOSE_LOD_SLOTS := ["torso", "legs", "back"]
 const CHILD_BODY := "child"
 ## What a child wears in a slot whose garment has no child's cut: the plain garment of that
 ## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
@@ -1188,7 +1641,7 @@ func _garments_fit(variant: String) -> bool:
 ## difference between it and the girth of whichever body is worn -- so each variant's own
 ## shape (narrow shoulders, a heavy middle) comes in at its end without the width jumping,
 ## and nothing is counted twice.
-const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12}
+const VARIANT_GIRTH := {"": 1.0, "slight": 0.90, "heavy": 1.12, "woman": 1.0}
 
 
 static func girth_for(build: float) -> float:
@@ -1207,6 +1660,15 @@ const ARM_ROOM_HEAVY := 3.0
 const HEAD_SCALE := 1.06
 
 
+## Metres each shoulder joint stands out along the collarbone for the record's shoulder width:
+## SHOULDER_SPAN at the ends of its range (0.86 .. 1.14), nothing at 1.
+const SHOULDER_SPAN := 0.016
+
+
+static func shoulders_out_for(a: CharacterAppearance) -> float:
+	return clampf((a.shoulder_width - 1.0) / 0.14, -1.0, 1.0) * SHOULDER_SPAN
+
+
 static func arm_room_for(torso: String, variant: String) -> float:
 	return float(ARM_ROOM.get(torso, 0.0)) + (ARM_ROOM_HEAVY if variant == "heavy" else 0.0)
 
@@ -1214,8 +1676,9 @@ static func arm_room_for(torso: String, variant: String) -> float:
 ## How much of the arms' swing a cloak to the knee takes back while the body walks: the share
 ## of the clip's arm pose ArmRoom returns to the Idle's hang. The cloth lying on an arm goes with
 ## nearly all of its swing, and the whole Walk swing still brought the hand out through the front
-## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it.
-const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7}
+## of the cloak at every step. A shoulder cape or a plaid leaves the arms free below it; a shawl
+## lies over the tops of the arms to the elbow, and running they came up through its sides.
+const ARM_HOLD := {"cloak": 0.7, "hooded_cloak": 0.7, "ragged_cloak": 0.7, "torn_cloak": 0.7, "shawl": 0.6}
 ## Running, nearly all of it: the Run pumps the arms 38 degrees with the elbows bent 80, and at
 ## the walk's hold the elbow behind still came out through the back of the cloak.
 const ARM_HOLD_RUNNING := 0.95
@@ -1283,15 +1746,18 @@ func _build_animation_tree() -> void:
 		var node := AnimationNodeAnimation.new()
 		node.animation = name
 		sm.add_node(name, node, Vector2(x, y))
-		# travel() needs a path of real transitions or it teleports without a cross-fade
-		sm.add_transition(LOCOMOTION_STATE, name,
-				_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+		# travel() needs a path of real transitions or it teleports without a cross-fade. The edge
+		# into a one-shot plays it from its start (_into_one_shot): without that, the clip went on
+		# from wherever it was last left, which for anything played before was its last frame. A
+		# heavy blow swung once, and every heavy after it stood in its follow-through with the
+		# blade out in front for the whole of the swing; a roll rolled once each way, and after
+		# that the body slid along in the roll's last pose, a dash (playtest 2026-09-27, 4 and 6).
+		sm.add_transition(LOCOMOTION_STATE, name, _into_one_shot(name))
 		sm.add_transition(name, LOCOMOTION_STATE,
 				_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		if _has_swim:
 			# a flinch or a flask in the water goes back to the swim, not through a walk
-			sm.add_transition(SWIM_STATE, name,
-					_transition(ONE_SHOT_BLEND_IN, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
+			sm.add_transition(SWIM_STATE, name, _into_one_shot(name))
 			sm.add_transition(name, SWIM_STATE,
 					_transition(ONE_SHOT_BLEND_OUT, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE))
 		y += 46.0
@@ -1336,6 +1802,19 @@ static func _starts_with_any(clip: String, prefixes: Array) -> bool:
 		if clip.begins_with(str(p)):
 			return true
 	return false
+
+
+## The edge from the legs (or the swim) into a one-shot: cross-faded in, and played from the clip's
+## start. The edges back out keep `reset` off, so the gait goes on in step from where it was. (Before
+## this the clip also stood still for the first tenth of a second of its first play, the fade's,
+## and the picture's blow landed that much after the timeline's.) A swing's edge switches at once and
+## the model blends the legs' pose into the swing's itself, as a hand-over does (_blend_handover):
+## the mixer's cross-fade from the idle carried a spear's butt 6-8 cm into the chest for two frames.
+func _into_one_shot(clip: String) -> AnimationNodeStateMachineTransition:
+	var fade := 0.0 if _starts_with_any(clip, HANDS_OVER) else ONE_SHOT_BLEND_IN
+	var t := _transition(fade, AnimationNodeStateMachineTransition.SWITCH_MODE_IMMEDIATE)
+	t.reset = true
+	return t
 
 
 ## One transition resource per edge: they are cheap, and `travel` refuses to cross-fade
@@ -1447,7 +1926,13 @@ func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
 		return below
 	var pose := AnimationNodeAnimation.new()
 	pose.animation = STANCE_CLIPS[0]
+	_stance_node = pose
 	bt.add_node("stance_pose", pose, Vector2(800, 200))
+	# a stance played again starts from its first frame, at the pace it is given
+	bt.add_node("stance_seek", AnimationNodeTimeSeek.new(), Vector2(900, 200))
+	bt.connect_node("stance_seek", 0, "stance_pose")
+	bt.add_node("stance_rate", AnimationNodeTimeScale.new(), Vector2(950, 200))
+	bt.connect_node("stance_rate", 0, "stance_seek")
 	var layer := AnimationNodeBlend2.new()
 	layer.filter_enabled = true
 	var clip := anim_player.get_animation(STANCE_CLIPS[0])
@@ -1457,7 +1942,7 @@ func _add_stance_layer(bt: AnimationNodeBlendTree, below: String) -> String:
 			layer.set_filter_path(path, true)
 	bt.add_node("stance", layer, Vector2(1000, 0))
 	bt.connect_node("stance", 0, below)
-	bt.connect_node("stance", 1, "stance_pose")
+	bt.connect_node("stance", 1, "stance_rate")
 	_has_stance_layer = true
 	return "stance"
 
@@ -1748,6 +2233,7 @@ func _update_locomotion(delta: float) -> void:
 	if _has_stance_layer:
 		_stance_w = move_toward(_stance_w, 1.0 if _stance != "" else 0.0, delta / STANCE_BLEND_S)
 		p["stance/blend_amount"] = _stance_w
+		p["stance_rate/scale"] = _stance_rate()
 	if _has_turns:
 		_update_turn(delta, p)
 	for key in p:
@@ -1901,10 +2387,26 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	_holding = ""
 	if _has_stance_layer and STANCE_CLIPS.has(clip_name):
 		# held over the legs in the Locomotion graph, not played as a state of its own
+		var was := _stance
 		_stance = clip_name
 		_one_shot = ""
 		if _state_machine.get_current_node() != LOCOMOTION_STATE:
 			_state_machine.travel(LOCOMOTION_STATE)
+		# from its first frame, every time (test_clips_play_again): a loose then a draw again, or a
+		# draw let down and drawn again. One stance into another hands the pose over as a swing
+		# into the next does (_begin_handover), the legs going on as they were.
+		if was == clip_name and not STANCE_TIMED.has(clip_name):
+			return true              # a held loop asked for again goes on
+		if was != "" and _stance_w > 0.0 and was != clip_name:
+			_begin_handover(ONE_SHOT_HANDOVER, LEGS)
+			# the aim is laid on after the blend, every frame: blend from the pose without it
+			for b in _pre_aim:
+				if int(b) < _handover_from.size() and _handover_from[int(b)] != null:
+					(_handover_from[int(b)] as Array)[0] = _pre_aim[b]
+		if _stance_node != null and _stance_node.animation != StringName(clip_name):
+			_stance_node.animation = clip_name
+		anim_tree.set("parameters/%s/stance_seek/seek_request" % LOCOMOTION_STATE, 0.0)
+		_stance_time = 0.0
 		return true
 	_stance = ""
 	if _is_locomotion_clip(clip_name) or SWIM_CLIPS.has(clip_name):
@@ -1917,7 +2419,9 @@ func play_intent(clip_name: String, blend: float = DEFAULT_BLEND) -> bool:
 	var current := str(_state_machine.get_current_node())
 	if current == LOCOMOTION_STATE or current == SWIM_STATE or _handovers.has("%s>%s" % [current, clip_name]):
 		if current != LOCOMOTION_STATE and current != SWIM_STATE:
-			_begin_handover()
+			_begin_handover(ONE_SHOT_HANDOVER)
+		elif _starts_with_any(clip_name, HANDS_OVER):
+			_begin_handover(ONE_SHOT_BLEND_IN, SWING_ARMS)
 		_state_machine.travel(clip_name)
 	else:
 		_state_machine.start(clip_name, true)
@@ -1980,7 +2484,45 @@ func current_stance() -> String:
 	return _stance
 
 
+## Past these distances from the eye a body's pose is worked out every second, and every fourth,
+## frame (with the time of the frames between), staggered so each frame takes a share: forty people
+## and foes posed in full every frame were most of what a film's frame cost the main thread, most of
+## them a hundred metres off or more (TRIAGE item 36). A fight's swing or a flinch is always posed.
+const POSE_HALF_M := 35.0
+const POSE_QUARTER_M := 90.0
+var _pose_owed := 0.0
+
+
 func _process(delta: float) -> void:
+	var every := _pose_every()
+	if every > 1:
+		_pose_owed += delta
+		if (Engine.get_process_frames() + get_instance_id()) % every != 0:
+			return
+		delta = _pose_owed
+		_pose_owed = 0.0
+	elif _pose_owed > 0.0:
+		delta += _pose_owed
+		_pose_owed = 0.0
+	_pose(delta)
+
+
+## How often this body is posed: every frame near the eye, in a fight's move, or with no eye.
+func _pose_every() -> int:
+	if not _one_shot.is_empty() or not is_inside_tree():
+		return 1
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return 1
+	var d := cam.global_position.distance_squared_to(global_position)
+	if d > POSE_QUARTER_M * POSE_QUARTER_M:
+		return 4
+	if d > POSE_HALF_M * POSE_HALF_M:
+		return 2
+	return 1
+
+
+func _pose(delta: float) -> void:
 	_update_locomotion(delta)
 	_ease_grip(delta)
 	if arm_room != null:
@@ -1992,8 +2534,395 @@ func _process(delta: float) -> void:
 			_blend_handover(step)
 	if not _one_shot.is_empty():
 		_advance_one_shot(step)
+	_advance_stance(step)
 	_turn_the_hips()
+	_lay_carry(delta)
+	_aim_the_body(delta)
+	_hold_in_view(delta)
 	_plant_feet(delta)
+	if bow_hands != null:
+		bow_hands.update(self, delta)
+
+
+## The stance's clip plays on (at _stance_rate); one of STANCE_ENDS that has played through lets the
+## upper body go back to the legs' over STANCE_BLEND_S.
+func _advance_stance(step: float) -> void:
+	if _stance.is_empty():
+		return
+	_stance_time += step * _stance_rate()
+	if STANCE_ENDS.has(_stance) and _stance_time >= clip_length(_stance):
+		_stance = ""
+
+
+## How fast the stance's clip plays: a timed one (a draw, a loose) at the AnimationDriver's pace for
+## it, as a one-shot is (speed_scale); a held one (a guard, a bow held drawn) at its own.
+func _stance_rate() -> float:
+	return maxf(speed_scale, 0.0) if STANCE_TIMED.has(_stance) else 1.0
+
+
+## Seconds into the stance's clip (its own time), and the stance's own event times from the sidecar.
+func stance_time() -> float:
+	return _stance_time
+
+
+func stance_event(event_name: String, fallback := -1.0) -> float:
+	for e in clip_events(_stance):
+		if str(e.get("name", "")) == event_name:
+			return float(e.get("t", fallback))
+	return fallback
+
+
+## How much the body is turned to its aim now (0..1): the bow up from the moment it is raised
+## until the loose's follow-through is done.
+func aim_weight() -> float:
+	return _aim_w
+
+
+func _aim_wanted() -> float:
+	match _stance:
+		"Bow_Draw":
+			var from := stance_event("nocked", 0.3)
+			var full := stance_event("bow_raised", 0.56)
+			return clampf((_stance_time - from) / maxf(full - from, 0.01), 0.0, 1.0)
+		"Bow_Aim":
+			return 1.0
+		"Bow_Release":
+			var hold := stance_event("cancel_ok", 0.3)
+			var length := maxf(clip_length("Bow_Release"), hold + 0.01)
+			return 1.0 - clampf((_stance_time - hold) / (length - hold), 0.0, 1.0)
+	return 0.0
+
+
+## The spine and chest turned up or down and round to the aim (aim_pitch, aim_yaw) over whatever the
+## clips have set, with a held draw's tremble on top: the bow's clips are drawn level and straight
+## ahead, and the body bends to where the arrow will go. Only while a bow is up (_aim_wanted).
+func _aim_the_body(delta: float) -> void:
+	_aim_w = move_toward(_aim_w, maxf(_aim_wanted() * _stance_w, clampf(view_follow, 0.0, 1.0)), delta / AIM_BLEND_S)
+	_pre_aim.clear()
+	if skeleton == null or _aim_w <= 0.001:
+		return
+	_tremble_t += delta
+	var shake := Vector2(sin(_tremble_t * 23.0) + 0.6 * sin(_tremble_t * 37.0 + 1.3),
+			sin(_tremble_t * 29.0 + 0.7) + 0.5 * sin(_tremble_t * 41.0)) * (aim_tremble / 1.6)
+	var pitch := clampf(aim_pitch + shake.y, -AIM_MOST, AIM_MOST) * _aim_w
+	var yaw := clampf(aim_yaw + shake.x, -AIM_MOST, AIM_MOST) * _aim_w
+	# the rig faces +Z, so its right is -X: up is a turn about +X the other way
+	for pair in [["Spine", AIM_SPINE], ["Chest", AIM_CHEST]]:
+		var b := skeleton.find_bone(str(pair[0]))
+		if b < 0:
+			continue
+		var share := float(pair[1])
+		_pre_aim[b] = skeleton.get_bone_pose_rotation(b)
+		var turn := Quaternion(Vector3.UP, yaw * share) * Quaternion(Vector3.RIGHT, -pitch * share)
+		_set_bone_global_rotation(b, turn * skeleton.get_bone_global_pose(b).basis.get_rotation_quaternion())
+
+
+# --- first person (triage 57) ------------------------------------------------------------------
+
+## The arms held in the carry (see `carry`), as far as it has eased in: each arm bone turned from
+## the pose the clips set towards Idle_Combat's, played on at its own pace so the guard breathes.
+## Only the arms: the chest, the head and the legs go on with the walk, the run or the idle, so the
+## hands ride the stride as they would.
+func _lay_carry(delta: float) -> void:
+	var wanted := carry if first_person and _one_shot.is_empty() and _stance.is_empty() and not _swimming \
+			and _holding.is_empty() else 0.0
+	_carry_w = move_toward(_carry_w, clampf(wanted, 0.0, 1.0), delta / CARRY_BLEND_S)
+	if skeleton == null or _carry_w <= 0.001:
+		return
+	var clip := _find_animation(CARRY_CLIP)
+	if clip == null:
+		return
+	if _carry_tracks.is_empty():
+		for i in clip.get_track_count():
+			if clip.track_get_type(i) != Animation.TYPE_ROTATION_3D:
+				continue
+			var bone_name := str(clip.track_get_path(i).get_concatenated_subnames())
+			if CARRY_BONES.has(bone_name):
+				var b := skeleton.find_bone(bone_name)
+				if b >= 0:
+					_carry_tracks[b] = i
+	_carry_t = fmod(_carry_t + delta, maxf(clip.length, 0.01))
+	var w := smoothstep(0.0, 1.0, _carry_w)
+	for b in _carry_tracks:
+		var held := clip.rotation_track_interpolate(int(_carry_tracks[b]), _carry_t)
+		skeleton.set_bone_pose_rotation(b, skeleton.get_bone_pose_rotation(b).slerp(held, w))
+
+
+## The arms placed for the eyes in first person, over whatever posed them this frame:
+##   * in the carry (`carry`, as far as it has eased in) each hand is reached to its place in the view
+##     (FP_HOLD_*: across, up and ahead of the eyes, the view's own axes) by turning its upper arm and
+##     forearm, the elbow down and out; a weapon in the right hand is turned so its blade points up,
+##     ahead and across the view (FP_BLADE), and a free left hand keeps its grip on the weapon where
+##     the guard put it (a two-handed hilt, the pommel); a shield or a bow in the left has a place of
+##     its own. Idle_Combat's guard, laid on first, held its sword upright 20 cm before the eyes:
+##     a black bar across half the picture;
+##   * a raised guard (Block_Idle, and a blow taken on it) is held the same way at FP_GUARD_*: the
+##     blade across the view, or the shield before its left. Laid on as the clip has it, the guard
+##     was a black crossguard and an open hand filling the picture a hand's breadth from the eyes;
+##   * in a swing, a saying, a parry, or a reach to use or take something (FP_LIFTS) both arms are
+##     turned up together about the line of the shoulders by FP_LIFT_DEG, and each hand is kept inside
+##     the view (_keep_hands_in_view), so an arc the clip draws wide and low at the chest is drawn
+##     where the eyes see it. Not a bow, whose clips are already drawn at the eye and aimed.
+func _hold_in_view(delta: float) -> void:
+	var lift_to := 1.0 if first_person and _starts_with_any(_one_shot, FP_LIFTS) else 0.0
+	_lift_w = move_toward(_lift_w, lift_to, delta / FP_LIFT_S)
+	var guard_to := 1.0 if first_person and (_stance == "Block_Idle" or _one_shot == "Block_Hit") else 0.0
+	_guard_w = move_toward(_guard_w, guard_to, delta / CARRY_BLEND_S)
+	if skeleton == null or not first_person:
+		return
+	if _lift_w > 0.001:
+		var lw := smoothstep(0.0, 1.0, _lift_w)
+		_lift_arms(deg_to_rad(FP_LIFT_DEG) * lw)
+		_keep_hands_in_view(lw)
+	if _carry_w > 0.001:
+		_reach_for_view(smoothstep(0.0, 1.0, _carry_w), false)
+	if _guard_w > 0.001:
+		_reach_for_view(smoothstep(0.0, 1.0, _guard_w), true)
+
+
+## Both arms turned up by `angle` (rad) about the line of the shoulders, as one: every Shoulder bone
+## turned about its own joint, which is on that line.
+func _lift_arms(angle: float) -> void:
+	var left := skeleton.find_bone("Shoulder.L")
+	var right := skeleton.find_bone("Shoulder.R")
+	if left < 0 or right < 0:
+		return
+	var axis := (skeleton.get_bone_global_pose(left).origin - skeleton.get_bone_global_pose(right).origin)
+	if axis.length() < 0.01:
+		axis = Vector3.RIGHT
+	# the rig faces +Z and +X is its left: a turn about +X takes its forward (+Z) down, so up is -angle
+	var q := Quaternion(axis.normalized(), -angle)
+	for b in [left, right]:
+		_set_bone_global_rotation(b, q * skeleton.get_bone_global_pose(b).basis.get_rotation_quaternion())
+
+
+## Each hand drawn into the view in a swing (see FP_ACROSS), its arm reaching for the place and the
+## hand keeping the turn the clip gave it, so the blade still points where the clip points it. A
+## left hand gripping the right hand's weapon keeps its grip; a free one is drawn in only for a saying.
+func _keep_hands_in_view(w: float) -> void:
+	var names := ["UpperArm.R", "LowerArm.R", "Hand.R", "UpperArm.L", "LowerArm.L", "Hand.L"]
+	var bones: Array[int] = []
+	for n in names:
+		var b := skeleton.find_bone(n)
+		if b < 0:
+			return
+		bones.append(b)
+	var socket_r := skeleton.find_bone("Socket.WeaponR")
+	var was: Array[Quaternion] = []
+	for b in bones:
+		was.append(skeleton.get_bone_pose_rotation(b))
+	var head := skeleton.find_bone("Head")
+	var eye := skeleton.get_bone_global_pose(head) * (_eye_in_head if _eye_in_head != Vector3.INF else EYE_IN_HEAD)
+	var turn := _view_turn()
+	var grip_l := Transform3D.IDENTITY
+	var gripping := false
+	if socket_r >= 0 and _holds("WeaponR"):
+		grip_l = skeleton.get_bone_global_pose(socket_r).affine_inverse() * skeleton.get_bone_global_pose(bones[5])
+		gripping = grip_l.origin.length() < FP_TWO_HANDS_M
+	_hand_into_view(bones[0], bones[1], bones[2], eye, turn, Vector3(-0.8, -0.7, -0.3))
+	if gripping:
+		var want := skeleton.get_bone_global_pose(socket_r) * grip_l
+		_reach(bones[3], bones[4], bones[5], want.origin, turn * Vector3(0.8, -0.7, -0.3))
+		_set_bone_global_rotation(bones[5], want.basis.get_rotation_quaternion())
+	elif _one_shot.begins_with("Cast_"):
+		# the hand a saying is said with; a free hand in a swing goes where the swing has it
+		_hand_into_view(bones[3], bones[4], bones[5], eye, turn, Vector3(0.8, -0.7, -0.3))
+	if w < 0.999:
+		for i in bones.size():
+			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+func _hand_into_view(upper: int, lower: int, hand: int, eye: Vector3, turn: Quaternion, pole: Vector3) -> void:
+	var at := skeleton.get_bone_global_pose(hand).origin
+	var local := turn.inverse() * (at - eye)
+	var v := Vector3(-local.x, local.y, local.z)          # across to the right, up, ahead
+	var z := maxf(v.z, FP_NEAREST)
+	var put := Vector3(clampf(v.x, -FP_ACROSS * z, FP_ACROSS * z), clampf(v.y, -FP_BELOW * z, FP_ABOVE * z), z)
+	if put.distance_to(v) < 0.005:
+		return
+	var keep := skeleton.get_bone_global_pose(hand).basis.get_rotation_quaternion()
+	_reach(upper, lower, hand, _in_view(eye, put), turn * pole)
+	_set_bone_global_rotation(hand, keep)
+
+
+## A place in the view (x across to the right, y up, z ahead of the eyes, metres) in the skeleton's
+## space: the view looks along the body's way, pitched by view_pitch.
+func _in_view(eye: Vector3, v: Vector3) -> Vector3:
+	return eye + _view_turn() * Vector3(-v.x, v.y, v.z)
+
+
+func _view_turn() -> Quaternion:
+	return Quaternion(Vector3.RIGHT, -clampf(view_pitch, -1.5, 1.5))
+
+
+## The carry's reach, or the guard's (see _hold_in_view), at `w` of the way from the pose the
+## clips set.
+func _reach_for_view(w: float, guard: bool) -> void:
+	var names := ["UpperArm.R", "LowerArm.R", "Hand.R", "UpperArm.L", "LowerArm.L", "Hand.L"]
+	var bones: Array[int] = []
+	for n in names:
+		var b := skeleton.find_bone(n)
+		if b < 0:
+			return
+		bones.append(b)
+	var was: Array[Quaternion] = []
+	for b in bones:
+		was.append(skeleton.get_bone_pose_rotation(b))
+	var head := skeleton.find_bone("Head")
+	var eye := skeleton.get_bone_global_pose(head) * (_eye_in_head if _eye_in_head != Vector3.INF else EYE_IN_HEAD)
+	var right_holds := _holds("WeaponR")
+	var bow := _holds("WeaponL")
+	var left_holds := bow or _holds("ShieldL")
+	var socket_r := skeleton.find_bone("Socket.WeaponR")
+	# the left hand's grip on what the right holds, as the guard has it
+	var grip_l := Transform3D.IDENTITY
+	if right_holds and not left_holds and socket_r >= 0:
+		grip_l = skeleton.get_bone_global_pose(socket_r).affine_inverse() * skeleton.get_bone_global_pose(bones[5])
+	# a guard holds a two-handed weapon in both hands; a one-handed blade's is the right hand's alone
+	var two_hands := right_holds and not left_holds and grip_l.origin.length() < FP_TWO_HANDS_M
+	var turn := _view_turn()
+	if bow:
+		_reach(bones[3], bones[4], bones[5], _in_view(eye, FP_HOLD_BOW), turn * Vector3(0.9, -0.5, 0.2))
+		_turn_held(bones[5], skeleton.find_bone("Socket.WeaponL"), turn * _flip(FP_BOW_AXIS))
+		_reach(bones[0], bones[1], bones[2], _in_view(eye, FP_HOLD_FREE_R), turn * Vector3(-0.9, -0.6, -0.2))
+	elif right_holds:
+		_reach(bones[0], bones[1], bones[2], _in_view(eye, FP_GUARD_R if guard else FP_HOLD_R), turn * Vector3(-0.8, -0.7, -0.3))
+		_turn_held(bones[2], socket_r, turn * _flip(FP_GUARD_BLADE if guard else FP_BLADE))
+		if left_holds or (guard and not two_hands):
+			_reach(bones[3], bones[4], bones[5], _in_view(eye, FP_GUARD_L if guard and left_holds else FP_HOLD_L),
+					turn * Vector3(0.8, -0.7, -0.3))
+		else:
+			var want := skeleton.get_bone_global_pose(socket_r) * grip_l
+			_reach(bones[3], bones[4], bones[5], want.origin, turn * Vector3(0.8, -0.7, -0.3))
+			_set_bone_global_rotation(bones[5], want.basis.get_rotation_quaternion())
+	else:
+		_reach(bones[0], bones[1], bones[2], _in_view(eye, FP_HOLD_FREE_R), turn * Vector3(-0.8, -0.7, -0.3))
+		_reach(bones[3], bones[4], bones[5], _in_view(eye, _mirror(FP_HOLD_FREE_R) if not left_holds else FP_HOLD_L),
+				turn * Vector3(0.8, -0.7, -0.3))
+	if w < 0.999:
+		for i in bones.size():
+			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+## A view direction (x right, y up, z ahead) in the rig's axes, where +X is the body's left.
+static func _flip(v: Vector3) -> Vector3:
+	return Vector3(-v.x, v.y, v.z).normalized()
+
+
+static func _mirror(v: Vector3) -> Vector3:
+	return Vector3(-v.x, v.y, v.z)
+
+
+## Whether something is held in this socket (a HeldItems model).
+func _holds(socket_name: String) -> bool:
+	var s := socket(socket_name)
+	if s == null:
+		return false
+	for c in s.get_children():
+		if c.has_meta(HeldItems.TAG) and not c.is_queued_for_deletion():
+			return true
+	return false
+
+
+## A two-bone reach: the upper arm and forearm turned so the hand's joint is at `target` (skeleton
+## space), the elbow bent toward `pole`. Out of reach, the arm points at it, straight.
+func _reach(upper: int, lower: int, hand: int, target: Vector3, pole: Vector3) -> void:
+	var a := skeleton.get_bone_global_pose(upper).origin
+	var b := skeleton.get_bone_global_pose(lower).origin
+	var c := skeleton.get_bone_global_pose(hand).origin
+	var l1 := a.distance_to(b)
+	var l2 := b.distance_to(c)
+	var to := target - a
+	if l1 < 0.01 or l2 < 0.01 or to.length() < 0.01:
+		return
+	var d := clampf(to.length(), absf(l1 - l2) + 0.01, (l1 + l2) * 0.999)
+	var dir := to.normalized()
+	var cos_a := clampf((l1 * l1 + d * d - l2 * l2) / (2.0 * l1 * d), -1.0, 1.0)
+	var side := pole - dir * pole.dot(dir)
+	if side.length() < 0.001:
+		side = Vector3.DOWN - dir * dir.y
+	var elbow := a + dir * (l1 * cos_a) + side.normalized() * (l1 * sqrt(1.0 - cos_a * cos_a))
+	_turn_bone_toward(upper, b - a, elbow - a)
+	b = skeleton.get_bone_global_pose(lower).origin
+	c = skeleton.get_bone_global_pose(hand).origin
+	_turn_bone_toward(lower, c - b, a + dir * d - b)
+
+
+## Turns a bone about its own joint so `from` (a direction it carries, skeleton space) points along `to`.
+func _turn_bone_toward(bone: int, from: Vector3, to: Vector3) -> void:
+	if from.length() < 0.0001 or to.length() < 0.0001:
+		return
+	var f := from.normalized()
+	var t := to.normalized()
+	if f.dot(t) > 0.99999:
+		return
+	var q := Quaternion(f, t) if f.dot(t) > -0.9999 else Quaternion(f.cross(Vector3.UP).normalized(), PI)
+	_set_bone_global_rotation(bone, q * skeleton.get_bone_global_pose(bone).basis.get_rotation_quaternion())
+
+
+## Turns the hand so what its socket holds points along `way` (skeleton space; the held model's +Y).
+func _turn_held(hand: int, socket_bone: int, way: Vector3) -> void:
+	if socket_bone < 0:
+		return
+	_turn_bone_toward(hand, skeleton.get_bone_global_pose(socket_bone).basis.y, way)
+
+
+## How far the arms are in the carry now (0..1).
+func carry_weight() -> float:
+	return _carry_w
+
+
+## The meshes first person draws into the shadows only: the head and everything on it.
+func first_person_hidden() -> Array[MeshInstance3D]:
+	var out: Array[MeshInstance3D] = []
+	for slot in FP_HEAD_SLOTS:
+		for mi in _part_meshes.get(slot, []):
+			if mi is MeshInstance3D and is_instance_valid(mi):
+				out.append(mi)
+	var own := _default_meshes.get("head") as MeshInstance3D
+	if own != null:
+		out.append(own)
+	for eye in _default_eyes:
+		out.append(eye)
+	return out
+
+
+## Puts the head into the shadows only, or back, as `first_person` says. Each mesh keeps the shadow
+## setting it had (an eye casts none) under the meta "fp_cast" while it is hidden.
+func _apply_first_person_look() -> void:
+	for mi in first_person_hidden():
+		if first_person:
+			if not mi.has_meta("fp_cast"):
+				mi.set_meta("fp_cast", mi.cast_shadow)
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		elif mi.has_meta("fp_cast"):
+			mi.cast_shadow = int(mi.get_meta("fp_cast")) as GeometryInstance3D.ShadowCastingSetting
+			mi.remove_meta("fp_cast")
+
+
+## Where the eyes are now, in world space: between the eyeballs, carried by the Head bone as the
+## clips and the aim pose it (the first-person camera's place).
+func eye_point() -> Vector3:
+	if skeleton == null:
+		return global_position + Vector3.UP * 1.62
+	var head := skeleton.find_bone("Head")
+	if head < 0:
+		return global_position + Vector3.UP * 1.62
+	if _eye_in_head == Vector3.INF:
+		_eye_in_head = _measure_eye_in_head(head)
+	return skeleton.global_transform * (skeleton.get_bone_global_pose(head) * _eye_in_head)
+
+
+## The eyes' middle in the Head bone's rest frame, from the rig's eyeballs (their bind-pose boxes).
+func _measure_eye_in_head(head: int) -> Vector3:
+	if _default_eyes.is_empty():
+		return EYE_IN_HEAD + Vector3(0.0, 0.0, EYE_AHEAD)
+	var mid := Vector3.ZERO
+	for eye in _default_eyes:
+		var in_skeleton := skeleton.global_transform.affine_inverse() * eye.global_transform
+		mid += in_skeleton * eye.get_aabb().get_center()
+	mid /= float(_default_eyes.size())
+	return skeleton.get_bone_global_rest(head).affine_inverse() * mid + Vector3(0.0, 0.0, EYE_AHEAD)
 
 
 ## A fight's hand-over (a swing into the next, a roll, a flinch) is the pose the last clip left
@@ -2003,25 +2932,37 @@ func _process(delta: float) -> void:
 ## weighted, and composes one over the other, and between two poses far apart that goes where
 ## neither does. From the two-handed chop's follow-through into the sweep after it, it put a
 ## spear's butt 9 cm through the chest (test_attack_motion).
-func _begin_handover() -> void:
+##
+## A swing from the legs blends the body so, but not the arms and what they hold (`free`): they take
+## the swing's own pose from its first frame. Between the idle's hang and a swing's wind-up there is
+## no arc of the arms that keeps a long weapon out of the body: the mixer's cross-fade put a spear's
+## butt 6-8 cm into the chest for two frames, and a bone-by-bone blend 11 cm (test_attack_motion).
+func _begin_handover(across: float, free: Array[String] = []) -> void:
 	if skeleton == null:
 		return
+	_handover_len = across
 	var n := skeleton.get_bone_count()
 	_handover_from.resize(n)
 	for i in n:
 		_handover_from[i] = [skeleton.get_bone_pose_rotation(i), skeleton.get_bone_pose_position(i)]
+	for bone_name in free:
+		var b := skeleton.find_bone(bone_name)
+		if b >= 0:
+			_handover_from[b] = null
 	_handover_t = 0.0
 
 
 ## Called after the tree has set this frame's pose (see _begin_handover).
 func _blend_handover(step: float) -> void:
 	_handover_t += step
-	var w := _handover_t / ONE_SHOT_HANDOVER
+	var w := _handover_t / _handover_len
 	if w >= 1.0 or skeleton == null:
 		_handover_t = -1.0
 		return
 	w = w * w * (3.0 - 2.0 * w)
 	for i in mini(_handover_from.size(), skeleton.get_bone_count()):
+		if _handover_from[i] == null:
+			continue
 		var was: Array = _handover_from[i]
 		skeleton.set_bone_pose_rotation(i, (was[0] as Quaternion).slerp(skeleton.get_bone_pose_rotation(i), w))
 		skeleton.set_bone_pose_position(i, (was[1] as Vector3).lerp(skeleton.get_bone_pose_position(i), w))

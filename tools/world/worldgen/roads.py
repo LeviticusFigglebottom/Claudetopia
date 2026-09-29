@@ -1039,10 +1039,21 @@ def carve_roads(grid: Grid, H: np.ndarray, roads: list, no_fill: np.ndarray | No
     mask = np.zeros((n, n), dtype=bool)
     elev = np.zeros((n, n), dtype=np.float32)
     wide = np.zeros((n, n), dtype=np.float32)
+    # A texel the line crosses takes the level where the line passes nearest its centre, not where
+    # it leaves it: up a steep pitch the exit's level stood a texel's run of grade off the road.
+    # And the first road laid through a texel keeps it. The roads are laid in order, and a later
+    # one that runs along an earlier one takes the earlier one's levels where it is snapped to it
+    # (`plan_roads`); where it only runs close beside, it keeps its own. Stamped over the earlier
+    # road, the later one's levels won the texels its line happened to cross: on w4096f, where the
+    # Chain Bridge-Windgate and Ruddow-Fallen Hand tracks share a zigzag up a 1-in-3 at (668,
+    # -3046), the earlier road's carriageway was read 2.5 m off its grade, with a second carve a
+    # metre and a half higher beside it.
     for r in roads:
-        paths.rasterise_polyline(r.points, grid, value=r.elevation, out_mask=mask, out_value=elev)
-        paths.rasterise_polyline(r.points, grid, value=np.full(r.points.shape[0], r.width, dtype=np.float32),
-                                 out_mask=mask, out_value=wide)
+        i, j, v = paths.polyline_texels(r.points, grid, np.asarray(r.elevation, dtype=np.float64), at_centre=True)
+        free = ~mask[i, j]
+        elev[i[free], j[free]] = v[free]
+        wide[i[free], j[free]] = r.width
+        mask[i, j] = True
     if not mask.any():
         return H, np.full((n, n), 1e6, dtype=np.float32), wide
     dist_t, (ii, jj) = ndimage.distance_transform_edt(~mask, return_indices=True)

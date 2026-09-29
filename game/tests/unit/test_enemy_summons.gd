@@ -43,7 +43,7 @@ func test_the_reeve_exists_and_rings_at_half_health() -> void:
 			toll = a
 	assert_false(toll.is_empty(), "the second phase rings the hammer")
 	assert_eq(str(toll["summons"]["enemy"]), WIGHT)
-	assert_eq(int(toll["summons"]["count"]), 4)
+	assert_eq(int(toll["summons"]["count"]), 1, "one of the cist-dead a toll: four buried the fights run's level-1 player")
 
 
 func test_summoning_puts_bodies_in_the_room() -> void:

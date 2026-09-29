@@ -12,7 +12,8 @@ extends Node
 ##    "gait": {"at": {place spec}, "heading": deg, "frames": 8, "interval": 0.1, "settle": 1.6,
 ##             "camera": {"distance": m, "height": m, "fov": deg},
 ##             "runs": [{"label": "jog", "press": ["move_forward"]}, ...]},
-##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?}}
+##    "cinematic": {"id": "core:cinematic/x", "samples": [0.0, 0.5, 1.0], "shots": [ids]?,
+##                  "opening": "core:opening/x"? (the body stood at that start, for a style film)}}
 ##
 ## A place spec is the opening cinematic's: `{"place": id, "bearing": deg, "distance": m,
 ## "height": m}`, a compass bearing and a distance from the place and `height` metres above the
@@ -60,6 +61,10 @@ extends Node
 ## would, lets it settle, and takes `frames` shots `interval` seconds apart from its left side.
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
+##
+## `"preview_pois": [ids]` stands those POIs up where their defs say, on pads laid at runtime, even
+## when the built world has them somewhere else (PoiPreview): a place written or moved since the last
+## world build, photographed before the next (tools/world/poi_sheet.py, docs/WORLD_LIFE.md).
 ##
 ## A shot's `"dress": {"kind", "region", "at": [x, z], "brief"?, "encounter"?, "radius"?}` stands up a
 ## point of interest of that kind on the ground there for the shot, as the world raises one from a
@@ -112,6 +117,8 @@ var overrides: Array[String] = []
 ## `--no-horizon` shoots the world as it was before the horizon layer: no stand-ins past the
 ## streamed ring and Terrain3D's clipmap at its old 32 vertices a ring, for a before and after.
 var horizon := true
+## `--no-sight`: a cinematic's shots ask only for the rings round their camera and what they look
+## at, as before ShotSight (CinematicPlayer.sight_streaming), for a before and after of bare ground.
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## The plan's `hud` section, when it asks for the HUD over its shots.
@@ -139,6 +146,9 @@ func _ready() -> void:
 			overrides.append(a.substr(6))
 		elif a == "--no-horizon":
 			horizon = false
+		elif a == "--no-sight":
+			# a cinematic's shots ask only for the rings round their camera, as before ShotSight
+			CinematicPlayer.sight_streaming = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -175,6 +185,9 @@ func run() -> int:
 			GameState.set_flag(key, flags[key])
 	if plan.has("cinematic"):
 		return await _shoot_cinematic(plan["cinematic"])
+	# `"preview_pois": [ids]`: those POIs stood up where their defs say, on pads laid now, whatever
+	# the built world has (PoiPreview; tools/world/poi_sheet.py writes such a plan)
+	PoiPreview.ask(plan.get("preview_pois", []))
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
@@ -273,6 +286,10 @@ func _load_world(with_body := false) -> World:
 	add_child(w)
 	await get_tree().process_frame
 	await get_tree().process_frame
+	# the world stands up in steps over many frames now; until it is up nothing 3D is drawn, and
+	# every shot before it was an empty frame (0 draw calls)
+	if w is World and not (w as World).is_world_ready:
+		await (w as World).world_ready
 	return w as World
 
 
@@ -302,6 +319,45 @@ func _hide_for_shot(words_v: Variant) -> void:
 				hidden += 1
 				break
 	Log.info("Capture", "hid %d drawn things for %s" % [hidden, str(words_v)])
+
+
+## A shot's `"materials": ["brightwater_boulder"]` logs, for every drawn thing whose path or asset
+## names one of the words, each surface's material as the renderer has it: its class, its shader,
+## and a shader material's parameters. What a probe outside the world reads is the material as it
+## was made; this is the one the frame is drawn with.
+func _report_materials(words_v: Variant) -> void:
+	if not (words_v is Array) or (words_v as Array).is_empty() or _world == null:
+		return
+	var told := {}
+	for n in _world.find_children("*", "GeometryInstance3D", true, false):
+		var path := str(_world.get_path_to(n)) + " " + str(n.get_meta("asset_path", ""))
+		var hit := false
+		for w in words_v:
+			hit = hit or path.contains(str(w))
+		if not hit:
+			continue
+		var mesh: Mesh = null
+		if n is MultiMeshInstance3D and (n as MultiMeshInstance3D).multimesh != null:
+			mesh = (n as MultiMeshInstance3D).multimesh.mesh
+		elif n is MeshInstance3D:
+			mesh = (n as MeshInstance3D).mesh
+		if mesh == null:
+			continue
+		for s in mesh.get_surface_count():
+			var mat: Material = (n as GeometryInstance3D).material_override
+			if mat == null:
+				mat = mesh.surface_get_material(s)
+			if mat == null or told.has(mat.get_instance_id()):
+				continue
+			told[mat.get_instance_id()] = true
+			var line := "%s s%d %s" % [n.name, s, mat.get_class()]
+			if mat is ShaderMaterial and (mat as ShaderMaterial).shader != null:
+				var sm := mat as ShaderMaterial
+				line += " %s" % sm.shader.resource_path.get_file()
+				for u in sm.shader.get_shader_uniform_list():
+					var v: Variant = sm.get_shader_parameter(u["name"])
+					line += " %s=%s" % [u["name"], (v as Resource).get_class() + str((v as Texture2D).get_size()) if v is Texture2D else str(v)]
+			Log.info("Capture", "material " + line)
 
 
 ## Terrain3D's debug view for a shot: "grey" (every material at albedo 0.2), "checkered",
@@ -353,6 +409,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 			_world.horizon.visible = false
 			if is_instance_valid(_world.terrain_node):
 				_world.terrain_node.set("mesh_size", 32)
+				World.share_clipmap(_world.terrain_node)
 		Log.info("Capture", "%s: horizon %s" % [str(shot.get("label", index)),
 				_world.horizon.summary() if horizon else "left out (--no-horizon)"])
 	if shot.has("body"):
@@ -391,6 +448,7 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		atmos.set("look_override", light if typeof(light) == TYPE_DICTIONARY else {})
 	_set_terrain_view(str(shot.get("terrain_view", "")))
 	_hide_for_shot(shot.get("hide", []))
+	_report_materials(shot.get("materials", []))
 	# `"debug_draw": "unshaded"` (or "lighting", "overdraw", "wireframe") draws the shot in one of the
 	# viewport's debug views: unshaded is the albedo alone, which tells a colour from a light.
 	var views := {"unshaded": Viewport.DEBUG_DRAW_UNSHADED, "lighting": Viewport.DEBUG_DRAW_LIGHTING,
@@ -454,6 +512,19 @@ func _dress_for(shot: Dictionary) -> Node3D:
 	var z := float(at[1])
 	var provider := World.terrain()
 	var y := provider.get_height(x, z) if provider != null else 0.0
+	if spec.has("scene"):
+		# a scene as a cell's `scenes` entry stands it (a town stone): at the ground, turned to `yaw`,
+		# configured with `props`
+		var packed := load(str(spec["scene"])) as PackedScene
+		if packed == null:
+			return null
+		var inst := packed.instantiate() as Node3D
+		if inst.has_method("configure"):
+			inst.call("configure", spec.get("props", {}))
+		inst.position = Vector3(x, y, z)
+		inst.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
+		_world.add_child(inst)
+		return inst
 	var kind := str(spec.get("kind", ""))
 	var id := "core:poi/staged_%s" % kind
 	var entry := {"place_id": id, "pos": [x, y, z], "radius_flat_m": float(spec.get("radius", 30.0))}
@@ -1399,6 +1470,11 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 		Log.error("Capture", "no body stood up to hand the cinematic over to")
 		return 1
 	_world.streamer.cells_per_frame = 12
+	# a style's film hands over to a body standing at its own start (`"opening": "core:opening/x"`)
+	var opening_id := str(spec.get("opening", ""))
+	if opening_id != "" and spawn != null and spawn.has_method("stand_at_opening"):
+		if not bool(spawn.call("stand_at_opening", ContentDB.get_or_empty(opening_id))):
+			_failures.append("cannot stand the body at %s" % opening_id)
 	# the body drops the last half-metre onto the ground before the last shot is composed on it
 	for i in 40:
 		await get_tree().physics_frame
@@ -1442,12 +1518,16 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				"hour": snappedf(WorldClock.time_hours, 0.01),
 				"weather": str(_world.atmosphere.call("current_weather_id")) if _world.atmosphere else "",
 				"words": cin.overlay().said(), "ready": ready, "frames_waited": waited,
+				# the bare-ground measure: of the cells this moment sees, how many were standing
+				"seen_standing": [cin.sight_standing().x, cin.sight_standing().y],
+				"loaded": _world.streamer.loaded_count(),
 				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
 			})
 			if not ready and not black:
 				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
-			Log.info("Capture", "%s  %.1f m above the ground, %s" % [file, cam.y - ground, "ready" if ready else "NOT READY"])
+			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing" % [file, cam.y - ground,
+					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y])
 			index += 1
 	cin.release()
 	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)

@@ -1,0 +1,71 @@
+[
+  {
+    "id": "core:dialogue/tella_oul",
+    "name": "Tella Oul",
+    "npc": "core:npc/tella_oul",
+    "start": "start",
+    "notes": "Moreva's night-watch (docs/FIGHTING_STYLE_STARTS.md 3.4): the rogue's first lesson is getting past her to the South Channel's traps unseen (first_rogue's the_traps, NightWatch). Spoken to, she is only the watch, proud of it and fond of a story.",
+    "greetings": [
+      {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Who's that on the boards? — Oh. You. Go on up; it's no hour for the landing.", "weight": 2},
+      {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "seen_on_the_boards"}], "text": "I saw you. I see everybody. Go on up, before I start wondering why you were so low.", "weight": 3},
+      {"conditions": [{"flag": "moreva_bravo_down"}, {"quest_done": "core:quest/first_rogue"}], "text": "The Tallymen's man went into the reeds on tithe-day and the collector swears he slipped. In the fog. On his own. The Council has written it down that way.", "weight": 2},
+      {"conditions": [{"time_between": [20, 7]}], "text": "Late. The channel's talking. Mind the south boards; one of them's loose and it tells on you."},
+      {"conditions": [], "text": "Tella Oul. The watch. Nights, mostly; days I sleep and the landing robs itself.", "weight": 0.5}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "next": "hub"},
+      "hub": {
+        "speaker": "npc",
+        "text": "Well?",
+        "choices": [
+          {"text": "What do you watch for?", "next": "watch_for"},
+          {"text": "What happened to your boot?", "next": "the_boot"},
+          {"text": "Nothing. Good night.", "effects": [{"end": true}]}
+        ]
+      },
+      "watch_for": {
+        "speaker": "npc",
+        "text": "Boats in off the channels, by their poles; every pole sounds like its owner, if you listen long enough. Fire on the boards. Tallymen's thieves. And things that come up out of the South Channel on the wrong side of midnight, which the Council says is eels and I say is not eels. — Mostly I watch the boards. Nobody steals anything in Moreva without walking on them.",
+        "next": "hub"
+      },
+      "the_boot": {
+        "speaker": "npc",
+        "text": "Spring. Somebody on the south boards at the fourth hour, low, where nobody honest is low. I went after them into the reeds and the reeds had my boot, and when I got my lantern up there was nobody, only the channel. A yard off, I'd swear it. — I've kept the other one. When I find the one who was lying in there, I'll give them the pair.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tithe_courier",
+    "name": "The Tithe Courier",
+    "npc": "core:npc/tithe_courier",
+    "start": "start",
+    "notes": "The courier is only ever a lead's body (The Unsaid Page), gone from the world as a person, so nobody walks up to him; if anybody ever does, he does not stop.",
+    "greetings": [
+      {"conditions": [], "text": "(He does not turn his head. He does not slow. The satchel is buckled, and his hand is on the buckle.)", "weight": 1}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "choices": [{"text": "Let him go.", "effects": [{"end": true}]}]}
+    }
+  },
+  {
+    "id": "core:dialogue/tithe_collector",
+    "name": "Brannock Tole",
+    "npc": "core:npc/tithe_collector",
+    "start": "start",
+    "notes": "The Tallymen's collector at Moreva, stood only asleep by his strongbox through the rogue's night lessons (first_rogue). Spoken to standing up, he half wakes, counts, and sleeps again; crouched, the interact key is his pocket (Pickpocketing).",
+    "greetings": [
+      {"conditions": [], "text": "Mm? — Forty baskets, less the tenth, less the Charter's half-mark… it's not tithe-day. Go away. Nobody touches the box.", "weight": 1}
+    ],
+    "nodes": {
+      "start": {"speaker": "npc", "text": "{greeting}", "next": "back_to_sleep"},
+      "back_to_sleep": {
+        "speaker": "npc",
+        "text": "(He settles his hand on his waistcoat pocket, says a sum to nobody, and is asleep again before he has finished it.)",
+        "choices": [
+          {"text": "Leave him to it.", "effects": [{"end": true}]}
+        ]
+      }
+    }
+  }
+]

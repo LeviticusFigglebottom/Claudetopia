@@ -51,6 +51,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 from worldgen import atlas as ATLAS  # noqa: E402
+from worldgen import content as CONTENT  # noqa: E402
 from worldgen.roads import pad_radius  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -74,6 +75,15 @@ CREST_M = 120.0
 
 # --- reading ---------------------------------------------------------------------------------
 
+
+def pack_defs(pack: str) -> list:
+    """Every place def (places/places.json) and every POI def (every pois/*.json)."""
+    out = []
+    path = os.path.join(pack, "places", "places.json")
+    if os.path.exists(path):
+        out += json.load(open(path, encoding="utf-8"))
+    return out + CONTENT.poi_registry(pack)
+
 def things(pack: str = PACK, world: str = GEN) -> list:
     """Every thing worth stopping for: dicts {id, name, kind, x, z, r, cls} where r is how far
     out from its position it counts as there (a settlement's pad and outskirts; 0 for a point
@@ -84,22 +94,18 @@ def things(pack: str = PACK, world: str = GEN) -> list:
         for e in json.load(open(path, encoding="utf-8")):
             built[e["place_id"]] = float(e.get("radius_flat_m", 0.0))
     out = []
-    for sub in (("places", "places.json"), ("pois", "pois.json")):
-        p = os.path.join(pack, *sub)
-        if not os.path.exists(p):
+    for d in pack_defs(pack):
+        pos = d.get("position")
+        kind = str(d.get("kind", ""))
+        if not pos or len(pos) < 2 or kind in NOT_THINGS:
             continue
-        for d in json.load(open(p, encoding="utf-8")):
-            pos = d.get("position")
-            kind = str(d.get("kind", ""))
-            if not pos or len(pos) < 2 or kind in NOT_THINGS:
-                continue
-            is_place = ":place/" in d["id"]
-            r = 0.0
-            if is_place and kind in ATLAS.SETTLEMENT_KINDS:
-                r = built.get(d["id"], pad_radius(d)) + OUTSKIRTS_M
-            cls = "place" if is_place else ("wayside" if d.get("wayside") else "poi")
-            out.append({"id": d["id"], "name": d.get("name", d["id"]), "kind": kind,
-                        "x": float(pos[0]), "z": float(pos[1]), "r": r, "cls": cls})
+        is_place = ":place/" in d["id"]
+        r = 0.0
+        if is_place and kind in ATLAS.SETTLEMENT_KINDS:
+            r = built.get(d["id"], pad_radius(d)) + OUTSKIRTS_M
+        cls = "place" if is_place else ("wayside" if d.get("wayside") else "poi")
+        out.append({"id": d["id"], "name": d.get("name", d["id"]), "kind": kind,
+                    "x": float(pos[0]), "z": float(pos[1]), "r": r, "cls": cls})
     return out
 
 
@@ -301,13 +307,10 @@ def sites(m: dict, only: list | None = None, provinces: list | None = None,
     road_pts = np.concatenate([resample(p, 6.0)[0] for _rid, p in m["roads"] if len(p) > 1])
     # clear of everything the packs stand anywhere, the mine mouths and edges included
     taken = [(t["x"], t["z"]) for t in m["things"]]
-    for sub in (("places", "places.json"), ("pois", "pois.json")):
-        pp = os.path.join(m.get("pack", PACK), *sub)
-        if os.path.exists(pp):
-            for dd in json.load(open(pp, encoding="utf-8")):
-                pos = dd.get("position")
-                if pos and len(pos) >= 2 and str(dd.get("kind", "")) in NOT_THINGS:
-                    taken.append((float(pos[0]), float(pos[1])))
+    for dd in pack_defs(m.get("pack", PACK)):
+        pos = dd.get("position")
+        if pos and len(pos) >= 2 and str(dd.get("kind", "")) in NOT_THINGS:
+            taken.append((float(pos[0]), float(pos[1])))
     out = []
     for gi, g in enumerate(m["road"]["thin"]):
         if only and gi + 1 not in only:
@@ -485,12 +488,9 @@ SAFE_ROADS = ("core:road/stair_head_sunken_choir", "core:road/stair_head_hushlin
 def threats(pack: str = PACK) -> list:
     """Every place a def in encounters/ stands foes up at: {id, x, z, spawns, file}."""
     pos = {}
-    for sub in (("places", "places.json"), ("pois", "pois.json")):
-        p = os.path.join(pack, *sub)
-        if os.path.exists(p):
-            for d in json.load(open(p, encoding="utf-8")):
-                if d.get("position") and len(d["position"]) >= 2:
-                    pos[d["id"]] = (float(d["position"][0]), float(d["position"][1]))
+    for d in pack_defs(pack):
+        if d.get("position") and len(d["position"]) >= 2:
+            pos[d["id"]] = (float(d["position"][0]), float(d["position"][1]))
     out = []
     folder = os.path.join(pack, "encounters")
     for name in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:

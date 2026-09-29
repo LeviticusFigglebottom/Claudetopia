@@ -1,0 +1,129 @@
+{
+ "note": "The Mage's and the Rogue's starts, for the fighting-style starts (docs/FIGHTING_STYLE_STARTS.md \u00a73.3a, \u00a73.4a): each start's first view, its first fight (a body stood there, turned to the foes the place stands up) and a fingerpost on its ride to the Stair Head. Every point is said from a place (PlaceRef), so it goes where the place goes. Taken after the build that stands the starts and the atlas's fingerposts.",
+ "shots": [
+  {
+   "label": "mage_first_view",
+   "at": {
+    "place": "core:place/the_lamp",
+    "bearing": 232.0,
+    "distance": 7,
+    "height": 31.0
+   },
+   "look": {
+    "place": "core:place/gullhithe",
+    "height": 4.0
+   },
+   "fov": 60,
+   "time": 16.5,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "mage_first_fight",
+   "at": {
+    "place": "core:place/the_lamp",
+    "bearing": 180.0,
+    "distance": 12,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:place/the_lamp",
+    "bearing": 180.0,
+    "distance": 16
+   },
+   "look": {
+    "place": "core:place/the_lamp",
+    "bearing": 180.0,
+    "distance": 90,
+    "height": 0.5
+   },
+   "face_foes": true,
+   "fov": 62,
+   "time": 18.3,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "mage_ride_strides_foot_post",
+   "at": {
+    "place": "core:place/strides_foot",
+    "offset": [
+     -106.7,
+     -38.0
+    ],
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/strides_foot",
+    "offset": [
+     -106.7,
+     -43.0
+    ],
+    "height": 2.35
+   },
+   "fov": 55,
+   "time": 10.0,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "rogue_first_view",
+   "at": {
+    "place": "core:place/moreva",
+    "bearing": 180.0,
+    "distance": 30,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/moreva",
+    "bearing": 180.0,
+    "distance": 160,
+    "height": 0.5
+   },
+   "fov": 60,
+   "time": 5.4,
+   "weather": "core:weather/fog"
+  },
+  {
+   "label": "rogue_first_fight",
+   "at": {
+    "place": "core:place/moreva",
+    "bearing": 150.0,
+    "distance": 18,
+    "height": 2.2
+   },
+   "body": {
+    "place": "core:place/moreva",
+    "bearing": 150.0,
+    "distance": 14
+   },
+   "look": {
+    "place": "core:place/moreva",
+    "height": 1.2
+   },
+   "face_foes": true,
+   "fov": 62,
+   "time": 10.0,
+   "weather": "core:weather/fog"
+  },
+  {
+   "label": "rogue_ride_eelweir_post",
+   "at": {
+    "place": "core:poi/eelweir",
+    "offset": [
+     -9.3,
+     -7.6
+    ],
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:poi/eelweir",
+    "offset": [
+     -5.4,
+     -4.4
+    ],
+    "height": 2.35
+   },
+   "fov": 55,
+   "time": 9.0,
+   "weather": "core:weather/mist"
+  }
+ ]
+}

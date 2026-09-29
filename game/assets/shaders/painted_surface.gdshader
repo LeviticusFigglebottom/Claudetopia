@@ -5,9 +5,9 @@ render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 // thatch and beaten earth, chosen by `pattern`. Triplanar, so no UVs are needed on
 // generated geometry, and painterly: broad tonal variation, edge wear, no photo grain.
 //
-// pattern: 0 plaster  1 planks  2 stone blocks  3 timber  4 thatch  5 beaten earth
+// pattern: 0 plaster  1 planks  2 stone blocks  3 timber  4 thatch  5 beaten earth  6 woven wool
 
-uniform int pattern : hint_range(0, 5) = 0;
+uniform int pattern : hint_range(0, 6) = 0;
 uniform vec4 base_color : source_color = vec4(0.78, 0.74, 0.66, 1.0);
 uniform vec4 accent_color : source_color = vec4(0.58, 0.52, 0.44, 1.0);
 uniform vec4 grout_color : source_color = vec4(0.44, 0.41, 0.36, 1.0);
@@ -17,6 +17,14 @@ uniform float wear : hint_range(0.0, 1.0) = 0.3;     // traffic polish and grime
 uniform float bump_strength : hint_range(0.0, 2.0) = 0.6;
 uniform float soot_height = -1000.0;       // world Y above which soot gathers (near a hearth)
 uniform float variation : hint_range(0.0, 1.0) = 0.5;
+// Indoors (house_interior.gd): how much of the plaster's crack network shows (1 outside, where
+// weather makes it), broad limewash strokes of the brush, and a painted dado band round the
+// room's foot, `dado_height` over each storey's floor (`storey_pitch` apart; 0 is none).
+uniform float crack_amount : hint_range(0.0, 1.0) = 1.0;
+uniform float brush : hint_range(0.0, 1.0) = 0.0;
+uniform float dado_height = 0.0;
+uniform float storey_pitch = 2.75;
+uniform vec4 dado_color : source_color = vec4(0.52, 0.36, 0.24, 1.0);
 
 varying vec3 world_pos;
 varying vec3 world_normal;
@@ -78,11 +86,24 @@ vec4 surface(vec3 p, vec3 n) {
 		float c = fbm3(p * vec3(7.0, 0.85, 7.0), 3);
 		float crack = smoothstep(0.02, 0.0, abs(c - 0.5))
 				* smoothstep(0.44, 0.7, fbm3(p * vec3(1.7, 0.45, 1.7), 2));
-		col = mix(col, grout_color.rgb * 0.55, crack * 0.8);
+		col = mix(col, grout_color.rgb * 0.55, crack * 0.8 * crack_amount);
+		// Limewash laid on with a wide brush: long soft strokes, a little warmer where thick.
+		vec3 q = (an.x > an.z) ? p.zyx : p.xyz;
+		float stroke = fbm3(vec3(q.x * 0.9, q.y * 3.2, q.z * 0.9), 3);
+		float wash = fbm3(p * 0.45, 2);
+		col = mix(col, col * vec3(1.03, 0.99, 0.92), brush * smoothstep(0.35, 0.75, stroke) * 0.6);
+		col = mix(col, col * vec3(0.9, 0.86, 0.8), brush * smoothstep(0.55, 0.8, wash) * 0.5);
+		if (dado_height > 0.0) {
+			float yy = p.y - floor((p.y + 0.02) / storey_pitch) * storey_pitch;
+			float edge = dado_height + (fbm3(p * vec3(6.0, 0.5, 6.0), 2) - 0.5) * 0.04;
+			float band = 1.0 - smoothstep(edge - 0.015, edge + 0.015, yy);
+			vec3 d = dado_color.rgb * (0.9 + stroke * 0.2) * (0.92 + wash * 0.12);
+			col = mix(col, d, band);
+		}
 		// Lime bloom gathers low on a cob wall where the damp rises.
 		float rise = clamp(1.0 - (p.y - floor(p.y / 2.75) * 2.75) / 0.9, 0.0, 1.0);
 		col = mix(col, col * vec3(0.94, 0.93, 0.9) + vec3(0.03), rise * 0.35 * fine);
-		h = (m - 0.5) * 0.18 + (fine - 0.5) * 0.12 - crack * 0.25;
+		h = (m - 0.5) * 0.18 + (fine - 0.5) * 0.12 - crack * 0.25 * crack_amount;
 	} else if (pattern == 1) {   // floorboards: long boards, joints, per-board tone
 		vec2 uv = (an.y > 0.5) ? p.xz : ((an.x > an.z) ? p.zy : p.xy);
 		float board = floor(uv.y / unit_size);
@@ -121,6 +142,15 @@ vec4 surface(vec3 p, vec3 n) {
 		col = mix(accent_color.rgb, base_color.rgb, straw);
 		col *= 0.75 + bundle * 0.45;
 		h = (straw - 0.5) * 1.2;
+	} else if (pattern == 6) {   // woven wool: bands across the weft, a fine twill, soft pile
+		vec2 uv = (an.y > 0.5) ? p.xz : ((an.x > an.z) ? p.zy : p.xy);
+		float band = floor(uv.x / unit_size);
+		float which = mod(band, 5.0);
+		col = which < 1.0 ? accent_color.rgb : (which < 2.0 ? grout_color.rgb : base_color.rgb);
+		float twill = fract((uv.x + uv.y) * 38.0);
+		col *= 0.9 + smoothstep(0.3, 0.7, twill) * 0.12;
+		col *= 0.9 + fbm3(p * 3.0, 2) * 0.18;
+		h = (twill - 0.5) * 0.15;
 	} else {                      // beaten earth: swept, uneven, darker where feet fall
 		float m = fbm3(p * 2.0, 3);
 		float swept = fbm3(p * vec3(8.0, 1.0, 1.4), 2);
@@ -131,7 +161,44 @@ vec4 surface(vec3 p, vec3 n) {
 	return vec4(col, h);
 }
 
+// A town's made ground (Settlement's paving and beaten earth) lies on the terrain as it is drawn
+// near. A few hundred metres off, the terrain's clipmap draws a vertex only every 4, 8 and 16 m,
+// and its coarser triangles cut the corner of a pad's lip and stand up through the paving there.
+// Each patch carries how far it must stand up on each of those rings (UV.x, UV.y, UV2.x;
+// Settlement._far_lift), and is lifted by as much as the terrain under it has come to them: over
+// the same bands of distance Terrain3D folds each ring's every other vertex away in (its geomorph,
+// the smoothstep below), taken a little early.
+uniform bool terrain_follow = false;
+// x: the clipmap's vertices a side (Terrain3D's mesh_size; 0 is no Terrain3D), y: metres between
+// its nearest vertices (World.share_clipmap)
+global uniform vec2 wm_terrain_clipmap;
+
+float clipmap_fold(float d, float scale) {
+	float m = wm_terrain_clipmap.x;
+	return smoothstep(0.55, 0.95, ((d + 2.0 * scale) / scale - m - 4.0) / (m - 2.0));
+}
+
+// What stands on the ground (a settlement's drystone walls, a garden's fence posts) carries the same
+// three lifts in CUSTOM0 (FabricMesh.carry_ground_lift; Settlement._foot_lift): Skarlow's walls
+// against their crag went 4.4 m into the 4 m ring.
+uniform bool ground_follow = false;
+
 void vertex() {
+	if (terrain_follow && wm_terrain_clipmap.x > 2.0) {
+		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float d = length(w.xz - CAMERA_POSITION_WORLD.xz);
+		float s = wm_terrain_clipmap.y;
+		// a settlement is never turned or scaled: up in its space is up
+		VERTEX.y += UV.x * clipmap_fold(d, s) + (UV.y - UV.x) * clipmap_fold(d, s * 2.0)
+				+ (UV2.x - UV.y) * clipmap_fold(d, s * 4.0);
+	}
+	if (ground_follow && wm_terrain_clipmap.x > 2.0) {
+		vec3 w = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+		float d = length(w.xz - CAMERA_POSITION_WORLD.xz);
+		float s = wm_terrain_clipmap.y;
+		VERTEX.y += CUSTOM0.x * clipmap_fold(d, s) + (CUSTOM0.y - CUSTOM0.x) * clipmap_fold(d, s * 2.0)
+				+ (CUSTOM0.z - CUSTOM0.y) * clipmap_fold(d, s * 4.0);
+	}
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	world_normal = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
 }

@@ -120,7 +120,14 @@ func _run() -> void:
 	seed(SEED)
 	var only := ""
 	var archetypes: Array = []
+	var seeds: Array[int] = []
 	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seeds="):
+			# Several dice orders: every fight is played once per seed, re-seeded before it, so a
+			# fight on a knife-edge shows as one (./run.sh fights --only=naming --seeds=1,2,3,4,5).
+			for n in a.substr(8).split(",", false):
+				seeds.append(int(n))
+			_partial = true
 		if a.begins_with("--calling="):
 			only = a.substr(10)
 			# One Calling may never meet a check's occasion (a parry needs a parrying blade).
@@ -137,15 +144,25 @@ func _run() -> void:
 		for fight in ROSTER:
 			if not archetypes.is_empty() and not archetypes.has(str(fight["archetype"])):
 				continue
-			var r: Dictionary = await _fight(calling, fight)
-			results.append(r)
-			print("FIGHT | %s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d | %d | %d | %d%s" % [
-				Ids.name_of(calling), r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
-				int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
-				float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
-				int(r["rolled"]), int(r["staggered"]), int(r["blocked"]), int(r["swallows"]), int(r["sayings"]),
-				("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
+			var orders: Array[int] = seeds.duplicate()
+			if orders.is_empty():
+				orders.append(-1)
+			for dice in orders:
+				if dice >= 0:
+					seed(dice)
+				await _fight_and_print(calling, fight, dice)
 	_verdict()
+
+
+func _fight_and_print(calling: String, fight: Dictionary, dice: int) -> void:
+	var r: Dictionary = await _fight(calling, fight)
+	results.append(r)
+	print("FIGHT | %s%s | %s | %s | %s | %.1f | %d | %.0f | %d/%d | %.1f | %.0f%% | %d/%d | %d | %d | %d | %d | %d%s" % [
+		Ids.name_of(calling), (" seed %d" % dice) if dice >= 0 else "", r["archetype"], Ids.name_of(str(r["enemy"])), r["outcome"], float(r["seconds"]),
+		int(r["blows"]), float(r["damage"]), int(r["landed"]), int(r["swings"]),
+		float(r["dealt"]) / maxf(float(r["landed"]), 1.0), float(r["left"]) * 100.0, int(r["standing"]), int(r["foes"]),
+		int(r["rolled"]), int(r["staggered"]), int(r["blocked"]), int(r["swallows"]), int(r["sayings"]),
+		("  <- " + str(r["flag"])) if str(r["flag"]) != "" else ""])
 
 
 # --- one fight -----------------------------------------------------------------------------------
@@ -505,7 +522,13 @@ func _decide() -> void:
 	var reach_now := weapon.reach + 0.35
 	if not threat.is_empty():
 		var until := float(threat["lands"]) - now
-		if not _parry_plan.is_empty() and threat["foe"] == target and p.can_parry_with_equipment():
+		# A press "outside" the window has to be made outside it: a blow first seen with less than
+		# that to go (the player busy in a swing until then) is left to the roll, and the check
+		# waits for the next one. The lantern clerk's press came 0.2 s before the blow, inside the
+		# 0.25 s window, parried as it should, and was failed as a parry that should not have been.
+		var parry_in_time := _parry_plan.is_empty() or _parry_plan[0] == "inside" \
+				or until > DamageModel.PARRY_WINDOW + 0.05
+		if not _parry_plan.is_empty() and threat["foe"] == target and p.can_parry_with_equipment() and parry_in_time:
 			# The parry check, on this fight's first two blows: one pressed inside the window,
 			# one pressed early enough to be outside it.
 			var plan := _parry_plan[0]
@@ -721,14 +744,32 @@ static func _v(v: Vector3) -> String:
 # --- the checks that need watching ---------------------------------------------------------------
 
 ## A parry pressed inside the window opens the foe for a riposte; one pressed early does not.
+## A blow that never reached the player (the foe staggered or burned out of its swing), or reached
+## it later than the telegraph said (a Reedborn's Hush-Frost chills the bandit and slows its swing,
+## so a press meant for 0.10 s before it came 0.65 s before), tests nothing about the window: the
+## press is tried again on the next blow.
 func _check_parry_later(plan: String, foe: Enemy) -> void:
+	var reached := [false]
+	var pressed_at := Actor.now()
+	var on_hit := func(hit: HitData, _outcome: String) -> void:
+		if hit.attacker == foe and (plan != "inside" or Actor.now() - pressed_at <= DamageModel.PARRY_WINDOW):
+			reached[0] = true
+	var body := _player
+	body.hit_taken.connect(on_hit)
 	for i in 40:
 		await get_tree().physics_frame
 		if not is_instance_valid(foe) or foe.is_dead():
-			return
+			break
 		if foe.is_riposte_open():
 			break
-	var opened := is_instance_valid(foe) and foe.is_riposte_open()
+	if is_instance_valid(body) and body.hit_taken.is_connected(on_hit):
+		body.hit_taken.disconnect(on_hit)
+	if not is_instance_valid(foe) or foe.is_dead():
+		return
+	var opened := foe.is_riposte_open()
+	if not opened and not bool(reached[0]):
+		_parry_plan.push_front(plan)
+		return
 	if plan == "inside":
 		_mark("parry_inside", opened, "a parry pressed 0.10 s before the blow did not open a riposte")
 	else:

@@ -1,0 +1,39 @@
+{
+ "bounds": [
+  -0.1025,
+  -0.1564,
+  1.2953,
+  0.103,
+  0.1162,
+  1.7889
+ ],
+ "card_tris": 8723,
+ "cards": "twin_braids_cards",
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "hair",
+ "material": "hair",
+ "materials": {
+  "twin_braids": "hair",
+  "twin_braids_cards": "hair_cards"
+ },
+ "params": {
+  "bone": null,
+  "material": "hair"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 68748,
+ "slot_hint": "attachment",
+ "textures": [
+  "twin_braids_normal.png",
+  "twin_braids_albedo.png",
+  "twin_braids_orm.png"
+ ],
+ "tris": [
+  5200,
+  0,
+  0
+ ],
+ "version": 1
+}

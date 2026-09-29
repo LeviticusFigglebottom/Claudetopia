@@ -1,0 +1,16 @@
+[
+  {"height": 1.78, "build": 0.5, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "short", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.70, "build": 0.5, "feminine": 1.0, "skin": "wheat", "hair_colour": "dark_brown", "culture": "vale",
+   "parts": {"head": "default", "hair": "long", "torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}},
+  {"height": 1.66, "build": 0.4, "feminine": 1.0, "skin": "fair", "hair_colour": "chestnut", "culture": "vale",
+   "parts": {"head": "soft", "hair": "bun", "torso": "dress", "feet": "shoes", "belt": "belt", "back": "cloak"}},
+  {"height": 1.68, "build": 0.4, "feminine": 1.0, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "narrow", "hair": "braid", "torso": "coat", "legs": "trousers", "feet": "shoes", "belt": "belt_satchel", "back": "shoulder_cape"}},
+  {"height": 1.64, "build": 0.35, "feminine": 1.0, "skin": "olive", "hair_colour": "black", "culture": "reedfolk",
+   "parts": {"head": "round", "hair": "long", "torso": "wrap_torso", "legs": "wrap_skirt", "feet": "shoes", "belt": "sash"}},
+  {"height": 1.74, "build": 0.8, "feminine": 1.0, "skin": "fair", "hair_colour": "ginger", "culture": "clans",
+   "parts": {"head": "broad", "hair": "braid", "torso": "shirt", "legs": "kilt", "feet": "boots", "belt": "belt_knife", "back": "plaid"}},
+  {"height": 1.72, "build": 0.6, "feminine": 1.0, "skin": "umber", "hair_colour": "black", "culture": "vale",
+   "parts": {"head": "angular", "hair": "cropped", "torso": "brigandine", "legs": "trousers", "feet": "boots", "belt": "belt", "hands": "gloves", "back": "pauldrons"}}
+]

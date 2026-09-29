@@ -49,11 +49,50 @@ var _ended_ms := -100000
 ## once they could, a talk with the Warden could not be left.
 const BYE_NODE := "bye"
 
+## A conversation has one owner, this runner, and every way it can be left ends it here, so the one
+## signal everything else keys on (EventBus.dialogue_ended: the camera's two-shot, the dialogue
+## page, the body's held keys, the NPC's day) is always sent (triage 41: a trade left the camera
+## on the shopkeeper and the page could stay up with nothing on it). Besides the graph's own ends:
+## the player struck or a foe closing in, the player dying, a save loaded, and
+## the person spoken to gone (unloaded, dead) or more than WALK_AWAY_M further off than when the
+## talk began (they walked on, or the player was carried off: a fast travel, a knock-back).
+const WALK_AWAY_M := 4.0
+## Nobody further than this at the start is anybody the talk is held to (a quest's word from
+## across the map, a Hearthstone, a test): the camera's reach (CameraRig.TALK_REACH).
+const SPEAKER_REACH_M := 6.0
+## A foe turning on the player nearer than this ends the talk.
+const FOE_NEAR_M := 25.0
+## How often the watch looks, in seconds.
+const WATCH_S := 0.25
+## A choice the runner adds where an author's every choice was closed off by its conditions and
+## the node has nothing after it: the page is never left with nothing to press.
+const LEAVE_CHOICE := "Leave."
+
+## The body of the person being spoken to, when they stand near the player: what the camera frames
+## and what the watch measures. Null for a voice with no body (a stone, a lectern, a test).
+var speaker_actor: Node3D = null
+## Who the next conversation is with, when the caller already has the body (set before start).
+var _next_speaker: Node3D = null
+var _held_at := 0.0
+var _watch_t := 0.0
+
 
 func _ready() -> void:
 	add_to_group("dialogue_runner")
 	if ctx == null:
 		ctx = SocialContext.new()
+	set_process(false)
+	for pair in [[EventBus.damage_dealt, _on_damage_dealt], [EventBus.enemy_engaged, _on_enemy_engaged],
+			[EventBus.player_died, _on_player_died], [EventBus.game_loaded, _on_game_loaded]]:
+		var sig: Signal = pair[0]
+		if not sig.is_connected(pair[1]):
+			sig.connect(pair[1])
+
+
+## The body the next conversation is held to (the camera frames it; walking away from it ends the
+## talk). Otherwise the roster's actor for the npc id is used.
+func set_next_speaker(body: Node3D) -> void:
+	_next_speaker = body
 
 
 func is_running() -> bool:
@@ -101,6 +140,7 @@ func _begin(new_dialogue_id: String, def_override: Dictionary, new_npc_id: Strin
 	if dialogue_id != "" and _def.is_empty():
 		Log.warn("Dialogue", "unknown dialogue '%s' (content problem)" % dialogue_id)
 	_running = true
+	_hold_to_speaker()
 	# Having spoken to somebody once is what puts them in the journal's People page.
 	if npc_id != "" and ContentDB.has(npc_id):
 		ctx.set_flag("met:" + npc_id, true)
@@ -132,6 +172,8 @@ func stop() -> void:
 	var who := npc_id
 	current_choices.clear()
 	current_node_id = ""
+	speaker_actor = null
+	set_process(false)
 	EventBus.dialogue_ended.emit(who)
 	ended.emit()
 
@@ -141,6 +183,95 @@ func stop() -> void:
 ## and the press the dialogue took to close itself must not open it again (Interactor.try_interact).
 func just_ended() -> bool:
 	return Engine.get_process_frames() - _ended_frame <= 2 or Time.get_ticks_msec() - _ended_ms < 250
+
+
+# --- the watch: every other way a conversation is left ----------------------------------------
+
+func _player_body() -> Node3D:
+	var p := Peers.player() as Node3D
+	if p == null and is_inside_tree():
+		p = get_tree().get_first_node_in_group("player") as Node3D
+	return p if p != null and is_instance_valid(p) and p.is_inside_tree() else null
+
+
+func _hold_to_speaker() -> void:
+	speaker_actor = null
+	var body: Node3D = _next_speaker if _next_speaker != null and is_instance_valid(_next_speaker) else null
+	_next_speaker = null
+	if body == null and npc_id != "" and NpcRegistry.instance != null and is_instance_valid(NpcRegistry.instance):
+		body = NpcRegistry.instance.actor(npc_id) as Node3D
+	var player := _player_body()
+	if body == null or player == null or not body.is_inside_tree():
+		return
+	var apart := _flat_distance(body, player)
+	if apart > SPEAKER_REACH_M:
+		return
+	speaker_actor = body
+	_held_at = apart
+	_watch_t = 0.0
+	set_process(true)
+
+
+static func _flat_distance(a: Node3D, b: Node3D) -> float:
+	var d := a.global_position - b.global_position
+	return Vector2(d.x, d.z).length()
+
+
+func _process(delta: float) -> void:
+	if not _running:
+		set_process(false)
+		return
+	_watch_t += delta
+	if _watch_t < WATCH_S:
+		return
+	_watch_t = 0.0
+	check_speaker()
+
+
+## Ends the conversation when the person spoken to is gone or out of reach (see WALK_AWAY_M).
+## Returns whether it is still running. The watch calls it; a test may call it at once.
+func check_speaker() -> bool:
+	if not _running or speaker_actor == null:
+		return _running
+	var body := speaker_actor
+	if not is_instance_valid(body) or not body.is_inside_tree() or ("alive" in body and not bool(body.get("alive"))):
+		stop()
+		return false
+	var player := _player_body()
+	if player != null and _flat_distance(body, player) > maxf(_held_at, SPEAKER_REACH_M) + WALK_AWAY_M:
+		stop()
+		return false
+	return true
+
+
+func _is_player(n: Node) -> bool:
+	return n != null and is_instance_valid(n) and n.is_in_group("player")
+
+
+## Struck, the talk is over: the body is held while somebody is talking, and a held body cannot
+## raise its guard.
+func _on_damage_dealt(_attacker: Node, victim: Node, amount: float, _kind: String) -> void:
+	if _running and amount > 0.0 and _is_player(victim):
+		stop()
+
+
+func _on_enemy_engaged(enemy: Node, engaged: bool) -> void:
+	if not _running or not engaged or enemy == null or not is_instance_valid(enemy):
+		return
+	if not _is_player(enemy.get("target") as Node):
+		return
+	var player := _player_body()
+	if player != null and enemy is Node3D and _flat_distance(enemy as Node3D, player) > FOE_NEAR_M:
+		return
+	stop()
+
+
+func _on_player_died(_at: Vector3) -> void:
+	stop()
+
+
+func _on_game_loaded(_slot: String) -> void:
+	stop()
 
 
 # --- walking the graph ----------------------------------------------------------------------------
@@ -189,6 +320,12 @@ func _enter(node_id: String) -> void:
 	var text := _text_of(node)
 	var speaker := _speaker_of(node)
 	current_choices = _visible_choices(node)
+	if current_choices.is_empty() and not node.has("next") and _has_authored_choices(node) and not ctx.end_requested:
+		# every answer the author wrote is closed off here and nothing comes after: a way out
+		current_choices.append({"text": LEAVE_CHOICE, "next": "end", "source_index": -7})
+	if text.strip_edges().is_empty() and current_choices.is_empty():
+		# a page with no line and nothing to press is never put up (triage 41)
+		text = "..."
 
 	line_shown.emit(speaker, text, _choice_payload())
 	if not current_choices.is_empty():
@@ -293,15 +430,18 @@ func _speaker_of(node: Dictionary) -> String:
 		"player", "you":
 			return ctx.player_name()
 		_:
+			# the bound person's own name written out is still them, and answers to their `known_as`
+			if speaker == str(ctx.npc.get("name", "")):
+				return _npc_name()
 			var def := ContentDB.get_or_empty(speaker)
-			return str(def.get("name", speaker)) if not def.is_empty() else speaker
+			return Npc.shown_name(def, ctx, speaker) if not def.is_empty() else speaker
 
 
 ## Who the nameplate says. The bound NPC's name when there is one; otherwise the dialogue's own
 ## `speaker_name`, which is how a conversation with somebody who is not a roster NPC — a voice
 ## through a door, a Sayer at a lectern — still has a name over it.
 func _npc_name() -> String:
-	var bound := str(ctx.npc.get("name", ""))
+	var bound := Npc.shown_name(ctx.npc, ctx)
 	if not bound.is_empty():
 		return bound
 	var named := str(_def.get("speaker_name", ""))
@@ -407,6 +547,11 @@ func _talk_node() -> Dictionary:
 	return {"speaker": "npc", "text": framing % str(news.get("text", "")), "next": _talk_return_to}
 
 
+static func _has_authored_choices(node: Dictionary) -> bool:
+	var choices: Variant = node.get("choices", [])
+	return typeof(choices) == TYPE_ARRAY and not (choices as Array).is_empty()
+
+
 func _visible_choices(node: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var choices: Variant = node.get("choices", [])
@@ -473,8 +618,30 @@ func _choice_payload() -> Array:
 			entry["tag"] = str(c["tag"])
 		if c.has("skill"):
 			entry["skill"] = str(c["skill"])
+		var q := quest_cue(c)
+		if not q.is_empty():
+			entry["quest"] = q
 		out.append(entry)
 	return out
+
+
+## What a choice does to the player's quests (QuestCues.for_choice): {kind, quest_id, name, tier,
+## tag, tier_word}, or {} when it does nothing to any. Read from its effects and the lines it leads
+## to; nothing an author writes on the choice.
+func quest_cue(choice: Dictionary) -> Dictionary:
+	if ctx == null:
+		return {}
+	return QuestCues.for_choice(choice, npc_id, _node,
+			func(conds: Variant) -> bool: return Conditions.all_of(conds if typeof(conds) == TYPE_ARRAY else [], ctx),
+			ctx.provider("quests"))
+
+
+## What the person spoken to is to the player's quests now (QuestCues.state_now), for the page's
+## nameplate: {} when nothing.
+func speaker_quest_state() -> Dictionary:
+	if npc_id == "" or ctx == null:
+		return {}
+	return QuestCues.state_now(npc_id, ctx.provider("quests"), ctx)
 
 
 ## Gesture replies and notifications produced by effects go out as soon as they are made.
@@ -485,6 +652,7 @@ func _flush_side_effects() -> void:
 	for n in ctx.notifications:
 		EventBus.emit_notify(str(n))
 	ctx.notifications.clear()
+	Barks.flush(ctx)
 	# the work a resident offers is their place's board, read over the conversation the way a
 	# notice post is read: the same screen, and the conversation is there when it closes
 	for place in ctx.work_offered:

@@ -767,7 +767,7 @@ func test_the_hushline_landing_stands_clear_of_the_water_with_its_wights_on_it()
 func test_standing_at_the_start_completes_nothing_and_the_warden_sends_you_north() -> void:
 	var quests: Node = Social.quests
 	quests.call("reset_for_new_game")
-	assert_true(bool(quests.call("start", NAMING)), "the Naming starts")
+	assert_true(bool(quests.call("start", NAMING, "wake")), "the Naming starts")
 	var start := Vector3(_xz(START).x, 0.0, _xz(START).y)
 	quests.call("check_reach", start)
 	EventBus.place_discovered.emit(START)
@@ -808,7 +808,7 @@ func test_the_warden_is_held_at_her_fire_until_you_walk_north() -> void:
 	assert_eq(str(named.get("spot", "")), "wren_stair_head", "at her fire, rain or no")
 	GameState.set_flag("new_game", false)
 	assert_ne(str(Schedules.entry_for_def(wren, 3, 15.0).get("place", "")), START, "and nobody else's game keeps her there")
-	quests.call("start", NAMING)
+	quests.call("start", NAMING, "wake")
 	assert_eq(str(Schedules.entry_for_def(wren, 3, 15.0).get("place", "")), START, "the first stage holds her")
 	quests.call("set_stage", NAMING, "the_choir")
 	assert_eq(str(Schedules.entry_for_def(wren, 3, 15.0).get("place", "")), START, "so does the walk north")
@@ -823,7 +823,7 @@ func test_the_warden_is_held_at_her_fire_until_you_walk_north() -> void:
 func test_the_warden_speaks_first_and_the_hud_says_what_to_do() -> void:
 	var quests: Node = Social.quests
 	quests.call("reset_for_new_game")
-	quests.call("start", NAMING)
+	quests.call("start", NAMING, "wake")
 	# by day: after dark she has a line about counting bells that is just as much hers
 	var hour := WorldClock.time_hours
 	WorldClock.set_time(10.0)
@@ -841,3 +841,116 @@ func test_the_warden_speaks_first_and_the_hud_says_what_to_do() -> void:
 	hud.free()
 	quests.call("reset_for_new_game")
 	_forget_the_story()
+
+
+# --- the descent (DESIGN §5.1a) ------------------------------------------------------------------------
+
+## The stair the camp lays is the stair the descent counts: its line runs from the camp down the
+## bank, it has forty steps and more, and the fortieth is a way down it, below the head.
+func test_the_stair_is_counted_step_by_step_to_the_fortieth() -> void:
+	if provider == null:
+		skip("no built world")
+		return
+	var d := _raise_start()
+	assert_true(d != null, "the Stair Head is dressed")
+	if d == null:
+		return
+	var descent := d.find_child("StairDescent", true, false) as StairDescent
+	assert_true(descent != null, "the dressing stands a descent on its stair")
+	if descent == null:
+		return
+	assert_gt(descent.path.size(), 1, "along the stair's line")
+	assert_true(descent.step_at.size() >= StairDescent.STEPS, "the stair has at least forty steps (%d)" % descent.step_at.size())
+	var head := descent.path[0]
+	assert_near(descent.steps_down(head), 0.0, 0.5, "the head is no steps down")
+	# the fortieth step, and a pace past it, on the line
+	var along := descent.trigger_m()
+	var at := _point_along(descent.path, along + 0.3)
+	assert_true(descent.steps_down(at) >= float(StairDescent.STEPS), "the fortieth step is the fortieth (%.1f)" % descent.steps_down(at))
+	assert_true(at.y < head.y - 3.0, "and it is well down the bank (%.1f m below the head)" % (head.y - at.y))
+	var halfway := _point_along(descent.path, descent.step_at[19])
+	assert_near(descent.steps_down(halfway), 20.0, 1.01, "the twentieth is halfway")
+	assert_eq(descent.steps_down(head + Vector3(40.0, 0.0, 0.0)), -1.0, "the heath beside the camp is not the stair")
+
+
+func _point_along(path: PackedVector3Array, m: float) -> Vector3:
+	var run := 0.0
+	for i in range(path.size() - 1):
+		var seg := path[i].distance_to(path[i + 1])
+		if run + seg >= m:
+			return path[i].lerp(path[i + 1], (m - run) / maxf(seg, 0.001))
+		run += seg
+	return path[path.size() - 1]
+
+
+## Every step down takes colour and sound out of the world, and the wake gives them back.
+func test_the_descent_drains_the_colour_and_the_sound_and_gives_them_back() -> void:
+	var sky := _FakeSky.new()
+	sky.add_to_group("atmosphere")
+	_tree().root.add_child(sky)
+	var music := AudioServer.get_bus_index("Music")
+	var before := AudioServer.get_bus_volume_db(music)
+	StairDescent.drain(0.5)
+	assert_near(sky.drain, 0.5, 0.01, "halfway down, half the colour")
+	assert_near(AudioServer.get_bus_volume_db(music), before - StairDescent.QUIET_DB * 0.5, 0.01, "and half the sound, in dB")
+	StairDescent.drain(1.0)
+	assert_near(sky.drain, 1.0, 0.01, "at the fortieth, none")
+	assert_near(AudioServer.get_bus_volume_db(music), before - StairDescent.QUIET_DB, 0.01)
+	StairDescent.restore()
+	assert_near(sky.drain, 0.0, 0.001, "and the wake gives it back")
+	assert_near(AudioServer.get_bus_volume_db(music), before, 0.01, "exactly")
+	sky.queue_free()
+
+
+class _FakeSky extends Node:
+	var drain := 0.0
+
+
+## The fortieth step plays the wake; turning back at the top says "Good" and plays nothing.
+func test_the_fortieth_step_plays_the_wake_and_turning_back_does_not() -> void:
+	var quests: Node = Social.quests
+	quests.call("reset_for_new_game")
+	var descent := StairDescent.new()
+	for p in [Vector3(0, 100, 0), Vector3(0, 80, 40)]:
+		descent.path.append(p)
+	for i in 60:
+		descent.step_at.append(0.5 + float(i) * 0.7)
+	var host := Node3D.new()
+	_tree().root.add_child(host)
+	host.add_child(descent)
+	var services := _WakeCounter.new()
+	services.add_to_group("game_services")
+	host.add_child(services)
+	var body := Node3D.new()
+	body.add_to_group("player")
+	host.add_child(body)
+	body.global_position = descent.path[0].lerp(descent.path[1], 0.2)
+	descent._process(1.0)
+	assert_eq(descent.progress, 0.0, "nothing happens on the stair before the Naming waits at it")
+	quests.call("start", NAMING)
+	assert_eq(str(quests.call("stage_id_of", NAMING)), "down_the_stair")
+	descent._process(1.0)
+	assert_gt(descent.progress, 0.0, "a few steps down, some colour has gone")
+	body.global_position = descent.path[0]
+	descent._process(1.0)
+	assert_eq(descent.progress, 0.0, "back at the top, it is back")
+	assert_true(GameState.has_flag("turned_back"), "and the Warden said Good")
+	assert_eq(services.wakes, 0, "no wake for turning back")
+	var fortieth := descent.step_at[StairDescent.STEPS - 1] + 0.2
+	body.global_position = descent.path[0].move_toward(descent.path[1], fortieth)
+	descent._process(1.0)
+	assert_eq(services.wakes, 1, "the fortieth step plays the wake")
+	assert_true(bool((quests.call("objectives_of", NAMING) as Array)[0]["done"]), "the descent is done")
+	assert_eq(str(quests.call("stage_id_of", NAMING)), "down_the_stair", "and the wake, not the objective, moves the Naming on")
+	StairDescent.restore()
+	host.queue_free()
+	quests.call("reset_for_new_game")
+	GameState.clear_flag("turned_back")
+	GameState.clear_flag("saw_it_go_down")
+
+
+class _WakeCounter extends Node:
+	var wakes := 0
+
+	func begin_wake() -> void:
+		wakes += 1

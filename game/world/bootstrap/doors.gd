@@ -17,6 +17,20 @@ const PLAN_ROLE := "door_plan"
 const DOOR_SCENE := "res://systems/interiors/door.tscn"
 ## How far above the ground a door frame sits, so it is not buried by a metre of chalk.
 const SILL := 0.05
+## Standing up over frames, the towns within this of where the world is first seen from are raised
+## before it says it is ready; the rest after, nearest the eye first (`_process`).
+const READY_M := 900.0
+## After it is ready, a town is raised once the eye comes within this of it, nearest first: towns
+## further off are not drawn from where anybody stands, and raising all thirty-nine behind the menu,
+## the loading fade and the first minutes of play was minutes of main-thread time on a slow machine
+## (TRIAGE item 36). A walker covers this in a couple of minutes, and a town is raised in a second.
+const WANT_M := 2400.0
+## While somebody is watching (play, a film's pictures, the title's menu), only the towns this near:
+## the rest wait for a curtain (a film's black, the loading fade), where a frame of building is not
+## seen.
+const WANT_WATCHED_M := 1100.0
+const LOOK_EVERY_S := 0.25
+var _look_in := 0.0
 
 @export var place_doors: bool = true
 ## Buildings are raised around house doors; a tool that only wants the doors turns this off.
@@ -32,6 +46,16 @@ var fabric: Array[Settlement] = []
 ## like everything else, and handed on to the fabric with those houses already on it.
 var streets: Dictionary = {}          # place id -> StreetPlan
 var _road_lines: Array = []
+## Whether the world already had everything placed while it stood up (`place_all_over_frames`), so
+## hearing it is ready places nothing twice.
+var _placed := false
+## Standing up over frames: the towns not yet raised (their place defs), what raising them needs
+## (`_fabric_begin`), and the one being raised now.
+var _queue: Array = []
+var _fill: Dictionary = {}
+var _raising: Settlement = null
+## Whether the towns before the world is ready are up, and the rest are raised as the eye comes near.
+var _in_background := false
 
 
 func _ready() -> void:
@@ -43,7 +67,8 @@ func _ready() -> void:
 	var world := _world()
 	if world != null and not world.is_world_ready:
 		await world.world_ready
-	place_all()
+	if not _placed:
+		place_all()
 
 
 ## The world this belongs to, found by looking up rather than through World.instance, which the
@@ -60,6 +85,154 @@ func _world() -> World:
 ## Reads every door plan and stands its doors up. Returns how many were placed; a plan for a
 ## place the world does not have is skipped with a warning rather than dropped in silence.
 func place_all() -> int:
+	_place_doors()
+	if raise_fabric:
+		_fill_settlements()
+	doors_placed.emit(placed.size())
+	_placed = true
+	return placed.size()
+
+
+## `place_all` over frames, for a world standing up in steps (World.stand_up_in_steps): the fabric
+## of thirty-nine settlements raised at once was 8.9 s without a frame drawn, behind the title's
+## chart and under the loading caption (PROGRESS "The title never freezes"), and a settlement a frame
+## was a frame of up to 1.9 s each (TRIAGE item 36). Each town is now raised a piece at a time within
+## the frame's budget (WorldPace, Settlement.stepwise); the towns within READY_M of `near` (where the
+## world is first seen from) before this returns, so the world says it is ready with them standing,
+## and the others after it, one at a time, once the eye comes near enough, nearest first (`_process`),
+## so the country is not held for towns nobody is looking at. `doors_placed` is emitted when this
+## returns, with the doors all placed.
+func place_all_over_frames(near: Array = []) -> void:
+	_place_doors()
+	if not raise_fabric:
+		doors_placed.emit(placed.size())
+		_placed = true
+		return
+	_fill = _fabric_begin()
+	_queue = (_fill.get("places", []) as Array).duplicate()
+	_placed = true
+	while true:
+		var next := _nearest_queued(near, READY_M)
+		if next.is_empty():
+			break
+		await _raise_paced(next)
+		if not is_inside_tree():
+			return
+	doors_placed.emit(placed.size())
+	_in_background = true
+	set_process(not _queue.is_empty())
+	if _queue.is_empty():
+		_fabric_end(_fill)
+
+
+func _process(delta: float) -> void:
+	if not _in_background or _raising != null or not is_inside_tree():
+		return
+	if _queue.is_empty():
+		set_process(false)
+		return
+	_look_in -= delta
+	if _look_in > 0.0:
+		return
+	_look_in = LOOK_EVERY_S
+	_raise_next()
+
+
+func _raise_next() -> void:
+	if _raising != null or _queue.is_empty():
+		return
+	# while a film's pictures are watched nothing is raised: its holds (black, or the last frame) are
+	# where the towns its next shot opens on are raised, and a shot waits for them (ShotSight.TOWNS_M)
+	if not WorldPace.curtained() and get_tree().get_first_node_in_group(CinematicPlayer.GROUP) != null:
+		return
+	var next := _nearest_queued(_eyes(), WANT_M if WorldPace.curtained() else WANT_WATCHED_M)
+	if next.is_empty():
+		return
+	await _raise_paced(next)
+	if _queue.is_empty() and is_inside_tree():
+		set_process(false)
+		_fabric_end(_fill)
+
+
+## Where the world is being looked at from: whatever the streamer follows, and the points it is
+## asked to stand round besides (a film's next shot).
+func _eyes() -> Array:
+	var out: Array = []
+	var world := _world()
+	var streamer := world.streamer if world != null else null
+	if streamer != null:
+		if streamer.target != null and is_instance_valid(streamer.target):
+			out.append(streamer.target.global_position)
+		out.append_array(streamer.also_around)
+	return out
+
+
+## The queued town nearest any of `points` within `reach`, taken off the queue; {} for none. With no
+## points and no limit to the reach, the first queued.
+func _nearest_queued(points: Array, reach: float) -> Dictionary:
+	var world := _world()
+	if _queue.is_empty() or world == null:
+		return {}
+	var best := 0 if points.is_empty() and reach == INF else -1
+	var best_d := INF
+	for i in _queue.size():
+		var at := world.place_position(str((_queue[i] as Dictionary).get("id", "")))
+		for p in points:
+			var d := Vector2((p as Vector3).x - at.x, (p as Vector3).z - at.z).length()
+			if d < best_d and d <= reach:
+				best_d = d
+				best = i
+	if best < 0:
+		return {}
+	var place: Dictionary = _queue[best]
+	_queue.remove_at(best)
+	return place
+
+
+## Raises one town a piece at a time and returns when it stands.
+func _raise_paced(place: Dictionary) -> void:
+	if place.is_empty():
+		return
+	var s := _raise_settlement(place, _fill, true)
+	if s == null or s.is_raised:
+		return
+	_raising = s
+	await s.raised
+	if _raising == s:
+		_raising = null
+
+
+## Whether every town within `reach` of `at` stands (none queued or half-raised there). What a film's
+## shot or the loading fade waits for besides the cells (UI.near_ring_progress).
+func towns_standing_near(at: Vector3, reach: float) -> Vector2i:
+	var world := _world()
+	var wanted := 0
+	var standing := 0
+	if world == null:
+		return Vector2i.ZERO
+	for place in _queue:
+		var p := world.place_position(str((place as Dictionary).get("id", "")))
+		if Vector2(p.x - at.x, p.z - at.z).length() <= reach:
+			wanted += 1
+	for s in fabric:
+		if is_instance_valid(s) and Vector2(s.position.x - at.x, s.position.z - at.z).length() <= reach:
+			wanted += 1
+			standing += 1 if s.is_raised else 0
+	return Vector2i(standing, wanted)
+
+
+## Every world's doors' towns within `reach` of `at`: Vector2i(standing, wanted).
+static func towns_near(tree: SceneTree, at: Vector3, reach: float) -> Vector2i:
+	var out := Vector2i.ZERO
+	if tree == null:
+		return out
+	for wd in tree.get_nodes_in_group("world_doors"):
+		if wd is WorldDoors:
+			out += (wd as WorldDoors).towns_standing_near(at, reach)
+	return out
+
+
+func _place_doors() -> void:
 	for door in placed:
 		if is_instance_valid(door):
 			door.queue_free()
@@ -84,22 +257,27 @@ func place_all() -> int:
 			if door != null:
 				placed.append(door)
 	Log.info("WorldDoors", "placed %d doors" % placed.size())
-	if raise_fabric:
-		_fill_settlements()
-	doors_placed.emit(placed.size())
-	return placed.size()
 
 
 ## The town around the doors. Twenty-four interiors do not make eleven settlements; the fabric
 ## is what turns a paved circle with four doors on it into somewhere people live.
 func _fill_settlements() -> void:
+	var fill := _fabric_begin()
+	for place in fill.get("places", []):
+		_raise_settlement(place, fill)
+	_fabric_end(fill)
+
+
+## What raising the fabric needs, worked out once: the roads, the ground kept clear, the places.
+## {} with no world.
+func _fabric_begin() -> Dictionary:
 	for s in fabric:
 		if is_instance_valid(s):
 			s.queue_free()
 	fabric.clear()
 	var world := _world()
 	if world == null:
-		return
+		return {}
 	var roads := _road_lines if not _road_lines.is_empty() else _roads()
 	# A house with an inside is on its street's plan already; a deep place's mouth that opens in
 	# a settlement keeps its own ground clear.
@@ -115,30 +293,46 @@ func _fill_settlements() -> void:
 		if entry.has("scene"):
 			var lp: Array = entry.get("pos", [0, 0, 0])
 			reserved.append_array(footprint(Vector2(float(lp[0]), float(lp[2])), PoiKit.radius_of(str(entry["scene"]))))
-	var built := 0
+	var places: Array = []
 	for place in ContentDB.all("place"):
-		var kind := str(place.get("kind", ""))
-		if not Settlement.FABRIC.has(kind):
-			continue
-		var id := str(place.get("id", ""))
-		var centre := world.place_position(id)
-		if centre == Vector3.ZERO:
-			continue
-		var radius := _pad_radius(world, id)
-		var near: Array = []
-		for line in roads:
-			if _touches(line, centre, radius):
-				near.append(line)
-		var street: StreetPlan = streets.get(id, null)
-		if street == null:
-			street = StreetPlan.make(id, kind, Vector2(centre.x, centre.z), radius, near)
-			streets[id] = street
-		var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
-				near, reserved, street)
-		add_child(s)
-		fabric.append(s)
-		built += 1
-	Log.info("WorldDoors", "raised the fabric of %d settlements" % built)
+		if Settlement.FABRIC.has(str(place.get("kind", ""))):
+			places.append(place)
+	return {"world": world, "roads": roads, "reserved": reserved, "places": places, "built": 0}
+
+
+func _raise_settlement(place: Dictionary, fill: Dictionary, stepwise := false) -> Settlement:
+	var world: World = fill.get("world", null)
+	if world == null or not is_instance_valid(world):
+		return null
+	var roads: Array = fill["roads"]
+	var reserved: Array[Rect2] = fill["reserved"]
+	var kind := str(place.get("kind", ""))
+	var id := str(place.get("id", ""))
+	var centre := world.place_position(id)
+	if centre == Vector3.ZERO:
+		return null
+	var radius := _pad_radius(world, id)
+	var near: Array = []
+	for line in roads:
+		if _touches(line, centre, radius):
+			near.append(line)
+	var street: StreetPlan = streets.get(id, null)
+	if street == null:
+		street = StreetPlan.make(id, kind, Vector2(centre.x, centre.z), radius, near)
+		streets[id] = street
+	var s := Settlement.raise_at(id, kind, str(place.get("region", "")), centre, radius,
+			near, reserved, street)
+	s.stepwise = stepwise
+	fabric.append(s)
+	fill["built"] = int(fill["built"]) + 1
+	add_child(s)
+	return s
+
+
+func _fabric_end(fill: Dictionary) -> void:
+	if fill.is_empty():
+		return
+	Log.info("WorldDoors", "raised the fabric of %d settlements" % int(fill["built"]))
 
 
 ## A round footprint as the fabric's reserved rectangles: a cross of two, which between them hold

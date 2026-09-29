@@ -34,6 +34,8 @@ func _ready() -> void:
 			shots_wanted = int(a.substr(8))
 		elif a == "--cut":
 			film_cut = true
+		elif a == "--no-sight":
+			TitleVista.sight_streaming = false
 	if out_dir.is_empty():
 		print("TITLE_FILM: --out=<dir> is needed")
 		get_tree().quit(2)
@@ -42,6 +44,7 @@ func _ready() -> void:
 	Settings.persist = false
 	Settings.apply_graphics_preset(preset)
 	report["preset"] = preset
+	report["sight"] = TitleVista.sight_streaming
 	_run.call_deferred()
 
 
@@ -59,17 +62,37 @@ func _run() -> void:
 		_finish(1)
 		return
 	# the slowest frame while the world stands up behind the menu: what a player's hand would feel
+	# and every frame longer than a quarter second, with what the vista was doing: where a gap is
 	var slowest := 0.0
+	var frames := 0
+	var long_frames: Array = []
 	var last := Time.get_ticks_usec()
 	while not vista.is_showing() and vista.phase != TitleVista.Phase.GONE:
 		await get_tree().process_frame
 		var now := Time.get_ticks_usec()
-		slowest = maxf(slowest, float(now - last) / 1000.0)
+		var gap := float(now - last) / 1000.0
+		slowest = maxf(slowest, gap)
+		frames += 1
+		if gap > 250.0:
+			long_frames.append({"at_ms": Time.get_ticks_msec() - _t0, "gap_ms": int(gap),
+					"phase": TitleVista.Phase.keys()[vista.phase],
+					"world": (vista.world.stand_up_ms.duplicate() if vista.world != null else {}),
+					# where it went: scripts' _process, physics ticks (and how many), or neither (the renderer)
+					"process_ms": int(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0),
+					"physics_ms": int(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0),
+					"navigation_ms": int(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS) * 1000.0),
+					"cells": vista.world.streamer.loaded_count() if vista.world != null and vista.world.streamer != null else 0,
+					"worst_build": str(vista.world.streamer.worst_frame_build) if vista.world != null and vista.world.streamer != null else ""})
 		last = now
 		if Time.get_ticks_msec() - _t0 > int(CAP_S * 1000.0):
 			break
 	report["vista_up_ms"] = Time.get_ticks_msec() - _t0
 	report["slowest_frame_before_up_ms"] = slowest
+	report["frames_before_up"] = frames
+	report["long_frames_before_up"] = long_frames
+	report["stand_up_ms"] = vista.world.stand_up_ms if vista.world != null else {}
+	print("TITLE_FILM: %d frames before the country came up, the slowest %.0f ms; the world stood up in %s"
+			% [frames, slowest, str(report["stand_up_ms"])])
 	if not vista.is_showing():
 		print("TITLE_FILM: the country never came up")
 		_finish(1)
@@ -81,8 +104,9 @@ func _run() -> void:
 	for n in count:
 		var entry := await _still(vista, n, 0.5, "%02d_%s" % [n, str((vista._shots[n] as Dictionary).get("id", ""))])
 		(report["shots"] as Array).append(entry)
-		print("TITLE_FILM: %-24s cells %s, %d draws, %.2f M prims" % [entry["id"],
-				"in" if entry["cells_ready"] else "NOT in", entry["draw_calls"], float(entry["primitives"]) / 1e6])
+		print("TITLE_FILM: %-24s cells %s, %d of %d seen standing, %d loaded, %d draws, %.2f M prims" % [entry["id"],
+				"in" if entry["cells_ready"] else "NOT in", entry["seen_standing"][0], entry["seen_standing"][1],
+				entry["loaded"], entry["draw_calls"], float(entry["primitives"]) / 1e6])
 	if film_cut and count >= 2:
 		await _still(vista, 0, 0.97, "cut_0_end_of_first")
 		for pair in [[0.5, "cut_1_dipping"], [1.0, "cut_2_dark"]]:
@@ -102,11 +126,18 @@ func _still(vista: TitleVista, i: int, u: float, name: String, dark := 0.0) -> D
 	while not vista.cells_in() and Time.get_ticks_msec() < until:
 		await get_tree().process_frame
 	var came := vista.cells_in()
+	if not came:
+		print("TITLE_FILM: %s is waiting for: %s" % [vista.current_shot_id(), vista.waiting_for()])
 	for k in 4:
 		await get_tree().process_frame
 	vista.dip.modulate.a = dark
 	await RenderingServer.frame_post_draw
+	# the bare-ground measure: of the cells this very moment sees (ShotSight), how many are standing
+	var streamer := vista.world.streamer
+	var now_seen := streamer.standing_of(ShotSight.rings(ShotSight.seen(vista.path_of(i), streamer,
+			Callable(vista, "_surface"), u, u, vista._aspect(), vista._reach(streamer))))
 	var entry := {"index": i, "id": vista.current_shot_id(), "u": u, "cells_ready": came,
+			"seen_standing": [now_seen.x, now_seen.y], "loaded": streamer.loaded_count(),
 			"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 			"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
 			"camera": vista.camera.global_position}

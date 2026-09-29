@@ -48,16 +48,15 @@ func _build() -> void:
 	var page := UiKit.page("What You Have Learned")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 60.0
-	frame.offset_top = 34.0
-	frame.offset_right = -60.0
-	frame.offset_bottom = -34.0
 	add_child(frame)
+	UiFit.inset(frame, 60.0, 34.0)
 	var body: VBoxContainer = page["body"]
+	# a large UI (triage 28): three columns of skills and a narrower list of perks
+	var narrow := UiFit.narrow(self)
 
 	_header = UiKit.label("", "Heading", HORIZONTAL_ALIGNMENT_CENTER)
 	body.add_child(_header)
-	_attr_row = UiKit.row(26)
+	_attr_row = UiKit.row(14 if narrow else 26)
 	_attr_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	body.add_child(_attr_row)
 	body.add_child(UiKit.divider())
@@ -67,20 +66,20 @@ func _build() -> void:
 	body.add_child(columns)
 
 	_grid = GridContainer.new()
-	_grid.columns = 4
+	_grid.columns = 3 if narrow else 4
 	_grid.add_theme_constant_override("h_separation", 6)
 	_grid.add_theme_constant_override("v_separation", 4)
 	var grid_scroll := UiKit.scroll(_grid)
-	grid_scroll.custom_minimum_size = Vector2(560, 0)
+	grid_scroll.custom_minimum_size = Vector2(420 if narrow else 560, 0)
 	grid_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(grid_scroll)
 
 	columns.add_child(VSeparator.new())
 
 	_perk_box = UiKit.column(8)
-	_perk_box.custom_minimum_size = Vector2(320, 0)
+	_perk_box.custom_minimum_size = Vector2(270 if narrow else 320, 0)
 	var perk_scroll := UiKit.scroll(_perk_box)
-	perk_scroll.custom_minimum_size = Vector2(330, 0)
+	perk_scroll.custom_minimum_size = Vector2(280 if narrow else 330, 0)
 	perk_scroll.size_flags_horizontal = Control.SIZE_FILL
 	columns.add_child(perk_scroll)
 

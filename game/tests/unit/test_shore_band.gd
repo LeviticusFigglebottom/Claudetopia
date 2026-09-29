@@ -36,6 +36,11 @@ func test_the_band_lies_along_the_waterline_near_the_eye() -> void:
 		assert_true(Vector2(verts[t].x - LARK.x, verts[t].z - LARK.z).length() < ShoreBand.REACH_M + 2.0 * ShoreBand.CELL_M,
 				"near the eye")
 	assert_eq(off, 0, "every triangle of it touches its band of the still water")
+	# and on the sea's sand, at the Cinderlea strand
+	var strand := Vector3(-3590.0, 0.0, 1832.0)
+	for i in 40:
+		band.update(strand)
+	assert_gt(band.triangles(), 50, "a band on the sea's sand at the Cinderlea strand (%d)" % band.triangles())
 	# far from any water there is none
 	var dry := Vector3(-600.0, 0.0, 3300.0)
 	var far_off := false

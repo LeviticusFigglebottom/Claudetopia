@@ -1,16 +1,17 @@
 {
  "bounds": [
-  -0.0856,
-  -0.1115,
+  -0.0857,
+  -0.1114,
   1.4029,
   0.0858,
   0.1104,
-  1.7807
+  1.7806
  ],
  "collision": "none",
  "generator": "character_forge",
  "kind": "head",
  "params": {
+  "feminine": 0.0,
   "head": {
    "brow": 1.35,
    "cheeks": 1.0,
@@ -38,7 +39,7 @@
   "heavy_brow_orm.png"
  ],
  "tris": [
-  7808,
+  17408,
   0,
   0
  ],

@@ -40,6 +40,9 @@ var mods := Modifiers.new()
 ## effect id -> when the timed modifier it set runs out (seconds, engine clock).
 var mods_source_expiry: Dictionary = {}
 var calling_id: String = ""
+## The fighting style the character was taught (core:style/*, DESIGN §5.1), or "" for one named
+## before styles, or on the fallback start. Saved beside the Calling.
+var style_id: String = ""
 ## The sayings this character has been taught, sorted; the only authority on what may be cast.
 var known_spells: Array[String] = []
 
@@ -96,6 +99,38 @@ func apply_calling(id: String, inventory: Inventory = null) -> bool:
 	return true
 
 
+## Applies a fighting style (core:style/*) on top of the Calling: its skill bonuses, its kit (into
+## `inventory`, and the kit's `equip` rows into `equipment`'s hands) and its sayings. A style adds
+## to the Calling and never replaces it. Returns false for an unknown style.
+func apply_style(id: String, inventory: Inventory = null, equipment: Object = null) -> bool:
+	var def := ContentDB.get_or_empty(id)
+	if def.is_empty() or Ids.type_of(id) != StyleDef.TYPE:
+		Log.error("Progression", "unknown style '%s'" % id)
+		return false
+	style_id = id
+	skill_set.apply_bonuses(def.get("skill_bonuses", {}))
+	var kit: Dictionary = def.get("kit", {})
+	for row_v in kit.get("items", []):
+		if not (row_v is Dictionary):
+			continue
+		var row: Dictionary = row_v
+		var item := str(row.get("item", ""))
+		if not ContentDB.has(item):
+			continue
+		if inventory != null:
+			inventory.add(item, int(row.get("count", 1)))
+		var hand := str(row.get("equip", ""))
+		if hand != "" and equipment != null and equipment.has_method("equip"):
+			equipment.call("equip", item, hand)
+		var quick := str(row.get("quick", ""))
+		if quick != "" and equipment != null and equipment.has_method("bind_quick"):
+			equipment.call("bind_quick", quick, item)
+	for spell in kit.get("spells", []):
+		learn_spell(str(spell))
+	skills_changed.emit()
+	return true
+
+
 ## Every calling, for the character-creation screen.
 static func callings() -> Array:
 	return ContentDB.all(CALLING_TYPE)
@@ -106,6 +141,7 @@ func reset_for_new_game() -> void:
 	leveling.reset()
 	perks.reset()
 	calling_id = ""
+	style_id = ""
 	known_spells.clear()
 	sayings_changed.emit()
 	_refresh_perk_modifiers()
@@ -346,6 +382,8 @@ func summary() -> Dictionary:
 	var d := leveling.summary(skill_set.total_gains)
 	d["calling"] = calling_id
 	d["calling_name"] = str(ContentDB.get_or_empty(calling_id).get("name", ""))
+	d["style"] = style_id
+	d["style_name"] = str(ContentDB.get_or_empty(style_id).get("name", ""))
 	d["total_gains"] = skill_set.total_gains
 	d["max_health"] = max_health()
 	d["max_stamina"] = max_stamina()
@@ -415,13 +453,15 @@ static func of(tree: SceneTree) -> Progression:
 
 func to_save() -> Dictionary:
 	return {
-		"calling": calling_id, "skills": skill_set.to_save(), "leveling": leveling.to_save(),
+		"calling": calling_id, "style": style_id, "skills": skill_set.to_save(), "leveling": leveling.to_save(),
 		"perks": perks.to_save(), "known_spells": known_spells.duplicate(),
 	}
 
 
 func from_save(d: Dictionary) -> void:
 	calling_id = str(d.get("calling", ""))
+	# a save from before styles has none, and loads as the fallback start (docs/FIGHTING_STYLE_STARTS §5.5)
+	style_id = str(d.get("style", ""))
 	skill_set.from_save(d.get("skills", {}))
 	leveling.from_save(d.get("leveling", {}))
 	perks.from_save(d.get("perks", {}))

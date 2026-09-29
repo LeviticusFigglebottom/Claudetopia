@@ -36,6 +36,10 @@ HIPS_POS = "Hips@pos"
 LEG_BONES = ["UpperLeg.L", "LowerLeg.L", "Foot.L", "Toe.L", "UpperLeg.R", "LowerLeg.R", "Foot.R", "Toe.R"]
 ARM_BONES = ["Shoulder.L", "UpperArm.L", "LowerArm.L", "Hand.L", "Shoulder.R", "UpperArm.R", "LowerArm.R", "Hand.R"]
 AXIAL_BONES = ["Hips", "Spine", "Chest", "Neck", "Head"]
+## How far a flowing swing's elbow pole leans out to the side when it comes into line with the reach
+## (a share of the pole's own length; see `_solve_arm`).
+POLE_LEAN = 0.5
+LEAN_FROM, LEAN_OVER = 0.45, 0.45
 
 
 # --------------------------------------------------------------------------------------
@@ -442,6 +446,10 @@ class ClipBuilder:
         self.grounded = grounded
         self.feet = FootPlan(skel)
         self.knee_pole = np.array([0.0, -1.0, 0.0])
+        # passes of the grip solve (local_pose): the socket sits off the hand, and the hand turns as
+        # the arm is solved again. Two do for a blade held out; a staff's or a bow's hands, turned far
+        # from the forearm's line, want more to settle (the clips that ask for them set it).
+        self.grip_passes = 2
         self.extra: dict = {}
         # direct per-frame override: fn(t, pose) -> pose  (used by generators)
         self.post: List[Callable[[float, Pose], Pose]] = []
@@ -497,11 +505,18 @@ class ClipBuilder:
                 # the socket there (two passes are enough, the offset is short and rigid)
                 p2 = dict(pose)
                 p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float))
-                for _ in range(2):
+                used = None
+                for _ in range(self.grip_passes):
                     self._solve_arm(local, side, p2)
                     Wg = sk.fk(local)
                     socket = "Socket.WeaponL" if side == "L" else "Socket.WeaponR"
                     off = sk.joint_world(Wg, socket) - sk.joint_world(Wg, f"Hand.{side}")
+                    # More than two passes are damped: a hand turned far off the forearm's line
+                    # swings the socket's offset with the arm, and undamped the solve went round
+                    # a two-step cycle 10 cm wide (a staff's guard) instead of settling.
+                    if self.grip_passes > 2 and used is not None:
+                        off = (off + used) * 0.5
+                    used = off
                     p2[f"Hand.{side}@ik"] = tuple(np.asarray(pose[f"Hand.{side}@grip"], float) - off)
                 self._solve_arm(local, side, p2)
             elif f"Hand.{side}@ik" in pose:
@@ -542,6 +557,14 @@ class ClipBuilder:
                 # turning pole crossed their rest front and rolled them half a turn in a frame.
                 w = ease("smooth", (to[2] + 0.10) / 0.50)
                 p = p * (1.0 - w) + high * w
+                # A hand carried up across the chest close to the shoulder (the rising cut, the
+                # two-handed chop's lift) reaches straight away from that pole, and a pole lying
+                # along the reach leaves the bend's plane free to turn: the rising cut's elbow
+                # swung 30 cm in one 120th (45 m/s). Lean the pole out to the side as it comes
+                # into line, so the plane turns over through the elbow's outward side.
+                d = to / max(float(np.linalg.norm(to)), 1e-9)
+                along = abs(float(np.dot(p, d))) / max(float(np.linalg.norm(p)), 1e-9)
+                p = p + out * (float(np.linalg.norm(p)) * POLE_LEAN * ease("smooth", (along - LEAN_FROM) / LEAN_OVER))
             elif to[2] > 0.15:
                 p = high
             pole = p

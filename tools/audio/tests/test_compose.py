@@ -72,7 +72,7 @@ def test_modes_match_the_region_character():
 
 def test_no_simultaneous_minor_seconds_in_any_playing_combination():
     for name, s in scores().items():
-        for comb in compose.PLAY_COMBINATIONS:
+        for comb in compose.combinations_of(s):
             bad = compose.clashes(s, comb)
             assert not bad, "%s (%s) clashes: %s" % (name, comb, bad[:3])
 
@@ -254,6 +254,63 @@ def test_the_combat_stem_shares_key_and_tempo_so_it_can_layer():
         for n in pitched:
             assert theory.in_mode(n.midi, s.tonic, s.mode), (key, n)
         assert any(n.voice == "drum" for n in combat), "%s combat has no pulse" % key
+
+
+# --- the rotation: each region's variations (triage 2026-09-27 #19) -------------------------------
+
+def variation(key: str, kind: str):
+    return scores()["variation:%s/%s" % (key, kind)]
+
+
+def test_every_region_has_two_more_days_two_nights_and_a_fight():
+    roles = [compose.VARIATION_ROLE[k] for k in compose.VARIATIONS]
+    assert roles.count("day") >= 2 and roles.count("night") >= 1 and roles.count("combat") == 1
+    for key in compose.REGIONS:
+        for kind in compose.VARIATIONS:
+            s = variation(key, kind)
+            assert s.meta["role"] == compose.VARIATION_ROLE[kind]
+            assert s.meta["region_id"] == compose.REGIONS[key]["region_id"]
+            assert 40.0 <= s.seconds() <= 100.0, "%s/%s is %.1f s" % (key, kind, s.seconds())
+
+
+def test_variations_keep_the_region_key_and_state_the_toll():
+    for key in compose.REGIONS:
+        theme = region(key)
+        for kind in compose.VARIATIONS:
+            s = variation(key, kind)
+            assert s.tonic == theme.tonic, (key, kind)
+            if kind != "night_1":
+                assert s.mode == theme.mode, "%s/%s left the region's mode" % (key, kind)
+            lead = sorted([n for n in s.notes("melody") if n.voice in ("lead", "counter")],
+                          key=lambda n: n.beat)
+            assert _contains_transformation([n.midi for n in lead], s.tonic, s.mode), \
+                "%s/%s never states the Toll" % (key, kind)
+
+
+def test_variations_are_not_the_theme_again():
+    for key in compose.REGIONS:
+        theme = region(key)
+        seen = {(theme.bpm, theme.bars)}
+        for kind in compose.VARIATIONS:
+            s = variation(key, kind)
+            assert (s.bpm, s.bars) not in seen, "%s/%s has the tempo and length of another" % (key, kind)
+            seen.add((s.bpm, s.bars))
+
+
+def test_night_is_slower_and_sparser_and_the_fight_drives():
+    for key in compose.REGIONS:
+        theme = region(key)
+        day = variation(key, "day_2")
+        for kind in ("night_1", "night_2"):
+            s = variation(key, kind)
+            assert s.bpm < theme.bpm, (key, kind)
+            density = len(s.notes("melody")) / s.total_beats()
+            assert density < len(day.notes("melody")) / day.total_beats(), "%s/%s is busier than day" % (key, kind)
+        assert variation(key, "night_1").mode == compose.NIGHT_MODE[theme.mode]
+        fight = variation(key, "fight")
+        assert fight.bpm > theme.bpm, key
+        drums = [n for n in fight.notes("combat") if n.voice in compose.UNPITCHED_VOICES]
+        assert len(drums) >= fight.bars * 4, "%s fight has no drive" % key
 
 
 def test_boss_music_has_two_intensities_that_differ():

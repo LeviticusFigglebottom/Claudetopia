@@ -97,7 +97,9 @@ def footprint(scene):
 
 
 PACK = os.path.join(GAME, "content/packs/core")
-defs = json.load(open(os.path.join(PACK, "pois/pois.json")))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "world"))
+from worldgen import content as CONTENT  # noqa: E402  (every pois/*.json, one a region)
+defs = CONTENT.poi_registry(PACK)
 places = {d["id"]: d for d in defs}
 places.update({d["id"]: d for d in json.load(open(os.path.join(PACK, "places/places.json")))})
 start = places["core:poi/stair_head"]

@@ -1442,6 +1442,69 @@
     48,
     48
    ]
+  },
+  "cairn": {
+   "file": "markers/cairn.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "tally_post": {
+   "file": "markers/tally_post.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "fold": {
+   "file": "markers/fold.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "lantern_post": {
+   "file": "markers/lantern_post.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "well": {
+   "file": "markers/well.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "hut": {
+   "file": "markers/hut.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "grave": {
+   "file": "markers/grave.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "beacon": {
+   "file": "markers/beacon.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "peat_cut": {
+   "file": "markers/peat_cut.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1569,7 +1632,9 @@
   "tunic"
  ],
  "markers": [
+  "beacon",
   "bridge",
+  "cairn",
   "camp",
   "cave",
   "city",
@@ -1577,15 +1642,20 @@
   "default",
   "edge",
   "farmstead",
+  "fold",
   "fort",
   "giant_bones",
+  "grave",
   "hamlet",
   "hidden_valley",
+  "hut",
   "interior_dungeon",
   "landmark",
+  "lantern_post",
   "lodge",
   "market_field",
   "mill",
+  "peat_cut",
   "player",
   "poi",
   "quarry",
@@ -1598,12 +1668,14 @@
   "standing_stones",
   "strange",
   "strange_tree",
+  "tally_post",
   "tower",
   "town",
   "village",
   "vista",
   "waterfall",
   "waystone",
+  "well",
   "wreck"
  ],
  "fills": {

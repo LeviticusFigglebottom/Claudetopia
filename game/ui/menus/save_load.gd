@@ -28,11 +28,8 @@ func _build() -> void:
 	var page := UiKit.page("")
 	var frame: PanelContainer = page["frame"]
 	frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	frame.offset_left = 190.0
-	frame.offset_top = 46.0
-	frame.offset_right = -190.0
-	frame.offset_bottom = -46.0
 	add_child(frame)
+	UiFit.inset(frame, 190.0, 46.0)
 	var body: VBoxContainer = page["body"]
 	var head := UiKit.label("", "Title", HORIZONTAL_ALIGNMENT_CENTER)
 	head.name = "Head"

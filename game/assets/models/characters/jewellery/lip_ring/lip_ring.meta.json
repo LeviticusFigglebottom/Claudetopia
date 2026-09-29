@@ -1,0 +1,20 @@
+{
+ "bounds": {
+  "max": [
+   0.00052,
+   0.00255,
+   0.00335
+  ],
+  "min": [
+   -0.00052,
+   -0.00695,
+   -0.00615
+  ]
+ },
+ "fit": null,
+ "generator": "gen_jewellery",
+ "kind": "jewellery",
+ "name": "lip_ring",
+ "tris": 160,
+ "vertices": 80
+}

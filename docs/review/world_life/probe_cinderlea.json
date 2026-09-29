@@ -1,0 +1,2192 @@
+{
+ "region": "core:region/cinderlea",
+ "built_at": "2026-09-28T18:00:36Z",
+ "terrain": "terrain3d",
+ "pois": [
+  {
+   "id": "core:poi/glass_bridge",
+   "kind": "bridge",
+   "preview": false,
+   "pos": [
+    60.0,
+    59.72,
+    2860.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 61.0,
+    "z": 89.1,
+    "height": 11.1,
+    "reach": 67.3,
+    "top": 10.2
+   },
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 57520,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.9,
+   "raise_ms": 107,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_of_the_pilgrims",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    270.0,
+    53.91,
+    2720.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 11.6,
+    "z": 12.3,
+    "height": 6.9,
+    "reach": 12.0,
+    "top": 6.6
+   },
+   "pieces": 36,
+   "draws": 36,
+   "primitives": 15626,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 3,
+   "bodies": 4,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.3,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/headless_watch",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -750.0,
+    119.0,
+    2990.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 16.1,
+    "z": 19.4,
+    "height": 14.4,
+    "reach": 13.9,
+    "top": 10.5
+   },
+   "pieces": 13,
+   "draws": 13,
+   "primitives": 82912,
+   "interactables": {},
+   "lights": 3,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:tower",
+     "family": "eyes",
+     "asset": "Eyes",
+     "x": -752.8,
+     "y": 121.37,
+     "z": 2985.5,
+     "amount": 2.56,
+     "detail": "2.56 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 35.4,
+   "raise_ms": 15,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_one_poppy",
+   "kind": "strange",
+   "preview": false,
+   "pos": [
+    -1150.0,
+    70.62,
+    3200.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.5,
+    "z": 3.8,
+    "height": 2.7,
+    "reach": 4.8,
+    "top": 2.5
+   },
+   "pieces": 16,
+   "draws": 16,
+   "primitives": 139713,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 9.7,
+   "raise_ms": 25,
+   "finished": true
+  },
+  {
+   "id": "core:poi/thirteenth_colossus",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    380.0,
+    76.14,
+    3060.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 56.8,
+    "z": 34.5,
+    "height": 10.6,
+    "reach": 37.5,
+    "top": 5.8
+   },
+   "pieces": 35,
+   "draws": 35,
+   "primitives": 106220,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.8,
+   "raise_ms": 138,
+   "finished": true
+  },
+  {
+   "id": "core:poi/cold_fire_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -1600.0,
+    69.9,
+    2830.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 17.2,
+    "z": 22.9,
+    "height": 2.8,
+    "reach": 13.4,
+    "top": 2.7
+   },
+   "pieces": 96,
+   "draws": 96,
+   "primitives": 67566,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 32,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.2,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/glass_falls",
+   "kind": "waterfall",
+   "preview": false,
+   "pos": [
+    -80.0,
+    102.53,
+    3030.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 21.6,
+    "z": 27.9,
+    "height": 18.7,
+    "reach": 23.2,
+    "top": 18.4
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 272812,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:waterfall",
+     "family": "stream",
+     "asset": "Stream",
+     "x": -87.9,
+     "y": 115.74,
+     "z": 3038.8,
+     "amount": 0.21,
+     "detail": "0.21 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 26.8,
+   "raise_ms": 69,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hushline_stair",
+   "kind": "hidden_valley",
+   "preview": false,
+   "pos": [
+    40.0,
+    4.0,
+    3872.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 17.8,
+    "z": 62.9,
+    "height": 22.2,
+    "reach": 64.3,
+    "top": 7.5
+   },
+   "pieces": 27,
+   "draws": 27,
+   "primitives": 12629,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 7,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.6,
+   "raise_ms": 15,
+   "finished": true
+  },
+  {
+   "id": "core:poi/stair_head",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    10.0,
+    107.55,
+    3670.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 405.1,
+    "z": 538.0,
+    "height": 132.7,
+    "reach": 437.4,
+    "top": 29.3
+   },
+   "pieces": 245,
+   "draws": 245,
+   "primitives": 129225,
+   "interactables": {
+    "Hearthstone": 1,
+    "PoiTouch": 1
+   },
+   "lights": 14,
+   "bodies": 24,
+   "hearthstones": 1,
+   "seat": {
+    "floating": 5
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:camp/stair_head",
+     "family": "@meshinstance3d@7682",
+     "asset": "@MeshInstance3D@7682",
+     "x": -7.4,
+     "y": 109.37,
+     "z": 3669.9,
+     "amount": 1.77,
+     "detail": "1.77 m over the ground",
+     "region": "cinderlea"
+    },
+    {
+     "check": "floating",
+     "src": "poi:camp/stair_head",
+     "family": "@meshinstance3d@7828",
+     "asset": "@MeshInstance3D@7828",
+     "x": -17.0,
+     "y": 117.15,
+     "z": 3645.9,
+     "amount": 12.22,
+     "detail": "12.22 m over the ground",
+     "region": "cinderlea"
+    },
+    {
+     "check": "floating",
+     "src": "poi:camp/stair_head",
+     "family": "@meshinstance3d@7830",
+     "asset": "@MeshInstance3D@7830",
+     "x": -16.8,
+     "y": 117.2,
+     "z": 3645.8,
+     "amount": 12.26,
+     "detail": "12.26 m over the ground",
+     "region": "cinderlea"
+    },
+    {
+     "check": "floating",
+     "src": "poi:camp/stair_head",
+     "family": "@meshinstance3d@7832",
+     "asset": "@MeshInstance3D@7832",
+     "x": -17.2,
+     "y": 117.2,
+     "z": 3645.9,
+     "amount": 12.31,
+     "detail": "12.31 m over the ground",
+     "region": "cinderlea"
+    },
+    {
+     "check": "floating",
+     "src": "poi:camp/stair_head",
+     "family": "@meshinstance3d@7833",
+     "asset": "@MeshInstance3D@7833",
+     "x": -13.9,
+     "y": 118.31,
+     "z": 3637.8,
+     "amount": 13.19,
+     "detail": "13.19 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 2.8,
+   "raise_ms": 187,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sunk_plaza",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1600.0,
+    69.76,
+    3280.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 21.5,
+    "z": 15.9,
+    "height": 11.3,
+    "reach": 19.5,
+    "top": 9.8
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60936,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "rope_coil",
+     "asset": "sedgemire_rope_coil_b.glb",
+     "x": -1587.9,
+     "y": 70.2,
+     "z": 3272.5,
+     "amount": 0.3,
+     "detail": "0.30 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 0.8,
+   "raise_ms": 34,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_street",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2050.0,
+    70.15,
+    2980.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 13.5,
+    "z": 11.3,
+    "height": 4.7,
+    "reach": 13.2,
+    "top": 4.5
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 121199,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.6,
+   "raise_ms": 35,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tower_of_vaelost",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -2550.0,
+    70.29,
+    3350.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.4,
+    "z": 6.5,
+    "height": 11.2,
+    "reach": 6.3,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 42570,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:tower",
+     "family": "drum",
+     "asset": "Drum",
+     "x": -2550.0,
+     "y": 70.17,
+     "z": 3350.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sunk_plaza_tower_of_vaelost",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 2.0,
+   "raise_ms": 17,
+   "finished": true
+  },
+  {
+   "id": "core:poi/anthem_hall",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1850.0,
+    69.63,
+    3500.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.3,
+    "z": 12.7,
+    "height": 4.8,
+    "reach": 14.3,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 111763,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.6,
+   "raise_ms": 16,
+   "finished": true
+  },
+  {
+   "id": "core:poi/cistern_of_isse",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2750.0,
+    70.32,
+    3150.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 20.5,
+    "z": 11.4,
+    "height": 10.9,
+    "reach": 17.7,
+    "top": 9.6
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60772,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "rope_coil",
+     "asset": "sedgemire_rope_coil_b.glb",
+     "x": -2735.8,
+     "y": 70.84,
+     "z": 3149.6,
+     "amount": 0.29,
+     "detail": "0.29 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 1.0,
+   "raise_ms": 34,
+   "finished": true
+  },
+  {
+   "id": "core:poi/kneeling_colossus",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2300.0,
+    69.93,
+    3620.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 54.8,
+    "z": 43.0,
+    "height": 10.6,
+    "reach": 37.5,
+    "top": 6.8
+   },
+   "pieces": 35,
+   "draws": 35,
+   "primitives": 101580,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.5,
+   "raise_ms": 61,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_garden",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -650.0,
+    117.58,
+    3480.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 13.0,
+    "z": 15.2,
+    "height": 4.8,
+    "reach": 15.9,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 118115,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.5,
+   "raise_ms": 23,
+   "finished": true
+  },
+  {
+   "id": "core:poi/greywatch",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -1600.0,
+    68.86,
+    3700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.9,
+    "z": 8.9,
+    "height": 3.2,
+    "reach": 6.1,
+    "top": 3.2
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 51464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.3,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ashwinter_carts",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -950.0,
+    68.62,
+    2450.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 13.8,
+    "z": 10.5,
+    "height": 5.4,
+    "reach": 12.7,
+    "top": 5.1
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 118163,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.2,
+   "raise_ms": 10,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_wood_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -2350.0,
+    73.4,
+    1950.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.2,
+    "z": 4.1,
+    "height": 3.4,
+    "reach": 3.4,
+    "top": 2.8
+   },
+   "pieces": 27,
+   "draws": 27,
+   "primitives": 12425,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.4,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ashcombe",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2800.0,
+    75.36,
+    1780.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.6,
+    "z": 10.9,
+    "height": 4.8,
+    "reach": 13.7,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 114871,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.3,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hesk_pool",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2000.0,
+    57.35,
+    2380.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.0,
+    "z": 19.5,
+    "height": 12.4,
+    "reach": 16.6,
+    "top": 10.0
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60926,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "rope_coil",
+     "asset": "sedgemire_rope_coil_a.glb",
+     "x": -1997.8,
+     "y": 56.87,
+     "z": 2394.0,
+     "amount": 0.27,
+     "detail": "0.27 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 4.6,
+   "raise_ms": 36,
+   "finished": true
+  },
+  {
+   "id": "core:poi/last_milestone",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -2950.0,
+    69.6,
+    2650.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.7,
+    "z": 8.9,
+    "height": 3.2,
+    "reach": 5.9,
+    "top": 3.2
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 47464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.9,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/builders_harbour",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -3480.0,
+    14.9,
+    2980.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 21.4,
+    "z": 17.6,
+    "height": 11.7,
+    "reach": 20.0,
+    "top": 9.3
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60806,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "rope_coil",
+     "asset": "sedgemire_rope_coil_a.glb",
+     "x": -3491.0,
+     "y": 14.36,
+     "z": 2988.9,
+     "amount": 0.27,
+     "detail": "0.27 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 21.1,
+   "raise_ms": 48,
+   "finished": true
+  },
+  {
+   "id": "core:poi/grey_wreck",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    -3500.0,
+    14.57,
+    2420.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 21.2,
+    "z": 25.3,
+    "height": 5.4,
+    "reach": 17.6,
+    "top": 4.7
+   },
+   "pieces": 33,
+   "draws": 33,
+   "primitives": 39093,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {
+    "lamp_unhung": 1
+   },
+   "findings": [
+    {
+     "check": "lamp_unhung",
+     "src": "poi:wreck",
+     "family": "lantern_hanging",
+     "asset": "sedgemire_lantern_hanging_b.glb",
+     "x": -3502.4,
+     "y": 17.97,
+     "z": 2430.7,
+     "amount": 0.0,
+     "detail": "nothing to hang from within 0.3 m (3.5 m over the ground)",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 1.5,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/strand_beacon",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -3420.0,
+    14.62,
+    1950.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 7.2,
+    "z": 8.7,
+    "height": 12.6,
+    "reach": 6.0,
+    "top": 12.4
+   },
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 77163,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:tower",
+     "family": "drum",
+     "asset": "Drum",
+     "x": -3420.0,
+     "y": 14.35,
+     "z": 1950.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of west_walk_strand_beacon",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 29.6,
+   "raise_ms": 50,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ninth_waystone",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -620.0,
+    77.01,
+    2560.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.9,
+    "z": 8.3,
+    "height": 3.2,
+    "reach": 5.9,
+    "top": 3.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 55464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:standing_stones",
+     "family": "standing_stone",
+     "asset": "briarwold_standing_stone_a.glb",
+     "x": -616.1,
+     "y": 77.03,
+     "z": 2562.1,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of glass_bridge_greyfold",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 3.9,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hermits_gate",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1250.0,
+    70.06,
+    2750.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 13.9,
+    "z": 8.2,
+    "height": 4.8,
+    "reach": 8.1,
+    "top": 4.7
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 118223,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.3,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hush_bell",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    660.0,
+    85.82,
+    3700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 6.4,
+    "height": 12.7,
+    "reach": 6.6,
+    "top": 12.4
+   },
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 77217,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 14.0,
+   "raise_ms": 50,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tenth_waystone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    -280.0,
+    72.99,
+    2700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 1.5,
+    "z": 1.6,
+    "height": 1.5,
+    "reach": 2.2,
+    "top": 1.5
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1332,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.1,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/row_of_mouths",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -530.0,
+    122.9,
+    3210.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 19.5,
+    "z": 10.1,
+    "height": 11.2,
+    "reach": 16.6,
+    "top": 9.4
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 60684,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.9,
+   "raise_ms": 38,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hesk_morn",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1150.0,
+    67.3,
+    3700.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 11.5,
+    "z": 14.3,
+    "height": 4.8,
+    "reach": 13.9,
+    "top": 4.4
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 114847,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.3,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/silent_market",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -3100.0,
+    70.37,
+    3450.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 14.4,
+    "height": 4.7,
+    "reach": 8.5,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 118103,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.4,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sulion",
+   "kind": "tower",
+   "preview": false,
+   "pos": [
+    -3120.0,
+    69.89,
+    3080.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 9.5,
+    "z": 7.0,
+    "height": 11.2,
+    "reach": 7.3,
+    "top": 11.1
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 42534,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 1
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:tower",
+     "family": "drum",
+     "asset": "Drum",
+     "x": -3120.0,
+     "y": 69.81,
+     "z": 3080.0,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of greyfold_builders_harbour",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 1.3,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/north_gate",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2450.0,
+    69.96,
+    2600.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.4,
+    "z": 14.7,
+    "height": 4.7,
+    "reach": 10.3,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 114823,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.2,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/greyline_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -1620.0,
+    68.92,
+    1960.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 10.5,
+    "z": 9.5,
+    "height": 6.0,
+    "reach": 6.5,
+    "top": 5.7
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 53996,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.8,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/driftwood_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -3250.0,
+    70.57,
+    1890.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 18.5,
+    "z": 23.4,
+    "height": 2.7,
+    "reach": 12.7,
+    "top": 2.7
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 57698,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/grey_hedge",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1950.0,
+    66.37,
+    1900.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.7,
+    "z": 9.2,
+    "height": 5.5,
+    "reach": 8.8,
+    "top": 5.1
+   },
+   "pieces": 5,
+   "draws": 7,
+   "primitives": 97464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 13,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_pit",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2750.0,
+    74.93,
+    2250.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.9,
+    "z": 10.7,
+    "height": 4.8,
+    "reach": 9.2,
+    "top": 4.4
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 121151,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.8,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/last_hearth",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -1350.0,
+    63.56,
+    2300.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 4.9,
+    "z": 4.4,
+    "height": 3.5,
+    "reach": 3.5,
+    "top": 2.8
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 16011,
+   "interactables": {
+    "Hearthstone": 1
+   },
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 1,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.2,
+   "raise_ms": 19,
+   "finished": true
+  },
+  {
+   "id": "core:poi/weighhouse",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -2450.0,
+    70.54,
+    3080.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 15.3,
+    "z": 12.5,
+    "height": 4.7,
+    "reach": 16.4,
+    "top": 4.6
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 111775,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/turning_cairn",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    215.0,
+    78.97,
+    3720.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 3.2,
+    "z": 3.2,
+    "height": 2.9,
+    "reach": 2.4,
+    "top": 2.9
+   },
+   "pieces": 20,
+   "draws": 20,
+   "primitives": 12811,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 78.5,
+   "raise_ms": 3,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sweepers_lean_to",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -60.0,
+    78.77,
+    2960.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 20.6,
+    "z": 19.1,
+    "height": 2.9,
+    "reach": 14.6,
+    "top": 2.6
+   },
+   "pieces": 62,
+   "draws": 62,
+   "primitives": 59050,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {
+    "on_road": 4
+   },
+   "findings": [
+    {
+     "check": "on_road",
+     "src": "poi:camp",
+     "family": "stool",
+     "asset": "briarwold_stool_a.glb",
+     "x": -60.6,
+     "y": 79.05,
+     "z": 2964.6,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
+     "region": "cinderlea"
+    },
+    {
+     "check": "on_road",
+     "src": "poi:camp",
+     "family": "stool",
+     "asset": "briarwold_stool_a.glb",
+     "x": -55.3,
+     "y": 78.76,
+     "z": 2960.1,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
+     "region": "cinderlea"
+    },
+    {
+     "check": "on_road",
+     "src": "poi:camp",
+     "family": "stool",
+     "asset": "briarwold_stool_a.glb",
+     "x": -60.7,
+     "y": 78.75,
+     "z": 2959.5,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
+     "region": "cinderlea"
+    },
+    {
+     "check": "on_road",
+     "src": "poi:camp",
+     "family": "bedroll",
+     "asset": "cinderlea_bedroll_b.glb",
+     "x": -53.7,
+     "y": 78.76,
+     "z": 2960.3,
+     "amount": 0.0,
+     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 19.1,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/novices_seats",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -300.0,
+    120.07,
+    3620.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 8.6,
+    "z": 10.3,
+    "height": 3.3,
+    "reach": 6.0,
+    "top": 3.3
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 47464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 6,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hushline_cave",
+   "kind": "cave",
+   "preview": false,
+   "pos": [
+    -601.0,
+    4.0,
+    3780.0
+   ],
+   "radius_flat_m": 18.0,
+   "footprint": {
+    "x": 21.3,
+    "z": 22.1,
+    "height": 124.2,
+    "reach": 25.8,
+    "top": 122.5
+   },
+   "pieces": 49,
+   "draws": 49,
+   "primitives": 154112,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 17,
+   "hearthstones": 0,
+   "seat": {
+    "buried": 5,
+    "sunk": 6,
+    "overlap": 1
+   },
+   "findings": [
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat1",
+     "asset": "Throat1",
+     "x": -592.8,
+     "y": 3.68,
+     "z": 3765.8,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 52.97 m below the lowest ground under it)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat2",
+     "asset": "Throat2",
+     "x": -591.8,
+     "y": 3.76,
+     "z": 3764.1,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 114.35 m below the lowest ground under it)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat3",
+     "asset": "Throat3",
+     "x": -590.8,
+     "y": 3.84,
+     "z": 3762.3,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 114.65 m below the lowest ground under it)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throat4",
+     "asset": "Throat4",
+     "x": -589.8,
+     "y": 3.92,
+     "z": 3760.6,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 114.97 m below the lowest ground under it)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "buried",
+     "src": "poi:cave",
+     "family": "throatend",
+     "asset": "ThroatEnd",
+     "x": -589.3,
+     "y": 3.92,
+     "z": 3759.8,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 115.30 m below the lowest ground under it)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -589.7,
+     "y": 26.06,
+     "z": 3771.3,
+     "amount": 26.79,
+     "detail": "382% of its 7.0 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_b.glb",
+     "x": -588.2,
+     "y": 112.58,
+     "z": 3769.2,
+     "amount": 7.02,
+     "detail": "138% of its 5.1 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_b.glb",
+     "x": -597.8,
+     "y": 117.86,
+     "z": 3763.6,
+     "amount": 3.18,
+     "detail": "77% of its 4.1 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -592.8,
+     "y": 56.68,
+     "z": 3768.7,
+     "amount": 3.43,
+     "detail": "97% of its 3.5 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_b.glb",
+     "x": -595.0,
+     "y": 90.75,
+     "z": 3766.4,
+     "amount": 2.99,
+     "detail": "97% of its 3.1 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "sunk",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -587.4,
+     "y": 26.22,
+     "z": 3772.7,
+     "amount": 17.07,
+     "detail": "293% of its 5.8 m under the ground at its middle",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:cave",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -589.7,
+     "y": 26.06,
+     "z": 3771.3,
+     "amount": 0.61,
+     "detail": "61% of it shares its box with boulder (poi:cave)",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 119.5,
+   "raise_ms": 57,
+   "finished": true
+  },
+  {
+   "id": "core:poi/salt_road_cairn",
+   "kind": "vista",
+   "preview": false,
+   "pos": [
+    -3380.0,
+    64.7,
+    1652.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.0,
+    "z": 0.0,
+    "height": 0.0,
+    "reach": 0.0,
+    "top": 0.0
+   },
+   "pieces": 3,
+   "draws": 3,
+   "primitives": 65084,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
+   "raise_ms": 11,
+   "finished": true
+  },
+  {
+   "id": "core:poi/last_meal_stone",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -952.0,
+    122.29,
+    3321.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 4.7,
+    "z": 3.1,
+    "height": 2.9,
+    "reach": 3.4,
+    "top": 2.8
+   },
+   "pieces": 24,
+   "draws": 24,
+   "primitives": 16757,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.2,
+   "raise_ms": 4,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bowing_stones",
+   "kind": "standing_stones",
+   "preview": false,
+   "pos": [
+    -816.0,
+    121.81,
+    3091.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 9.8,
+    "z": 9.3,
+    "height": 3.7,
+    "reach": 6.3,
+    "top": 3.2
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 43464,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.9,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/scavengers_cold_camp",
+   "kind": "camp",
+   "preview": false,
+   "pos": [
+    -1292.0,
+    69.4,
+    2585.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 21.1,
+    "z": 18.1,
+    "height": 2.9,
+    "reach": 14.9,
+    "top": 2.6
+   },
+   "pieces": 84,
+   "draws": 84,
+   "primitives": 64314,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 28,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.3,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/robing_house",
+   "kind": "ruins",
+   "preview": false,
+   "pos": [
+    -1954.0,
+    69.54,
+    3644.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 14.0,
+    "z": 8.4,
+    "height": 5.0,
+    "reach": 8.2,
+    "top": 4.8
+   },
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 111799,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/harbour_milestone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    -3335.0,
+    69.33,
+    3218.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 2.0,
+    "z": 1.5,
+    "height": 1.4,
+    "reach": 2.2,
+    "top": 0.6
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 1728,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.0,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/half_ash_cairn",
+   "kind": "cairn",
+   "preview": false,
+   "pos": [
+    -2988.0,
+    79.68,
+    2052.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.3,
+    "z": 0.1,
+    "height": 2.9,
+    "reach": 0.2,
+    "top": 2.9
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 136354,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.5,
+   "raise_ms": 41,
+   "finished": true
+  },
+  {
+   "id": "core:poi/first_step_cairn",
+   "kind": "cairn",
+   "preview": false,
+   "pos": [
+    188.0,
+    65.15,
+    3356.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.2,
+    "z": 0.2,
+    "height": 2.8,
+    "reach": 0.2,
+    "top": 2.8
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 125066,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.6,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/scavengers_grave",
+   "kind": "grave",
+   "preview": false,
+   "pos": [
+    -2620.0,
+    69.98,
+    3644.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.5,
+    "z": 1.6,
+    "height": 2.2,
+    "reach": 1.7,
+    "top": 1.9
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 51318,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.8,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/salt_hulk",
+   "kind": "wreck",
+   "preview": false,
+   "pos": [
+    -3549.0,
+    14.24,
+    1623.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 18.5,
+    "z": 22.0,
+    "height": 5.4,
+    "reach": 16.7,
+    "top": 4.7
+   },
+   "pieces": 33,
+   "draws": 33,
+   "primitives": 39093,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {
+    "lamp_unhung": 1
+   },
+   "findings": [
+    {
+     "check": "lamp_unhung",
+     "src": "poi:wreck",
+     "family": "lantern_hanging",
+     "asset": "sedgemire_lantern_hanging_b.glb",
+     "x": -3544.8,
+     "y": 17.64,
+     "z": 1633.2,
+     "amount": 0.0,
+     "detail": "nothing to hang from within 0.3 m (3.6 m over the ground)",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 3.3,
+   "raise_ms": 8,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tower_road_bell",
+   "kind": "shrine",
+   "preview": false,
+   "pos": [
+    -2222.0,
+    70.24,
+    3505.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 12.3,
+    "z": 10.6,
+    "height": 6.4,
+    "reach": 8.3,
+    "top": 6.4
+   },
+   "pieces": 29,
+   "draws": 29,
+   "primitives": 15112,
+   "interactables": {},
+   "lights": 3,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:shrine",
+     "family": "bell_medium",
+     "asset": "cinderlea_bell_medium_a.glb",
+     "x": -2225.6,
+     "y": 70.44,
+     "z": 3503.3,
+     "amount": 0.16,
+     "detail": "0.16 m over the ground",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 2.6,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/warden_under_ash",
+   "kind": "grave",
+   "preview": false,
+   "pos": [
+    -1912.0,
+    71.08,
+    2011.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 0.5,
+    "z": 1.7,
+    "height": 2.2,
+    "reach": 1.7,
+    "top": 1.9
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 38518,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/glass_road_stone",
+   "kind": "waystone",
+   "preview": false,
+   "pos": [
+    -82.0,
+    67.26,
+    2761.0
+   ],
+   "radius_flat_m": 14.0,
+   "footprint": {
+    "x": 1.5,
+    "z": 1.4,
+    "height": 1.5,
+    "reach": 2.1,
+    "top": 1.4
+   },
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 1452,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.2,
+   "raise_ms": 8,
+   "finished": true
+  }
+ ]
+}
