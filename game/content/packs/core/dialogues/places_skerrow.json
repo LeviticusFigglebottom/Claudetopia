@@ -2284,5 +2284,321 @@
         ]
       }
     }
+  },
+  {
+    "id": "core:dialogue/varn_ko_skarl",
+    "speaker_name": "Varn ko-Skarl",
+    "notes": "The keeper of the Moot Beacon on Rib Edge (skerrow world life; the author of the stack-count at the Beacon Shieling). Gives core:quest/send_word.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "beacon_answered"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "I lit it on the first clear night, with nobody sitting. Nothing answered. The next morning there was a stone in the bowl, grey-green, and warm. I've put it on the stack. I'm keeping it dry."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "beacon_banked"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "Banked, and still banked. Twice now the turf's been lifted off it in the night and laid back. Whoever it is knows how to bank a fire. That's more than most."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "beacon_told_the_moot"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "The Moot sat three days on it and lit my beacon for the sitting, the proper way. Rudd Pike stayed dark. I watched the north all three nights. Nothing. It's the nothing I didn't like."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He ties a knot in his cord before he answers.)* Ko-Skarl, Varn. The Moot's beacon. It's not lit. It was.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Varn ko-Skarl",
+        "text": "When the Moot sits in the Rib Cathedral I light it, and every hold between here and the Mere sees it and keeps its quarrels till the Moot rises. That's the whole of it. A fire that says: not now, we're talking. — Thirty turves a day in the dry, all summer, stacked at the shieling. Enough for three sittings.",
+        "effects": [
+          {
+            "set_flag": "varn_ko_skarl_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Rudd Pike, when the Long Snow comes down on the Windgate, so every hold shuts its doors. The Dreugh road beacon, for a death on the road. That's the three. Each means one thing. — Beacons are a language with three words. You don't want a fourth.",
+        "effects": [
+          {
+            "set_flag": "varn_ko_skarl_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Go on. I'm knotting.",
+        "choices": [
+          {
+            "text": "What is the Moot Beacon for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who else lights beacons?",
+            "next": "topic_2"
+          },
+          {
+            "text": "The beacon was lit with the Moot not sitting?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/send_word"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/send_word"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The beacons are being lit from the north. There's a ninth stone on the Going-Up Cairn.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/send_word",
+                  "the_answer"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Last night. My stack gone to ash in one night, the bowl full of it, and me asleep beside it in the dew and warm through, as if somebody had sat by me and kept a fire for me. — And Rudd Pike burned the same night. No snow came down. — Two beacons lit and nobody sitting and nobody shut in. Somebody is talking over our heads, and I want to know who, and who they think is listening. Go up Rudd Pike and look at the ash. Ash says more than people think.",
+        "choices": [
+          {
+            "text": "I'll go up Rudd Pike.",
+            "effects": [
+              {
+                "start_quest": "core:quest/send_word"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Put your hand in it. If it's warm, don't say anything to the Rudd. They'll only want it to have been them.",
+        "next": "hub"
+      },
+      "q_decide_answer_it": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He looks north for a long time.)* — A fourth word. — All right. The first clear night. Just the once, and then we'll see who's listening. — If nobody answers, I've wasted a week's peat. If somebody does, I've done a thing no keeper's done since the Chain Years, and the Moot will have my token for it.",
+        "next": "hub"
+      },
+      "q_decide_bank_them": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Banked. *(Turf over the coals, low.)* — A fire banked isn't out. It's waiting. That's all I'm telling it to do. — And if the bowl's full of ash again some morning, I'll sit up and see who comes to feed it.",
+        "next": "hub"
+      },
+      "q_decide_tell_the_moot": {
+        "speaker": "Varn ko-Skarl",
+        "text": "The Moot, then. *(He knots a knot at the very end of the cord and bites it off.)* — They'll argue a week about what it means and a month about whose it is to answer. That's what the Moot is for. It's slow on purpose. Something coming down off the Wall ought to find us slow.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He stops knotting.)* — From the north. From over the Wall, where nothing's asked of anybody. — The Rope-Song says a clan went up and never came down, and every child in the heights knows the verse and none of them thinks it's true. — Nine stones. For the count. *(He reads his knots back, all of them, under his breath.)* — They lit mine to talk to Rudd's, or Rudd's to talk to mine, and I'm the one sitting beside it. What do I do with my fire?",
+        "choices": [
+          {
+            "text": "Light it in answer, on a night nobody's sitting.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "answer_it"
+                ]
+              }
+            ],
+            "next": "q_decide_answer_it"
+          },
+          {
+            "text": "Bank both, and say nothing. Whoever it is can wait.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "bank_them"
+                ]
+              }
+            ],
+            "next": "q_decide_bank_them"
+          },
+          {
+            "text": "Take it to the Moot. The beacons are being lit from the north.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "tell_the_moot"
+                ]
+              }
+            ],
+            "next": "q_decide_tell_the_moot"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Go on. I'll have a knot for you.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/rudd_pike_ash",
+    "speaker_name": "Rudd Pike's fire-bowl",
+    "notes": "A PoiTouch at the foot of Rudd Pike Beacon (skerrow.gd rudd_pike_beacon), for core:quest/send_word and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Rudd Pike's fire-bowl",
+        "no_talk": true,
+        "text": "Ash spilled from the fire-bowl down the beacon's foot, still warm under the crust a finger deep. It is not peat ash: it is grey and fine and full of small white splinters, heather burned with bone, the way nobody in the heights burns anything. Trodden into it, one print of a boot soled with plaited hide, the toe to the north.",
+        "choices": [
+          {
+            "text": "Brush the ash off your hand.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/black_keep_stair",
+    "speaker_name": "The Black Keep's stair",
+    "notes": "A PoiTouch at the foot of the Black Keep (skerrow.gd black_keep), for core:quest/send_word and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Black Keep's stair",
+        "no_talk": true,
+        "text": "The keep's inside stair burned out with the rest of it the night the Skarl and the Rudd each burned it first. It has been relaid: new steps, set dry and tight, going up the blackened wall to where the tower breaks off and stopping there, at the height that looks north over the Wall. The new stones are grey-green with a lichen that does not grow in Skarldale.",
+        "choices": [
+          {
+            "text": "Leave the stair.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kharrow_force_rope",
+    "speaker_name": "The iron rope at Kharrow Force",
+    "notes": "A PoiTouch at the iron rope over the lip of Kharrow Force (skerrow.gd kharrow_force).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The iron rope at Kharrow Force",
+        "no_talk": true,
+        "text": "A rope of forged iron links, each a hand long, pinned into the rock either side of the lip and slung across it a hand above the water. Kharrow youths cross it on their naming day, hand over hand, the Force going down under them into the gorge. The links are worn bright in two places, where hands have held on longest: the first link, and the one halfway across where you cannot go back.",
+        "choices": [
+          {
+            "text": "Let go of the rope.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/snow_shelter_bell",
+    "speaker_name": "The shelter bell",
+    "notes": "A PoiTouch at the bell on its pole by the Snow Shelter (skerrow.gd snow_shelter).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The shelter bell",
+        "no_talk": true,
+        "text": "A clan bell on a pole by the shelter door, its rope knotted short so a hand in a mitten can find it. Rung, it means: someone is caught out here, come. Whoever hears it goes; it is the one law older than the Moot. There is ice on the clapper, and a clean arc through the frost on the bell's lip, where it was rung on a clear night not long ago and nobody came in time.",
+        "choices": [
+          {
+            "text": "Leave the bell be.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghastfoot_clay_skull",
+    "speaker_name": "The skull in Ghastfoot's keystone",
+    "notes": "A PoiTouch under the arch at Ghastfoot (skerrow.gd ghastfoot).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The skull in Ghastfoot's keystone",
+        "no_talk": true,
+        "text": "Up in the keystone of the Ghast arch, where travellers going up the dale ask leave of it, a skull. It is clay. It is very well painted: the stains, the cracked eye-socket, the tooth missing on the left, all as the Ghast children have drawn it for a hundred years. Somebody knew that skull well enough to copy it by heart, and took the real one.",
+        "choices": [
+          {
+            "text": "Ask leave of it anyway.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/watch_gate_bell",
+    "speaker_name": "The frozen bell at the Watch of the Gate",
+    "notes": "A PoiTouch under the toll-house bell at the Watch of the Gate (skerrow.gd watch_of_the_gate).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The frozen bell at the Watch of the Gate",
+        "no_talk": true,
+        "text": "The toll-house bell hangs frozen mid-swing, tilted toward the pass, the ice holding it where it was when somebody last rang it for the Windgate. Nobody can say when that was. Under it, on the lintel, the toll is cut in Skerrish and Valish both: a mark a head, a name for the slate, and the pass shut until spring.",
+        "choices": [
+          {
+            "text": "Leave it frozen.",
+            "next": "end"
+          }
+        ]
+      }
+    }
   }
 ]

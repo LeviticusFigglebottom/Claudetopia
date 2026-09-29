@@ -800,3 +800,61 @@ static func whelping_hole(d: PoiDressing) -> void:
 	var satchel := Vector2(sin(2.3), cos(2.3)) * 9.5
 	await _prop(d, "sack", satchel, k.rng.randf_range(0.0, TAU), 0.8)
 	k.marker("the_mouth", k.on_ground(0.0, 2.6))
+
+
+# --- a thing to touch at a place that had none ----------------------------------------------------------
+
+## The kind's own, and beside it one thing to put a hand on that says what the place is (a
+## `PoiTouch` with its conversation): at a clear spot toward `dir`, `r0` to `r1` metres out.
+static func _kind_and_touch(d: PoiDressing, touch_name: String, prompt: String, dialogue: String, dir: Vector2,
+		r0: float, r1: float, lift := 0.8) -> Vector2:
+	await _kind(d)
+	if d.kit.far:
+		return Vector2.ZERO
+	var p := _open_spot(d, dir, r0, r1, 0.4, _solids(d))
+	d.kit.touchable(touch_name, d.kit.on_ground(p.x, p.y, lift), prompt, DIALOGUE + dialogue, "", false)
+	return p
+
+
+## The Moot Beacon: the tower, and Varn ko-Skarl's place at its foot, looking north.
+static func moot_beacon(d: PoiDressing) -> void:
+	await _kind(d)
+	if d.kit.far:
+		return
+	_resident(d, "the_beacon_foot", Vector2(0.0, -1.0), 4.0, 12.0)
+
+
+## Rudd Pike Beacon: the tower, and the warm ash spilled at its foot.
+static func rudd_pike_beacon(d: PoiDressing) -> void:
+	var p: Vector2 = await _kind_and_touch(d, "Ash", "Put a hand in the ash", "rudd_pike_ash", Vector2(0.0, -1.0), 3.0, 9.0, 0.3)
+	if d.kit.far:
+		return
+	var ash := d.masonry.begin()
+	d.masonry.ellipsoid(ash, d.kit.on_ground(p.x, p.y, 0.0), Vector3(1.1, 0.12, 0.8))
+	await d.kit.step()
+	d.masonry.commit(ash, PoiKit.plain(Color(0.42, 0.41, 0.4), 0.95), "Ash")
+
+
+## The Black Keep: the burned tower, and the foot of its relaid stair.
+static func black_keep(d: PoiDressing) -> void:
+	await _kind_and_touch(d, "Stair", "Look at the relaid stair", "black_keep_stair", Vector2(0.0, -1.0), 2.5, 8.0, 0.9)
+
+
+## Kharrow Force: the fall, and the iron rope over its lip for the naming.
+static func kharrow_force(d: PoiDressing) -> void:
+	await _kind_and_touch(d, "IronRope", "Take hold of the iron rope", "kharrow_force_rope", d.kit.grain(), 4.0, 14.0, 0.9)
+
+
+## The Snow Shelter: the shelter, and its bell on the pole by the door.
+static func snow_shelter(d: PoiDressing) -> void:
+	await _kind_and_touch(d, "ShelterBell", "Look at the shelter bell", "snow_shelter_bell", _away(d), 3.0, 9.0, 1.2)
+
+
+## Ghastfoot: the arch, and the skull in its keystone to ask leave of.
+static func ghastfoot(d: PoiDressing) -> void:
+	await _kind_and_touch(d, "Keystone", "Look up at the skull in the keystone", "ghastfoot_clay_skull", _away(d), 1.5, 8.0, 1.0)
+
+
+## The Watch of the Gate: the toll-house, and its bell frozen mid-swing.
+static func watch_of_the_gate(d: PoiDressing) -> void:
+	await _kind_and_touch(d, "FrozenBell", "Look at the frozen bell", "watch_gate_bell", Vector2(0.0, -1.0), 3.0, 9.0, 1.2)

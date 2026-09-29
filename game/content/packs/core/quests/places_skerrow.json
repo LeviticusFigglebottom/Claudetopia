@@ -931,5 +931,136 @@
       "marks": 140,
       "renown": 10
     }
+  },
+  {
+    "id": "core:quest/send_word",
+    "name": "Send Word",
+    "layer": "side",
+    "giver": "core:npc/varn_ko_skarl",
+    "region": "core:region/skerrow",
+    "summary": "The Moot Beacon on Rib Edge was lit last night, and the Moot is not sitting; Rudd Pike's beacon burned the same night, and the Windgate snow did not move. Varn ko-Skarl, who keeps the Moot Beacon, wants to know who is talking over the clans' heads, and to whom.",
+    "notes": "Skerrow world life. Links the Moot Beacon, Rudd Pike Beacon, the Black Keep (its stair relaid at night) and the Going-Up Cairn on the Wall's crest (a ninth stone, lichen from north of the Windgate). Hints at the clan that went up and never came down (WORLD_BIBLE 11); resolves nothing.",
+    "stages": [
+      {
+        "id": "the_ash",
+        "journal": "Varn ko-Skarl's peat went to ash in one night with the Moot not sitting, and he woke beside the beacon warm through. Rudd Pike's beacon, which is only lit when the Long Snow comes down on the Windgate, burned the same night, and the snow did not move. Two beacons lit and nobody to answer them.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/rudd_pike_beacon",
+            "text": "Look at the ash in Rudd Pike's fire-bowl"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/rudd_pike_beacon",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_stair",
+        "journal": "The ash at Rudd Pike is still warm and it is not peat: it is heather and bone, burned the way nobody in the heights burns anything, and trodden into it a print of a boot with a sole of plaited hide. The same boots, the Skarl say, have been seen at night on the Black Keep's stair, which somebody has been relaying stone by stone.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/black_keep",
+            "text": "See who has been relaying the Black Keep's stair"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/black_keep",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_crest",
+        "journal": "The Black Keep's new stair-stones are not Skarldale stone. They are grey-green with a lichen that grows nowhere south of the Windgate, and the stair goes up to the keep's broken top and stops, as if whoever laid it only wanted to see north. On the Wall's crest above the snow there is a cairn the Rope-Song says the clan that went up built on its way.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/going_up_cairn",
+            "text": "Climb to the Going-Up Cairn on the Wall's crest"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/going_up_cairn",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_answer",
+        "journal": "There are nine stones on the Going-Up Cairn, and the ninth has the same lichen as the Black Keep's stair, and on its underside somebody has scratched: from the hold beyond, for the count. Two beacons lit, one answering the other, from the north. Varn ko-Skarl keeps the Moot Beacon.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "send_word",
+            "text": "Tell Varn ko-Skarl what is to be done with the Moot Beacon",
+            "options": [
+              {
+                "id": "answer_it",
+                "text": "Light the Moot Beacon in answer, on a night nobody is sitting.",
+                "effects": [
+                  {
+                    "set_flag": "beacon_answered"
+                  },
+                  {
+                    "renown": 12
+                  }
+                ]
+              },
+              {
+                "id": "bank_them",
+                "text": "Bank both beacons and say nothing. Whoever it is can wait.",
+                "effects": [
+                  {
+                    "set_flag": "beacon_banked"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      4
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "tell_the_moot",
+                "text": "Take it to the Moot: the beacons are being lit from the north.",
+                "effects": [
+                  {
+                    "set_flag": "beacon_told_the_moot"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      10
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/moot_beacon",
+          "radius": 140
+        }
+      },
+      {
+        "id": "banked_or_burning",
+        "journal": "Varn ko-Skarl stacked his peat again, thirty turves a day in the dry, and some nights he sits up with the beacon, facing north.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 10,
+      "items": [
+        [
+          "core:item/oatcake",
+          2
+        ]
+      ]
+    }
   }
 ]

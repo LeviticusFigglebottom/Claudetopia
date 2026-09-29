@@ -829,5 +829,54 @@
         "spot": "home"
       }
     ]
+  },
+  {
+    "id": "core:npc/varn_ko_skarl",
+    "name": "Varn ko-Skarl",
+    "home_place": "core:poi/moot_beacon",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/varn_ko_skarl",
+    "bio": "Keeper of the Moot Beacon on the last tor of Rib Edge: he cuts and stacks the peat for it at his shieling below the tor all summer, and lights it when the Moot sits so the lowlands keep their quarrels. Thirty turves a day in the dry. This month the stack went to ash in a night with the Moot not sitting, and he woke beside it warm through, as if somebody had kept a fire for him.",
+    "unique_habit": "Knots a cord while he talks, a knot for every thing you tell him, and reads the knots back to you at the end to show he was listening.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "pious",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7118,
+      "build": "tall_raw_boned",
+      "age": 61.0,
+      "feminine": 0.0,
+      "hair": "grey_and_wild_under_a_skarl_hood",
+      "notes": "a peat-spade over one shoulder, soot to the elbows, a counting-cord of knots at his belt and a Skarl bone token blackened by the beacon"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/moot_beacon",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/moot_beacon",
+        "activity": "work",
+        "spot": "the_beacon_foot",
+        "notes": "at the beacon's foot, watching the north"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/moot_beacon",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
   }
 ]
