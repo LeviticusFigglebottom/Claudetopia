@@ -1,0 +1,223 @@
+[
+  {
+    "id": "core:interior/turnback_undercroft",
+    "name": "The Undercroft of Turnback",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/turnback_keep",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Aveline Ash, the First Vigilant, and the knights of Turnback who went down to her and did not come back up themselves",
+    "story": "The four who came back up the Stair cut an undercroft under their keep for the dead and the stores and the Count, vault by vault, as the keep's knights died and were laid there. Aveline Ash was laid in the lowest vault with her mace and the Turnback Count, and the spring after she came up the stair and took the Count back off the lectern, and went down again with it, and has kept it since.",
+    "unique_object": "a lectern in the lowest vault with a hundred years of candle-grease down its sides, and nothing on it",
+    "site": {
+      "kind": "crypt",
+      "seed": 8671,
+      "region": "core:region/cinderlea",
+      "size": "medium",
+      "boss": "core:boss/first_vigilant",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/tolling_knight"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#8a857b",
+          "#58544d",
+          "#a09a8d"
+        ],
+        "lights": [
+          "candles",
+          "brazier"
+        ],
+        "light_colour": "#ffb266"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/turnback_last_order",
+          "name": "a letter nailed inside a coffin-lid"
+        },
+        {
+          "kind": "prop",
+          "room": "stair_foot",
+          "prop": "bell_medium",
+          "note": "the keep's own bell, brought down when the knights left, clapper out"
+        },
+        {
+          "kind": "prop",
+          "room": "stair_foot",
+          "prop": "lantern_hand"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "stair_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "store_vault",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "the_turn",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "knights_vault",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ossuary"
+        },
+        {
+          "id": "fallen_roof",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "chapter_hall",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "lectern_vault",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/anthe_ondr",
+    "name": "Anthe-Ondr, the Under-Choir",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/rooftop_shaft",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Precentor, a chorister who went down into the buried choir-school and began to teach, and the pupils it has made of whoever came down",
+    "story": "A Builders' choir-school under the Ashgrid, kept whole by the ash that buried the city round it: halls of stone benches all facing the same way, a singing-hall at the bottom where the benches face a pit. The Sayers call it Anthe-Ondr, the deep choir. Coll Brisket's diggers broke through its roof in the spring, and the first night the shaft stood open it sang, because something in it has been holding a lesson for a thousand years and has only now had anybody to teach.",
+    "unique_object": "stone benches in every hall, all facing one way, towards the singing-hall, with the ash worn off their seats",
+    "site": {
+      "kind": "ruined_hall",
+      "seed": 3301,
+      "region": "core:region/cinderlea",
+      "size": "medium",
+      "boss": "core:boss/the_precentor",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/bell_bearer"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#5f5d66",
+          "#3b3a42",
+          "#77747e"
+        ],
+        "lights": [
+          "daylight",
+          "candles"
+        ],
+        "light_colour": "#bcd4e2"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "practice_rooms",
+          "book": "core:book/anthe_ondr_tally",
+          "name": "a digger's tally-board"
+        },
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "rope_coil",
+          "note": "Jory's rope, cut, at the foot of the ladder"
+        },
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "lantern_hand"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "shaft_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "broken_roof",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "bench_hall",
+          "role": "chamber",
+          "size": "large"
+        },
+        {
+          "id": "cloister",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.0
+        },
+        {
+          "id": "practice_rooms",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "choir_stalls",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "singing_hall",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  }
+]

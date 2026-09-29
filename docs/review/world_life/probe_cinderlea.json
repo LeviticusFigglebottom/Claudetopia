@@ -30,7 +30,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.9,
-   "raise_ms": 107,
+   "raise_ms": 3468,
    "finished": true
   },
   {
@@ -62,7 +62,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.3,
-   "raise_ms": 10,
+   "raise_ms": 137,
    "finished": true
   },
   {
@@ -107,7 +107,7 @@
     }
    ],
    "embankment_m": 35.4,
-   "raise_ms": 15,
+   "raise_ms": 102,
    "finished": true
   },
   {
@@ -139,7 +139,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.7,
-   "raise_ms": 25,
+   "raise_ms": 2245,
    "finished": true
   },
   {
@@ -169,7 +169,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 138,
+   "raise_ms": 486,
    "finished": true
   },
   {
@@ -201,7 +201,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 10,
+   "raise_ms": 686,
    "finished": true
   },
   {
@@ -246,7 +246,7 @@
     }
    ],
    "embankment_m": 26.8,
-   "raise_ms": 69,
+   "raise_ms": 1167,
    "finished": true
   },
   {
@@ -278,7 +278,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.6,
-   "raise_ms": 15,
+   "raise_ms": 66,
    "finished": true
   },
   {
@@ -315,8 +315,8 @@
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@7682",
-     "asset": "@MeshInstance3D@7682",
+     "family": "@meshinstance3d@6112",
+     "asset": "@MeshInstance3D@6112",
      "x": -7.4,
      "y": 109.37,
      "z": 3669.9,
@@ -327,11 +327,11 @@
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@7828",
-     "asset": "@MeshInstance3D@7828",
+     "family": "@meshinstance3d@6258",
+     "asset": "@MeshInstance3D@6258",
      "x": -17.0,
      "y": 117.15,
-     "z": 3645.9,
+     "z": 3645.8,
      "amount": 12.22,
      "detail": "12.22 m over the ground",
      "region": "cinderlea"
@@ -339,33 +339,33 @@
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@7830",
-     "asset": "@MeshInstance3D@7830",
+     "family": "@meshinstance3d@6260",
+     "asset": "@MeshInstance3D@6260",
      "x": -16.8,
      "y": 117.2,
      "z": 3645.8,
-     "amount": 12.26,
-     "detail": "12.26 m over the ground",
+     "amount": 12.25,
+     "detail": "12.25 m over the ground",
      "region": "cinderlea"
     },
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@7832",
-     "asset": "@MeshInstance3D@7832",
+     "family": "@meshinstance3d@6262",
+     "asset": "@MeshInstance3D@6262",
      "x": -17.2,
-     "y": 117.2,
-     "z": 3645.9,
-     "amount": 12.31,
-     "detail": "12.31 m over the ground",
+     "y": 117.19,
+     "z": 3645.8,
+     "amount": 12.3,
+     "detail": "12.30 m over the ground",
      "region": "cinderlea"
     },
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@7833",
-     "asset": "@MeshInstance3D@7833",
-     "x": -13.9,
+     "family": "@meshinstance3d@6263",
+     "asset": "@MeshInstance3D@6263",
+     "x": -14.0,
      "y": 118.31,
      "z": 3637.8,
      "amount": 13.19,
@@ -374,7 +374,7 @@
     }
    ],
    "embankment_m": 2.8,
-   "raise_ms": 187,
+   "raise_ms": 963,
    "finished": true
   },
   {
@@ -419,7 +419,7 @@
     }
    ],
    "embankment_m": 0.8,
-   "raise_ms": 34,
+   "raise_ms": 132,
    "finished": true
   },
   {
@@ -449,7 +449,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 35,
+   "raise_ms": 159,
    "finished": true
   },
   {
@@ -494,7 +494,7 @@
     }
    ],
    "embankment_m": 2.0,
-   "raise_ms": 17,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -524,7 +524,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 16,
+   "raise_ms": 200,
    "finished": true
   },
   {
@@ -569,7 +569,7 @@
     }
    ],
    "embankment_m": 1.0,
-   "raise_ms": 34,
+   "raise_ms": 50,
    "finished": true
   },
   {
@@ -599,7 +599,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.5,
-   "raise_ms": 61,
+   "raise_ms": 249,
    "finished": true
   },
   {
@@ -629,7 +629,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 23,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -659,7 +659,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.3,
-   "raise_ms": 13,
+   "raise_ms": 78,
    "finished": true
   },
   {
@@ -689,7 +689,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.2,
-   "raise_ms": 10,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -721,7 +721,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 6,
+   "raise_ms": 113,
    "finished": true
   },
   {
@@ -751,7 +751,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 11,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -796,7 +796,7 @@
     }
    ],
    "embankment_m": 4.6,
-   "raise_ms": 36,
+   "raise_ms": 46,
    "finished": true
   },
   {
@@ -826,7 +826,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 7,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -871,7 +871,7 @@
     }
    ],
    "embankment_m": 21.1,
-   "raise_ms": 48,
+   "raise_ms": 41,
    "finished": true
   },
   {
@@ -916,7 +916,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 8,
+   "raise_ms": 119,
    "finished": true
   },
   {
@@ -961,7 +961,7 @@
     }
    ],
    "embankment_m": 29.6,
-   "raise_ms": 50,
+   "raise_ms": 83,
    "finished": true
   },
   {
@@ -1006,7 +1006,7 @@
     }
    ],
    "embankment_m": 3.9,
-   "raise_ms": 5,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1036,7 +1036,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 7,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1066,7 +1066,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 14.0,
-   "raise_ms": 50,
+   "raise_ms": 53,
    "finished": true
   },
   {
@@ -1096,7 +1096,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.1,
-   "raise_ms": 4,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1126,7 +1126,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.9,
-   "raise_ms": 38,
+   "raise_ms": 274,
    "finished": true
   },
   {
@@ -1156,7 +1156,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.3,
-   "raise_ms": 8,
+   "raise_ms": 29,
    "finished": true
   },
   {
@@ -1186,7 +1186,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 14,
+   "raise_ms": 24,
    "finished": true
   },
   {
@@ -1231,7 +1231,7 @@
     }
    ],
    "embankment_m": 1.3,
-   "raise_ms": 11,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -1261,7 +1261,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.2,
-   "raise_ms": 8,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1291,7 +1291,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.8,
-   "raise_ms": 5,
+   "raise_ms": 51,
    "finished": true
   },
   {
@@ -1321,7 +1321,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 5,
+   "raise_ms": 122,
    "finished": true
   },
   {
@@ -1351,7 +1351,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 13,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -1381,7 +1381,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.8,
-   "raise_ms": 8,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1413,7 +1413,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 19,
+   "raise_ms": 63,
    "finished": true
   },
   {
@@ -1443,7 +1443,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 12,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1473,7 +1473,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 78.5,
-   "raise_ms": 3,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1554,7 +1554,7 @@
     }
    ],
    "embankment_m": 19.1,
-   "raise_ms": 11,
+   "raise_ms": 55,
    "finished": true
   },
   {
@@ -1763,7 +1763,7 @@
     }
    ],
    "embankment_m": 119.5,
-   "raise_ms": 57,
+   "raise_ms": 96,
    "finished": true
   },
   {
@@ -1793,7 +1793,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 11,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1823,7 +1823,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.2,
-   "raise_ms": 4,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1853,7 +1853,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.9,
-   "raise_ms": 6,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1885,7 +1885,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 8,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1915,7 +1915,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 7,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1945,7 +1945,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.0,
-   "raise_ms": 8,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1975,7 +1975,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 41,
+   "raise_ms": 137,
    "finished": true
   },
   {
@@ -2005,7 +2005,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.6,
-   "raise_ms": 6,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2035,7 +2035,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.8,
-   "raise_ms": 7,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -2080,7 +2080,7 @@
     }
    ],
    "embankment_m": 3.3,
-   "raise_ms": 8,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -2125,7 +2125,7 @@
     }
    ],
    "embankment_m": 2.6,
-   "raise_ms": 9,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -2155,7 +2155,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 14,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2185,7 +2185,544 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 8,
+   "raise_ms": 59,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_kilnway",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -3152.0,
+    67.76,
+    2360.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 26.4,
+    "z": 27.3,
+    "height": 9.8,
+    "reach": 27.4,
+    "top": 6.8
+   },
+   "pieces": 53,
+   "draws": 53,
+   "primitives": 89228,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 11
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3156.5,
+     "y": 65.56,
+     "z": 2355.9,
+     "amount": 0.9,
+     "detail": "90% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3156.5,
+     "y": 65.56,
+     "z": 2355.9,
+     "amount": 0.61,
+     "detail": "61% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3156.5,
+     "y": 65.56,
+     "z": 2355.9,
+     "amount": 0.68,
+     "detail": "68% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3159.1,
+     "y": 66.31,
+     "z": 2355.8,
+     "amount": 0.83,
+     "detail": "83% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_b.glb",
+     "x": -3154.4,
+     "y": 66.73,
+     "z": 2356.1,
+     "amount": 0.73,
+     "detail": "73% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3154.5,
+     "y": 65.21,
+     "z": 2365.8,
+     "amount": 0.68,
+     "detail": "68% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3154.5,
+     "y": 65.21,
+     "z": 2365.8,
+     "amount": 0.99,
+     "detail": "99% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3154.5,
+     "y": 65.21,
+     "z": 2365.8,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_b.glb",
+     "x": -3157.2,
+     "y": 66.2,
+     "z": 2365.9,
+     "amount": 0.96,
+     "detail": "96% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3152.7,
+     "y": 66.76,
+     "z": 2364.6,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -3154.0,
+     "y": 64.74,
+     "z": 2367.9,
+     "amount": 0.82,
+     "detail": "82% of it shares its box with boulder (poi:delve)",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 1.8,
+   "raise_ms": 683,
+   "finished": true
+  },
+  {
+   "id": "core:poi/turnback_keep",
+   "kind": "castle_ruin",
+   "preview": true,
+   "pos": [
+    -2676.0,
+    70.35,
+    2836.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 54.4,
+    "z": 46.9,
+    "height": 13.4,
+    "reach": 33.1,
+    "top": 12.0
+   },
+   "pieces": 79,
+   "draws": 79,
+   "primitives": 78032,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 14,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.1,
+   "raise_ms": 1164,
+   "finished": true
+  },
+  {
+   "id": "core:poi/salt_landing",
+   "kind": "camp",
+   "preview": true,
+   "pos": [
+    -3260.0,
+    69.69,
+    2756.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 22.5,
+    "z": 10.1,
+    "height": 4.1,
+    "reach": 13.1,
+    "top": 4.1
+   },
+   "pieces": 50,
+   "draws": 50,
+   "primitives": 57671,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 2,
+   "bodies": 16,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.7,
+   "raise_ms": 63,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bell_counters_hut",
+   "kind": "hut",
+   "preview": true,
+   "pos": [
+    -916.0,
+    70.32,
+    2740.0
+   ],
+   "radius_flat_m": 18.0,
+   "footprint": {
+    "x": 4.2,
+    "z": 5.2,
+    "height": 2.4,
+    "reach": 4.9,
+    "top": 1.9
+   },
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 7700,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 3,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.0,
+   "raise_ms": 28,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bellrope_walk",
+   "kind": "camp",
+   "preview": true,
+   "pos": [
+    492.0,
+    68.68,
+    3372.0
+   ],
+   "radius_flat_m": 36.0,
+   "footprint": {
+    "x": 36.1,
+    "z": 55.7,
+    "height": 2.6,
+    "reach": 32.5,
+    "top": 2.5
+   },
+   "pieces": 30,
+   "draws": 30,
+   "primitives": 73590,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.1,
+   "raise_ms": 265,
+   "finished": true
+  },
+  {
+   "id": "core:poi/greyfleece_shieling",
+   "kind": "shieling",
+   "preview": true,
+   "pos": [
+    -3090.0,
+    65.84,
+    1566.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 13.8,
+    "z": 16.6,
+    "height": 2.9,
+    "reach": 13.7,
+    "top": 2.7
+   },
+   "pieces": 11,
+   "draws": 11,
+   "primitives": 39480,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.5,
+   "raise_ms": 24,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ashcombe_mill",
+   "kind": "mill",
+   "preview": true,
+   "pos": [
+    -2492.0,
+    75.75,
+    1732.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 12.5,
+    "z": 13.9,
+    "height": 17.2,
+    "reach": 13.1,
+    "top": 17.2
+   },
+   "pieces": 33,
+   "draws": 33,
+   "primitives": 42615,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.1,
+   "raise_ms": 176,
+   "finished": true
+  },
+  {
+   "id": "core:poi/scavengers_ring",
+   "kind": "walled_camp",
+   "preview": true,
+   "pos": [
+    -1404.0,
+    69.46,
+    3060.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 28.0,
+    "z": 28.0,
+    "height": 8.6,
+    "reach": 20.8,
+    "top": 7.2
+   },
+   "pieces": 55,
+   "draws": 55,
+   "primitives": 34787,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.0,
+   "raise_ms": 81,
+   "finished": true
+  },
+  {
+   "id": "core:poi/rooftop_shaft",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -1884.0,
+    70.09,
+    3228.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 20.3,
+    "z": 22.8,
+    "height": 7.4,
+    "reach": 16.1,
+    "top": 4.4
+   },
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 39106,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.6,
+   "raise_ms": 55,
+   "finished": true
+  },
+  {
+   "id": "core:poi/unrung_graves",
+   "kind": "grave",
+   "preview": true,
+   "pos": [
+    -2788.0,
+    71.78,
+    3468.0
+   ],
+   "radius_flat_m": 20.0,
+   "footprint": {
+    "x": 1.4,
+    "z": 0.9,
+    "height": 2.2,
+    "reach": 1.7,
+    "top": 1.9
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 38518,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.6,
+   "raise_ms": 5,
+   "finished": true
+  },
+  {
+   "id": "core:poi/sayers_gauge",
+   "kind": "watchtower",
+   "preview": true,
+   "pos": [
+    -2596.0,
+    80.39,
+    2028.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 19.6,
+    "z": 17.6,
+    "height": 15.3,
+    "reach": 13.3,
+    "top": 13.8
+   },
+   "pieces": 58,
+   "draws": 58,
+   "primitives": 35267,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:watchtower",
+     "family": "barrel",
+     "asset": "briarwold_barrel_a.glb",
+     "x": -2593.9,
+     "y": 80.39,
+     "z": 2028.5,
+     "amount": 0.66,
+     "detail": "66% of it shares its box with crate (poi:watchtower)",
+     "region": "cinderlea"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:watchtower",
+     "family": "barrel",
+     "asset": "briarwold_barrel_a.glb",
+     "x": -2599.8,
+     "y": 80.39,
+     "z": 2026.1,
+     "amount": 0.85,
+     "detail": "85% of it shares its box with crate (poi:watchtower)",
+     "region": "cinderlea"
+    }
+   ],
+   "embankment_m": 2.5,
+   "raise_ms": 14,
+   "finished": true
+  },
+  {
+   "id": "core:poi/ploughed_ash",
+   "kind": "farmstead",
+   "preview": true,
+   "pos": [
+    -2148.0,
+    64.08,
+    2668.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 32.9,
+    "z": 32.9,
+    "height": 8.9,
+    "reach": 23.3,
+    "top": 8.7
+   },
+   "pieces": 40,
+   "draws": 40,
+   "primitives": 42033,
+   "interactables": {},
+   "lights": 11,
+   "bodies": 11,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.8,
+   "raise_ms": 139,
    "finished": true
   }
  ]

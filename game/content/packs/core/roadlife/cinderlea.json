@@ -2,16 +2,155 @@
   {
     "id": "core:roadtable/cinderlea",
     "region": "core:region/cinderlea",
-    "notes": "Cinderlea's ash roads: a first example set for the Cinderlea region agent to grow. Few travel here; the wights do.",
-    "budget": {"max_active": 2, "every_m": [360, 640]},
+    "notes": "Cinderlea's ash roads (docs/WORLD_LIFE_ROADS.md), owned by the Cinderlea region agent. Few travel here, and those who do are kind and quiet about it: the Order walking a pilgrim south, a pilgrim coming back who should not have, a scavenger with a pack of bronze, the Order's carts. The rest is the unquiet: wights who still wave, a fallen knight who still salutes, choristers holding the note over a bend, a bell-bearer walking a round nobody gave it.",
+    "budget": {
+      "max_active": 2,
+      "gap_s": 70,
+      "every_m": [
+        340,
+        620
+      ]
+    },
     "rows": [
-      {"event": "core:roadevent/cinderlea_wights_in_the_ash", "weight": 3, "when": "night", "sites": ["bend", "pass", "bridge"], "cooldown_h": 8},
-      {"event": "core:roadevent/cinderlea_wights_walking", "weight": 2, "cooldown_h": 6},
-      {"event": "core:roadevent/pilgrims", "weight": 2, "when": "day", "cooldown_h": 5},
-      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36}
+      {
+        "event": "core:roadevent/cinderlea_wights_in_the_ash",
+        "weight": 3,
+        "when": "night",
+        "sites": [
+          "bend",
+          "pass",
+          "bridge"
+        ],
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/cinderlea_wights_walking",
+        "weight": 2,
+        "cooldown_h": 6
+      },
+      {
+        "event": "core:roadevent/cinderlea_fallen_knight",
+        "weight": 1,
+        "when": "night",
+        "sites": [
+          "bend",
+          "bridge",
+          "pass"
+        ],
+        "tier": [
+          2,
+          99
+        ],
+        "cooldown_h": 18
+      },
+      {
+        "event": "core:roadevent/cinderlea_choristers_at_the_bend",
+        "weight": 2,
+        "when": "dusk",
+        "sites": [
+          "bend",
+          "pass"
+        ],
+        "tier": [
+          2,
+          99
+        ],
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/cinderlea_bell_bearer_round",
+        "weight": 1,
+        "when": "night",
+        "tier": [
+          3,
+          99
+        ],
+        "cooldown_h": 24
+      },
+      {
+        "event": "core:roadevent/cinderlea_order_walks_a_pilgrim",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/cinderlea_pilgrim_turned_back",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 16
+      },
+      {
+        "event": "core:roadevent/cinderlea_ring_scavenger",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/pilgrims",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 5
+      },
+      {
+        "event": "core:roadevent/wanderer_merchant",
+        "weight": 1,
+        "cooldown_h": 36
+      }
     ],
     "caravans": [
-      {"event": "core:roadevent/pilgrim_sutler", "route": ["core:place/pilgrims_ash", "core:place/ashwell"], "speed": 1.1, "start": 0.7}
+      {
+        "event": "core:roadevent/pilgrim_sutler",
+        "route": [
+          "core:place/pilgrims_ash",
+          "core:place/ashwell"
+        ],
+        "speed": 1.1,
+        "start": 0.7
+      },
+      {
+        "event": "core:roadevent/cinderlea_ninth_day_cart",
+        "route": [
+          "core:place/pilgrims_ash",
+          "core:place/greyfold"
+        ],
+        "speed": 1.0,
+        "start": 0.25
+      },
+      {
+        "event": "core:roadevent/cinderlea_wardens_chalk_train",
+        "route": [
+          "core:place/west_walk",
+          "core:place/greyfold"
+        ],
+        "speed": 1.25,
+        "start": 0.5
+      }
+    ],
+    "sites": [
+      {
+        "at": [
+          -1560,
+          2800
+        ],
+        "kind": "bend",
+        "tell": "injured_traveller"
+      },
+      {
+        "at": [
+          -2740,
+          2330
+        ],
+        "kind": "bend",
+        "tell": "crows"
+      },
+      {
+        "at": [
+          -2980,
+          2640
+        ],
+        "kind": "bend",
+        "tell": "crows"
+      }
     ]
   },
   {
@@ -20,29 +159,363 @@
     "kind": "caravan",
     "speed": 1.1,
     "cast": [
-      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the sutler", "do": "trade", "say": "Candles, bread and bandages. What else does a pilgrim need, going up there?"}},
-      {"role": "guard", "enemy": "core:enemy/caravan_guard", "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Nothing on this road wants your purse. That's the worry."}}
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Trade with the sutler",
+          "do": "trade",
+          "say": "Candles, bread and bandages. What else does a pilgrim need, going up there?"
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/caravan_guard",
+        "talk": {
+          "prompt": "Talk to the guard",
+          "do": "say",
+          "say": "Nothing on this road wants your purse. That's the worry."
+        }
+      }
     ],
-    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
-    "merchant": {"stock": "core:table/stock_pilgrim_sutler", "marks": 120, "buys": ["consumable", "ingredient"]},
-    "consequence": {"faction": "core:faction/tallymen", "reputation": -6, "killing": -12, "notice": "The sutler will tell Pilgrim's Ash who set on him.", "killing_notice": "The sutler's guard is dead on the ash road."},
-    "rescue": {"say": "The ash gives them up at dusk. You kept them off us -- here.", "marks": 15}
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/pockets_merchant"
+    },
+    "merchant": {
+      "stock": "core:table/stock_pilgrim_sutler",
+      "marks": 120,
+      "buys": [
+        "consumable",
+        "ingredient"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/tallymen",
+      "reputation": -6,
+      "killing": -12,
+      "notice": "The sutler will tell Pilgrim's Ash who set on him.",
+      "killing_notice": "The sutler's guard is dead on the ash road."
+    },
+    "rescue": {
+      "say": "The ash gives them up at dusk. You kept them off us -- here.",
+      "marks": 15
+    }
   },
   {
     "id": "core:roadevent/cinderlea_wights_in_the_ash",
     "name": "Wights under the ash",
     "kind": "ambush",
-    "tell": ["crows"],
+    "notes": "The un-ended people of Greyfold lying in the ash by the road; with the waving tell one of them stands in the road and waves, the way they still do, and whoever waves back is among them.",
+    "tell": [
+      "crows",
+      "injured_traveller"
+    ],
     "cast": [
-      {"role": "wight", "enemy": "core:enemy/ash_wight", "count": [2, 4]}
-    ]
+      {
+        "role": "wight",
+        "enemy": "core:enemy/ash_wight",
+        "count": [
+          2,
+          4
+        ]
+      },
+      {
+        "role": "bait",
+        "folk": {
+          "name": "Somebody grey, waving",
+          "tags": [
+            "person"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "only_tell": "injured_traveller",
+        "talk": {
+          "prompt": "Wave back",
+          "do": "spring"
+        }
+      }
+    ],
+    "lines": {
+      "speaker": "An ash-wight",
+      "spring": "*(They all wave.)*"
+    }
   },
   {
     "id": "core:roadevent/cinderlea_wights_walking",
     "name": "Ash-wights walking",
     "kind": "beasts",
     "cast": [
-      {"role": "wight", "enemy": "core:enemy/ash_wight", "count": [2, 3]}
+      {
+        "role": "wight",
+        "enemy": "core:enemy/ash_wight",
+        "count": [
+          2,
+          3
+        ]
+      }
     ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_fallen_knight",
+    "name": "A fallen knight on the road",
+    "kind": "ambush",
+    "notes": "One of the Order's knights gone wrong, standing a vigil at a bend in the dark. He salutes before he swings; the form is all that is left.",
+    "tell": [
+      "crows"
+    ],
+    "cast": [
+      {
+        "role": "knight",
+        "enemy": "core:enemy/tolling_knight",
+        "count": 1
+      }
+    ],
+    "lines": {
+      "speaker": "A Tolling knight",
+      "spring": "*(He salutes, and gives ground the one step the form allows, and comes on.)*"
+    }
+  },
+  {
+    "id": "core:roadevent/cinderlea_choristers_at_the_bend",
+    "name": "Choristers holding the note",
+    "kind": "ambush",
+    "notes": "Two choristers stand either side of a bend at dusk with their mouths open and hold the note across the road; silence stops them.",
+    "tell": [
+      "crows"
+    ],
+    "cast": [
+      {
+        "role": "chorister",
+        "enemy": "core:enemy/chorister",
+        "count": [
+          1,
+          2
+        ]
+      }
+    ],
+    "lines": {
+      "speaker": "A chorister",
+      "spring": "*(The note arrives before the voice does, as a pressure in the chest.)*"
+    }
+  },
+  {
+    "id": "core:roadevent/cinderlea_bell_bearer_round",
+    "name": "A bell-bearer walking its round",
+    "kind": "beasts",
+    "notes": "A bell-bearer walking a round across the road and back, ringing at nothing; nobody gave it the round.",
+    "cast": [
+      {
+        "role": "bearer",
+        "enemy": "core:enemy/bell_bearer",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_order_walks_a_pilgrim",
+    "name": "The Order walking a pilgrim south",
+    "kind": "pilgrims",
+    "notes": "Two knights of the Tolling Order walking a pilgrim to the line, the Vigil Book's third rule: talking about the weather, so that the last thing the pilgrim hears is a voice saying something ordinary.",
+    "speed": 0.9,
+    "cast": [
+      {
+        "role": "knight",
+        "folk": {
+          "name": "A knight of the Order",
+          "tags": [
+            "person",
+            "tolling_order"
+          ]
+        },
+        "count": 2,
+        "talk": {
+          "prompt": "Talk to the knight",
+          "do": "say",
+          "say": "We are walking her to the ring. Walk a way with us, if you're going south; talk about the eels, or the weather. Don't make a speech. — There's a place off the road the pilgrims stop at before the Choir, if you've not seen it.",
+          "hook": {
+            "rumour": "The knight says the pilgrims stop at {place} on the way south.",
+            "reveals": "nearest:shrine",
+            "once": true
+          }
+        }
+      },
+      {
+        "role": "pilgrim",
+        "folk": {
+          "name": "A pilgrim in grey",
+          "tags": [
+            "person",
+            "pilgrim"
+          ]
+        },
+        "count": 1,
+        "talk": {
+          "prompt": "Talk to the pilgrim",
+          "do": "say",
+          "say": "It's a fine day for it, isn't it? Grey, but fine. — No, I'm not frightened. I was, at the ninth waystone. I sat on it a while. Then I wasn't."
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_pilgrim_turned_back",
+    "name": "A pilgrim who turned back",
+    "kind": "lost_traveller",
+    "notes": "A pilgrim coming back up the road from the Choir, which the Order has no rule for, sitting at the roadside not knowing the way back, because nobody writes it down.",
+    "cast": [
+      {
+        "role": "pilgrim",
+        "folk": {
+          "name": "A pilgrim who turned back",
+          "tags": [
+            "person",
+            "pilgrim"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Ask the pilgrim what's wrong",
+          "do": "escort",
+          "say": "I got as far as the ring and I couldn't. I don't know the way back; nobody writes the way back down. Would you walk me to {place}? I'll not be any trouble. I've stopped being any trouble.",
+          "thanks": "There's a roof. — They'll give me bread there, and my name back, and not ask. Thank you. Here: it's the coin I was going to leave on the Tenth.",
+          "hook": {
+            "marks": 12,
+            "reputation": {
+              "faction": "core:faction/tolling_order",
+              "delta": 2
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_ring_scavenger",
+    "name": "A scavenger of the Ring",
+    "kind": "wanderer",
+    "notes": "One of Coll Brisket's scavengers walking the Ashgrid road with a pack of Builders' bronze; knows where the dead city has been opened lately.",
+    "speed": 1.1,
+    "cast": [
+      {
+        "role": "scavenger",
+        "folk": {
+          "name": "A scavenger of the Ring",
+          "tags": [
+            "person"
+          ]
+        },
+        "talk": {
+          "prompt": "Talk to the scavenger",
+          "do": "say",
+          "say": "Bronze for the Tallymen, four a pound if it's clean, which it never is. — If you're digging, don't dig where it's quiet. There's a roof opened up off the road where it's never been quiet at all.",
+          "hook": {
+            "rumour": "The scavenger says the dead city has been opened at {place}.",
+            "reveals": "nearest:ruins",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_ninth_day_cart",
+    "name": "The ninth-day cart to Greyfold",
+    "kind": "caravan",
+    "notes": "The Order's handcart, taking the ninth-day basket of ash-cakes from Pilgrim's Ash out to Greyfold, where Nan Greyfold lays the tables; a knight between the shafts and a novice walking beside.",
+    "speed": 1.0,
+    "cast": [
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Talk to the Order's carter",
+          "do": "trade",
+          "say": "Ash-cakes for Greyfold, candles for the Choir, bread for anyone. The Order doesn't sell. It'll take a coin, though, if you leave one; it goes on the Tenth."
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/caravan_guard",
+        "talk": {
+          "prompt": "Talk to the novice",
+          "do": "say",
+          "say": "I count the wights we pass. Nineteen this morning. They waved."
+        }
+      }
+    ],
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/pockets_common"
+    },
+    "merchant": {
+      "stock": "core:table/stock_pilgrim_sutler",
+      "marks": 80,
+      "buys": [
+        "consumable"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/tolling_order",
+      "reputation": -10,
+      "killing": -25,
+      "notice": "You struck at the Order's cart. Pilgrim's Ash will hear it before you get there.",
+      "killing_notice": "The Order's carter is dead on the Greyfold road, and the basket for the tables with him."
+    },
+    "rescue": {
+      "say": "They came up out of the ash at the cart like it was a table. — Thank you. Take a cake. They're for the dead, but the dead won't mind.",
+      "item": "core:item/ash_cake",
+      "count": 2
+    }
+  },
+  {
+    "id": "core:roadevent/cinderlea_wardens_chalk_train",
+    "name": "The Wardens' chalk train",
+    "kind": "caravan",
+    "notes": "A Wardens' packhorse carrying chalk from the West Walk to bank the fires on the grey side and set the Greyline stones, with a Warden at its head.",
+    "speed": 1.25,
+    "cast": [
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Talk to the chalk-carrier",
+          "do": "trade",
+          "say": "Chalk for the fires, and whatever else the Rest has sent. It's all for sale except the chalk."
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/road_warden",
+        "talk": {
+          "prompt": "Talk to the Warden",
+          "do": "say",
+          "say": "Every fire on the grey side is banked with Vale chalk, so that when a patrol turns back the last thing it sees is white. This year some of it has come back grey."
+        }
+      }
+    ],
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/pockets_merchant"
+    },
+    "merchant": {
+      "stock": "core:table/stock_pilgrim_sutler",
+      "marks": 100,
+      "buys": [
+        "consumable",
+        "ingredient"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/wardens",
+      "reputation": -12,
+      "killing": -25,
+      "notice": "You struck a Warden on the West Walk road. The Roll will have your name by morning.",
+      "killing_notice": "A Warden is dead on the West Walk road."
+    },
+    "rescue": {
+      "say": "Put down, then. Twice this month on this stretch. — The Rest pays for that.",
+      "marks": 20
+    }
   }
 ]

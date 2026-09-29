@@ -1,0 +1,1010 @@
+[
+  {
+    "id": "core:quest/the_turnback_count",
+    "name": "The Turnback Count",
+    "layer": "side",
+    "giver": "core:npc/elsbet_ash",
+    "region": "core:region/cinderlea",
+    "summary": "Elsbet Ash keeps a fire outside the gate of Turnback Keep, the Tolling Order's first house, which its knights turned in the end. Under the keep the First Vigilant still keeps the Turnback Count: a hundred years of the Choir's bells that the Order at the Ash has never seen.",
+    "notes": "The Cinderlea large site (docs/WORLD_LIFE_INTERIORS.md): a castle_ruin whose keep leads to core:interior/turnback_undercroft, boss core:boss/first_vigilant, who drops the Count. The four names are cut in the Last Milestone (pois/cinderlea.json last_milestone). The gate's names (core:dialogue/turnback_gate) start it too.",
+    "stages": [
+      {
+        "id": "the_four",
+        "journal": "Elsbet Ash wants the four names read before anybody goes down to the First Vigilant: the four who came back up the Stair in the Ash Winter cut them in the back of the Last Milestone on their way to building Turnback. The milestone stands at the end of the Builders' road west, where it counts down to a harbour that is not there.",
+        "objectives": [
+          {
+            "type": "read_book",
+            "target": "core:book/four_names_at_the_milestone",
+            "text": "Read the four names cut in the Last Milestone",
+            "where": "core:poi/last_milestone",
+            "in_place": true
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/last_milestone",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_undercroft",
+        "journal": "Aveline, Odo, Merrit, Sallow: the four names, cut low on the milestone where you would only see them sitting against it. Aveline Ash was the first of the four to turn, kept Turnback sixty years, died in the gate-arch counting, and came up out of the undercroft the spring after and took the Count back off the lectern. She is still keeping it, under the keep, past the gate and the knights who turned with her.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/first_vigilant",
+            "count": 1,
+            "where": "core:interior/turnback_undercroft",
+            "text": "Put the First Vigilant to rest in the undercroft of Turnback Keep"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/turnback_count",
+            "count": 1,
+            "text": "Take the Turnback Count"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/turnback_keep",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_count",
+        "journal": "The Turnback Count is heavy for a book: grey board, and the First Vigilant's mace-chain wound round it. Its first page is headed with four names and the number four hundred and ten, the night before the Order's first night. Elsbet Ash will not say where it goes. She has been choosing for Turnback for forty years.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_count",
+            "text": "Decide with Elsbet Ash where the Turnback Count is kept",
+            "with": "core:npc/elsbet_ash",
+            "options": [
+              {
+                "id": "to_the_ash",
+                "text": "It goes to the Ash. The Order should have its oldest count.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/turnback_count",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "turnback_count_to_the_ash"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      15
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "at_the_gate",
+                "text": "It stays at Turnback, read aloud at the gate to the one who kept it.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/turnback_count",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "turnback_count_at_the_gate"
+                  },
+                  {
+                    "morality": 4
+                  },
+                  {
+                    "renown": 8
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/turnback_keep",
+          "radius": 120
+        }
+      },
+      {
+        "id": "counted",
+        "journal": "The Turnback Count is where it was decided it should be. Elsbet Ash still keeps her fire outside the gate, and still reads the names round the arch in the evening; the last of them is Aveline's.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 12,
+      "rep": [
+        [
+          "core:faction/tolling_order",
+          5
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_harbour_light",
+    "name": "The Harbour Light",
+    "layer": "side",
+    "giver": "core:npc/thalisse_tal",
+    "region": "core:region/cinderlea",
+    "summary": "Thalisse Tal rowed from the Salt Isles because the Builders' Harbour bells were heard ringing from the sea, and the ship that should have followed her has not come. Sulion, the dead city's harbour light, shows something on moonless nights that is not a light, and a ship steering for it comes in on the Grey Wreck's rocks.",
+    "notes": "Sends you from the Salt Landing to Sulion (a chorister holds the note in the lamp-socket) and down the strand to the Grey Wreck for the salt-barge's chart (its hook: a line ruled from the Isles to the Choir). The decision is Thalisse's to make with you.",
+    "stages": [
+      {
+        "id": "the_socket",
+        "journal": "Sulion's lamp-socket has been empty since the Tallymen carried its sul-stone across Wickmere to Gullhithe in 998. On the nights with no moon it glows, and Thalisse Tal says it is not a light but a singing, and the Salt Isles ships steer by it. Go up Sulion and put out whatever is in the socket.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/sulion",
+            "text": "Go to Sulion, the dead city's harbour light"
+          },
+          {
+            "type": "kill",
+            "target": "core:enemy/chorister",
+            "count": 1,
+            "where": "core:poi/sulion",
+            "text": "Silence the chorister holding the note in Sulion's socket"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/sulion",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_chart",
+        "journal": "A chorister stood in Sulion's socket with its mouth open to the sea, holding the note, and the note was what showed as a light. It is quiet now. Thalisse wants to see the chart the Grey Wreck was steering by: an Isles salt-barge that came ashore in the Ash Winter, her crew walked inland, her chart in the stern locker.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/salt_barge_chart",
+            "count": 1,
+            "text": "Take the salt-barge's chart from the Grey Wreck",
+            "where": "core:poi/grey_wreck"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/grey_wreck",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_light",
+        "journal": "The Grey Wreck's chart has the coasts drawn as bells and a line ruled in tar from the Salt Isles to Sulion, and on, straight, over the strand and the heath to the Choir. Thalisse Tal will want to see it, and to decide what the *Tal Oune* steers by.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_light",
+            "text": "Decide with Thalisse Tal what the ship steers by",
+            "with": "core:npc/thalisse_tal",
+            "options": [
+              {
+                "id": "rerule_the_chart",
+                "text": "Rule a new line on the chart, to the Strand Beacon.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/salt_barge_chart",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "harbour_chart_reruled"
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              },
+              {
+                "id": "light_sulion",
+                "text": "Give Sulion a true light: a plain lamp in the socket.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/salt_barge_chart",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "harbour_sulion_relit"
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/salt_landing",
+          "radius": 120
+        }
+      },
+      {
+        "id": "kept",
+        "journal": "The *Tal Oune* has a true mark to steer by now, one way or the other. Thalisse Tal keeps the lantern on the oar lit every night and trims it at the turn of the tide, and will not let anybody else touch it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 6
+    }
+  },
+  {
+    "id": "core:quest/counts_in_a_strange_hand",
+    "name": "Counts in a Strange Hand",
+    "layer": "side",
+    "giver": "core:npc/ivet_carrow",
+    "region": "core:region/cinderlea",
+    "summary": "The Tolling Order scratched the year's first bell-count on the Ninth Waystone every year until 1024, and then stopped. This spring the counts began again in a hand the Order does not know, and they count one bell more than the Choir has.",
+    "notes": "Pays the Ninth Waystone's hook (pois/cinderlea.json ninth_waystone) and the Tenth's coin-bowl, and ends at the Bell-Counter's Hut, a new place on the open heath between them. Given by the keeper of the Novices' Seats.",
+    "stages": [
+      {
+        "id": "the_ninth",
+        "journal": "Ivet Carrow keeps the Novices' Seats and cannot leave them. The chapter-master wants to know whose hand is writing the Choir's counts on the Ninth Waystone, where the Order stopped writing them in 1024. Start there, she says, and look at the fours.",
+        "objectives": [
+          {
+            "type": "read_book",
+            "target": "core:book/ninth_waystone_counts",
+            "text": "Read the counts on the Ninth Waystone",
+            "where": "core:poi/ninth_waystone",
+            "in_place": true
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/ninth_waystone",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_tenth",
+        "journal": "The Order's counts on the Ninth end in 1024. Nineteen years of smooth stone, and then, this spring, four hundred and thirteen, in long strokes with the fours open at the top, and a little mark like a seat seen from behind, turned round. The pilgrims' road goes on to the Tenth Waystone.",
+        "objectives": [
+          {
+            "type": "read_book",
+            "target": "core:book/tenth_waystone_counts",
+            "text": "Look for the hand on the Tenth Waystone",
+            "where": "core:poi/tenth_waystone",
+            "in_place": true
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/tenth_waystone",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_counter",
+        "journal": "Under the lip of the Tenth's coin-bowl the same hand has scratched the count four times, and an arrow off the road, west, across the open heath towards nothing a pilgrim walks to. Ivet Carrow says there is nothing out there but an old hermit's boughs against a boulder, and he does not talk to the Order.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/eddery_wray",
+            "topic": "q_counts_eddery",
+            "text": "Ask the hermit at the Bell-Counter's Hut about the counts"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bell_counters_hut",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_hand",
+        "journal": "Eddery Wray sat the Novices' Seats in 1024 and turned round at the four hundredth bell and was sent home, and did not go. He has counted the Choir every night for nineteen years from a boulder on the heath, and this spring, when the count came to one more bell than there is, he told the stones. Ivet Carrow will want to know.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_hand",
+            "text": "Tell Ivet Carrow whose hand it is, or not",
+            "with": "core:npc/ivet_carrow",
+            "options": [
+              {
+                "id": "name_him",
+                "text": "Tell the chapter-master. Eddery Wray should be counted with the Order.",
+                "effects": [
+                  {
+                    "set_flag": "strange_hand_named"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      10
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_his_count",
+                "text": "Leave him be. His count is his own.",
+                "effects": [
+                  {
+                    "set_flag": "strange_hand_kept"
+                  },
+                  {
+                    "morality": 4
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/novices_seats",
+          "radius": 120
+        }
+      },
+      {
+        "id": "counted",
+        "journal": "The hand on the waystones has a name, or has been let keep it. Four hundred and thirteen, it says, which is one more bell than the Choir has; and nobody at the Seats, the waystones or the boulder has said that the count is wrong.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 60,
+      "renown": 6
+    }
+  },
+  {
+    "id": "core:quest/the_wet_rope",
+    "name": "The Wet Rope",
+    "layer": "side",
+    "giver": "core:npc/hewin_ash",
+    "region": "core:region/cinderlea",
+    "summary": "Hewin Ash, the Tolling Order's roper, is one rope short, and the Hush Bell on the cliff's edge has been rung for the first time since the Stair was cut, with a new rope wet with sea-water, over a cliff nobody climbs.",
+    "notes": "Pays the Hush Bell's hook (pois/cinderlea.json hush_bell) from the Bell-Rope Walk, a new place on the cliff-top heath; the answer is Ossul Tal at the Salt Landing, who rang it for his ship (the Isles' landing-peal is on the tin in the tower, core:book/note_hush_bell_rule).",
+    "stages": [
+      {
+        "id": "the_bell",
+        "journal": "A rope forty fathom long went missing from Hewin Ash's frame in the night, with a coin left where it hung that is not a coin the Order uses. Then the Hush Bell was rung: the pilgrims' ship-bell on a stone arm over the cliff, whose rope rotted to a hand's length before Hewin was born. It has a new rope, wet with sea-water. Hewin wants its end, cut at the arm.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/hush_bell",
+            "text": "Go out to the Hush Bell on the cliff's edge"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/wet_bell_rope_end",
+            "count": 1,
+            "text": "Cut the end of the new rope at the bell-arm",
+            "where": "core:poi/hush_bell"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/hush_bell",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_splice",
+        "journal": "The rope's end is still wet a day after it was cut, and it is finished with a splice you have not seen on the heath. Hewin Ash reads a rope's end like a signature.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/hewin_ash",
+            "topic": "q_wet_rope_splice",
+            "text": "Bring the rope's end to Hewin Ash at the Bell-Rope Walk"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bellrope_walk",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_sailor",
+        "journal": "The rope is Hewin's: his lay, his flax, the chapter-bell's rope. The splice is a boat-splice, tucked backwards with a lock at the crown, that nobody on the heath or in the Vale ties, and the coin on his frame had a ship on it. The only ship's people on this coast are the Salt Isles traders at the Salt Landing, above the Ash Strand.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/ossul_tal",
+            "topic": "q_wet_rope_ossul",
+            "text": "Ask the Salt Isles traders at the Salt Landing about the Hush Bell"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/salt_landing",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_rope",
+        "journal": "Ossul Tal rowed round under the cliff at low water, climbed to the Hush Bell, spliced Hewin's rope onto its arm and rang it three times, the Salt Isles landing-peal, so that his family's ship, eleven days behind him, would know he was ashore. The Hush Bell was the pilgrims' ship-bell, before the Stair. Hewin Ash will want to know.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_rope",
+            "text": "Decide with Hewin Ash what becomes of the Hush Bell's rope",
+            "with": "core:npc/hewin_ash",
+            "options": [
+              {
+                "id": "lay_him_a_rope",
+                "text": "Lay Ossul a proper rope, and let him ring his ship in.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/wet_bell_rope_end",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "hush_bell_rope_laid"
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      -3
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "take_it_down",
+                "text": "Take the rope down. The Hush is not to be rung into.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/wet_bell_rope_end",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "hush_bell_rope_down"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      8
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bellrope_walk",
+          "radius": 120
+        }
+      },
+      {
+        "id": "rung",
+        "journal": "Hewin Ash counts his ropes the way the others count bells, and he is not short any more, one way or another. The Hush Bell hangs over the cliff with the sea under it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 70,
+      "renown": 6
+    }
+  },
+  {
+    "id": "core:quest/names_for_the_door",
+    "name": "Names for the Door",
+    "layer": "side",
+    "giver": "core:npc/garrow_lune",
+    "region": "core:region/cinderlea",
+    "summary": "The hermit in the Hermit's Gate has tried names on a door with no hinges for thirty years, since he saw a pilgrim open it with one. There are three names on the heath nobody has written down, so he cannot have tried them.",
+    "notes": "Pays three hooks: the name round Vaelost's top course (tower_of_vaelost), the footprints that walk out of Hesk-Morn onto the air (hesk_morn), and the one grave in the Unrung Graves the Order has no name for (a new place). Ends at the Hermit's Gate.",
+    "stages": [
+      {
+        "id": "three_names",
+        "journal": "Garrow Lune, the hermit in the gate, wants three names nobody has written down. The name round Vaelost's top course, which the Order will pay to know. Whoever walked out of Hesk-Morn, the other hingeless door on the cliff, onto the air. And the name on the one grave in the Unrung Graves that the Order has no name for.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/vaelost_course_chip",
+            "count": 1,
+            "text": "Find a piece of the name round Vaelost's top course",
+            "where": "core:poi/tower_of_vaelost"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/hesk_morn_name_tag",
+            "count": 1,
+            "text": "Find a name at Hesk-Morn, where the footprints end",
+            "where": "core:poi/hesk_morn"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/unrung_grave_bell",
+            "count": 1,
+            "text": "Take the bell from the grave the Order has no name for",
+            "where": "core:poi/unrung_graves"
+          }
+        ]
+      },
+      {
+        "id": "the_door",
+        "journal": "Three names: two Oroth letters and part of a third on a chip of Vaelost's top course; a pilgrim's tin name-tag lying face down on Hesk-Morn's threshold at the end of the footprints; a name scratched round the lip of a clapperless bell in a hand that shook. Garrow Lune will try them on the door.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/garrow_lune",
+            "topic": "q_names_tried",
+            "text": "Bring the three names to Garrow Lune at the Hermit's Gate"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/hermits_gate",
+          "radius": 120
+        }
+      },
+      {
+        "id": "your_name",
+        "journal": "None of the three opened the door. Garrow Lune sat down on the step and did not write them on the arch. It was never the name, he says; it was who said it. The pilgrim who opened it thirty years ago was nobody, going through. You came up out of the Hush.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_door",
+            "text": "Say your own name at the door, or tell Garrow Lune to stop",
+            "with": "core:npc/garrow_lune",
+            "options": [
+              {
+                "id": "give_your_name",
+                "text": "Put your hand on the door and say your own name.",
+                "effects": [
+                  {
+                    "set_flag": "hermit_door_your_name"
+                  },
+                  {
+                    "take_item": [
+                      "core:item/vaelost_course_chip",
+                      1
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/hesk_morn_name_tag",
+                      1
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/unrung_grave_bell",
+                      1
+                    ]
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "stop_trying",
+                "text": "Tell him to put the names down and rest.",
+                "effects": [
+                  {
+                    "set_flag": "hermit_door_rest"
+                  },
+                  {
+                    "take_item": [
+                      "core:item/vaelost_course_chip",
+                      1
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/hesk_morn_name_tag",
+                      1
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/unrung_grave_bell",
+                      1
+                    ]
+                  },
+                  {
+                    "morality": 4
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/hermits_gate",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_spiral",
+        "journal": "The spiral of names on the Hermit's Gate stops where it stopped. Garrow Lune sits in the arch in the afternoons, when the step is warm.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 80,
+      "renown": 8,
+      "rep": [
+        [
+          "core:faction/sayers",
+          5
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_singing_shaft",
+    "name": "The Singing Shaft",
+    "layer": "side",
+    "giver": "core:npc/coll_brisket",
+    "region": "core:region/cinderlea",
+    "summary": "Coll Brisket's diggers sank a shaft west of the Scavengers' Ring onto the roof of a buried Builders' hall, and the first night it stood open it sang. Three went down on a rope to see. The rope went slack.",
+    "notes": "The Ashgrid's large site: the Rooftop Shaft (a region builder, game/world/pois/regions/cinderlea.gd rooftop_shaft) into core:interior/anthe_ondr, boss core:boss/the_precentor, who drops the diggers' tokens. Nell's lamp waits on Bell Street (pays its hook's hollow bells).",
+    "stages": [
+      {
+        "id": "nells_lamp",
+        "journal": "Nell Brisket, Coll's daughter, sank a shaft west of the Ring onto a Builders' roof, and it sang, and she and Tam and Wicken went down on Jory Flint's rope, and it went slack. The three slept on Bell Street the night before, in one of the hollow bells, and Coll says Nell will have left her lamp there. A digger's lamp, not a torch: torches are too loud.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/nells_lamp",
+            "count": 1,
+            "text": "Find Nell's lamp in the hollow bells on Bell Street",
+            "where": "core:poi/bell_street"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bell_street",
+          "radius": 120
+        }
+      },
+      {
+        "id": "anthe_ondr",
+        "journal": "Nell's lamp was full: she filled it and forgot it. The Rooftop Shaft is west of the Ring, a headframe over a hole in the ash, with a tally-stick on it notched three times. At the bottom is a hall of the Builders' city the ash kept whole, a choir-school the Sayers call Anthe-Ondr, the Under-Choir, and something in it is teaching.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/the_precentor",
+            "count": 1,
+            "where": "core:interior/anthe_ondr",
+            "text": "Silence the Precentor in the singing-hall of Anthe-Ondr"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/diggers_tokens",
+            "count": 1,
+            "text": "Take the three diggers' tokens"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/rooftop_shaft",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_shaft",
+        "journal": "The Precentor kept the three diggers' tokens in a row in the singing-hall, like bells, and the benches all faced it. It is quiet down there now. Coll Brisket is at the Ring's gate, looking west.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_shaft",
+            "text": "Tell Coll Brisket what becomes of the shaft",
+            "with": "core:npc/coll_brisket",
+            "options": [
+              {
+                "id": "fill_it",
+                "text": "Fill the shaft in. Leave the Under-Choir to the ash.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/diggers_tokens",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "singing_shaft_filled"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      5
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              },
+              {
+                "id": "dig_on",
+                "text": "It is quiet now. Dig it, and count every digger in.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/diggers_tokens",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "singing_shaft_dug"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      5
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/scavengers_ring",
+          "radius": 120
+        }
+      },
+      {
+        "id": "counted_in",
+        "journal": "Three tokens hang on the Scavengers' Ring's gate-post beside the price-board. Coll Brisket counts his diggers in at dusk, every one, and says the number out loud.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/the_grey_gone_back",
+    "name": "The Grey Gone Back",
+    "layer": "side",
+    "giver": "core:npc/idrin_fenn",
+    "region": "core:region/cinderlea",
+    "summary": "The Sayers' Gauge has measured the grey coming on across the west heath every year for thirty-two years. This year it says the grey has gone back, and its Surveyor will not send that to the Circle until three other things agree.",
+    "notes": "Pays three hooks: the Greyline Stones' new stone set in front of the old (greyline_stones), the Last Hearth's chalk gone grey (last_hearth), and the Weighhouse's pans moved (weighhouse). Ends at the Sayers' Gauge, a new place.",
+    "stages": [
+      {
+        "id": "the_greyline",
+        "journal": "Idrin Fenn, the Circle's Surveyor at the Gauge, has read the grey gone back five divisions and will not send it to the Spire alone. The Wardens set a stone at the edge of the ash every Naming Day at the Greyline Stones, and every year it has gone in behind the last. Read this year's.",
+        "objectives": [
+          {
+            "type": "read_book",
+            "target": "core:book/greyline_reading",
+            "text": "Read the Wardens' stones at the Greyline",
+            "where": "core:poi/greyline_stones",
+            "in_place": true
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/greyline_stones",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_chalk",
+        "journal": "This year's Greyline stone stands a long stride in front of last year's, out on the grey, with green grass at its root. The Last Hearth, the Wardens' last fire on the grey side, is banked with chalk, and the chalk turned grey overnight, right through. Bring the Surveyor a piece.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/grey_chalk",
+            "count": 1,
+            "text": "Take a lump of the grey chalk from the Last Hearth",
+            "where": "core:poi/last_hearth"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/last_hearth",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_pans",
+        "journal": "The chalk is grey right through and leaves a grey mark, not a white one. The Weighhouse in the Ashgrid has scales the Builders left fused with one pan down; the Order says something was weighed there and found wanting, and this year the other pan is down.",
+        "objectives": [
+          {
+            "type": "read_book",
+            "target": "core:book/weighhouse_pans",
+            "text": "Read the Weighhouse's scales",
+            "where": "core:poi/weighhouse",
+            "in_place": true
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/weighhouse",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_line",
+        "journal": "Three measures: the Wardens' stone gone forward, the chalk gone grey, and the Weighhouse's other pan down, with the Oroth word for the Hush on its rim. Two say the grey has gone back. One says something has got heavier. Idrin Fenn will want to hear them all.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_line",
+            "text": "Decide with Idrin Fenn whether the Gauge's line goes to the Spire",
+            "with": "core:npc/idrin_fenn",
+            "options": [
+              {
+                "id": "send_it",
+                "text": "Send the line to the Spire. It is what she measured.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/grey_chalk",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "gauge_line_sent"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/sayers",
+                      10
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "another_year",
+                "text": "Read another year first.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/grey_chalk",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "gauge_line_held"
+                  },
+                  {
+                    "renown": 5
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/sayers_gauge",
+          "radius": 120
+        }
+      },
+      {
+        "id": "measured",
+        "journal": "The Gauge's reading-book has three new lines under this year's figure, small, in the Surveyor's hand. Idrin Fenn reads the grey at dawn and dusk, and says the number out loud, as if somebody were checking.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 8
+    }
+  },
+  {
+    "id": "core:quest/a_green_cutting",
+    "name": "A Green Cutting",
+    "layer": "side",
+    "giver": "core:npc/morwen_tarrant",
+    "region": "core:region/cinderlea",
+    "summary": "One hawthorn in the Grey Hedge, a farm's hedge gone to ash-wood in the White Wood, has come into leaf. Morwen Tarrant, the last shepherd on the grey side, wants a cutting before the grey takes it back.",
+    "notes": "Pays the Grey Hedge's hook (pois/cinderlea.json grey_hedge) from Greyfleece Shieling, a new place above the Ash Strand. The wights that walk the hedge are this quest's own (QuestFoes).",
+    "stages": [
+      {
+        "id": "the_hedge",
+        "journal": "Morwen Tarrant keeps the last flock on the grey side and cannot leave it. A Warden told her one hawthorn in the Grey Hedge has come into leaf. She wants a cutting, wrapped wet and kept out of the ash, before the grey takes it back. The wights walk the hedge, looking for the farm that was there.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:enemy/ash_wight",
+            "count": 2,
+            "where": "core:poi/grey_hedge",
+            "stand": "own",
+            "text": "Put down the wights walking the Grey Hedge"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/hawthorn_cutting",
+            "count": 1,
+            "text": "Take a cutting from the hawthorn in leaf",
+            "where": "core:poi/grey_hedge"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/grey_hedge",
+          "radius": 120
+        }
+      },
+      {
+        "id": "where_it_grows",
+        "journal": "Five green leaves and a bud, the only green thing on the grey side of the Greyline, in a wet rag. Morwen Tarrant is at Greyfleece Shieling with her flock.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_cutting",
+            "text": "Decide with Morwen Tarrant where the cutting is planted",
+            "with": "core:npc/morwen_tarrant",
+            "options": [
+              {
+                "id": "shieling_wall",
+                "text": "Plant it in the shieling wall, where the lambs are born.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/hawthorn_cutting",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "hawthorn_at_shieling"
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              },
+              {
+                "id": "last_hearth",
+                "text": "Send it to the Wardens' Last Hearth, where the grey stops.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/hawthorn_cutting",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "hawthorn_to_hearth"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/wardens",
+                      8
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/greyfleece_shieling",
+          "radius": 120
+        }
+      },
+      {
+        "id": "planted",
+        "journal": "The cutting from the Grey Hedge is in the ground. Morwen Tarrant calls her ewes in at dusk by the names of the people of Ashcombe, forty names out loud on the heath every night.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 45,
+      "renown": 5,
+      "items": [
+        [
+          "core:item/bread",
+          1
+        ]
+      ]
+    }
+  }
+]

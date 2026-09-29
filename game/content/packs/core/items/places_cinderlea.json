@@ -1,0 +1,312 @@
+[
+  {
+    "id": "core:item/note_hush_bell_rule",
+    "name": "The Ringers' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tin plate nailed inside the Hush Bell's tower at the height of a hand, the words punched through it with a nail so the wind reads them too.",
+    "reads": "core:book/note_hush_bell_rule"
+  },
+  {
+    "id": "core:item/note_vaelost_sighting",
+    "name": "A Sayer's Sighting of the Top Course",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A page of a Sayer's field-book, ruled for readings and full of crossings-out, weighted under a stone at the foot of Vaelost where somebody stood a long time with a glass.",
+    "reads": "core:book/note_vaelost_sighting"
+  },
+  {
+    "id": "core:item/note_anthem_hall_slate",
+    "name": "A Slate from the Back Bench",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's slate in a pilgrim's frame, left on the last bench of the Anthem Hall with two lines on it, one in chalk and one scratched.",
+    "reads": "core:book/note_anthem_hall_slate"
+  },
+  {
+    "id": "core:item/note_bell_garden_rows",
+    "name": "The Ring's Row-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A knight of the ring's row-book, wrapped in oilcloth and wedged under the mouth of the tenth bell in the fourth row, kept for whoever stands the rows next.",
+    "reads": "core:book/note_bell_garden_rows"
+  },
+  {
+    "id": "core:item/note_row_of_mouths_count",
+    "name": "The Count of Mouths",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of the Order's count-paper wound round the foot of a pillar in the Row of Mouths and tied with grey thread: a list of which mouth sang, dusk by dusk.",
+    "reads": "core:book/note_row_of_mouths_count"
+  },
+  {
+    "id": "core:item/note_sunk_plaza_tally",
+    "name": "The Fountain Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Order's tally of the Sunk Plaza's fountain, a double sheet folded into a pilgrim's bell and dropped in with the others, as if its keeper could not decide whether it was a count or an offering.",
+    "reads": "core:book/note_sunk_plaza_tally"
+  },
+  {
+    "id": "core:item/note_driftwood_strand_tally",
+    "name": "A Scavenger's Strand-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strand-scavenger's book of what the Grey Sea brought in, kept on sheets of barge-sail sewn together, left on the driftwood table where anybody can add to it.",
+    "reads": "core:book/note_driftwood_strand_tally"
+  },
+  {
+    "id": "core:item/note_thirteenth_dig_book",
+    "name": "The Dig-Book, Third Season",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Sayers' dig-book for the Thirteenth, third season, a thick quarto warped with ash-damp and left open on the finds table with a stone on the page.",
+    "reads": "core:book/note_thirteenth_dig_book"
+  },
+  {
+    "id": "core:item/note_unrung_graves_list",
+    "name": "The Burial List of the West Quarter",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Order's burial list for the pilgrims' graves in the dead city's west quarter, a long strip of count-paper rolled round a bell-post and tied with grey thread.",
+    "reads": "core:book/note_unrung_graves_list"
+  },
+  {
+    "id": "core:item/note_bell_counters_tally",
+    "name": "A Count Given Up",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A shard of slate scratched with a year's bell-count and then scored through, left on a stone by the Bell-Counter's shelter for whoever wants it, which is not him.",
+    "reads": "core:book/note_bell_counters_tally"
+  },
+  {
+    "id": "core:item/note_sayers_gauge_readings",
+    "name": "The Gauge Book, 1011 to 1043",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Sayers' Gauge's reading-book, bound in the Circle's blue-grey board and chained to the tripod so it cannot be carried off, which somebody has managed anyway: the chain has been cut and the book left on the step.",
+    "reads": "core:book/note_sayers_gauge_readings"
+  },
+  {
+    "id": "core:item/note_scavengers_prices",
+    "name": "What the Tallymen Pay",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A price-list chalked on a board and hung on the Scavengers' Ring's gate-post, corrected so often the board is more chalk than wood.",
+    "reads": "core:book/note_scavengers_prices"
+  },
+  {
+    "id": "core:item/turnback_count",
+    "name": "The Turnback Count",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A hundred years of the Choir's bells, counted night by night by the four who came back up the Stair and the knights who kept Turnback after them, bound in grey board with the First Vigilant's mace-chain round it. The Order's oldest figure is four hundred and eleven, the first night. This book starts a night earlier."
+  },
+  {
+    "id": "core:item/salt_barge_chart",
+    "name": "The Salt Barge's Chart",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A Salt Isles chart on greased sailcloth out of the Grey Wreck's stern locker, the coasts drawn as lines of little bells, and a line ruled in tar from the Isles to Sulion's harbour light and on, straight, to the Choir."
+  },
+  {
+    "id": "core:item/wet_bell_rope_end",
+    "name": "The Wet Rope's End",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "The tail of the new rope on the Hush Bell, cut off at the arm: the Order's grey flax laid at the Bell-Rope Walk, finished at the end with a splice nobody on the heath ties, and still wet with sea-water a day after it was cut."
+  },
+  {
+    "id": "core:item/vaelost_course_chip",
+    "name": "A Chip of Vaelost's Top Course",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A chip of fused stone the size of a hand, fallen from the top course of Vaelost in the night's wind, with two Oroth letters of the name cut on it and the edge of a third."
+  },
+  {
+    "id": "core:item/hesk_morn_name_tag",
+    "name": "A Name-Tag from the Silent Door",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A pilgrim's name-tag of stamped tin on grey thread, lying on the threshold of Hesk-Morn with its face down, at the end of the footprints that walk out onto the air."
+  },
+  {
+    "id": "core:item/unrung_grave_bell",
+    "name": "The Bell from the Extra Grave",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A pilgrim's hand-bell from the one grave in the Unrung Graves the Order has no name for, its clapper taken out like all the others. A name is scratched round the lip in a hand that shook."
+  },
+  {
+    "id": "core:item/hawthorn_cutting",
+    "name": "A Green Hawthorn Cutting",
+    "category": "ingredient",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A cutting from the one hawthorn in the Grey Hedge that has come into leaf, wrapped in a wet rag: five green leaves and a bud, the only green thing on the grey side of the Greyline."
+  },
+  {
+    "id": "core:item/grey_chalk",
+    "name": "A Lump of Grey Chalk",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Chalk from the bank of the Last Hearth's fire, grey right through, the way the Wardens found it one morning. It leaves a grey mark, not a white one."
+  },
+  {
+    "id": "core:item/nells_lamp",
+    "name": "Nell's Digging Lamp",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A scavenger's lamp with a Builders' bronze hood, left in the hollow bell on Bell Street where Coll Brisket's diggers slept the night before they went down the new shaft. Its wick is trimmed short for close work and it has been filled to the brim."
+  },
+  {
+    "id": "core:item/diggers_tokens",
+    "name": "The Three Diggers' Tokens",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Three scavengers' tally-tokens of stamped bronze, the Ring's mark on each, taken from the singing-hall at the bottom of Anthe-Ondr where the Precentor kept them in a row, like bells."
+  },
+  {
+    "id": "core:item/ashcombe_ash_flour",
+    "name": "A Sack of Ashcombe Flour",
+    "category": "misc",
+    "weight": 1.0,
+    "value": 12,
+    "tags": [
+      "lore"
+    ],
+    "description": "A small sack of Ashcombe Mill's grinding, marked with the miller's mark and the year 866: ash ground finer than smoke, grey, that sifts like flour and would bake like nothing at all. The Order buys it for the chapter-bread on the night of the Ash Winter."
+  },
+  {
+    "id": "core:item/hallows_seed_corn",
+    "name": "The Hallows' Seed-Corn",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 20,
+    "tags": [
+      "lore"
+    ],
+    "description": "A leather seed-bag from the Last Furrow's barn, the Hallows' mark burnt on its flap, full of seed-corn from the harvest of 865. It has been in the ash a hundred and seventy-seven years and the grains are still whole."
+  }
+]
