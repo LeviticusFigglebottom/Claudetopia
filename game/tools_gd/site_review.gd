@@ -74,7 +74,7 @@ func _inside(id: String) -> void:
 	var ent := site.get_node("Entrance") as Node3D
 	var fwd := -ent.transform.basis.z
 	var eye := ent.position + Vector3.UP * 1.65
-	shots.append({"label": "%s_00_way_in" % slug, "pos": eye - fwd * 0.5, "look": eye + fwd * 6.0 + Vector3.DOWN * 0.5})
+	shots.append({"label": "%s_00_way_in" % slug, "pos": eye + fwd * 0.3, "look": eye + fwd * 6.0 + Vector3.DOWN * 0.5})
 	var n := 1
 	for r in plan.rooms:
 		var c: Vector3 = r["centre"]
@@ -173,6 +173,9 @@ func _outside(id: String) -> void:
 
 
 func _take() -> void:
+	# the first frames after a build draw before every light is in: let them pass
+	for i in 30:
+		await get_tree().process_frame
 	for s in shots:
 		if s.has("ortho"):
 			cam.projection = Camera3D.PROJECTION_ORTHOGONAL

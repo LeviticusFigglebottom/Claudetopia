@@ -114,13 +114,24 @@ func test_the_showcase_insides_are_built_walkable_and_left() -> void:
 		assert_false(hit.is_empty(), "%s: a floor under the way in" % id)
 		if not hit.is_empty():
 			assert_true(absf(at.y - (hit["position"] as Vector3).y) < 0.3, "%s: standing on it (%.2f m)" % [id, at.y - (hit["position"] as Vector3).y])
+		# the way in looks into its room: from eye height, the first room's far side is metres away
+		var ent := site.get_node("Entrance") as Node3D
+		var eye := ent.global_position + Vector3.UP * 1.65
+		var look := eye - ent.global_transform.basis.z * 30.0
+		var seen := space.intersect_ray(PhysicsRayQueryParameters3D.create(eye, look, 1))
+		var clear := 30.0 if seen.is_empty() else eye.distance_to(seen["position"])
+		var up := space.intersect_ray(PhysicsRayQueryParameters3D.create(eye, eye + Vector3.UP * 20.0, 1))
+		print("SITE WAY IN | %s | at %s facing %s: %.1f m clear ahead, roof %s" % [id, site.to_local(ent.global_position),
+				-ent.global_transform.basis.z, clear, "over" if not up.is_empty() else "none"])
+		assert_gt(clear, 3.0, "%s: the way in looks into its room" % id)
+		assert_false(up.is_empty(), "%s: the way in is under the roof, inside" % id)
 		# every room's floor is rock under its middle, with room to stand over it
 		for r in site.plan.rooms:
 			var c := site.to_global(r["centre"])
 			var down := space.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3.UP * 1.5, c + Vector3.DOWN * 2.0, 1))
-			var up := space.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3.UP * 0.3, c + Vector3.UP * 2.1, 1))
+			var head := space.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3.UP * 0.3, c + Vector3.UP * 2.1, 1))
 			assert_false(down.is_empty(), "%s: room %s has a floor" % [id, r["id"]])
-			assert_true(up.is_empty(), "%s: room %s has headroom at its middle" % [id, r["id"]])
+			assert_true(head.is_empty(), "%s: room %s has headroom at its middle" % [id, r["id"]])
 		var report := _walk(site)
 		print("SITE | %s | %d rooms, %d links, %d chunks, %d tris, %d lights, %d foes, %d containers | reached %s | main %.0f ms" % [
 			id, site.plan.rooms.size(), site.plan.links.size(), site.chunks.size(), _tris(site), site.dress.lights.size(),

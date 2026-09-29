@@ -829,7 +829,8 @@ func _boulders(r: Dictionary, count: int) -> void:
 		var at := plan.take_spot(r, true)
 		if at == Vector3.INF:
 			break
-		list.append(PoiKit.transform_at(floor_under(at) + Vector3.DOWN * 0.25, randf_yaw(), kit.rng.randf_range(0.3, 0.75)))
+		var sc := kit.rng.randf_range(0.45, 0.9)
+		list.append(PoiKit.transform_at(floor_under(at) + Vector3.DOWN * 0.12 * sc, randf_yaw(), sc))
 	if not list.is_empty():
 		kit.scatter(path, list, true)
 	await step()

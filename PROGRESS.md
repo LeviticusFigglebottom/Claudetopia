@@ -12586,3 +12586,59 @@ the staff, and looking down at the legs with the body's shadow (head and all).
 - Sheathed, no hands are in view looking ahead. Mounted archery still isn't there (triage 55).
 - Only the man's default body with a sword, the bow and the staff was filmed. A shield, a
   two-handed weapon, a woman's body, riding, swimming and sneaking in first person were not seen.
+
+## Large sites: caves, mines, crypts, keeps and forts from data (world life 0-C, 2026-09-29)
+
+The world had eight caves (each a Blender-forged mesh) and no forts. `game/world/sites/` makes a
+large site from a def, at runtime, the same on every machine; `docs/WORLD_LIFE_INTERIORS.md` is the
+region agents' guide (data, kinds, set-pieces, sizing, testing, limits).
+
+### What was built
+- **`SitePlan`** (pure data): an inside laid as a descending spiral of rooms of varied size and
+  height (so the walk comes back round), joined by ramps no steeper than 27 degrees; a loop (two
+  rooms not neighbours on the walk joined, or a side room bridging two); a secret room behind loose
+  stones; a barred way from the boss back to the entrance, lifted from the boss's side; set-pieces
+  (underground lake, daylight or collapsed shaft, chasm or lava rift with a bridge, ledge with a
+  ramp, forge hall, ossuary niches, barracks, cellar, fungus/obsidian/ore grottoes, a pillared
+  boss arena); foes placed by role (guards, sleepers by a fire, archers on a ledge, an ambusher, a
+  patrol, the heavy in the hall, the boss behind a fog gate); containers by tier; the def's
+  features. Eight kinds (`SiteKinds`): cave, mine, crypt, keep, ruined_hall, bandit_cave, sea_cave,
+  lava_tube.
+- **`SiteField`**: the plan's carve/fill ops as a signed distance field evaluated only in each
+  op's box, meshed by surface nets into 14 m chunks whose faces are also the collision. Runs on a
+  worker thread; cached in `user://site_cache/`; prefetched when the site's entrance is raised.
+- **`SiteInterior`** (`site_interior.tscn`, the interior def's scene): the way in and a slab of
+  floor at once, the body held there until built; chunks, dressing, navigation mesh (baked off the
+  main thread) and foes a piece at a time within `WorldPace`. **`SiteDress`**: lights by theme
+  (torches in brackets, braziers, a camp's fire, glow fungus, ember cracks and lava vents, daylight
+  shafts), the region's props, the set-pieces dressed, the rock site's way out as a throat climbing
+  to a soft daylight, the secret's stones and the shortcut's bar (`SiteSeal`, remembered by flag).
+- **Outsides** (`site_exterior.gd`, POI kinds `delve`, `fort`, `castle_ruin`, `stockade`,
+  `walled_camp`, `watchtower`): walls in bays over the ground with one walkway level, crenels,
+  corner towers the walkways run onto, a gatehouse, stairs (doubling back where the wall is short)
+  up beside the gate, a keep with the door to its undercroft, lean-tos, fire, stores; a garrison of
+  tower archers, wall walkers, gate guards and men at the fire; a notice or cairn that starts the
+  site's quest.
+- **Showcases** (own files, `*_showcase.json` / `pois/_interiors_showcase.json`): **The Kilnway**,
+  a lava tube on the empty west heath of Cinderlea (-3152, 2360), and **Scathe Fort** with its
+  undercroft on the empty east down of Hearthvale (2456, 2224): two bosses (extending the
+  bell-bearer and the Larkbourne bruiser), their unique drops, two side quests started at the
+  sites, two rumours. `tools_gd/site_review.tscn` renders a site; sheets in `docs/review/sites/`.
+
+### Tests (`test_sites`, 7 tests; with test_pois, test_poi_kinds, test_interiors, test_content_db: 76, 0 failed)
+Every kind x 6 seeds x 2 sizes: every room reached from the way in and back, a loop, one boss, no
+passage too steep; 96/96 with a secret, 93/96 with a shortcut. Both showcases entered through
+`Interiors`, stood on, every room on one navigation mesh with the way in, left by the way out;
+saved inside and loaded back inside; the rock identical build to build; a paced build's longest
+main-thread piece 7-13 ms (a foe stood up 17-56 ms, the Enemy's own cost), identical to the build
+at once. The fort: walled round with one gate, a garrison of 10 with the walls' walkers up on the
+walkway, and the walkway on one navigation mesh with the yard up the stairs.
+
+### Not done / limits
+- The world build reads only `pois/pois.json`: the showcases stand on unflattened ground (trees
+  of the build inside Scathe's yard) until the build reads `pois/_interiors_showcase.json` (or 0-A's
+  per-region files hold them) and the world is rebuilt.
+- Drops (a loop ending on a ledge over a lower room) are supported but the spiral rarely makes one.
+- A fort's garrison stands up again whenever its cell is raised again.
+- The Kilnway's outside was only seen on a flat pad (the world-capture run timed out on the loaded
+  box after the fort's three shots); the cave builder's bank looks raw there.
