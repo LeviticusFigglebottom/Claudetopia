@@ -12974,8 +12974,12 @@ What was changed:
   boulders were dropped after the seat audit counted them as overlaps.
 - The trestles are end to end, and the mound is turfed.
 
-A second sheet of those three was still in the machine's queue when this was written (see
-below). No sheets are committed.
+A second sheet of those three was killed in the queue by the container restart and was not run
+again, to save usage. The fixes are measured by the seat audit and the probe, not by eye. No sheets
+are committed.
+- Not done: a sheet of the reworked Kilns, Long Table and Swallet, and of the other twelve new
+  places, which were never rendered. Only the probe measured them: under 110 draws each, nothing
+  floating, buried, sunk or on a road.
 
 **Not done / for the coordinator:**
 - Shared: `QuestWalk` (test_map_quests) says a site interior's boss is held by nothing ("holds 0
