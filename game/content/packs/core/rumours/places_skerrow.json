@@ -1,0 +1,50 @@
+[
+  {
+    "id": "core:rumour/ghastow_chains",
+    "name": "One chain too many",
+    "tone": "cold",
+    "text": "The Moot counts the chains on Old Ghastow's gate every spring, one for every soul it ever unroped. This spring there's one more chain than there are clanless. The Unroped have started paying blood-prices before the blood, and they're doing it at the Stones, in public, the way the law says.",
+    "variants": ["Somebody laid coin in the Blood-Price Stones for a death that hasn't happened yet. Graddo the reckoner went up the Edge and hasn't come down."],
+    "tags": ["skerrow", "grim"]
+  },
+  {
+    "id": "core:rumour/orrdun_singing",
+    "name": "The verse from the Wall",
+    "tone": "cold",
+    "text": "The Skarl cattle come down the fell at dusk to a voice from high on the Wall, before their own herd-singer's opened his mouth. It's the Skarl verse, sung right, with names in it. The old Skarl say it's coming out of Orrdun, where they stopped carrying their dead ninety years ago, and they say it quietly.",
+    "variants": ["Up at Skarl Shieling the herd won't come to its own singer till somebody on the Wall's finished. Somebody's singing a roll of names up there."],
+    "tags": ["skerrow", "strange"]
+  },
+  {
+    "id": "core:rumour/tokens_in_the_water",
+    "name": "Tokens of no clan",
+    "tone": "neutral",
+    "text": "Skarl Spout's been bringing bone tokens out of the fell, one a week, cut with a closed hand. That's no clan's mark. The keeper asked the Moot whose it was and the whole long table went quiet at once, which is an answer, if you know how to read the Moot.",
+    "variants": ["Closed hand. Cut on bone. Coming down the Skarl Water. The Moot won't say it and the Rope-Song has a gap where it'd go."],
+    "tags": ["skerrow", "strange"]
+  },
+  {
+    "id": "core:rumour/frozen_drove",
+    "name": "The drove on the Wall",
+    "tone": "neutral",
+    "text": "The Hanging Falls thawed on the wrong day this spring and slumped the snow on the Wall, and there's a whole Skarl drove standing up there under it, lost in the Long Winter of 988. Standing, mind, all of them, facing north. The Skarl want to know if they're still owned.",
+    "variants": ["They found the drove of 988. Every beast facing the Windgate, heads up, like something called them."],
+    "tags": ["skerrow", "strange"]
+  },
+  {
+    "id": "core:rumour/sorting_ground",
+    "name": "Somebody tidying the giants",
+    "tone": "cold",
+    "text": "There's a stretch of pavement on the moor past the Giant's Spine where the thralls are laying out bones in rows, biggest to smallest, like a smith laying out a set of tools. The Rudd bone-counter at the ford got thirty-two this spring. You do the sum.",
+    "variants": ["The stone-thralls have been seen carrying. Carrying. Bones, in their arms, like firewood."],
+    "tags": ["skerrow", "grim"]
+  },
+  {
+    "id": "core:rumour/sayer_on_the_moor",
+    "name": "The Sayer at Blackwater",
+    "tone": "warm",
+    "text": "There's a Sayer out of Tollmere living by Blackwater Tarn with a house full of brass and ribbons, measuring the Breath to prove it isn't there. Six winters. The herders take her peat. She thanks them in figures.",
+    "variants": ["The Sayer at Blackwater's stopped writing home. The herders say she holds her hand over the shakeholes every morning now, like the rest of us."],
+    "tags": ["skerrow", "sayers"]
+  }
+]

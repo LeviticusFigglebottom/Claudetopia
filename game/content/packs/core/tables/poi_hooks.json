@@ -222,6 +222,7 @@
       {
         "poi": "core:poi/blood_price_stones",
         "quests": [
+          "core:quest/a_stone_before_the_death",
           "core:quest/forty_head_and_a_hearth"
         ],
         "finds": [],
@@ -248,7 +249,9 @@
       },
       {
         "poi": "core:poi/bone_ford",
-        "quests": [],
+        "quests": [
+          "core:quest/thirty_two"
+        ],
         "finds": [
           "core:item/note_bone_ford"
         ],
@@ -276,6 +279,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/brakhs_drink",
+        "quests": [
+          "core:quest/tokens_of_no_clan"
+        ],
+        "finds": [
+          "core:item/note_brakhs_drink_warning"
+        ],
+        "encounters": [
+          "core:encounter/brakhs_drink"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/brakhs_eye",
         "quests": [],
         "finds": [
@@ -297,7 +313,9 @@
       },
       {
         "poi": "core:poi/breathing_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/where_the_breath_went"
+        ],
         "finds": [
           "core:item/note_breathing_stones"
         ],
@@ -340,7 +358,9 @@
         "quests": [
           "core:quest/nine_lights"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_briars_end_rib"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -382,6 +402,17 @@
         "encounters": [
           "core:encounter/wayside_broken_stilts"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/broom_wifes_bield",
+        "quests": [
+          "core:quest/the_broom_at_the_watch"
+        ],
+        "finds": [
+          "core:item/note_bressas_round"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -521,7 +552,9 @@
       {
         "poi": "core:poi/chain_bridge",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_chain_pitch_tally"
+        ],
         "encounters": [
           "core:encounter/chain_bridge"
         ],
@@ -763,7 +796,9 @@
         "quests": [
           "core:quest/askes_tune"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_deadground_slate"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -861,7 +896,9 @@
       },
       {
         "poi": "core:poi/drovers_bothy",
-        "quests": [],
+        "quests": [
+          "core:quest/up_the_dale_in_spring"
+        ],
         "finds": [
           "core:item/note_drovers_bothy"
         ],
@@ -1027,6 +1064,19 @@
           "core:item/wayside_elderhold_charcoal_hut"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/faceless_graves",
+        "quests": [
+          "core:quest/tokens_of_no_clan"
+        ],
+        "finds": [
+          "core:item/note_faceless_rubbing"
+        ],
+        "encounters": [
+          "core:encounter/faceless_graves"
+        ],
         "hearthstone": false
       },
       {
@@ -1200,11 +1250,26 @@
       },
       {
         "poi": "core:poi/frost_moot",
-        "quests": [],
+        "quests": [
+          "core:quest/the_broom_at_the_watch"
+        ],
         "finds": [
           "core:item/note_frost_moot"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/frozen_drove",
+        "quests": [
+          "core:quest/up_the_dale_in_spring"
+        ],
+        "finds": [
+          "core:item/lead_beasts_bell"
+        ],
+        "encounters": [
+          "core:encounter/frozen_drove"
+        ],
         "hearthstone": false
       },
       {
@@ -1241,7 +1306,9 @@
         "quests": [
           "core:quest/a_debt_with_a_nicer_voice"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_far_anchor_rubbing"
+        ],
         "encounters": [
           "core:encounter/ghasts_broken_bridge"
         ],
@@ -1250,9 +1317,12 @@
       {
         "poi": "core:poi/ghorrow",
         "quests": [
-          "core:quest/the_ninth_door"
+          "core:quest/the_ninth_door",
+          "core:quest/tokens_of_no_clan"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_ghorrow_door_chalk"
+        ],
         "encounters": [
           "core:encounter/ghorrow"
         ],
@@ -1260,8 +1330,12 @@
       },
       {
         "poi": "core:poi/giants_spine",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/thirty_two"
+        ],
+        "finds": [
+          "core:item/note_spine_count"
+        ],
         "encounters": [
           "core:encounter/giants_spine"
         ],
@@ -1269,8 +1343,12 @@
       },
       {
         "poi": "core:poi/giants_stair",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/the_verse_nobody_sang"
+        ],
+        "finds": [
+          "core:item/note_last_riser"
+        ],
         "encounters": [
           "core:encounter/giants_stair"
         ],
@@ -1303,6 +1381,15 @@
         "quests": [],
         "finds": [
           "core:item/wayside_glass_road_stone"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/going_up_cairn",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_going_up_cairn"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1482,7 +1569,9 @@
       },
       {
         "poi": "core:poi/hanging_falls",
-        "quests": [],
+        "quests": [
+          "core:quest/up_the_dale_in_spring"
+        ],
         "finds": [
           "core:item/note_hanging_falls"
         ],
@@ -1654,7 +1743,9 @@
       {
         "poi": "core:poi/hidden_tarn",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_tarn_catch"
+        ],
         "encounters": [
           "core:encounter/hidden_tarn"
         ],
@@ -2121,7 +2212,9 @@
       },
       {
         "poi": "core:poi/lichen_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/where_the_breath_went"
+        ],
         "finds": [
           "core:item/note_lichen_stones"
         ],
@@ -2536,6 +2629,26 @@
         "hearthstone": true
       },
       {
+        "poi": "core:poi/old_ghastow",
+        "quests": [
+          "core:quest/a_stone_before_the_death"
+        ],
+        "finds": [
+          "core:item/note_ghastow_chain_tag"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/old_kharrows_rest",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_old_kharrows_rest"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/old_quarry",
         "quests": [
           "core:quest/the_stride_dedication"
@@ -2599,6 +2712,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/orrdun",
+        "quests": [
+          "core:quest/the_verse_nobody_sang"
+        ],
+        "finds": [
+          "core:item/note_orrdun_bier_list"
+        ],
+        "encounters": [
+          "core:encounter/orrdun"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/oskel_drip",
         "quests": [],
         "finds": [
@@ -2632,7 +2758,9 @@
         "quests": [
           "core:quest/askes_tune"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_oskel_fire_book"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -2699,6 +2827,19 @@
           "core:item/note_pellows_pale"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pennants_weather_house",
+        "quests": [
+          "core:quest/where_the_breath_went"
+        ],
+        "finds": [
+          "core:item/note_pennants_weather_book"
+        ],
+        "encounters": [
+          "core:encounter/pennants_weather_house"
+        ],
         "hearthstone": false
       },
       {
@@ -2849,11 +2990,25 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/reckoners_hut",
+        "quests": [
+          "core:quest/a_stone_before_the_death"
+        ],
+        "finds": [
+          "core:item/note_reckoners_table"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/red_moor",
         "quests": [
-          "core:quest/a_debt_with_a_nicer_voice"
+          "core:quest/a_debt_with_a_nicer_voice",
+          "core:quest/a_stone_before_the_death"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_red_moor_chalk_book"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -2889,7 +3044,9 @@
       {
         "poi": "core:poi/rib_cathedral",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_oath_slip"
+        ],
         "encounters": [
           "core:encounter/rib_cathedral"
         ],
@@ -3067,7 +3224,9 @@
         "quests": [
           "core:quest/forty_head_and_a_hearth"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_ruddale_parapet_chalk"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -3350,6 +3509,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/skarl_drove_well",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_skarl_drove_well"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/skarl_mill",
         "quests": [],
         "finds": [
@@ -3361,7 +3529,8 @@
       {
         "poi": "core:poi/skarl_shieling",
         "quests": [
-          "core:quest/nine_lights"
+          "core:quest/nine_lights",
+          "core:quest/the_verse_nobody_sang"
         ],
         "finds": [],
         "encounters": [],
@@ -3380,7 +3549,9 @@
       },
       {
         "poi": "core:poi/skarl_spout",
-        "quests": [],
+        "quests": [
+          "core:quest/tokens_of_no_clan"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/skarl_spout"
@@ -3397,8 +3568,23 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/skerrfall_quarry",
+        "quests": [
+          "core:quest/where_the_breath_went"
+        ],
+        "finds": [
+          "core:item/note_skerrfall_lintel_book"
+        ],
+        "encounters": [
+          "core:encounter/skerrfall_quarry"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/skerry_watch",
-        "quests": [],
+        "quests": [
+          "core:quest/the_broom_at_the_watch"
+        ],
         "finds": [
           "core:item/note_skerry_watch"
         ],
@@ -3450,6 +3636,19 @@
           "core:item/note_snow_shelter"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sorting_ground",
+        "quests": [
+          "core:quest/thirty_two"
+        ],
+        "finds": [
+          "core:item/note_sorting_count"
+        ],
+        "encounters": [
+          "core:encounter/sorting_ground"
+        ],
         "hearthstone": false
       },
       {
@@ -3621,8 +3820,12 @@
       },
       {
         "poi": "core:poi/the_bonefield",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/thirty_two"
+        ],
+        "finds": [
+          "core:item/note_bonefield_complaint"
+        ],
         "encounters": [
           "core:encounter/the_bonefield"
         ],
@@ -3658,7 +3861,9 @@
       {
         "poi": "core:poi/the_jawbone",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_jawbone_balk_tally"
+        ],
         "encounters": [
           "core:encounter/the_jawbone"
         ],
@@ -3681,6 +3886,20 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_last_field"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_leadhouse",
+        "quests": [
+          "core:quest/the_broom_at_the_watch"
+        ],
+        "finds": [
+          "core:item/salt_boat_letter",
+          "core:item/note_leadhouse_tide_book"
+        ],
+        "encounters": [
+          "core:encounter/the_leadhouse"
         ],
         "hearthstone": false
       },
@@ -3974,6 +4193,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/uldras_steading",
+        "quests": [],
+        "finds": [
+          "core:item/note_jory_wool_book"
+        ],
+        "encounters": [
+          "core:encounter/uldras_steading"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/unasked_camp",
         "quests": [],
         "finds": [
@@ -4002,6 +4232,15 @@
         "encounters": [
           "core:encounter/wayside_unroofed_hold"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/unroping_post",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_unroping_post"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4047,6 +4286,17 @@
           "core:item/note_wading_giant"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wall_keepers_ring",
+        "quests": [],
+        "finds": [
+          "core:item/note_wall_book"
+        ],
+        "encounters": [
+          "core:encounter/wall_keepers_ring"
+        ],
         "hearthstone": false
       },
       {
@@ -4166,6 +4416,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/whelping_hole",
+        "quests": [],
+        "finds": [
+          "core:item/note_whelping_courier"
+        ],
+        "encounters": [
+          "core:encounter/whelping_hole"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/whitecut_falls",
         "quests": [],
         "finds": [],
@@ -4187,7 +4448,9 @@
       },
       {
         "poi": "core:poi/winter_cairns",
-        "quests": [],
+        "quests": [
+          "core:quest/up_the_dale_in_spring"
+        ],
         "finds": [
           "core:item/note_winter_cairns"
         ],

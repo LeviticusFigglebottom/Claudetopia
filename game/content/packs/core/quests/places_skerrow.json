@@ -1,0 +1,935 @@
+[
+  {
+    "id": "core:quest/a_stone_before_the_death",
+    "name": "A Stone Before the Death",
+    "layer": "side",
+    "giver": "core:npc/graddo_ko_kharrow",
+    "region": "core:region/skerrow",
+    "summary": "Somebody has laid coin in the Blood-Price Stones' grooves for a death nobody has reported, and set up a new stone on the Red Moor where only the dead get stones. Graddo ko-Kharrow, who has set every blood-price on the North Road for thirty-one years, did not set this one.",
+    "notes": "Skerrow world life (docs/WORLD_LIFE.md). Links the Reckoner's Hut, the Blood-Price Stones, the Red Moor (Haska ko-Ghast cuts its stones) and Old Ghastow, the Unroped's hold (castle_ruin, keep interior core:interior/ghastow_undercroft, boss core:boss/gorrm_unroped). The price paid in advance is for Graddo's own death.",
+    "stages": [
+      {
+        "id": "the_coin",
+        "journal": "Graddo ko-Kharrow weighs a death in beasts, coin, news or years, and in thirty-one years nobody has refused his price. Coin has been laid in the Blood-Price Stones' grooves, by the North Road, where everyone can see a debt paid; nobody has reported a death, and nobody asked Graddo what one was worth. On the Red Moor, where Haska ko-Ghast cuts a stone for each of the dead of the year of the broken bridge, a twelfth stone has been set up, and nobody has died.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/blood_price_stones",
+            "text": "Look at the coin in the Blood-Price Stones' grooves"
+          },
+          {
+            "type": "reach",
+            "target": "core:poi/red_moor",
+            "text": "Find the new stone on the Red Moor"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/red_moor",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_unroped",
+        "journal": "The coin in the grooves is Ghast coin, forty years old. The new stone on the Red Moor came with a letter and a purse for Haska: cut this name, it said, the price is paid. The name is Graddo ko-Kharrow's. The letter was sealed with a knot of broken chain, which is how the Unroped of Old Ghastow sign; they have paid for a death in advance, in public, as the law says a death is paid for. Gorrm, their chief, keeps the undercroft under Ghastow's keep.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/old_ghastow",
+            "text": "Go up to Old Ghastow"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/gorrm_unroped",
+            "count": 1,
+            "where": "core:interior/ghastow_undercroft",
+            "text": "Deal with Gorrm the Unroped in the undercroft under Ghastow's keep"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/gorrms_reckoning",
+            "count": 1,
+            "text": "Take Gorrm's reckoning"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/old_ghastow",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_reckoning",
+        "journal": "Gorrm's reckoning is a reckoner's book kept by a man who hated reckoners. Its first price is his own: a hundred head, set by Graddo ko-Kharrow in the year 1003 for the death of a Kharrow herdsman, which Ghast would not pay, so the Moot unroped him. Under it, in another hand, the Moot's own finding two winters later: the herdsman fell. Nobody reckoned what that was worth. Graddo is at his hut on the Edge.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "a_stone_before_the_death",
+            "text": "Tell Graddo ko-Kharrow what is to be done about the stone and the reckoning",
+            "options": [
+              {
+                "id": "reckon_it_back",
+                "text": "Have Graddo reckon what the Moot owed Gorrm, and lay it in the grooves in his name.",
+                "effects": [
+                  {
+                    "set_flag": "stone_reckoned_back"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cut_his_name",
+                "text": "Have Haska cut Gorrm's name on the stone meant for Graddo.",
+                "effects": [
+                  {
+                    "set_flag": "stone_cut_for_gorrm"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "burn_the_reckoning",
+                "text": "Burn the reckoning. A price paid is a price paid.",
+                "effects": [
+                  {
+                    "set_flag": "stone_reckoning_burned"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      4
+                    ]
+                  },
+                  {
+                    "marks": 60
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/reckoners_hut",
+          "radius": 140
+        }
+      },
+      {
+        "id": "reckoned",
+        "journal": "Graddo ko-Kharrow notched a stick for it, as he notches one for every price, and hung it on the wall with the others, and stood looking at it for a long time.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 12,
+      "items": [
+        [
+          "core:item/oatcake",
+          3
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_verse_nobody_sang",
+    "name": "The Verse Nobody Sang",
+    "layer": "side",
+    "giver": "core:npc/tamsk_ko_skarl",
+    "region": "core:region/skerrow",
+    "summary": "At dusk the cattle at Skarl Shieling come down the fell to a verse from the Wall before Tamsk ko-Skarl has sung a note: a Skarl verse, with names in it nobody living has sung.",
+    "notes": "Skerrow world life. Links Skarl Shieling, the Giants' Stair (the one way up the Wall there) and Orrdun (delve, crypt interior core:interior/orrdun_bone_hall, boss core:boss/keener_of_orrdun), where the Skarl carried their dead to lie nearest the Breath.",
+    "stages": [
+      {
+        "id": "up_the_stair",
+        "journal": "Tamsk ko-Skarl sings his herd down at dusk as his mother did. This month they come down to another voice before he opens his mouth, from high on the Wall: the Skarl verse, sung right, with names in it he has never heard, in an order. The only way up the Wall on that side is the Giants' Stair.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/giants_stair",
+            "text": "Climb the Giants' Stair toward the singing"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/giants_stair",
+          "radius": 140
+        }
+      },
+      {
+        "id": "orrdun",
+        "journal": "From the top of the Giants' Stair the singing is plain, and it is coming out of the Wall's face above the snowline: Orrdun, where the Skarl carried their dead for three hundred years to lie nearest the Breath, and stopped carrying ninety years ago when the last memory-keeper who went up behind a bier did not come down. Somebody is still singing them in.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/orrdun",
+            "text": "Go into Orrdun"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/keener_of_orrdun",
+            "count": 1,
+            "where": "core:interior/orrdun_bone_hall",
+            "text": "Stop the Keener singing at the bottom of Orrdun"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/keeners_name_roll",
+            "count": 1,
+            "text": "Take the Keener's roll of names"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/orrdun",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_names",
+        "journal": "The Keener was Hethra ko-Skarl, who went up behind the last bier and, when the Breath did not come, sang the name before it, and the one before that. Her roll is every name in Orrdun in the order it came, three hundred years of Skarl dead, and the last line is blank. Tamsk is at the shieling. The names are the Skarl's to do something with.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_verse_nobody_sang",
+            "text": "Tell Tamsk ko-Skarl what is to be done with the names",
+            "options": [
+              {
+                "id": "sing_them_in",
+                "text": "Sing the names at dusk with the herd, the way she did, so somebody still does.",
+                "effects": [
+                  {
+                    "set_flag": "verse_sung_at_dusk"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "to_the_memory_keeper",
+                "text": "Take the roll down to the memory-keepers at Kharrow Hold.",
+                "effects": [
+                  {
+                    "set_flag": "verse_to_the_hold"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      10
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "leave_them_quiet",
+                "text": "Put the roll back in Orrdun with the dead. Let them wait for the Breath in quiet.",
+                "effects": [
+                  {
+                    "set_flag": "verse_left_quiet"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      4
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/skarl_shieling",
+          "radius": 140
+        }
+      },
+      {
+        "id": "dusk",
+        "journal": "At dusk the herd came down the fell to Tamsk, and to nobody else.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/tokens_of_no_clan",
+    "name": "Tokens of No Clan",
+    "layer": "side",
+    "giver": "core:npc/ossa_ko_skarl",
+    "region": "core:region/skerrow",
+    "summary": "For a month the Skarl Water has been bringing a bone token out of Skarl Spout once a week, each cut with the same mark, and the mark belongs to no clan. Ossa ko-Skarl, the Spout's keeper, knows where the water goes in.",
+    "notes": "Skerrow world life. Links Skarl Spout, the Faceless Graves, the Brakh's Drink (delve, cave interior core:interior/brakhs_drink_under, boss core:boss/kneeling_brakh) and Ghorrow, the eighth hold. It does not name the eighth clan.",
+    "stages": [
+      {
+        "id": "the_turned_stone",
+        "journal": "Ossa ko-Skarl keeps the tokens in a jar tied shut. The mark cut on them is a closed hand. Below Ghorrow the Faceless Graves lie in a row with their headstones face-down, and a Skarl herder says one has been turned face-up in the night.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/faceless_graves",
+            "text": "Look at the turned headstone at the Faceless Graves"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/faceless_graves",
+          "radius": 140
+        }
+      },
+      {
+        "id": "where_the_water_goes_in",
+        "journal": "The turned headstone has the closed hand cut on it, and a line of Skerrish under it worn to nothing. The water that brings the tokens goes into the fell at the Brakh's Drink, where the Skarl verse says a giant knelt to drink and was still drinking when the Breath came.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/brakhs_drink",
+            "text": "Go in where the Skarl Water goes under the fell"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/kneeling_brakh",
+            "count": 1,
+            "where": "core:interior/brakhs_drink_under",
+            "text": "Get past the Kneeling Brakh at the lake"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/token_of_no_clan",
+            "count": 1,
+            "text": "Take a token out of the Brakh's hands"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/brakhs_drink",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_lintel",
+        "journal": "The Brakh's hands were full of tokens, hundreds, all with the closed hand. Whoever cut them gave them to the water, and the water gave them to the giant, and the giant has been giving them back. Ghorrow, the hold with no clan's mark over its door, is up the fell.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/ghorrow",
+            "text": "Take the token to Ghorrow's bare lintel"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/ghorrow",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_tokens",
+        "journal": "Under the paint on Ghorrow's bare lintel, cut deep and filled with old mortar, is a socket the size of a token, and the closed hand fits it. Ossa ko-Skarl is at the Spout with her jar.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "tokens_of_no_clan",
+            "text": "Tell Ossa ko-Skarl what is done with the tokens",
+            "options": [
+              {
+                "id": "back_to_the_water",
+                "text": "Give them back to the Skarl Water. It has been carrying them for somebody.",
+                "effects": [
+                  {
+                    "set_flag": "tokens_to_the_water"
+                  },
+                  {
+                    "renown": 8
+                  }
+                ]
+              },
+              {
+                "id": "to_ghorrows_lintel",
+                "text": "Set one in Ghorrow's lintel and leave the rest at the door.",
+                "effects": [
+                  {
+                    "set_flag": "tokens_to_ghorrow"
+                  },
+                  {
+                    "renown": 12
+                  }
+                ]
+              },
+              {
+                "id": "to_the_moot",
+                "text": "Take the jar down to the Moot at Kharrow Hold.",
+                "effects": [
+                  {
+                    "set_flag": "tokens_to_the_moot"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      10
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/skarl_spout",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_water_runs_clear",
+        "journal": "No token has come out of Skarl Spout since. Ossa ko-Skarl tastes the water every morning and says it tastes of the moor again, and nothing else.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 170,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/where_the_breath_went",
+    "name": "Where the Breath Went",
+    "layer": "side",
+    "giver": "core:npc/maudry_pennant",
+    "region": "core:region/skerrow",
+    "summary": "The Breathing Stones' shakehole has stopped breathing out. Maudry Pennant, the Sayer sent to the High Moor to prove the Breath is only karst, wants to know where the air went, and it is not a question she likes.",
+    "notes": "Skerrow world life. The clans' account against the Sayers'. Links Pennant's Weather-House, the Breathing Stones, the Seven Stones (a survey point over the moor) and Skerrfall Quarry, whose new face breathes out.",
+    "stages": [
+      {
+        "id": "the_stopped_hole",
+        "journal": "Six winters of Maudry Pennant's weather-book say the shakehole at the Breathing Stones breathes out on a rising glass and in on a falling one, as a sponge would. Since the new moon it has only breathed in. She wants a hand held over it, by someone who has not already decided what it means.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/breathing_stones",
+            "text": "Hold a hand over the Breathing Stones' hole"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/breathing_stones",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_survey",
+        "journal": "It pulls at the hand, steadily, and gives nothing back. Maudry wants a reading from the Seven Stones, the highest ground on that side of the moor, to see whether the whole moor is drawing in or only the hole.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/lichen_stones",
+            "text": "Take the wind's reading at the Seven Stones"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/lichen_stones",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_new_face",
+        "journal": "From the Seven Stones the moor is still, and the only thing moving is a thread of mist going straight up out of Skerrfall, Brindle's quarry above Brindlecrag, where last autumn the face opened on a giant's bone and something walked out of it.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/skerrfall_quarry",
+            "text": "Go to Skerrfall Quarry"
+          },
+          {
+            "type": "kill",
+            "target": "core:enemy/stone_thrall",
+            "count": 1,
+            "where": "core:poi/skerrfall_quarry",
+            "text": "Put down the thrall that walked out of the new face"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/skerrfall_quarry",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_write_up",
+        "journal": "The new face breathes out, warm, on a falling glass, through the socket where the giant's bone lay. Whatever the moor breathed through the Breathing Stones it is breathing through Skerrfall now. Maudry Pennant will write it down one way or another, and Tollmere will read it.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "where_the_breath_went",
+            "text": "Tell Maudry Pennant how to write it up",
+            "options": [
+              {
+                "id": "write_karst",
+                "text": "Karst: the quarry cut a new way out of the rock and the air took it.",
+                "effects": [
+                  {
+                    "set_flag": "breath_written_karst"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/sayers",
+                      8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "write_breath",
+                "text": "The Breath: something vast is breathing in, and breathed out once more where a giant lay.",
+                "effects": [
+                  {
+                    "set_flag": "breath_written_breath"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "write_both",
+                "text": "Both, and the numbers, and let Tollmere choose.",
+                "effects": [
+                  {
+                    "set_flag": "breath_written_both"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/pennants_weather_house",
+          "radius": 140
+        }
+      },
+      {
+        "id": "posted",
+        "journal": "Maudry Pennant sealed six winters of weather in one packet for the Circle and wrote on the outside, in a hand she did not use for anything else: read the last page first.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 140,
+      "renown": 10,
+      "items": [
+        [
+          "core:item/oatcake",
+          2
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_broom_at_the_watch",
+    "name": "The Broom at the Watch",
+    "layer": "side",
+    "giver": "core:npc/grenna_ko_oskel",
+    "region": "core:region/skerrow",
+    "summary": "Somebody has been sweeping the Skerry Watch, where nobody has watched for a boat in forty years, and leaving the broom. Grenna ko-Oskel, who lost a husband and a son the winter the watch went dark, wants to know who.",
+    "notes": "Skerrow world life. Links the Skerry Watch, the Frost Moot (swept too), the Broom-Wife's Bield (Bressa, unroped for the watch-fire) and the Leadhouse (the Salt boat's last letter).",
+    "stages": [
+      {
+        "id": "the_broom",
+        "journal": "Grenna ko-Oskel sits in the Skerry Watch every day with her back to the land. Her husband and her son sailed as pilots on the last Salt boat, which broke on the skerries the winter the watch-fire was found unlit. Somebody sweeps the watch at night and leaves a heather broom. The snow is swept off the Old Moot's seats too, under the Wall, one seat each morning.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/frost_moot",
+            "text": "Watch the seats at the Frost Moot"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/frost_moot",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_sweeper",
+        "journal": "The broom-tracks lead away from the Frost Moot across the heather to a single turf bield with brooms stacked at its door. Grenna will not say the name of the woman who was keeping the watch that winter. The Moot unroped her for it.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/broom_wifes_bield",
+            "text": "Follow the broom-tracks to the bield"
+          },
+          {
+            "type": "talk",
+            "target": "core:npc/bressa_unroped",
+            "topic": "the_watch_winter",
+            "text": "Ask Bressa about the winter of the watch-fire"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/broom_wifes_bield",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_salt_letter",
+        "journal": "Bressa will not say whether the fire was lit. She says the Salt men wrote everything down, and wrote it in the Leadhouse, and that the clanless sleep there now when the wind is in the west.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_leadhouse",
+            "text": "Go to the Leadhouse above the Oskel shore"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/salt_boat_letter",
+            "count": 1,
+            "text": "Find what the Salt men left under the hearth"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_leadhouse",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_letter",
+        "journal": "Under the Leadhouse hearth, in a Salt Isles tin, a letter in an Oskel hand, never sent: Grenna's son to his mother, the night they sailed. The watch-fire is lit, he writes; they can see it from the lead-house door; the master will sail on the tide whatever it says. Grenna ko-Oskel is at the watch.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_broom_at_the_watch",
+            "text": "Decide what Grenna ko-Oskel is told",
+            "options": [
+              {
+                "id": "read_it_to_her",
+                "text": "Read Grenna the letter.",
+                "effects": [
+                  {
+                    "set_flag": "broom_letter_read"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "to_the_moot",
+                "text": "Take the letter to the Moot, and have Bressa's rope tied again.",
+                "effects": [
+                  {
+                    "set_flag": "broom_rope_retied"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      10
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_it",
+                "text": "Keep it. Tell Grenna only that the sweeper means no harm.",
+                "effects": [
+                  {
+                    "set_flag": "broom_letter_kept"
+                  },
+                  {
+                    "marks": 40
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/skerry_watch",
+          "radius": 140
+        }
+      },
+      {
+        "id": "swept",
+        "journal": "The Skerry Watch was swept again last night, and the broom was left, as before, leaning in the door.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 10
+    }
+  },
+  {
+    "id": "core:quest/up_the_dale_in_spring",
+    "name": "Up the Dale in Spring",
+    "layer": "side",
+    "giver": "core:npc/ottar_ko_skarl",
+    "region": "core:region/skerrow",
+    "summary": "Ottar ko-Skarl banked the Drovers' Bothy fire in the autumn and found it lit in spring, with a herd's worth of hoofprints round it going up the dale, when nothing goes up.",
+    "notes": "Skerrow world life. Links the Drovers' Bothy, the Winter Cairns (a cairn for each beast lost in the Long Winter of 988), the Hanging Falls (thawed on the wrong day) and the Frozen Drove, the lost drove of 988 opened by the thaw.",
+    "stages": [
+      {
+        "id": "the_pebbles",
+        "journal": "Ottar ko-Skarl has driven Skarldale forty autumns and never seen a beast go up it in spring. The prints round the bothy were cloven and small, the old hill breed nobody has kept since the Long Winter of 988. On the fell above, every one of the four thousand Winter Cairns, a cairn for every beast that winter took, has had a pebble added each morning this month.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/winter_cairns",
+            "text": "Go up to the Winter Cairns"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/winter_cairns",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_wrong_thaw",
+        "journal": "The pebbles on the cairns are wet and have come from a stream bed, and the only running water above the cairns this spring is the Hanging Falls, which thaws one day a year and this year thawed on the wrong day and has not stopped.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/hanging_falls",
+            "text": "Go to the Hanging Falls"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/hanging_falls",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_drove",
+        "journal": "The Hanging Falls' melt has cut down through the snow on the Wall's face, and where it has, the snow has slumped. Above it, in the snow, something is standing.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/frozen_drove",
+            "text": "Climb to what is standing in the snow"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/lead_beasts_bell",
+            "count": 1,
+            "text": "Take the bell from the lead beast"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/frozen_drove",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_bell",
+        "journal": "The drove of 988 stands in the snow, every beast facing the Windgate, and the drover's crook upright in the middle of them. The lead beast's bell is a Skarl drove-bell, the note that means water. Ottar ko-Skarl is at the bothy.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "up_the_dale_in_spring",
+            "text": "Tell Ottar ko-Skarl what is to be done about the drove",
+            "options": [
+              {
+                "id": "ring_them_down",
+                "text": "Ring the bell at the Winter Cairns, the note that means water, and let them come home.",
+                "effects": [
+                  {
+                    "set_flag": "drove_rung_down"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "leave_them_standing",
+                "text": "Leave them standing on the Wall, facing north. They went to see something.",
+                "effects": [
+                  {
+                    "set_flag": "drove_left_standing"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      4
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "claim_them",
+                "text": "A beast remembered is a beast still owned: tell the Skarl their drove is found.",
+                "effects": [
+                  {
+                    "set_flag": "drove_claimed"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      10
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/drovers_bothy",
+          "radius": 140
+        }
+      },
+      {
+        "id": "banked",
+        "journal": "Ottar ko-Skarl banked the bothy fire again, and this time sat up with it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 140,
+      "renown": 10,
+      "items": [
+        [
+          "core:item/oatcake",
+          3
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/thirty_two",
+    "name": "Thirty-Two",
+    "layer": "side",
+    "giver": "core:npc/orsk_ko_rudd",
+    "region": "core:region/skerrow",
+    "summary": "The Bone Ford's stepping-stones are a giant's vertebrae, and a Rudd has counted them at thirty-one every spring for a thousand years. Orsk ko-Rudd counted thirty-two this spring, and has not yet sung the number.",
+    "notes": "Skerrow world life. Links the Bone Ford, the Giant's Spine (count the vertebrae), the Bonefield (its bones lying in order) and the Sorting Ground, where stone-thralls are laying the giants' bones out in rows.",
+    "stages": [
+      {
+        "id": "the_spine",
+        "journal": "Orsk ko-Rudd has counted the Bone Ford every morning since the spring and got thirty-two each time, and a number sung into the Rope-Song cannot be unsung. He wants the Giant's Spine on the moor counted, which has lain in the heather as long as the ford has lain in the beck; if one has come to the ford, it has come from somewhere.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/giants_spine",
+            "text": "Count the vertebrae of the Giant's Spine"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/giants_spine",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_order",
+        "journal": "The Giant's Spine is short: its last vertebrae are gone, and there are drag-marks in the heather, going south toward the ford, and others going north. The Bonefield lies north of the spine, where the Skarl say the bones have begun to lie in order.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_bonefield",
+            "text": "Go to the Bonefield"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_bonefield",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_sorting",
+        "journal": "The Bonefield's bones lie in rows now, by kind, and the rows point west across the moor to a pavement where the stone-thralls are laying out a giant, bone by bone, largest to smallest.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/sorting_ground",
+            "text": "Go to the Sorting Ground"
+          },
+          {
+            "type": "kill",
+            "target": "core:enemy/stone_thrall",
+            "count": 2,
+            "where": "core:poi/sorting_ground",
+            "text": "Put down the thralls at their sorting"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/sorting_ground",
+          "radius": 140
+        }
+      },
+      {
+        "id": "the_number",
+        "journal": "The line of vertebrae on the Sorting Ground stops one short, and the gap is the size of the Bone Ford's thirty-second stone. Something is putting a giant back together, and the ford has what it needs to finish. Orsk ko-Rudd is at the ford.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "thirty_two",
+            "text": "Tell Orsk ko-Rudd what is to be done",
+            "options": [
+              {
+                "id": "sing_thirty_two",
+                "text": "Sing thirty-two. It is the true count now.",
+                "effects": [
+                  {
+                    "set_flag": "thirty_two_sung"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "carry_it_back",
+                "text": "Carry the thirty-second stone to the end of the line on the Sorting Ground.",
+                "effects": [
+                  {
+                    "set_flag": "thirty_two_carried"
+                  },
+                  {
+                    "renown": 12
+                  }
+                ]
+              },
+              {
+                "id": "break_the_line",
+                "text": "Break the line on the Sorting Ground and scatter it, and sing thirty-one.",
+                "effects": [
+                  {
+                    "set_flag": "thirty_two_scattered"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      8
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bone_ford",
+          "radius": 140
+        }
+      },
+      {
+        "id": "counted",
+        "journal": "Orsk ko-Rudd counted the ford the next morning, and sang what he counted, and his voice did not shake.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 140,
+      "renown": 10
+    }
+  }
+]

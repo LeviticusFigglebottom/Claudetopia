@@ -2,17 +2,31 @@
   {
     "id": "core:roadtable/skerrow",
     "region": "core:region/skerrow",
-    "notes": "The Skerrow's high roads and passes: a first example set for the Skerrow region agent to grow.",
+    "notes": "The Skerrow's high roads and passes (docs/WORLD_LIFE_ROADS.md). Clanless and the Unroped at the passes and bridges, scree-hags on the gorge sides, crag-wolves and a stone-thrall crossing at night; on the road by day the clans' own traffic: memory-keepers walking to the Moot, Rudd carrying blood-price to the Stones, Skarl drovers, a tinker off the Oskel Edge camp. Caravans: Kharrow's pack train to Ruddow, Brindlecrag's ore carts to the Hold, and a Skarl pack train down from Skarlow.",
+    "budget": {"max_active": 3, "gap_s": 60, "every_m": [280, 560]},
     "rows": [
       {"event": "core:roadevent/skerrow_clanless_ambush", "weight": 3, "sites": ["pass", "bend", "bridge"], "tier": [1, 99], "cooldown_h": 8},
+      {"event": "core:roadevent/skerrow_unroped_toll", "weight": 2, "sites": ["bridge", "pass", "bend"], "tier": [2, 99], "cooldown_h": 12},
+      {"event": "core:roadevent/skerrow_scree_hags", "weight": 2, "sites": ["pass", "bend"], "tier": [1, 99], "cooldown_h": 8},
       {"event": "core:roadevent/skerrow_crag_wolves", "weight": 2, "cooldown_h": 6},
+      {"event": "core:roadevent/skerrow_thrall_crossing", "weight": 1, "when": "night", "tier": [2, 99], "cooldown_h": 14},
+      {"event": "core:roadevent/skerrow_memory_keeper", "weight": 2, "when": "day", "cooldown_h": 16},
+      {"event": "core:roadevent/skerrow_blood_price_bearers", "weight": 1, "when": "day", "cooldown_h": 20},
+      {"event": "core:roadevent/skerrow_skarl_drovers", "weight": 2, "when": "day", "biome": ["upland", "open", "fields"], "cooldown_h": 12},
+      {"event": "core:roadevent/skerrow_tinker", "weight": 1, "cooldown_h": 30},
       {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 8},
       {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
       {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
       {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
     ],
     "caravans": [
-      {"event": "core:roadevent/pack_train", "route": ["core:place/kharrow_hold", "core:place/ruddow"], "speed": 1.2, "start": 0.5}
+      {"event": "core:roadevent/pack_train", "route": ["core:place/kharrow_hold", "core:place/ruddow"], "speed": 1.2, "start": 0.5},
+      {"event": "core:roadevent/carters_wagon", "route": ["core:place/brindlecrag", "core:place/kharrow_hold"], "speed": 1.1, "start": 0.2},
+      {"event": "core:roadevent/pack_train", "route": ["core:place/skarlow", "core:place/kharrow_hold"], "speed": 1.15, "start": 0.7}
+    ],
+    "sites": [
+      {"at": [-2150, -2650], "kind": "bridge", "tell": "crows"},
+      {"at": [-100, -2230], "kind": "pass", "tell": "crows"}
     ]
   },
   {
@@ -27,11 +41,94 @@
     "lines": {"speaker": "A clanless raider", "spring": "No clan, no toll-stone, no mercy."}
   },
   {
+    "id": "core:roadevent/skerrow_unroped_toll",
+    "name": "The Unroped's price",
+    "kind": "ambush",
+    "notes": "Old Ghastow's people out on the road. The bait is one of them, a broken chain round his neck, who asks what you owe.",
+    "tell": ["injured_traveller", "crows"],
+    "cast": [
+      {"role": "bandit", "enemy": "core:enemy/clanless_outrider", "count": [1, 2]},
+      {"role": "bandit", "enemy": "core:enemy/clanless_hewer", "count": 1},
+      {"role": "bait", "folk": {"name": "A man with a broken chain", "tags": ["person", "clanless"]}, "pose": "Sit_Idle", "only_tell": "injured_traveller",
+       "talk": {"prompt": "Ask the man with the broken chain what he wants", "do": "spring"}}
+    ],
+    "lines": {"speaker": "One of the Unroped", "spring": "What are you worth? Nobody? Then nobody's owed for you."}
+  },
+  {
+    "id": "core:roadevent/skerrow_scree_hags",
+    "name": "Stones from above",
+    "kind": "ambush",
+    "notes": "Scree-hags on the gorge side: the stones come first, from above, to find out whether you are the sort who looks up.",
+    "tell": ["crows"],
+    "cast": [
+      {"role": "hag", "enemy": "core:enemy/scree_hag", "count": [1, 2]}
+    ],
+    "lines": {"speaker": "A scree-hag", "spring": "Look up. Look up. Look up."}
+  },
+  {
     "id": "core:roadevent/skerrow_crag_wolves",
     "name": "Crag-wolves on the fell",
     "kind": "beasts",
     "cast": [
       {"role": "beast", "enemy": "core:enemy/crag_wolf", "count": [2, 3]}
     ]
+  },
+  {
+    "id": "core:roadevent/skerrow_thrall_crossing",
+    "name": "A thrall carrying",
+    "kind": "beasts",
+    "notes": "A stone-thrall crossing the road in the dark with a bone in its arms, going toward the Sorting Ground; it wants to be let past.",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/stone_thrall", "count": 1}
+    ]
+  },
+  {
+    "id": "core:roadevent/skerrow_memory_keeper",
+    "name": "A memory-keeper on the road",
+    "kind": "wanderer",
+    "speed": 1.0,
+    "cast": [
+      {"role": "keeper", "folk": {"name": "A memory-keeper", "tags": ["person", "clan"], "appearance": {"age": 58}},
+       "talk": {"prompt": "Walk a way with the memory-keeper", "do": "say",
+                "say": "I am walking the Rope-Song to the Moot. Every verse, every name in it, from the Dreugh door to the Skarl fold. You may walk with me for a verse or two, if you do not talk. — There is a place up there the song goes quiet over. Go and look at it, if you like. I will not.",
+                "hook": {"rumour": "The memory-keeper's song went quiet over {place}.", "reveals": "core:poi/orrdun", "once": true}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/skerrow_blood_price_bearers",
+    "name": "Blood-price on the road",
+    "kind": "pilgrims",
+    "speed": 1.05,
+    "notes": "Two Rudd carrying a clan's blood-price to the Stones on the North Road, in plain sight, as the law says it is paid.",
+    "cast": [
+      {"role": "bearer", "folk": {"name": "A Rudd price-bearer", "tags": ["person", "clan"]}, "count": 2,
+       "talk": {"prompt": "Ask the Rudd what they carry", "do": "say",
+                "say": "A death's price, to the Stones, on the road where everyone can see. That is the point of the road. — Nine head and a year's peat, the reckoner said. We are carrying the coin for the peat. The beasts are walking on their own, behind, slower.",
+                "hook": {"rumour": "The price-bearers came from the reckoner at {place}.", "reveals": "core:poi/reckoners_hut", "once": true}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/skerrow_skarl_drovers",
+    "name": "Skarl drovers",
+    "kind": "pilgrims",
+    "speed": 0.9,
+    "cast": [
+      {"role": "drover", "folk": {"name": "A Skarl drover", "tags": ["person", "clan"]}, "count": [1, 2],
+       "talk": {"prompt": "Talk to the drover", "do": "say",
+                "say": "Down the dale, and they know the way better than I do. Stand still till they're past, they don't like strangers standing in the middle of their road. — If you're going up Skarldale, water at the drove-well and ring the bell. Everything round there knows that note.",
+                "hook": {"rumour": "The drover spoke of {place}.", "reveals": "core:poi/skarl_drove_well", "once": true}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/skerrow_tinker",
+    "name": "A tinker off the Edge",
+    "kind": "wanderer",
+    "speed": 1.1,
+    "cooldown_h": 30,
+    "cast": [
+      {"role": "wanderer", "folk": {"name": "A tinker", "tags": ["person"], "appearance": {"age": 40}},
+       "talk": {"prompt": "See what the tinker has", "do": "trade", "say": "Mended pots, mended chains, mended news. The news is the dear one."}}
+    ],
+    "merchant": {"stock": "core:table/stock_pedlar_round", "marks": 180, "buys": ["misc", "material", "ingredient"]}
   }
 ]

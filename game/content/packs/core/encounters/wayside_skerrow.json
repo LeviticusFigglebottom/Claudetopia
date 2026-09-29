@@ -881,5 +881,49 @@
         "item": "core:item/wayside_oskelcrag_peat_bank"
       }
     ]
+  },
+  {
+    "id": "core:encounter/wayside_going_up_cairn",
+    "place": "core:poi/going_up_cairn",
+    "notes": "A note lies here for whoever stops: The Ninth Stone",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_going_up_cairn"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_old_kharrows_rest",
+    "place": "core:poi/old_kharrows_rest",
+    "notes": "A note lies here for whoever stops: A Name in the Dent",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_old_kharrows_rest"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_skarl_drove_well",
+    "place": "core:poi/skarl_drove_well",
+    "notes": "A note lies here for whoever stops: The Well-Bell's Rope",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_skarl_drove_well"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/wayside_unroping_post",
+    "place": "core:poi/unroping_post",
+    "notes": "A note lies here for whoever stops: The Unroping Words",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/wayside_unroping_post"
+      }
+    ]
   }
 ]

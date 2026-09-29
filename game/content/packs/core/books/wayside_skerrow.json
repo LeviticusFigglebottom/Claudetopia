@@ -425,5 +425,33 @@
     "author": "the peat-cutters of Oskelcrag",
     "category": "book",
     "body": "# This bank\n\n*Cut on a bog-oak peg.*\n\n---\n\nIlse's bank. Her daughter's. Her daughter's son's. Nine marks, nine cutters.\n\n*A tenth mark, fresh, and under it:* They cut too deep. There was something in the floor of the cut. We have left the spade in it."
+  },
+  {
+    "id": "core:book/wayside_going_up_cairn",
+    "title": "Under the Ninth Stone",
+    "author": "unknown",
+    "category": "book",
+    "body": "# Scratched underneath\n\n*The lichen on this stone grows nowhere south of the Windgate.*\n\n---\n\nFrom the hold beyond. For the count.\n\n*Then a mark: a closed hand.*\n\n*Then, smaller:* We are still going up. There is further to go than the Song says. Tell them the stair does not stop where it stops."
+  },
+  {
+    "id": "core:book/wayside_old_kharrows_rest",
+    "title": "Cut in the Dent",
+    "author": "a Kharrow child, copying",
+    "category": "book",
+    "body": "# In the seat\n\n*Copied for the memory-keeper, letter by letter.*\n\n---\n\nThe mountain's name is not cut anywhere. That is the point. Old Kharrow carried it up so the mountain would know it, not so we would.\n\nThis name is cut very small in the bottom of the dent, where you would sit:\n\n*GRADDO.*\n\nNobody in Kharrow sat for their naming this spring. I sat. It was not comfortable. I was told not to get comfortable."
+  },
+  {
+    "id": "core:book/wayside_skarl_drove_well",
+    "title": "Rung",
+    "author": "the Skarl drovers",
+    "category": "book",
+    "body": "# The bell over the trough\n\n*A knot for each night it rang with nobody on the track.*\n\n---\n\nOne. In spring, when nothing comes down.\n\nThree. Five. The trough drunk low every morning, and the mud round it trodden small, cloven, a breed nobody keeps.\n\n*A long knot, like a stop:* We rang it back, the water note, from the bothy, to see. Something on the fell stopped. All together. Then went on up."
+  },
+  {
+    "id": "core:book/wayside_unroping_post",
+    "title": "Said at the Post",
+    "author": "the Clan-Moot",
+    "category": "book",
+    "body": "# The unroping\n\n*Said by the eldest of the clan, with the rope in both hands.*\n\n---\n\nThis is the length you were when you first walked the Edge alone. We held you until then. We have let go.\n\nWhat you owed, you owe to nobody. What is owed you, nobody owes.\n\nThe weather has you now.\n\n*Scratched under it, in several hands, over many years:* the weather has been kinder. \u2014 the weather does not reckon. \u2014 I came back to see my rope. It is nearly gone. I did not expect to mind."
   }
 ]

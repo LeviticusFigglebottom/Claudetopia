@@ -1,0 +1,100 @@
+[
+  {
+    "id": "core:interior/ghastow_undercroft",
+    "name": "Ghastow Undercroft",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/old_ghastow",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Gorrm the Unroped and the hardest of the clanless, and the old Ghast forge lit again for mending chains",
+    "story": "Under Ghastow's keep the Ghast cut stores and a winter hall into the moor's rock, and a forge for the chains of a hold that meant to keep its bridge. The Unroped have made it their hall of reckoning. Every exile who comes up the moor is brought down here and asked what their clan said they owed, and Gorrm writes it down.",
+    "unique_object": "the reckoning-wall, where every exile's price is cut in the rock beside the name of the clan that set it, and the prices struck through one by one as the Unroped say they have been paid",
+    "site": {
+      "kind": "keep",
+      "seed": 4417,
+      "region": "core:region/skerrow",
+      "size": "medium",
+      "set_pieces": ["forge_hall", "barracks", "cellar_store"],
+      "boss": "core:boss/gorrm_unroped",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/clanless_raider", "core:enemy/clanless_outrider"],
+        "archers": ["core:enemy/clanless_outrider"],
+        "heavy": ["core:enemy/clanless_hewer"]
+      },
+      "theme": {"palette": ["#6f6a63", "#46423d", "#8b847a"], "lights": ["torch", "brazier"]},
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "table_trestle", "note": "where the newcomers are sat down and asked their price"},
+        {"kind": "prop", "room": "mouth", "prop": "rope_coil"},
+        {"kind": "note", "room": "secret", "book": "core:book/ghastow_unroped_roll", "name": "the Unroped's roll"}
+      ]
+    }
+  },
+  {
+    "id": "core:interior/orrdun_bone_hall",
+    "name": "Orrdun",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/orrdun",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Skarl dead the Breath did not come for, and the Keener, the last memory-keeper who went up, singing their names at the bottom",
+    "story": "The Skarl cut Orrdun back into the Wall as far as they could carry a bier, niche after niche, so that the dead would lie nearest the mouth of the world when it breathed in. It did not breathe them in. Three hundred years of Skarl dead are still here, and some of them have got up, and at the bottom of the hall the Keener sings the names in the order they came, over and over, waiting for the one that makes the Breath listen.",
+    "unique_object": "the bier-niches, each with a clay tag on a thong bearing a Skarl name, and every tag turned face-out as if someone had read them all very recently",
+    "site": {
+      "kind": "crypt",
+      "seed": 988,
+      "region": "core:region/skerrow",
+      "size": "large",
+      "set_pieces": ["ossuary", "chasm_bridge", "collapsed_shaft"],
+      "boss": "core:boss/keener_of_orrdun",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/scree_hag"],
+        "archers": ["core:enemy/scree_hag"],
+        "heavy": ["core:enemy/stone_thrall"]
+      },
+      "theme": {"palette": ["#aeaca3", "#6f727a", "#cfccc1"], "lights": ["candles", "brazier"]},
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "bedroll", "note": "a bier-bearer's pack, left at the door the day they stopped carrying"},
+        {"kind": "prop", "room": "mouth", "prop": "lantern_hand"},
+        {"kind": "note", "room": "secret", "book": "core:book/orrdun_last_bier", "name": "the last bier-list"}
+      ]
+    }
+  },
+  {
+    "id": "core:interior/brakhs_drink_under",
+    "name": "Under the Brakh's Drink",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/brakhs_drink",
+    "danger": 3,
+    "formed_by": "water",
+    "resident": "crag-wolves that den in the dry galleries, scree-hags who fish the black water, and the Kneeling Brakh at the lake",
+    "story": "The Skarl Water runs into the fell and through the dark to a lake under the moor, and at the lake's edge, the Skarl verse says, a giant knelt to drink and was still drinking when the Breath came for it. What the Breath left kneels there yet: bone and limestone grown together, its hands in the water. For a month it has been lifting things out of the lake and letting the water carry them down to the Spout.",
+    "unique_object": "a giant's two cupped hands of bone and flowstone at the lake's edge, full of clan tokens of no clan",
+    "site": {
+      "kind": "cave",
+      "seed": 2481,
+      "region": "core:region/skerrow",
+      "size": "large",
+      "set_pieces": ["underground_lake", "daylight_shaft", "chasm_bridge"],
+      "boss": "core:boss/kneeling_brakh",
+      "boss_adds": 1,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/crag_wolf"],
+        "archers": ["core:enemy/scree_hag"],
+        "heavy": ["core:enemy/stone_thrall"]
+      },
+      "theme": {"palette": ["#8a8c86", "#565a58", "#a8aaa0"], "lights": ["fungus", "torch"]},
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "rope_coil", "note": "a Skarl water-keeper's rope, tied off at the mouth and cut"},
+        {"kind": "note", "room": "secret", "book": "core:book/brakhs_drink_spout_keeper", "name": "a Spout-keeper's slate"}
+      ]
+    }
+  }
+]
