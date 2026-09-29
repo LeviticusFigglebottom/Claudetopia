@@ -144,6 +144,8 @@ func _process(delta: float) -> void:
 	since_start_s += delta
 	if not running() or not _look.due(delta):
 		return
+	if WorldPace.paced():
+		_ask_warm()
 	look()
 
 
@@ -556,7 +558,47 @@ func start(def: Dictionary, site: Dictionary, path: PackedVector2Array, path_m: 
 	return ev
 
 
+## What the road's bodies are made of, read on a worker thread before the first is stood up, so
+## no frame on the main thread waits for a scene or a model to load (the first ride had a 112 ms
+## piece: a first cart and horse read off the disk in the frame they were stood up).
+const WARM: Array[String] = ["res://actors/enemy/enemy.tscn", "res://actors/npc/npc.tscn",
+	"res://assets/models/creatures/horse_cob/horse_cob.glb",
+	"res://assets/models/props/hearthvale_cart_a/hearthvale_cart_a.glb",
+	"res://assets/models/props/hearthvale_cart_b/hearthvale_cart_b.glb",
+	"res://assets/models/props/hearthvale_sack_a/hearthvale_sack_a.glb",
+	"res://assets/models/props/hearthvale_crate_a/hearthvale_crate_a.glb",
+	"res://assets/models/props/hearthvale_barrel_a/hearthvale_barrel_a.glb",
+	"res://assets/models/rocks/hearthvale_fallen_log_a/hearthvale_fallen_log_a.glb",
+	"res://assets/models/rocks/briarwold_fallen_log_a/briarwold_fallen_log_a.glb"]
+var _warm: Array = []
+var _warm_asked := false
+
+
+func _ask_warm() -> void:
+	if _warm_asked:
+		return
+	_warm_asked = true
+	for path in WARM:
+		if ResourceLoader.exists(path):
+			ResourceLoader.load_threaded_request(path)
+
+
+## Whether everything in WARM has been read (and is held, so the cache keeps it).
+func warm() -> bool:
+	_ask_warm()
+	if not _warm.is_empty():
+		return true
+	for path in WARM:
+		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			return false
+	for path in WARM:
+		_warm.append(ResourceLoader.load_threaded_get(path) if ResourceLoader.exists(path) else null)
+	return true
+
+
 func _build(ev: RoadEvent) -> void:
+	while WorldPace.paced() and not warm() and is_instance_valid(ev):
+		await WorldPace.next_frame()
 	# wait for the frame's budget before the first body: an event never begins in a spent frame
 	while WorldPace.paced() and WorldPace.left_usec() <= 0 and is_instance_valid(ev):
 		await WorldPace.next_frame()

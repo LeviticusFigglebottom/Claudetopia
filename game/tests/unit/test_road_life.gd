@@ -34,15 +34,15 @@ func before_each() -> void:
 	host = Node3D.new()
 	host.name = "RoadLifeTestHost"
 	_tree().root.add_child(host)
-	var floor := StaticBody3D.new()
-	floor.collision_layer = 1 | (1 << 10)
+	var ground_body := StaticBody3D.new()
+	ground_body.collision_layer = 1 | (1 << 10)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(6000.0, 1.0, 6000.0)
 	shape.shape = box
 	shape.position = Vector3(1000.0, -0.5, 2400.0)
-	floor.add_child(shape)
-	host.add_child(floor)
+	ground_body.add_child(shape)
+	host.add_child(ground_body)
 	player = (load("res://tests/fakes/fake_player.gd") as GDScript).new() as Node3D
 	player.name = "RoadPlayer"
 	host.add_child(player)

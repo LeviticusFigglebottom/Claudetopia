@@ -16,7 +16,7 @@ extends Node3D
 
 const LAYER_WORLD := 1 << 0
 ## Where the cart stands behind the horse's middle, and the cart's own origin to its shafts' ends.
-const CART_BEHIND_M := 2.7
+const CART_BEHIND_M := 3.4
 const PROPS := "res://assets/models/props/"
 
 var kind := "packhorse"
@@ -64,15 +64,16 @@ func build(train_kind: String, region_key: String, container_id: String, loot_ta
 			cart.rotation.y = -PI / 2.0
 			_cart.add_child(cart)
 		# the bed's load: sacks, a barrel and a crate standing on the bed (the bed is 0.53 up)
-		for spot in [[Vector3(-0.3, 0.56, 0.5), "sack"], [Vector3(0.28, 0.56, 0.8), "sack"],
-				[Vector3(0.0, 0.56, 1.6), "barrel"], [Vector3(-0.25, 0.56, 2.2), "crate"]]:
+		# the cart turned a quarter: its bed runs from 0.95 m before its middle to 0.95 m behind
+		for spot in [[Vector3(-0.3, 0.56, -0.6), "sack"], [Vector3(0.28, 0.56, -0.3), "sack"],
+				[Vector3(0.2, 0.56, 0.35), "barrel"], [Vector3(-0.22, 0.56, 0.6), "crate"]]:
 			var p := _prop(str(spot[1]), "a")
 			if p != null:
 				p.position = spot[0]
 				p.rotation.y = randf_range(-0.4, 0.4)
 				_cart.add_child(p)
-		_box(body, Vector3(1.5, 1.3, 2.6), Vector3(0.0, 0.8, CART_BEHIND_M + 1.2))
-		goods.position = Vector3(0.0, 0.6, 2.3)
+		_box(body, Vector3(1.5, 1.3, 2.2), Vector3(0.0, 0.8, CART_BEHIND_M))
+		goods.position = Vector3(0.0, 0.6, 0.0)
 		_goods_shape(Vector3(1.4, 1.0, 1.0))
 		_cart.add_child(goods)
 		return
@@ -90,7 +91,7 @@ func build(train_kind: String, region_key: String, container_id: String, loot_ta
 		var c := _prop("crate", "a")
 		if c != null:
 			c.scale = Vector3.ONE * 0.7
-			c.position = Vector3(0.0, 0.05, 0.0) if at != null else Vector3(0.0, 1.5, 0.1)
+			c.position = Vector3(0.0, -0.22, 0.05) if at != null else Vector3(0.0, 1.5, 0.1)
 			hold.add_child(c)
 		goods.position = Vector3(0.0, 0.8, 0.9)
 		_goods_shape(Vector3(1.0, 1.0, 0.9))

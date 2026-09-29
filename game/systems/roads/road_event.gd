@@ -168,17 +168,17 @@ func build() -> void:
 				members.append({"index": i, "role": str(entry.get("role", "")), "node": body, "does": does,
 						"talk": entry.get("talk", {}), "slot": slot})
 				slot += 1
-			await slice.pace("road_life")
+			await slice.pace("road_life_foe" if entry.has("enemy") else "road_life_folk")
 	var t: Dictionary = def.get("train", {})
 	if not t.is_empty() and is_inside_tree():
 		_stand_train(t)
-		await slice.pace("road_life")
+		await slice.pace("road_life_train")
 	if kind == "broken_cart" and is_inside_tree():
 		_stand_broken_cart()
-		await slice.pace("road_life")
+		await slice.pace("road_life_cart")
 	if kind == "ambush" and is_inside_tree():
 		_stand_tell()
-		await slice.pace("road_life")
+		await slice.pace("road_life_tell")
 	built = true
 	state = "live"
 
@@ -238,7 +238,10 @@ func _roam_line() -> Array:
 
 func _stand_foe(entry: Dictionary, at: Vector3, does: String) -> Enemy:
 	var facing := 0.0
-	var enemy := spawn_one(str(entry["enemy"]), at, facing, {"group": uid})
+	var options := {"group": uid}
+	if WorldPace.paced():
+		options["pace_slice"] = WorldPace.Slice.new()
+	var enemy := spawn_one(str(entry["enemy"]), at, facing, options)
 	if enemy == null:
 		return null
 	enemy.set_meta("road_event", uid)
@@ -252,12 +255,12 @@ func _stand_foe(entry: Dictionary, at: Vector3, does: String) -> Enemy:
 		enemy.sits = true
 		enemy.minding = true
 		enemy.inactive = true
-		var talk: Dictionary = entry.get("talk", {})
-		if not talk.is_empty():
+		var said: Dictionary = entry.get("talk", {})
+		if not said.is_empty():
 			var t := RoadTalk.new()
 			t.event = self
 			t.actor = enemy
-			t.prompt = str(talk.get("prompt", "Talk"))
+			t.prompt = str(said.get("prompt", "Talk"))
 			enemy.add_child(t)
 		if not (def.get("merchant", {}) as Dictionary).is_empty() and str(entry.get("role", "")) == "trader":
 			_give_shop(enemy)
@@ -276,10 +279,12 @@ func _stand_foe(entry: Dictionary, at: Vector3, does: String) -> Enemy:
 func _stand_folk(entry: Dictionary, at: Vector3, index: int) -> RoadFolk:
 	var folk: Dictionary = entry.get("folk", {})
 	var body := RoadFolk.make(folk, rng.randi(), str(journey.get("from", "")))
+	if WorldPace.paced():
+		body.pace_slice = WorldPace.Slice.new()
 	body.event = self
 	body.cast_index = index
-	var talk: Dictionary = entry.get("talk", {})
-	body.prompt = str(talk.get("prompt", ""))
+	var said: Dictionary = entry.get("talk", {})
+	body.prompt = str(said.get("prompt", ""))
 	body.activity = "travel"
 	if not (def.get("merchant", {}) as Dictionary).is_empty() and str(entry.get("role", "")) in ["trader", "wanderer"]:
 		_give_shop(body)
@@ -327,8 +332,8 @@ func _stand_train(t: Dictionary) -> void:
 	train = RoadTrain.new()
 	add_child(train)
 	var region_key := Ids.name_of(region) if region != "" else "hearthvale"
-	var owner := str(def.get("consequence", {}).get("faction", ""))
-	train.build(str(t.get("kind", "packhorse")), region_key, "road:%s:goods" % uid, str(t.get("goods", "core:loot/common_chest")), owner)
+	var owned_by := str(def.get("consequence", {}).get("faction", ""))
+	train.build(str(t.get("kind", "packhorse")), region_key, "road:%s:goods" % uid, str(t.get("goods", "core:loot/common_chest")), owned_by)
 	var here := file_point(0, -4.0)
 	train.move(_v3(here["at"]), here["dir"], 0.0)
 
