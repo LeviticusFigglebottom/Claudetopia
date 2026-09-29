@@ -41,6 +41,8 @@ var _regions := PackedByteArray()
 var _water := PackedByteArray()
 var _levels := PackedFloat32Array()
 var _loaded := false
+## Pads laid since Terrain3D's maps were last updated (`lay_pad`, `commit_pads`).
+var _pads_laid := false
 
 
 func _ready() -> void:
@@ -317,6 +319,46 @@ func max_height_around(x: float, z: float, radius: float, samples: int = 12) -> 
 		var a := TAU * float(i) / float(samples)
 		best = maxf(best, get_height(x + cos(a) * radius, z + sin(a) * radius))
 	return best
+
+
+## A pad laid on the ground as it stands, for a place the world has not been built with yet
+## (PoiPreview): level at `level` out to `level_radius`, blended back into the land by `reach`, in
+## the runtime map and in Terrain3D's heights alike. `commit_pads` once they are all laid.
+func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float) -> void:
+	if not _heights.is_empty():
+		var i0 := maxi(int(floor((z - reach - _height_origin.y) / _spacing)), 0)
+		var i1 := mini(int(ceil((z + reach - _height_origin.y) / _spacing)), _grid - 1)
+		var j0 := maxi(int(floor((x - reach - _height_origin.x) / _spacing)), 0)
+		var j1 := mini(int(ceil((x + reach - _height_origin.x) / _spacing)), _grid - 1)
+		for i in range(i0, i1 + 1):
+			for j in range(j0, j1 + 1):
+				var d := Vector2(_height_origin.x + j * _spacing - x, _height_origin.y + i * _spacing - z).length()
+				if d < reach:
+					var k := i * _grid + j
+					_heights[k] = lerpf(_heights[k], level, 1.0 - smoothstep(level_radius, reach, d))
+	if _data == null or not _data.has_method("set_height"):
+		return
+	var s := float(_terrain.get("vertex_spacing")) if _terrain != null else 1.0
+	s = s if s > 0.0 else 1.0
+	for gx in range(int(floor((x - reach) / s)), int(ceil((x + reach) / s)) + 1):
+		for gz in range(int(floor((z - reach) / s)), int(ceil((z + reach) / s)) + 1):
+			var p := Vector3(gx * s, 0.0, gz * s)
+			var d := Vector2(p.x - x, p.z - z).length()
+			if d >= reach:
+				continue
+			var h: float = _data.call("get_height", p)
+			if is_nan(h):
+				continue
+			_data.call("set_height", p, lerpf(h, level, 1.0 - smoothstep(level_radius, reach, d)))
+	_pads_laid = true
+
+
+
+## Hands the pads `lay_pad` laid to Terrain3D's maps, so they are drawn and collided with.
+func commit_pads() -> void:
+	if _pads_laid and _data != null and _data.has_method("update_maps"):
+		_data.call("update_maps", 0, true, false)      # Terrain3DRegion.TYPE_HEIGHT, every region
+	_pads_laid = false
 
 
 func in_bounds(x: float, z: float) -> bool:

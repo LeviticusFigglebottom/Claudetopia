@@ -62,6 +62,10 @@ extends Node
 ## Run it with `--fixed-fps 60` so an interval is simulation time and not whatever the software
 ## rasteriser managed: every frame is then one physics tick.
 ##
+## `"preview_pois": [ids]` stands those POIs up where their defs say, on pads laid at runtime, even
+## when the built world has them somewhere else (PoiPreview): a place written or moved since the last
+## world build, photographed before the next (tools/world/poi_sheet.py, docs/WORLD_LIFE.md).
+##
 ## A shot's `"dress": {"kind", "region", "at": [x, z], "brief"?, "encounter"?, "radius"?}` stands up a
 ## point of interest of that kind on the ground there for the shot, as the world raises one from a
 ## POI def, and takes it down after: a kind can be photographed in the real country before the map
@@ -181,6 +185,9 @@ func run() -> int:
 			GameState.set_flag(key, flags[key])
 	if plan.has("cinematic"):
 		return await _shoot_cinematic(plan["cinematic"])
+	# `"preview_pois": [ids]`: those POIs stood up where their defs say, on pads laid now, whatever
+	# the built world has (PoiPreview; tools/world/poi_sheet.py writes such a plan)
+	PoiPreview.ask(plan.get("preview_pois", []))
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")

@@ -148,6 +148,9 @@ def pad_targets_for(places: list, pois: list) -> list:
                  "region": p.get("region", "")}
         if p.get("wayside"):
             entry["wayside"] = True                  # a small pad (roads.WAYSIDE_PAD_M)
+        if p.get("pad_radius_m"):
+            # a larger place asks for its own pad (docs/WORLD_LIFE.md); the atlas's `pads` still win
+            entry["pad_radius_m"] = float(p["pad_radius_m"])
         out.append(entry)
     return out
 
