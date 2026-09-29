@@ -253,7 +253,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A Salt Isles tide-book, water-stained, nailed to the Leadhouse wall.",
+    "description": "A Salt Isles tide-book, water-stained and swollen, nailed to the Leadhouse wall by a factor who expected to come back for it.",
     "reads": "core:book/leadhouse_tide_book"
   },
   {
@@ -337,7 +337,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A child's slate from the Deadground, a line of chalk crosses on it like a map.",
+    "description": "A child's slate from the Deadground, a line of chalk crosses on it running up toward a circle, like a map of something moving.",
     "reads": "core:book/deadground_slate"
   },
   {
@@ -379,7 +379,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A child's count of the Giant's Spine, pencilled on a scrap of Rudd tally-cloth.",
+    "description": "A child's count of the Giant's Spine, pencilled on a scrap of Rudd tally-cloth and weighted with a stone in the heather.",
     "reads": "core:book/spine_count"
   },
   {
@@ -393,7 +393,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A complaint to the Moot, never sent, left weighted under a rib in the Bonefield.",
+    "description": "A complaint to the Moot, folded small and never sent, left weighted under a rib in the Bonefield by a herder who thought better of it.",
     "reads": "core:book/bonefield_complaint"
   },
   {
@@ -407,7 +407,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A charcoal rubbing of the mark on the far anchor of Ghast's Broken Bridge.",
+    "description": "A charcoal rubbing on bark of the marks cut into the far anchor of Ghast's Broken Bridge, taken from a rope at low water.",
     "reads": "core:book/far_anchor_rubbing"
   },
   {
@@ -451,5 +451,47 @@
     ],
     "description": "A rubbing of the last riser of the Giants' Stair, taken by somebody who climbed to where it stops.",
     "reads": "core:book/last_riser"
+  },
+  {
+    "id": "core:item/ghastow_unroped_roll",
+    "name": "The Unroped's Roll",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of stitched hides kept in the secret store under Ghastow's keep, every exile who came up the moor written on it in several hands, with their price.",
+    "reads": "core:book/ghastow_unroped_roll"
+  },
+  {
+    "id": "core:item/orrdun_last_bier",
+    "name": "The Last Bier-List",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The last page of a Skarl memory-keeper's bier-list, soft with ninety years of cold, the names in it getting larger toward the foot of the page.",
+    "reads": "core:book/orrdun_last_bier"
+  },
+  {
+    "id": "core:item/brakhs_drink_spout_keeper",
+    "name": "A Spout-Keeper's Slate",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate chalked by some keeper of Skarl Spout long before Ossa, wedged in a dry niche where the underground lake begins, the chalk still legible.",
+    "reads": "core:book/brakhs_drink_spout_keeper"
   }
 ]

@@ -639,3 +639,164 @@ static func sorting_ground(d: PoiDressing) -> void:
 		k.scatter(skull, pieces, true)
 	k.touchable("TheGap", k.on_ground(end.x, end.y, top + 0.3), "Look at the end of the line", DIALOGUE + "sorting_ground_gap", "", false)
 	k.marker("the_line", k.on_ground(end.x - along.x * 3.0, end.y - along.y * 3.0, top))
+
+
+## The Faceless Graves: a row of long graves on the fell, each with its headstone laid face-down at its
+## head and sunk in the turf, and the last one turned face-up, its turf still pale.
+static func faceless_graves(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var along := k.grain()
+	var across := Vector2(along.y, -along.x)
+	var turf := PoiKit.painted(5, {"base": "#5d6a3c", "accent": "#46522c", "grout": "#2f3a1d", "unit": 0.3}, 0.6)
+	var stone := k.surface("stone", 0.8)
+	var slabs := m.begin()
+	var turned := Vector2.ZERO
+	for i in 5:
+		var c := along * (-4.8 + 2.4 * float(i))
+		var head := c + across * 1.6
+		await k.step()
+		# the grave: a long low mound across the row, lying the way the fell falls
+		m.mound(k.on_ground(c.x, c.y, -0.12), 1.0, 0.32, turf, "Grave", true, 2.2, 4, 12, i == 2, 0.08)
+		if i < 4:
+			# face-down: flat on the turf, a hand proud of it, its back to the sky
+			var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), k.on_ground(head.x, head.y, 0.05))
+			m.block(slabs, xf, Vector3(0.75, 0.14, 1.1))
+			k.collider(Vector3(0.75, 0.14, 1.1), xf, "stone")
+		else:
+			turned = head
+	# the last stone, turned face-up and leant on its own foot, and the pale ground it came off
+	var up := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)) * Basis(Vector3.RIGHT, -1.1), k.on_ground(turned.x, turned.y, 0.4))
+	m.block(slabs, up, Vector3(0.75, 0.14, 1.1))
+	k.collider(Vector3(0.75, 0.5, 0.9), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), k.on_ground(turned.x, turned.y, 0.35)), "stone")
+	await k.step()
+	m.commit(slabs, stone, "Headstones", true)
+	if k.far:
+		return
+	var scar := m.begin()
+	var bare := turned + across * 1.0
+	m.block(scar, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), k.on_ground(bare.x, bare.y, -0.03)), Vector3(0.8, 0.08, 1.15))
+	await k.step()
+	m.commit(scar, PoiKit.painted(5, {"base": "#8a8466", "accent": "#6f6a52", "grout": "#4a4636", "unit": 0.2}, 0.8), "PaleTurf")
+	k.touchable("TurnedStone", k.on_ground(turned.x, turned.y, 0.7), "Look at the turned headstone",
+			DIALOGUE + "faceless_graves_turned", "", false)
+	k.marker("the_graves", k.on_ground(-across.x * 2.5, -across.y * 2.5))
+
+
+## The Unroping Post: a post and arm by the Oskelcrag road like any gibbet, socketed in stones, and hung
+## not with a cage but with children's ropes cut short, each at the length its child was when they
+## first walked the Edge alone; the oldest gone grey and thin, the newest still with its colour.
+static func unroping_post(d: PoiDressing) -> void:
+	var k := d.kit
+	if k.far:
+		return
+	var m := d.masonry
+	var along := k.road_direction(60.0)
+	if along == Vector2.ZERO:
+		along = k.grain()
+	var out := Vector2(along.y, -along.x)
+	# stand it off the road, on the side away from it
+	var at := _open_spot(d, _away(d), 2.5, 7.0, 1.2, _solids(d))
+	var socket := k.rock("boulder", 1)
+	if socket != "":
+		var stones: Array = []
+		for i in 3:
+			var a := TAU * float(i) / 3.0 + 0.4
+			var p := at + Vector2(sin(a), cos(a)) * 0.55
+			stones.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.25), k.rng.randf_range(0.0, TAU), 0.42))
+		await k.step()
+		k.scatter(socket, stones, true)
+	var timber := m.begin()
+	var top := m.post(timber, at, 4.1, 0.26)
+	var arm := Vector3(out.x, 0.0, out.y)
+	var arm_end := top + arm * 1.8 - Vector3(0.0, 0.2, 0.0)
+	m.block(timber, Transform3D(Basis.looking_at(arm, Vector3.UP), top + arm * 0.85 - Vector3(0.0, 0.2, 0.0)), Vector3(0.18, 0.18, 2.0))
+	var brace_a := top - Vector3(0.0, 1.1, 0.0)
+	var brace_b := top + arm * 0.9 - Vector3(0.0, 0.25, 0.0)
+	m.block(timber, Transform3D(Basis.looking_at((brace_b - brace_a).normalized(), Vector3.UP), (brace_a + brace_b) * 0.5),
+			Vector3(0.11, 0.11, brace_a.distance_to(brace_b)))
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.95), "Post")
+	# the ropes: tied along the arm and round the post, and the lashing at the post's foot they are
+	# tied off to, all one cord, so none of it hangs from nothing
+	var rope := m.begin()
+	var foot := k.on_ground(at.x, at.y)
+	for i in 5:
+		m.block(rope, Transform3D(Basis(), foot + Vector3(0.0, 0.25 + 0.18 * float(i), 0.0)), Vector3(0.3, 0.05, 0.3))
+	var tie_run := foot + Vector3(0.0, 1.0, 0.0)
+	m.block(rope, Transform3D(Basis(), (tie_run + top) * 0.5 + arm * 0.14), Vector3(0.03, top.y - tie_run.y, 0.03))
+	for i in 7:
+		var t := 0.25 + 0.21 * float(i)
+		var hang := top + arm * (1.8 * t) - Vector3(0.0, 0.2, 0.0)
+		var drop := k.rng.randf_range(0.45, 1.05)
+		var xf := Transform3D(Basis(Vector3.BACK, k.rng.randf_range(-0.06, 0.06)), hang - Vector3(0.0, 0.09 + drop * 0.5, 0.0))
+		m.block(rope, xf, Vector3(0.035, drop, 0.035))
+		# the knot where each is cut: a thicker end
+		m.block(rope, Transform3D(Basis(), hang - Vector3(0.0, 0.09 + drop, 0.0)), Vector3(0.06, 0.07, 0.06))
+		# and where it is tied on
+		m.block(rope, Transform3D(Basis(), hang - Vector3(0.0, 0.1, 0.0)), Vector3(0.07, 0.08, 0.22))
+	await k.step()
+	m.commit(rope, PoiKit.plain(Color(0.55, 0.49, 0.38), 0.95), "Ropes")
+	await PoiDressing.kind_builders().LAND._grass(d, "heather", at, 5.0, 16)
+	k.marker("the_gibbet", k.on_ground(at.x - out.x * 1.2, at.y - out.y * 1.2), true)
+
+
+## The Whelping Hole: a shakehole on the moor fallen in to the dark, not a mouth in a hillside: a black
+## throat in a funnel of trodden turf, a rim of limestone blocks with the scree gone down between
+## them, white fur caught everywhere, and round it what the wolves dragged up there, bones and a
+## courier's satchel.
+static func whelping_hole(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var trodden := PoiKit.painted(5, {"base": "#6b6452", "accent": "#524c3d", "grout": "#34302a", "unit": 0.25}, 0.8)
+	# the funnel: a low dish of trodden earth, and the black throat in its bottom
+	await k.step()
+	m.mound(k.on_ground(0.0, 0.0, -0.3), 6.5, 0.28, trodden, "Funnel", true, 1.1, 5, 18, true, 0.12)
+	var throat := m.begin()
+	m.ellipsoid(throat, k.on_ground(0.0, 0.0, 0.0), Vector3(2.4, 0.12, 1.9))
+	await k.step()
+	m.commit(throat, PoiKit.plain(Color(0.02, 0.02, 0.025), 1.0), "Throat", true)
+	# the rim: limestone blocks round the dish, a pace apart so the scree runs down between them
+	var block := k.rock("boulder", 1)
+	var rim: Array = []
+	if block != "":
+		for i in 7:
+			var a := TAU * float(i) / 7.0 + k.rng.randf_range(-0.15, 0.15)
+			var r := k.rng.randf_range(6.0, 7.2)
+			var p := Vector2(sin(a), cos(a)) * r
+			rim.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.35), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.55, 0.8),
+					Vector3(k.rng.randf_range(-0.2, 0.2), 0.0, k.rng.randf_range(-0.2, 0.2))))
+		await k.step()
+		k.scatter(block, rim, true, true)
+	var scree := k.rock("scree")
+	if scree != "":
+		var fall: Array = []
+		for i in 7:
+			var a := TAU * (float(i) + 0.5) / 7.0
+			var p := Vector2(sin(a), cos(a)) * k.rng.randf_range(4.2, 5.2)
+			fall.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.12), a, k.rng.randf_range(0.5, 0.7)))
+		await k.step()
+		k.scatter(scree, fall, true)
+	if k.far:
+		return
+	# white fur on the rim and the turf, where they come and go
+	var fur := m.begin()
+	for i in 26:
+		var a := k.rng.randf_range(0.0, TAU)
+		var p := Vector2(sin(a), cos(a)) * k.rng.randf_range(2.8, 9.0)
+		m.ellipsoid(fur, k.on_ground(p.x, p.y, 0.02), Vector3(0.12, 0.04, 0.09) * k.rng.randf_range(0.7, 1.4))
+	await k.step()
+	m.commit(fur, PoiKit.plain(Color(0.9, 0.9, 0.88), 0.95), "Fur")
+	# what they dragged up: a giant's small bones gnawed white, a beast's, and further out a satchel
+	var bone := k.rock("bone_finger", 0)
+	if bone != "":
+		var gnawed: Array = []
+		for i in 5:
+			var a := k.rng.randf_range(0.0, TAU)
+			var p := Vector2(sin(a), cos(a)) * k.rng.randf_range(8.0, 15.0)
+			gnawed.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.05), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.12, 0.2)))
+		await k.step()
+		k.scatter(bone, gnawed, false)
+	var satchel := Vector2(sin(2.3), cos(2.3)) * 9.5
+	await _prop(d, "sack", satchel, k.rng.randf_range(0.0, TAU), 0.8)
+	k.marker("the_mouth", k.on_ground(0.0, 2.6))

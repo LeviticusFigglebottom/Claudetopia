@@ -15,20 +15,56 @@
       "seed": 4417,
       "region": "core:region/skerrow",
       "size": "medium",
-      "set_pieces": ["forge_hall", "barracks", "cellar_store"],
+      "set_pieces": [
+        "forge_hall",
+        "barracks",
+        "cellar_store"
+      ],
       "boss": "core:boss/gorrm_unroped",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "foes": {
-        "rank": ["core:enemy/clanless_raider", "core:enemy/clanless_outrider"],
-        "archers": ["core:enemy/clanless_outrider"],
-        "heavy": ["core:enemy/clanless_hewer"]
+        "rank": [
+          "core:enemy/clanless_raider",
+          "core:enemy/clanless_outrider"
+        ],
+        "archers": [
+          "core:enemy/clanless_outrider"
+        ],
+        "heavy": [
+          "core:enemy/clanless_hewer"
+        ]
       },
-      "theme": {"palette": ["#6f6a63", "#46423d", "#8b847a"], "lights": ["torch", "brazier"]},
+      "theme": {
+        "palette": [
+          "#6f6a63",
+          "#46423d",
+          "#8b847a"
+        ],
+        "lights": [
+          "torch",
+          "brazier"
+        ]
+      },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "table_trestle", "note": "where the newcomers are sat down and asked their price"},
-        {"kind": "prop", "room": "mouth", "prop": "rope_coil"},
-        {"kind": "note", "room": "secret", "book": "core:book/ghastow_unroped_roll", "name": "the Unroped's roll"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle",
+          "note": "where the newcomers are sat down and asked their price"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/ghastow_unroped_roll",
+          "name": "the Unroped's roll",
+          "item": "core:item/ghastow_unroped_roll"
+        }
       ]
     }
   },
@@ -45,23 +81,101 @@
     "unique_object": "the bier-niches, each with a clay tag on a thong bearing a Skarl name, and every tag turned face-out as if someone had read them all very recently",
     "site": {
       "kind": "crypt",
-      "seed": 988,
+      "seed": 1043,
       "region": "core:region/skerrow",
       "size": "large",
-      "set_pieces": ["ossuary", "chasm_bridge", "collapsed_shaft"],
       "boss": "core:boss/keener_of_orrdun",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "foes": {
-        "rank": ["core:enemy/scree_hag"],
-        "archers": ["core:enemy/scree_hag"],
-        "heavy": ["core:enemy/stone_thrall"]
+        "rank": [
+          "core:enemy/scree_hag"
+        ],
+        "archers": [
+          "core:enemy/scree_hag"
+        ],
+        "heavy": [
+          "core:enemy/stone_thrall"
+        ]
       },
-      "theme": {"palette": ["#aeaca3", "#6f727a", "#cfccc1"], "lights": ["candles", "brazier"]},
+      "theme": {
+        "palette": [
+          "#aeaca3",
+          "#6f727a",
+          "#cfccc1"
+        ],
+        "lights": [
+          "candles",
+          "brazier"
+        ]
+      },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "bedroll", "note": "a bier-bearer's pack, left at the door the day they stopped carrying"},
-        {"kind": "prop", "room": "mouth", "prop": "lantern_hand"},
-        {"kind": "note", "room": "secret", "book": "core:book/orrdun_last_bier", "name": "the last bier-list"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "bedroll",
+          "note": "a bier-bearer's pack, left at the door the day they stopped carrying"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/orrdun_last_bier",
+          "name": "the last bier-list",
+          "item": "core:item/orrdun_last_bier"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "first_niches",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ossuary"
+        },
+        {
+          "id": "bearers_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "fallen_roof",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "keepers_rest",
+          "role": "shrine",
+          "size": "medium"
+        },
+        {
+          "id": "cold_passage",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.0
+        },
+        {
+          "id": "deep_niches",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "ossuary"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
       ]
     }
   },
@@ -78,22 +192,96 @@
     "unique_object": "a giant's two cupped hands of bone and flowstone at the lake's edge, full of clan tokens of no clan",
     "site": {
       "kind": "cave",
-      "seed": 2481,
+      "seed": 990,
       "region": "core:region/skerrow",
       "size": "large",
-      "set_pieces": ["underground_lake", "daylight_shaft", "chasm_bridge"],
       "boss": "core:boss/kneeling_brakh",
       "boss_adds": 1,
       "boss_loot": "core:loot/rich_chest",
       "foes": {
-        "rank": ["core:enemy/crag_wolf"],
-        "archers": ["core:enemy/scree_hag"],
-        "heavy": ["core:enemy/stone_thrall"]
+        "rank": [
+          "core:enemy/crag_wolf"
+        ],
+        "archers": [
+          "core:enemy/scree_hag"
+        ],
+        "heavy": [
+          "core:enemy/stone_thrall"
+        ]
       },
-      "theme": {"palette": ["#8a8c86", "#565a58", "#a8aaa0"], "lights": ["fungus", "torch"]},
+      "theme": {
+        "palette": [
+          "#8a8c86",
+          "#565a58",
+          "#a8aaa0"
+        ],
+        "lights": [
+          "fungus",
+          "torch"
+        ]
+      },
       "features": [
-        {"kind": "prop", "room": "mouth", "prop": "rope_coil", "note": "a Skarl water-keeper's rope, tied off at the mouth and cut"},
-        {"kind": "note", "room": "secret", "book": "core:book/brakhs_drink_spout_keeper", "name": "a Spout-keeper's slate"}
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil",
+          "note": "a Skarl water-keeper's rope, tied off at the mouth and cut"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/brakhs_drink_spout_keeper",
+          "name": "a Spout-keeper's slate",
+          "item": "core:item/brakhs_drink_spout_keeper"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "wet_gallery",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "dry_galleries",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "daylight",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "daylight_shaft"
+        },
+        {
+          "id": "low_water",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.0
+        },
+        {
+          "id": "grotto",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "fungus_grotto"
+        },
+        {
+          "id": "the_lake",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
       ]
     }
   }

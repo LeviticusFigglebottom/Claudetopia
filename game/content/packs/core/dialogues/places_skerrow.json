@@ -2265,5 +2265,24 @@
         ]
       }
     }
+  },
+  {
+    "id": "core:dialogue/faceless_graves_turned",
+    "speaker_name": "The turned headstone",
+    "notes": "A PoiTouch at the one face-up headstone of the Faceless Graves (skerrow.gd faceless_graves), for core:quest/tokens_of_no_clan and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The turned headstone",
+        "no_talk": true,
+        "text": "Five long graves in a row, each with its headstone laid face-down at the head of it, the turf grown up round the edges so they seem sunk into the fell. The last stone lies face-up, and the turf where it lay is still pale. Cut deep in its face: a closed hand. Under it a line of Skerrish, worn nearly to nothing, of which three letters can still be felt with a thumb, and then the words WE KEPT THE, and then nothing.",
+        "choices": [
+          {
+            "text": "Leave it face-up.",
+            "next": "end"
+          }
+        ]
+      }
+    }
   }
 ]

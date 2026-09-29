@@ -95,7 +95,7 @@
    "lies": [{"item": "core:item/note_pennants_weather_book"}]},
   {"id": "core:encounter/skerrfall_quarry", "place": "core:poi/skerrfall_quarry",
    "notes": "the thrall that walked out of the new face stands about the quarry floor",
-   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 1, "at": "the_new_face"}],
+   "spawns": [{"enemy": "core:enemy/stone_thrall", "count": 1, "spread": 2.0}],
    "lies": [{"item": "core:item/note_skerrfall_lintel_book"}]},
   {"id": "core:encounter/the_leadhouse", "place": "core:poi/the_leadhouse",
    "notes": "clanless out of the west wind; the Salt boat's letter under the hearthstone",
