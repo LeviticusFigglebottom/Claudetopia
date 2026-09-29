@@ -226,5 +226,10 @@ scatter (trees, rocks) the build put there may stand inside the fort's yard.
   small rooms with high noise can pinch shut; keep `tight` for passages.
 - A fort's garrison stands up again when its cell is raised again (as any POI's encounter does);
   killed foes are not remembered across streaming.
-- Lights: the pocket's own OmniLights, up to three or four a room plus glow; Compatibility draws a
-  limited number per mesh, so chunks are 14 m.
+- Lights: the pocket's own OmniLights, up to three or four a room plus glow. Compatibility draws at
+  most 12 per mesh, so chunks are 14 m and `SiteDress._light_budget` draws in the widest lights
+  until no chunk is reached by more than 11 (tested). In the Kilnway's review render the view from
+  the way in straight into the mouth room still comes out unlit (the same room is lit seen from its
+  other doorway, and physics has the arrival inside the room): not yet explained, worth a look on
+  Forward+ and in the game with the player's own light.
+- The lava tube reads red and dark; the keep's undercroft reads as cut chalk rather than ashlar.
