@@ -85,7 +85,7 @@ static func _gate_fire(d: PoiDressing, fire: Vector2, facing: Vector2, spot: Str
 # --- the Salt Landing -------------------------------------------------------------------------------
 
 ## A camp of two Salt Isles traders on the heath above the strand: their boat hauled up on log
-## rollers with its bow to the sea, the sail rigged on four poles as an awning over the salt and the
+## rollers with its bow to the sea, the sail rigged as a lean-to over the salt and the
 ## glass, an oar planted upright with a lantern on it for the ship that has not come, and a fire.
 static func salt_landing(d: PoiDressing) -> void:
 	var k := d.kit
@@ -138,14 +138,15 @@ static func salt_landing(d: PoiDressing) -> void:
 		await k.step()
 		k.place(k.prop("rope_coil"), k.on_ground(coil.x, coil.y), k.rng.randf_range(0.0, TAU))
 
-	# the awning: the boat's sail on four poles over the salt, sloping to the weather
+	# the awning: the boat's sail over the salt, up on two poles to the sea and pegged down behind
 	var aw := fire - sea * 7.5 - side * 1.0
 	var half_w := 3.2
 	var half_d := 2.3
 	var corners: Array = []
 	for s in [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]:
 		var c: Vector2 = aw + side * (half_w * float(s[0])) + sea * (half_d * float(s[1]))
-		var h := 2.6 if float(s[1]) > 0.0 else 1.9
+		# a lean-to: the sail up on two poles on the sea side, pegged to the ground at the back
+		var h := 2.7 if float(s[1]) > 0.0 else 0.12
 		corners.append(m.post(timber, c, h, 0.12))
 	var sail := m.begin()
 	var ca: Vector3 = corners[0]
@@ -160,22 +161,21 @@ static func salt_landing(d: PoiDressing) -> void:
 	var z_axis := up_slope.normalized()
 	var y_axis := z_axis.cross(x_axis).normalized()
 	m.block(sail, Transform3D(Basis(x_axis, y_axis, z_axis), mid), Vector3(across.length() + 0.5, 0.03, up_slope.length() + 0.5))
-	# a tent-pole under the middle of the sail, where the cloth would sag
-	m.post(timber, Vector2(mid.x, mid.z), mid.y - k.on_ground(mid.x, mid.z).y - 0.02, 0.08)
 	await k.step()
 	m.commit(sail, PoiKit.plain(SAIL, 0.9), "Sail", true)
 	if not k.far:
-		k.marker("thalisse_awning", k.on_ground(aw.x, aw.y), true)
+		var under := aw + sea * 1.4
+		k.marker("thalisse_awning", k.on_ground(under.x, under.y), true)
 		# the salt, in sacks, and the glass in crates
 		for i in 5:
-			var at := aw + side * (-2.2 + float(i) * 0.75) - sea * 1.4
+			var at := aw + side * (-2.2 + float(i) * 0.75) + sea * 1.0
 			await k.step()
 			k.place(k.prop("sack"), k.on_ground(at.x, at.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.05))
 		for i in 2:
-			var at := aw + side * (1.6 + float(i) * 1.0) + sea * 1.2
+			var at := aw + side * (1.6 + float(i) * 1.0) + sea * 1.9
 			await k.step()
 			k.place(k.prop("crate"), k.on_ground(at.x, at.y), PoiKit.yaw_of(sea) + k.rng.randf_range(-0.2, 0.2))
-		var roll := aw - side * 2.0 + sea * 1.0
+		var roll := aw - side * 2.0 + sea * 1.7
 		await k.step()
 		k.place(k.prop("bedroll"), k.on_ground(roll.x, roll.y), PoiKit.yaw_of(side))
 
