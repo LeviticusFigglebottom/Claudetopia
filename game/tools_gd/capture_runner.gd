@@ -518,10 +518,13 @@ func _dress_for(shot: Dictionary) -> Node3D:
 		var packed := load(str(spec["scene"])) as PackedScene
 		if packed == null:
 			return null
+		# drawn as a cell draws it: a carved landmark or a rock in the painted stone
+		RockPaint.paint_scene(packed, str(spec["scene"]))
 		var inst := packed.instantiate() as Node3D
 		if inst.has_method("configure"):
 			inst.call("configure", spec.get("props", {}))
-		inst.position = Vector3(x, y, z)
+		# set into the ground as a cell sets it (a carved landmark's `buried_m`)
+		inst.position = Vector3(x, y - WorldStreamer.seated_depth(str(spec["scene"])), z)
 		inst.rotation.y = deg_to_rad(float(spec.get("yaw", 0.0)))
 		_world.add_child(inst)
 		return inst

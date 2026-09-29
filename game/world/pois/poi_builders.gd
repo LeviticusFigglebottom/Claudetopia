@@ -1372,7 +1372,10 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 			var g := k.on_ground(p.x, p.y)
 			var turn := k.rng.randf_range(0.0, TAU)
 			var size := k.rng.randf_range(0.48, 0.55)
-			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))])
+			# toward the way from the stone's side of it, for a carved stone whose face is +Z
+			var toward := -side * (1.0 if n % 2 == 0 else -1.0)
+			var face := atan2(toward.x, toward.y) + (turn / TAU - 0.5) * 0.6
+			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05)), face])
 			if n % 3 == 1:
 				await _lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
 			n += 1
@@ -1405,11 +1408,12 @@ static func _dressed_waystones(k: PoiKit, m: PoiMasonry, stones: Array) -> void:
 		for i in stones.size():
 			var s: Array = stones[i]
 			var path := k.rock("waystone", i)
-			var sunk := float(PoiKit.meta(path).get("buried_m", WAYSTONE_SUNK_M))
 			var scale := float(s[2]) / 0.515
 			var lean: Vector3 = s[3]
-			k.place(path, (s[0] as Vector3) - Vector3(0.0, sunk * scale, 0.0), float(s[1]), scale, true,
-					Vector3(lean.z, 0.0, -lean.x), true)
+			# its face (+Z, the panel and the mark) turned to the way, a little off square; set
+			# down its `buried_m` by PoiKit.place
+			var face: float = float(s[4]) if s.size() > 4 else float(s[1])
+			k.place(path, s[0] as Vector3, face, scale, true, Vector3(lean.z, 0.0, -lean.x), true)
 		return
 	var st := m.begin()
 	for s in stones:

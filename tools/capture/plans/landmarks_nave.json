@@ -1,0 +1,112 @@
+{
+ "note": "The Drowned Nave from the Oskelcrag road, the marsh, above, the west, close and at dusk.",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "label": "nave_sedgemire_ground1",
+   "pos": [
+    -3298.4,
+    5.1,
+    -1571.3
+   ],
+   "look_at": [
+    -3038.4,
+    5.4,
+    -1121.0
+   ],
+   "fov": 60.0,
+   "time": 7.5,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "nave_from_the_marsh_south",
+   "pos": [
+    -3298.4,
+    5.1,
+    -1571.3
+   ],
+   "look_at": [
+    -3300.0,
+    45.0,
+    -1420.0
+   ],
+   "fov": 60.0,
+   "time": 10.0,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "nave_landmark",
+   "pos": [
+    -3120.0,
+    59.1,
+    -1108.2
+   ],
+   "look_at": [
+    -3300.0,
+    12.1,
+    -1420.0
+   ],
+   "fov": 58.0,
+   "time": 7.5,
+   "weather": "core:weather/overcast",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "nave_from_the_west",
+   "at": {
+    "place": "core:place/drowned_nave",
+    "bearing": 255.0,
+    "distance": 230,
+    "height": 1.8
+   },
+   "look": {
+    "place": "core:place/drowned_nave",
+    "bearing": 0.0,
+    "distance": 0,
+    "height": 35.0
+   },
+   "time": 15.0,
+   "weather": "core:weather/overcast",
+   "fov": 60
+  },
+  {
+   "label": "nave_close",
+   "at": {
+    "place": "core:place/drowned_nave",
+    "bearing": 190.0,
+    "distance": 75,
+    "height": 1.8
+   },
+   "look": {
+    "place": "core:place/drowned_nave",
+    "bearing": 0.0,
+    "distance": 0,
+    "height": 25.0
+   },
+   "time": 10.0,
+   "weather": "core:weather/overcast",
+   "fov": 62
+  },
+  {
+   "label": "nave_dusk_from_the_road",
+   "pos": [
+    -3298.4,
+    5.1,
+    -1571.3
+   ],
+   "look_at": [
+    -3300.0,
+    40.0,
+    -1420.0
+   ],
+   "fov": 60.0,
+   "time": 17.35,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  }
+ ]
+}

@@ -411,12 +411,23 @@ def carved_stone(pal, name, ground_z=0.0, base_hex="#6a6258", soot=0.75, lichen=
         wz = nb.separate_z()
         wn = nb.noise(nb.coord(0.35 / scale), scale=1.0, detail=2.0, rough=0.5)
         wline = nb.math("ADD", wz, nb.math("MULTIPLY", wn.outputs["Fac"], 1.4))
+        # the wet: stone the fen has soaked, dark from the water up to a man's height and more,
+        # in runs down the faces where the rain comes off the walls into it
+        rn = nb.noise(nb.coord((0.8 / scale, 0.8 / scale, 0.06 / scale)), scale=1.0, detail=3.0, rough=0.55)
+        runs = nb.map_range(rn.outputs["Fac"], 0.42, 0.7, 0.35, 1.0)
+        wet = nb.math("MULTIPLY", nb.map_range(wline, drowned_z + 7.5, drowned_z + 1.8, 0.0, 0.85), runs, clamp=True)
+        col = nb.mix(wet, col, P.lin("#1c1f1a"))
         wm = nb.map_range(wline, drowned_z + 1.6, drowned_z + 0.4, 0.0, 1.0)
         col = nb.mix(wm, col, P.lin(weed_hex))
-        # the tide mark: a pale band of dried scum just above the water
-        tm = nb.math("MULTIPLY", nb.map_range(wline, drowned_z + 1.7, drowned_z + 2.3, 1.0, 0.0),
-                     nb.map_range(wline, drowned_z + 1.4, drowned_z + 1.7, 0.0, 1.0), clamp=True)
-        col = nb.mix(nb.math("MULTIPLY", tm, 0.5), col, P.lin("#9a9884"))
+        # moss at the waterline, a green collar a metre or two deep, thickest on the ledges and
+        # broken where the stone stands proud
+        mn = nb.noise(nb.coord(0.9 / scale), scale=1.0, detail=3.0, rough=0.6, distortion=0.4)
+        band = nb.math("MULTIPLY", nb.map_range(wline, drowned_z + 3.6, drowned_z + 2.0, 0.0, 1.0),
+                       nb.map_range(wline, drowned_z + 0.5, drowned_z + 1.3, 0.0, 1.0), clamp=True)
+        ledge = nb.map_range(nz, 0.1, 0.7, 0.55, 1.0)
+        moss = nb.math("MULTIPLY", nb.math("MULTIPLY", band, ledge, clamp=True),
+                       nb.map_range(mn.outputs["Fac"], 0.38, 0.6, 0.0, 0.95), clamp=True)
+        col = nb.mix(moss, col, P.lin("#3a4527"))
     # relief: pitting at a hand's scale and the crackle cut in, broad enough to survive the bake
     hn = nb.noise(nb.coord(1.6 / scale), scale=1.0, detail=4.0, rough=0.6)
     height = nb.math("SUBTRACT", hn.outputs["Fac"], nb.math("MULTIPLY", crack, 0.6))
@@ -467,10 +478,16 @@ def choir_colossus(pal, rng, params, variant):
     lo_z = float(min(Vb[:, 2].min(), Vd[:, 2].min() if len(Vd) else 0.0))
     ground_z = -lo_z                     # where the ground line lies once the model is dropped
     stone = carved_stone(pal, "choir_stone", ground_z=ground_z, scale=1.0)
-    body = _carved("colossus_body", Vb, Tb, stone, target_tris=int(params.get("body_tris", 20000)))
+    # the fallen c's "debris" is most of the figure -- its whole upper body lying in the ash, arms
+    # and hands and all -- and at the rubble's 5000 triangles it stood beside its sooted
+    # neighbours as a pale faceted shape of flat planes; its stump is only the lower robe
+    lying = pose == "c"
+    body = _carved("colossus_body", Vb, Tb, stone,
+                   target_tris=int(params.get("body_tris", 10000 if lying else 20000)))
     parts = [body]
     if len(Td):
-        parts.append(_carved("colossus_debris", Vd, Td, stone, target_tris=int(params.get("debris_tris", 5000))))
+        parts.append(_carved("colossus_debris", Vd, Td, stone,
+                             target_tris=int(params.get("debris_tris", 16000 if lying else 5000))))
     cols = []
     for kind, prim in fig["collision"]:
         sc = CV.sdf.Scene().add(prim)
@@ -982,8 +999,11 @@ def drowned_nave(pal, rng, params, variant):
         meshes[key] = (V, T)
     lo_z = float(min(v[0][:, 2].min() for v in meshes.values() if len(v[0])))
     ground_z = -lo_z
-    stone = carved_stone(pal, "nave_stone", ground_z=ground_z, base_hex="#5c584e", soot=0.45, lichen=0.55,
-                         gilding=0.06, ash=0.0, drowned_z=ground_z + 1.1, lichen_hex="#56603f")
+    # fen-dark stone: at #5c584e (a linear mean of 0.17, and not drawn in the painted stone, whose
+    # ceiling holds the Choir under 0.08) the tower stood over the overcast marsh bleached near
+    # white, a chalk spire, not a church a thousand years in the water; soot and weed streak it
+    stone = carved_stone(pal, "nave_stone", ground_z=ground_z, base_hex="#403d35", soot=0.7, lichen=0.6,
+                         gilding=0.04, ash=0.0, drowned_z=ground_z + 1.1, lichen_hex="#4a5438")
     water = M.NB("nave_water")
     wn = water.noise(water.coord(0.4), scale=1.0, detail=2.0, rough=0.5)
     wcol = water.ramp(wn.outputs["Fac"], [(0.35, P.lin("#161c19")), (0.65, P.lin("#243029"))])
