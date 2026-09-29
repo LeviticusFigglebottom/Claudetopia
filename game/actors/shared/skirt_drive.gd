@@ -131,10 +131,11 @@ func _knee_bend(sk: Skeleton3D, side: String) -> float:
 	return acos(clampf(t.dot(s), -1.0, 1.0))
 
 
-## A soft maximum: the larger, eased into the other over `k` where they are close.
+## A soft maximum: the larger, eased into the other over `k` where they are close. Never more than
+## the larger (with the usual bump, two thighs at rest set the front 2.6 degrees out).
 static func _smax(x: float, y: float, k: float) -> float:
 	var h := clampf(0.5 + 0.5 * (x - y) / k, 0.0, 1.0)
-	return lerpf(y, x, h) + k * h * (1.0 - h)
+	return lerpf(y, x, h)
 
 
 ## A skirt bone turned from its rest by `pitch` about the body's left-right axis (+ ahead) and

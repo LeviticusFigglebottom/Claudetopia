@@ -708,7 +708,7 @@ def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float, legs: floa
     hips_z = float(skel.J["UpperLeg.L"][2])
     knee_z = float(skel.J["LowerLeg.L"][2])
     cy = float(skel.J["Hips"][1])
-    legs = [B[b + side] for side in ("L", "R") for b in ("UpperLeg.", "LowerLeg.", "Foot.", "Toe.")]
+    leg_cols = [B[b + side] for side in ("L", "R") for b in ("UpperLeg.", "LowerLeg.", "Foot.", "Toe.")]
 
     def fn(V, W):
         W0 = np.asarray(W, float)
@@ -718,8 +718,8 @@ def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float, legs: floa
         below = _ss((hips_z - 0.02 * s - z) / (0.10 * s))
         down = np.clip((hips_z - z) / max(hips_z - knee_z, 1e-3), 0.0, 1.0)
         keep = keep_hip + (keep_knee - keep_hip) * down
-        moved = W[:, legs].sum(axis=1) * below
-        W[:, legs] *= (1.0 - below)[:, None]
+        moved = W[:, leg_cols].sum(axis=1) * below
+        W[:, leg_cols] *= (1.0 - below)[:, None]
         # round the hips: the forge's front is -Y, its left +X
         dx, dy = x, y - cy
         r2 = dx * dx + dy * dy + (0.01 * s) ** 2
@@ -2670,7 +2670,10 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     # Wholly now, and to the shin it goes with the shins below the knee, as the robe: over the
     # trousers at the worst of the Walk, Run and Sprint, clipcheck drew 5, 28 and 30 leg vertices
     # through it at 85 % (with its floor gone), and 2, 5 and 11 like this. Half of it hangs from
-    # the skirt's bones, as the long skirt worn under it does.
+    # the skirt's bones, as the long skirt a Lakefolk woman wears under it does: a coat weighted
+    # otherwise than the skirt under it let the skirt through in every gait (37-50 vertices, 40-50
+    # mm; 10-25 and 7-22 mm alike). Over trousers that costs a sprinting thigh through the front
+    # edge (clipcheck on the man, Run/Sprint/Dodge_F: 2/6/13 from the legs alone, 15/34/24 so).
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
                                      shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
     return g
@@ -3202,13 +3205,13 @@ def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 9,
 # may wear them too.
 # --------------------------------------------------------------------------------------
 
-def _long_skirt_weights(skel: Skeleton):
+def _long_skirt_weights(skel: Skeleton, legs: float = 0.35):
     """Full and to the ankle, it hangs mostly from the skirt's bones (SkirtDrive swings them from
-    the thighs), and a third of it as the robe did before them: from the thighs, and below the
+    the thighs), and `legs` of it as the robe did before them: from the thighs, and below the
     knee from the shins. From the legs alone a run tore it into two tubes over the legs with a
     sheet between the forward knee and the trailing heel (triage 29)."""
     return _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05, shin_back=0.85, shin_front=0.5,
-                          panels=True, legs=0.35)
+                          panels=True, legs=legs)
 
 
 def _bodice_shell(skel: Skeleton, body, *, hem: float, sleeves: float, collar: float, waist: float,
@@ -3242,7 +3245,8 @@ def long_skirt(skel: Skeleton, body) -> Garment:
     the Lakefolk's under the long coat. It clears the body by the thickness of a shirt's hem."""
     g = skirt(skel, body, hem=0.065, flare=1.25, name="long_skirt", gap=0.016, folds=12)
     g.target_tris = 3800
-    g.weight_adjust = _long_skirt_weights(skel)
+    # half from the legs, as the coat worn over it: at a third its back swung out through the coat's
+    g.weight_adjust = _long_skirt_weights(skel, legs=0.5)
     return g
 
 

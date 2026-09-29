@@ -641,12 +641,17 @@ def _garment_material(g, out_dir: str, stem: str, seed: int, scene=None, skel: O
     # Where a garment is worn through first: the point of each elbow and the front of each knee.
     # The exposure term above finds what stands proud of the cloth's own field, and an elbow
     # inside a sleeve is not proud of the sleeve, so it never wore there.
+    # Not the knees of a skirt that falls past them: it hangs clear of the knee and does not rub
+    # there, and the pale patches read as fading on its front in a run (the dress, the robe).
+    skirt_past_knee = skel is not None and getattr(g, "open_below", None) is not None \
+        and float(g.open_below) < float(skel.J["LowerLeg.L"][2])
     joints = []
     if skel is not None:
         s_ = float(skel.props.height / 1.78)
         for side in ("L", "R"):
             joints.append((np.asarray(skel.J["LowerArm." + side], float), 0.050 * s_, 1.0))    # elbow, behind
-            joints.append((np.asarray(skel.J["LowerLeg." + side], float), 0.060 * s_, -1.0))   # knee, in front
+            if not skirt_past_knee:
+                joints.append((np.asarray(skel.J["LowerLeg." + side], float), 0.060 * s_, -1.0))   # knee, in front
 
     def _worn(p, nrm):
         w = np.zeros(len(p))

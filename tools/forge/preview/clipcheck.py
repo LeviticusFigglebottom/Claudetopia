@@ -219,7 +219,7 @@ class Rig:
 
         def smax(x, y, k):
             h = min(max(0.5 + 0.5 * (x - y) / k, 0.0), 1.0)
-            return y + (x - y) * h + k * h * (1.0 - h)
+            return y + (x - y) * h
 
         front = max(smax(p["L"], p["R"], self.SMOOTH), 0.0)
         back = min(-smax(-p["L"], -p["R"], self.SMOOTH), 0.0)
