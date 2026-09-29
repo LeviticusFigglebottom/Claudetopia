@@ -411,7 +411,7 @@
       {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ring"]}, {"flag": "dole_spar_ready"}], "text": "Shield up.", "weight": 2},
       {"conditions": [{"quest_at": ["core:quest/first_warrior", "the_ditch"]}, {"flag": "tam_sent"}], "text": "Wynstead road, south-east, past the sheepwash. Two in a ditch, on the road the pay goes by. Hollin's across the yard. Tam's gone ahead. Shield first. Go on.", "weight": 2},
       {"conditions": [{"quest_at": ["core:quest/first_warrior", "report"]}], "text": "Well? Is the road clear?"},
-      {"conditions": [{"quest_active": "core:quest/the_relief"}], "text": "You've the pay, the page and the cob. South, to the Stair Head. Don't stop to be admired."},
+      {"conditions": [{"quest_active": "core:quest/the_relief"}, {"flag": "cleared_the_wynstead_ditch"}], "text": "You've the pay, the page and the cob, and the Wynstead road's quiet behind you. South, to the Stair Head. Don't stop to be admired.", "weight": 2},
       {"conditions": [{"style": "core:style/warrior"}, {"flag": "woke_at_hushline"}], "text": "Hesk has written Tam Hobb in the quiet column. I read it out myself, once, to the yard. That's all anybody gets."}
     ],
     "nodes": {
