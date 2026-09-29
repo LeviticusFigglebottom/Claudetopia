@@ -213,16 +213,12 @@
       "hook_prompt": "Look at the lantern nailed to the gate",
       "garrison": {
         "rank": [
-          "core:enemy/ebb_hand",
           "core:enemy/ebb_hand"
         ],
         "archers": [
           "core:enemy/flood_caller"
         ],
-        "heavy": [
-          "core:enemy/bog_drowned"
-        ],
-        "count": 6,
+        "count": 3,
         "tower_archers": 2
       }
     }

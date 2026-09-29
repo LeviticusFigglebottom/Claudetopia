@@ -670,7 +670,7 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 	var face := k.grain()
 	var side := Vector2(face.y, -face.x)
 	var turf := PoiKit.painted(5, {"base": "#2e3a24", "accent": "#232d1a", "grout": "#151b0f", "unit": 0.3}, 0.5)
-	m.mound(k.on_ground(0.0, 0.0, -0.4), 10.5, 1.2, turf, "Hummock", true, 2.2, 6, 20, true, 0.05)
+	m.mound(k.on_ground(0.0, 0.0, -0.55), 11.5, 1.35, turf, "Hummock", true, 1.6, 6, 20, true, 0.08)
 	if k.far:
 		return
 	var boards := m.begin()
@@ -682,7 +682,7 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 			if row == 2 and i == 3:
 				continue
 			var p := face * (float(row) - 1.0) * 3.2 + side * (float(i) - 1.5) * 2.4 + k.jitter(0.25)
-			var gy := k.on_ground(p.x, p.y).y + _hummock_lift(p, 10.5, 1.2)
+			var gy := k.on_ground(p.x, p.y).y + _hummock_lift(p, 11.5, 1.35)
 			var gb := Basis(Vector3.UP, PoiKit.yaw_of(face) + k.rng.randf_range(-0.08, 0.08))
 			var head := p - face * 1.0
 			if row == 2 and i == 2:
@@ -715,7 +715,7 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 			var q := Vector2(sin(a), cos(a)) * r
 			if absf(q.dot(side)) < 4.8 and absf(q.dot(face)) < 4.6:
 				continue
-			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, _hummock_lift(q, 10.5, 1.2) - 0.05), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.2)))
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, _hummock_lift(q, 11.5, 1.35) - 0.05), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.8, 1.2)))
 		await k.step()
 		k.scatter(sedge, xfs, false, false, false)
 	await reeds(d, 11.0, 18.0, 55, [])
@@ -723,7 +723,7 @@ static func drylanders_hummock(d: PoiDressing) -> void:
 
 static func _hummock_lift(p: Vector2, r: float, h: float) -> float:
 	var f := clampf(p.length() / r, 0.0, 1.0)
-	return h * pow(maxf(1.0 - f * f, 0.0), 2.2 * 0.5) - 0.4
+	return h * pow(maxf(1.0 - f * f, 0.0), 1.6 * 0.5) - 0.55
 
 
 # --- The Bog-Iron Bloomery ---------------------------------------------------------------------------
@@ -822,7 +822,7 @@ static func grey_line(d: PoiDressing) -> void:
 				m.ellipsoid(knots, top - Vector3(0, 0.14, 0), Vector3(0.09, 0.07, 0.09))
 	await k.step()
 	m.commit(fresh, k.surface("timber", 0.6), "NewRows", true)
-	m.commit(old, PoiKit.plain(Color(0.62, 0.6, 0.57), 0.95), "GreyRows", true)
+	m.commit(old, PoiKit.painted(3, {"base": "#6d6a62", "accent": "#55524b"}, 0.9), "GreyRows", true)
 	if k.far:
 		return
 	await k.step()
