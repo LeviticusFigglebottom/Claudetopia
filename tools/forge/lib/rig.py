@@ -37,13 +37,14 @@ SOCKET_BONES: Dict[str, str] = {
     "Socket.WeaponR": "Hand.R", "Socket.WeaponL": "Hand.L", "Socket.ShieldL": "LowerArm.L",
     "Socket.Back": "Chest", "Socket.HipL": "Hips", "Socket.Head": "Head", "Socket.Lantern": "Hand.L",
 }
-# Cloth bones: a skirt's front, back and sides, and below the knee the front and back of a long
-# one. They deform (a skirt is weighted to them) but no clip keys them: HumanoidModel's SkirtDrive
+# Cloth bones: a skirt's front, back and sides, and below the knee the same four again for a long
+# one (a side without its own bone below the knee stood out from a raised knee as a board to the
+# hem). They deform (a skirt is weighted to them) but no clip keys them: HumanoidModel's SkirtDrive
 # poses them each frame from the thighs, after the clips. Not in DEFORM_NAMES, so the body and every
 # part weighted from it know nothing of them; WEIGHT_NAMES is the list a skirt is weighted over.
 CLOTH_BONES: List[Tuple[str, str]] = [
     ("Skirt.F", "Hips"), ("Skirt.B", "Hips"), ("Skirt.L", "Hips"), ("Skirt.R", "Hips"),
-    ("Skirt.F2", "Skirt.F"), ("Skirt.B2", "Skirt.B"),
+    ("Skirt.F2", "Skirt.F"), ("Skirt.B2", "Skirt.B"), ("Skirt.L2", "Skirt.L"), ("Skirt.R2", "Skirt.R"),
 ]
 CLOTH_NAMES = [n for n, _ in CLOTH_BONES]
 WEIGHT_NAMES = DEFORM_NAMES + CLOTH_NAMES
@@ -326,6 +327,8 @@ def _cloth_defs(J: Dict[str, np.ndarray], p: Proportions) -> Dict[str, Tuple[np.
         "Skirt.R": (at(-0.120, 0.0, hip_z), at(-0.130, 0.0, knee_z), -LEFT),
         "Skirt.F2": (at(0.0, -0.070, knee_z), at(0.0, -0.070, low_z), FWD),
         "Skirt.B2": (at(0.0, 0.070, knee_z), at(0.0, 0.070, low_z), -FWD),
+        "Skirt.L2": (at(0.130, 0.0, knee_z), at(0.130, 0.0, low_z), LEFT),
+        "Skirt.R2": (at(-0.130, 0.0, knee_z), at(-0.130, 0.0, low_z), -LEFT),
     }
 
 

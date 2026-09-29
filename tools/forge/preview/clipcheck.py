@@ -184,7 +184,8 @@ class Rig:
         return world
 
     skirt_amount = 1.0  # SkirtDrive.amount: 1 walking and running, 0 swimming and in the saddle
-    SMOOTH, SIDE_SHARE, FALL_BACK, HEEL_LIFT = 0.18, 0.60, 0.60, 0.55   # skirt_drive.gd's
+    # skirt_drive.gd's
+    SMOOTH, SIDE_SHARE, SIDE_SPREAD, FALL_BACK, HEEL_LIFT, SIDE_HEEL = 0.18, 1.0, 0.80, 0.60, 0.80, 0.55
 
     def _rest(self):
         if getattr(self, "_rest_world", None) is None:
@@ -208,7 +209,7 @@ class Rig:
             return math.atan2(d[2], -d[1])
 
         def abd(d, side):
-            return math.atan2(d[0] * (1.0 if side == "L" else -1.0), -d[1])
+            return math.asin(min(max(d[0] * (1.0 if side == "L" else -1.0), -1.0), 1.0))
 
         p, ab = {}, {}
         for side in ("L", "R"):
@@ -222,10 +223,13 @@ class Rig:
 
         front = max(smax(p["L"], p["R"], self.SMOOTH), 0.0)
         back = min(-smax(-p["L"], -p["R"], self.SMOOTH), 0.0)
+        def knee(side):
+            ka, kb, kc = (W[n + side][:3, 3] for n in ("UpperLeg.", "LowerLeg.", "Foot."))
+            t_, s_ = (kb - ka) / np.linalg.norm(kb - ka), (kc - kb) / np.linalg.norm(kc - kb)
+            return math.acos(float(np.clip(t_ @ s_, -1.0, 1.0))) * a
+
         tr = "L" if p["L"] < p["R"] else "R"
-        ka, kb, kc = (W[n + tr][:3, 3] for n in ("UpperLeg.", "LowerLeg.", "Foot."))
-        t_, s_ = (kb - ka) / np.linalg.norm(kb - ka), (kc - kb) / np.linalg.norm(kc - kb)
-        heel = math.acos(float(np.clip(t_ @ s_, -1.0, 1.0))) * a
+        heel = knee(tr)
 
         def rot(axis, ang):
             c, s1 = math.cos(ang), math.sin(ang)
@@ -235,7 +239,7 @@ class Rig:
                              [z * x * (1 - c) - y * s1, z * y * (1 - c) + x * s1, c + z * z * (1 - c)]])
 
         def panel(bone, pt, ab_, parent_name):
-            side = -1.0 if bone.endswith(".R") else 1.0
+            side = -1.0 if bone.endswith((".R", ".R2")) else 1.0
             turn = rot((1.0, 0.0, 0.0), -pt) @ rot((0.0, 0.0, 1.0), ab_ * side)
             g = body @ turn @ R(rest[bone])
             # the bone keeps its rest offset from its parent, carried by the parent's pose
@@ -248,8 +252,13 @@ class Rig:
 
         panel("Skirt.F", front, 0.0, "Hips")
         panel("Skirt.B", back, 0.0, "Hips")
-        panel("Skirt.L", p["L"] * self.SIDE_SHARE, ab["L"] * 0.8, "Hips")
-        panel("Skirt.R", p["R"] * self.SIDE_SHARE, ab["R"] * 0.8, "Hips")
+        for side in ("L", "R"):
+            sp = p[side] * self.SIDE_SHARE
+            panel("Skirt." + side, sp, ab[side] * self.SIDE_SPREAD, "Hips")
+            # below the knee: falls back from a raised knee, lifts a little with a heel behind
+            behind = min(max(-sp / 0.3, 0.0), 1.0)
+            low = max(sp, 0.0) * (1.0 - self.FALL_BACK) + min(sp, 0.0) - knee(side) * self.SIDE_HEEL * behind
+            panel("Skirt.%s2" % side, low, ab[side] * self.SIDE_SPREAD, "Skirt." + side)
         # below the knee: its own turn in the body's frame (less of the front's: it falls back
         # from a raised knee; the back's less the trailing heel's lift), hung from the upper panel
         panel("Skirt.F2", front * (1.0 - self.FALL_BACK), 0.0, "Skirt.F")
@@ -626,6 +635,10 @@ def main():
     rig.hold = float(args.get("hold", 0.0))
     rig.arm_out = float(args.get("arm-out", 0.0))
     rig.skirt_amount = float(args.get("skirt", 1.0))
+    # --drive="SIDE_SHARE:0.8;FALL_BACK:0.5": SkirtDrive's constants, to try before skirt_drive.gd
+    for kv in (x for x in args.get("drive", "").split(";") if x):
+        k, v = kv.split(":")
+        setattr(rig, k, float(v))
     # --bust=<weight>: her bust slider (item 46), on her body and on what she wears
     bust = float(args.get("bust", 0.0))
     body_morph = {"bust": bust} if bust else None

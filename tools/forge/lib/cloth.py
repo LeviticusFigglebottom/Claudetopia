@@ -623,7 +623,7 @@ def _on_loft(stations: Sequence[Tuple[float, float, float, float]], x: float, y:
 def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
                    keep_knee: float = 0.90, blend: float = 0.10, shin_back: float = 0.0,
                    shin_front: float = 0.0, panels: bool = False,
-                   thigh: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+                   legs: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """A skirt goes with the thighs, and stretches between them.
 
     Weighted straight from the body, every vertex below the hips took the nearest leg's weights
@@ -647,12 +647,13 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
     With `panels` the legs' share goes to the skirt's own bones (rig.CLOTH_BONES) instead, which
     HumanoidModel's SkirtDrive swings from the thighs: the front with whichever thigh is ahead,
     the back with whichever is behind, each side with its own, and below the knee (a long
-    skirt) the front and the back again. `thigh` of it stays with the thigh under it. The
+    skirt) the four again. `legs` of it is weighted as without the panels. The
     returned matrix is over rig.WEIGHT_NAMES then, and the forge skins the part over those
     (character_forge._part_object). Only on the grown rig: a child's cut is worn on the grown
     skeleton re-proportioned (ChildProportions), which does not move the skirt's bones."""
     if panels and _panels_fit(skel):
-        return _panel_weights(skel, keep_hip, keep_knee, thigh)
+        on_legs = _skirt_weights(skel, keep_hip, keep_knee, blend, shin_back, shin_front)
+        return _panel_weights(skel, keep_hip, keep_knee, legs, on_legs)
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
@@ -687,14 +688,19 @@ def _panels_fit(skel: Skeleton) -> bool:
     return abs(skel.props.height - rig.DEFAULT_HEIGHT) < 0.05
 
 
-def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float,
-                   thigh: float) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float, legs: float,
+                   on_legs: Callable[[np.ndarray, np.ndarray], np.ndarray]) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """_skirt_weights with `panels`: the legs' share to the skirt's bones, over rig.WEIGHT_NAMES.
 
     Round the hips it is parted by where the vertex lies from their centre -- front, back, left,
-    right, by the square of the angle's cosine -- and below the knee the front's and the back's
-    shares go to Skirt.F2 and Skirt.B2, which SkirtDrive hangs from the upper panels: the front
-    falls back from a raised knee, the back lifts with a heel kicked up behind."""
+    right, by the square of the angle's cosine -- and below the knee to Skirt.F2, B2, L2 and R2,
+    which SkirtDrive hangs from the upper panels: the front and the sides fall back from a raised
+    knee, the back lifts with a heel kicked up behind.
+
+    `legs` of every vertex is weighted as `on_legs` weights it (the skirt without the bones: the
+    thighs, and a long one's shins below the knee). Hung from the panels alone the skirt swung as
+    one stiff bell and a narrow robe let the calf kicked up behind through its back; hung from the
+    legs alone it tore into two tubes with a sheet between them."""
     deform = list(rig.DEFORM_NAMES)
     names = list(rig.WEIGHT_NAMES)
     B = {b: i for i, b in enumerate(names)}
@@ -717,25 +723,19 @@ def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float,
         # round the hips: the forge's front is -Y, its left +X
         dx, dy = x, y - cy
         r2 = dx * dx + dy * dy + (0.01 * s) ** 2
-        front = np.maximum(-dy, 0.0) ** 2 / r2
-        back = np.maximum(dy, 0.0) ** 2 / r2
-        left = np.maximum(dx, 0.0) ** 2 / r2
-        right = np.maximum(-dx, 0.0) ** 2 / r2
-        tot = front + back + left + right
-        front, back, left, right = front / tot, back / tot, left / tot, right / tot
+        part = {"F": np.maximum(-dy, 0.0) ** 2 / r2, "B": np.maximum(dy, 0.0) ** 2 / r2,
+                "L": np.maximum(dx, 0.0) ** 2 / r2, "R": np.maximum(-dx, 0.0) ** 2 / r2}
+        tot = sum(part.values())
         below_knee = _ss((knee_z - z) / (0.10 * s))
-        share = moved * keep
-        cloth = share * (1.0 - thigh)
-        W[:, B["Skirt.F"]] += cloth * front * (1.0 - below_knee)
-        W[:, B["Skirt.F2"]] += cloth * front * below_knee
-        W[:, B["Skirt.B"]] += cloth * back * (1.0 - below_knee)
-        W[:, B["Skirt.B2"]] += cloth * back * below_knee
-        W[:, B["Skirt.L"]] += cloth * left
-        W[:, B["Skirt.R"]] += cloth * right
-        wl = _ss((x + 0.025 * s) / (0.05 * s))
-        W[:, B["UpperLeg.L"]] += share * thigh * wl
-        W[:, B["UpperLeg.R"]] += share * thigh * (1.0 - wl)
+        cloth = moved * keep
+        for k, share in part.items():
+            W[:, B["Skirt." + k]] += cloth * share / tot * (1.0 - below_knee)
+            W[:, B["Skirt.%s2" % k]] += cloth * share / tot * below_knee
         W[:, B["Hips"]] += moved * (1.0 - keep)
+        if legs > 0.0:
+            L = np.zeros_like(W)
+            L[:, :len(deform)] = np.asarray(on_legs(V, W0), float)
+            W = (1.0 - legs) * W + legs * L
         return W
     return fn
 
@@ -781,6 +781,8 @@ def skirt(skel: Skeleton, body, *, hem: float = 0.30, flare: float = 1.0, name: 
 def dress(skel: Skeleton, body) -> Garment:
     s = _s(skel)
     g = skirt(skel, body, hem=0.22, flare=0.8, name="dress")
+    # past the knee: half of it from the skirt's bones, half from the thighs as the skirt goes
+    g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05, panels=True, legs=0.5)
     reg = torso_region(skel, top=0.90, hem=0.55, sleeves=0.45, collar=0.0)
     g.scene.union(offset_shell(body, reg, 0.010 * s, gap=0.004 * s,
                                bounds=zbox(skel, 0.53 * skel.props.height, 0.92 * skel.props.height, xy=0.50)), k=0.01 * s)
@@ -810,9 +812,11 @@ def robe(skel: Skeleton, body) -> Garment:
     # To the ankle, it goes with the shins below the knee as well: hung from the thighs alone it
     # swung up as a board over a raised knee, and the trailing heel kicked out through its back
     # (clipcheck, the worst of the Walk, Run and Sprint: 40, 75 and 70 leg vertices drawn through;
-    # 3, 7 and 13 like this).
+    # 3, 7 and 13 like this). Half of it hangs from the skirt's bones now (SkirtDrive): from the
+    # legs alone a stride drew the cloth between them into a sheet (its edges at 12-14 times their
+    # length at the 98th percentile in the Run and the Sprint; 6-7 like this).
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5)
+                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
     return g
 
 
@@ -2665,9 +2669,10 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     # of it at the hip the forward thigh came through the front of the coat at the Walk's contact.
     # Wholly now, and to the shin it goes with the shins below the knee, as the robe: over the
     # trousers at the worst of the Walk, Run and Sprint, clipcheck drew 5, 28 and 30 leg vertices
-    # through it at 85 % (with its floor gone), and 2, 5 and 11 like this.
+    # through it at 85 % (with its floor gone), and 2, 5 and 11 like this. Half of it hangs from
+    # the skirt's bones, as the long skirt worn under it does.
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5)
+                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
     return g
 
 
@@ -2957,9 +2962,10 @@ def wrap_skirt(skel: Skeleton, body, *, hem: float = 0.18) -> Garment:
     g.scene.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
     g.target_tris = 3600
     # to mid-calf and narrow: with the shins below the knee, as the robe (clipcheck, the worst of
-    # the Walk, Run and Sprint: 20, 35 and 46 leg vertices drawn through; 4, 9 and 15 like this)
+    # the Walk, Run and Sprint: 20, 35 and 46 leg vertices drawn through; 4, 9 and 15 like this),
+    # and half of it from the skirt's bones, so it is not drawn into a sheet between the legs
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5)
+                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
     return g
 
 
@@ -3197,8 +3203,12 @@ def ragged_hem(skel: Skeleton, g: Garment, z_hem: float, teeth: int = 9,
 # --------------------------------------------------------------------------------------
 
 def _long_skirt_weights(skel: Skeleton):
-    """To the ankle it goes with the shins below the knee, as the robe does."""
-    return _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05, shin_back=0.85, shin_front=0.5)
+    """Full and to the ankle, it hangs mostly from the skirt's bones (SkirtDrive swings them from
+    the thighs), and a third of it as the robe did before them: from the thighs, and below the
+    knee from the shins. From the legs alone a run tore it into two tubes over the legs with a
+    sheet between the forward knee and the trailing heel (triage 29)."""
+    return _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05, shin_back=0.85, shin_front=0.5,
+                          panels=True, legs=0.35)
 
 
 def _bodice_shell(skel: Skeleton, body, *, hem: float, sleeves: float, collar: float, waist: float,

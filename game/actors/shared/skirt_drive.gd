@@ -5,9 +5,10 @@ extends SkeletonModifier3D
 ## A skirt weighted to the two thighs alone is at best half of each at the front: in a run the
 ## raised knee stood in front of the cloth and a long skirt stretched between the legs into a sheet.
 ## Here the front panel (Skirt.F) swings with whichever thigh is ahead and the back (Skirt.B) with
-## whichever is behind, each side (Skirt.L, Skirt.R) with most of its own thigh, and below the knee
-## the front (Skirt.F2) falls back from a raised knee while the back (Skirt.B2) lifts with a heel
-## kicked up behind. No clip keys these bones.
+## whichever is behind, each side (Skirt.L, Skirt.R) with its own thigh, and below the knee the
+## front and the sides (Skirt.F2, L2, R2) fall back from a raised knee while the back (Skirt.B2)
+## lifts with a heel kicked up behind. No clip keys these bones. tools/forge/preview/clipcheck.py
+## poses them the same way in numpy (Rig._skirt_drive): change both together.
 ##
 ## `amount` is how much of that is laid on: 1 walking and running, 0 when the thighs are no guide to
 ## where the cloth hangs -- swimming (prone, the legs trailing) and seated in the saddle (the thighs
@@ -18,9 +19,11 @@ var amount := 1.0
 var lag := 0.0
 
 const SMOOTH := 0.18        ## rad over which the front and back hand over between the thighs
-const SIDE_SHARE := 0.60    ## of a thigh's swing that the panel beside it takes
-const FALL_BACK := 0.60     ## of the front panel's swing the cloth below the knee gives back
-const HEEL_LIFT := 0.55     ## of the trailing knee's bend the back below the knee takes
+const SIDE_SHARE := 1.0     ## of a thigh's swing that the panel beside it takes
+const SIDE_SPREAD := 0.80   ## of a thigh's spread out to the side that the panel beside it takes
+const FALL_BACK := 0.60     ## of a panel's forward swing the cloth below the knee gives back
+const HEEL_LIFT := 0.80     ## of the trailing knee's bend the back below the knee takes
+const SIDE_HEEL := 0.55     ## of its own knee's bend a side below the knee takes, its leg behind
 
 var _ids: Dictionary = {}
 var _ok := false
@@ -32,7 +35,7 @@ var _now: Dictionary = {}   ## bone -> Vector2(pitch, abduction) laid on last fr
 func _setup(sk: Skeleton3D) -> void:
 	_ids.clear()
 	for n in ["Hips", "UpperLeg.L", "UpperLeg.R", "LowerLeg.L", "LowerLeg.R", "Foot.L", "Foot.R",
-			"Skirt.F", "Skirt.B", "Skirt.L", "Skirt.R", "Skirt.F2", "Skirt.B2"]:
+			"Skirt.F", "Skirt.B", "Skirt.L", "Skirt.R", "Skirt.F2", "Skirt.B2", "Skirt.L2", "Skirt.R2"]:
 		_ids[n] = sk.find_bone(n)
 	_ok = true
 	for n in _ids:
@@ -80,9 +83,15 @@ func _process_modification() -> void:
 	var heel := _knee_bend(sk, trailing) * a
 	var g_f := _pose_panel(sk, "Skirt.F", front, 0.0, hips_pose)
 	var g_b := _pose_panel(sk, "Skirt.B", back, 0.0, hips_pose)
-	_pose_panel(sk, "Skirt.L", float(p["L"]) * SIDE_SHARE, float(ab["L"]) * 0.8, hips_pose)
-	_pose_panel(sk, "Skirt.R", float(p["R"]) * SIDE_SHARE, float(ab["R"]) * 0.8, hips_pose)
-	# below the knee the turn is the upper panel's plus its own
+	for side in ["L", "R"]:
+		var sp := float(p[side]) * SIDE_SHARE
+		var spread := float(ab[side]) * SIDE_SPREAD
+		var g_s := _pose_panel(sk, "Skirt." + side, sp, spread, hips_pose)
+		# below the knee: falls back from a raised knee, lifts a little with a heel behind
+		var behind := clampf(-sp / 0.3, 0.0, 1.0)
+		var low := maxf(sp, 0.0) * (1.0 - FALL_BACK) + minf(sp, 0.0) - _knee_bend(sk, side) * a * SIDE_HEEL * behind
+		_pose_panel(sk, "Skirt.%s2" % side, low, spread, g_s)
+	# below the knee each panel is turned in the body's frame, hung from the one above it
 	_pose_panel(sk, "Skirt.F2", front * (1.0 - FALL_BACK), 0.0, g_f)
 	_pose_panel(sk, "Skirt.B2", back - heel * HEEL_LIFT, 0.0, g_b)
 
@@ -105,9 +114,11 @@ static func _pitch(d: Vector3) -> float:
 	return atan2(d.z, -d.y)
 
 
-## Out to the side, radians, + away from the body's midline.
+## Out to the side, radians, + away from the body's midline: the angle out of the plane the thigh
+## swings in. (As atan2 of the side over the drop it ran to 90 degrees as a thigh came up level in
+## a sprint, and past it in a roll, and the side panels stood out as boards.)
 static func _abduction(d: Vector3, side: String) -> float:
-	return atan2(d.x * (1.0 if side == "L" else -1.0), -d.y)
+	return asin(clampf(d.x * (1.0 if side == "L" else -1.0), -1.0, 1.0))
 
 
 ## How far the knee is bent, radians: the angle between thigh and shin.
@@ -138,7 +149,7 @@ func _pose_panel(sk: Skeleton3D, bone: String, pitch: float, ab: float, parent: 
 		var k := 1.0 - exp(-dt / maxf(lag, 1e-3))
 		target = (_now[bone] as Vector2).lerp(target, k)
 	_now[bone] = target
-	var side_sign := -1.0 if bone.ends_with(".R") else 1.0
+	var side_sign := -1.0 if bone.ends_with(".R") or bone.ends_with(".R2") else 1.0
 	# about +X by -pitch swings a hanging bone toward +Z (ahead); about +Z by +ab toward +X (left)
 	var turn := Quaternion(Vector3.RIGHT, -target.x) * Quaternion(Vector3.BACK, target.y * side_sign)
 	var rest := sk.get_bone_global_rest(id).basis.get_rotation_quaternion()
