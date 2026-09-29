@@ -1,0 +1,68 @@
+[
+  {
+    "id": "core:enemy/flood_caller",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Flood-Caller",
+    "faction": "unquiet",
+    "tint": "#2e3f63",
+    "region": "core:region/sedgemire",
+    "lore": "A reedfolk who read the Tide account the other way round. The water went out and will come back, and when it does the drowned will walk ashore; the Flood-Callers are the ones who got tired of waiting, and cut the burial lanterns off the water before they can burn down so that the dead come back up where they went in. They have learned a little of the cold the wisps carry, from standing out on the water at night calling to them, and the drowned they raise do not touch them.",
+    "loot": "core:loot/pockets_common",
+    "marks": [6, 18],
+    "tags": ["flood_caller", "cultist", "caster", "humanoid", "person"]
+  },
+  {
+    "id": "core:enemy/ebb_hand",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Ebb-Hand",
+    "faction": "unquiet",
+    "tint": "#394a4c",
+    "region": "core:region/sedgemire",
+    "lore": "An eel-fisher with an eel-spear and a grievance against the living, which is that they are not yet the dead. The Ebb-Hands pole the Flood-Callers' boats, cut the lanterns off the water with a hook on a long pole, and stand on the fighting step of the Oulnauve stakes singing the Tide account backwards, which in Sedgish is very nearly a threat.",
+    "loot": "core:loot/pockets_common",
+    "marks": [4, 14],
+    "tags": ["flood_caller", "cultist", "humanoid", "person"]
+  },
+  {
+    "id": "core:enemy/aunsa_mor",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Aunsa Mor, the Caller",
+    "faction": "unquiet",
+    "tint": "#1f2d52",
+    "scale": 1.08,
+    "region": "core:region/sedgemire",
+    "lore": "Aunsa Mor measured burial oil at the Isseva jetty for thirty years, a spoonful for every year of a life, and one winter she poured it all back into the water instead and said the lanterns had been lies all along. The Reed Council exiled her, which is the heaviest thing the Council can do; she went north up the Oulnauve with the ones who believed her and built the stakes. She is patient, which is the reedfolk virtue, and she has decided the flood is owed.",
+    "stats": {"hp": 190, "stamina": 120, "poise": 50, "armour": 5, "speed": 3.3, "will": 40},
+    "behaviour": {"engage_range": 8.0, "circle": 0.5, "retreat_threshold": 0.25, "patience": 5.0, "leash": 40.0, "keep_distance": 8.0, "strafe_speed": 0.9, "aggression": 0.75, "retreat_time": 1.4, "hyper_armour": 12.0},
+    "loot": "core:loot/smuggler_stash",
+    "marks": [40, 90],
+    "tags": ["flood_caller", "cultist", "caster", "humanoid", "person", "elite"]
+  },
+  {
+    "id": "core:enemy/old_grey_bitch",
+    "extends": "core:enemy/leech_hound",
+    "name": "Mother, the Old Bitch",
+    "tint": "#5b5160",
+    "scale": 1.3,
+    "height": 1.15,
+    "radius": 0.5,
+    "region": "core:region/sedgemire",
+    "lore": "The first hound Illa Nauve bred to guard her leeches, and the one that taught the others to drink. She is grey at the muzzle and scarred along both flanks from herons, and she slipped her collar at the thaw and led the pack into the withies. She does not fight like the young ones. She takes one mouthful, and then she stands off in the reeds and lets the others take the rest, and waits for you to put your shield down.",
+    "stats": {"hp": 150, "stamina": 110, "poise": 34, "armour": 3, "speed": 5.2},
+    "behaviour": {"engage_range": 2.2, "circle": 0.9, "retreat_threshold": 0.35, "patience": 6.0, "leash": 50.0, "flank": true, "spread": 3.6, "strafe_speed": 1.3, "aggression": 0.55},
+    "marks": [0, 6],
+    "tags": ["beast", "pack", "quadruped", "elite"]
+  },
+  {
+    "id": "core:enemy/guild_bailiff",
+    "extends": "core:enemy/caravan_guard",
+    "name": "Guild Bailiff",
+    "tint": "#5a2a24",
+    "region": "core:region/sedgemire",
+    "lore": "The Tallymen's Guild does not keep soldiers; it keeps bailiffs, who are soldiers with a ledger. In the Delta they walk the roads in pairs in oxblood coats gone brown with the damp, see the tithe-cart safely between the landings, and look for eels with no tally-chalk on the basket. They leave you alone until you touch Guild property, and then they write your name down, and then they hit you.",
+    "loot": "core:loot/pockets_common",
+    "marks": [6, 16],
+    "tags": ["person", "humanoid", "guardian", "tallymen"],
+    "appearance": {"seed": 8177, "culture": "vale", "parts": {"torso": "gambeson", "legs": "trousers", "feet": "boots", "belt": "belt", "hands": "gloves", "headgear": "helm"}, "palette": {"primary": "5a2a24", "secondary": "3a2420", "leather": "4a3525", "metal": "6f7478"}, "skin": "wheat", "hair_colour": "dark_brown", "build": 0.8, "feminine": 0.0, "height": 1.8}
+  }
+]

@@ -3,29 +3,34 @@
    "notes": "bog-drowned climb the poles after dark if the lanterns are out: while Lissane is walking her round they are lit.",
    "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "night", "unless_present": "core:npc/lissane_sa"}]},
   {"id": "core:encounter/drowned_bell_shrine", "place": "core:poi/drowned_bell_shrine",
-   "notes": "wisps circle at midnight",
-   "spawns": [{"enemy": "core:enemy/wisp", "count": 2, "when": "midnight", "spread": 5.0}]},
+   "notes": "wisps circle at midnight. The shrine's keeping is cut on a board under the Hearthstone's lip; a Flood-Caller's diver left his sounding pushed between the stones (core:quest/lanterns_taken_up reads it).",
+   "spawns": [{"enemy": "core:enemy/wisp", "count": 2, "when": "midnight", "spread": 5.0}],
+   "lies": [{"item": "core:item/note_drowned_bell_shrine_offerings"}, {"item": "core:item/note_flood_callers_sounding"}]},
   {"id": "core:encounter/sallow_king", "place": "core:poi/sallow_king",
    "notes": "sallowjaw ambush from the water inside the ring; a moral choice with reputation cost. They lie in the pool under the King's roots and come up at whoever walks into the ring; the reedfolk feed them so they nest nowhere else, and the Reed Council hears of every one the player kills here. Walking back out of the ring costs nothing.",
    "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2, "at": "the_pool", "spread": 1.6,
                "killing_costs": {"faction": "core:faction/reed_council", "reputation": -8,
-                                 "notice": "The reedfolk feed the Sallow King's sallowjaws so they nest nowhere else. The Reed Council will hear who killed one."}}]},
+                                 "notice": "The reedfolk feed the Sallow King's sallowjaws so they nest nowhere else. The Reed Council will hear who killed one."}}],
+   "lies": [{"item": "core:item/note_sallow_king_feeding_tally"}]},
   {"id": "core:encounter/reed_wreck", "place": "core:poi/reed_wreck",
    "notes": "leech-hounds in the hold; a chart of the Salt Isles, on the crate under her bow",
    "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3}],
    "lies": [{"item": "core:item/salt_isles_guide", "at": "the_chart"}]},
   {"id": "core:encounter/stair_of_isse", "place": "core:poi/stair_of_isse",
-   "notes": "bog-drowned rise from between the columns as you pass",
-   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "spread": 4.0}]},
+   "notes": "bog-drowned rise from between the columns as you pass; a rubbing of the ninth step's two inscriptions lies on the stair",
+   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "spread": 4.0}],
+   "lies": [{"item": "core:item/note_stair_of_isse_rubbing"}]},
   {"id": "core:encounter/wisp_hollow", "place": "core:poi/wisp_hollow",
-   "notes": "wisps lure toward deep water",
-   "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "spread": 5.0}]},
+   "notes": "wisps lure toward deep water; the strongbox in the chimney holds a mother's letter",
+   "spawns": [{"enemy": "core:enemy/wisp", "count": 4, "spread": 5.0}],
+   "lies": [{"item": "core:item/note_wisp_hollow_strongbox_letter"}]},
   {"id": "core:encounter/long_jetty", "place": "core:poi/long_jetty",
    "notes": "bog-drowned climb to the last post at midnight",
    "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "midnight"}]},
   {"id": "core:encounter/peat_hags", "place": "core:poi/peat_hags",
-   "notes": "leech-hounds come up to the cuttings after dark",
-   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3, "when": "night", "spread": 3.0}]},
+   "notes": "leech-hounds come up to the cuttings after dark, four and more, after the kept Warden; the cutters' finds-board stands by the stacks",
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 4, "when": "night", "spread": 3.0}],
+   "lies": [{"item": "core:item/note_peat_hags_finds"}]},
   {"id": "core:encounter/sunken_tower", "place": "core:poi/sunken_tower",
    "notes": "sallowjaws bask on the drowned courses",
    "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2}]},
@@ -43,5 +48,266 @@
    "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "when": "night", "spread": 3.0}]},
   {"id": "core:encounter/old_crannog", "place": "core:poi/old_crannog",
    "notes": "leech-hounds in the carr at night",
-   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]}
+   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]},
+  {
+    "id": "core:encounter/unsung_vault",
+    "place": "core:poi/unsung_vault",
+    "notes": "the drowned wait on the steps of the doorway after dark, come up out of the Vault since its lanterns went out; the apprentice's page lies weighted on the top step",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night",
+        "spread": 3.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_unsung_keepers_last_page"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/greylag_fold",
+    "place": "core:poi/greylag_fold",
+    "notes": "leech-hounds come up out of the carr on the wet side after the geese at night; the goose-count lies on the deck",
+    "spawns": [
+      {
+        "enemy": "core:enemy/leech_hound",
+        "count": 3,
+        "when": "night",
+        "spread": 3.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_greylag_count"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/oulnauve_stakes",
+    "place": "core:poi/oulnauve_stakes",
+    "notes": "the Caller in the yard among the cut lanterns, with her Flood-Callers round her; the fort's garrison (site.garrison) holds the walls. Their creed is nailed up in the yard.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/aunsa_mor",
+        "count": 1,
+        "at": "the_yard",
+        "spread": 1.0
+      },
+      {
+        "enemy": "core:enemy/flood_caller",
+        "count": 1,
+        "at": "the_yard",
+        "spread": 3.0
+      },
+      {
+        "enemy": "core:enemy/ebb_hand",
+        "count": 2,
+        "at": "the_yard",
+        "spread": 3.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_flood_callers_tract"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/eel_tally",
+    "place": "core:poi/eel_tally",
+    "notes": "the Guild's bravo sits on the tally-house steps by day, minding the barrels: he fights whoever strikes him or takes from the ground at his feet. The torn page of the book lies by the barrels.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/tithe_bravo",
+        "count": 1,
+        "when": "day",
+        "at": "the_tally_steps",
+        "sits": true
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_eel_tally_page"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/hesters_stilts",
+    "place": "core:poi/hesters_stilts",
+    "notes": "no foes; Hester's list of the Vale drowned is on her step",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_hesters_names"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/isses_chair",
+    "place": "core:poi/isses_chair",
+    "notes": "no foes; a copy of the naming-cord is left on the seat for whoever cannot read knots",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_isses_chair_cord"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/leech_wifes_stilts",
+    "place": "core:poi/leech_wifes_stilts",
+    "notes": "the wild hounds circle the leech-tubs after dark; they never come to the door. The ledger board hangs by the kennels.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/leech_hound",
+        "count": 4,
+        "when": "night",
+        "spread": 4.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_leech_wifes_ledger"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/draining_mill",
+    "place": "core:poi/draining_mill",
+    "notes": "bog-drowned rise from the sump after dark and walk the dry cut the mill made; the engineer's pumping-book is on the ledge by the sluice",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 4,
+        "when": "night",
+        "spread": 4.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_draining_mill_pumping_book"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/drylanders_hummock",
+    "place": "core:poi/drylanders_hummock",
+    "notes": "wisps come to the grave-lanterns at midnight, when nobody from the dry country is there to light them; the rubbings of the boards are kept in a jar by the newest grave",
+    "spawns": [
+      {
+        "enemy": "core:enemy/wisp",
+        "count": 2,
+        "when": "midnight",
+        "spread": 5.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_drylanders_boards"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/bog_iron_bloomery",
+    "place": "core:poi/bog_iron_bloomery",
+    "notes": "sallowjaws lie in the flooded ore-pits, warm from the furnace, and come up at whoever walks the pit edges; the bloomer's cord hangs on the furnace door",
+    "spawns": [
+      {
+        "enemy": "core:enemy/sallowjaw",
+        "count": 2,
+        "spread": 5.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_bloomers_cord"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/grey_line",
+    "place": "core:poi/grey_line",
+    "notes": "at night the grey comes in over the rows, and the ash-wights walk in it; the row-knots are written up on the stake-drivers' board",
+    "spawns": [
+      {
+        "enemy": "core:enemy/ash_wight",
+        "count": 3,
+        "when": "night",
+        "spread": 5.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/note_grey_line_knots"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/south_stilts",
+    "place": "core:poi/south_stilts",
+    "notes": "no foes by day; the watchman's birch-bark log for the Council is tucked in the ladder",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_south_stilts_log"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/eel_stews",
+    "place": "core:poi/eel_stews",
+    "notes": "no foes; the stews-keeper's note to the Tally is wedged in the high pond's sluice",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/note_eel_stews_sluice_note"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/grey_gull",
+    "place": "core:poi/grey_gull",
+    "notes": "sallowjaws lie up in the pool the hull scoured when she came ashore, and come up at whoever goes aboard",
+    "spawns": [
+      {
+        "enemy": "core:enemy/sallowjaw",
+        "count": 2,
+        "spread": 4.0
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/reed_bridge",
+    "place": "core:poi/reed_bridge",
+    "notes": "since the bridge was pressed flat, the drowned walk over it at night the way something very heavy once did",
+    "spawns": [
+      {
+        "enemy": "core:enemy/bog_drowned",
+        "count": 2,
+        "when": "night",
+        "spread": 3.0
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/withy_beds",
+    "place": "core:poi/withy_beds",
+    "notes": "the leech-wife's wild hounds lie up in the thick stools by day, until their old bitch is put down (core:quest/the_old_bitch stands her)",
+    "spawns": [
+      {
+        "enemy": "core:enemy/leech_hound",
+        "count": 2,
+        "when": "day",
+        "spread": 4.0,
+        "unless": [
+          {
+            "quest_done": "core:quest/the_old_bitch"
+          }
+        ]
+      }
+    ]
+  }
 ]

@@ -1,0 +1,31 @@
+[
+  {
+    "id": "core:boss/keeper_of_the_unsung",
+    "extends": "core:enemy/bog_drowned",
+    "name": "The Last Keeper",
+    "archetype": "boss",
+    "arena": "core:poi/unsung_vault",
+    "region": "core:region/sedgemire",
+    "tint": "#3f5a52",
+    "scale": 1.45,
+    "lore": "Ninety years a Keeper, singing the first voice of the round for the drowned nobody else would sing for, and then the second for them, and then the third. One night this winter something under the Vault's floor sang the second voice back, very nearly right, and she stopped to listen, and has been listening since. She still holds her lantern up. She has forgotten what it is for, but not that it must not go out, and she will not let anybody near it.",
+    "stats": {"hp": 520, "stamina": 170, "poise": 150, "armour": 10, "speed": 1.9, "will": 40},
+    "resists": {"frost": 0.4, "poison": 0.5},
+    "behaviour": {"engage_range": 2.8, "circle": 0.1, "retreat_threshold": 0.0, "patience": 3.5, "leash": 60.0, "hyper_armour": 30.0, "aggression": 0.8, "strafe_speed": 0.3},
+    "phases": [
+      {"name": "the first voice", "hp": 1.0, "aggression": 0.75},
+      {"name": "the round answered", "hp": 0.5, "aggression": 0.95, "speed": 2.3, "hyper_armour": 36.0,
+       "say": "She opens her mouth and the round comes out of it in two voices at once, and the unsung round the walls get up to hear it.",
+       "attacks": [
+         {"name": "sodden_grasp", "clip": "Attack_Unarmed_1", "weapon_class": "unarmed", "damage": 22.0, "poise_damage": 28.0, "range": 2.6, "telegraph": 0.8, "hit_window": 0.2, "recovery": 0.8, "cooldown": 2.6, "gcd": 0.7, "weight": 3.0, "lunge": 1.6, "statuses": [{"id": "chilled", "duration": 5.0}]},
+         {"name": "drag_under", "clip": "Attack_Unarmed_2", "weapon_class": "unarmed", "damage": 32.0, "poise_damage": 46.0, "heavy": true, "hyper_armour": true, "range": 2.8, "telegraph": 1.2, "hit_window": 0.22, "recovery": 1.0, "cooldown": 6.5, "gcd": 1.1, "weight": 1.5, "lunge": 2.2, "knockdown": true, "knockback": 1.4},
+         {"name": "wake_the_unsung", "clip": "Cast_Long", "damage": 0.0, "poise_damage": 0.0, "range": 20.0, "telegraph": 1.8, "hit_window": 0.2, "recovery": 0.8, "cooldown": 18.0, "gcd": 0.9, "weight": 1.0,
+          "summons": {"enemy": "core:enemy/bog_drowned", "count": 2, "radius": 5.0, "cap": 3}}
+       ]}
+    ],
+    "marks": [200, 340],
+    "loot": "core:loot/rich_chest",
+    "drops": ["core:item/unsung_keepers_lantern"],
+    "tags": ["undead", "revenant", "humanoid", "brute", "boss"]
+  }
+]

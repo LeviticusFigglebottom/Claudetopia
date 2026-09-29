@@ -1,0 +1,36 @@
+[
+  {
+    "id": "core:interior/unsung_vault",
+    "name": "The Unsung Vault",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/unsung_vault",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the unsung: the drowned nobody could sing for, laid in the Builders' niches with their lanterns; and the last Keeper, at the bottom, listening to the floor",
+    "story": "A cistern the Builders cut under the carr, vaulted and stepped down into the dark, that the reedfolk found when the carr's peat was cut back and gave to the drowned who had no one: the nameless, the last of their families, the strangers. Three hundred years of lanterns in the niches, and a Keeper at the bottom singing the whole round alone. The lanterns went out this winter from the bottom up.",
+    "unique_object": "a wall of Builders' niches, every niche with a small reedfolk lantern in it, cold, and a name knotted on a cord where the name was known",
+    "site": {
+      "kind": "crypt",
+      "seed": 4417,
+      "region": "core:region/sedgemire",
+      "size": "large",
+      "set_pieces": ["ossuary", "underground_lake", "chasm_bridge"],
+      "boss": "core:boss/keeper_of_the_unsung",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": ["core:enemy/bog_drowned"],
+        "archers": ["core:enemy/wisp"],
+        "heavy": ["core:enemy/bog_drowned"]
+      },
+      "theme": {"palette": ["#3e4744", "#262d2b", "#56605a"], "lights": ["candles", "brazier"], "light_colour": "#ffb35a"},
+      "features": [
+        {"kind": "prop", "room": "mouth", "prop": "lantern_hanging", "note": "the first of the cold lanterns, hung inside the door"},
+        {"kind": "prop", "room": "mouth", "prop": "basket"},
+        {"kind": "note", "room": "room2", "book": "core:book/unsung_keepers_rule", "name": "the Keepers' Rule"}
+      ]
+    }
+  }
+]

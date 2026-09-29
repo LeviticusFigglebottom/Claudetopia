@@ -2,18 +2,37 @@
   {
     "id": "core:roadtable/sedgemire",
     "region": "core:region/sedgemire",
-    "notes": "Sedgemire's causeways and boardwalk roads: a first example set for the Sedgemire region agent to grow. The marsh has no road-robbers; the drowned and the leech-hounds take their place.",
-    "budget": {"every_m": [320, 600]},
+    "notes": "Sedgemire's causeways, boardwalks and tracks (docs/WORLD_LIFE_ROADS.md). The marsh has no road-robbers of the Vale's kind: the drowned, the leech-hounds, the sallowjaws and the wisps take their place, and since the spring the Flood-Callers, who cut burial boats loose on the channels by the roads (quiet once their Caller at Oulnauve is down). What walks the roads is the reedfolk's own life: eel-carriers between the Landing and Moreva, lantern-sellers on the Westway, the Guild's tithe-cart and its bailiffs, burial processions singing to the water, the lamplighter at dusk.",
+    "budget": {"every_m": [300, 560], "gap_s": 60},
     "rows": [
       {"event": "core:roadevent/sedgemire_drowned_rise", "weight": 2, "when": "night", "sites": ["bridge", "bend"], "cooldown_h": 10},
       {"event": "core:roadevent/sedgemire_leech_hounds", "weight": 2, "when": "night", "cooldown_h": 6},
+      {"event": "core:roadevent/sedgemire_flood_callers", "weight": 3, "when": "dusk", "sites": ["bend", "bridge"], "tier": [2, 99], "cooldown_h": 12},
+      {"event": "core:roadevent/sedgemire_flood_callers", "weight": 2, "when": "night", "sites": ["bend", "bridge"], "tier": [2, 99], "cooldown_h": 12},
+      {"event": "core:roadevent/sedgemire_sallowjaw_log", "weight": 2, "sites": ["bridge"], "biome": ["marsh", "shore"], "cooldown_h": 8},
+      {"event": "core:roadevent/sedgemire_wisp_lights", "weight": 2, "when": "night", "biome": ["marsh"], "cooldown_h": 8},
+      {"event": "core:roadevent/sedgemire_burial_procession", "weight": 2, "when": "dusk", "cooldown_h": 18},
+      {"event": "core:roadevent/sedgemire_burial_procession", "weight": 1, "when": "day", "cooldown_h": 18},
+      {"event": "core:roadevent/sedgemire_lamplighter", "weight": 3, "when": "dusk", "cooldown_h": 20},
+      {"event": "core:roadevent/sedgemire_stuck_punt", "weight": 2, "when": "day", "cooldown_h": 12},
+      {"event": "core:roadevent/sedgemire_guild_bailiffs", "weight": 1, "when": "day", "cooldown_h": 24},
+      {"event": "core:roadevent/sedgemire_eel_poacher", "weight": 1, "when": "day", "cooldown_h": 20},
       {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 8},
       {"event": "core:roadevent/lost_traveller", "weight": 2, "cooldown_h": 8},
       {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
       {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
     ],
     "caravans": [
-      {"event": "core:roadevent/pack_train", "route": ["core:place/nauves_landing", "core:place/isseva"], "speed": 1.2, "start": 0.4}
+      {"event": "core:roadevent/pack_train", "route": ["core:place/nauves_landing", "core:place/isseva"], "speed": 1.2, "start": 0.4},
+      {"event": "core:roadevent/sedgemire_eel_carriers", "route": ["core:place/nauves_landing", "core:place/moreva"], "speed": 1.1, "start": 0.2},
+      {"event": "core:roadevent/sedgemire_lantern_sellers", "route": ["core:place/nauvissa", "core:place/isseva"], "speed": 1.0, "start": 0.65},
+      {"event": "core:roadevent/sedgemire_tithe_cart", "route": ["core:place/isseva", "core:place/oulea"], "speed": 1.2, "start": 0.5}
+    ],
+    "sites": [
+      {"at": [-2425, -673], "kind": "bend", "tell": "crows"},
+      {"at": [-2382, -40], "kind": "bridge"},
+      {"at": [-2355, 791], "kind": "bridge", "tell": "felled_tree"},
+      {"at": [-2790, -1000], "kind": "bend"}
     ]
   },
   {
@@ -32,5 +51,166 @@
     "cast": [
       {"role": "beast", "enemy": "core:enemy/leech_hound", "count": [2, 3]}
     ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_flood_callers",
+    "name": "The Flood-Callers at the channel",
+    "kind": "ambush",
+    "notes": "Flood-Callers cutting a burial boat loose where a road runs by a channel. The woman on the boards is one of them. Stops once the Caller at the Stakes at Oulnauve is down (core:quest/lanterns_taken_up).",
+    "unless": [{"flag": "oulnauve_caller_down"}],
+    "tell": ["injured_traveller", "crows"],
+    "cast": [
+      {"role": "caller", "enemy": "core:enemy/ebb_hand", "count": [2, 3]},
+      {"role": "singer", "enemy": "core:enemy/flood_caller", "count": 1},
+      {"role": "bait", "folk": {"name": "A woman on the boards", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller",
+       "talk": {"prompt": "Ask the woman what's wrong", "do": "spring", "say": "They cut my mother's lantern loose — there, on the water, it's going out—"}}
+    ],
+    "lines": {"speaker": "An Ebb-Hand", "spring": "Let it go out! They are coming home!"}
+  },
+  {
+    "id": "core:roadevent/sedgemire_sallowjaw_log",
+    "name": "A log by the bridge",
+    "kind": "beasts",
+    "notes": "A sallowjaw lying as a log in the ditch where the road crosses water.",
+    "cast": [
+      {"role": "beast", "enemy": "core:enemy/sallowjaw", "count": [1, 2]}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_wisp_lights",
+    "name": "Lanterns off the road",
+    "kind": "beasts",
+    "notes": "Two lights at the right height, the right amber, off the causeway over water deeper than it looks.",
+    "cast": [
+      {"role": "wisp", "enemy": "core:enemy/wisp", "count": [2, 3]}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_burial_procession",
+    "name": "A burial going to the water",
+    "kind": "pilgrims",
+    "speed": 0.8,
+    "cast": [
+      {"role": "mourner", "folk": {"name": "A reedfolk mourner", "tags": ["person", "reedfolk"]}, "count": [3, 5],
+       "talk": {"prompt": "Sing the third voice with them", "do": "help",
+                "say": "— You know the round? Then the third, under us, and slow. — There. She'll go out further for that. The water heard a stranger sing for her, and it listens for strangers.",
+                "hook": {"reputation": {"faction": "core:faction/reed_council", "delta": 2}, "rumour": "The mourners say the lanterns burn longest from {place}.", "reveals": "nearest:shrine"}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_lamplighter",
+    "name": "The lamplighter",
+    "kind": "wanderer",
+    "speed": 0.9,
+    "cast": [
+      {"role": "lamplighter", "folk": {"name": "A lamplighter", "tags": ["person", "reedfolk"], "appearance": {"age": 58}},
+       "talk": {"prompt": "Walk a verse with the lamplighter", "do": "say",
+                "say": "A verse a pole; that's how long a wick takes to catch. — You're walking the boards after dark? Then walk them after me, and keep to the lit side. The drowned climb the dark poles.",
+                "hook": {"rumour": "The lamplighter says there is a light nobody lit at {place}.", "reveals": "nearest:ruins", "once": true}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_stuck_punt",
+    "name": "A punt in the ditch",
+    "kind": "broken_cart",
+    "cast": [
+      {"role": "punter", "folk": {"name": "An eel-wife", "tags": ["person", "reedfolk"]}, "pose": "Work_Dig",
+       "talk": {"prompt": "Help push the punt off", "do": "help",
+                "say": "On three — no, on the round's third line, that's when you push — there! She floats. Take an eel liver for your trouble; it's good for the blood, whatever the Isseva bleeders say.",
+                "hook": {"item": "core:item/eel_liver", "count": 2, "marks": 4}}}
+    ]
+  },
+  {
+    "id": "core:roadevent/sedgemire_guild_bailiffs",
+    "name": "The Guild's bailiffs",
+    "kind": "patrol",
+    "speed": 1.3,
+    "cast": [
+      {"role": "bailiff", "enemy": "core:enemy/guild_bailiff", "count": [2, 3],
+       "talk": {"prompt": "Talk to the bailiff", "do": "say",
+                "say": "Guild business. If you've seen a man with a sack of eels and no tally-chalk on it, you've seen a thief. If you haven't, you haven't. Good day.",
+                "hook": {"rumour": "The bailiff says the Guild counts its eels at {place}.", "reveals": "core:poi/eel_tally", "once": true}}}
+    ],
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -12, "killing": -25,
+                    "notice": "You struck a Guild bailiff. The Tallymen write everything down.",
+                    "killing_notice": "A Guild bailiff is dead on a marsh road, and there is a column in Lantern Row for that."}
+  },
+  {
+    "id": "core:roadevent/sedgemire_eel_poacher",
+    "name": "An eel-poacher running",
+    "kind": "fugitive",
+    "speed": 1.4,
+    "cast": [
+      {"role": "fugitive", "folk": {"name": "An eel-poacher", "tags": ["person", "reedfolk"]},
+       "talk": {"prompt": "Let the poacher past", "do": "help",
+                "say": "They're the Guild's, those two, and the eels were the marsh's before they were anybody's. — Here. And there's a dry place in the reeds where they never look.",
+                "hook": {"marks": 6, "rumour": "The poacher's dry place is {place}.", "reveals": "nearest:camp", "once": true}}},
+      {"role": "hunter", "enemy": "core:enemy/guild_bailiff", "count": 2,
+       "talk": {"prompt": "Point the bailiffs after the poacher", "do": "turn_in",
+                "say": "That way? Obliged. The Guild remembers who helps it count.",
+                "hook": {"marks": 12, "reputation": {"faction": "core:faction/tallymen", "delta": 3}}}}
+    ],
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -8, "killing": -20,
+                    "notice": "You struck a Guild bailiff.", "killing_notice": "A Guild bailiff is dead on a marsh road."}
+  },
+  {
+    "id": "core:roadevent/sedgemire_eel_carriers",
+    "name": "Eel-carriers",
+    "kind": "caravan",
+    "notes": "Moreva's catch walked to the Landing in wet baskets on a packhorse, a carrier at its head and a boardwalker beside.",
+    "speed": 1.1,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader",
+       "talk": {"prompt": "Buy from the eel-carrier", "do": "trade", "say": "Live eels, smoked eels, eel-skin for your boots. The live ones are the Landing's, mind; the smoked ones I can sell you."}},
+      {"role": "guard", "enemy": "core:enemy/caravan_guard",
+       "talk": {"prompt": "Talk to the boardwalker", "do": "say", "say": "The hounds come up the channel after the baskets at night. We walk in the day. So should you."}}
+    ],
+    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
+    "merchant": {"stock": "core:table/stock_eel_wife", "marks": 90, "buys": ["consumable", "ingredient"]},
+    "consequence": {"faction": "core:faction/reed_council", "reputation": -8, "killing": -15,
+                    "notice": "The Reed Council will hear you set on the eel-carriers.",
+                    "killing_notice": "An eel-carrier lies dead on the channel track, and the marsh keeps its own count."},
+    "rescue": {"say": "The baskets are all still wet. That's the whole of what I care about. Take a smoked one; take two.", "marks": 12,
+               "reputation": {"faction": "core:faction/reed_council", "delta": 4}}
+  },
+  {
+    "id": "core:roadevent/sedgemire_lantern_sellers",
+    "name": "Lantern-sellers from Isseva",
+    "kind": "caravan",
+    "notes": "Isseva's lantern-makers carrying frames and indigo paper up the Westway to Nauvissa and back.",
+    "speed": 1.0,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader",
+       "talk": {"prompt": "See the lanterns", "do": "trade", "say": "Burial lanterns are made to measure, so I don't carry those. Everything else that burns, I do."}},
+      {"role": "guard", "enemy": "core:enemy/caravan_guard",
+       "talk": {"prompt": "Talk to the porter", "do": "say", "say": "Mind the frames. Every one's pegged by hand and they don't like being knocked."}}
+    ],
+    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
+    "merchant": {"stock": "core:table/stock_lantern_maker", "marks": 120, "buys": ["misc", "material"]},
+    "consequence": {"faction": "core:faction/reed_council", "reputation": -8, "killing": -15,
+                    "notice": "The Reed Council will hear you set on the lantern-sellers.",
+                    "killing_notice": "A lantern-seller is dead on the Westway, and somebody will have to make her lantern."},
+    "rescue": {"say": "Not one frame cracked. — Here. And a lantern, for the road; it's not a burial one, it's for you.", "marks": 15,
+               "reputation": {"faction": "core:faction/reed_council", "delta": 4}}
+  },
+  {
+    "id": "core:roadevent/sedgemire_tithe_cart",
+    "name": "The Guild's tithe-cart",
+    "kind": "caravan",
+    "notes": "The Tallymen's tenth of the Delta's eels going between Isseva and Oulea on a cart, a Guild carter and two bailiffs. Its load is the Guild's while the carter lives.",
+    "speed": 1.2,
+    "cast": [
+      {"role": "trader", "enemy": "core:enemy/road_trader",
+       "talk": {"prompt": "Talk to the Guild's carter", "do": "trade", "say": "The tithe's not for sale. What's on the tailboard is. Guild prices; I don't make them."}},
+      {"role": "guard", "enemy": "core:enemy/guild_bailiff", "count": 2,
+       "talk": {"prompt": "Talk to the bailiff", "do": "say", "say": "One in ten, by the Charter. Stand off the wheels."}}
+    ],
+    "train": {"kind": "wagon", "goods": "core:loot/common_chest"},
+    "merchant": {"stock": "core:table/stock_carters_load", "marks": 200, "buys": ["consumable", "ingredient", "material", "misc"]},
+    "consequence": {"faction": "core:faction/tallymen", "reputation": -12, "killing": -25,
+                    "notice": "You set on the Guild's tithe-cart. Lantern Row will hear of it.",
+                    "killing_notice": "A Guild man is dead beside the tithe-cart, and the Tallymen keep count."},
+    "rescue": {"say": "The tithe's all here. The Guild will write down that you helped; it writes down everything.", "marks": 20,
+               "reputation": {"faction": "core:faction/tallymen", "delta": 5}}
   }
 ]

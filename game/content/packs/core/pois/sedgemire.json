@@ -136,5 +136,262 @@
    "story": "An old reedfolk woman smokes eels in a reed hut on the dry edge of the Delta, where the Vale's carters meet the boardwalk, and sells them to both sides at one price, which she says is the only fair thing on the Westway.", "encounter": "none", "hook": "She has started smoking eels for somebody who comes at night and pays in the Vale's old pennies, the kind with the Toll whole on them.", "wayside": true},
   {"id": "core:poi/drowned_trader", "name": "The Drowned Trader", "region": "core:region/sedgemire", "kind": "wreck", "position": [-3323, 576], "hearthstone": false,
    "unique_feature": "a trading ship sunk to her rails in the Delta's mud beside the Saeva road, her mast leaning, indigo rags tied to the shrouds", "visible_from": [],
-   "story": "A Lakefolk trader came up the Delta too far on a spring tide and settled in the mud when it ran out. The reedfolk tied indigo to her shrouds to mark her for the boats, and say that what went down with her crew still keeps her.", "encounter": "the drowned rise from the hull after dark", "hook": "The indigo rags on the shrouds have been untied in the night and tied again in the Lakefolk's knot.", "wayside": true}
+   "story": "A Lakefolk trader came up the Delta too far on a spring tide and settled in the mud when it ran out. The reedfolk tied indigo to her shrouds to mark her for the boats, and say that what went down with her crew still keeps her.", "encounter": "the drowned rise from the hull after dark", "hook": "The indigo rags on the shrouds have been untied in the night and tied again in the Lakefolk's knot.", "wayside": true},
+  {
+    "id": "core:poi/unsung_vault",
+    "name": "The Unsung Vault",
+    "region": "core:region/sedgemire",
+    "kind": "delve",
+    "position": [
+      -2908,
+      -1572
+    ],
+    "radius_m": 22,
+    "pad_radius_m": 30,
+    "hearthstone": false,
+    "builder": "unsung_vault",
+    "unique_feature": "a black Oroth doorway sunk to its lintel in a peat hummock of the carr, its approach lined with lantern poles whose lanterns are all cold",
+    "visible_from": [
+      "core:poi/old_crannog",
+      "core:poi/drowned_arch"
+    ],
+    "story": "The Builders cut a cistern under the carr and the carr grew over it. When the reedfolk found it they gave it the drowned nobody could sing for: the ones who came up nameless, the ones whose people were all gone. Their lanterns were carried down and kept lit by a Keeper who sang the whole round for all of them, every night, one Keeper after another for three hundred years. This winter the singing under the carr stopped, and the lanterns on the poles went out one by one from the door outward.",
+    "encounter": "the drowned wait on the steps of the doorway after dark; inside, the unsung who were never sung for, and the last Keeper at the bottom, still holding her lantern",
+    "hook": "A knot-cord hangs from the lintel in the Keepers' weave: one knot for every Keeper, and the last knot has been tied and then pulled half undone.",
+    "site": {
+      "interior": "core:interior/unsung_vault",
+      "hook": "core:dialogue/unsung_vault_lintel",
+      "hook_prompt": "Read the knot-cord on the lintel"
+    }
+  },
+  {
+    "id": "core:poi/greylag_fold",
+    "name": "Greylag Fold",
+    "region": "core:region/sedgemire",
+    "kind": "fold",
+    "position": [
+      -2516,
+      -1820
+    ],
+    "pad_radius_m": 24,
+    "hearthstone": false,
+    "builder": "greylag_fold",
+    "unique_feature": "a round withy fold on a dry rise of the North Fen full of grey geese, the goose-herd's stilt-house beside it and her punt drawn up under it",
+    "visible_from": [
+      "core:poi/crookstilts",
+      "core:poi/old_crannog"
+    ],
+    "story": "The Mors have wintered the grey geese on the North Fen since before the Nave leaned. The geese come down from the clans' country in the first frost and the family brings them in to the fold at dusk by singing, because a goose will follow a round it has heard since the egg. Since the singing under the carr stopped, the geese will not settle; they face west all night, toward the Vault, and call.",
+    "encounter": "leech-hounds come up out of the carr after the geese at night",
+    "hook": "The old goose-herd sits up all night on her deck with a lantern, singing the third voice of the round, because, she says, somebody has to."
+  },
+  {
+    "id": "core:poi/oulnauve_stakes",
+    "name": "The Stakes at Oulnauve",
+    "region": "core:region/sedgemire",
+    "kind": "stockade",
+    "position": [
+      -1924,
+      -1652
+    ],
+    "radius_m": 26,
+    "pad_radius_m": 28,
+    "hearthstone": false,
+    "builder": "oulnauve_stakes",
+    "unique_feature": "a palisade of black bog-oak stakes on a peat island where the deep channel bends, its yard heaped with burial lanterns cut from the water, every one unlit",
+    "visible_from": [
+      "core:poi/mor_oul"
+    ],
+    "story": "The Tide account says the water went out and will come back, and that when it does the drowned will walk ashore. The Flood-Callers are the reedfolk who got tired of waiting for it. They cut the burial lanterns off the water before they can burn down, so that the dead go out with nothing to steer by and come back up, and they call each one that rises a wave of the flood. They have built their stakes where the Oulnauve channel bends, and they have a great many lanterns.",
+    "encounter": "Flood-Callers on the fighting step and the watch platforms; the Caller, Aunsa Mor, in the yard among the lanterns, and the drowned they have raised penned in the ditch",
+    "hook": "A burial lantern nailed to the gate by its frame, and on the frame, in fresh indigo, the Callers' mark: a wave, and under it the words THEY ARE COMING HOME.",
+    "site": {
+      "style": "stockade",
+      "radius": 15,
+      "gate_bearing_deg": 323,
+      "hook": "core:dialogue/oulnauve_gate",
+      "hook_prompt": "Look at the lantern nailed to the gate",
+      "garrison": {
+        "rank": [
+          "core:enemy/ebb_hand",
+          "core:enemy/ebb_hand"
+        ],
+        "archers": [
+          "core:enemy/flood_caller"
+        ],
+        "heavy": [
+          "core:enemy/bog_drowned"
+        ],
+        "count": 6,
+        "tower_archers": 2
+      }
+    }
+  },
+  {
+    "id": "core:poi/eel_tally",
+    "name": "The Eel Tally",
+    "region": "core:region/sedgemire",
+    "kind": "tally_post",
+    "position": [
+      -2220,
+      -740
+    ],
+    "pad_radius_m": 22,
+    "hearthstone": false,
+    "builder": "eel_tally",
+    "unique_feature": "a Tallymen's counting-house on stilts at the head of the stews' channel, the Guild's brass lantern over the door and the eel-barrels ranked below it in chalked rows",
+    "visible_from": [
+      "core:poi/eel_stews",
+      "core:poi/heron_watch"
+    ],
+    "story": "Every live eel that goes up to Tollmere from the Delta is counted at the Tally first, and one in ten stays behind as the Guild's. The reedfolk pole their catch in, the clerk chalks it on the barrels and in the book, and a hired bravo sits on the steps with his hand on his hilt in case anybody counts differently. The clerk this year is new, and he has noticed that the book and the barrels do not agree.",
+    "encounter": "the Guild's bravo sits on the tally-house steps by day and fights anyone who touches the barrels",
+    "hook": "One row of barrels has been chalked twice, in two hands, and the numbers do not match."
+  },
+  {
+    "id": "core:poi/hesters_stilts",
+    "name": "Hester's House",
+    "region": "core:region/sedgemire",
+    "kind": "farmstead",
+    "position": [
+      -1956,
+      940
+    ],
+    "pad_radius_m": 28,
+    "hearthstone": false,
+    "unique_feature": "a Vale cottage of lime-washed wattle and thatch set down on a peat island in the reeds, with a barley patch no bigger than a boat and a row of named lanterns on its fence",
+    "visible_from": [
+      "core:poi/boardwalk_gate",
+      "core:poi/lantern_wrights_camp"
+    ],
+    "story": "Hester Wrenn came down the Westway from Gosford forty years ago behind a reedman who had come up it selling eels, and he built her a house the way they build them in the Vale so that she would stay. He went into the water twenty years ago and she stayed anyway. She is the only person in Sedgemire who grows barley and the only one who knows the names of the Vale folk the marsh has drowned, because they come to her door first.",
+    "encounter": "none; a widow who talks to strangers, and a fence of lanterns",
+    "hook": "One lantern on her fence has no name on it, and she will not say whose it is until somebody asks."
+  },
+  {
+    "id": "core:poi/isses_chair",
+    "name": "Isse's Chair",
+    "region": "core:region/sedgemire",
+    "kind": "shrine",
+    "position": [
+      -2132,
+      108
+    ],
+    "pad_radius_m": 24,
+    "hearthstone": false,
+    "builder": "isses_chair",
+    "unique_feature": "a ring of nine black stilts of bog-oak, turned to stone at the foot, round a low seat of green Oroth stone heaped with cut reeds and knots",
+    "visible_from": [
+      "core:place/nauves_landing",
+      "core:poi/lantern_causeway"
+    ],
+    "story": "The reedfolk say these are the legs of Isse's own house, the first ever built on stilts, and that the seat is where she sat to teach the others how. Couples are married standing between two of the stilts with a reed held between them; the dead are named here before they are sent out. The stilts are older than Isseva, and the seat is Builders' work older than that, and nobody can say who put the one inside the other.",
+    "encounter": "none; the Chair's tender, and what people leave",
+    "hook": "Somebody has left a knot on the seat tied in no weave any lantern-maker knows, and it has not rotted in a month of rain."
+  },
+  {
+    "id": "core:poi/leech_wifes_stilts",
+    "name": "The Leech-Wife's Stilts",
+    "region": "core:region/sedgemire",
+    "kind": "hut",
+    "position": [
+      -1660,
+      340
+    ],
+    "pad_radius_m": 24,
+    "hearthstone": false,
+    "builder": "leech_wifes_stilts",
+    "unique_feature": "a stilt-house over a ring of sunken leech-tubs and empty wattle kennels, a pole of iron collars hung by the door",
+    "visible_from": [
+      "core:poi/withy_beds"
+    ],
+    "story": "Illa Nauve keeps the leeches Isseva's bleeders use, and she kept the hounds that were bred to guard them: sleek marsh dogs that learned from the leeches how to drink. Last spring the hounds went into the reeds after her old bitch and did not come back, and now they come back every night, and hunt the tubs, and her.",
+    "encounter": "leech-hounds circle the tubs after dark, the old bitch that leads them among them",
+    "hook": "The collar pole has one hook empty and scratched bright, as if something had been pulling at it from below."
+  },
+  {
+    "id": "core:poi/draining_mill",
+    "name": "The Draining Mill",
+    "region": "core:region/sedgemire",
+    "kind": "mill",
+    "position": [
+      -3388,
+      -116
+    ],
+    "pad_radius_m": 26,
+    "hearthstone": false,
+    "unique_feature": "a Tollmere windmill with torn sails standing on the open delta, built to pump the marsh dry, its sluice gate choked with reeds and black water",
+    "visible_from": [
+      "core:place/oulea",
+      "core:poi/sallow_king",
+      "core:poi/eel_hurdles"
+    ],
+    "story": "Forty years ago the Tallymen bought the rights to the west Delta from the Reed Council for a boat of silver and built a wind-pump to drain it for sheep. It pumped for one summer. The water it lifted out of the ground was not the marsh's water, the Oulea folk say, but something older from underneath, and the engineer went down into the sump to see why it tasted of iron, and the mill has not turned since.",
+    "encounter": "bog-drowned rise from the sump after dark and walk the dry channel the mill cut",
+    "hook": "The engineer's pumping-book is still on the ledge by the sluice, open at the last day, with a column of figures that goes wrong halfway down."
+  },
+  {
+    "id": "core:poi/drylanders_hummock",
+    "name": "The Drylanders' Hummock",
+    "region": "core:region/sedgemire",
+    "kind": "grave",
+    "position": [
+      -2956,
+      20
+    ],
+    "pad_radius_m": 22,
+    "hearthstone": false,
+    "builder": "drylanders_hummock",
+    "unique_feature": "a low green hummock west of Isseva crowded with earth graves, each marked with a board in a stranger's letters and, beside it, a reedfolk lantern pole",
+    "visible_from": [
+      "core:place/isseva",
+      "core:poi/sallow_king"
+    ],
+    "story": "The reedfolk give their dead to the water. People from the dry country do not want to go into the water, and say so, and Isseva has always listened: the Tallymen's clerks, the Vale carters, a Warden or two and a Salt Isles sailor are buried here in the earth the way they asked. The reedfolk did not know what else a grave wanted, so each one has a lantern as well.",
+    "encounter": "wisps come to the lanterns at midnight, when nobody from the dry country is there to light them",
+    "hook": "The newest board is a Vale name, cut last month, and there is nobody under it."
+  },
+  {
+    "id": "core:poi/bog_iron_bloomery",
+    "name": "The Bog-Iron Bloomery",
+    "region": "core:region/sedgemire",
+    "kind": "camp",
+    "position": [
+      -3228,
+      924
+    ],
+    "pad_radius_m": 24,
+    "hearthstone": false,
+    "builder": "bog_iron_bloomery",
+    "unique_feature": "a squat clay furnace smoking on a hummock among flooded ore-pits, heaps of rust-red bog ore and charcoal round it and the slag in black rivers down the bank",
+    "visible_from": [
+      "core:poi/tide_hearth",
+      "core:poi/reed_wreck",
+      "core:poi/saoul"
+    ],
+    "story": "The only iron the reedfolk have is the iron the marsh makes: red ore that grows in the pits a hand's depth a lifetime. The Lissas dig it and smelt it here in a clay bloomery they build again every spring, and every eel-spear and boat-nail in the Delta came out of it. The pits they dug when their grandmothers were girls have filled with water again, and the sallowjaws have found them warm from the furnace.",
+    "encounter": "sallowjaws lie in the flooded ore-pits and come up at whoever walks the pit edges",
+    "hook": "The bloomer's tally-cord hangs from the furnace with this spring's blooms knotted on it, and it stops a month ago."
+  },
+  {
+    "id": "core:poi/grey_line",
+    "name": "The Grey Line",
+    "region": "core:region/sedgemire",
+    "kind": "strange",
+    "position": [
+      -2556,
+      1052
+    ],
+    "pad_radius_m": 24,
+    "hearthstone": false,
+    "builder": "grey_line",
+    "unique_feature": "rows of withy stakes driven across the reed-beds south of Nauvissa, one row for every year, each tagged with a knot; beyond the last row the reeds are the colour of ash",
+    "visible_from": [
+      "core:place/nauvissa",
+      "core:poi/long_jetty"
+    ],
+    "story": "Every midsummer since the Ash Winter, Nauvissa has walked south to where the reeds go grey and driven a row of stakes along the edge of it, and tied that year's knot to each one. There are sixty rows. The oldest are far in the grey now, their knots gone white; the newest is a reed-bed from the village. Nobody has ever had to move a row back, and this spring, for the first time, the grey has come in past the new row at night and gone back by day.",
+    "encounter": "at night the grey comes in over the rows, and what walks in it walks with it",
+    "hook": "The newest row's knots have been tied again in the night, in grey rush, by somebody who knew the weave."
+  }
 ]

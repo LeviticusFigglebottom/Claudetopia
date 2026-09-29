@@ -1,0 +1,250 @@
+[
+  {
+    "id": "core:quest/the_unsung",
+    "name": "The Unsung",
+    "layer": "side",
+    "giver": "core:npc/eune_mor",
+    "region": "core:region/sedgemire",
+    "summary": "Under the carr of the North Fen the reedfolk kept the lanterns of the drowned nobody could sing for, and a Keeper sang the round for all of them every night for three hundred years. This winter the singing stopped. Eune Mor's geese know it, and so does the girl who sleeps in the Old Crannog.",
+    "notes": "Sedgemire world life (docs/WORLD_LIFE.md). Links Greylag Fold (Eune Mor, the giver), the Old Crannog (Aue Sa, the Keeper's apprentice who ran: the crannog's 'somebody has been sleeping in it every night') and the Unsung Vault (core:interior/unsung_vault, a crypt with the Keeper as its boss). The choice is made with Eune at the fold.",
+    "stages": [
+      {
+        "id": "the_crannog",
+        "journal": "Eune Mor has wintered the grey geese on the North Fen for fifty years, and the geese have never once faced west at night until this one. West is the carr, and under the carr is the Unsung Vault, where the Keeper sings for the drowned nobody else will sing for. The singing stopped at the new moon. The Keeper had an apprentice, a Sa girl, and Eune says she has been seen going into the Old Crannog at dusk and coming out at dawn, and leaving the fire laid behind her for the next one.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/aue_sa", "topic": "q_the_unsung_ran", "text": "Find the Keeper's apprentice at the Old Crannog"}
+        ],
+        "marker": {"place_id": "core:poi/old_crannog", "radius": 90}
+      },
+      {
+        "id": "the_vault",
+        "journal": "Aue Sa ran. She was singing the second voice under the Keeper's first when the Keeper stopped singing and went on standing there with her mouth open, and the lanterns round the walls began to go out one at a time, and the unsung began to get up. The Keeper did not stop them. The Keeper, Aue says, was listening to something under the floor that was singing back. Go down, and put the Keeper to rest, and bring back her lantern: the Keeper's lantern is the one all the others were lit from.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/unsung_vault", "text": "Go to the Unsung Vault in the carr"},
+          {"type": "kill", "target": "core:boss/keeper_of_the_unsung", "count": 1, "where": "core:interior/unsung_vault", "text": "Put the Keeper to rest at the bottom of the Vault"},
+          {"type": "collect", "target": "core:item/unsung_keepers_lantern", "count": 1, "text": "Take the Keeper's lantern"}
+        ],
+        "marker": {"place_id": "core:poi/unsung_vault", "radius": 60},
+        "on_complete": [{"set_flag": "unsung_keeper_rested"}, {"renown": 8}]
+      },
+      {
+        "id": "the_keepers_lantern",
+        "journal": "The Keeper's lantern is horn and alder and older than Isseva, and it is lit, and it does not want oil. Every lantern in the Vault was lit from it once. Eune Mor at the fold has sung the third voice every night since the singing stopped, because, she says, somebody had to; she will know what is to be done with it, or she will know who should say.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_keepers_lantern",
+            "text": "Settle with Eune Mor what becomes of the Keeper's lantern",
+            "options": [
+              {"id": "aue_keeps", "text": "Give it to Aue Sa. She knows the second voice; she can learn the first.",
+               "effects": [{"set_flag": "unsung_aue_keeper"}, {"rep": ["core:faction/reed_council", 10]}, {"morality": 5}, {"take_item": ["core:item/unsung_keepers_lantern", 1]}]},
+              {"id": "sing_them_out", "text": "Carry the unsung out to the water and sing them out, all of them, and let the Vault be dark.",
+               "effects": [{"set_flag": "unsung_sung_out"}, {"rep": ["core:faction/reed_council", 15]}, {"morality": 8}, {"deed": ["dead_buried", 2]}, {"take_item": ["core:item/unsung_keepers_lantern", 1]}]},
+              {"id": "keep_the_lantern", "text": "Keep it. A light that needs no oil is worth more lit in a pack than in a hole.",
+               "effects": [{"set_flag": "unsung_lantern_kept"}, {"rep": ["core:faction/reed_council", -10]}, {"morality": -6}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/greylag_fold", "radius": 90}
+      },
+      {
+        "id": "the_geese_settle",
+        "journal": "That night the grey geese at the fold turned their heads under their wings and slept, all of them, facing whichever way they liked.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 140, "renown": 12, "items": [["core:item/rope", 1]]}
+  },
+  {
+    "id": "core:quest/lanterns_taken_up",
+    "name": "The Lanterns Taken Up",
+    "layer": "side",
+    "giver": "core:npc/tuo_lissa",
+    "region": "core:region/sedgemire",
+    "summary": "Burial lanterns are going out on the water before they have burned down, and the drowned are coming back up where they did. Tuo Lissa has watched boats with no lights pole north past Heron Watch every night for a month, toward the Oulnauve channel, and he has counted the lanterns in them.",
+    "notes": "Sedgemire world life. Links Heron Watch (Tuo Lissa, the giver), the Stakes at Oulnauve (the Flood-Callers' stockade; Aunsa Mor, the Caller, an elite stood by the POI's encounter and by QuestFoes) and the Drowned Bell Shrine, where the Callers meant the lanterns to go under the bell. The choice is made with Tuo.",
+    "stages": [
+      {
+        "id": "the_stakes",
+        "journal": "Tuo Lissa sits in Heron Watch because the bittern will not have anybody else near her bell, and from the top of it he has watched boats go north up the channel at night with no lanterns in them and a great many lanterns in them: burial lanterns, unlit, stacked like baskets. The drowned have been getting up along every channel in the Delta this spring. He says the boats go to the old peat island where the Oulnauve bends, where somebody has built a palisade, and that the people in them sing the Tide account the wrong way round.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/oulnauve_stakes", "text": "Go north to the stakes on the Oulnauve"},
+          {"type": "kill", "target": "core:enemy/aunsa_mor", "count": 1, "where": "core:poi/oulnauve_stakes", "text": "Deal with the Flood-Callers' Caller in the yard"},
+          {"type": "collect", "target": "core:item/cut_burial_lanterns", "count": 1, "where": "core:poi/oulnauve_stakes", "text": "Take back the lanterns they cut from the water"}
+        ],
+        "marker": {"place_id": "core:poi/oulnauve_stakes", "radius": 60},
+        "on_complete": [{"set_flag": "oulnauve_caller_down"}, {"renown": 8}]
+      },
+      {
+        "id": "the_bell",
+        "journal": "The Caller's lanterns were counted and tied in bundles of nine, and each bundle was tagged in indigo for the Drowned Bell. The Flood-Callers meant to sink them under the bell that tolls from under the water at midnight, where the dead of three hundred years went out, and wake all of them at once. One of them has been down to the bell already, and left word of what he found.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/drowned_bell_shrine", "text": "Go to the Drowned Bell Shrine"},
+          {"type": "read_book", "target": "core:book/flood_callers_sounding", "count": 1, "text": "Read what the Callers' diver left at the shrine"}
+        ],
+        "marker": {"place_id": "core:poi/drowned_bell_shrine", "radius": 80}
+      },
+      {
+        "id": "what_the_lanterns_are_for",
+        "journal": "The diver found the bell standing upright on the bottom, and the dead standing round it, all of them, the lanterns long gone, facing it as if they were waiting to be told something. The Callers wanted the bell rung for them. Tuo Lissa's grandmother went out under that bell. He will want to know what you have done with the lanterns.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "what_the_lanterns_are_for",
+            "text": "Tell Tuo Lissa what becomes of the lanterns",
+            "options": [
+              {"id": "light_and_send", "text": "Light every one and send them out again from the shrine, with the round sung properly.",
+               "effects": [{"set_flag": "taken_up_sent_out"}, {"rep": ["core:faction/reed_council", 15]}, {"morality": 8}, {"deed": ["dead_buried", 2]}, {"take_item": ["core:item/cut_burial_lanterns", 1]}]},
+              {"id": "to_isseva", "text": "Take them to the burial jetty at Isseva. The jetty-keepers will know whose each one was.",
+               "effects": [{"set_flag": "taken_up_to_isseva"}, {"rep": ["core:faction/reed_council", 10]}, {"morality": 5}, {"take_item": ["core:item/cut_burial_lanterns", 1]}]},
+              {"id": "sink_them", "text": "Sink them under the bell unlit, the way the Callers wanted, and see who comes up.",
+               "effects": [{"set_flag": "taken_up_sunk"}, {"rep": ["core:faction/reed_council", -20]}, {"morality": -12}, {"take_item": ["core:item/cut_burial_lanterns", 1]}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/heron_watch", "radius": 90}
+      },
+      {
+        "id": "the_channel_quiet",
+        "journal": "Tuo Lissa sat up in the watch that night and counted no boats going north at all, and wrote the nought in the bell-rope's knots the way his grandmother taught him to write a good night.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 160, "renown": 12, "morality": 2}
+  },
+  {
+    "id": "core:quest/names_from_the_vale",
+    "name": "Names from the Vale",
+    "layer": "side",
+    "giver": "core:npc/hester_wrenn",
+    "region": "core:region/sedgemire",
+    "summary": "For forty years a woman from Gosford has made a lantern for every Vale traveller the marsh drowned and hung it on the Long Jetty with the name on. This spring somebody hung one there for her.",
+    "notes": "Sedgemire world life. Links Hester's House (Hester Wrenn, the giver), the Long Jetty ('somebody has been leaving lanterns with names on them at the Long Jetty, and the names are all from the Vale': Hester) and the Drylanders' Hummock (the newest board, a Vale name with nobody under it). The choice is made with Hester.",
+    "stages": [
+      {
+        "id": "the_jetty",
+        "journal": "Hester Wrenn came to the Delta from Gosford behind an eel-seller and stayed when he went into the water. Every Vale carter, drover and runaway the marsh has drowned since has come to her door first, she says, one way or another, and she has made each of them a lantern and hung it on the Long Jetty with their name on it so that the reedfolk would sing for them too. Last week a lantern was hanging on the jetty's last post that she did not make, in a reedfolk weave, with a Vale name on it. She will not say whose. She wants it brought to her.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/long_jetty", "text": "Walk out along the Long Jetty"},
+          {"type": "collect", "target": "core:item/vale_named_lantern", "count": 1, "where": "core:poi/long_jetty", "text": "Take down the lantern Hester did not make"}
+        ],
+        "marker": {"place_id": "core:poi/long_jetty", "radius": 80}
+      },
+      {
+        "id": "the_hummock",
+        "journal": "The name on the lantern is Hester Wrenn. The frame is pegged in the Mor weave, and the paper is indigo, which is a burial lantern and nothing else. On the rail beside it somebody has scratched a line of the round and an arrow pointing west, to the hummock where Isseva buries the dry-country dead in the earth.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/drylanders_hummock", "text": "Go to the Drylanders' Hummock west of Isseva"},
+          {"type": "read_book", "target": "core:book/drylanders_boards", "count": 1, "text": "Read the grave-boards on the hummock"}
+        ],
+        "marker": {"place_id": "core:poi/drylanders_hummock", "radius": 80}
+      },
+      {
+        "id": "which_ground",
+        "journal": "The newest board on the hummock says HESTER WRENN OF GOSFORD, cut in careful Vale letters by somebody who learned them for the purpose, and the earth in front of it has been dug and turned and left open. Somebody in the Delta has made her a lantern for the water and a grave for the earth, and has left her to choose. She should hear it from you.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "which_ground",
+            "text": "Tell Hester what was left for her, and help her choose",
+            "options": [
+              {"id": "the_water", "text": "The lantern is the reedfolk's way of saying she is one of theirs. When it is time, the water.",
+               "effects": [{"set_flag": "hester_chose_water"}, {"rep": ["core:faction/reed_council", 10]}, {"morality": 4}, {"take_item": ["core:item/vale_named_lantern", 1]}]},
+              {"id": "the_earth", "text": "The grave is the same kindness in the Vale's words. When it is time, the earth, and the lantern beside it.",
+               "effects": [{"set_flag": "hester_chose_earth"}, {"rep": ["core:faction/reed_council", 5]}, {"morality": 4}, {"take_item": ["core:item/vale_named_lantern", 1]}]},
+              {"id": "neither", "text": "She is not dead. Hang the lantern on her own fence, fill in the grave, and let her grow her barley.",
+               "effects": [{"set_flag": "hester_chose_neither"}, {"morality": 2}, {"renown": 4}, {"take_item": ["core:item/vale_named_lantern", 1]}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/hesters_stilts", "radius": 90}
+      },
+      {
+        "id": "the_fence",
+        "journal": "Hester lit the lantern on her fence that night with the others, the Vale names and her own, and sat out under them with her pipe until the reeds stopped moving.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 90, "renown": 8}
+  },
+  {
+    "id": "core:quest/tithe_day",
+    "name": "Tithe-Day at the Tally",
+    "layer": "side",
+    "giver": "core:npc/wystan_crail",
+    "region": "core:region/sedgemire",
+    "summary": "The Tallymen take one eel in ten on their way to the Tollmere market, and the new clerk at the Eel Tally has found that the Guild's book and the reedfolk's barrels do not agree. The Oulea trappers keep their own count, on a notched stick, out at the Eel Hurdles.",
+    "notes": "Sedgemire world life. Links the Eel Tally (Wystan Crail, the giver; a Guild bravo sits on the steps) and the Eel Hurdles (the trappers' raft; the stick is lying there). Three endings, chosen with Wystan.",
+    "stages": [
+      {
+        "id": "the_stick",
+        "journal": "Wystan Crail came down from Lantern Row in the spring to keep the Tally's book, and has found that the last clerk kept two: one for the Guild, with a tithe of one in ten, and one in a different ink with one in eight. The difference went somewhere. The Oulea trappers who send their catch up from the Eel Hurdles keep their own count of every barrel, notched on a stick the way reedfolk have counted since before the Guild could write, and the stick will say which book was true.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/eel_hurdles", "text": "Pole out to the trappers' raft at the Eel Hurdles"},
+          {"type": "collect", "target": "core:item/hurdle_tally_stick", "count": 1, "where": "core:poi/eel_hurdles", "text": "Find the trappers' tally-stick"}
+        ],
+        "marker": {"place_id": "core:poi/eel_hurdles", "radius": 90}
+      },
+      {
+        "id": "the_count",
+        "journal": "The stick is ash, rubbed black with handling, and every barrel the trappers have sent up for eleven years is notched on it: four hundred and forty this year, where the Guild's honest book says four hundred. Forty barrels of Oulea's eels went into the old clerk's pocket, and the trappers knew, and said nothing, because saying things to the Guild costs more than eels. Wystan Crail is waiting for the stick.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_count",
+            "text": "Settle the count with Wystan Crail",
+            "options": [
+              {"id": "true_count", "text": "Give him the stick. The book should say what the water says, and the Guild should pay back what was taken.",
+               "effects": [{"set_flag": "tally_true_count"}, {"rep": ["core:faction/tallymen", 10]}, {"rep": ["core:faction/reed_council", 8]}, {"morality": 5}, {"take_item": ["core:item/hurdle_tally_stick", 1]}]},
+              {"id": "break_the_stick", "text": "Break it over the barrels. No stick, no forty barrels owed, and the Guild will be grateful to whoever lost it.",
+               "effects": [{"set_flag": "tally_stick_broken"}, {"rep": ["core:faction/tallymen", 8]}, {"rep": ["core:faction/reed_council", -12]}, {"morality": -8}, {"marks": 60}, {"take_item": ["core:item/hurdle_tally_stick", 1]}]},
+              {"id": "back_to_oulea", "text": "Take it back to the trappers and tell them to bring it to the Tally themselves, next tithe-day, in front of everyone.",
+               "effects": [{"set_flag": "tally_stick_to_oulea"}, {"rep": ["core:faction/reed_council", 12]}, {"rep": ["core:faction/tallymen", -6]}, {"morality": 4}, {"take_item": ["core:item/hurdle_tally_stick", 1]}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/eel_tally", "radius": 90}
+      },
+      {
+        "id": "the_next_tithe",
+        "journal": "On the next tithe-day the barrels at the Tally were chalked once, in one hand, and the bravo on the steps slept through the whole of it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 80, "renown": 6}
+  },
+  {
+    "id": "core:quest/the_old_bitch",
+    "name": "The Old Bitch of the Withies",
+    "layer": "side",
+    "giver": "core:npc/illa_nauve",
+    "region": "core:region/sedgemire",
+    "summary": "The leech-wife's hounds went into the reeds after her old bitch last spring and came back wild. They lair in the Withy Beds by day and hunt her leech-tubs by night, and they will go on doing it as long as the old one leads them.",
+    "notes": "Sedgemire world life. Links the Leech-Wife's Stilts (Illa Nauve, the giver) and the Withy Beds, where QuestFoes stands the old bitch (core:enemy/old_grey_bitch, a leech-hound grown old and large). Her collar is lying where she lairs; Illa takes it on the next word.",
+    "stages": [
+      {
+        "id": "the_withies",
+        "journal": "Illa Nauve bred marsh hounds to guard her leeches from the herons, and the hounds learned from the leeches how to drink. The old bitch was the first of them and the best, and last spring she slipped her collar and went into the reeds, and the rest went after her. They lair in the Withy Beds by day, where the stools are thick enough to hide a dog, and come back at night for the tubs. Illa wants it finished, and she wants the collar back on its hook.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/withy_beds", "text": "Go to the Withy Beds where the pack lairs"},
+          {"type": "kill", "target": "core:enemy/old_grey_bitch", "count": 1, "where": "core:poi/withy_beds", "text": "Put down the old bitch that leads them"},
+          {"type": "collect", "target": "core:item/old_bitchs_collar", "count": 1, "where": "core:poi/withy_beds", "text": "Find the collar she slipped"}
+        ],
+        "marker": {"place_id": "core:poi/withy_beds", "radius": 80}
+      },
+      {
+        "id": "the_hook",
+        "journal": "The collar was in the old bitch's bed under a withy stool, chewed through at the buckle and chewed again, as if she had tried to put it back on. Illa Nauve will want it on the empty hook by her door.",
+        "objectives": [
+          {"type": "deliver", "target": "core:npc/illa_nauve", "item": "core:item/old_bitchs_collar", "count": 1, "text": "Give Illa Nauve the collar"}
+        ],
+        "marker": {"place_id": "core:poi/leech_wifes_stilts", "radius": 80}
+      }
+    ],
+    "rewards": {"marks": 70, "renown": 5, "items": [["core:item/rope", 1]]}
+  }
+]

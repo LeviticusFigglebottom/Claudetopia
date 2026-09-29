@@ -238,6 +238,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bog_iron_bloomery",
+        "quests": [],
+        "finds": [
+          "core:item/note_bloomers_cord"
+        ],
+        "encounters": [
+          "core:encounter/bog_iron_bloomery"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/bone_carvers_camp",
         "quests": [],
         "finds": [
@@ -810,6 +821,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/draining_mill",
+        "quests": [],
+        "finds": [
+          "core:item/note_draining_mill_pumping_book"
+        ],
+        "encounters": [
+          "core:encounter/draining_mill"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/dreugh_road_beacon",
         "quests": [],
         "finds": [
@@ -888,8 +910,13 @@
       },
       {
         "poi": "core:poi/drowned_bell_shrine",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/lanterns_taken_up"
+        ],
+        "finds": [
+          "core:item/note_drowned_bell_shrine_offerings",
+          "core:item/note_flood_callers_sounding"
+        ],
         "encounters": [
           "core:encounter/drowned_bell_shrine"
         ],
@@ -954,8 +981,23 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/drylanders_hummock",
+        "quests": [
+          "core:quest/names_from_the_vale"
+        ],
+        "finds": [
+          "core:item/note_drylanders_boards"
+        ],
+        "encounters": [
+          "core:encounter/drylanders_hummock"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/eel_hurdles",
-        "quests": [],
+        "quests": [
+          "core:quest/tithe_day"
+        ],
         "finds": [
           "core:item/note_eel_hurdles"
         ],
@@ -976,8 +1018,23 @@
         "quests": [
           "core:quest/the_boat_that_moved"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_eel_stews_sluice_note"
+        ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/eel_tally",
+        "quests": [
+          "core:quest/tithe_day"
+        ],
+        "finds": [
+          "core:item/note_eel_tally_page"
+        ],
+        "encounters": [
+          "core:encounter/eel_tally"
+        ],
         "hearthstone": false
       },
       {
@@ -1364,7 +1421,9 @@
         "finds": [
           "core:item/note_grey_gull"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/grey_gull"
+        ],
         "hearthstone": false
       },
       {
@@ -1374,6 +1433,17 @@
           "core:item/note_grey_hedge"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/grey_line",
+        "quests": [],
+        "finds": [
+          "core:item/note_grey_line_knots"
+        ],
+        "encounters": [
+          "core:encounter/grey_line"
+        ],
         "hearthstone": false
       },
       {
@@ -1400,6 +1470,19 @@
         "finds": [],
         "encounters": [
           "core:encounter/grey_wreck"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/greylag_fold",
+        "quests": [
+          "core:quest/the_unsung"
+        ],
+        "finds": [
+          "core:item/note_greylag_count"
+        ],
+        "encounters": [
+          "core:encounter/greylag_fold"
         ],
         "hearthstone": false
       },
@@ -1617,7 +1700,9 @@
       },
       {
         "poi": "core:poi/heron_watch",
-        "quests": [],
+        "quests": [
+          "core:quest/lanterns_taken_up"
+        ],
         "finds": [
           "core:item/note_heron_watch"
         ],
@@ -1647,6 +1732,17 @@
         "quests": [],
         "finds": [
           "core:item/wayside_hespers_boat"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/hesters_stilts",
+        "quests": [
+          "core:quest/names_from_the_vale"
+        ],
+        "finds": [
+          "core:item/note_hesters_names"
         ],
         "encounters": [],
         "hearthstone": false
@@ -1812,6 +1908,15 @@
         "quests": [],
         "finds": [
           "core:item/note_indigo_beds"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/isses_chair",
+        "quests": [],
+        "finds": [
+          "core:item/note_isses_chair_cord"
         ],
         "encounters": [],
         "hearthstone": false
@@ -2120,6 +2225,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/leech_wifes_stilts",
+        "quests": [
+          "core:quest/the_old_bitch"
+        ],
+        "finds": [
+          "core:item/note_leech_wifes_ledger"
+        ],
+        "encounters": [
+          "core:encounter/leech_wifes_stilts"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/lichen_stones",
         "quests": [],
         "finds": [
@@ -2188,7 +2306,9 @@
       },
       {
         "poi": "core:poi/long_jetty",
-        "quests": [],
+        "quests": [
+          "core:quest/names_from_the_vale"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/long_jetty"
@@ -2508,7 +2628,9 @@
       },
       {
         "poi": "core:poi/old_crannog",
-        "quests": [],
+        "quests": [
+          "core:quest/the_unsung"
+        ],
         "finds": [],
         "encounters": [
           "core:encounter/old_crannog"
@@ -2655,6 +2777,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/oulnauve_stakes",
+        "quests": [
+          "core:quest/lanterns_taken_up"
+        ],
+        "finds": [
+          "core:item/note_flood_callers_tract"
+        ],
+        "encounters": [
+          "core:encounter/oulnauve_stakes"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/patter_stone",
         "quests": [],
         "finds": [
@@ -2677,7 +2812,9 @@
         "quests": [
           "core:quest/the_slow_reflection"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_peat_hags_finds"
+        ],
         "encounters": [
           "core:encounter/peat_hags"
         ],
@@ -2863,7 +3000,9 @@
         "finds": [
           "core:item/note_reed_bridge"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/reed_bridge"
+        ],
         "hearthstone": false
       },
       {
@@ -3083,7 +3222,9 @@
       {
         "poi": "core:poi/sallow_king",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_sallow_king_feeding_tally"
+        ],
         "encounters": [
           "core:encounter/sallow_king"
         ],
@@ -3457,7 +3598,9 @@
         "quests": [
           "core:quest/which_account"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_south_stilts_log"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -3492,7 +3635,9 @@
       {
         "poi": "core:poi/stair_of_isse",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_stair_of_isse_rubbing"
+        ],
         "encounters": [
           "core:encounter/stair_of_isse"
         ],
@@ -4023,6 +4168,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/unsung_vault",
+        "quests": [
+          "core:quest/the_unsung"
+        ],
+        "finds": [
+          "core:item/note_unsung_keepers_last_page"
+        ],
+        "encounters": [
+          "core:encounter/unsung_vault"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/verderers_moss_grave",
         "quests": [],
         "finds": [
@@ -4208,7 +4366,9 @@
         "quests": [
           "core:quest/the_lantern_still_lit"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_wisp_hollow_strongbox_letter"
+        ],
         "encounters": [
           "core:encounter/wisp_hollow"
         ],
@@ -4216,11 +4376,15 @@
       },
       {
         "poi": "core:poi/withy_beds",
-        "quests": [],
+        "quests": [
+          "core:quest/the_old_bitch"
+        ],
         "finds": [
           "core:item/note_withy_beds"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/withy_beds"
+        ],
         "hearthstone": false
       },
       {
