@@ -34,6 +34,8 @@ const OVERLAY_LAYER := 1
 ## The night is lifted above the regions' own night exposure: the user found it too dark to play
 ## (2026-09-27). Together with the brighter night ambient in SUN_KEYS and the moon at 0.38.
 const NIGHT_LIFT := 1.2
+## The most a pixel feeds the glow (Environment.glow_hdr_luminance_cap; Godot's default is 12).
+const GLOW_LUMINANCE_CAP := 4.0
 
 const SUN_KEYS := [
 	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.34, 1.0, 0.0],
@@ -248,6 +250,13 @@ func _build_nodes() -> void:
 	env.glow_bloom = 0.05
 	env.glow_hdr_threshold = 1.1
 	env.glow_intensity = 0.5
+	# What one pixel can feed the glow. Forward+ draws in 16-bit float, so the sky's sun disc
+	# (about ten times white, sun_disc_color below) and the sun's glints on water went into the
+	# glow at full value at Godot's default cap of 12, and a low sun at the frame's edge spread
+	# over the picture (TRIAGE 54, the Ranger's film "blindingly bright" on the user's GPU). At 4
+	# a lamp (emission 3 at most) glows as before and the sun still clears the threshold;
+	# Compatibility's narrower range seldom reached the cap.
+	env.glow_hdr_luminance_cap = GLOW_LUMINANCE_CAP
 	env.adjustment_enabled = true
 	world_env.environment = env
 	add_child(world_env)
