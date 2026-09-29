@@ -25,6 +25,9 @@ const LAND := preload("res://world/pois/poi_builders_land.gd")
 const WAYSIDE := preload("res://world/pois/poi_builders_wayside.gd")
 ## Black volcanic glass: the Glass Falls' pour and the Glassbed's river, set as they flowed.
 const OBSIDIAN := preload("res://world/pois/obsidian_glass.gd")
+## The large sites' outsides: forts, stockades, watchtowers, ruined castles, walled camps, and the
+## ways down into a site's inside (docs/WORLD_LIFE_INTERIORS.md).
+const SITES := preload("res://world/sites/site_exterior.gd")
 
 
 static func build(d: PoiDressing) -> void:
@@ -93,6 +96,8 @@ static func build(d: PoiDressing) -> void:
 			await WAYSIDE.peat_cut(d)
 		"beacon":
 			await WAYSIDE.beacon(d)
+		"delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp":
+			await SITES.build(d)
 		_:
 			Log.warn("PoiDressing", "%s: no builder for kind '%s'" % [d.poi_id, d.kind])
 	if not d.kit.far and PoiKit.brief_says(d.brief, ["sheep grazing"]):

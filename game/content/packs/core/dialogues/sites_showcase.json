@@ -1,0 +1,48 @@
+[
+  {
+    "id": "core:dialogue/kilnway_cairn",
+    "speaker_name": "A pilgrim's cairn",
+    "notes": "The Kilnway's hook: a PoiTouch on the cairn at the mouth (world/sites/site_exterior.gd, _hook). A conversation with nobody in it; starts core:quest/ring_the_warden_down.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "A pilgrim's cairn",
+        "no_talk": true,
+        "text": "Seven stones, the top one flat, and under it a fold of oilcloth. Inside, a page in the Tolling Order's square hand: 'A bearer went down this road the winter after the fire, to keep the warm from bringing them up. His bell has not been heard on the heath since the year of the long frost. The pilgrims who sleep at this mouth hear it under them every night. Whoever reads this: go down, and ring him to rest, and bring the clapper to the Ash so the bell cannot be rung again. We would go. We are not able.' Under it, in pencil: 'He is still on duty. Do not wake him on the stair.'",
+        "choices": [
+          {"text": "Fold the page away. You will go down.", "conditions": [{"quest_not_done": "core:quest/ring_the_warden_down"}, {"not": {"quest_active": "core:quest/ring_the_warden_down"}}],
+           "effects": [{"start_quest": "core:quest/ring_the_warden_down"}], "next": "taken"},
+          {"text": "Put the stone back.", "next": "end"}
+        ]
+      },
+      "taken": {
+        "speaker": "A pilgrim's cairn",
+        "text": "Warm air comes up out of the dark with a smell of hot stone and old incense in it. Somewhere a long way down, very faintly, something rings once, flat.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/scathe_notice",
+    "speaker_name": "Notices on Scathe's gate",
+    "notes": "Scathe Fort's hook: a PoiTouch on the notice post at the gate (world/sites/site_exterior.gd, _hook). Starts core:quest/the_scathe_tithe.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Notices on Scathe's gate",
+        "no_talk": true,
+        "text": "Two notices on one nail. The lower is old, weathered to felt, in a Warden's hand: 'SCATHE. The fort's bounty stands to any who clear it of squatters, to be paid at the Rest on proof.' The upper is new and nailed through the old one: 'BY ORDER. The tithe on the down is now ONE MARK A WHEEL. Pay at the gate. Them as do not pay will be written down. H. Wendle, Captain.' Someone has written under it, in chalk, 'he means it'.",
+        "choices": [
+          {"text": "Pull the captain's notice down and keep the Warden's.", "conditions": [{"quest_not_done": "core:quest/the_scathe_tithe"}, {"not": {"quest_active": "core:quest/the_scathe_tithe"}}],
+           "effects": [{"start_quest": "core:quest/the_scathe_tithe"}], "next": "taken"},
+          {"text": "Leave them both.", "next": "end"}
+        ]
+      },
+      "taken": {
+        "speaker": "Notices on Scathe's gate",
+        "text": "The nail comes out easily. On the wall above the gate somebody laughs, and somebody else tells him to shut up and fetch the captain.",
+        "next": "end"
+      }
+    }
+  }
+]
