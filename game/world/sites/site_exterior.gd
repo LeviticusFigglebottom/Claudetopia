@@ -588,10 +588,19 @@ static func _garrison(d: PoiDressing, site: Dictionary, walk: Array, towers: Arr
 	d.add_child(sp)
 	await k.step()
 	var pick := func(list: Array) -> String: return str(list[k.rng.randi() % list.size()]) if not list.is_empty() else ""
+	# each has a place in the garrison (`<poi>/<group>/<n>`), and whoever was killed there stays dead
+	# when the fort is raised again, until a rest (SiteFallen)
+	var slots := {}
 	var stand := func(id: String, at: Vector3, yaw: float, opts: Dictionary) -> Enemy:
-		if id == "" or not ContentDB.has(id):
+		var group := str(opts.get("group", d.poi_id + "/yard"))
+		var n := int(slots.get(group, 0))
+		slots[group] = n + 1
+		var key := "%s/%d" % [group, n]
+		if id == "" or not ContentDB.has(id) or SiteFallen.is_fallen(key):
 			return null
-		return sp.spawn_one(id, d.to_global(at + Vector3.UP * 0.1), yaw, opts)
+		var e := sp.spawn_one(id, d.to_global(at + Vector3.UP * 0.1), yaw, opts)
+		SiteFallen.watch(e, key)
+		return e
 	# archers on the tower tops
 	for i in mini(towers.size(), int(g.get("tower_archers", 3))):
 		var t: Vector3 = towers[i]

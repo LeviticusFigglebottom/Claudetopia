@@ -79,6 +79,8 @@ func _make(def: Dictionary) -> void:
 	var wanted := _room_list()
 	_lay_main(wanted)
 	_lay_loop()
+	if bool(_site.get("drops", true)):
+		_lay_drop()
 	_lay_secret()
 	_lay_shortcut()
 	for r in rooms:
@@ -435,6 +437,83 @@ func _make_drop(l: Dictionary) -> void:
 	l["kind"] = "drop"
 	l["drop"] = fall
 	l["one_way_to"] = lower["id"]
+
+
+## A ledge over a lower room: a level passage from a room of the walk that ends high in the wall
+## of a room further on and 2.5-5 m lower, the fall between, one way down. The spiral seldom brings
+## a loop's two rooms to that difference by itself, so the drop is looked for on its own: the
+## nearest pair (not neighbours, the upper one past the way in, neither the boss's) whose passage
+## keeps clear of every other room and whose lower room can be raised to open under the lip
+## without meeting a room or passage over it. A place with `"drops": false` has none.
+const DROP_FALL := Vector2(2.5, 5.0)
+
+
+func _lay_drop() -> void:
+	for l in links:
+		if l["kind"] == "drop":
+			return
+	var best: Array = []
+	var best_gap := 16.0
+	for i in range(1, rooms.size()):
+		for j in range(i + 2, rooms.size()):
+			var up: Dictionary = rooms[i]
+			var lo: Dictionary = rooms[j]
+			if lo["role"] in ["boss", "secret", "bypass"] or up["role"] in ["boss", "secret", "bypass"]:
+				continue
+			if _linked(up["id"], lo["id"]):
+				continue
+			var cu: Vector3 = up["centre"]
+			var cl: Vector3 = lo["centre"]
+			var fall := cu.y - cl.y
+			if fall < DROP_FALL.x or fall > DROP_FALL.y:
+				continue
+			var flat := Vector3(cl.x - cu.x, 0.0, cl.z - cu.z)
+			if flat.length() < 0.5:
+				continue
+			var gap := flat.length() - edge_along(up, flat.normalized()) - edge_along(lo, -flat.normalized())
+			if gap < 2.5 or gap > best_gap:
+				continue
+			if _mouth_near(up, flat.normalized(), 2.5) or _mouth_near(lo, -flat.normalized(), 2.5):
+				continue
+			# the passage runs level at the upper room's floor
+			if not _segment_clear(cu, Vector3(cl.x, cu.y, cl.z), [up["id"], lo["id"]], 1.0):
+				continue
+			if not _raise_clear(lo, fall + 4.0, [up["id"]]):
+				continue
+			best = [up, lo]
+			best_gap = gap
+	if best.is_empty():
+		return
+	var l := _join(best[0], best[1], "loop")
+	_make_drop(l)
+
+
+## Whether room `r` can be made `new_h` high (half-height) without its roof coming within STACK_GAP
+## of a room over it, or cutting a passage that runs over it (those of `skip` and its own aside).
+func _raise_clear(r: Dictionary, new_h: float, skip: Array) -> bool:
+	var c: Vector3 = r["centre"]
+	var top := c.y + new_h + STACK_GAP
+	var rad := radius_of(r)
+	for o in rooms:
+		if o["id"] == r["id"] or skip.has(o["id"]):
+			continue
+		var oc: Vector3 = o["centre"]
+		if oc.y <= c.y:
+			continue
+		if Vector2(oc.x - c.x, oc.z - c.z).length() < rad + radius_of(o) + 2.5 and oc.y < top:
+			return false
+	for l in links:
+		if l["a"] == r["id"] or l["b"] == r["id"] or skip.has(l["a"]) or skip.has(l["b"]):
+			continue
+		var pts: Array = l["points"]
+		for i in range(1, pts.size()):
+			var a: Vector3 = pts[i - 1]
+			var b: Vector3 = pts[i]
+			for t in 9:
+				var p := a.lerp(b, float(t) / 8.0)
+				if p.y > c.y and p.y < top and Vector2(p.x - c.x, p.z - c.z).length() < rad + float(spec.get("tunnel_r", 1.8)) + 1.0:
+					return false
+	return true
 
 
 ## A small room off a chamber in the middle of the walk, behind a wall of loose stones: rich loot,

@@ -93,6 +93,8 @@ func _light_budget() -> void:
 				on = here
 				break
 		if over < 0:
+			for l in lights:
+				l.set_meta("budget_on", l.visible)
 			return
 		on.sort_custom(func(a: OmniLight3D, b: OmniLight3D) -> bool: return a.omni_range > b.omni_range)
 		var widest: OmniLight3D = on[0]
@@ -237,6 +239,24 @@ func _way_out() -> void:
 		_lamp(plan.exit_glow + back * 2.5, Color(0.86, 0.9, 0.98), 2.2, 9.0)
 		# and the day's light where the throat opens into the room
 		_lamp(plan.exit_at + back * 1.5 + Vector3.UP * 2.2, Color(0.8, 0.84, 0.92), 2.2, 11.0)
+		# the day falling in down the throat and across the first room's floor, fading as it goes:
+		# the first view in is the day behind you and the place's own light ahead
+		var spill := SpotLight3D.new()
+		spill.name = "DaySpill"
+		spill.position = plan.exit_glow + back * 0.8 + Vector3.DOWN * 0.3
+		var toward: Vector3 = (plan.rooms[0]["centre"] as Vector3) + back * 2.0
+		spill.look_at_from_position(spill.position, toward, Vector3.UP)
+		spill.light_color = Color(0.86, 0.9, 1.0)
+		spill.light_energy = 3.2
+		spill.spot_range = 20.0
+		spill.spot_angle = 38.0
+		spill.spot_attenuation = 1.1
+		spill.spot_angle_attenuation = 0.9
+		spill.light_specular = 0.2
+		spill.set_meta("flicker", 0.0)
+		spill.set_meta("base_energy", 3.2)
+		lights_node.add_child(spill)
+		lights.append(spill)
 	await step()
 
 
@@ -248,6 +268,9 @@ func _room(r: Dictionary) -> void:
 	var reach := Vector2(half.x, half.z).length()
 	# a cold, weak fill so the room's shape reads beyond its lamps
 	var tint := Color(0.6, 0.66, 0.8).lerp(Color(str(plan.spec.get("light_colour", "#ffb066"))), 0.3)
+	if plan.spec.has("fill_colour"):
+		# a kind lit by one hot colour (the lava tube) keeps its shadows cool, so the heat reads as heat
+		tint = Color(str(plan.spec["fill_colour"]))
 	var fill := _lamp(c + Vector3.UP * half.y * 0.7, tint, 1.0 + reach / 14.0, reach * 1.3)
 	fill.light_specular = 0.0
 	var ls: Array = plan.spec.get("lights", ["torch"])
@@ -1203,7 +1226,8 @@ func people() -> void:
 	spawner.name = "Foes"
 	spawner.spawn_on_ready = false
 	site.add_child(spawner)
-	for e in plan.encounters:
+	for ei in plan.encounters.size():
+		var e: Dictionary = plan.encounters[ei]
 		var enemy_id := str(e["enemy"])
 		if not ContentDB.has(enemy_id):
 			Log.warn("SiteDress", "%s: no foe '%s'" % [plan.id, enemy_id])
@@ -1213,6 +1237,11 @@ func people() -> void:
 			continue
 		var i := 0
 		for p in e["spots"]:
+			# whoever was killed here stays dead when the place is entered again, until a rest
+			var key := "%s/%s/%d/%d" % [plan.id, e["room"], ei, i]
+			if role != "boss" and SiteFallen.is_fallen(key):
+				i += 1
+				continue
 			var at := site.to_global(floor_under(p) + Vector3.UP * 0.05)
 			var opts := {"group": "%s/%s" % [plan.id, e["room"]]}
 			if e.has("patrol"):
@@ -1226,6 +1255,8 @@ func people() -> void:
 			i += 1
 			if foe == null:
 				continue
+			if role != "boss":
+				SiteFallen.watch(foe, key)
 			match role:
 				"sleeper":
 					# lying by the fire: roused by noise, a blow, or being walked into
@@ -1275,7 +1306,38 @@ func _arena(e: Dictionary) -> void:
 
 # --- every frame ----------------------------------------------------------------------------------
 
+## Compatibility draws at most `max_renderable_lights` (32) lights in view and drops the rest in no
+## order it says: from the Kilnway's way in, looking down the tube, more than that were in the
+## frustum and the mouth room's own went, so the first view in was black (the same room lit from its
+## other doorway). So only the NEAR_LIGHTS lights nearest the eye (by how far their reach falls short
+## of it) are on at once, chosen again as the eye moves.
+const NEAR_LIGHTS := 24
+var _near_from := Vector3.INF
+
+
+func _nearest_lights() -> void:
+	var vp := site.get_viewport() if site.is_inside_tree() else null
+	var cam := vp.get_camera_3d() if vp != null else null
+	if cam == null:
+		return
+	var eye := site.to_local(cam.global_position)
+	if _near_from != Vector3.INF and eye.distance_squared_to(_near_from) < 1.0:
+		return
+	_near_from = eye
+	var order: Array = []
+	for l in lights:
+		if not bool(l.get_meta("budget_on", true)):
+			continue
+		var reach := (l as OmniLight3D).omni_range if l is OmniLight3D else ((l as SpotLight3D).spot_range if l is SpotLight3D else 0.0)
+		order.append([l.position.distance_to(eye) - reach, l])
+	order.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	for i in order.size():
+		(order[i][1] as Light3D).visible = i < NEAR_LIGHTS
+
+
 func flicker() -> void:
+	if site.is_built:
+		_nearest_lights()
 	if not _water_set and site.is_inside_tree():
 		# the water's depth is read in world space, and the interior is moved to its pocket after it
 		# is built

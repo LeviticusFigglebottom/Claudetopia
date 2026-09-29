@@ -75,6 +75,16 @@ func _inside(id: String) -> void:
 	var fwd := -ent.transform.basis.z
 	var eye := ent.position + Vector3.UP * 1.65
 	shots.append({"label": "%s_00_way_in" % slug, "pos": eye + fwd * 0.3, "look": eye + fwd * 6.0 + Vector3.DOWN * 0.5})
+	# where the eye stands at the way in: the floor under it and the roof over it (a way in whose
+	# eye is in the rock renders black)
+	await get_tree().physics_frame
+	var space := get_world_3d().direct_space_state
+	var probe := func(from: Vector3, to: Vector3) -> float:
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(site.to_global(from), site.to_global(to)))
+		return -1.0 if hit.is_empty() else site.to_global(from).distance_to(hit["position"])
+	print("site review: way in eye %s: floor %.2f below, roof %.2f above, wall %.2f ahead, lights %d" % [eye,
+			probe.call(eye, eye + Vector3.DOWN * 8.0), probe.call(eye, eye + Vector3.UP * 12.0),
+			probe.call(eye, eye + fwd * 20.0), site.dress.lights.size() if site.dress != null else 0])
 	var n := 1
 	for r in plan.rooms:
 		var c: Vector3 = r["centre"]
