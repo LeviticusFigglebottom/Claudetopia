@@ -1,0 +1,22 @@
+[
+  {
+    "id": "core:item/kiln_bell_clapper",
+    "name": "The Kiln-Warden's Clapper",
+    "category": "misc",
+    "weight": 2.5,
+    "value": 240,
+    "stack": 1,
+    "tags": ["quest", "tolling_order", "bell", "unique"],
+    "description": "The clapper of the Order's flat bell, black with the tube's heat and still warm a day after it is carried out. The Order would give a great deal to have it back, and would rather you did not ask why they never went down for it themselves."
+  },
+  {
+    "id": "core:item/scathe_tithe_ledger",
+    "name": "Hobb Wendle's Tithe Book",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 60,
+    "stack": 1,
+    "tags": ["quest", "bandit", "ledger", "unique"],
+    "description": "A carter's day-book turned to a toll-roll: every tithe taken on the down since spring, in a careful hand, with the names of the carters who would not pay it written in a different ink. The Wardens at the Rest will want to see it, and so will some of the carters' families."
+  }
+]
