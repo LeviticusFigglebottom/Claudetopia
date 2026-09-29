@@ -160,6 +160,8 @@ static func salt_landing(d: PoiDressing) -> void:
 	var z_axis := up_slope.normalized()
 	var y_axis := z_axis.cross(x_axis).normalized()
 	m.block(sail, Transform3D(Basis(x_axis, y_axis, z_axis), mid), Vector3(across.length() + 0.5, 0.03, up_slope.length() + 0.5))
+	# a tent-pole under the middle of the sail, where the cloth would sag
+	m.post(timber, Vector2(mid.x, mid.z), mid.y - k.on_ground(mid.x, mid.z).y - 0.02, 0.08)
 	await k.step()
 	m.commit(sail, PoiKit.plain(SAIL, 0.9), "Sail", true)
 	if not k.far:
@@ -227,7 +229,7 @@ static func bellrope_walk(d: PoiDressing) -> void:
 
 	# the wheel end: two uprights, an axle, a spoked wheel standing across the walk's line
 	var wheel_at := -axis * half
-	var hub := k.on_ground(wheel_at.x, wheel_at.y, 1.25)
+	var hub := k.on_ground(wheel_at.x, wheel_at.y, 1.08)
 	for s in [-1.0, 1.0]:
 		var foot: Vector2 = wheel_at + axis * 0.35 * float(s)
 		m.post(timber, foot, 2.1, 0.14)
@@ -245,7 +247,6 @@ static func bellrope_walk(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(wheel, k.surface("timber", 0.6), "Wheel", true)
 	# the hooks the strands start from, on a bar at the wheel's side
-	var start_y := k.on_ground(wheel_at.x, wheel_at.y).y + 1.05
 	var bar_at := wheel_at + axis * 0.9
 	var bar_top := m.post(timber, bar_at, 1.1, 0.12)
 	m.block(timber, Transform3D(basis, bar_top), Vector3(1.3, 0.1, 0.1))
@@ -488,3 +489,38 @@ static func rooftop_shaft(d: PoiDressing) -> void:
 	k.place(k.prop("lantern_hand"), k.on_ground(lamp.x, lamp.y), 0.0, 1.0, false)
 	# the tally-stick on its post, where the site's quest starts
 	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(out.x, 0.0, out.y) * 3.6 - Vector3(side.x, 0.0, side.y) * 3.2)
+
+
+# --- Ashcombe Mill ----------------------------------------------------------------------------------
+
+## The kind's windmill (its sails turning), and by the door the miller's sack-tally: a board on a
+## post, chalked a line a sack, the last line fresh. Touching it reads it.
+static func ashcombe_mill(d: PoiDressing) -> void:
+	await PoiDressing.kind_builders().LAND.mill(d)
+	var k := d.kit
+	if k.far:
+		return
+	var m := d.masonry
+	var face: Vector2 = -PoiDressing.kind_builders().LAND.WIND
+	var side := Vector2(face.y, -face.x)
+	var door := face * 3.6
+	var at := door + face * 1.9 - side * 1.3
+	if k.road_distance(at) < PoiKit.ROAD_CLEAR_M:
+		at = door + face * 1.9 - side * 3.4
+	var timber := m.begin()
+	var top := m.post(timber, at, 1.7, 0.14)
+	var board_at := top + Vector3.DOWN * 0.45
+	m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(face)), board_at + Vector3(face.x, 0.0, face.y) * 0.09), Vector3(0.7, 0.55, 0.04))
+	await k.step()
+	m.commit(timber, k.surface("planks", 0.8), "TallyBoard")
+	# the chalk: a white stroke for each sack, rows of them, on the side of the board facing out
+	var chalk := m.begin()
+	var right := Vector3(side.x, 0.0, side.y)
+	var fwd := Vector3(face.x, 0.0, face.y)
+	for row in 5:
+		for i in (9 if row < 4 else 4):
+			var p := board_at + fwd * 0.115 + right * (-0.28 + float(i) * 0.065) + Vector3.UP * (0.2 - float(row) * 0.1)
+			m.block(chalk, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(face)), p), Vector3(0.012, 0.07, 0.004))
+	await k.step()
+	m.commit(chalk, PoiKit.plain(Color(0.88, 0.87, 0.84), 0.95), "Chalk")
+	k.touchable("the_tally", board_at + fwd * 0.3, "Read the sack-tally", "core:dialogue/ashcombe_mill_tally", "", false)

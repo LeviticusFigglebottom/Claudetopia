@@ -12,14 +12,9 @@
     "unique_object": "a lectern in the lowest vault with a hundred years of candle-grease down its sides, and nothing on it",
     "site": {
       "kind": "crypt",
-      "seed": 8670,
+      "seed": 8671,
       "region": "core:region/cinderlea",
       "size": "medium",
-      "set_pieces": [
-        "ossuary",
-        "collapsed_shaft",
-        "chasm_bridge"
-      ],
       "boss": "core:boss/first_vigilant",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
@@ -56,14 +51,61 @@
         },
         {
           "kind": "prop",
-          "room": "mouth",
+          "room": "stair_foot",
           "prop": "bell_medium",
           "note": "the keep's own bell, brought down when the knights left, clapper out"
         },
         {
           "kind": "prop",
-          "room": "mouth",
+          "room": "stair_foot",
           "prop": "lantern_hand"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "stair_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "store_vault",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "the_turn",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "knights_vault",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ossuary"
+        },
+        {
+          "id": "fallen_roof",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "chapter_hall",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "lectern_vault",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
         }
       ]
     }
@@ -84,11 +126,6 @@
       "seed": 3301,
       "region": "core:region/cinderlea",
       "size": "medium",
-      "set_pieces": [
-        "collapsed_shaft",
-        "ledge",
-        "chasm_bridge"
-      ],
       "boss": "core:boss/the_precentor",
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
@@ -119,20 +156,66 @@
       "features": [
         {
           "kind": "note",
-          "room": "room3",
+          "room": "practice_rooms",
           "book": "core:book/anthe_ondr_tally",
           "name": "a digger's tally-board"
         },
         {
           "kind": "prop",
-          "room": "mouth",
+          "room": "shaft_foot",
           "prop": "rope_coil",
           "note": "Jory's rope, cut, at the foot of the ladder"
         },
         {
           "kind": "prop",
-          "room": "mouth",
+          "room": "shaft_foot",
           "prop": "lantern_hand"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "shaft_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "broken_roof",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "bench_hall",
+          "role": "chamber",
+          "size": "large"
+        },
+        {
+          "id": "cloister",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.0
+        },
+        {
+          "id": "practice_rooms",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "choir_stalls",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "singing_hall",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
         }
       ]
     }

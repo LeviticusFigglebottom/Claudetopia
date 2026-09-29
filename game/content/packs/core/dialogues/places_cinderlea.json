@@ -1861,5 +1861,19 @@
         "next": "end"
       }
     }
+  },
+  {
+    "id": "core:dialogue/ashcombe_mill_tally",
+    "speaker_name": "The sack-tally",
+    "notes": "A PoiTouch by Ashcombe Mill's door (game/world/pois/regions/cinderlea.gd ashcombe_mill). Lore only; pays the mill's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The sack-tally",
+        "no_talk": true,
+        "text": "A board by the mill door, chalked in fives the way a miller keeps count: a line a sack. The oldest rows have been rained on and chalked over so many times the board is white under the grey. The top line says ASHCOMBE MILL, TARRANT'S CORN, 866, in a careful hand. The newest stroke, at the end of the last row, is sharp and clean and has not been rained on at all. Inside, the stones are going round, and somebody is feeding the hopper, and the sacks by the door are full of something grey and fine that is not flour.",
+        "next": "end"
+      }
+    }
   }
 ]
