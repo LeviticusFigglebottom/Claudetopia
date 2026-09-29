@@ -524,3 +524,44 @@ static func ashcombe_mill(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(chalk, PoiKit.plain(Color(0.88, 0.87, 0.84), 0.95), "Chalk")
 	k.touchable("the_tally", board_at + fwd * 0.3, "Read the sack-tally", "core:dialogue/ashcombe_mill_tally", "", false)
+
+
+# --- the places whose people keep a spot ------------------------------------------------------------
+
+## The kind's own place, and the spots its people stand at by day (NpcRegistry.spot_marker): without
+## one a person of a place the world was not built with has nowhere to stand. `spots` is
+## [[name, metres out, bearing off the way to the road in radians], ...].
+static func _kind_with_spots(d: PoiDressing, build: Callable, spots: Array) -> void:
+	await build.call(d)
+	var k := d.kit
+	if k.far:
+		return
+	var road := k.road_direction(160.0)
+	var face := road.normalized() if road != Vector2.ZERO else k.downhill()
+	if face == Vector2.ZERO:
+		face = Vector2(0.0, 1.0)
+	for s in spots:
+		var at := face.rotated(float(s[2])) * float(s[1])
+		if k.road_distance(at) < PoiKit.ROAD_CLEAR_M + 0.5:
+			at = face.rotated(float(s[2]) + PI) * float(s[1])
+		k.marker(str(s[0]), k.on_ground(at.x, at.y), true)
+
+
+## Morwen Tarrant's shieling: she works at the fold, off the hut's side.
+static func greyfleece_shieling(d: PoiDressing) -> void:
+	await _kind_with_spots(d, Callable(PoiDressing.kind_builders().LAND, "shieling"), [["the_fold", 7.0, 1.2]])
+
+
+## Eddery Wray's shelter: he counts facing his boulder, a pace or two in front of it.
+static func bell_counters_hut(d: PoiDressing) -> void:
+	await _kind_with_spots(d, Callable(PoiDressing.kind_builders().WAYSIDE, "hut"), [["the_stone", 3.2, 0.6]])
+
+
+## The Scavengers' Ring: Coll at the roof-boss hearth in the yard, Jory at the gate.
+static func scavengers_ring(d: PoiDressing) -> void:
+	await _kind_with_spots(d, Callable(PoiDressing.kind_builders().SITES, "build"), [["ring_hearth", 3.5, 0.9], ["the_gate", 11.0, 0.0]])
+
+
+## The Sayers' Gauge: the Surveyor at the foot of the tower's outside stair, outside its low wall.
+static func sayers_gauge(d: PoiDressing) -> void:
+	await _kind_with_spots(d, Callable(PoiDressing.kind_builders().SITES, "build"), [["the_gauge_foot", 12.0, 0.5]])

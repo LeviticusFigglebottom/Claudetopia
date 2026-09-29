@@ -255,7 +255,7 @@
         "hour": 6,
         "place": "core:poi/novices_seats",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_seats",
         "notes": "sweeping the seats and counting"
       },
       {
@@ -263,14 +263,14 @@
         "hour": 12,
         "place": "core:poi/novices_seats",
         "activity": "eat",
-        "spot": "home"
+        "spot": "the_seats"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/novices_seats",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_seats",
         "notes": "sitting with the Hush in front of her"
       },
       {
@@ -319,7 +319,7 @@
         "hour": 7,
         "place": "core:poi/bell_counters_hut",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_stone",
         "notes": "scratching the night's count on the boulder"
       },
       {
@@ -327,14 +327,14 @@
         "hour": 12,
         "place": "core:poi/bell_counters_hut",
         "activity": "eat",
-        "spot": "home"
+        "spot": "the_stone"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/bell_counters_hut",
         "activity": "idle",
-        "spot": "home",
+        "spot": "the_stone",
         "notes": "walking the waystones and back"
       },
       {
@@ -342,7 +342,7 @@
         "hour": 18,
         "place": "core:poi/bell_counters_hut",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_stone",
         "notes": "the evening count, facing the Choir"
       },
       {
@@ -537,7 +537,7 @@
         "hour": 7,
         "place": "core:poi/hermits_gate",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_arch",
         "notes": "trying names on the door"
       },
       {
@@ -545,7 +545,7 @@
         "hour": 12,
         "place": "core:poi/hermits_gate",
         "activity": "eat",
-        "spot": "home",
+        "spot": "the_arch",
         "notes": "pilgrims' bread"
       },
       {
@@ -553,7 +553,7 @@
         "hour": 13,
         "place": "core:poi/hermits_gate",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_arch",
         "notes": "writing the day's names on the arch"
       },
       {
@@ -561,7 +561,7 @@
         "hour": 20,
         "place": "core:poi/hermits_gate",
         "activity": "pray",
-        "spot": "home",
+        "spot": "the_arch",
         "notes": "the evening's last name"
       },
       {
@@ -610,7 +610,7 @@
         "hour": 6,
         "place": "core:poi/scavengers_ring",
         "activity": "work",
-        "spot": "home",
+        "spot": "ring_hearth",
         "notes": "sorting the day's bronze by the roof-boss hearth"
       },
       {
@@ -618,14 +618,14 @@
         "hour": 12,
         "place": "core:poi/scavengers_ring",
         "activity": "eat",
-        "spot": "home"
+        "spot": "ring_hearth"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/scavengers_ring",
         "activity": "work",
-        "spot": "home",
+        "spot": "ring_hearth",
         "notes": "at the gate, looking west at the new shaft"
       },
       {
@@ -633,7 +633,7 @@
         "hour": 20,
         "place": "core:poi/scavengers_ring",
         "activity": "socialise",
-        "spot": "home"
+        "spot": "ring_hearth"
       },
       {
         "days": "all",
@@ -681,7 +681,7 @@
         "hour": 7,
         "place": "core:poi/scavengers_ring",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_gate",
         "notes": "coiling rope by the gate"
       },
       {
@@ -689,14 +689,14 @@
         "hour": 12,
         "place": "core:poi/scavengers_ring",
         "activity": "eat",
-        "spot": "home"
+        "spot": "the_gate"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/scavengers_ring",
         "activity": "work",
-        "spot": "home"
+        "spot": "the_gate"
       },
       {
         "days": "all",
@@ -746,7 +746,7 @@
         "hour": 6,
         "place": "core:poi/sayers_gauge",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_gauge_foot",
         "notes": "at the gauge on the platform"
       },
       {
@@ -754,14 +754,14 @@
         "hour": 12,
         "place": "core:poi/sayers_gauge",
         "activity": "eat",
-        "spot": "home"
+        "spot": "the_gauge_foot"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/sayers_gauge",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_gauge_foot",
         "notes": "writing up, at the foot of the stair"
       },
       {
@@ -769,7 +769,7 @@
         "hour": 18,
         "place": "core:poi/sayers_gauge",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_gauge_foot",
         "notes": "the dusk reading"
       },
       {
@@ -819,7 +819,7 @@
         "hour": 5,
         "place": "core:poi/greyfleece_shieling",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_fold",
         "notes": "out with the flock on the grey grass"
       },
       {
@@ -827,14 +827,14 @@
         "hour": 12,
         "place": "core:poi/greyfleece_shieling",
         "activity": "eat",
-        "spot": "home"
+        "spot": "the_fold"
       },
       {
         "days": "all",
         "hour": 13,
         "place": "core:poi/greyfleece_shieling",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_fold",
         "notes": "at the fold, shearing or mending the wall"
       },
       {
@@ -842,7 +842,7 @@
         "hour": 19,
         "place": "core:poi/greyfleece_shieling",
         "activity": "work",
-        "spot": "home",
+        "spot": "the_fold",
         "notes": "calling the ewes in by name"
       },
       {

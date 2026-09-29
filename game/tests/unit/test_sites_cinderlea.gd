@@ -83,6 +83,10 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/bellrope_walk": {"spots": ["home", "the_wheel", "the_sledge"], "touch": ["the_strand"]},
 		"core:poi/rooftop_shaft": {"doors": ["Door_anthe_ondr"], "touch": ["Hook"]},
 		"core:poi/ashcombe_mill": {"spots": ["the_door"], "touch": ["the_tally"]},
+		"core:poi/greyfleece_shieling": {"spots": ["the_fold"]},
+		"core:poi/bell_counters_hut": {"spots": ["the_stone"]},
+		"core:poi/scavengers_ring": {"spots": ["ring_hearth", "the_gate"]},
+		"core:poi/sayers_gauge": {"spots": ["the_gauge_foot"]},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)
