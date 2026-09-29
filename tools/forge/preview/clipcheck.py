@@ -185,7 +185,7 @@ class Rig:
 
     skirt_amount = 1.0  # SkirtDrive.amount: 1 walking and running, 0 swimming and in the saddle
     # skirt_drive.gd's
-    SMOOTH, SIDE_SHARE, SIDE_SPREAD, FALL_BACK, HEEL_LIFT, SIDE_HEEL = 0.18, 1.0, 0.80, 0.60, 0.80, 0.55
+    SMOOTH, SIDE_SHARE, SIDE_SPREAD, FALL_BACK, HEEL_LIFT, SIDE_HEEL, HEEL_MAX = 0.18, 1.0, 0.80, 0.60, 0.80, 0.55, 1.0
 
     def _rest(self):
         if getattr(self, "_rest_world", None) is None:
@@ -257,12 +257,13 @@ class Rig:
             panel("Skirt." + side, sp, ab[side] * self.SIDE_SPREAD, "Hips")
             # below the knee: falls back from a raised knee, lifts a little with a heel behind
             behind = min(max(-sp / 0.3, 0.0), 1.0)
-            low = max(sp, 0.0) * (1.0 - self.FALL_BACK) + min(sp, 0.0) - knee(side) * self.SIDE_HEEL * behind
+            low = max(sp, 0.0) * (1.0 - self.FALL_BACK) + min(sp, 0.0) \
+                - min(knee(side) * self.SIDE_HEEL, self.HEEL_MAX) * behind
             panel("Skirt.%s2" % side, low, ab[side] * self.SIDE_SPREAD, "Skirt." + side)
         # below the knee: its own turn in the body's frame (less of the front's: it falls back
         # from a raised knee; the back's less the trailing heel's lift), hung from the upper panel
         panel("Skirt.F2", front * (1.0 - self.FALL_BACK), 0.0, "Skirt.F")
-        panel("Skirt.B2", back - heel * self.HEEL_LIFT, 0.0, "Skirt.B")
+        panel("Skirt.B2", back - min(heel * self.HEEL_LIFT, self.HEEL_MAX), 0.0, "Skirt.B")
 
 
 class Merged:

@@ -24,6 +24,8 @@ const SIDE_SPREAD := 0.80   ## of a thigh's spread out to the side that the pane
 const FALL_BACK := 0.60     ## of a panel's forward swing the cloth below the knee gives back
 const HEEL_LIFT := 0.80     ## of the trailing knee's bend the back below the knee takes
 const SIDE_HEEL := 0.55     ## of its own knee's bend a side below the knee takes, its leg behind
+const HEEL_MAX := 1.0       ## rad: the most a heel lifts the cloth below the knee (a roll folds the
+                            ## knees shut, and the lower back stood out behind the feet as a fin)
 
 var _ids: Dictionary = {}
 var _ok := false
@@ -89,11 +91,12 @@ func _process_modification() -> void:
 		var g_s := _pose_panel(sk, "Skirt." + side, sp, spread, hips_pose)
 		# below the knee: falls back from a raised knee, lifts a little with a heel behind
 		var behind := clampf(-sp / 0.3, 0.0, 1.0)
-		var low := maxf(sp, 0.0) * (1.0 - FALL_BACK) + minf(sp, 0.0) - _knee_bend(sk, side) * a * SIDE_HEEL * behind
+		var low := maxf(sp, 0.0) * (1.0 - FALL_BACK) + minf(sp, 0.0) \
+				- minf(_knee_bend(sk, side) * a * SIDE_HEEL, HEEL_MAX) * behind
 		_pose_panel(sk, "Skirt.%s2" % side, low, spread, g_s)
 	# below the knee each panel is turned in the body's frame, hung from the one above it
 	_pose_panel(sk, "Skirt.F2", front * (1.0 - FALL_BACK), 0.0, g_f)
-	_pose_panel(sk, "Skirt.B2", back - heel * HEEL_LIFT, 0.0, g_b)
+	_pose_panel(sk, "Skirt.B2", back - minf(heel * HEEL_LIFT, HEEL_MAX), 0.0, g_b)
 
 
 var _body := Quaternion.IDENTITY
