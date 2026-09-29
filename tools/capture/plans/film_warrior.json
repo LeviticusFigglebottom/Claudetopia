@@ -1,0 +1,2 @@
+{"note": "The Warrior's opening film at the middle of each shot, through CinematicPlayer.scrub (TRIAGE 54: tools/capture/film_light.py holds its light to the caps). ./run.sh shots tools/capture/plans/film_warrior.json",
+ "cinematic": {"id": "core:cinematic/start_warrior", "opening": "core:opening/warrior", "samples": [0.5]}}

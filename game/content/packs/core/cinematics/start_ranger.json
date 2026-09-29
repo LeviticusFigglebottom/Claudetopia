@@ -67,7 +67,7 @@
       {
         "id": "the_lodge",
         "duration": 9.0,
-        "time": 7.2,
+        "time": 16.4,
         "weather": "core:weather/still",
         "fov": 50,
         "keys": [

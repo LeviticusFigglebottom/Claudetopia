@@ -12770,3 +12770,73 @@ walkway, and the walkway on one navigation mesh with the yard up the stairs.
 - A fort's garrison stands up again whenever its cell is raised again.
 - The Kilnway's outside was only seen on a flat pad (the world-capture run timed out on the loaded
   box after the fort's three shots); the cave builder's bank looks raw there.
+## The Ranger's film out of the sun (triage 54, 2026-09-29)
+
+The user saw the Ranger's intro film "blindingly bright at parts" on Forward+, and later said their
+own display brightness was part of it. So nothing is dimmed across the game: one outlier shot is
+moved, and one Forward+-only glow setting is capped.
+
+**The cause.** The film's second shot, `the_lodge`, looks across Fernhold's clearing at a bearing of
+120-130 degrees at 07:12. The sun is then at about 110 degrees and 15 degrees high, 3 degrees above
+the top of the frame (fov 50 at 2.35:1). In Compatibility, which is all this machine can draw, the
+frame is the clearing black against the light: mean luminance 0.035, p99 0.20, nothing blown. On
+Forward+ the same frame gets three things Compatibility mostly lacks:
+- the sky's sun disc (about ten times white) and its halo feed the glow in 16-bit float;
+- on the "painted" preset, the Briarwold's god rays are volumetric fog (density 0.02, anisotropy
+  0.75, sun volumetric energy 2.0) scattering that sun forward into the lens;
+- SSR/SSIL/SDFGI brighten it further on "painted".
+The Warrior's opening shot over the downs keeps its sun 6 degrees off the frame's side and reads
+well (mean 0.40, nothing blown).
+
+**What changed:**
+- `start_ranger.json`: `the_lodge` is at 16:24, not 07:12. Its framing is kept (it was chosen
+  clear of the trees); the sun is now at about 250 degrees, behind the camera, lighting the lodge
+  from the front. It is one shot earlier than `the_force` at 16:48; the opening and the hand-over
+  at 07:36 are unchanged.
+- `atmosphere.gd`: `glow_hdr_luminance_cap` is 4 (`GLOW_LUMINANCE_CAP`; Godot's default is 12). A
+  pixel feeds the glow at most four times white, so the sun disc and the sun's glints on water no
+  longer spread over the picture on Forward+. Lamps (emission 3 at most) glow as before, and the
+  sun still clears the 1.1 threshold. Compatibility's narrower range seldom reached the cap.
+- The sun's height and direction are now static functions, `Atmosphere.sun_elevation_for(hour,
+  look)` and `sun_direction_for(hour, elev)`, which `_apply` and the test share
+  (`look_of_region` too).
+
+**Measured** (Compatibility, xvfb, 960x540, mid-shot, `tools/capture/film_light.py`):
+
+| film | mean | p99 | blown (luminance >= 0.95) |
+|---|---|---|---|
+| Warrior, 4 shots | 0.26-0.40 | 0.83-0.89 | 0% |
+| Mage, 4 shots | 0.36-0.50 | 0.91-0.99 | 0.3-2.5% (a white lighthouse against the white crags) |
+| Rogue, 4 shots (before dawn, mist) | 0.05-0.08 | 0.21-0.51 | 0% |
+| Ranger `the_wold` | 0.36 | 0.82 | 0% |
+| Ranger `the_lodge` at 07:12 (before) | 0.035 | 0.20 | 0% |
+| Ranger `the_lodge` at 16:24 (after) | 0.046 | 0.40 | 0%: sunlit patches on the paving, the sun behind |
+
+In Compatibility the low sun makes the lodge black, not blown, so no luminance cap on
+Compatibility can catch this case. Its guard is geometric.
+
+**Tests:**
+- `test_cinematic_paths_clear.test_no_film_stares_into_a_low_sun` checks every film shot with a
+  time, in weather that doesn't veil the sun (`sun_mult` >= 0.6). At 21 moments it puts the sun
+  where the atmosphere would, for the region the shot starts in, into the camera's frame (the
+  film's letterbox aspect). It fails a sun under 35 degrees that is inside the frame or within 5
+  degrees of its edge. Before the fix it named `start_ranger/the_lodge`, 3 degrees off.
+- `tools/capture/film_light.py <frames dir>...` (or `--shoot`) measures each frame between the
+  letterbox bars. It fails a frame whose mean is over 0.58 or whose blown share is over 4%: plainly
+  out of family against the films above. New plans: `film_warrior.json`, `film_mage.json`,
+  `film_rogue.json`.
+- Run: test_cinematic_paths_clear (with the new test), test_cinematic_player, test_shot_sight and test_atmosphere, 40 tests, 0 failed. `film_light.py` passes the Warrior, Mage, Rogue and after-lodge frames.
+
+**For the user to check on Forward+:**
+- Replay the Ranger's film: the lodge is now in afternoon light.
+- If any shot still glares, try Settings > Graphics > Volumetric fog off (the "painted" preset
+  turns it on; it is the Briarwold's god rays), then Glow off. That says which of the two is doing
+  it.
+- The settings changed for Forward+ are the glow's luminance cap (12 to 4), plus the one shot's
+  hour. Glow intensity, threshold, bloom, tonemap (ACES, white 6), exposure and the night lift are
+  all unchanged.
+
+**Not done:**
+- The title vista was not shot (a film takes up to an hour on this loaded machine).
+- The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
+  read as "bleached" in HANDOFF §00, not a film setting.
