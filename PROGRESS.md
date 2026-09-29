@@ -12840,3 +12840,90 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+## Brightwater: world life in Brightwater (phase 1, 2026-09-29)
+
+The Brightwater region agent's pass (docs/WORLD_LIFE.md): the Mere's empty shores filled with
+places that belong to the Lakefolk (charters, ledgers, lime, slate, smugglers' Hush, the Builders
+under everything), its weak places given people, finds and quests, three large sites with bosses,
+and its road table grown.
+
+### New places (8)
+- **Pennyfold Keep** (fort + keep undercroft, -1216, 770): the Tallymen's old customs fort, sold to
+  the Fair Company of bravos who sell writs of protection from themselves; garrison of cutpurses,
+  Company blades, crossbows on the towers, bravos; the charter-board at the gate starts *Writs of
+  Protection*; Captain Sabeline Marr (boss) in the counting-vaults.
+- **The Hush Hole** (delve, sea_cave inside, -1808, -1712): the smugglers' cave in the North Fen
+  cliff whose throat the Spire's dropouts have Hushed; the Sedgish-knotted net at the mouth starts
+  *Knots Not Ours*; Ambrose Quell, the Word-Seller (boss), at the landing.
+- **The Bleaching Green** (camp, own builder, -640, 880): tenter-frames of guild linen, one bare,
+  lye-tubs, lime-pit, notice post; Linnet Whitlow and Perrin Mull; gives *Writs of Protection*.
+- **The Cadbrae Slate Cut** (quarry, own builder, 1700, 198): the Slades' slate quarry that has cut
+  down to a course of black Oroth stone; slate stacks, the splitting-bench and the humming slate;
+  Barnet and Jessamy Slade; cutpurses by night; gives *The Singing Slate*.
+- Wayside, each with a note in the region's voice: **The False Lantern** (smugglers' landward-blind
+  lamp), **The Priced Gibbet** (the hanging-fee on a brass plate), **The Weed-Cutters' Hut** (lilies
+  growing back in rows, tied to *The Ruled Line*), **The Thousand Post** (the Slades' tally post).
+
+### Raised
+- **Gull Holm**: its own builder stands the Builders' hinge-less door facing the city, into
+  *The Cellars under Gull Holm* (ruined_hall; the Brood-Mother, a drake laying round a still-warm
+  light-stone); a chalk note on the step; *The Warm Egg* sends you there. Score 3 -> 9.
+- People at their own spots (own builders put the markers down): Netta and Cobb Knotley at the Net
+  Field (gives *Knots Not Ours*), Kester Wick at the Eggers' Camp, Ottilie Gannet at the Standing
+  Arches (gives *The Warm Egg*), Emmet Quarle at the Listening Post, Crispin Tolley at the Counting
+  Tower, Ghedda the clanless miller at Brindle Mill.
+- Finds paying off existing hooks: Tolley's unsent letters (Counting Tower), a receipt for a
+  charter pin (Charter Stone), the Quiet Hands' copy of the masons' lintel (Tallyman's Folly), the
+  smugglers' bowl-signals (North Cliff Beacon), a smoker's note on the drip (Standing Arches);
+  gutter drakes under the Dry Jetty by night.
+- 11 people with dialogue, 4 quests, 3 bosses, 2 new foes (Company Crossbow, Company Blade),
+  3 interiors, 14 items, 16 books/notes, 3 rumours (all in `..._brightwater.json` files).
+- **Road life** (`roadlife/brightwater.json`): the Company's writ-sellers (ambush, until their
+  captain is dealt with), Hush-sellers' runners by night, a Tallymen's clerk on his rounds,
+  laundresses to the Wash-Stones, a runaway ledger-apprentice; caravans: an eel-cart
+  Gullhithe-Sedgehithe and a Cadbrae slate wagon Merrowhithe-Stride's Foot; three ambush sites.
+
+### Measured (region_audit.py brightwater --probe, before -> after)
+| | before (w4096f) | after | target |
+|---|---|---|---|
+| POIs | 62 | 70 | >= 70 |
+| land > 200 m from anything | 9% (0.088) | 3.8% | <= 5% |
+| largest empty stretch | 0.089 km2 | 0.00 km2 | <= 0.08 |
+| weak share (non-wayside) | 0.515 (17) | 0.189 (7) | <= 0.25 |
+| strong (>= 8) | 1 | 6 (Hush Hole 11, Pennyfold 10, Gull Holm 9, Bleaching Green 9, Cadbrae 9, Willow Isle 8) | >= 5 |
+| placement problems | 33 at 23 POIs | 34 at 24 | |
+
+New places' own cost (probe): 7-78 draws, 2-91 k triangles; all seat-clean but the Hush Hole's
+cave-builder boulders (overlap, not a fail).
+
+### Tests
+- `region_check.py brightwater` and `--godot`: PASS (content, placement, density).
+- `./run.sh test --filter=test_brightwater_places,test_sites,test_road_life,test_poi_people`: 32
+  passed; `--filter=objects_seated_brightwater,test_poi_preview,test_pois,test_brightwater_places`:
+  33 passed; 0 script errors; game warnings 48 (baseline 49).
+- `test_brightwater_places` (new): the people's spots put down, nobody inside anything; Gull Holm's
+  door on the holm; hooks and doors at the two sites; the three insides built and walked to every
+  room on their navigation meshes, with foes, an arena and a way out.
+- pytest test_content_split + test_region_check: 8 passed.
+- Quest walker `--only=writs_of_protection,knots_not_ours,the_warm_egg,the_singing_slate`: 4 of 4
+  end every way they can, 0 errors.
+
+### Not done / for the coordinator
+- **Shared bug, site_dress.gd `_ledge`** reads `z["span"]`; site_plan.gd writes the ledge zone with
+  `len`: any site whose plan makes a ledge (the `ledge` set-piece, the auto-ledge in a large room
+  without one, a chasm that falls back to a ledge) throws and leaves the ledge undressed. Worked
+  round here by seeds/set-pieces that make none.
+- **Shared, crows.gd**: a crow's body and wings are unnamed MeshInstance3Ds, so the seat audit calls
+  a gibbet's crows "floating" 9 m up. Worked round in the Priced Gibbet's own builder (names them
+  `crow_N`); better fixed in crows.gd or seat_audit's AIRBORNE rule.
+- The atlas puts the Hush Hole's spot in province `north_fen` (Sedgemire's); the region map says
+  Brightwater. A warning only.
+- Left for the build or shared builders (audit part c): `road_through` at North Cliff Beacon,
+  Pilgrim Stair, Rafters' Camp, Sedge Hearth, Strandline Stones, Tallyman's Folly, the Limekilns
+  (atlas roads end at their middles); `past_pad` at the three long bridges, the Bell Buoys and Willow
+  Isle (pieces over water; a bigger pad would flatten banks and islet); `steep_skirt` at Counting
+  Tower, Market Brow, North Cliff Beacon, Reeve's Chair, Smoke Coppice, Limekilns; the wreck
+  builder's unhung lanterns, the Long Stride's floating chest, Dry Jetty's rope, Willow Isle's
+  rowboat/campfire, Log Boom's brazier in its wall, Sedge Hearth's sunk bell (all in shared kind
+  builders).
+- The eight new places stand on preview pads until the world is rebuilt.

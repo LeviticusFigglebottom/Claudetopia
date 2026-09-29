@@ -22,11 +22,6 @@ extends RefCounted
 ##   own place and a spot where the person who lives there works, so they stand up at it and not on
 ##   a ring round the middle (which at a tower on a cliff is the air).
 
-## Lime-wash, and the linen the Mere's light bleaches to it.
-const LIME := Color(0.93, 0.92, 0.87)
-const LINEN := Color(0.95, 0.95, 0.92)
-const SLATE := Color(0.29, 0.31, 0.34)
-const BRASS := Color(0.72, 0.56, 0.26)
 ## Tollmere, which the pier-house door faces across the water.
 const CITY := Vector2(40.0, -300.0)
 
@@ -186,7 +181,7 @@ static func gull_holm(d: PoiDressing) -> void:
 		var x := k.rng.randf_range(-1.2, 1.2)
 		m.block(lime, Transform3D(basis, lintel + basis * Vector3(x, 0.31, k.rng.randf_range(-0.3, 0.3))), Vector3(0.18, 0.02, 0.14))
 	await k.step()
-	m.commit(lime, PoiKit.plain(LIME, 0.95), "GullLime")
+	m.commit(lime, PoiKit.painted(0, {"base": "#d8d5c9", "accent": "#b9b6aa", "grout": "#8c897e", "unit": 0.1}, 0.7, 0.6), "GullLime")
 	var interior := "core:interior/gull_holm_cellars"
 	if ContentDB.has(interior):
 		var door := Door.new()
@@ -275,7 +270,8 @@ static func bleaching_green(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.5), "Tenters")
 	await k.step()
-	m.commit(linen, PoiKit.plain(LINEN, 0.9), "Linen", true)
+	# linen in the sun: off-white with the weave's faint grain and the damp's grey where it was watered
+	m.commit(linen, PoiKit.painted(0, {"base": "#e8e5da", "accent": "#d3cfc2", "grout": "#b5b1a4", "unit": 0.2}, 0.35, 0.5), "Linen", true)
 	# the lye-tubs by the fire, steaming, and the lime-pit beyond them
 	var tubs := fire - out * 3.4 + across * 3.0
 	tubs = _clear_spot(k, tubs, across)
@@ -295,7 +291,8 @@ static func bleaching_green(d: PoiDressing) -> void:
 	var pit := m.begin()
 	_slab(k, m, pit, pit_at, PoiKit.yaw_of(out), Vector3(2.6, 0.06, 1.8), 0.02)
 	await k.step()
-	m.commit(pit, PoiKit.plain(LIME, 1.0), "LimePit")
+	# slaked lime gone grey-white and cracked in the sun, with the green's mud trodden into its edge
+	m.commit(pit, PoiKit.painted(5, {"base": "#c9c6b8", "accent": "#a8a597", "grout": "#6e6b5e", "unit": 0.28}, 0.85, 0.8), "LimePit")
 	var rim := m.begin()
 	for s in [-1.0, 1.0]:
 		_slab(k, m, rim, pit_at + out * (float(s) * 1.05), PoiKit.yaw_of(out), Vector3(3.0, 0.18, 0.25), 0.1)
@@ -326,6 +323,12 @@ static func cadbrae_slate_cut(d: PoiDressing) -> void:
 	await PoiDressing.kind_builders().LAND.quarry(d)
 	var k := d.kit
 	var m := d.masonry
+	# the floor and the squared blocks are slate here, blue-grey and split, not a chalk pit's white
+	var spoil := PoiKit.painted(5, {"base": "#5d6168", "accent": "#474b52", "grout": "#2c2f34", "unit": 0.22}, 0.8, 0.7)
+	for part in ["QuarryFloor", "Blocks"]:
+		var mi := d.find_child(part, true, false) as MeshInstance3D
+		if mi != null:
+			mi.material_override = spoil
 	var face := k.downhill()
 	if face == Vector2.ZERO:
 		face = k.grain()
@@ -493,3 +496,32 @@ static func the_priced_gibbet(d: PoiDressing) -> void:
 	for n in crows.find_children("*", "MeshInstance3D", true, false):
 		n.name = "crow_%d" % i
 		i += 1
+
+
+## The delve as the site builder raises it, and then the Hush Hole's own ground: on unbuilt ground the
+## cave raises a bank of its own over its throat in the ground's paint, which reads as a pale square
+## lifted off the fen; here it is the fen cliff's dark, wet turf, and the cliff's boulders lie
+## half-sunk along its brow and cheeks so the mouth is in rock.
+static func the_hush_hole(d: PoiDressing) -> void:
+	await PoiDressing.kind_builders().SITES.build(d)
+	var k := d.kit
+	var bank := d.find_child("Bank", true, false) as MeshInstance3D
+	if bank == null or k.far:
+		return
+	bank.material_override = PoiKit.painted(5, {"base": "#44503a", "accent": "#343d2c", "grout": "#23291d", "unit": 0.35}, 0.8, 0.8)
+	var box := bank.get_aabb()
+	var mouth := d.find_child("the_mouth", true, false) as Node3D
+	var rock := k.rock("boulder")
+	if rock == "":
+		return
+	var stones: Array = []
+	for i in 20:
+		var x := k.rng.randf_range(box.position.x, box.end.x)
+		var z := k.rng.randf_range(box.position.z, box.end.z)
+		if mouth != null and Vector2(x - mouth.position.x, z - mouth.position.z).length() < 7.0:
+			continue
+		var sc := k.rng.randf_range(0.6, 1.3)
+		# on the ground round the bank's foot and under its flanks, a third sunk
+		stones.append(PoiKit.transform_at(k.on_ground(x, z, -0.35 * sc), k.rng.randf_range(0.0, TAU), sc))
+	await k.step()
+	k.scatter(rock, stones, true)
