@@ -365,50 +365,106 @@ static func wall_keepers_ring(d: PoiDressing) -> void:
 	_spot(d, "the_woodfolk_fire", wood + axis * 1.3)
 
 
-# --- places of their own ------------------------------------------------------------------------------
-
-## Pennant's Weather-House: a turf bothy by the tarn, and round it a Sayer's instruments on posts, a
-## wind-vane, a rain-gauge, a glass in a box and a ribbon over a shakehole, and a bell on a frame that
-## rings when the wind turns.
+## Pennant's Weather-House: a turf bothy by the tarn inside a drystone yard, and round it everything a
+## Sayer brought up from Tollmere to measure the moor: a wind-vane, a rain-gauge, a glass in a box, a
+## louvred screen on legs, a ribbon over a shakehole in the turf, a bell on a frame that rings when the
+## wind turns, a line of pennants between two poles to show the wind from a mile off, the Circle's
+## banner, and her table out of doors with the day's readings weighted under a stone.
 static func pennants_weather_house(d: PoiDressing) -> void:
 	await PoiDressing.kind_builders().WAYSIDE.hut(d)
 	var k := d.kit
+	var m := d.masonry
+	var away := _away(d)
+	var toward := -away
+	var side := Vector2(toward.y, -toward.x)
+	# the yard: a drystone wall round the bothy and the instruments, its gap toward the tarn's path
+	var wall := k.prop("drystone_wall")
+	if wall != "":
+		var runs: Array = []
+		var half := Vector2(8.0, 6.5)
+		var corners := [Vector2(-half.x, -half.y), Vector2(half.x, -half.y), Vector2(half.x, half.y), Vector2(-half.x, half.y)]
+		for c_i in 4:
+			var a: Vector2 = corners[c_i]
+			var b: Vector2 = corners[(c_i + 1) % 4]
+			var len_m := a.distance_to(b)
+			var count := int(round(len_m / 2.5))
+			for j in count:
+				if c_i == 2 and (j == int(count * 0.5) or j == int(count * 0.5) - 1):
+					continue    # the gate-gap in the front run
+				var t := (float(j) + 0.5) / float(count)
+				var q2 := a.lerp(b, t)
+				var q := side * q2.x + toward * q2.y
+				var dir := side * (b - a).normalized().x + toward * (b - a).normalized().y
+				runs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.05), _yaw_x(dir), 1.0))
+		await k.step()
+		k.scatter(wall, runs, true, true)
 	if k.far:
 		return
-	var m := d.masonry
-	var solids := _solids(d)
-	var away := _away(d)
-	var yard := _open_spot(d, away.rotated(1.2), 6.0, 11.0, 1.8, solids)
-	var toward := -yard.normalized()
-	var side := Vector2(toward.y, -toward.x)
+	var yard := side * 3.6 - toward * 1.0
 	var timber := m.begin()
 	var brass := m.begin()
 	# the vane: a tall post, a cross-arm, a tail-fin
 	var vane_at := yard + side * 1.8
-	var vane_top := m.post(timber, vane_at, 3.2, 0.1)
+	var vane_top := m.post(timber, vane_at, 3.4, 0.1)
 	m.block(brass, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)), vane_top + Vector3(0.0, 0.1, 0.0)), Vector3(0.05, 0.05, 1.1))
 	m.block(brass, Transform3D(Basis(Vector3.UP, k.rng.randf_range(0.0, TAU)), vane_top + Vector3(0.0, 0.18, 0.4)), Vector3(0.02, 0.26, 0.34))
 	# the rain-gauge: a short post and a funnelled can
-	var gauge_at := yard - side * 1.4
+	var gauge_at := yard - side * 1.2 + toward * 2.0
 	var gauge_top := m.post(timber, gauge_at, 1.0, 0.09)
 	m.block(brass, Transform3D(Basis(), gauge_top + Vector3(0.0, 0.14, 0.0)), Vector3(0.18, 0.28, 0.18))
 	# the glass in its box on a stand
-	var glass_at := yard + toward * 1.2
+	var glass_at := yard + toward * 1.4
 	var glass_top := m.post(timber, glass_at, 1.25, 0.1)
 	m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)), glass_top + Vector3(0.0, 0.2, 0.0)), Vector3(0.32, 0.42, 0.16))
-	# the bell on its frame, where the wind turns it
-	var bell_at := yard - toward * 1.4
-	var hang := m.frame(timber, bell_at, PoiKit.yaw_of(side), 0.9, 1.7, 0.08)
+	# the screen: a louvred box on four legs, for the air's warmth out of the sun
+	var screen_at := yard - side * 1.4 - toward * 2.0
+	var louvres := m.begin()
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			# its legs in the same piece as the box, so the box stands on them
+			m.post(louvres, screen_at + side * (0.3 * float(sx)) + toward * (0.25 * float(sz)), 1.2, 0.06)
+	var box_at := k.on_ground(screen_at.x, screen_at.y, 1.35)
+	for i in 5:
+		m.block(louvres, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)) * Basis(Vector3.RIGHT, 0.5), box_at + Vector3(0.0, -0.2 + 0.1 * float(i), 0.0)),
+				Vector3(0.78, 0.03, 0.62))
+	m.block(louvres, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)), box_at + Vector3(0.0, 0.3, 0.0)), Vector3(0.86, 0.06, 0.7))
 	await k.step()
-	m.commit(timber, k.surface("timber", 0.6), "Instruments")
+	m.commit(louvres, PoiKit.painted(3, {"base": "#b3ab98", "accent": "#8d8573"}, 0.8), "Screen")
+	# the bell on its frame, where the wind turns it
+	var bell_at := yard - toward * 1.6 + side * 2.6
+	var hang := m.frame(timber, bell_at, PoiKit.yaw_of(side), 0.9, 1.7, 0.08)
 	await k.step()
 	m.commit(brass, PoiKit.plain(PoiKit.BRONZE, 0.45, 0.8), "Brass")
 	var bell := k.prop("bell_small")
 	if bell != "":
 		await k.step()
 		k.place(bell, hang - Vector3(0.0, 0.3, 0.0), 0.0, 1.0, false)
+	# the pennant line: two poles and a line between them strung with pennants, all one piece
+	var pennants := m.begin()
+	var pole_a := side * -6.5 + toward * 4.5
+	var pole_b := side * 6.5 + toward * 4.5
+	var top_a := m.post(timber, pole_a, 5.6, 0.12)
+	var top_b := m.post(timber, pole_b, 5.6, 0.12)
+	var cloth := m.begin()
+	var line_n := 14
+	for i in line_n:
+		var t0 := float(i) / float(line_n)
+		var t1 := float(i + 1) / float(line_n)
+		var sag0 := 0.7 * sin(PI * t0)
+		var sag1 := 0.7 * sin(PI * t1)
+		var p0 := top_a.lerp(top_b, t0) - Vector3(0.0, 0.15 + sag0, 0.0)
+		var p1 := top_a.lerp(top_b, t1) - Vector3(0.0, 0.15 + sag1, 0.0)
+		m.block(pennants, Transform3D(Basis.looking_at((p1 - p0).normalized(), Vector3.UP), (p0 + p1) * 0.5), Vector3(0.02, 0.02, p0.distance_to(p1)))
+		if i > 0:
+			m.block(cloth, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(toward)), p0 - Vector3(0.0, 0.22, 0.0)), Vector3(0.34, 0.42, 0.015))
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.6), "Instruments")
+	await k.step()
+	m.commit(pennants, PoiKit.plain(Color(0.2, 0.18, 0.16), 0.9), "PennantLine")
+	await k.step()
+	m.commit(cloth, PoiKit.painted(5, {"base": "#6c7a8a", "accent": "#b9ad8e", "grout": "#3f4650", "unit": 0.25}, 0.7), "Pennants")
 	# the ribbon over a shakehole in the turf, leaning in
-	var hole := yard + toward * 3.2 + side * 1.0
+	var hole := yard - toward * 2.0 - side * 6.1
 	var dark := m.begin()
 	m.ellipsoid(dark, k.on_ground(hole.x, hole.y, -0.02), Vector3(0.5, 0.05, 0.42))
 	await k.step()
@@ -418,43 +474,161 @@ static func pennants_weather_house(d: PoiDressing) -> void:
 	m.block(stick, Transform3D(Basis(), tip + Vector3(-0.1, -0.15, 0.0)), Vector3(0.025, 0.3, 0.01))
 	await k.step()
 	m.commit(stick, PoiKit.plain(Color(0.62, 0.16, 0.14), 0.8), "Ribbon")
-	k.touchable("Gauges", glass_top + Vector3(0.0, 0.2, 0.0), "Read the gauges", DIALOGUE + "weather_house_gauges", "", false)
-	# the Circle's banner on its pole by the door, the one thing on the moor that says Tollmere
+	# her table out of doors: the day's readings under a stone, and the stool she reads them on
+	var desk := yard - side * 4.2 + toward * 0.6
+	await _prop(d, "table_trestle", desk, PoiKit.yaw_of(side))
+	await _prop(d, "paper_stack", desk, PoiKit.yaw_of(side) + 0.3, 1.0, 0.83)
+	await _prop(d, "stool", desk + toward * 0.9, k.rng.randf_range(0.0, TAU))
+	await _prop(d, "peat_stack", side * -3.4 - toward * 4.4, PoiKit.yaw_of(side))
 	var banner := k.prop("banner")
 	if banner != "":
-		var pole := yard + side * 3.4 + toward * 2.6
+		var pole := side * 4.6 + toward * 5.6
 		await k.step()
 		k.place(banner, k.on_ground(pole.x, pole.y), PoiKit.yaw_of(toward), 1.0, true)
-	_spot(d, "the_instruments", yard + toward * 0.2 - side * 0.2)
+	k.touchable("Gauges", glass_top + Vector3(0.0, 0.2, 0.0), "Read the gauges", DIALOGUE + "weather_house_gauges", "", false)
+	_spot(d, "the_instruments", desk + toward * 1.4)
 
 
-## Skerrfall Quarry: the kind's quarry, and in the foot of its first bench the long white bone the
-## last face was cut round, half out of the rock like a lintel over nothing, and Hodd ko-Brindle's
-## bench facing it.
+## Skerrfall Quarry: Brindle's quarry cut back into the fell in three benches of weathered limestone,
+## the hill's own turf closing over their lips; the floor below them the fell's ground, with spoil
+## heaped to one side and the scree run down from it, part-dressed blocks waiting in a row, sheerlegs
+## over the floor with a block on its rope, a track of laid flags going down toward Brindlecrag, and in
+## the foot of the first bench the long white bone the last face was cut round, half out of the rock
+## like a lintel over nothing, with Hodd ko-Brindle's bench facing it. Nothing here is a slab stood on
+## the slope: every piece stands on its own ground or is cut back into the hill.
 static func skerrfall_quarry(d: PoiDressing) -> void:
-	await PoiDressing.kind_builders().LAND.quarry(d)
 	var k := d.kit
+	var m := d.masonry
+	# the face goes into the hill: uphill, else against the fall, else the grain
+	var into := k.uphill()
+	if into == Vector2.ZERO:
+		into = -k.downhill()
+	if into == Vector2.ZERO:
+		into = k.grain()
+	var side := Vector2(into.y, -into.x)
+	var rock := PoiKit.painted(0, {"base": "#8c877d", "accent": "#747068", "grout": "#4d4a44", "unit": 0.6}, 0.9, 0.8)
+	var fresh := PoiKit.painted(0, {"base": "#a09a8e", "accent": "#878276", "grout": "#5c5850", "unit": 0.5}, 0.75, 0.8)
+	var turf := PoiKit.painted(5, {"base": "#565a3a", "accent": "#43462c", "grout": "#2c2e1d", "unit": 0.3}, 0.7)
+	var floor_c := -into * 3.0
+	var floor_y := k.on_ground(floor_c.x, floor_c.y).y
+	# the benches: an arc of cut rock stepping back into the hill, each bench no prouder than the hill a
+	# pace behind it, so the face is the hill cut back and not a wall stood in front of it
+	var arc_r := 9.0
+	var cut := m.begin()
+	var lips := m.begin()
+	var n := 9
+	var lower: Array[float] = []
+	lower.resize(n)
+	lower.fill(floor_y)
+	var first_foot := Vector2.ZERO
+	for b in 3:
+		var r := arc_r + float(b) * 2.8
+		for i in n:
+			var a0 := -1.1 + 2.2 * float(i) / float(n)
+			var a1 := -1.1 + 2.2 * float(i + 1) / float(n)
+			var dir := into.rotated((a0 + a1) * 0.5)
+			var p := floor_c + dir * r
+			var behind := p + dir * 2.0
+			var top := minf(floor_y + 3.0 * float(b + 1) + k.rng.randf_range(-0.35, 0.35), k.on_ground(behind.x, behind.y).y + 0.4)
+			if b == 0:
+				top = maxf(top, floor_y + 1.8)
+			if top < lower[i] + 0.8:
+				continue
+			lower[i] = top
+			var h := maxf(top - floor_y + 0.6, 1.0)
+			var chord := 2.0 * r * sin((a1 - a0) * 0.5) + 0.35
+			var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(dir)), Vector3(p.x, floor_y + h * 0.5 - 0.6, p.y))
+			m.block(cut, xf, Vector3(chord, h, 3.0))
+			m.block(lips, Transform3D(xf.basis, Vector3(p.x, top + 0.04, p.y)), Vector3(chord + 0.15, 0.12, 3.1))
+			if b == 0:
+				k.collider(Vector3(chord, h, 3.0), xf, "stone")
+				if i == 4:
+					first_foot = floor_c + dir * (r - 1.5)
+	await k.step()
+	m.commit(cut, rock, "Face", true)
+	await k.step()
+	m.commit(lips, turf, "FaceTurf")
 	if k.far:
 		return
-	# the face as the quarry laid it (poi_builders_land.gd quarry): its arc round `centre`, uphill
-	var face := k.downhill()
-	if face == Vector2.ZERO:
-		face = k.grain()
-	var side := Vector2(face.y, -face.x)
-	var arc_r := minf(d.pad_radius * 0.75, 16.0)
-	var centre := face * 2.0
-	var foot := centre - face * (arc_r - 1.5)
+	# the bone in the foot of the first bench, the face cut round it
 	var bone := k.rock("bone_finger", 1)
-	if bone != "":
+	if bone != "" and first_foot != Vector2.ZERO:
 		var s := 0.62
-		var at := foot - side * (3.3 * s)
+		var at := first_foot - side * (3.3 * s)
 		await k.step()
 		k.place(bone, k.on_ground(at.x, at.y, -0.25), _yaw_x(side), s, true)
-	k.marker("the_new_face", k.on_ground(foot.x + face.x * 3.5, foot.y + face.y * 3.5))
-	var seat := foot + face * 5.5 + side * 2.6
+	k.marker("the_new_face", k.on_ground(first_foot.x - into.x * 3.5, first_foot.y - into.y * 3.5))
+	# the part-dressed blocks waiting in a row, some stacked, each on its own ground
+	var blocks := m.begin()
+	for i in 6:
+		var p := floor_c + side * (-6.5 + 2.1 * float(i)) - into * k.rng.randf_range(2.5, 4.0)
+		var size := Vector3(k.rng.randf_range(0.9, 1.4), k.rng.randf_range(0.55, 0.85), k.rng.randf_range(0.8, 1.2))
+		var g := k.on_ground(p.x, p.y)
+		var xf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(side) + k.rng.randf_range(-0.2, 0.2)), g + Vector3(0.0, size.y * 0.5 - 0.08, 0.0))
+		m.block(blocks, xf, size)
+		k.collider(size, xf, "stone")
+		if i % 3 == 1:
+			var up := Transform3D(xf.basis.rotated(Vector3.UP, 0.2), xf.origin + Vector3(0.0, size.y * 0.95, 0.0))
+			m.block(blocks, up, size * Vector3(0.8, 0.85, 0.8))
+			k.collider(size * Vector3(0.8, 0.85, 0.8), up, "stone")
+	await k.step()
+	m.commit(blocks, fresh, "Blocks")
+	# the spoil: the face's rock broken small and gone grey with earth, heaped to one side, and its
+	# scree run down from it
+	var spoil_at := floor_c + side * 8.5 - into * 1.0
+	await k.step()
+	m.mound(k.on_ground(spoil_at.x, spoil_at.y, -0.2), 3.2, 1.3, PoiKit.painted(5, {"base": "#6f6b5f", "accent": "#5a574d", "grout": "#3a3832", "unit": 0.3}, 0.9, 0.9),
+			"Spoil", true, 1.3, 6, 18, false, 0.16)
+	var scree := k.rock("scree")
+	if scree != "":
+		var heap: Array = []
+		for i in 10:
+			var a := k.rng.randf_range(0.0, TAU)
+			var rr := sqrt(k.rng.randf()) * 4.4
+			var p := spoil_at + Vector2(sin(a), cos(a)) * rr
+			heap.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 1.3 * pow(maxf(1.0 - rr / 3.2, 0.0), 1.3) - 0.15), k.rng.randf_range(0.0, TAU),
+					k.rng.randf_range(0.4, 0.75)))
+		await k.step()
+		k.scatter(scree, heap, true)
+	# the sheerlegs: three poles to a head over the floor, the rope, and a block hanging on it a hand
+	# off the ground
+	var timber := m.begin()
+	var legs_at := floor_c - side * 4.0 + into * 1.5
+	var head := k.on_ground(legs_at.x, legs_at.y, 5.2)
+	for a in [0.3, 2.4, 4.5]:
+		var foot := legs_at + Vector2(sin(a), cos(a)) * 1.9
+		await k.step()
+		m.limb(timber, k.on_ground(foot.x, foot.y, -0.1), head, 0.1)
+	var hang_at := k.on_ground(legs_at.x, legs_at.y, 0.0)
+	await k.step()
+	m.limb(timber, head, hang_at + Vector3(0.0, 1.05, 0.0), 0.02)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.7), "Sheerlegs", true)
+	var lifted := m.begin()
+	m.block(lifted, Transform3D(Basis(Vector3.UP, 0.4), hang_at + Vector3(0.0, 0.62, 0.0)), Vector3(1.0, 0.7, 0.8))
+	# a stone rest under it, so it stands on something while it waits to be swung
+	m.block(lifted, Transform3D(Basis(Vector3.UP, 0.1), hang_at + Vector3(0.0, 0.12, 0.0)), Vector3(0.7, 0.26, 0.6))
+	await k.step()
+	m.commit(lifted, fresh, "Lifted")
+	k.collider(Vector3(1.0, 0.95, 0.8), Transform3D(Basis(Vector3.UP, 0.4), hang_at + Vector3(0.0, 0.47, 0.0)), "stone")
+	# the track down: flags laid on the ground, off toward the fall of the hill
+	var flags := m.begin()
+	var down := -into
+	for i in 9:
+		var p := floor_c + down * (5.0 + 1.6 * float(i)) + side * (sin(float(i) * 0.7) * 0.8)
+		m.block(flags, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(down) + k.rng.randf_range(-0.3, 0.3)), k.on_ground(p.x, p.y, -0.02)),
+				Vector3(k.rng.randf_range(0.8, 1.2), 0.1, k.rng.randf_range(0.7, 1.0)))
+	await k.step()
+	m.commit(flags, rock, "Track")
+	# the tools, and Hodd's bench facing the bone
+	for kind in ["wheelbarrow", "pitchfork"]:
+		var p := floor_c + side * k.rng.randf_range(-3.0, 3.0) - into * k.rng.randf_range(4.5, 6.0)
+		await _prop(d, kind, p, k.rng.randf_range(0.0, TAU))
+	var seat := first_foot - into * 5.0 + side * 2.4
 	await _prop(d, "bench", seat, PoiKit.yaw_of(side))
-	await _prop(d, "whetstone", seat + side * 0.9 + face * 0.3, k.rng.randf_range(0.0, TAU))
-	_spot(d, "the_quarry_bench", seat + face * 0.9)
+	await _prop(d, "whetstone", seat + side * 0.9 - into * 0.3, k.rng.randf_range(0.0, TAU))
+	_spot(d, "the_quarry_bench", seat - into * 0.9)
+	await PoiDressing.kind_builders().LAND._grass(d, "heather", floor_c - into * 6.0, 9.0, 24)
 
 
 ## The Reckoner's Hut: a turf bothy on the Edge, and beside its door a frame hung with tally-sticks in
@@ -595,11 +769,12 @@ static func sorting_ground(d: PoiDressing) -> void:
 			var size := Vector3(k.rng.randf_range(1.6, 3.0), k.rng.randf_range(0.28, 0.5), k.rng.randf_range(1.8, 3.1))
 			var g := k.on_ground(c.x, c.y)
 			var tilt := Basis(Vector3.RIGHT, k.rng.randf_range(-0.04, 0.04)) * Basis(Vector3.BACK, k.rng.randf_range(-0.04, 0.04))
-			m.block(clint, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + k.rng.randf_range(-0.3, 0.3)) * tilt,
-					g + Vector3(0.0, size.y * 0.5 - 0.18, 0.0)), size)
+			var cxf := Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + k.rng.randf_range(-0.3, 0.3)) * tilt,
+					g + Vector3(0.0, size.y * 0.5 - 0.18, 0.0))
+			m.block(clint, cxf, size)
+			k.collider(size, cxf, "stone")
 	await k.step()
 	m.commit(clint, PoiKit.painted(0, {"base": "#9c978b", "accent": "#857f73", "grout": "#5d584f", "unit": 0.9}, 0.8, 0.8), "Pavement", true)
-	k.collider(Vector3(44.0, 0.3, 23.0), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along) + PI * 0.5), k.on_ground(0.0, 0.0, 0.07)), "stone")
 	if k.far:
 		return
 	var top := 0.2
