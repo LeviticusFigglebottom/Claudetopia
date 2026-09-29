@@ -623,7 +623,7 @@ def _on_loft(stations: Sequence[Tuple[float, float, float, float]], x: float, y:
 def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
                    keep_knee: float = 0.90, blend: float = 0.10, shin_back: float = 0.0,
                    shin_front: float = 0.0, panels: bool = False,
-                   legs: float = 0.0) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+                   legs: float = 0.0, calf: Optional[float] = None) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """A skirt goes with the thighs, and stretches between them.
 
     Weighted straight from the body, every vertex below the hips took the nearest leg's weights
@@ -653,7 +653,7 @@ def _skirt_weights(skel: Skeleton, keep_hip: float = 0.55,
     skeleton re-proportioned (ChildProportions), which does not move the skirt's bones."""
     if panels and _panels_fit(skel):
         on_legs = _skirt_weights(skel, keep_hip, keep_knee, blend, shin_back, shin_front)
-        return _panel_weights(skel, keep_hip, keep_knee, legs, on_legs)
+        return _panel_weights(skel, keep_hip, keep_knee, legs, on_legs, legs if calf is None else calf)
     bones = list(rig.DEFORM_NAMES)
     B = {b: i for i, b in enumerate(bones)}
     s = _s(skel)
@@ -689,7 +689,8 @@ def _panels_fit(skel: Skeleton) -> bool:
 
 
 def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float, legs: float,
-                   on_legs: Callable[[np.ndarray, np.ndarray], np.ndarray]) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
+                   on_legs: Callable[[np.ndarray, np.ndarray], np.ndarray],
+                   calf: float) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
     """_skirt_weights with `panels`: the legs' share to the skirt's bones, over rig.WEIGHT_NAMES.
 
     Round the hips it is parted by where the vertex lies from their centre -- front, back, left,
@@ -732,10 +733,13 @@ def _panel_weights(skel: Skeleton, keep_hip: float, keep_knee: float, legs: floa
             W[:, B["Skirt." + k]] += cloth * share / tot * (1.0 - below_knee)
             W[:, B["Skirt.%s2" % k]] += cloth * share / tot * below_knee
         W[:, B["Hips"]] += moved * (1.0 - keep)
-        if legs > 0.0:
+        # `calf`: the share on the legs behind the knee and down, where a narrow skirt's back
+        # meets the calf kicked up behind (the robe's)
+        share = legs + (calf - legs) * below_knee * (part["B"] + 0.5 * (part["L"] + part["R"])) / tot
+        if np.any(share > 0.0):
             L = np.zeros_like(W)
             L[:, :len(deform)] = np.asarray(on_legs(V, W0), float)
-            W = (1.0 - legs) * W + legs * L
+            W = (1.0 - share)[:, None] * W + share[:, None] * L
         return W
     return fn
 
@@ -812,11 +816,12 @@ def robe(skel: Skeleton, body) -> Garment:
     # To the ankle, it goes with the shins below the knee as well: hung from the thighs alone it
     # swung up as a board over a raised knee, and the trailing heel kicked out through its back
     # (clipcheck, the worst of the Walk, Run and Sprint: 40, 75 and 70 leg vertices drawn through;
-    # 3, 7 and 13 like this). Half of it hangs from the skirt's bones now (SkirtDrive): from the
-    # legs alone a stride drew the cloth between them into a sheet (its edges at 12-14 times their
-    # length at the 98th percentile in the Run and the Sprint; 6-7 like this).
+    # 3, 7 and 13 like this). A fifth of it hangs from the skirt's bones now (SkirtDrive), and
+    # nothing behind the knee: the robe is narrow, and at half on the bones the calf kicked up
+    # behind came through its back (her Run/Sprint 34/43 vertices, against 19/20 from the legs
+    # alone; 15/19 like this, the stretch 10/11 against 12/14).
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
+                                     shin_back=1.0, shin_front=0.5, panels=True, legs=0.8, calf=1.0)
     return g
 
 
@@ -2626,7 +2631,8 @@ def build_beard(skel: Skeleton, style: str, hs: Optional[bodylib.HeadStyle] = No
 # you could name from across a field.
 # --------------------------------------------------------------------------------------
 
-def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
+def coat(skel: Skeleton, body, *, hem: float = 0.215, skirt_bones: bool = False,
+         name: str = "coat") -> Garment:
     """Lakefolk: a long straight coat with a standing collar.  It falls to the shin without
     narrowing, which is the opposite of everyone else's belted taper."""
     s = _s(skel)
@@ -2663,19 +2669,21 @@ def coat(skel: Skeleton, body, *, hem: float = 0.215) -> Garment:
     sc.subtract(sdf.box([0.0, -0.140 * s, (hip + z_hem) * 0.5],
                         [0.007 * s, 0.045 * s, (hip - z_hem) * 0.62]), k=0.005 * s)
     sc.intersect(sdf.plane([0.0, 0.0, z_hem], [0.0, 0.0, -1.0]))
-    g = Garment("coat", sc, spacing=0.0075, target_tris=4800, material="cloth", open_below=z_hem)
+    g = Garment(name, sc, spacing=0.0075, target_tris=4800, material="cloth", open_below=z_hem)
     # its skirt is a skirt: weighted from the nearest leg, a stride opened it at the side and the
     # trousers showed through in patches; and it goes with the thigh nearly whole, since at 0.70
     # of it at the hip the forward thigh came through the front of the coat at the Walk's contact.
     # Wholly now, and to the shin it goes with the shins below the knee, as the robe: over the
     # trousers at the worst of the Walk, Run and Sprint, clipcheck drew 5, 28 and 30 leg vertices
-    # through it at 85 % (with its floor gone), and 2, 5 and 11 like this. Half of it hangs from
-    # the skirt's bones, as the long skirt a Lakefolk woman wears under it does: a coat weighted
-    # otherwise than the skirt under it let the skirt through in every gait (37-50 vertices, 40-50
-    # mm; 10-25 and 7-22 mm alike). Over trousers that costs a sprinting thigh through the front
-    # edge (clipcheck on the man, Run/Sprint/Dodge_F: 2/6/13 from the legs alone, 15/34/24 so).
+    # through it at 85 % (with its floor gone), and 2, 5 and 11 like this.
+    #
+    # `skirt_bones` (the part `coat_skirt`, worn over a long skirt: HumanoidModel.OVER_SKIRT) hangs
+    # half from the skirt's bones, as the long skirt under it does: the coat weighted otherwise
+    # let the skirt through it in every gait (37-50 vertices, 40-50 mm; 10-25 at 7-22 mm alike).
+    # Over trousers the same let a sprinting thigh through the open front (Run/Sprint/Dodge_F on
+    # the man: 2/6/13 from the legs alone, 15/34/24 so), so the plain coat keeps the legs' weights.
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
+                                     shin_back=0.85, shin_front=0.5, panels=skirt_bones, legs=0.5)
     return g
 
 
@@ -2966,9 +2974,10 @@ def wrap_skirt(skel: Skeleton, body, *, hem: float = 0.18) -> Garment:
     g.target_tris = 3600
     # to mid-calf and narrow: with the shins below the knee, as the robe (clipcheck, the worst of
     # the Walk, Run and Sprint: 20, 35 and 46 leg vertices drawn through; 4, 9 and 15 like this),
-    # and half of it from the skirt's bones, so it is not drawn into a sheet between the legs
+    # and half of it from the skirt's bones, so it is not drawn into a sheet between the legs; not
+    # behind the knee, where the calf kicked up came through (her Sprint 32 -> 27 -> 19 so)
     g.weight_adjust = _skirt_weights(skel, keep_hip=1.0, keep_knee=1.0, blend=0.05,
-                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5)
+                                     shin_back=0.85, shin_front=0.5, panels=True, legs=0.5, calf=1.0)
     return g
 
 
@@ -3452,6 +3461,8 @@ CLOTHING_BUILDERS: Dict[str, Callable[[Skeleton, Scene], Garment]] = {
     "greaves": greaves,
     "helm": lambda s, b: helm(s, b),
     "coat": lambda s, b: coat(s, b),
+    # the same coat hung from the skirt's bones, worn over a long skirt (HumanoidModel.OVER_SKIRT)
+    "coat_skirt": lambda s, b: coat(s, b, skirt_bones=True, name="coat_skirt"),
     "shoulder_cape": shoulder_cape,
     "wrap_torso": wrap_torso,
     "wrap_skirt": lambda s, b: wrap_skirt(s, b),

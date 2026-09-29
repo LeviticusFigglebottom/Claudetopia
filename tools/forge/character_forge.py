@@ -835,7 +835,7 @@ def _slot_hint(name: str) -> str:
     if name.endswith("_child"):
         name = name[:-len("_child")]
     if name in ("tunic", "shirt", "dress", "robe", "gambeson", "plate_torso", "brigandine", "apron",
-                "coat", "wrap_torso", "kirtle", "fitted_tunic", "bodice"):
+                "coat", "coat_skirt", "wrap_torso", "kirtle", "fitted_tunic", "bodice"):
         return "torso"
     if name in ("trousers", "skirt", "wrap_skirt", "kilt", "leg_wraps", "long_skirt"):
         return "legs"

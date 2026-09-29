@@ -708,6 +708,7 @@ func apply_appearance(d: Variant, slice: WorldPace.Slice = null) -> void:
 			var part_name := hair_worn if slot == "hair" else appearance.part(slot)
 			if slot == "head":
 				part_name = head_to_wear(part_name)
+			part_name = over_skirt_cut(slot, part_name)
 			if child:
 				part_name = _child_cut(slot, part_name)
 			if part_name.is_empty():
@@ -1529,6 +1530,24 @@ const CHILD_BODY := "child"
 ## What a child wears in a slot whose garment has no child's cut: the plain garment of that
 ## slot. A slot missing here (hands, back) is left bare rather than draped in a grown cut.
 const CHILD_STAND_INS := {"torso": "tunic", "legs": "trousers", "feet": "shoes", "belt": "belt"}
+## A garment cut again to hang from the skirt's bones (SkirtDrive), worn in place of its plain cut
+## when a long skirt that hangs from them is worn under it: weighted otherwise than the skirt, the
+## skirt came through it in every gait, and hung from them over trousers a sprinting thigh came
+## through its open front (PROGRESS "Skirts that swing from their own bones").
+const OVER_SKIRT := {"coat": "coat_skirt"}
+const SKIRT_BONE_LEGS := ["long_skirt", "wrap_skirt"]
+
+
+## The part worn in `slot` for `part_name`, given what is worn under it (OVER_SKIRT).
+func over_skirt_cut(slot: String, part_name: String) -> String:
+	if slot != "torso" or not OVER_SKIRT.has(part_name) or appearance == null:
+		return part_name
+	if not (appearance.part("legs") in SKIRT_BONE_LEGS):
+		return part_name
+	var cut := str(OVER_SKIRT[part_name])
+	return cut if ResourceLoader.exists(_part_path(slot, cut)) else part_name
+
+
 ## Slots whose parts are skinned to the body and so are cut per skeleton. Everything else
 ## (head, hair, beard, headgear, attachments) is rigid to the head and fits any skeleton.
 const CUT_PER_SKELETON := ["torso", "legs", "feet", "hands", "belt", "back"]

@@ -123,3 +123,22 @@ func test_swimming_and_the_saddle_ease_it_off() -> void:
 	_m.skirt_drive._process_modification()
 	for b in ["Skirt.F", "Skirt.B", "Skirt.L", "Skirt.R", "Skirt.F2", "Skirt.B2", "Skirt.L2", "Skirt.R2"]:
 		assert_true(_turn(b) < 1.0, "%s at rest with the drive off" % b)
+
+
+## A coat over a long skirt is the coat cut to hang from the skirt's bones (as the skirt under it
+## does); over trousers it is the plain coat, on the legs (HumanoidModel.OVER_SKIRT).
+func test_a_coat_is_cut_for_what_is_worn_under_it() -> void:
+	if not _ready_or_skip():
+		return
+	if not ResourceLoader.exists("res://assets/models/characters/clothing/coat_skirt/coat_skirt.glb"):
+		skip("coat_skirt not built")
+		return
+	_m.apply_appearance({"feminine": 1.0, "parts": {"torso": "coat", "legs": "long_skirt", "feet": "shoes"}})
+	var mi := _m.worn_mesh("torso")
+	assert_true(mi != null, "a coat is worn")
+	if mi != null:
+		assert_eq(str(mi.get_meta("part", "")), "coat_skirt", "over a long skirt: the skirt-boned coat")
+	_m.apply_appearance({"parts": {"torso": "coat", "legs": "trousers", "feet": "shoes"}})
+	mi = _m.worn_mesh("torso")
+	if mi != null:
+		assert_eq(str(mi.get_meta("part", "")), "coat", "over trousers: the plain coat")

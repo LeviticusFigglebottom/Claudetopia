@@ -39,13 +39,11 @@ LEGS = ["UpperLeg", "LowerLeg", "Foot", "Hips"]
 # the kilt 97/115 and the tunic over trousers 35/58, most of it through the floor under the hem.
 # The narrow wrap skirt and the robe to the ankle are what is left: a shin at the full stretch of
 # the Sprint still comes out under a raised knee.
-# The robe, the wrap skirt and the coat hang half from the skirt's bones since (PROGRESS "Skirts that
-# swing from their own bones"): their cloth is no longer drawn into a sheet between the legs (the
-# stretch below), and a kicked-up calf or a sprinting thigh comes through a little more often, less
-# deep: robe 24/41 (was 15/15 at 49/33 mm deep, now 31/35 mm), wrap skirt 11/32, coat over trousers
-# 15/34 (was 2/6).
-STRIDES = [("kilt", "", 6), ("skirt", "", 6), ("dress", "", 6), ("robe", "", 45), ("wrap_skirt", "", 36),
-           ("tunic", "trousers", 8), ("coat", "trousers", 38)]
+# The robe and the wrap skirt hang partly from the skirt's bones since (PROGRESS "Skirts that swing
+# from their own bones"), with the calf behind the knee on the legs; the plain coat, worn over
+# trousers, is main's (its skirt-boned cut, coat_skirt, is worn over a long skirt).
+STRIDES = [("kilt", "", 6), ("skirt", "", 6), ("dress", "", 6), ("robe", "", 18), ("wrap_skirt", "", 30),
+           ("tunic", "trousers", 8), ("coat", "trousers", 12)]
 
 
 def floor_area(part: "C.Part", tol: float = 0.005) -> float:
@@ -101,8 +99,8 @@ class AStrideStaysInside(unittest.TestCase):
 # their length at rest). Measured on the woman as built, Walk/Run/Sprint/Sneak_Walk/Dodge_F: see
 # PROGRESS "Skirts that swing from their own bones". From the legs alone the long skirt stretched
 # to 11-19 in a run and a sprint, the kirtle 7-12 and the robe 8-14.
-PANELLED = {"long_skirt": 0.5, "kirtle": 0.35, "robe": 0.5, "dress": 0.5, "wrap_skirt": 0.5, "coat": 0.5}
-HUNG = [("long_skirt", 8, 9.5), ("kirtle", 12, 5.5), ("robe", 45, 8.0), ("dress", 8, 6.5)]
+PANELLED = {"long_skirt": 0.5, "kirtle": 0.35, "robe": 0.8, "dress": 0.5, "wrap_skirt": 0.5, "coat_skirt": 0.5}
+HUNG = [("long_skirt", 8, 9.5), ("kirtle", 12, 5.5), ("robe", 20, 11.5), ("dress", 8, 6.5)]
 HUNG_CLIPS = ("Walk", "Run", "Sprint", "Sneak_Walk", "Dodge_F")
 
 
@@ -124,7 +122,7 @@ class LongSkirtsHangFromTheirBones(unittest.TestCase):
             low = part.V[:, 1] < 0.75
             self.assertGreater(float(W[low].sum(axis=1).mean()), 0.8 * (1.0 - legs),
                                "%s hangs from the skirt's bones" % name)
-        for name in ("kilt", "skirt", "dress_child", "tunic"):
+        for name in ("kilt", "skirt", "dress_child", "tunic", "coat"):
             path = C.CHARS / "clothing" / name / (name + ".glb")
             if path.exists():
                 self.assertFalse(set(cloth) & set(C.Part(path).joints), "%s binds no skirt bone" % name)
