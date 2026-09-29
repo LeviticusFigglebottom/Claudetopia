@@ -664,6 +664,7 @@ static func roadmens_lodge(d: PoiDressing) -> void:
 static func wardens_kennels(d: PoiDressing) -> void:
 	await _builders().SITES.build(d)
 	var k := d.kit
+	_part_the_stores(d)
 	var m := d.masonry
 	var gate := k.road_direction(120.0)
 	if gate == Vector2.ZERO:
@@ -701,6 +702,36 @@ static func wardens_kennels(d: PoiDressing) -> void:
 	await _row(k, "bowl", bowls, false)
 	k.marker("the_feeding_trough", k.on_ground(trough_at.x + gate.x * 1.6, trough_at.y + gate.y * 1.6), true)
 	k.marker("the_kennel_gate", k.on_ground(gate.x * 9.0 + side.x * 2.6, gate.y * 9.0 + side.y * 2.6), true)
+
+
+## The yard's stores (the site's own barrels, crates and sacks, set down at random) moved apart
+## where two were set down in one place: a barrel standing in a sack. Each is moved out from the
+## middle until it is clear, and set down on the ground there.
+static func _part_the_stores(d: PoiDressing) -> void:
+	var k := d.kit
+	if k.far:
+		return
+	var stores: Array[Node3D] = []
+	for c in d.get_children():
+		var n := c as Node3D
+		if n == null:
+			continue
+		var nm := str(n.name)
+		for kind in ["barrel", "crate", "sack", "chopping_block", "cart"]:
+			if nm.contains("_" + kind + "_"):
+				stores.append(n)
+				break
+	for i in stores.size():
+		var a := stores[i]
+		for j in i:
+			var b := stores[j]
+			var gap := Vector2(a.position.x - b.position.x, a.position.z - b.position.z)
+			if gap.length() >= 1.3:
+				continue
+			var out := Vector2(a.position.x, a.position.z)
+			out = out.normalized() if out.length() > 0.1 else Vector2(1.0, 0.0)
+			var p := Vector2(a.position.x, a.position.z) + out * 1.6
+			a.position = k.on_ground(p.x, p.y)
 
 
 # --- the Struck Gibbet ------------------------------------------------------------------------------
