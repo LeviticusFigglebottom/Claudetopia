@@ -7,11 +7,41 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-28 (evening), by the fourth coordinating session (see §00). Its work is on
+**Last refreshed:** 2026-09-29, by the fifth coordinating session (see §000). Earlier: the fourth (§00). Its work is on
 `claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
 cfac2a7b) and not yet merged into it.
 
 ---
+
+## 000. The fifth coordinating session (2026-09-29, a cloud container)
+
+**Main now holds everything.** The triage branch (`claude/game-bugs-triage-fixes-6ffit0`, 1c777be3) was
+fast-forwarded into main (`claude/blissful-volta-dg80e6` = `claude/gifted-brahmagupta-29u39r`); the
+Windows build ran on it (run 16, success), so the `nightly` release carries the triage, world life 0-A,
+0-B and 0-C. This session's own branch is `ccr-5482a4d5-nx976d`, kept at main's head.
+
+**The machine** is the same class as §00's (4 cores, 15 GB, no GPU), rebuilt the same way: Godot 4.7.2 at
+`~/godot/Godot_v4.7.2-stable_linux.x86_64`; `~/bin/blender`, a shim that runs `blender -b --python X --
+args` through Blender 4.2's `bpy` wheel in `~/bpyenv` (Python 3.11); `~/bin/heavy`, three machine-wide
+slots that also wait for 3 GB free (and stand back while `/tmp/heavy-slots/WORLD_BUILD` exists); Blender
+one at a time via `flock /tmp/heavy-slots/BLENDER`; ffmpeg from apt; `pip install -r tools/requirements.txt`.
+
+**Agents at work** (worktrees `.claude/worktrees/<area>`, branches `wip/<area>`, pushed hourly):
+- **World life phase 1**, one per region to `docs/WORLD_LIFE.md`: hearthvale, briarwold, brightwater,
+  cinderlea, sedgemire, skerrow (fill the empty land, raise weak POIs, strong places and a large site
+  each, road tables; done = `region_check.py <region> --godot` PASS).
+- **sites** (0-C follow-up): Scathe Fort's walls read as clean white blocks; the Kilnway's mouth is a raw
+  mound with a boulder in a black box and its way in is near black; neither showcase has `pad_radius_m`;
+  a fort's garrison stands up again on every raise.
+- **landmarks** (`wip/landmarks` + main): the waystones, and the carved colossi, the Nave and the stones
+  judged against the bar.
+- **tree-forge** (`wip/tree-forge` + main): the red deer built and put in the country.
+- **characters** (`wip/characters-2`, fresh from main): the skirt bones ported onto today's rig and
+  garments. The old `wip/characters` is not merged: its faces and hair were superseded by triage 39-47.
+- Loose end fixed here: the listening-bell is silent after the wake (57526e92).
+
+**Then**: land each hand-back (targeted tests, an import), then the world build (w4096g) once every
+region is in, then the full checks (suite, flow, journey, fights, the quest walker) and a nightly.
 
 ## 00. The fourth coordinating session (2026-09-27/28, a cloud container): the playtest triage
 
