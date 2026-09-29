@@ -30,7 +30,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 20.6,
-   "raise_ms": 42,
+   "raise_ms": 1559,
    "finished": true
   },
   {
@@ -89,7 +89,7 @@
     }
    ],
    "embankment_m": 12.7,
-   "raise_ms": 12,
+   "raise_ms": 37,
    "finished": true
   },
   {
@@ -146,7 +146,7 @@
     }
    ],
    "embankment_m": 8.7,
-   "raise_ms": 7,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -176,7 +176,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 16.0,
-   "raise_ms": 65,
+   "raise_ms": 60,
    "finished": true
   },
   {
@@ -245,7 +245,7 @@
     }
    ],
    "embankment_m": 31.1,
-   "raise_ms": 41,
+   "raise_ms": 58,
    "finished": true
   },
   {
@@ -275,7 +275,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.8,
-   "raise_ms": 20,
+   "raise_ms": 32,
    "finished": true
   },
   {
@@ -311,8 +311,8 @@
     {
      "check": "on_road",
      "src": "poi:camp",
-     "family": "@meshinstance3d@6826",
-     "asset": "@MeshInstance3D@6826",
+     "family": "@meshinstance3d@5929",
+     "asset": "@MeshInstance3D@5929",
      "x": 2774.6,
      "y": 181.55,
      "z": 671.4,
@@ -322,7 +322,7 @@
     }
    ],
    "embankment_m": 11.3,
-   "raise_ms": 22,
+   "raise_ms": 83,
    "finished": true
   },
   {
@@ -352,7 +352,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 20.2,
-   "raise_ms": 59,
+   "raise_ms": 41,
    "finished": true
   },
   {
@@ -384,7 +384,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 10.6,
-   "raise_ms": 9,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -416,7 +416,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.2,
-   "raise_ms": 12,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -448,7 +448,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 28.4,
-   "raise_ms": 5,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -478,7 +478,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 16.6,
-   "raise_ms": 8,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -508,7 +508,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.9,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -538,7 +538,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 22.3,
-   "raise_ms": 40,
+   "raise_ms": 46,
    "finished": true
   },
   {
@@ -568,7 +568,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.9,
-   "raise_ms": 30,
+   "raise_ms": 40,
    "finished": true
   },
   {
@@ -598,7 +598,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.3,
-   "raise_ms": 4,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -628,7 +628,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.5,
-   "raise_ms": 21,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -658,7 +658,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 16.5,
-   "raise_ms": 5,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -690,7 +690,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.7,
-   "raise_ms": 5,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -720,7 +720,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.5,
-   "raise_ms": 13,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -750,7 +750,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 16.5,
-   "raise_ms": 16,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -780,7 +780,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 31.8,
-   "raise_ms": 4,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -810,7 +810,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 15.9,
-   "raise_ms": 5,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -885,7 +885,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 17.7,
-   "raise_ms": 10,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -930,7 +930,7 @@
     }
    ],
    "embankment_m": 18.7,
-   "raise_ms": 22,
+   "raise_ms": 27,
    "finished": true
   },
   {
@@ -960,7 +960,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 20.6,
-   "raise_ms": 4,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1017,7 +1017,7 @@
     }
    ],
    "embankment_m": 31.2,
-   "raise_ms": 241,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -1047,7 +1047,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 19.4,
-   "raise_ms": 6,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1077,7 +1077,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 31.2,
-   "raise_ms": 9,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1107,7 +1107,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 11.2,
-   "raise_ms": 16,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -1169,7 +1169,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 10.6,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1229,7 +1229,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 17.2,
-   "raise_ms": 22,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1259,7 +1259,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 27.3,
-   "raise_ms": 28,
+   "raise_ms": 32,
    "finished": true
   },
   {
@@ -1426,7 +1426,7 @@
     }
    ],
    "embankment_m": 21.4,
-   "raise_ms": 48,
+   "raise_ms": 49,
    "finished": true
   },
   {
@@ -1456,7 +1456,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.7,
-   "raise_ms": 6,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -1546,7 +1546,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 10.2,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1576,7 +1576,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.6,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1621,7 +1621,7 @@
     }
    ],
    "embankment_m": 8.5,
-   "raise_ms": 14,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1651,7 +1651,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.8,
-   "raise_ms": 4,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1741,7 +1741,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.1,
-   "raise_ms": 8,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1771,7 +1771,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.9,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1803,7 +1803,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.9,
-   "raise_ms": 7,
+   "raise_ms": 14,
    "finished": true
   },
   {
@@ -1982,7 +1982,7 @@
     }
    ],
    "embankment_m": 9.5,
-   "raise_ms": 43,
+   "raise_ms": 42,
    "finished": true
   },
   {
@@ -2042,7 +2042,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.1,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2072,7 +2072,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.8,
-   "raise_ms": 7,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2102,7 +2102,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 8.5,
-   "raise_ms": 7,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -2132,7 +2132,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.4,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2162,7 +2162,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.1,
-   "raise_ms": 6,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -2252,7 +2252,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.1,
-   "raise_ms": 8,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -2342,7 +2342,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.9,
-   "raise_ms": 6,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2372,7 +2372,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.0,
-   "raise_ms": 7,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2551,7 +2551,7 @@
     }
    ],
    "embankment_m": 23.9,
-   "raise_ms": 44,
+   "raise_ms": 36,
    "finished": true
   },
   {
@@ -2581,7 +2581,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 6.3,
-   "raise_ms": 4,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -2611,7 +2611,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.4,
-   "raise_ms": 11,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -2641,7 +2641,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 8,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2671,7 +2671,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.4,
-   "raise_ms": 10,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -2701,7 +2701,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 5,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2731,7 +2731,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 5.8,
-   "raise_ms": 4,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2836,7 +2836,7 @@
     }
    ],
    "embankment_m": 5.5,
-   "raise_ms": 32,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -2896,7 +2896,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 12.6,
-   "raise_ms": 6,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2926,7 +2926,553 @@
    "seat": {},
    "findings": [],
    "embankment_m": 34.4,
-   "raise_ms": 14,
+   "raise_ms": 7,
+   "finished": true
+  },
+  {
+   "id": "core:poi/skarl_delving",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    3172.0,
+    209.53,
+    -1844.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 22.6,
+    "z": 23.6,
+    "height": 9.0,
+    "reach": 24.4,
+    "top": 6.3
+   },
+   "pieces": 54,
+   "draws": 54,
+   "primitives": 95838,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "briarwold_boulder_b.glb",
+     "x": 3175.6,
+     "y": 208.64,
+     "z": -1847.7,
+     "amount": 0.8,
+     "detail": "80% of it shares its box with boulder (poi:delve)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "briarwold_boulder_a.glb",
+     "x": 3173.6,
+     "y": 208.82,
+     "z": -1847.9,
+     "amount": 0.66,
+     "detail": "66% of it shares its box with boulder (poi:delve)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 4.3,
+   "raise_ms": 140,
+   "finished": true
+  },
+  {
+   "id": "core:poi/horn_pale",
+   "kind": "stockade",
+   "preview": true,
+   "pos": [
+    2972.0,
+    150.95,
+    -460.0
+   ],
+   "radius_flat_m": 30.0,
+   "footprint": {
+    "x": 40.3,
+    "z": 40.2,
+    "height": 10.0,
+    "reach": 25.1,
+    "top": 9.2
+   },
+   "pieces": 114,
+   "draws": 114,
+   "primitives": 216423,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.2,
+   "raise_ms": 991,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tallying_hide",
+   "kind": "tower",
+   "preview": true,
+   "pos": [
+    2796.0,
+    150.88,
+    -12.0
+   ],
+   "radius_flat_m": 38.0,
+   "footprint": {
+    "x": 53.4,
+    "z": 49.6,
+    "height": 31.5,
+    "reach": 40.9,
+    "top": 30.2
+   },
+   "pieces": 23,
+   "draws": 28,
+   "primitives": 19169,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 2
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "campfire",
+     "asset": "hearthvale_campfire_b.glb",
+     "x": 2800.7,
+     "y": 150.88,
+     "z": -14.9,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with giant_oak (poi:tower)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:tower",
+     "family": "sack",
+     "asset": "hearthvale_sack_b.glb",
+     "x": 2801.8,
+     "y": 150.88,
+     "z": -15.3,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with giant_oak (poi:tower)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 17.7,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/listening_horns",
+   "kind": "camp",
+   "preview": true,
+   "pos": [
+    3404.0,
+    185.2,
+    -2228.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 19.5,
+    "z": 22.7,
+    "height": 2.8,
+    "reach": 12.3,
+    "top": 2.7
+   },
+   "pieces": 97,
+   "draws": 97,
+   "primitives": 109258,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 32,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.5,
+   "raise_ms": 92,
+   "finished": true
+  },
+  {
+   "id": "core:poi/layers_ring",
+   "kind": "walled_camp",
+   "preview": true,
+   "pos": [
+    3588.0,
+    277.2,
+    -1148.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 27.8,
+    "z": 31.2,
+    "height": 8.6,
+    "reach": 20.9,
+    "top": 7.2
+   },
+   "pieces": 56,
+   "draws": 56,
+   "primitives": 34875,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 20.4,
+   "raise_ms": 9,
+   "finished": true
+  },
+  {
+   "id": "core:poi/greyed_ring",
+   "kind": "strange_tree",
+   "preview": true,
+   "pos": [
+    3532.0,
+    277.3,
+    -148.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 30.5,
+    "z": 30.5,
+    "height": 15.0,
+    "reach": 18.6,
+    "top": 13.6
+   },
+   "pieces": 53,
+   "draws": 77,
+   "primitives": 106278,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 12,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 10
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3532.0,
+     "y": 275.82,
+     "z": -148.0,
+     "amount": 0.78,
+     "detail": "78% of it shares its box with willow (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3532.0,
+     "y": 275.82,
+     "z": -148.0,
+     "amount": 0.68,
+     "detail": "68% of it shares its box with willow (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3542.1,
+     "y": 276.53,
+     "z": -142.6,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with dock_post (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3542.1,
+     "y": 276.53,
+     "z": -142.6,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3542.1,
+     "y": 276.53,
+     "z": -142.6,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3542.1,
+     "y": 276.53,
+     "z": -142.6,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3525.7,
+     "y": 276.64,
+     "z": -138.6,
+     "amount": 0.71,
+     "detail": "71% of it shares its box with willow (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3535.3,
+     "y": 276.54,
+     "z": -137.7,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with dock_post (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "willow",
+     "asset": "sedgemire_willow_b.glb",
+     "x": 3535.3,
+     "y": 276.54,
+     "z": -137.7,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:strange_tree",
+     "family": "basket",
+     "asset": "hearthvale_basket_b.glb",
+     "x": 3542.1,
+     "y": 277.3,
+     "z": -138.7,
+     "amount": 0.81,
+     "detail": "81% of it shares its box with basket (poi:strange_tree)",
+     "region": "briarwold"
+    }
+   ],
+   "embankment_m": 18.5,
+   "raise_ms": 35,
+   "finished": true
+  },
+  {
+   "id": "core:poi/stave_hollow",
+   "kind": "farmstead",
+   "preview": true,
+   "pos": [
+    2748.0,
+    205.15,
+    -1308.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 29.8,
+    "z": 29.8,
+    "height": 9.6,
+    "reach": 21.1,
+    "top": 9.4
+   },
+   "pieces": 37,
+   "draws": 37,
+   "primitives": 36093,
+   "interactables": {},
+   "lights": 11,
+   "bodies": 11,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.8,
+   "raise_ms": 17,
+   "finished": true
+  },
+  {
+   "id": "core:poi/wold_beacon",
+   "kind": "beacon",
+   "preview": true,
+   "pos": [
+    3372.0,
+    216.68,
+    -1580.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 3.6,
+    "z": 4.6,
+    "height": 4.4,
+    "reach": 3.3,
+    "top": 4.2
+   },
+   "pieces": 11,
+   "draws": 11,
+   "primitives": 6369,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.0,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/colleys_hearth",
+   "kind": "hut",
+   "preview": true,
+   "pos": [
+    2988.0,
+    236.11,
+    -1684.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 9.3,
+    "z": 5.8,
+    "height": 3.9,
+    "reach": 6.3,
+    "top": 3.6
+   },
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 3214,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 6.3,
+   "raise_ms": 6,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hartswell",
+   "kind": "well",
+   "preview": true,
+   "pos": [
+    3380.0,
+    259.2,
+    1700.0
+   ],
+   "radius_flat_m": 16.0,
+   "footprint": {
+    "x": 2.2,
+    "z": 2.5,
+    "height": 1.7,
+    "reach": 2.3,
+    "top": 1.4
+   },
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 708,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.4,
+   "raise_ms": 12,
+   "finished": true
+  },
+  {
+   "id": "core:poi/stray_thorn",
+   "kind": "ruins",
+   "preview": true,
+   "pos": [
+    3708.0,
+    173.29,
+    -1700.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 14.1,
+    "z": 9.0,
+    "height": 5.0,
+    "reach": 8.4,
+    "top": 4.6
+   },
+   "pieces": 5,
+   "draws": 7,
+   "primitives": 94116,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 5.1,
+   "raise_ms": 18,
+   "finished": true
+  },
+  {
+   "id": "core:poi/tine_barrow",
+   "kind": "ruins",
+   "preview": true,
+   "pos": [
+    3636.0,
+    258.58,
+    1420.0
+   ],
+   "radius_flat_m": 25.0,
+   "footprint": {
+    "x": 14.8,
+    "z": 14.3,
+    "height": 4.7,
+    "reach": 10.3,
+    "top": 4.6
+   },
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 117490,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 13.3,
+   "raise_ms": 13,
    "finished": true
   }
  ]
