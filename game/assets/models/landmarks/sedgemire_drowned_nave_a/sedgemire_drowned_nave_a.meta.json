@@ -13,7 +13,7 @@
   ],
   "radius": 73.063
  },
- "built_seconds": 56.26,
+ "built_seconds": 54.98,
  "buried_m": 15.25,
  "category": "landmarks",
  "collision": "sedgemire_drowned_nave_a_col.glb",
@@ -39,11 +39,11 @@
   },
   {
    "name": "sedgemire_drowned_nave_a_LOD1",
-   "tris": 14557
+   "tris": 14555
   },
   {
    "name": "sedgemire_drowned_nave_a_LOD2",
-   "tris": 5458
+   "tris": 5451
   }
  ],
  "name": "sedgemire_drowned_nave_a",

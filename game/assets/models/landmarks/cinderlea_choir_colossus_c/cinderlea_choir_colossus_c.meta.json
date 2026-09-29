@@ -1,19 +1,19 @@
 {
  "bounds": {
-  "height": 21.753,
+  "height": 21.743,
   "max": [
-   14.606,
+   48.038,
    21.739,
-   13.218
+   13.221
   ],
   "min": [
-   -20.952,
-   -0.014,
-   -48.136
+   -14.604,
+   -0.004,
+   -21.112
   ],
-  "radius": 37.087
+  "radius": 37.335
  },
- "built_seconds": 182.32,
+ "built_seconds": 115.92,
  "buried_m": 4.17,
  "category": "landmarks",
  "collision": "cinderlea_choir_colossus_c_col.glb",
@@ -33,15 +33,15 @@
  "meshes": [
   {
    "name": "cinderlea_choir_colossus_c",
-   "tris": 24999
+   "tris": 25999
   },
   {
    "name": "cinderlea_choir_colossus_c_LOD1",
-   "tris": 4999
+   "tris": 10398
   },
   {
    "name": "cinderlea_choir_colossus_c_LOD2",
-   "tris": 3749
+   "tris": 3897
   }
  ],
  "name": "cinderlea_choir_colossus_c",
@@ -79,9 +79,9 @@
   "cinderlea_choir_colossus_c_orm.png"
  ],
  "tris": [
-  25000,
-  5000,
-  3750
+  26000,
+  10400,
+  3900
  ],
  "version": 3
 }
