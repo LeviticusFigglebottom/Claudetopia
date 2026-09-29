@@ -136,6 +136,20 @@ func test_the_showcase_insides_are_built_walkable_and_left() -> void:
 		print("SITE | %s | %d rooms, %d links, %d chunks, %d tris, %d lights, %d foes, %d containers | reached %s | main %.0f ms" % [
 			id, site.plan.rooms.size(), site.plan.links.size(), site.chunks.size(), _tris(site), site.dress.lights.size(),
 			site.dress.spawner.living.size(), site.plan.containers.size(), report["reached"], site.main_us / 1000.0])
+		# no chunk of rock is reached by more lights than Compatibility draws on one object (12)
+		var worst := 0
+		for ch in site.chunks:
+			var box := AABB((ch["verts"] as PackedVector3Array)[0], Vector3.ZERO)
+			for v in ch["verts"]:
+				box = box.expand(v)
+			var n := 0
+			for l in site.dress.lights:
+				var o := l as OmniLight3D
+				if o != null and o.visible and box.grow(o.omni_range).has_point(o.position):
+					n += 1
+			worst = maxi(worst, n)
+		print("SITE LIGHTS | %s | at most %d lights on one chunk" % [id, worst])
+		assert_true(worst <= 12, "%s: at most 12 lights reach one chunk (%d)" % [id, worst])
 		assert_eq(report["unreached"], [], "%s: every room is walkable from the way in on the navigation mesh" % id)
 		assert_gt(site.dress.spawner.living.size(), 4, "%s: foes stand in it" % id)
 		assert_true(site.find_child("BossArena", true, false) != null, "%s: the boss has an arena" % id)

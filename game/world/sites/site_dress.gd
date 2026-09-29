@@ -57,6 +57,49 @@ func build() -> void:
 		await _link(l)
 	await _containers()
 	await _features()
+	_light_budget()
+	await step()
+
+
+## Compatibility draws at most `max_lights_per_object` (12) lights on one mesh and drops the rest
+## without a word, and which it drops is not the farthest: a chunk of rock reached by the fills of
+## four rooms went black by a lit lamp. So no chunk is reached by more than LIGHTS_PER_CHUNK: the
+## widest-reaching of the lights on a chunk over it is drawn in, a fifth at a time, and one already
+## small is put out.
+const LIGHTS_PER_CHUNK := 11
+
+
+func _light_budget() -> void:
+	var boxes: Array[AABB] = []
+	for ch in site.chunks:
+		var vs: PackedVector3Array = ch["verts"]
+		if vs.is_empty():
+			continue
+		var box := AABB(vs[0], Vector3.ZERO)
+		for v in vs:
+			box = box.expand(v)
+		boxes.append(box)
+	for guard in 400:
+		var over := -1
+		var on: Array = []
+		for bi in boxes.size():
+			var here: Array = []
+			for l in lights:
+				var o := l as OmniLight3D
+				if o != null and o.visible and boxes[bi].grow(o.omni_range).has_point(o.position):
+					here.append(o)
+			if here.size() > LIGHTS_PER_CHUNK:
+				over = bi
+				on = here
+				break
+		if over < 0:
+			return
+		on.sort_custom(func(a: OmniLight3D, b: OmniLight3D) -> bool: return a.omni_range > b.omni_range)
+		var widest: OmniLight3D = on[0]
+		if widest.omni_range > 6.0:
+			widest.omni_range *= 0.8
+		else:
+			widest.visible = false
 
 
 # --- materials ------------------------------------------------------------------------------------
@@ -191,9 +234,9 @@ func _way_out() -> void:
 		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		glow.name = "Daylight"
 		root.add_child(glow)
-		_lamp(plan.exit_glow + back * 2.5, Color(0.86, 0.9, 0.98), 2.6, 16.0)
+		_lamp(plan.exit_glow + back * 2.5, Color(0.86, 0.9, 0.98), 2.2, 9.0)
 		# and the day's light where the throat opens into the room
-		_lamp(plan.exit_at + back * 1.5 + Vector3.UP * 2.2, Color(0.8, 0.84, 0.92), 1.8, 13.0)
+		_lamp(plan.exit_at + back * 1.5 + Vector3.UP * 2.2, Color(0.8, 0.84, 0.92), 2.2, 11.0)
 	await step()
 
 
@@ -205,7 +248,7 @@ func _room(r: Dictionary) -> void:
 	var reach := Vector2(half.x, half.z).length()
 	# a cold, weak fill so the room's shape reads beyond its lamps
 	var tint := Color(0.6, 0.66, 0.8).lerp(Color(str(plan.spec.get("light_colour", "#ffb066"))), 0.3)
-	var fill := _lamp(c + Vector3.UP * half.y * 0.7, tint, 0.8 + reach / 18.0, reach * 2.2)
+	var fill := _lamp(c + Vector3.UP * half.y * 0.7, tint, 1.0 + reach / 14.0, reach * 1.3)
 	fill.light_specular = 0.0
 	var ls: Array = plan.spec.get("lights", ["torch"])
 	var role := str(r["role"])
@@ -347,7 +390,7 @@ func _ring_of(r: Dictionary, what: String, count: int) -> void:
 				var run := kit.rng.randf_range(0.6, 1.3)
 				var dir := Vector3(sin(h), 0.0, cos(h))
 				m.block(embers, Transform3D(Basis(Vector3.UP, h), at + dir * run * 0.5 + Vector3.UP * 0.005), Vector3(0.08, 0.02, run))
-			_lamp(at + Vector3.UP * 1.0, Color(1.0, 0.45, 0.16), 3.4, 15.0, 0.2, i == 0)
+			_lamp(at + Vector3.UP * 1.0, Color(1.0, 0.45, 0.16), 3.4, 12.0, 0.2, i == 0)
 		else:
 			_place("brazier", at, a, 1.0)
 			m.ellipsoid(embers, at + Vector3.UP * 0.95, Vector3(0.28, 0.12, 0.28))
@@ -637,7 +680,7 @@ func _chasm(r: Dictionary, z: Dictionary) -> void:
 		root.add_child(lava)
 		var side := basis * Vector3.RIGHT
 		for s in [-1.0, 1.0]:
-			_lamp(c + side * float(s) * float(z["reach"]) * 0.25 + Vector3.DOWN * (depth - 2.0), Color(1.0, 0.42, 0.12), 4.0, 16.0, 0.12)
+			_lamp(c + side * float(s) * float(z["reach"]) * 0.25 + Vector3.DOWN * (depth - 2.0), Color(1.0, 0.42, 0.12), 4.0, 12.0, 0.12)
 	else:
 		_lamp(c + Vector3.DOWN * (depth * 0.6), Color(0.35, 0.42, 0.55), 0.6, depth + 4.0)
 	# a fall is caught at the bottom and the body stood back at the near end of the bridge
