@@ -6,8 +6,10 @@ render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 //   R  which leg: 0.25 fore left, 0.5 fore right, 0.75 hind left, 1.0 hind right (0 off the legs)
 //   G  the neck and head, 0 at the withers to 1 at the muzzle
 //   B  the tail, 0 at its root to 1 at its tip
+//   A  0.5 on an attachment carried with the head (a stag's antlers), painted antler_colour
 // INSTANCE_CUSTOM: x its own phase (0..1), y walking (0 stood .. 1 walking), z grazing (0 head up ..
-// 1 head down). A grazing beast's head goes down and comes up to look about; a walking one swings
+// 1 head down), w how fast the legs go against stride_hz (0 is 1; a deer's flight is 2.6). A grazing
+// beast's head goes down and comes up to look about; a walking one swings
 // its legs in a walk's diagonal pairs and nods; every one flicks its tail now and then.
 
 uniform vec4 leg_top = vec4(0.8);          // the height each leg hinges at, by leg
@@ -18,6 +20,7 @@ uniform vec4 body_colour : source_color = vec4(0.45, 0.30, 0.18, 1.0);
 uniform vec4 head_colour : source_color = vec4(0.40, 0.26, 0.15, 1.0);
 uniform vec4 leg_colour : source_color = vec4(0.18, 0.12, 0.08, 1.0);
 uniform vec4 tail_colour : source_color = vec4(0.12, 0.08, 0.06, 1.0);
+uniform vec4 antler_colour : source_color = vec4(0.45, 0.37, 0.27, 1.0);
 
 varying vec3 v_tint;
 
@@ -31,7 +34,8 @@ vec3 rot_y(vec3 v, float a) {
 
 void vertex() {
 	vec4 pose = INSTANCE_CUSTOM;
-	float t = TIME * stride_hz + pose.x * 7.0;
+	float rate = pose.w > 0.0 ? pose.w : 1.0;
+	float t = TIME * stride_hz * rate + pose.x * 7.0;
 	vec3 v = VERTEX;
 	vec3 n = NORMAL;
 	float leg = COLOR.r;
@@ -44,7 +48,7 @@ void vertex() {
 		// a walk: the diagonal pairs a half-cycle apart, the hind a quarter behind its fore
 		float ph = (id == 0 || id == 3) ? 0.0 : 0.5;
 		ph += id >= 2 ? 0.25 : 0.0;
-		float swing = sin((t + ph) * 6.28318) * 0.42 * pose.y;
+		float swing = sin((t + ph) * 6.28318) * 0.42 * pose.y * clamp(0.8 + 0.25 * rate, 1.0, 1.45);
 		vec3 local = v - vec3(0.0, top, 0.0);
 		local = rot_x(local, swing);
 		n = rot_x(n, swing);
@@ -60,7 +64,7 @@ void vertex() {
 		local = rot_x(local, a);
 		n = rot_x(n, a);
 		v = local + neck_pivot;
-		v_tint = mix(body_colour.rgb, head_colour.rgb, smoothstep(0.35, 0.75, neck));
+		v_tint = COLOR.a < 0.75 ? antler_colour.rgb : mix(body_colour.rgb, head_colour.rgb, smoothstep(0.35, 0.75, neck));
 	} else if (tail > 0.01) {
 		float flick = pow(max(sin(TIME * 0.9 + pose.x * 17.0), 0.0), 12.0);
 		float a = sin(TIME * 9.0 + pose.x * 5.0) * 0.5 * flick * tail;

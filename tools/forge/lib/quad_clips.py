@@ -707,6 +707,194 @@ def build_sheep_clips(solver: Solver) -> Dict[str, QuadClip]:
 SHEEP_CLIPS = ["Idle", "Graze", "Walk", "Trot", "Run", "Turn_L90", "Turn_R90"]
 
 
+def deer_gaits() -> List[GaitSpec]:
+    """A red deer's gaits: a long unhurried walk, a springy trot, and the flight -- a bounding gallop
+    where the hinds land together, then the fores, and all four are off the ground twice a stride,
+    the scut up to show the rump patch. Speeds are what the game plays them at (ground speed /
+    `speed`, as a horse's)."""
+    return [
+        GaitSpec("Walk", speed=1.3, cycle=26 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.08, fold=0.5, bob=0.012, bobs=2, bob_at=0.05, nod=5.0, nods=2, nod_at=0.30,
+                 roll=1.5, carriage=-4.0, ears=-4.0),
+        GaitSpec("Trot", speed=3.2, cycle=17 / FPS, duty=0.32,
+                 footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
+                 lift=0.16, fold=0.85, bob=0.035, bobs=2, bob_at=0.21, nod=2.0, nods=2, nod_at=0.25,
+                 carriage=-8.0, tail=15.0, ears=-8.0),
+        GaitSpec("Run", speed=10.0, cycle=14 / FPS, duty=0.14,
+                 footfalls={"HL": 0.0, "HR": 0.06, "FL": 0.46, "FR": 0.53},
+                 lift=0.26, fold=1.0, bob=0.10, bobs=1, bob_at=0.30, pitch=9.0, pitch_at=0.85,
+                 nod=5.0, nods=1, nod_at=0.6, flex=12.0, flex_at=0.72, carriage=-6.0, tail=55.0, ears=10.0),
+        GaitSpec("Turn_L90", speed=0.0, cycle=33 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.07, fold=0.45, bob=0.008, bobs=2, nod=3.0, turn=90.0, ears=-6.0),
+        GaitSpec("Turn_R90", speed=0.0, cycle=33 / FPS, duty=0.62,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                 lift=0.07, fold=0.45, bob=0.008, bobs=2, nod=3.0, turn=-90.0, ears=-6.0),
+    ]
+
+
+def _with(base: QuadClip, name: str, fn, length: Optional[float] = None, loop: Optional[bool] = None) -> QuadClip:
+    """`base` under another name with its poses changed by fn(qp, t) -> None."""
+    def sample(t: float) -> QuadPose:
+        qp = base.sample(t)
+        fn(qp, t)
+        return qp
+    return QuadClip(name, length or base.length, base.loop if loop is None else loop, sample, list(base.events),
+                    dict(base.extra))
+
+
+def alert_clip(solver: Solver, length: float = 2.0) -> QuadClip:
+    """Head up, ears forward, stock still but for the breath and a flick of the ears: what a deer
+    does for a second or three when it has heard you. A loop the game holds as long as it likes."""
+    def sample(t: float) -> QuadPose:
+        qp = QuadPose(feet=_stand(solver))
+        u = t / length
+        qp.lift = 0.006 + 0.003 * math.sin(2 * math.pi * u)
+        qp.neck = -22.0
+        qp.head = -8.0
+        qp.ears = (-22.0, -22.0 + 12.0 * (bump(((u - 0.55) % 1.0) / 0.12) if ((u - 0.55) % 1.0) < 0.12 else 0.0))
+        qp.ear_turn = (-6.0, -6.0)
+        qp.tail = 12.0
+        return qp
+    return QuadClip("Alert", length, True, sample, [], {})
+
+
+def tail_flick(qp: QuadPose, t: float, every: float = 3.0, up: float = 45.0) -> None:
+    """A deer's tail flicked up and down, once every `every` seconds."""
+    w = (t % every) / every
+    if w < 0.08:
+        qp.tail = qp.tail + up * bump(w / 0.08)
+
+
+def hit_clip(solver: Solver, length: float = 0.6) -> QuadClip:
+    """A wild beast struck: a flinch away from the blow, the head flung up, the ears back, the scut
+    up; back to standing by the end."""
+    def sample(t: float) -> QuadPose:
+        u = t / length
+        k = bump(u, 0.22)
+        qp = QuadPose(feet=_stand(solver))
+        qp.lift = -0.035 * k
+        qp.roll = -5.0 * k
+        qp.side = -0.03 * k
+        qp.loin = 5.0 * k
+        qp.neck = -18.0 * k
+        qp.head = -14.0 * k
+        qp.neck_turn = 12.0 * k
+        qp.ears = (45.0 * k, 45.0 * k)
+        qp.tail = 40.0 * k
+        for f in FEET:
+            qp.feet[f].pastern += 8.0 * k
+        return qp
+    return QuadClip("Hit", length, False, sample, [], {})
+
+
+def death_clip(solver: Solver, length: float = 2.2) -> QuadClip:
+    """A beast going down: the forelegs buckle and it drops to its knees, the quarters follow, and
+    it lies folded on its brisket with the head let down along the ground. The last frame is held
+    (CONTRACTS §3)."""
+    sk = solver.skel
+    hip = sk.bones["Thigh.L"].head.copy()
+    hip[0] = 0.0
+    lengths = {}
+    for f in FEET:
+        b = foot_bones(f)
+        lengths[f] = (sk.bones[b[-3]].length, sk.bones[b[-2]].length, sk.bones[b[-1]].length)
+    brisket = sk.bones[foot_bones("FL")[-3]].head[2]      # the knee's height at rest
+
+    def folded(f: str) -> FootPose:
+        """The hoof folded under the lying body: a fore cannon laid back along the ground from the
+        knee, a hind one laid forward from the hock."""
+        fore = f[0] == "F"
+        b = foot_bones(f)
+        joint = sk.bones[b[-3]].head.copy()
+        lc, lp, lh = lengths[f]
+        K = np.array([joint[0], joint[1] + (0.06 if fore else -0.10), 0.05])
+        cannon = -88.0 if fore else 88.0
+        pastern = -120.0 if fore else 120.0
+        hoof = -150.0 if fore else 150.0
+        F = K + lc * sag(cannon)
+        C = F + lp * sag(pastern)
+        toe = C + lh * sag(hoof)
+        return FootPose(toe=toe, hoof=hoof, pastern=pastern, cannon=cannon, planted=False)
+
+    def sample(t: float) -> QuadPose:
+        u = t / length
+        fore_k = smooth(u / 0.35)                  # the knees go
+        hind_k = smooth((u - 0.22) / 0.35)         # then the quarters
+        head_k = smooth((u - 0.45) / 0.45)         # and the head is let down
+        feet = _stand(solver)
+        for f in FEET:
+            k = fore_k if f[0] == "F" else hind_k
+            if k <= 0.0:
+                continue
+            a, b = feet[f], folded(f)
+            feet[f] = FootPose(toe=a.toe * (1.0 - k) + b.toe * k, hoof=a.hoof * (1.0 - k) + b.hoof * k,
+                               pastern=a.pastern * (1.0 - k) + b.pastern * k,
+                               cannon=solver._rest_cannon[f] * (1.0 - k) + b.cannon * k, planted=k < 0.5)
+        qp = QuadPose(feet=feet)
+        drop = brisket * 1.28
+        qp.pivot = hip
+        # the front goes down first, pitching the body forward; the quarters come down after it
+        qp.pitch = -14.0 * fore_k * (1.0 - hind_k)
+        qp.lift = -drop * (0.55 * fore_k + 0.45 * hind_k)
+        qp.roll = 12.0 * hind_k
+        qp.neck = -10.0 * fore_k * (1.0 - head_k) + 78.0 * head_k
+        qp.head = 8.0 * fore_k - 50.0 * head_k
+        qp.neck_turn = 18.0 * head_k
+        qp.ears = (40.0 * fore_k, 45.0 * fore_k)
+        qp.tail = 20.0 * fore_k * (1.0 - head_k)
+        qp.jaw = 6.0 * head_k
+        return qp
+    return QuadClip("Death", length, False, sample, [(0.35 * length, "fall"), (0.6 * length, "land")], {"held": True})
+
+
+def build_deer_clips(solver: Solver) -> Dict[str, QuadClip]:
+    """A red deer's clips: Idle, Graze, Graze_Step, Alert, Walk, Trot, Run (the flight: a bound),
+    Hit, Death and the turns."""
+    clips: Dict[str, QuadClip] = {}
+    for g in deer_gaits():
+        clips[g.name] = gait_clip(solver, g)
+    idle = idle_clip(solver)
+
+    def idle_fn(qp: QuadPose, t: float) -> None:
+        qp.neck -= 10.0             # a deer's head is carried higher than a horse's at ease
+        tail_flick(qp, t, 2.0)
+    clips["Idle"] = _with(idle, "Idle", idle_fn)
+    graze = graze_clip(solver)
+
+    def graze_fn(qp: QuadPose, t: float) -> None:
+        # a deer's neck, carried high, has further to come down: the muzzle to about 0.15 m
+        qp.neck += 30.0
+        qp.head -= 10.0
+        qp.pitch -= 4.0
+        tail_flick(qp, t, 2.0, 35.0)
+    clips["Graze"] = _with(graze, "Graze", graze_fn)
+    # grazing on: a slow step with the head down, the muzzle through the grass
+    step = GaitSpec("Graze_Step", speed=0.35, cycle=48 / FPS, duty=0.75,
+                    footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75},
+                    lift=0.05, fold=0.4, bob=0.006, bobs=2, nod=2.0, carriage=0.0, ears=0.0)
+    base = gait_clip(solver, step)
+    hip = solver.skel.bones["Thigh.L"].head.copy()
+    hip[0] = 0.0
+
+    def graze_step(qp: QuadPose, t: float) -> None:
+        qp.pivot = hip
+        qp.pitch -= 10.0
+        qp.neck += 135.0
+        qp.head -= 82.0
+        tail_flick(qp, t, 1.6, 30.0)
+    clips["Graze_Step"] = _with(base, "Graze_Step", graze_step)
+    clips["Alert"] = alert_clip(solver)
+    clips["Hit"] = hit_clip(solver)
+    clips["Death"] = death_clip(solver)
+    return clips
+
+
+# CONTRACTS §3b: a wild beast's set -- the gaits (Run is its bound), Hit and Death -- and a deer's own
+DEER_CLIPS = ["Idle", "Graze", "Graze_Step", "Alert", "Walk", "Trot", "Run", "Hit", "Death", "Turn_L90", "Turn_R90"]
+
+
 MOUNT_CLIPS = ["Idle", "Graze", "Walk", "Trot", "Canter", "Gallop", "Walk_Back", "Turn_L90", "Turn_R90",
                "Stop", "Rear", "Mount", "Dismount"]
 

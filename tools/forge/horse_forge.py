@@ -43,6 +43,7 @@ from forge.lib import quad_clips as qc  # noqa: E402
 from forge.lib import horse_body as hb  # noqa: E402
 from forge.lib import sheep_body as sb  # noqa: E402
 from forge.lib import far_herd  # noqa: E402
+from forge.lib import deer_body as db  # noqa: E402
 
 NAME = "horse_cob"
 OUT_ROOT = os.path.join(cf.ROOT, "game", "assets", "models", "creatures")
@@ -654,6 +655,197 @@ def cmd_sheep(args) -> None:
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 
 
+# --------------------------------------------------------------------------------------
+# the red deer: one body for the hind and the stag, the stag's antlers a mesh of their own on the
+# Head bone that the game shows or hides; two coats (the red, and the grey hart's)
+# --------------------------------------------------------------------------------------
+
+DEER = "deer_red"
+DEER_TRIS = 7000
+DEER_LOD1 = 2400
+DEER_LOD2 = 700
+DEER_TEX = 1024
+DEER_FAR_ANTLER_TRIS = 260
+DEER_COATS = {
+    # a red deer's summer red is a dull rust going brown on the back, not a fox's orange; the belly
+    # only a little paler, buff under the barrel
+    "red": {"body": (0.47, 0.27, 0.16), "back": (0.36, 0.22, 0.14), "belly": (0.62, 0.50, 0.37),
+            "rump": (0.80, 0.70, 0.52), "rump_edge": (0.30, 0.18, 0.11), "legs": (0.42, 0.30, 0.22),
+            "face": (0.46, 0.33, 0.24), "muzzle": (0.14, 0.11, 0.10), "ear_in": (0.82, 0.74, 0.62),
+            "throat": (0.78, 0.68, 0.54), "ruff": (0.30, 0.20, 0.13)},
+    # the grey hart: the same beast gone pale, its red all but out of it
+    "grey": {"body": (0.60, 0.58, 0.54), "back": (0.50, 0.48, 0.45), "belly": (0.80, 0.78, 0.73),
+             "rump": (0.90, 0.88, 0.83), "rump_edge": (0.40, 0.38, 0.36), "legs": (0.50, 0.48, 0.45),
+             "face": (0.58, 0.56, 0.53), "muzzle": (0.18, 0.17, 0.17), "ear_in": (0.86, 0.84, 0.80),
+             "throat": (0.84, 0.82, 0.78), "ruff": (0.42, 0.40, 0.38)},
+}
+DEER_FIXED = {"hoof": (0.12, 0.10, 0.09), "eye": (0.03, 0.025, 0.02), "gland": (0.10, 0.08, 0.07),
+              "antler": (0.52, 0.42, 0.30), "antler_tip": (0.90, 0.86, 0.76)}
+
+
+def deer_paint(skel, field: sdf.SampledField, style, coat: str = "red", seed: int = 13):
+    n1 = paint.Noise(seed, 64)
+    n2 = paint.Noise(seed + 7, 64)
+    n3 = paint.Noise(seed + 19, 64)
+    s = skel.props.withers / quad.DEFAULT_WITHERS
+    C = {k: np.array(v) for k, v in {**DEER_COATS[coat], **DEER_FIXED}.items()}
+
+    def flow(P):
+        f = np.tile(np.array([0.0, 1.0, -0.35]), (len(P), 1))
+        f[P[:, 2] < skel.J["Humerus.L"][2] - 0.05 * s] = np.array([0.0, 0.1, -1.0])
+        f[P[:, 1] < skel.J["Neck1"][1]] = np.array([0.0, 0.5, -1.0])
+        return f
+
+    def grain(P, nrm):
+        f = paint.strand_directions(P, nrm, flow)
+        Q = P - f * np.sum(P * f, axis=1, keepdims=True)
+        return n2.fbm(Q, freq=180.0 / s, octaves=2), n3.at(Q, 650.0 / s)
+
+    def albedo(P, nrm):
+        R = db.regions(skel, P, style)
+        occ = paint.sdf_occlusion(field, P, nrm, radius=0.08 * s, samples=5, strength=1.1)
+        big = n1.fbm(P, freq=2.5 / s, octaves=3)
+        clump, strand = grain(P, nrm)
+        up = np.clip(nrm[:, 2], -1, 1)
+        c = np.broadcast_to(C["body"], (len(P), 3)).copy() * (0.92 + 0.16 * big)[:, None]
+        c = paint.mix(c, C["back"], np.clip(0.7 * R["back"] + 0.35 * paint.smoothstep(0.3, 0.9, up), 0, 1))
+        c = paint.mix(c, C["belly"], np.clip(0.85 * R["belly"] * (1.0 - paint.smoothstep(-0.5, 0.2, up)), 0, 1))
+        c = paint.mix(c, C["legs"], R["legs"] * 0.8)
+        c = paint.mix(c, C["face"], R["face"] * 0.7)
+        c = paint.mix(c, C["throat"], R["throat"] * 0.7)
+        c = paint.mix(c, C["ruff"], R["ruff"])
+        # the rump patch, pale, edged darker where it meets the flank
+        edge = np.clip(R["rump"] * 4.0, 0, 1) * (1.0 - R["rump"])
+        c = paint.mix(c, C["rump_edge"], 0.6 * edge)
+        c = paint.mix(c, C["rump"], R["rump"])
+        c = paint.mix(c, C["ear_in"], R["ear_in"] * 0.85)
+        c = paint.mix(c, C["muzzle"], R["muzzle"] * 0.95)
+        c = paint.mix(c, C["gland"], R["gland"] * 0.9)
+        c = paint.mix(c, C["hoof"] * (0.8 + 0.4 * n2.at(P * 30.0 / s, 1.0))[:, None], R["hoof"])
+        c = paint.mix(c, C["eye"], R["eye"])
+        v = 0.92 + 0.14 * (clump - 0.5) + 0.06 * (strand - 0.5)
+        v = v * (0.55 + 0.45 * occ) + 0.10 * paint.exposure(occ, 4.0) * paint.smoothstep(-0.1, 0.6, up)
+        return np.clip(c * v[:, None], 0, 1)
+
+    def orm(P, nrm):
+        R = db.regions(skel, P, style)
+        occ = paint.sdf_occlusion(field, P, nrm, radius=0.08 * s, samples=5, strength=1.1)
+        clump, _ = grain(P, nrm)
+        rough = 0.78 + 0.08 * (clump - 0.5) - 0.3 * R["muzzle"] - 0.2 * R["hoof"] - 0.7 * R["eye"]
+        return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.08, 0.97), np.zeros(len(P))], axis=1)
+
+    def height(P, nrm):
+        clump, strand = grain(P, nrm)
+        R = db.regions(skel, P, style)
+        return (0.25 + 0.6 * R["ruff"]) * (0.6 * clump + 0.4 * strand)
+
+    return albedo, orm, height
+
+
+def antler_paint(skel, seed: int = 17):
+    n1 = paint.Noise(seed, 64)
+    s = skel.props.withers / quad.DEFAULT_WITHERS
+    C = {k: np.array(v) for k, v in DEER_FIXED.items()}
+    poll = skel.J["Head"]
+
+    def albedo(P, nrm):
+        h = np.clip((P[:, 2] - poll[2]) / (0.55 * s), 0, 1)
+        grooves = n1.fbm(P * np.array([6.0, 6.0, 0.6]) / s, freq=12.0, octaves=3)
+        c = C["antler"] * (0.7 + 0.5 * grooves)[:, None]
+        # the tines polished pale at their points, where they are rubbed on the trees
+        return np.clip(paint.mix(c, C["antler_tip"], paint.smoothstep(0.75, 1.0, h) * 0.7), 0, 1)
+
+    def orm(P, nrm):
+        return np.stack([np.ones(len(P)), np.full(len(P), 0.62), np.zeros(len(P))], axis=1)
+
+    def height(P, nrm):
+        return n1.fbm(P * np.array([8.0, 8.0, 0.5]) / s, freq=14.0, octaves=3)
+
+    return albedo, orm, height
+
+
+def cmd_deer(args) -> None:
+    """The red deer on WM_Quadruped_v1: body, LODs, the stag's antlers on the Head bone, both coats,
+    skin and clips, one GLB (and the far herd's mesh)."""
+    t0 = time.time()
+    cf.reset_scene()
+    out_dir = cf.ensure_dir(args.out or os.path.join(OUT_ROOT, DEER))
+    skel = quad.QuadSkeleton(db.RED)
+    style = db.DeerStyle()
+    arm = quad.build_armature(skel, name="Armature")
+    grid = []
+    body = mesh_object("Deer_Body", db.deer_scene(skel, style), 0.012 if args.quick else 0.007, DEER_TRIS, grid_out=grid)
+    clean_mesh(body)
+    field = sdf.SampledField.from_grid(*grid)
+    log("deer body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
+    bodylib.smart_uv(body, angle_deg=60.0, margin=0.008)
+    log("deer weights: %s" % skin_body(body, arm, skel))
+    size = 256 if args.quick else DEER_TEX
+    a, o, n = bake_maps(body, out_dir, "%s_coat" % DEER, *deer_paint(skel, field, style, "red"), size=size)
+    body.data.materials.append(cf.make_material("WM_Deer_Coat", a, o, n, roughness=0.8))
+    # the grey hart's coat: the albedo alone, for the game to swap in
+    ga, _, _ = bake_maps(body, out_dir, "%s_grey_coat" % DEER, deer_paint(skel, field, style, "grey")[0],
+                         lambda P, N: np.stack([np.ones(len(P)), np.full(len(P), 0.8), np.zeros(len(P))], axis=1),
+                         size=size)
+    for suffix in ("_orm.png",):
+        pth = os.path.join(out_dir, "%s_grey_coat%s" % (DEER, suffix))
+        if os.path.exists(pth):
+            os.unlink(pth)
+    # the antlers: meshed alone, all on the Head bone
+    ant = mesh_object("Deer_Antlers", db.antler_scene(skel), 0.004 if not args.quick else 0.008, 2400, smooth_iters=2)
+    clean_mesh(ant)
+    bodylib.smart_uv(ant, angle_deg=60.0, margin=0.01)
+    head = skel.J["Head"]
+    W = np.zeros((4, len(quad.DEFORM_NAMES)))
+    W[:, quad.DEFORM_NAMES.index("Head")] = 1.0
+    skin_to_body(ant, arm, np.array([head, head + 0.01, head - 0.01, head + np.array([0.0, 0.0, 0.3])]), W)
+    aa, ao, an = bake_maps(ant, out_dir, "%s_antlers" % DEER, *antler_paint(skel), size=256 if args.quick else 512)
+    ant.data.materials.append(cf.make_material("WM_Deer_Antler", aa, ao, an, roughness=0.62))
+    log("antlers: %d tris" % bodylib.tri_count(ant))
+    lods = []
+    for lname, target in (("Deer_Body_LOD1", DEER_LOD1), ("Deer_Body_LOD2", DEER_LOD2)):
+        lob = duplicate_joined([body if not lods else lods[-1]], lname)
+        decimate_to(lob, target)
+        clean_mesh(lob)
+        lods.append(lob)
+        log("%s: %d tris" % (lname, bodylib.tri_count(lob)))
+    solver = qc.make_solver(skel)
+    clips = qc.build_deer_clips(solver)
+    sidecar = {}
+    for name in qc.DEER_CLIPS:
+        baked = clips[name].bake(solver)
+        cf.push_clip(arm, baked)
+        sidecar[name] = baked.sidecar()
+    log("baked %d clips (worst reach %.3f m)" % (len(sidecar), solver.reach_error))
+    glb = cf.export_glb(os.path.join(out_dir, "%s.glb" % DEER), [arm, body, ant] + lods, with_animation=True)
+    with open(os.path.join(out_dir, "%s.clips.json" % DEER), "w") as f:
+        json.dump(sidecar, f, indent=1, sort_keys=True)
+    tris = [bodylib.tri_count(body)] + [bodylib.tri_count(l) for l in lods]
+    cf.write_meta(os.path.join(out_dir, "%s.meta.json" % DEER), DEER,
+                  {"proportions": skel.props.to_dict(), "style": style.to_dict(), "coats": DEER_COATS},
+                  tris, collision="none", bounds=cf.object_bounds(body), seed=style.seed,
+                  extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID,
+                         "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
+                         "antlers": {"mesh": "Deer_Antlers", "bone": "Head", "tris": bodylib.tri_count(ant),
+                                     "note": "a stag's; the game hides the mesh for a hind"},
+                         "coat_variants": {"grey": "%s_grey_coat_albedo.png" % DEER}})
+    far_herd.export_bind(body, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_lod2_bind.glb" % DEER), log=log)
+    deer_far_stag(body, ant, skel, out_dir)
+    deer_sidecars(out_dir)
+    log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
+
+
+def deer_sidecars(out_dir: str) -> None:
+    """The .import sidecars the forge's other assets have: VRAM textures, normal maps flagged, the
+    GLBs with the forge's scene settings (Godot's first-sight defaults are lossless and unflagged)."""
+    from pathlib import Path
+    from forge.lib import export as E
+    d = Path(out_dir)
+    textures = sorted(p.name for p in d.glob("%s_*.png" % DEER))
+    E.write_import_sidecars(d, "%s.glb" % DEER, textures,
+                            ["%s_lod2_bind.glb" % DEER, "%s_stag_lod2_bind.glb" % DEER])
+
+
 def cmd_clips(args) -> None:
     t0 = time.time()
     cf.reset_scene()
@@ -667,11 +859,47 @@ def cmd_clips(args) -> None:
     log("baked %d clips onto the bare armature in %.1fs: %s" % (len(sidecar), time.time() - t0, glb))
 
 
+def deer_far_stag(body, ant, skel, out_dir: str) -> str:
+    """The stag's far herd mesh: the body with a coarse copy of the antlers joined on, marked so
+    the far shader paints them their own colour and carries them with the head."""
+    import bpy
+    a2 = ant.copy()
+    a2.data = ant.data.copy()
+    bpy.context.collection.objects.link(a2)
+    for m in list(a2.modifiers):
+        a2.modifiers.remove(m)
+    bpy.ops.object.select_all(action='DESELECT')
+    a2.select_set(True)
+    bpy.context.view_layer.objects.active = a2
+    n0 = bodylib.tri_count(a2)
+    decimate_to(a2, DEER_FAR_ANTLER_TRIS)
+    log("far stag: antlers %d -> %d tris" % (n0, bodylib.tri_count(a2)))
+    g = a2.vertex_groups.new(name="Antler")
+    g.add(list(range(len(a2.data.vertices))), 1.0, 'REPLACE')
+    b2 = body.copy()
+    b2.data = body.data.copy()
+    bpy.context.collection.objects.link(b2)
+    joined = duplicate_joined([b2, a2], "Deer_Stag_Far")
+    for o in (a2, b2):
+        bpy.data.objects.remove(o, do_unlink=True)
+    path = far_herd.export_bind(joined, skel, quad.DEFORM_NAMES, os.path.join(out_dir, "%s_stag_lod2_bind.glb" % DEER),
+                                tris=far_herd.FAR_TRIS + DEER_FAR_ANTLER_TRIS, log=log, mark="Antler")
+    bpy.data.objects.remove(joined, do_unlink=True)
+    return path
+
+
 def cmd_far(args) -> None:
     """The far herd's mesh from a built GLB: its smallest LOD, in bind pose, parts in colours."""
     import bpy
     cf.reset_scene()
     bpy.ops.import_scene.gltf(filepath=args.glb)
+    if args.kind == "deer":
+        skel = quad.QuadSkeleton(db.RED)
+        obs = {o.name: o for o in bpy.data.objects if o.type == 'MESH'}
+        out = args.out or os.path.dirname(args.glb)
+        far_herd.export_bind(obs["Deer_Body"], skel, quad.DEFORM_NAMES, os.path.join(out, "%s_lod2_bind.glb" % DEER), log=log)
+        deer_far_stag(obs["Deer_Body"], obs["Deer_Antlers"], skel, out)
+        return
     skel = quad.QuadSkeleton(sb.EWE if args.kind == "sheep" else None)
     lod = [o for o in bpy.data.objects if o.type == 'MESH' and o.name in ("Horse_Body", "Sheep_Body")]
     if not lod:
@@ -685,9 +913,9 @@ def main(argv=None) -> int:
     if argv is None:
         argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser(prog="horse_forge")
-    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far"])
+    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far", "deer"])
     ap.add_argument("--glb", default="", help="far: the built GLB to take the far herd's mesh from")
-    ap.add_argument("--kind", default="horse", choices=["horse", "sheep"], help="far: whose proportions")
+    ap.add_argument("--kind", default="horse", choices=["horse", "sheep", "deer"], help="far: whose proportions")
     ap.add_argument("--face", default="dark", choices=["dark", "white"])
     ap.add_argument("--out", default="")
     ap.add_argument("--quick", action="store_true", help="coarse mesh and half-size maps, for looking")
@@ -699,6 +927,8 @@ def main(argv=None) -> int:
         cmd_sheep(args)
     elif args.command == "far":
         cmd_far(args)
+    elif args.command == "deer":
+        cmd_deer(args)
     elif args.command == "clips":
         if not args.out:
             raise SystemExit("clips needs --out")

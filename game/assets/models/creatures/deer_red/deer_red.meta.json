@@ -1,0 +1,178 @@
+{
+ "antlers": {
+  "bone": "Head",
+  "mesh": "Deer_Antlers",
+  "note": "a stag's; the game hides the mesh for a hind",
+  "tris": 2400
+ },
+ "bones": 40,
+ "bounds": [
+  -0.1872,
+  -1.0229,
+  -0.0003,
+  0.1869,
+  0.7657,
+  1.7403
+ ],
+ "clips": [
+  "Alert",
+  "Death",
+  "Graze",
+  "Graze_Step",
+  "Hit",
+  "Idle",
+  "Run",
+  "Trot",
+  "Turn_L90",
+  "Turn_R90",
+  "Walk"
+ ],
+ "coat_variants": {
+  "grey": "deer_red_grey_coat_albedo.png"
+ },
+ "collision": "none",
+ "generator": "horse_forge",
+ "params": {
+  "coats": {
+   "grey": {
+    "back": [
+     0.5,
+     0.48,
+     0.45
+    ],
+    "belly": [
+     0.8,
+     0.78,
+     0.73
+    ],
+    "body": [
+     0.6,
+     0.58,
+     0.54
+    ],
+    "ear_in": [
+     0.86,
+     0.84,
+     0.8
+    ],
+    "face": [
+     0.58,
+     0.56,
+     0.53
+    ],
+    "legs": [
+     0.5,
+     0.48,
+     0.45
+    ],
+    "muzzle": [
+     0.18,
+     0.17,
+     0.17
+    ],
+    "ruff": [
+     0.42,
+     0.4,
+     0.38
+    ],
+    "rump": [
+     0.9,
+     0.88,
+     0.83
+    ],
+    "rump_edge": [
+     0.4,
+     0.38,
+     0.36
+    ],
+    "throat": [
+     0.84,
+     0.82,
+     0.78
+    ]
+   },
+   "red": {
+    "back": [
+     0.36,
+     0.22,
+     0.14
+    ],
+    "belly": [
+     0.62,
+     0.5,
+     0.37
+    ],
+    "body": [
+     0.47,
+     0.27,
+     0.16
+    ],
+    "ear_in": [
+     0.82,
+     0.74,
+     0.62
+    ],
+    "face": [
+     0.46,
+     0.33,
+     0.24
+    ],
+    "legs": [
+     0.42,
+     0.3,
+     0.22
+    ],
+    "muzzle": [
+     0.14,
+     0.11,
+     0.1
+    ],
+    "ruff": [
+     0.3,
+     0.2,
+     0.13
+    ],
+    "rump": [
+     0.8,
+     0.7,
+     0.52
+    ],
+    "rump_edge": [
+     0.3,
+     0.18,
+     0.11
+    ],
+    "throat": [
+     0.78,
+     0.68,
+     0.54
+    ]
+   }
+  },
+  "proportions": {
+   "body_length": 1.2,
+   "bulk": 0.74,
+   "cannon": 1.22,
+   "head_size": 1.0,
+   "leg_length": 1.12,
+   "neck_length": 1.12,
+   "neck_raise": 16.0,
+   "tail_length": 0.3,
+   "width": 0.86,
+   "withers": 1.15
+  },
+  "style": {
+   "coat": "red",
+   "ruff": 0.0,
+   "seed": 11
+  }
+ },
+ "rig": "WM_Quadruped_v1",
+ "seed": 11,
+ "tris": [
+  7000,
+  2400,
+  700
+ ],
+ "version": 1
+}

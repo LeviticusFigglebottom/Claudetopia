@@ -92,6 +92,8 @@ func _run() -> void:
 			"road": await _road()
 			"slope": await _slope()
 			"flock": await _flock()
+			"deer": await _deer()
+			"deer_wild": await _deer_wild()
 			"downhill": await _downhill()
 
 
@@ -385,6 +387,131 @@ func _flock() -> void:
 		await _frames(45)
 		await _save("flock_%s" % str(spec[0]))
 		_lines.append("flock %s: %d drawn live, from %s" % [str(spec[0]), best.live_count(), str(away.snapped(Vector3.ONE * 0.01))])
+
+
+## The red deer beside the cob, for scale: a stag, a hind and a yearling hind stood in the Toll's
+## Lip's yard next to her, standing, walking and at the bound (played on the spot), from the side and
+## the three-quarters.
+func _deer() -> void:
+	_hide_hud()
+	var at := _horse.global_position
+	var f := Basis(Vector3.UP, _horse.heading)
+	_player.teleport(at + f * Vector3(0.0, 0.0, -14.0) + Vector3(0.0, 0.3, 0.0), _horse.heading, "ride_studio")
+	await _settle(at)
+	# the three in a row beside her, heads the way hers is: a side view has all four in profile
+	var side := f * Vector3(1.0, 0.0, 0.0)
+	var fwd := f * Vector3(0.0, 0.0, 1.0)
+	var deer: Array[HorseModel] = []
+	for spec in [[2.6, true, 1.08], [-0.2, false, 1.0], [-2.8, false, 0.82]]:
+		var m := HorseModel.new()
+		m.model_path = DeerHerds.MODEL
+		m.antlers = bool(spec[1])
+		_world.add_child(m)
+		var p: Vector3 = at + side * 2.3 + fwd * float(spec[0])
+		p.y = _world.provider.get_height(p.x, p.z)
+		m.global_transform = Transform3D(Basis(Vector3.UP, _horse.heading).scaled(Vector3.ONE * float(spec[2])), p)
+		deer.append(m)
+	var mid := at + side * 1.2
+	for pose in [["stand", 0.0, ""], ["walk", 1.1, "Walk"], ["run", 9.5, "Run"], ["alert", 0.0, "Alert"], ["graze", 0.0, "Graze"]]:
+		for m in deer:
+			m.standing_clip = str(pose[2]) if str(pose[2]) in ["Alert"] else ""
+			m.grazing = str(pose[2]) == "Graze"
+			m.set_motion(float(pose[1]), 0.0, str(pose[2]))
+		await _frames(24 if str(pose[0]) in ["stand", "graze"] else 11)
+		for v in [["side", side * 9.5 + Vector3(0.0, 1.1, 0.0)], ["quarter", side * 6.5 + fwd * 6.5 + Vector3(0.0, 1.5, 0.0)]]:
+			var eye: Vector3 = mid + (v[1] as Vector3)
+			eye.y = maxf(eye.y, _world.provider.get_height(eye.x, eye.z) + 1.0)
+			_cam.global_position = eye
+			_cam.look_at(mid + Vector3(0.0, 0.95, 0.0), Vector3.UP)
+			_cam.make_current()
+			await _frames(2)
+			await _save("deer_%s_%s" % [str(pose[0]), str(v[0])])
+	# close on the stag's head and the hind's
+	for m in [deer[0], deer[1]]:
+		m.set_motion(0.0, 0.0, "")
+		m.standing_clip = "Alert"
+	await _frames(20)
+	for k in 2:
+		var hp := deer[k].global_position + fwd * 0.9 * float(deer[k].scale.x) + Vector3(0.0, 1.45, 0.0)
+		_cam.global_position = hp + side * 2.4 + fwd * 1.6 + Vector3(0.0, 0.2, 0.0)
+		_cam.look_at(hp + Vector3(0.0, 0.25 if k == 0 else 0.0, 0.0), Vector3.UP)
+		await _frames(2)
+		await _save("deer_head_%s" % ("stag" if k == 0 else "hind"))
+	_lines.append("deer: stag, hind and yearling beside the cob at %s" % str(at.round()))
+	for m in deer:
+		m.queue_free()
+
+
+func _hide_hud() -> void:
+	for n in get_tree().root.find_children("*", "CanvasLayer", true, false):
+		(n as CanvasLayer).visible = false
+
+
+## The deer where they live: the herds at a Briarwold wood's edge as the country puts them there,
+## near (the rigged deer), off on the next rise (the far herd's meshes), and put up and running.
+func _deer_wild() -> void:
+	var p := _world.provider
+	var cell := Vector2i(27, 17)
+	var c := Vector3(p.origin.x + (float(cell.x) + 0.5) * 256.0, 0.0, p.origin.y + (float(cell.y) + 0.5) * 256.0)
+	c.y = p.get_height(c.x, c.z)
+	_hide_hud()
+	# the eye the wildlife reads is the camera's: it goes too, or the herds are Merrowby's
+	_cam.global_position = c + Vector3(0.0, 20.0, 0.0)
+	_cam.make_current()
+	_player.teleport(c + Vector3(0.0, 1.0, 0.0), 0.0, "ride_studio")
+	await _settle(c)
+	print("RIDE deer_wild: settled at %s" % str(c.round()))
+	var herds: DeerHerds = _world.wildlife.deer if _world.wildlife != null else null
+	if herds == null:
+		failures.append("deer_wild: no deer herds under the wildlife")
+		return
+	Settings.set_value("graphics", "wildlife", 3.0, false)
+	_world.wildlife.set_density(3.0)
+	var best: Dictionary = {}
+	for i in 60:
+		var bd := INF
+		for h in herds.herds:
+			var d := DeerHerds._flat(h["home"], c)
+			if d < bd:
+				bd = d
+				best = h
+		if not best.is_empty():
+			break
+		await _frames(5)
+	if best.is_empty():
+		failures.append("deer_wild: no herd within reach of the Briarwold's edge at %s" % str(c.round()))
+		return
+	var home: Vector3 = best["home"]
+	_lines.append("deer_wild: %d herds, %d deer (%d stags); the nearest %d at %s" % [herds.herds.size(), herds.count(),
+			herds.count(true), (best["deer"] as Array).size(), str(home.round())])
+	# the body well back out of their way, behind the camera
+	for spec in [["far_140m", 140.0, 6.0], ["near_45m", 45.0, 1.7], ["near_28m", 28.0, 1.6]]:
+		var dist: float = spec[1]
+		var away := _clear_bearing(home, dist, float(spec[2]))
+		var eye := home + away * dist
+		eye.y = p.get_height(eye.x, eye.z) + float(spec[2])
+		var body := home + away * (dist + 4.0)
+		# nobody near: they graze on, the eye is only a camera
+		_player.teleport(Vector3(body.x, p.get_height(body.x, body.z) + 0.1, body.z) + away * 110.0, 0.0, "ride_studio")
+		_cam.global_position = eye
+		_cam.look_at(home + Vector3(0.0, 0.9, 0.0), Vector3.UP)
+		_cam.make_current()
+		await _frames(60)
+		await _save("deer_wild_%s" % str(spec[0]))
+		_lines.append("deer_wild %s: %d rigged" % [str(spec[0]), herds.live_count()])
+	# now the body walks up on them from behind the camera, and they go
+	var away := _clear_bearing(home, 30.0, 1.6)
+	var walk_from := home + away * 34.0
+	_player.teleport(Vector3(walk_from.x, p.get_height(walk_from.x, walk_from.z) + 0.1, walk_from.z), atan2(-away.x, -away.z), "ride_studio")
+	var eye2 := home + away * 40.0 + Vector3(-away.z, 0.0, away.x) * 12.0
+	eye2.y = p.get_height(eye2.x, eye2.z) + 2.2
+	_cam.global_position = eye2
+	_cam.look_at(home + Vector3(0.0, 1.0, 0.0), Vector3.UP)
+	_cam.make_current()
+	for k in 10:
+		await _frames(6)
+		await _save("deer_wild_flee_%02d" % k)
+	_lines.append("deer_wild flee: herd %s" % str(DeerHerds.S.keys()[int(best["state"])]))
 
 
 ## A bearing from `at` along which an eye `dist` out and `h` up sees the sheep's back clear.
