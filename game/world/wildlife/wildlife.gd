@@ -472,11 +472,14 @@ func _step_flock(f: Dictionary, dt: float, near: Array[Vector3]) -> void:
 	var night := _night()
 	# a flock that is put up goes up together: the first to see you calls the rest
 	var spooked := false
-	for b in f["birds"]:
-		if int(b["state"]) == State.SIT and flush > 0.0:
-			var who := _nearest(b["pos"], near)
-			if _flat(who, b["pos"]) < flush:
-				spooked = true
+	if flush > 0.0:
+		for b in f["birds"]:
+			if int(b["state"]) == State.SIT:
+				var who := _nearest(b["pos"], near)
+				if _flat(who, b["pos"]) < flush:
+					# one is enough: the rest are not asked
+					spooked = true
+					break
 	if spooked and habit != "shy":
 		var who := _nearest(f["home"], near)
 		_put_up(f, who)
