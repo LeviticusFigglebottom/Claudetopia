@@ -311,6 +311,114 @@ func test_the_fort_stands_with_a_gate_a_walkway_and_a_garrison() -> void:
 	await tree.process_frame
 
 
+## Every kind, several seeds, built and walked on its navigation mesh from the way in to every room:
+## an author never hunts for a seed that can be walked (only the showcases were walked, and 13 of 14
+## mines tried left rooms off the mesh).
+func test_every_kind_is_walked_end_to_end() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var bad: Array = []
+	var built := 0
+	for kind in SiteKinds.KINDS:
+		for seed_i in [811, 1031, 1044]:
+			var def := _def(kind, seed_i)
+			var site := SiteInterior.new()
+			site.def_override = def
+			site.paced_override = 0
+			tree.root.add_child(site)
+			await tree.process_frame
+			built += 1
+			var report := _walk(site)
+			if not (report["unreached"] as Array).is_empty():
+				var nm := SiteInterior.navmesh_settings()
+				NavigationServer3D.bake_from_source_geometry_data(nm, site.source_geometry())
+				var why: Array = []
+				for rid in report["unreached"]:
+					var r := site.plan.room(str(rid))
+					var ways: Array = []
+					for li in r["links"]:
+						var l: Dictionary = site.plan.links[li]
+						var pts: Array = l["points"]
+						var a: Vector3 = pts[0]
+						var b: Vector3 = pts[-1]
+						var run := Vector2(b.x - a.x, b.z - a.z).length()
+						var mid: Vector3 = (a + b) * 0.5
+						ways.append("%s %s-%s rise %.1f/%.1f mid %s" % [l["kind"], l["a"], l["b"], b.y - a.y, run,
+								"on" if _near_poly(nm, mid) < 1.5 else "OFF(%.1f)" % _near_poly(nm, mid)])
+					why.append("%s[%s %s, centre %s] via %s" % [rid, r["role"], r["set_piece"],
+							"on" if _near_poly(nm, r["centre"]) < 1.5 else "OFF", ways])
+				bad.append("%s/%d: %s" % [kind, seed_i, why])
+			site.queue_free()
+			await tree.process_frame
+	for b in bad:
+		print("SITE WALK | " + str(b))
+	print("SITE WALK | %d of %d built sites walked to every room" % [built - bad.size(), built])
+	assert_eq(bad.size(), 0, "every kind walked end to end")
+
+
+static func _near_poly(nm: NavigationMesh, p: Vector3) -> float:
+	var verts := nm.get_vertices()
+	var best := INF
+	for i in nm.get_polygon_count():
+		best = minf(best, _poly_distance(verts, nm.get_polygon(i), p))
+	return best
+
+
+## How far `p` is from a navigation polygon: across (0 inside it, else to its nearest edge) and
+## twice how far above or below it. A flat vaulted floor bakes into a few big polygons whose middles
+## are far from any point on them, so matching by the polygons' middles lost whole rooms.
+static func _poly_distance(verts: PackedVector3Array, poly: PackedInt32Array, p: Vector3) -> float:
+	var q := Vector2(p.x, p.z)
+	var inside := true
+	var sign_seen := 0.0
+	var edge := INF
+	var y := 0.0
+	for k in poly.size():
+		var a3 := verts[poly[k]]
+		var b3 := verts[poly[(k + 1) % poly.size()]]
+		y += a3.y
+		var a := Vector2(a3.x, a3.z)
+		var b := Vector2(b3.x, b3.z)
+		var c := (b - a).cross(q - a)
+		if absf(c) > 0.0001:
+			if sign_seen == 0.0:
+				sign_seen = signf(c)
+			elif signf(c) != sign_seen:
+				inside = false
+		var ab := b - a
+		var t := clampf((q - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		edge = minf(edge, (a + ab * t).distance_to(q))
+	y /= float(poly.size())
+	return (0.0 if inside else edge) + absf(y - p.y) * 0.5
+
+
+## A site whose rooms are written out, with a ledge asked for and a secret: built (the ledge's
+## dressing read a key the plan never wrote), and every room reached from the way in.
+func test_a_written_site_with_a_ledge_is_built_and_reached() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	for seed_i in [1043, 1044, 1045, 1046, 1047]:
+		var def := {"id": "core:interior/test_written_%d" % seed_i, "name": "Written", "danger": 2,
+				"site": {"kind": "cave", "seed": seed_i, "region": "hearthvale", "boss": "core:boss/barrow_reeve",
+				"rooms": [{"id": "porch", "role": "entrance", "size": "medium"},
+						{"id": "stair", "role": "passage", "size": "small", "drop": -3.0},
+						{"id": "hall", "role": "hall", "size": "large", "set_piece": "ledge"},
+						{"id": "den", "role": "camp", "size": "large"},
+						{"id": "throne", "role": "boss", "size": "huge", "set_piece": "boss_arena"}]}}
+		var p := SitePlan.make(def)
+		var reach := p.reach()
+		assert_eq((reach["from"] as Array).size(), p.rooms.size(), "%d: every written room reached %s" % [seed_i, p.problems])
+		if seed_i == 1043:
+			var site := SiteInterior.new()
+			site.def_override = def
+			site.paced_override = 0
+			tree.root.add_child(site)
+			await tree.process_frame
+			assert_true(site.is_built, "a written site with a ledge is built")
+			var report := _walk(site)
+			assert_eq(report["unreached"], [], "and walked to every room")
+			site.queue_free()
+			await tree.process_frame
+
+
 ## The fort's garrison and a site's foes stay dead when the place is raised again, until a rest.
 func test_the_fallen_stay_dead_until_a_rest() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
@@ -448,7 +556,7 @@ func _walk(site: SiteInterior) -> Dictionary:
 	var unreached: Array = []
 	for r in site.plan.rooms:
 		var goal: Vector3 = r["centre"]
-		if _joined(nm, site.plan.entrance, goal):
+		if _joined(nm, site.plan.entrance, goal, SiteInterior.passage_links(site.plan)):
 			reached.append(r["id"])
 		else:
 			unreached.append(r["id"])
@@ -456,7 +564,7 @@ func _walk(site: SiteInterior) -> Dictionary:
 
 
 ## Whether two points (local to the navigation mesh) stand on polygons joined by shared edges.
-static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
+static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3, links: Array = []) -> bool:
 	var verts := nm.get_vertices()
 	var n := nm.get_polygon_count()
 	if n == 0:
@@ -470,20 +578,25 @@ static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
 		var best := -1
 		var best_d := INF
 		for i in n:
-			var c := Vector3.ZERO
-			var poly := nm.get_polygon(i)
-			for vi in poly:
-				c += verts[vi]
-			c /= float(poly.size())
-			var d := Vector2(c.x - p.x, c.z - p.z).length() + absf(c.y - p.y) * 2.0
+			var d := _poly_distance(verts, nm.get_polygon(i), p)
 			if d < best_d:
 				best_d = d
 				best = i
-		return best if best_d < 4.0 else -1
+		return best if best_d < 1.5 else -1
 	var start: int = nearest.call(a)
 	var goal: int = nearest.call(b)
 	if start < 0 or goal < 0:
 		return false
+	# the navigation's links (SiteInterior.passage_links): a way from one polygon to another
+	var jumps := {}
+	for w in links:
+		var pa: int = nearest.call(w[0])
+		var pb: int = nearest.call(w[1])
+		if pa < 0 or pb < 0:
+			continue
+		jumps.get_or_add(pa, []).append(pb)
+		if bool(w[2]):
+			jumps.get_or_add(pb, []).append(pa)
 	var seen := {start: true}
 	var todo := [start]
 	while not todo.is_empty():
@@ -495,4 +608,8 @@ static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
 				if not seen.has(j):
 					seen[j] = true
 					todo.append(j)
+		for j in jumps.get(i, []):
+			if not seen.has(j):
+				seen[j] = true
+				todo.append(j)
 	return false

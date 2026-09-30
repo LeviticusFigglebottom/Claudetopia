@@ -12894,6 +12894,27 @@ sites get all of it (Skerrow's Old Ghastow uses the fort outside).
   inside has a stable key; a death sets `site_fallen/<key>` to the count of rests; raised again, the
   place leaves them out until a rest has been counted since (`GameState.counters.hearth_rests`).
 - **The secret's loose stones** are packed from the floor up (three floating bands before).
+- **Shared site bugs the region agents found:**
+  - `SiteDress._ledge` read `z["span"]`, the plan writes `len`: any large room given a ledge
+    (hand-written, or chosen for a large room with no set-piece) crashed the build. Fixed; a written
+    site with a ledge is now built in the tests.
+  - Reachability without hunting seeds: a passage's and a room's noise is capped so the rock never
+    pinches a way shut (a noisy kind's secret passage closed on some seeds); `SitePlan._repair_reach`
+    joins any room the walk left unjoined to the nearest reached one, and leaves out a secret room
+    it cannot reach rather than leave it sealed off; every walkable run of every passage is also a
+    `NavigationLink3D` (one way down a drop; not the loose stones or the bar until opened), so a
+    foe finds its way where the baked polygons of a sloped doorway do not quite meet a room's.
+    The test now builds every kind at three seeds (24 sites) and walks each from the way in to
+    every room. Its old check matched points to polygon middles within 4 m, so a flat vaulted
+    floor (a few big polygons) read as unwalkable: that was most of the "13 of 14 mines" and
+    Hound's Swallet reports; it now measures to the polygon itself.
+  - A walled camp's yard stores stood inside each other: each is now kept 1.4 m from the rest.
+  - A stockade's stakes were a 10-sided rod and a capsule point, ~400 triangles each and near 300 of
+    them, drawn again in every shadow split: the Stakes at Oulnauve at 2.1 M primitives. A stake is
+    now six faces and a point (18 triangles).
+  - The drop search tried every pair of rooms five ways: making a plan took 220 ms on the loaded
+    box (the paced-build test's frame budget). Pairs too far apart for any bend are now skipped
+    first.
 - **Pads**: `pad_radius_m` 38 for Scathe (towers reach 24 m, the gate track 30 m) and 34 for the
   Kilnway. PoiPreview and the next build level them and clear their scatter.
 - `site_review`: several `--site`s a run, labels `a_outside_`/`b_inside_`, a near three-quarter shot,
@@ -12921,3 +12942,14 @@ Sheets (before/after): `docs/review/sites/scathe_fort_sheet_before.jpg`, `scathe
   formation); its cellar and secret rooms are dim.
 - The drop's lip has no dressing of its own (a lamp, a broken edge).
 - Nobody has checked these on Forward+.
+- Not in my files, reported by the region agents: `test_map_quests`' static walk reads a site
+  interior's boss from encounters and says "holds 0"; it should read `site.boss` (the Kilnway's and
+  Scathe's own quests too). The region audit's foes column counts encounter files only, not a
+  site's `garrison`. The poi-probe Godot sometimes does not exit after writing its probe. The cave
+  builder's crag boulders (`poi_builders_land.gd` `_crag`) overlap each other (12 at the Unsung
+  Vault), which a `delve` without `"mouth": "lava"` inherits.
+- The four kind-and-seed builds whose navigation needed the passage links (mine 811 and 1044,
+  keep 811 and 1044) have a seam where a sloped passage meets a room: the cause in the bake (cell
+  height against the ramp's steps?) is not found; the links cover it for foes, and the player is not
+  held to the mesh.
+- The stockade's primitive count was not re-measured with `poi_sheet.py` (no run to spare).

@@ -178,6 +178,10 @@ bones), `barracks`, `cellar_store`, `fungus_grotto`, `obsidian_grotto`, `ore_gal
   archers on a ledge, an ambusher in a passage, one walking the round between the second and
   fourth rooms, the heavy and his men in the hall, the boss in its arena behind a fog gate (not
   stood up again once `boss_deed/<id>` is set). They walk a navigation mesh baked from the rock.
+- **Every room walkable**, whatever the seed: the rock's noise never pinches a passage below a body's
+  width, a room left unjoined is joined, an unreachable secret left out, and every passage is also a
+  navigation link, so foes find their way where the baked mesh has a seam. `test_sites` walks every
+  kind at three seeds.
 - **The dead stay dead** until a Hearthstone rest, inside and out (`SiteFallen`): each foe of an
   inside and each of a fort's garrison has a stable key (`<site>/<room or group>/<n>`), a death sets
   the flag `site_fallen/<key>` to the count of rests then, and the place stood up again (walked away

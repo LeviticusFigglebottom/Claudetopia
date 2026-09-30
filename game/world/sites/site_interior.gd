@@ -350,6 +350,36 @@ func _navigate() -> void:
 	else:
 		NavigationServer3D.bake_from_source_geometry_data(nm, src)
 		nav_region.navigation_mesh = nm
+	# The plan's passages are ways on the navigation too: where a passage's baked polygons do not
+	# quite meet a room's (a seam at a sloped doorway: 4 of 24 kind-and-seed builds walked had one),
+	# a link along each run of it joins them, so a foe always finds its way room to room. The loose
+	# stones and the barred gate are not ways until opened; a drop is one way, down.
+	for w in passage_links(plan):
+		var nl := NavigationLink3D.new()
+		nl.start_position = w[0]
+		nl.end_position = w[1]
+		nl.bidirectional = bool(w[2])
+		nav_region.add_child(nl)
+
+
+## Every run of every walkable passage of `plan`, as [from, to, both ways] (local points).
+static func passage_links(p: SitePlan) -> Array:
+	var out: Array = []
+	for l in p.links:
+		var kind := str(l["kind"])
+		if kind in ["secret", "shortcut"]:
+			continue
+		var pts: Array = l["points"]
+		var down := kind == "drop"
+		for i in range(1, pts.size()):
+			var a: Vector3 = pts[i - 1]
+			var b: Vector3 = pts[i]
+			if down and a.y < b.y:
+				var t := a
+				a = b
+				b = t
+			out.append([a, b, not down])
+	return out
 
 
 static func navmesh_settings() -> NavigationMesh:

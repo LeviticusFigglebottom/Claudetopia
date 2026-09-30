@@ -299,9 +299,9 @@ static func _hook(d: PoiDressing, site: Dictionary, near: Vector3, on_y := NAN) 
 		d.masonry.ellipsoid(stones, top, Vector3(0.34, 0.07, 0.26), Basis(Vector3.UP, k.rng.randf() * TAU))
 		await k.step()
 		d.masonry.commit(stones, stone_look(k, at.y), "Cairn")
-		var paper := d.masonry.begin()
-		d.masonry.block(paper, Transform3D(Basis(Vector3.UP, 0.4), top + Vector3(0.18, -0.06, 0.1)), Vector3(0.16, 0.012, 0.12))
-		d.masonry.commit(paper, PoiKit.plain(Color(0.82, 0.78, 0.66), 0.9), "CairnNote")
+		var note := d.masonry.begin()
+		d.masonry.block(note, Transform3D(Basis(Vector3.UP, 0.4), top + Vector3(0.18, -0.06, 0.1)), Vector3(0.16, 0.012, 0.12))
+		d.masonry.commit(note, PoiKit.plain(Color(0.82, 0.78, 0.66), 0.9), "CairnNote")
 		k.collider(Vector3(1.1, y - at.y + 0.2, 1.1), Transform3D(Basis.IDENTITY, at + Vector3.UP * (y - at.y) * 0.5), "stone")
 		k.touchable("Hook", top + Vector3.UP * 0.1, prompt, hook)
 		return
@@ -981,8 +981,14 @@ static func enclosure(d: PoiDressing, site: Dictionary, style: String) -> void:
 	var gate_at := Vector3.ZERO
 	var fallen: Array = []        # merlons fallen off the walls: where they lie at the foot
 	# stone: one weathered batch for the walls and their trim; timber: the stakes and the steps
-	var walls: Variant = Stones.new(k, seed_i) if not timber else m.begin()
-	var trim: Variant = walls if not timber else m.begin()
+	var walls: Variant
+	var trim: Variant
+	if timber:
+		walls = m.begin()
+		trim = m.begin()
+	else:
+		walls = Stones.new(k, seed_i)
+		trim = walls
 	var dark := m.begin()
 	if walls is Stones:
 		(walls as Stones).top = walk_y + 1.2
@@ -1380,8 +1386,7 @@ static func _palisade(d: PoiDressing, st: SurfaceTool, p0: Vector2, p1: Vector2,
 	for i in n:
 		var p := p0.lerp(p1, (float(i) + 0.5) / float(n))
 		var h := top + 1.2 + k.rng.randf_range(-0.2, 0.25) - foot
-		m.rod(st, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), Vector3(p.x, foot + h * 0.5, p.y)), 0.16, h)
-		m.limb(st, Vector3(p.x, foot + h - 0.02, p.y), Vector3(p.x, foot + h + 0.35, p.y), 0.07)
+		_stake(st, Vector3(p.x, foot, p.y), h, 0.16, k.rng.randf() * TAU, k.rng.randf_range(0.3, 0.45))
 	var yaw := atan2(dir.x, dir.y)
 	var mid := (p0 + p1) * 0.5
 	k.collider(Vector3(0.36, top + 1.2 - foot, run), Transform3D(Basis(Vector3.UP, yaw), Vector3(mid.x, (foot + top + 1.2) * 0.5, mid.y)), "wood")
@@ -1395,6 +1400,25 @@ static func _palisade(d: PoiDressing, st: SurfaceTool, p0: Vector2, p1: Vector2,
 	await k.step()
 	m.commit(deck, k.surface("planks", 0.6), "FightingStep", true)
 	m.commit(posts, k.surface("timber", 0.6), "FightingStepPosts")
+
+
+## A split stake, sharpened: six faces and a point, 18 triangles. A stake laid as a round rod with a
+## capsule for its point was ~400, and a stockade has near three hundred of them, drawn again in
+## every shadow split: Sedgemire's Stakes at Oulnauve came to over 2 M primitives a view.
+static func _stake(st: SurfaceTool, foot: Vector3, h: float, r: float, yaw: float, point: float) -> void:
+	var ring: Array[Vector3] = []
+	for i in 6:
+		var a := yaw + TAU * float(i) / 6.0
+		ring.append(Vector3(cos(a) * r, 0.0, sin(a) * r))
+	var tip := foot + Vector3.UP * (h + point)
+	for i in 6:
+		var a0: Vector3 = foot + ring[i]
+		var a1: Vector3 = foot + ring[(i + 1) % 6]
+		var b0 := a0 + Vector3.UP * h
+		var b1 := a1 + Vector3.UP * h
+		# wound to face out
+		for q in [a0, a1, b0, a1, b1, b0, b0, b1, tip]:
+			st.add_vertex(q)
 
 
 ## A corner tower at walkway height with a parapet round its top (square or round), a timber
@@ -1603,8 +1627,18 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 	things.append(["cart", -side * (radius * 0.3) + gate_dir * (radius * 0.44), k.rng.randf_range(-0.4, 0.4) + atan2(gate_dir.x, gate_dir.y), true, 0.0])
 	things.append(["chopping_block", back * (radius * 0.12) - side * (radius * 0.3), 0.0, true, 0.0])
 	things.append(["wheelbarrow", back * (radius * 0.02) - side * (radius * 0.22), k.rng.randf() * TAU, true, 0.0])
+	# the stores, never one inside another (a barrel stood in a sack)
 	for kind in ["barrel", "barrel", "crate", "crate", "sack", "sack", "basket", "banner"]:
-		var p := side * (k.rng.randf_range(-1.0, 1.0) * radius * 0.45) + back * (k.rng.randf_range(0.0, 0.25) * radius)
+		var p := Vector2.ZERO
+		for attempt in 8:
+			p = side * (k.rng.randf_range(-1.0, 1.0) * radius * 0.45) + back * (k.rng.randf_range(0.0, 0.25) * radius)
+			var clear := true
+			for t in things:
+				if (t[1] as Vector2).distance_to(p) < 1.4:
+					clear = false
+					break
+			if clear:
+				break
 		things.append([kind, p, k.rng.randf() * TAU, kind != "banner", 0.0])
 	# hens scratching about the yard, a goose
 	for q in 5:
@@ -1835,7 +1869,7 @@ static func _trodden(d: PoiDressing, gate_dir: Vector2, radius: float, gate_at: 
 			var pts: Array = []
 			for q in idx:
 				var qi := int(q)
-				pts.append(Vector3(start + float(qi % n) * step, ys[qi], start + float(qi / n) * step))
+				pts.append(Vector3(start + float(qi % n) * step, ys[qi], start + floorf(float(qi) / float(n)) * step))
 			for q in [0, 1, 2, 1, 3, 2]:
 				st.add_vertex(pts[q])
 			quads += 1

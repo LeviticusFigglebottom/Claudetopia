@@ -83,6 +83,7 @@ func _make(def: Dictionary) -> void:
 		_lay_drop()
 	_lay_secret()
 	_lay_shortcut()
+	_repair_reach()
 	for r in rooms:
 		_room_ops(r)
 	for l in links:
@@ -486,6 +487,10 @@ func _lay_drop() -> void:
 			if flat.length() < 0.5:
 				continue
 			var dir := flat.normalized()
+			# too far apart for any way round: no bend makes it shorter (this test first kept the
+			# plan's making within a frame: trying every pair every way was 220 ms)
+			if flat.length() - edge_along(up, dir) - edge_along(lo, -dir) > DROP_REACH + 4.0:
+				continue
 			# straight across, or out of the upper room at an angle and round one bend, where the
 			# straight way's doorway would open on another
 			for turn in [0.0, 0.6, -0.6, 1.05, -1.05]:
@@ -557,6 +562,60 @@ func _raise_clear(r: Dictionary, new_h: float, skip: Array) -> bool:
 				if p.y > c.y and p.y < top and Vector2(p.x - c.x, p.z - c.z).length() < rad + float(spec.get("tunnel_r", 1.8)) + 1.0:
 					return false
 	return true
+
+
+## Every room reached from the way in and back, whatever the seed: a room the walk left unjoined
+## (a def's own rooms can) is joined to the nearest room that is, and a secret room that cannot be
+## is left out rather than left sealed off.
+func _repair_reach() -> void:
+	for guard in rooms.size():
+		var rr := reach()
+		var from: Array = rr["from"]
+		var back: Array = rr["back"]
+		var lost: Array = []
+		for r in rooms:
+			if not from.has(r["id"]) or not back.has(r["id"]):
+				lost.append(r)
+		if lost.is_empty():
+			return
+		var r: Dictionary = lost[0]
+		if r["role"] == "secret":
+			for li in range(links.size() - 1, -1, -1):
+				if links[li]["a"] == r["id"] or links[li]["b"] == r["id"]:
+					links.remove_at(li)
+			rooms.erase(r)
+			_by_id.erase(r["id"])
+			for i in rooms.size():
+				rooms[i]["index"] = i
+			_reindex_links()
+			problems.append("%s: the secret room could not be reached and was left out" % id)
+			continue
+		var best: Dictionary = {}
+		var best_d := INF
+		for o in rooms:
+			if lost.has(o):
+				continue
+			var dd := (o["centre"] as Vector3).distance_to(r["centre"])
+			if dd < best_d:
+				best_d = dd
+				best = o
+		if best.is_empty():
+			return
+		_join(best, r, "passage")
+		problems.append("%s: %s was joined to %s to be reached" % [id, r["id"], best["id"]])
+
+
+func _reindex_links() -> void:
+	for r in rooms:
+		r["links"] = []
+	for i in links.size():
+		links[i]["index"] = i
+		var a := room(str(links[i]["a"]))
+		var b := room(str(links[i]["b"]))
+		if not a.is_empty():
+			(a["links"] as Array).append(i)
+		if not b.is_empty():
+			(b["links"] as Array).append(i)
 
 
 ## A small room off a chamber in the middle of the walk, behind a wall of loose stones: rich loot,
@@ -676,8 +735,10 @@ func _room_ops(r: Dictionary) -> void:
 		ops.append({"op": "carve", "type": "vault", "c": c, "half": half, "yaw": float(r["yaw"]),
 				"noise": _noise_amp(), "k": 0.0})
 	else:
+		# nor a small room's walls into its middle
+		var cap := minf(minf(half.x, half.z) * 0.18, half.y * 0.22)
 		ops.append({"op": "carve", "type": "dome", "c": c, "half": half, "yaw": float(r["yaw"]),
-				"noise": _noise_amp() * (1.2 if r["role"] == "boss" else 1.0), "k": 0.0})
+				"noise": minf(_noise_amp() * (1.2 if r["role"] == "boss" else 1.0), cap), "k": 0.0})
 
 
 func _link_ops(l: Dictionary) -> void:
@@ -696,12 +757,15 @@ func _link_ops(l: Dictionary) -> void:
 		var height := width * (1.25 if square else 1.3)
 		if str(l["kind"]) == "secret":
 			height = 2.6
+		# the noise never takes a passage narrower than a body can pass (a noisy kind's secret passage
+		# pinched shut on some seeds, and the room behind it was cut off)
 		if square:
 			ops.append({"op": "carve", "type": "corridor", "a": a2, "b": b2, "w": width * 0.5,
-					"h": height, "arched": _built(), "noise": _noise_amp() * 0.5, "k": 0.0})
+					"h": height, "arched": _built(), "noise": minf(_noise_amp() * 0.5, maxf(width * 0.5 - 0.95, 0.0)), "k": 0.0})
 		else:
-			ops.append({"op": "carve", "type": "tube", "a": a2, "b": b2, "r": width * 0.5 * 1.1,
-					"noise": _noise_amp() * 0.7, "k": 0.9})
+			var r := width * 0.5 * 1.1
+			ops.append({"op": "carve", "type": "tube", "a": a2, "b": b2, "r": r,
+					"noise": minf(_noise_amp() * 0.7, maxf(r - 1.25, 0.0)), "k": 0.9})
 
 
 # --- set-pieces -----------------------------------------------------------------------------------

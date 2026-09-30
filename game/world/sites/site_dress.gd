@@ -748,7 +748,7 @@ func _ledge(r: Dictionary, z: Dictionary) -> void:
 	var c: Vector3 = r["centre"]
 	var inward := Vector3(c.x - at.x, 0.0, c.z - at.z).normalized()
 	var st := m.begin()
-	var span := float(z["span"])
+	var span := float(z.get("len", z.get("span", 6.0)))
 	var lip := at + inward * 1.7
 	for i in int(span / 2.0) + 1:
 		var p := lip + along * (float(i) * 2.0 - span * 0.5)
