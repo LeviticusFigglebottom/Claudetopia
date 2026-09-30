@@ -94,6 +94,9 @@ func test_the_mage_is_a_whole_style_with_its_own_start() -> void:
 func test_the_braziers_count_lights_by_how_far_they_were_said() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
+	assert_eq(_at(FIRST), "hear_tamsin", "the day opens on Tamsin's word (the owner's playtest, 2026-09-30)")
+	EventBus.dialogue_node_entered.emit(TAMSIN, "the_day")
+	assert_eq(_at(FIRST), "the_braziers", "and once she has said what it is for, the braziers")
 	var me := _node("", Vector3.ZERO, true)
 	var near := _node("prop:brazier", Vector3(0, 0, 9))
 	var far := _node("prop:brazier", Vector3(0, 0, 20))
@@ -332,6 +335,8 @@ func test_a_mage_s_new_game_begins_below_the_lamp_with_the_braziers_down_the_sho
 	if not braziers.is_empty():
 		(braziers[0] as Pell).kindle(player)
 		assert_true((braziers[0] as Pell).lit, "a brazier catches")
+	assert_eq(str(Social.quests.call("stage_id_of", FIRST)), "hear_tamsin", "her word on the day is the first objective")
+	Social.quests.call("set_stage", FIRST, "the_braziers")
 	for i in 2:
 		Social.quests.call("complete_objective", FIRST, i)
 	await _horse_stands("core:mount/wicks_carthorse", QuestSpots.ensure().position_of("kettle_tether"), 9.0, player)

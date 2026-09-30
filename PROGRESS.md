@@ -14148,3 +14148,175 @@ test_progression_perks, test_perks_do_what_they_say: 231 tests, 0 failed, 0 scri
   only; a pad belt wheel would be the next step.
 - Assets: game/assets/ui/items/*.png and belt_*.png are committed with their imports. Nothing to
   rebuild, and no world build is needed.
+## The starts played again: the teacher's word first, fair butts, the Briar off the drop, a torch in every kit, the Briarwold's sun brought down (2026-09-30)
+
+The owner played the Ranger's start on Forward+ and reported five things. Each is fixed here, and
+the Warrior, Mage and Rogue starts were checked for the same faults. Branch `wip/starts-2`.
+
+**1. Nobody to talk to at the start.** Each tutorial now opens on a stage of its own,
+`hear_dole` / `hear_rosen` / `hear_tamsin` / `hear_sauve`. Its one objective is *speak to the
+teacher* (`talk`, topic `the_day`), and the teacher stands a few paces from the body (Rosen 3.5 m,
+Dole, Tamsin and Sauve within 10-12 m, measured by the journey and the built-world tests).
+- When control is handed back, the teacher calls you over. It is a summons greeting, kept in each
+  Calling's own opening words: "Over here, by the line. Come and hear what today's for."
+- Each dialogue's `start` is now `the_day`. That node opens the conversation while the stage is
+  current (`conditions`, and `else` the old first node). It says the goal, why it matters, and
+  the lessons in order.
+- When it has been said, the first lesson begins. The horse is still handed over after the first
+  lesson.
+- The first flag and weather of each start now go on the new stage's `on_enter`.
+- The Rogue's collector and night-watch now stand for `hear_sauve` too (npcs/start_rogue.json).
+  Before this, the collector was `gone_when` outside the box stages.
+- The journey now drives the conversation on its own step. test_rogue_plays talks to Sauve with
+  the keys before it crouches.
+
+**2. The archery lesson.** The owner was right on both counts.
+- The butts were 20, 35 and 50 m out.
+- The far butt's centre line was cut by a trunk at 46 m (a ray from the eye hit a scatter body).
+- Every objective counted a hit on any butt beyond its `min_range`, so the far butt closed the
+  middle one too.
+
+The fix:
+- The butts now stand 15, 25 and 35 m from the mark, at bearings 246, 240 and 235 (the near one
+  to the right).
+- A headless probe checked a grid of bearings from 195 to 285 at 15, 25 and 35 m. The spots chosen
+  are level (height difference 0.00) and have no solid within 1 m.
+- Rays from the eye at the mark to each butt are clear: to its foot, middle and top (0.3, 0.9 and
+  1.5 m), and to both edges of the boss (0.55 m either side). The built-world test checks this.
+  With the edge rays, the near butt at 250 degrees had its right edge clipped by the house corner,
+  so it moved to 246. That keeps the middle butt's edge line 1 m clear of it.
+- A new objective field, `prop`, names the one butt an objective counts (QuestLog: the Pell's node
+  name; Waymarks: the marker points at that prop).
+- A second new field, `in_turn`, makes the middle and far butts count only once the one before is
+  done (`after`). A stray arrow in the far butt while the near one is asked for counts for nothing.
+- The journal shows the next butt only when it is due. The marker is on it, and done steps show as
+  done.
+- The quest walker hits the named prop.
+
+**3. The quest giver after the horse: Alder Wyke on the Briar.**
+- The `alder_briar` spot was 222 m north-west of the lodge, on the rim of a drop: 20.7 m within
+  10 m of it and 81 m within 25 m. The ground 40 m to its west and north-west lies at 166-208 m,
+  against 269 m at the spot.
+- Rosen's `rosen_briar` spot was on the drop's face (grade 1.87, about 62 degrees).
+- Watched headless: Alder walked his straight line from the lodge and dropped 17 m down a bank at
+  (3302, 165). He stuck there with no progress (grade 1.1), gave the leg up, and was put at the
+  rim once out of sight. That is "stuck, and fell off a massive cliff face between rocks and big
+  trees". This is very likely the "massive pit" the crash agent owns. The fall was a walk over the
+  edge, not a spawn before the ground was in.
+- A second spot, beside the Thornmarch road 190 m east, was also rejected. Alder was held for
+  2 minutes on a steep bank at (3500, 270), about 35 m short of it.
+- The new spots are by the Thornmarch road, 143 m east of the lodge, looking along it towards the
+  Briar (the Thornmarch is the Briar wall, east):
+  - `alder_briar`: bearing 115.3, 142.7 m, grade 0.03, 2.8 m of drop within 10 m;
+  - `rosen_briar`: 114.6, 145.2 m, three paces from him.
+- Watched from the line: Alder walks the road there on his feet and arrives in 85 s, with no
+  give-ups. Rosen is there.
+- The journal and the objective now say "east of the lodge along the Thornmarch road".
+- Rosen's `rosen_lip` at the Force stood on a 1.66 grade (59 degrees). It moved 3 m to the lip's
+  one level shelf (Wold Force, bearing 115.8, 33.6 m, grade 0.19), no lower.
+- Every other spot the four starts lay was checked the same way (grade, drop within 10 and 25 m,
+  water, solids): the Lamp's three, Moreva's five, the Rest's tether, Tam's ditch verge and the
+  Glass Bridge. All are level and dry. The only solid is a trunk 0.8 m from Tam's ditch verge,
+  which he stands beside.
+- test_start_ranger now fails any tutorial spot on a grade over 0.3, or with more than 4 m of drop
+  within 10 m (except the lip, whose drop is the point of it).
+
+**4. A torch in every start.**
+- The Pitch Torch (core:item/torch, now tagged `torch`; light range 10 m, energy 1.6) is in each
+  style's kit. The kit reads "... and a pitch torch".
+- A start with no style gets one (`Player.STARTING_TORCH`, after the Calling and the style).
+- A torch is held and lit, not only a light at the belt:
+  - HeldItems draws it in the left hand. `HeldTorch` builds it: an ash haft, a pitch wrapping
+    bound with cord, and a two-tongued flame that stands up whichever way the haft leans and licks.
+  - The player's CarriedLight (with its StealthLight) moves to the torch's head in the left hand
+    and flickers with the flame.
+  - Taken into the off hand, a torch is lit at once.
+  - With no light in the off hand, the lantern key (L) takes a torch from the bag, burning. A bow
+    or a staff goes on the back meanwhile, and a shield is slung. L again puts it out and gives the
+    hands back what they held.
+- HumanoidModel holds the torch up in both views (`_hold_the_torch`), through walks, runs, swings
+  and sayings. It is not held up in rolls, falls, the saddle or water.
+  - Third person: in front of the left shoulder, head up.
+  - First person: at the lower left of the picture.
+  - Before, the left arm hung and the torch would have burned head-down by the thigh, out of the
+    first-person view.
+- New test in test_held_items: the torch is taken up with a bow in hand and burns; the light is
+  within 0.35 m of its head; it is held head-up above the hip; its fire is in the first-person
+  frustum; and it is put out again with the bow given back.
+
+**5. The Briarwold's sun.**
+- The region's recipe was the brightest daylight of the six after Cinderlea's ash sky: sun energy
+  1.2 × exposure 1.02 = 1.22, against Hearthvale 1.05, Brightwater 1.19, Skerrow 1.25 (a pale
+  fell sun), Sedgemire 0.67. It also had the hardest contrast (1.16) and, with Cinderlea's, the
+  strongest sun scatter in the far fog (0.35).
+- On Forward+ with the "painted" preset, its god rays were volumetric fog at density 0.02,
+  anisotropy 0.75 and sun volumetric energy 2.0. Over the fog's 96 m that replaces 85% of what lies
+  behind with lit fog, thrown forward toward the sun at about 28 times an even scatter's
+  brightness. Other regions use 0.005 and 0.4, about 38% and 4 times. In an open clearing like
+  Fernhold's, any view near the sun became a bright veil. Compatibility draws none of this.
+- Now:
+  - sun 1.08, exposure 1.0 (brightest daylight 1.08, beside Hearthvale's);
+  - contrast 1.13;
+  - `fog_sun_scatter` 0.22;
+  - god rays at density 0.0075, anisotropy 0.6 and sun volumetric energy 1.2
+    (`Atmosphere.GOD_RAYS_*`): about half the air 96 m off kept, and a third of the forward throw.
+- Kept, so the region is not dulled: the amber sun colour, the saturation (1.1), the strongest
+  bloom, the green fill, and god rays still denser than the plain air's.
+- The film's sun geometry is unchanged. test_cinematic_paths_clear's low-sun test passes on every
+  shot.
+
+**For the owner to check on Forward+, "painted" preset:**
+- Stand on Fernhold's common at 09:00-10:00 and 16:00-17:00. Look south-east, south and
+  south-west, across and near the sun.
+- Replay the Ranger's film: `the_wold` (the Wold over the canopy) and `the_force` (16:48, the
+  falls through the leaves) are the two that face the most sky.
+- If a shot still glares, turn Settings > Graphics > Volumetric fog off. If that clears it, the
+  rays want less again (`GOD_RAYS_DENSITY`). If it does not, the glow is the next suspect: its
+  luminance cap is 4, from triage 54.
+
+**Measured and tests.**
+- Headless probes on the built world: the butts' lines of sight and ranges, the Briar and lip
+  spots, and Alder's walk (above).
+- Targeted tests: test_start_ranger (8), test_start_warrior, test_start_mage, test_start_rogue,
+  test_rogue_plays, test_styles, test_held_items (7), test_cinematic_paths_clear, test_atmosphere,
+  test_poi_people, test_first_person, test_waymark_targets, test_waymarks,
+  test_quest_stage_references, test_content_db, test_content_social, test_quests,
+  test_pickpocketing, test_quest_givers: green.
+- test_cinematic_player failed a different one of its timing tests on each of two runs (the
+  fallback opening's country-waiting, under the loaded machine). It does not touch anything
+  changed here.
+- The GDScript warning count is back at its baseline of 49 (a local named `wrap` was renamed).
+- `./run.sh journey --style=`: warrior 7/7, ranger 6/6 (1 skipped: the first lesson is an arrow),
+  mage 7/7, rogue 7/7, 0 logged errors. Each now includes "the teacher's first conversation says
+  what the day is for, and closes the first objective".
+- `./run.sh quests --only=` the eight start quests: 8 of 8 end every way they can, 0 logged errors.
+  The Ranger's pair passed on a second run, after the walker learnt `prop`.
+
+**Looked at.** One Compatibility frame, `ranger_range_from_the_mark` (plan
+`tools/capture/plans/starts_played_again.json`). It shows the range running west down the lane
+between the lodge's houses, with the middle butt in the middle of the frame. The frame took over an
+hour on this machine's software GL (about 80 s a frame round Fernhold), so the coordinator stopped
+it. The Briar spot's frame and `film_light.py --shoot --films ranger` were not taken. The range's
+lines of sight and the quest givers' ground are verified headless instead: the built-world test,
+and the probes' walk-watch above. The owner judges the look on their GPU.
+
+### Not done / for the coordinator
+- **With the aim-hotbar branch:** the knife lesson now says `{key:cycle_weapon}`, as asked. On this
+  branch that action does not exist yet, so it reads "[cycle_weapon]" until the belt branch lands.
+  - The ranger kit still binds the knife to `quick_4`. After the merge it should follow whatever
+    the belt does for a weapon.
+  - The torch can go on the new belt then (a torch on the belt is taken into the off hand). Here it
+    is in the bag and on the lantern key: `Equipment.bind_quick` takes no tools on this branch.
+- **The pit and the NPC fall:** Alder's fall was over the rim of the big drop north-west of
+  Fernhold (the old `alder_briar` spot, 3239, 38, with 80 m of drop within 25 m). That is very
+  likely the pit the crash agent owns. The spots here no longer go near it. npc.gd's gravity and
+  snap were not touched.
+- The Briar lesson now happens 143 m east by the Thornmarch road. Whether the Briar's thorn is in
+  sight from there was not seen. Its journal says the two are "looking along it to the wall".
+- The Ranger's film light was not re-shot after the Briarwold change: the sun geometry is unchanged
+  and the low-sun test passes. The Forward+-only god-ray change is for the owner to judge, with the
+  checklist above.
+- A person held to a far `holds` spot still walks a straight line when there is no navigation mesh
+  (outside a settlement's pad plus 25 m). The fix here is the spot. A route by road for far holds,
+  as schedules have, would be the general fix.
+- test_cinematic_player's timing tests are flaky on the loaded machine (see above).

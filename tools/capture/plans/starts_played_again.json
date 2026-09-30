@@ -1,0 +1,49 @@
+{
+ "note": "The starts played again (2026-09-30): the Ranger's range from the shooting mark (the three butts at 15, 25 and 35 m, the near one to the right), and Alder and Rosen at their new Briar spot by the Thornmarch road. ./run.sh shots tools/capture/plans/starts_played_again.json",
+ "shots": [
+  {
+   "label": "ranger_range_from_the_mark",
+   "at": {
+    "place": "core:place/fernhold",
+    "bearing": 78.3,
+    "distance": 29.4,
+    "height": 1.75
+   },
+   "body": {
+    "place": "core:place/fernhold",
+    "bearing": 80.0,
+    "distance": 27.0
+   },
+   "look": {
+    "place": "core:place/fernhold",
+    "bearing": 147.7,
+    "distance": 9.2,
+    "height": 0.9
+   },
+   "fov": 62,
+   "time": 9.5,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "ranger_alder_on_the_briar_road",
+   "at": {
+    "place": "core:place/fernhold",
+    "bearing": 118.3,
+    "distance": 135.8,
+    "height": 1.8
+   },
+   "quests": {
+    "core:quest/first_ranger": "the_briar"
+   },
+   "look": {
+    "place": "core:place/fernhold",
+    "bearing": 115.3,
+    "distance": 142.7,
+    "height": 1.2
+   },
+   "fov": 60,
+   "time": 9.5,
+   "weather": "core:weather/clear"
+  }
+ ]
+}

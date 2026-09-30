@@ -122,6 +122,13 @@
       }
     ],
     "stages": [
+      {"id": "hear_sauve",
+       "journal": "Sauve Mor is waiting to tell you what tonight is for, and why you are here.\n\nHe is standing on the open boards south of the landing's gardens, a few paces from you, in the fog. Go and speak to him, quietly.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/sauve_mor", "topic": "the_day", "text": "Speak to Sauve Mor on the boards {key:interact}"}
+       ],
+       "on_enter": [{"set_flag": "out_before_dawn"}, {"weather": "core:weather/mist"}],
+       "on_complete": []},
       {
         "id": "the_strongbox",
         "journal": "Tomorrow is tithe-day.\n\nBrannock Tole, the Tallymen's collector, sleeps tonight against his strongbox, and the tithe-book in it says Moreva owes forty baskets of eels more than it ever caught. At the count the Charter believes the book, not the eels. Sauve means to have the book before he wakes.\n\nGo to the collector's strongbox on the landing's south-east boards, crouched. Pick its lock, and take the tithe-book out of it. Don't wake him.\n\nHow: crouched, you make less noise and are harder to see. Set the lock's pin as the needle crosses the band. A lock picked is a crime, and a crime seen is a bounty, so do it where nobody is watching. And if you have the hands for it, his pocket too: a sleeping man's pocket is a lock with no pin at all, if you come at it low.",

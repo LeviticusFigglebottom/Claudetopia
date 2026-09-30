@@ -980,6 +980,20 @@ func _style_journey(style_id: String) -> void:
 			var t := NpcRegistry.instance.actor(teacher) as Node3D if NpcRegistry.instance != null else null
 			return t != null and t.global_position.distance_to(player.global_position) < 14.0, 30.0)
 	_record("the teacher speaks first, a few paces off", not words.is_empty() and near, "\"%s\"" % words)
+	# the first objective is the teacher's word on what the day is for, and why (the owner's
+	# playtest, 2026-09-30): spoken to, the conversation opens on it and the lesson begins
+	var talk: Dictionary = (Social.quests.objectives_of(quest) as Array)[0]
+	var talk_stage := str(Social.quests.stage_id_of(quest))
+	if str(talk.get("type", "")) == "talk" and str(talk.get("target", "")) == teacher:
+		Social.dialogue.call("start", "", teacher)
+		await _physics(10)
+		Social.dialogue.call("stop")
+		await _physics(4)
+		_record("the teacher's first conversation says what the day is for, and closes the first objective",
+				str(Social.quests.stage_id_of(quest)) != talk_stage, "%s -> %s" % [talk_stage, str(Social.quests.stage_id_of(quest))])
+	else:
+		_record("the teacher's first conversation says what the day is for, and closes the first objective", false,
+				"the first objective is %s %s" % [str(talk.get("type", "")), str(talk.get("target", ""))])
 	# the first lesson, on the key
 	var first: Dictionary = (Social.quests.objectives_of(quest) as Array)[0]
 	if str(first.get("target", "")) in ["hit_light", "hit_heavy"]:

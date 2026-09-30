@@ -11,6 +11,13 @@
        "notes": "the yard's far side from the pells, where Dole has Hollin tied for you after the first lesson"}
     ],
     "stages": [
+      {"id": "hear_dole",
+       "journal": "Sergeant Dole is waiting to tell you what today is for, and why you are here.\n\nHe is standing at the end of the row of pells in the Wardens' drill yard, a few paces from you. Go and speak to him.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/wardens_dole", "topic": "the_day", "text": "Speak to Sergeant Dole in the drill yard {key:interact}"}
+       ],
+       "on_enter": [{"set_flag": "recruit_at_the_rest"}],
+       "on_complete": []},
       {"id": "the_yard",
        "journal": "Sergeant Dole needs a recruit to ride the Stair Head's pay south today, and it will be whoever can fight. He starts you on the pells.\n\nGo to the three pells in the drill yard, the wooden posts in a row. Strike them: three light blows, then two heavy blows, then lock on to one.\n\nHow: the light blow is quick. The heavy blow is held back and let go; it breaks a guard, and it costs more of your stamina, the bar that empties as you fight. Lock-on keeps your eyes on one enemy, because a bandit does not stand still to be looked at.",
        "marker": {"place_id": "core:place/wardens_rest", "radius": 40},

@@ -326,7 +326,7 @@ static func _act(quest: Dictionary, stage: Dictionary, o: Dictionary) -> Diction
 	var against := str(o.get("against", ""))
 	var act := str(o.get("target", ""))
 	if against.begins_with("prop:"):
-		return _prop(against.substr(5), quest, stage, act)
+		return _prop(against.substr(5), quest, stage, act, str(o.get("prop", "")))
 	if against != "":
 		match Ids.type_of(against):
 			"npc":
@@ -381,9 +381,12 @@ static func _quest_props(quest: Dictionary, kind: String) -> Array[Dictionary]:
 
 ## The things a lesson is made on: this quest's props of the kind, else any quest's, else (the
 ## pells a Vale fort's yard stands of its own) the stage's place until the live ones are found.
-static func _prop(kind: String, quest: Dictionary, stage: Dictionary, act := "") -> Dictionary:
+static func _prop(kind: String, quest: Dictionary, stage: Dictionary, act := "", only := "") -> Dictionary:
 	var rows := _quest_props(quest, kind)
-	if rows.is_empty():
+	# an objective about one prop by its name (the far butt, not the nearest) points at that one
+	if only != "":
+		rows = rows.filter(func(r: Dictionary) -> bool: return str(r["name"]) == only)
+	if rows.is_empty() and only == "":
 		for def in ContentDB.all("quest"):
 			rows.append_array(_quest_props(def, kind))
 	var names: Array[String] = []
@@ -404,7 +407,7 @@ static func _prop(kind: String, quest: Dictionary, stage: Dictionary, act := "")
 		if PlaceRef.xz(place) == Vector2.INF:
 			return _none("no yard is named for the pells")
 	return {"kind": "prop", "prop": kind, "names": names, "points": points, "place": place, "act": act,
-			"about": plural(kind)}
+			"about": plural(kind), "only": only}
 
 
 ## Foes a lesson is taught on: where the stage fights them (a kill of the kind in the stage, or
@@ -660,7 +663,10 @@ static func _spot_now(a: Dictionary) -> Dictionary:
 static func _prop_now(a: Dictionary, from: Vector3, inside: String) -> Dictionary:
 	var best: Node3D = null
 	var best_d := INF
+	var only := str(a.get("only", ""))
 	for node in live_props(str(a.get("prop", "")), str(a.get("act", ""))):
+		if only != "" and str(node.name) != only:
+			continue
 		var d := _flat(node.global_position, from) if from != Vector3.INF else 0.0
 		if d < best_d:
 			best_d = d

@@ -189,6 +189,15 @@ const FP_BELOW := 0.5
 const FP_ABOVE := 0.4
 const FP_NEAREST := 0.4
 const FP_TWO_HANDS_M := 0.13
+## A torch in the left hand is held up and a little out, its head above the hand, in both views
+## (the owner's playtest, 2026-09-30): at the arm's rest it hung head-down by the thigh, out of the
+## first-person picture and burning into the leg. Third person: from the chest joint (+X the body's
+## left, +Z ahead), the haft leaning TORCH_UP_3P. First person: a place in the view (x right, y up,
+## z ahead) at the picture's lower left, the haft leaning TORCH_UP_FP.
+const TORCH_HOLD_3P := Vector3(0.26, -0.16, 0.34)
+const TORCH_UP_3P := Vector3(0.08, 1.0, 0.3)
+const TORCH_HOLD_FP := Vector3(-0.27, -0.22, 0.48)
+const TORCH_UP_FP := Vector3(-0.12, 1.0, 0.28)
 const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw", "Interact", "Pick_Up"]
 ## The bones a stance owns: everything above the hips, and what hangs off it.
 const UPPER_BODY: Array[String] = ["Spine", "Chest", "Neck", "Head",
@@ -336,6 +345,8 @@ var view_follow := 0.0
 ## stance, not swimming).
 var carry := 0.0
 var _carry_w := 0.0
+## How far the left arm is in the torch's hold now (0..1).
+var _torch_w := 0.0
 var _carry_t := 0.0
 var _carry_tracks := {}                  ## bone -> its rotation track in CARRY_CLIP
 ## The view's pitch in first person (radians, up +: CameraRig.pitch), for placing the carry, and how
@@ -2584,6 +2595,7 @@ func _pose(delta: float) -> void:
 	_lay_carry(delta)
 	_aim_the_body(delta)
 	_hold_in_view(delta)
+	_hold_the_torch(delta)
 	_plant_feet(delta)
 	if bow_hands != null:
 		bow_hands.update(self, delta)
@@ -2816,8 +2828,9 @@ func _reach_for_view(w: float, guard: bool) -> void:
 	var head := skeleton.find_bone("Head")
 	var eye := skeleton.get_bone_global_pose(head) * (_eye_in_head if _eye_in_head != Vector3.INF else EYE_IN_HEAD)
 	var right_holds := _holds("WeaponR")
-	var bow := _holds("WeaponL")
-	var left_holds := bow or _holds("ShieldL")
+	var torch := holds_torch()
+	var bow := _holds("WeaponL") and not torch
+	var left_holds := bow or torch or _holds("ShieldL")
 	var socket_r := skeleton.find_bone("Socket.WeaponR")
 	# the left hand's grip on what the right holds, as the guard has it
 	var grip_l := Transform3D.IDENTITY
@@ -2856,6 +2869,55 @@ static func _flip(v: Vector3) -> Vector3:
 
 static func _mirror(v: Vector3) -> Vector3:
 	return Vector3(-v.x, v.y, v.z)
+
+
+## Whether the left hand holds a torch (HeldTorch).
+func holds_torch() -> bool:
+	var s := socket("WeaponL")
+	if s == null:
+		return false
+	for c in s.get_children():
+		if c is HeldTorch and not c.is_queued_for_deletion():
+			return true
+	return false
+
+
+## The left arm raised to hold a torch up (TORCH_HOLD_*), over whatever posed it: through walks,
+## runs, swings and sayings, not in a roll, a stagger, a fall, a climb, the saddle or the water,
+## where the clips' own arms are kept.
+func _hold_the_torch(delta: float) -> void:
+	var want := 1.0 if holds_torch() and (_one_shot.is_empty() or _starts_with_any(_one_shot, FP_LIFTS)) \
+			and _stance.is_empty() and not _swimming and _holding.is_empty() else 0.0
+	_torch_w = move_toward(_torch_w, want, delta / CARRY_BLEND_S)
+	if skeleton == null or _torch_w <= 0.001:
+		return
+	var bones: Array[int] = []
+	for n in ["UpperArm.L", "LowerArm.L", "Hand.L"]:
+		var b := skeleton.find_bone(n)
+		if b < 0:
+			return
+		bones.append(b)
+	var socket_l := skeleton.find_bone("Socket.WeaponL")
+	var was: Array[Quaternion] = []
+	for b in bones:
+		was.append(skeleton.get_bone_pose_rotation(b))
+	if first_person:
+		var head := skeleton.find_bone("Head")
+		var eye := skeleton.get_bone_global_pose(head) * (_eye_in_head if _eye_in_head != Vector3.INF else EYE_IN_HEAD)
+		var turn := _view_turn()
+		_reach(bones[0], bones[1], bones[2], _in_view(eye, TORCH_HOLD_FP), turn * Vector3(0.8, -0.7, -0.3))
+		_turn_held(bones[2], socket_l, turn * _flip(TORCH_UP_FP))
+	else:
+		var chest := skeleton.find_bone("Chest")
+		if chest < 0:
+			return
+		var at := skeleton.get_bone_global_pose(chest).origin + TORCH_HOLD_3P
+		_reach(bones[0], bones[1], bones[2], at, Vector3(0.8, -0.7, -0.3))
+		_turn_held(bones[2], socket_l, TORCH_UP_3P.normalized())
+	var w := smoothstep(0.0, 1.0, _torch_w)
+	if w < 0.999:
+		for i in bones.size():
+			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
 
 
 ## Whether something is held in this socket (a HeldItems model).

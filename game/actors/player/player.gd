@@ -174,6 +174,8 @@ var appearance: CharacterAppearance = CharacterAppearance.new()
 ## A carried light is off until the player strikes it, and it is the one thing they can do
 ## about the dark that also makes them easier to see (Stealth reads it as any other lamp).
 var lantern_lit: bool = false
+## The torch every new character carries (the style kits name it; a start with no style is given it).
+const STARTING_TORCH := "core:item/torch"
 var arrows: int = 20
 var is_sneaking: bool = false
 var is_sprinting: bool = false
@@ -351,6 +353,10 @@ func _take_the_naming() -> void:
 	if not style.is_empty() and str(prog.get("style_id")) != style and prog.has_method("apply_style"):
 		prog.call("apply_style", style, bag, worn)
 		_ready_style_sayings(style)
+	# and a torch, for the first dark: in every style's kit, and here for a start with no style
+	# (the owner's playtest, 2026-09-30: "a torch in every start")
+	if bag != null and _a_torch_in(bag) == "" and ContentDB.has(STARTING_TORCH):
+		bag.add(STARTING_TORCH, 1)
 
 
 ## A style's sayings on the free quick keys in the kit's order, and the first one readied: a mage's
@@ -431,18 +437,19 @@ func _dress_the_body() -> void:
 	_dress_hands()
 
 
-## The weapon in the hand, or in its sheath while it is put away, and a shield on the arm, drawn
-## (HeldItems). A lantern or a torch in the off hand is lit rather than drawn here
-## (_refresh_lantern).
+## The weapon in the hand, or in its sheath while it is put away, and a shield on the arm or a torch
+## in the left hand, drawn (HeldItems). A lantern is lit rather than drawn (_refresh_lantern); a
+## torch is both: its fire is drawn on the torch and its light is the CarriedLight at its head.
 func _dress_hands() -> void:
 	var body := body_model()
 	if body == null:
 		return
 	var main := ContentDB.get_or_empty(str(equipped.get("main_hand", "")))
 	var off := ContentDB.get_or_empty(str(equipped.get("off_hand", "")))
-	if not (off.get("tags", []) as Array).has("shield"):
+	if not (off.get("tags", []) as Array).has("shield") and not HeldItems.is_torch(off):
 		off = {}
 	HeldItems.dress(body, main, off, weapon_drawn)
+	_light_the_torch()
 
 
 ## Out of a fight the weapon rides in its sheath: a blade at the left hip, a two-handed weapon or a
@@ -2314,8 +2321,12 @@ func equip_weapon(item_id: String, instance_data: Dictionary = {}) -> void:
 
 
 func equip_offhand(item_id: String) -> void:
+	var was_torch := HeldItems.is_torch(offhand)
 	offhand = ContentDB.get_or_empty(item_id) if not item_id.is_empty() else {}
 	equipped["off_hand"] = item_id
+	# a torch taken into the hand is taken up burning: nobody carries a cold torch to see by
+	if HeldItems.is_torch(offhand) and not was_torch:
+		lantern_lit = true
 	_refresh_lantern()
 	_recompute_load()
 	_dress_hands()
@@ -2358,8 +2369,15 @@ func _refresh_lantern() -> void:
 		stealth_light.name = "StealthLight"
 		_lantern_light.add_child(stealth_light)
 		get_socket("Socket.Lantern").add_child(_lantern_light)
+	# a torch's light burns at its head in the left hand; a lantern's hangs at the belt
+	var torch := HeldItems.is_torch(offhand)
+	var home := get_socket("Socket.WeaponL" if torch else "Socket.Lantern")
+	if home != null and _lantern_light.get_parent() != home:
+		_lantern_light.reparent(home, false)
+	_lantern_light.position = HumanoidModel.grip_offset("L") + Vector3.UP * (HeldTorch.FLAME_Y + 0.12) if torch else Vector3.ZERO
 	_lantern_light.omni_range = float(light_def.get("range", 8.0))
 	_lantern_light.light_energy = float(light_def.get("energy", 1.0))
+	_lantern_light.set_meta("base_energy", _lantern_light.light_energy)
 	_lantern_light.light_color = Color.html(str(light_def.get("color", "#ffb86a")))
 	var stealth := _lantern_light.get_node_or_null("StealthLight") as StealthLight
 	if stealth != null:
@@ -2367,18 +2385,72 @@ func _refresh_lantern() -> void:
 		stealth.energy = _lantern_light.light_energy
 		stealth.enabled = lantern_lit
 	_lantern_light.visible = lantern_lit
+	_light_the_torch()
 
 
-## Strikes or shutters the carried light. Returns whether anything is lit afterwards.
+## The torch in the left hand burns while the carried light is lit.
+func _light_the_torch() -> void:
+	var torch := HeldItems.torch_of(body_model())
+	if torch != null:
+		torch.lit = lantern_lit and HeldItems.is_torch(offhand)
+		torch.light = _lantern_light
+
+
+## What the hands held before a torch was taken up with the lantern key, given back when it is put
+## out: {"main_hand": id, "off_hand": id}, or {} when no torch was taken up so.
+var _before_torch: Dictionary = {}
+
+
+## Strikes or shutters the carried light. Returns whether anything is lit afterwards. With a torch
+## in the bag and no light in the off hand, the key takes the torch up burning in the left hand (a
+## bow or a staff, which want both hands, goes on the back meanwhile, and a shield on the arm is
+## slung); with a torch in the hand it puts it out and gives the hands back what they held.
 func toggle_lantern() -> bool:
-	if offhand.get("light", {}).is_empty():
-		EventBus.notify.emit("You have nothing to light.", "warning")
+	var eq := _doll()
+	if HeldItems.is_torch(offhand):
+		lantern_lit = false
+		if eq != null and eq.has_method("unequip"):
+			eq.call("unequip", "off_hand")
+			var main_id := str(_before_torch.get("main_hand", ""))
+			var off_id := str(_before_torch.get("off_hand", ""))
+			if main_id != "" and str(eq.call("item_id", "main_hand")) == "":
+				eq.call("equip", main_id, "main_hand")
+			if off_id != "" and str(eq.call("item_id", "off_hand")) == "":
+				eq.call("equip", off_id, "off_hand")
+		_before_torch = {}
+		EventBus.notify.emit("You put out the torch.", "item")
 		return false
+	if offhand.get("light", {}).is_empty():
+		var bag := get_node_or_null("Inventory") as Inventory
+		var torch_id := _a_torch_in(bag)
+		if torch_id == "" or eq == null or not eq.has_method("equip"):
+			EventBus.notify.emit("You have nothing to light.", "warning")
+			return false
+		_before_torch = {"main_hand": str(eq.call("item_id", "main_hand")), "off_hand": str(eq.call("item_id", "off_hand"))}
+		if not bool(eq.call("equip", torch_id, "off_hand")):
+			_before_torch = {}
+			EventBus.notify.emit("You have nothing to light.", "warning")
+			return false
+		lantern_lit = true
+		_refresh_lantern()
+		EventBus.act_done.emit("torch", self, null, torch_id)
+		EventBus.notify.emit("You light a torch.", "item")
+		return true
 	lantern_lit = not lantern_lit
 	_refresh_lantern()
 	var said := "The %s is lit." % str(offhand.get("name", "lantern")).to_lower() if lantern_lit else "You shutter the light."
 	EventBus.notify.emit(said, "item")
 	return lantern_lit
+
+
+## The first torch in the bag, or "".
+static func _a_torch_in(bag: Inventory) -> String:
+	if bag == null:
+		return ""
+	for def in ContentDB.all("item"):
+		if HeldItems.is_torch(def) and bag.count(str(def.get("id", ""))) > 0:
+			return str(def["id"])
+	return ""
 
 
 ## Seconds before the weapon can be loosed again; 0 for a bow, which is drawn instead.
