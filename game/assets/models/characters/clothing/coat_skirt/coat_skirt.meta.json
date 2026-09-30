@@ -1,0 +1,37 @@
+{
+ "bounds": [
+  -0.7362,
+  -0.1553,
+  0.3824,
+  0.7362,
+  0.1578,
+  1.5573
+ ],
+ "collision": "none",
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "coat_skirt": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 75566,
+ "slot_hint": "torso",
+ "textures": [
+  "coat_skirt_albedo.png",
+  "coat_skirt_orm.png"
+ ],
+ "tris": [
+  4798,
+  0,
+  0
+ ],
+ "version": 1
+}

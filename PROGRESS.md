@@ -13241,3 +13241,116 @@ Tower 8. The new places' own cost: 5-114 draws, 1-216 k triangles (the Horn Pale
   Pellow's Pale.
 - Sheets for the flagship places (see above): not made; a render of Briarwold is an hour.
 - `poi-probe` aborts on exit after writing its file ("Aborted" from run.sh), harmless here.
+
+## Skirts that swing from their own bones: the long skirt, kirtle and robe no longer tear into a sheet at a run (characters, 2026-09-29)
+
+Triage 29's open item ("kirtle/long skirt leg clipping at a run unchecked"), and the skirt bones left
+half done on `wip/characters` (dddc7dec, de7f3b53, e0b3f6e4, aec52260, 7040b122's skin part), ported
+onto main's rig and garments. The old branch was not merged.
+
+### What is new
+- **The rig carries eight cloth bones** (`rig.CLOTH_BONES`, docs/CONTRACTS.md §2): `Skirt.F/B/L/R`
+  from the hips to the knee and `Skirt.F2/B2/L2/R2` below it. The old branch had six; without
+  `L2/R2` a side stood out from a raised knee as a board to the hem. They deform, are not in
+  `DEFORM_NAMES`, and no clip keys them (the export drops any channel the exporter samples onto
+  them, `glb.drop_channels`). Bone heat leaves them out (`body.auto_weights`), so every body's
+  weights are unchanged.
+- **The rig rebuilt** with Idle alone and every clip transplanted back (`rigbuild.sh`'s steps by
+  hand; Blender still segfaults on exit): clipdiff 91 identical; the body, head and eyes, their
+  weights by bone name and inverse binds identical to main's; textures byte-identical.
+- **SkirtDrive** (`game/actors/shared/skirt_drive.gd`), a SkeletonModifier3D after ArmRoom: the front
+  swings with whichever thigh is ahead, the back with whichever is behind, each side with its own
+  thigh (SIDE_SHARE 1.0: at 0.6 a thigh came out through the side); below the knee the front and
+  sides fall back from a raised knee (FALL_BACK 0.6) and the back and sides lift with a heel behind
+  (HEEL_LIFT 0.8, SIDE_HEEL 0.55, at most HEEL_MAX 1 rad: a roll's shut knees stood the lower back
+  up as a fin). Two bugs of the old port fixed: the thigh's spread was atan2(side, drop), which ran
+  to 90 degrees as a thigh came up level (the side panels stood out as boards in a sprint and a
+  roll), now asin of the side; and its soft maximum bumped 2.6 degrees above the thighs at rest.
+  HumanoidModel eases it to 0 swimming, in a Ride clip, mounting and on the RideSeat.
+- **Weights** (`cloth._skirt_weights(panels=True, legs=...)`): `legs` of each vertex hangs as the
+  skirt did before (thighs, and shins below the knee), the rest from the cloth bones by where it
+  lies round the hips. Hung from the bones alone the skirt swung as one stiff bell and a narrow
+  robe let the kicked-up calf through; from the legs alone it tore into two tubes with a sheet
+  between. kirtle 0.35; long_skirt, robe, dress, wrap_skirt, coat 0.5 (the coat matches the long
+  skirt a Lakefolk woman wears under it: weighted otherwise the skirt came through the coat in every
+  gait, 37-50 vertices). Only on the grown rig; every child's cut, the kilt, the knee skirts and the
+  fitted tunic are as they were. A part's skin names the cloth bones only if weighted to them
+  (`glb.drop_unweighted_joints`, from 7040b122).
+- **No knee wear on a skirt that falls past the knee** (`_garment_material`): the pale patches read
+  as fading on the dress's and robe's fronts in a run (wip/characters' Not done).
+- **clipcheck** poses the cloth bones as SkirtDrive does (`--skirt`, `--drive=` to try constants),
+  binds a bone a built part lacks at the rig's rest, and reports the cloth's **stretch** (98th
+  percentile of the edges below the hips over their rest length).
+- Rebuilt: long_skirt, kirtle, robe, dress, wrap_skirt, coat (`parts --only ...`): geometry and UVs
+  identical to main's (the wrap skirt remeshed with 2 more vertices), her fit and bust targets
+  rewritten, textures repainted.
+
+### Measured (clipcheck, her body, 8 samples, Walk/Run/Sprint/Sneak_Walk/Dodge_F; through / stretch)
+- long skirt: before 2/0/4/0/10 through, stretch 11/17/19/13/4 -> after 0/0/3/1/3, stretch 5/8/9/7/3.
+- kirtle: 2/6/8/0/22, stretch 7/11/12/9/3 -> 3/6/7/1/13, stretch 3/4/5/4/3.
+- dress: 4/10/7/3/18, stretch 7/10/11/9/3 -> 8/7/6/1/8, stretch 4/5/6/5/2.
+- robe: 12/19/20/7/32, stretch 8/12/14/11/3 -> 11/34/43/12/50, stretch 4/6/7/6/3 (the extra are
+  the trailing calf at the back of the narrow robe, 30-40 mm; the rest are arms and chest).
+- wrap skirt: 4/11/32/5/29 -> 10/11/27/12/29, stretch halved.
+- coat over her long skirt: 12/22/24/12/18 -> 10/16/21/11/25. Over trousers on the man, Run/Sprint/
+  Dodge_F: 2/6/13 -> 15/34/24 (a sprinting thigh through its open front edge).
+
+### Seen
+Compatibility, xvfb: a Clans woman in bodice and long skirt, a Vale woman in the kirtle and an Ash
+pilgrim mage in the robe (`tools/forge/preview/looks/skirts.json`) at Walk, Run, Sprint, Sneak_Walk
+and Dodge_F, front and side, before and after: `docs/review/characters/skirt_bones_sheet.jpg`.
+Before, the run and sprint tore every skirt into a pale stretched fan from the forward knee to the
+trailing foot with the shin showing under the front; after, each is one continuous bell over the
+stride, the walk and the crouch clean. The sprint still flares far forward as a stiff bell, and the
+roll (seen before the heel cap) stood a thin fin of cloth up past the feet.
+
+### Also from wip/characters
+- "The three swings brought up to the bar" (39e82560) is on main already, byte for byte (701a1a9a,
+  merged in 43c4e1c4): nothing to port. Its faces, heads and hair rebuilds are superseded by main's.
+
+### Tests
+test_rig_contract 35 OK (+2: the cloth bones there and unkeyed, no body weight on them);
+test_part_joints 2 OK (new); test_women 26 OK; test_garment_clips 4 OK (+2: the long garments hang
+from the cloth bones and the children's/short ones bind none; her legs stay in and the cloth is not
+a sheet in five clips; the robe's, wrap skirt's and coat-over-trousers' stride limits moved to what
+they measure now, noted in the file). Godot: test_skirt_drive (+2: a thigh raised level does not
+turn its side out; below the knee the front and side fall back), test_humanoid_model, test_riding,
+test_swimming, test_npc_appearance, test_player_body: 81 tests, 0 failed, 0 script errors (the one
+logged error is test_player_body's missing-slot case).
+
+### Not done / for the coordinator
+- **Landing:** the rig (`humanoid_rig.glb`, 37 bones) and the six garments are binary and rebuilt
+  here; take them whole, do not merge. Any branch that rebuilds the rig must build from this rig.py
+  (else the skirts lose their bones and bind errors follow). Any other garment rebuilt later picks
+  the cloth bones up only if its builder asks (`panels=True`).
+- The robe's trailing calf comes through its narrow back in the run/sprint more often than before
+  (shallower); the coat over trousers lets a sprinting thigh through its front edge. A split coat
+  weighting (legs over trousers, bones over a skirt) would need a second coat part.
+- The sprint's bell flares far forward and the roll's side panels stand up behind the knees:
+  rigid panels, not cloth. The roll and sprint after the HEEL_MAX cap were not rendered again.
+- Not rendered in the world or with the woman's carriage walking in real time; the SkirtDrive lag
+  (`lag`) stays off.
+- The knee skirts, kilt and fitted tunic keep their knee-wear paint and leg weights.
+
+
+### The robe and the coat, again (characters, 2026-09-30)
+
+The coordinator's review of the above: the robe's calf and the coat over trousers were regressions.
+- **The coat is main's again** (legs' weights; its stride test back to 12). A new part, `coat_skirt`,
+  is the same coat half on the skirt's bones, and HumanoidModel wears it in the coat's place over a
+  long skirt or a wrap skirt (`OVER_SKIRT`, `over_skirt_cut`). Her coat over the long skirt,
+  Walk/Run/Sprint/Dodge_F: 12/19/23/23 through at 5-21 mm (main's 12/22/24/18).
+- **The robe** hangs a fifth from the bones and its calf behind the knee wholly from the legs
+  (`_skirt_weights(legs=0.8, calf=1)`): her Walk/Run/Sprint/Sneak/Dodge_F 11/20/22/9/52 through
+  (main's 12/19/20/7/32; the roll's extra are its hands and the shins at 66 mm), stretch 7/10/11/9/3
+  (main's 8/12/14/11/3). Its stride limit back to main's 18.
+- **The wrap skirt**'s calf is on the legs too: 2/15/20/7/32 (main's 4/11/32/5/29), stretch halved.
+- Rebuilt: robe, wrap_skirt (skins only; textures unchanged), coat_skirt (new). Seen: Run and Sprint
+  side, the robed mage, a Lakefolk man in coat and trousers, a Lakefolk woman in coat_skirt over the
+  long skirt (`looks/skirts_coat.json`): the man's coat is main's; her coat and skirt swing together.
+- Tests: test_garment_clips (robe's roll limit 25, its bones' share read at 0.6 of the rest: the calf
+  is on the legs), Godot test_skirt_drive (+1: the coat is cut for what is under it),
+  test_humanoid_model, test_npc_appearance, test_player_body, test_enemy_dress: 70 passed.
+- For the coordinator: land `clothing/coat_skirt/` with the others; the plain coat is unchanged
+  from main. The robe's lighter use of the bones leaves it more stretch in a sprint than the long
+  skirts.

@@ -1,0 +1,8 @@
+[
+  {"height": 1.76, "build": 0.5, "skin": "amber", "hair_colour": "soot", "culture": "ash_pilgrims",
+   "parts": {"head": "hawk", "hair": "cropped", "torso": "robe", "feet": "boots", "belt": "cord_beads"}},
+  {"height": 1.78, "build": 0.5, "skin": "fair", "hair_colour": "sand", "culture": "lakefolk",
+   "parts": {"head": "narrow", "hair": "short", "torso": "coat", "legs": "trousers", "feet": "shoes", "belt": "belt_satchel"}},
+  {"height": 1.68, "build": 0.4, "feminine": 1.0, "skin": "porcelain", "hair_colour": "ash_blond", "culture": "lakefolk",
+   "parts": {"head": "narrow", "hair": "chignon", "torso": "coat", "legs": "long_skirt", "feet": "shoes", "belt": "belt_satchel"}}
+]

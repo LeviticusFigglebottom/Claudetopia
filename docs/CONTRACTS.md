@@ -30,6 +30,13 @@ Socket bones (non-deforming, for `BoneAttachment3D`): `Socket.WeaponR`
 `Socket.ShieldL` (LowerArm.L, forearm strap), `Socket.Back` (Chest, for
 sheathed 2H/bows), `Socket.HipL` (Hips, scabbard), `Socket.Head` (Head, for
 helms/hats/horns/halo), `Socket.Lantern` (Hand.L).
+Cloth bones (deforming, keyed by no clip): `Skirt.F`, `Skirt.B`, `Skirt.L`, `Skirt.R` (children of
+Hips, from the hip joints' height to the knee's, in front of, behind and beside the legs) and
+`Skirt.F2`, `Skirt.B2`, `Skirt.L2`, `Skirt.R2` (each a child of the one above it, from the knee to
+above the ankle). Only a skirt is weighted to them; the body and every other part are not, and a
+part's skin leaves them out when nothing in it is weighted to them. `SkirtDrive` (a
+SkeletonModifier3D after the clips) poses them each frame from the thighs; a channel on one is a
+contract break (`test_rig_contract`).
 Rest pose: A-pose, arms 35° below horizontal, palms in. Feet flat at y=0.
 Body proportions vary per character (the forge scales bone lengths); clips are
 authored on the default proportions and retarget by bone-local rotation, so

@@ -419,6 +419,110 @@ def set_morph_target(gltf: dict, bin_chunk: bytes, mesh_index: int, name: str, d
     return bytes(out)
 
 
+_COMP = {5121: ("B", 1), 5123: ("H", 2), 5125: ("I", 4), 5126: ("f", 4)}
+_WIDTH = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
+
+
+def _elements(gltf: dict, acc_i: int) -> tuple[str, int, int, int, int]:
+    """(struct code, component size, width, first byte, stride) of an accessor's elements."""
+    acc = gltf["accessors"][acc_i]
+    view = gltf["bufferViews"][acc["bufferView"]]
+    code, size = _COMP[acc["componentType"]]
+    width = _WIDTH[acc["type"]]
+    start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+    return code, size, width, start, view.get("byteStride", size * width)
+
+
+def drop_unweighted_joints(path: str | Path, names) -> list[str]:
+    """Take the joints named in `names` out of every skin in which no vertex is weighted to them,
+    and renumber the meshes' JOINTS_0 to match. The bones stay in the node tree.
+
+    A part is bound to the rig's skeleton by its skin's joint names, and a joint the rig lacks
+    is an error on every load. The skirt's bones (rig.CLOTH_NAMES) are in every armature the
+    forge builds, and so in every part's skin; a part not weighted to them now leaves them out,
+    so it binds on a rig built before them as well as after. Returns the names dropped."""
+    gltf, bin_chunk = read_glb(path)
+    data = bytearray(bin_chunk)
+    names = set(names)
+    dropped: list[str] = []
+    done_acc: set[int] = set()
+    for si, skin in enumerate(gltf.get("skins", [])):
+        joints = skin["joints"]
+        cand = [k for k, j in enumerate(joints) if gltf["nodes"][j].get("name") in names]
+        if not cand:
+            continue
+        prims = [p for n in gltf["nodes"] if n.get("skin") == si and "mesh" in n
+                 for p in gltf["meshes"][n["mesh"]]["primitives"]]
+        pairs = []
+        for p in prims:
+            a = p["attributes"]
+            k = 0
+            while "JOINTS_%d" % k in a:
+                pairs.append((a["JOINTS_%d" % k], a["WEIGHTS_%d" % k]))
+                k += 1
+        used = set()
+        for ja, wa in pairs:
+            jc, js, jw, j0, jst = _elements(gltf, ja)
+            wc, ws, ww, w0, wst = _elements(gltf, wa)
+            wscale = {"f": 1.0, "B": 255.0, "H": 65535.0}[wc]
+            for i in range(gltf["accessors"][ja]["count"]):
+                jv = struct.unpack_from("<%d%s" % (jw, jc), data, j0 + i * jst)
+                wv = struct.unpack_from("<%d%s" % (ww, wc), data, w0 + i * wst)
+                used.update(j for j, w in zip(jv, wv) if w / wscale > 1e-6)
+        drop = [k for k in cand if k not in used]
+        if not drop:
+            continue
+        keep = [k for k in range(len(joints)) if k not in drop]
+        new_of = {old: new for new, old in enumerate(keep)}
+        for ja, _ in pairs:
+            if ja in done_acc:
+                continue
+            done_acc.add(ja)
+            jc, js, jw, j0, jst = _elements(gltf, ja)
+            for i in range(gltf["accessors"][ja]["count"]):
+                off = j0 + i * jst
+                jv = struct.unpack_from("<%d%s" % (jw, jc), data, off)
+                # a dropped joint's slot carries no weight: point it at joint 0
+                struct.pack_into("<%d%s" % (jw, jc), data, off, *[new_of.get(j, 0) for j in jv])
+            gltf["accessors"][ja].pop("min", None)
+            gltf["accessors"][ja].pop("max", None)
+        if "inverseBindMatrices" in skin:
+            ia = skin["inverseBindMatrices"]
+            _, _, _, i0, ist = _elements(gltf, ia)
+            mats = [bytes(data[i0 + k * ist:i0 + k * ist + 64]) for k in keep]
+            for n, m in enumerate(mats):
+                data[i0 + n * ist:i0 + n * ist + 64] = m
+            gltf["accessors"][ia]["count"] = len(keep)
+        dropped += [gltf["nodes"][joints[k]]["name"] for k in drop]
+        skin["joints"] = [joints[k] for k in keep]
+    if dropped:
+        write_glb(path, gltf, bytes(data))
+    return dropped
+
+
+def drop_channels(path: str | Path, names) -> int:
+    """Take out of every animation the channels that key a node named in `names`, and the
+    samplers only they used. The exporter samples every bone of the armature into every clip,
+    and a channel on a skirt's bone (rig.CLOTH_NAMES) would pose it to rest under SkirtDrive:
+    no clip keys those bones (docs/CONTRACTS.md §2). The data they pointed at is left unreferenced
+    in the buffer. Returns how many channels went."""
+    gltf, bin_chunk = read_glb(path)
+    names = set(names)
+    gone = 0
+    for an in gltf.get("animations", []):
+        keep = [c for c in an["channels"] if gltf["nodes"][c["target"]["node"]].get("name") not in names]
+        gone += len(an["channels"]) - len(keep)
+        used = sorted({c["sampler"] for c in keep})
+        new_of = {old: new for new, old in enumerate(used)}
+        an["samplers"] = [an["samplers"][k] for k in used]
+        for c in keep:
+            c["sampler"] = new_of[c["sampler"]]
+        an["channels"] = keep
+    if gone:
+        write_glb(path, gltf, bin_chunk)
+    return gone
+
+
 def mesh_triangles(path: str | Path) -> int:
     """Triangles across every mesh in a GLB; 0 for a file that is only a skeleton."""
     return sum(m["tris"] for m in summary(path)["meshes"])
