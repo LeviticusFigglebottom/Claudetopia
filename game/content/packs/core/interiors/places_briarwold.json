@@ -1,0 +1,113 @@
+[
+  {
+    "id": "core:interior/skarl_delving",
+    "name": "The Skarl Delving",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/skarl_delving",
+    "danger": 3,
+    "formed_by": "creature",
+    "resident": "weavers and thornhounds in the galleries, silk-thieves who came for the silk and stayed, Brokk ko-Skarl who would not go home, and the Reel-Mother in the drowned shaft at the bottom",
+    "story": "The Skarl cut the delving square and timbered it the clan way, following a vein of tin down into the tor for two years, until the big vein broke through into the Wold's own dark: water-worn caverns that run under the Northwold to Blackgill and further. Their spoil slid in the thaw of 1033 and buried a woodfolk boy on the path below, and the clan went home. The weavers came up through the breach into the galleries and strung them, and the biggest of them went down to the bottom, where the shaft drowned, and has been there since.",
+    "unique_object": "a square clan adit, its timbering grey under years of silk, that breaks through into caverns nobody cut; and at the bottom a drowned shaft strung across with web so thick it holds a body's weight",
+    "site": {
+      "kind": "cave",
+      "seed": 1031,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "set_pieces": [
+        "fungus_grotto",
+        "underground_lake",
+        "daylight_shaft"
+      ],
+      "boss": "core:boss/reel_mother",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/weaver",
+          "core:enemy/thornhound"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/clanless_hewer"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand",
+          "note": "a Skarl lamp, still hung where the shift left it"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/what_the_skarl_owe",
+          "name": "a page of clan tally-paper"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "adit",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the clan's square adit, timbered, the frames gone grey with silk"
+        },
+        {
+          "id": "timbered_drift",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "tally_hall",
+          "role": "camp",
+          "size": "medium",
+          "note": "where the silk-thieves sleep, by the Skarl's old tally-fire"
+        },
+        {
+          "id": "the_breach",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "fungus_grotto",
+          "note": "where the big vein broke into the Wold's own dark, and the weavers came up"
+        },
+        {
+          "id": "silk_drift",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "under_water",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "Blackgill's water, going somewhere under the Wold before it comes out"
+        },
+        {
+          "id": "fallen_stope",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "daylight_shaft",
+          "note": "the stope that let the daylight in when the spoil slid"
+        },
+        {
+          "id": "brokks_hall",
+          "role": "hall",
+          "size": "medium",
+          "note": "Brokk ko-Skarl, who would not go home"
+        },
+        {
+          "id": "drowned_shaft",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "the drowned shaft, strung wall to wall"
+        }
+      ]
+    }
+  }
+]

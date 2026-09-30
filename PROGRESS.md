@@ -13093,3 +13093,151 @@ not re-rendered.
   audit's foes column (it reads encounter defs only).
 - The flagship sheet was not re-rendered after the colour fix; Turnback's gate-fire and the insides
   were not rendered.
+## The Wold between its places: world life in Briarwold (phase 1, 2026-09-29)
+
+The Briarwold's empty land is filled, its weak places raised, and it has large places of its own:
+twelve new places, four side quests given by people who live beside them, fourteen people, a
+delve with a boss, a buying-house stockade with a garrison, two builders of the region's own,
+and its roads' life. Everything is data in the Briarwold's own files (`pois/briarwold.json`,
+`encounters/pois_briarwold.json`, `roadlife/briarwold.json`, new `*/places_briarwold.json`,
+`enemies/road_folk_briarwold.json`, `world/pois/regions/briarwold.gd`,
+`tests/unit/test_sites_briarwold.gd`).
+
+### New places (each tied to a story the Wold already had)
+- **The Skarl Delving** (delve, Northwold, 3172,-1844): the clan's tin adit whose spoil buried a
+  woodfolk boy in 1033; it broke into caverns under the Wold (interior `skarl_delving`, cave, 10
+  rooms, set-pieces fungus grotto, underground lake, daylight shaft; weavers, thornhounds,
+  silk-thieves, a clanless Skarl exile); boss **the Reel-Mother** (a weaver brood-mother, drops the
+  boy's whistle); a tally-board at the mouth that starts its quest; a note in the secret room.
+- **The Horn Pale** (stockade, Greatwood, 2972,-460): a Tallymen's factor's buying-house for "Oroth
+  antler" at two marks the tine; garrison of poachers and a hired bravo, chained thornhounds, a
+  price board at the gate.
+- **The Tallying Hide** (tower, hide in a living oak, 2796,-12): Corra Bracken's watch on the Pale,
+  a post notched with 211 harts.
+- **The Listening Horns** (camp, cold, 3404,-2228; builder `listening_horns`): the Circle's
+  Listeners' camp of 1038 with three brass listening-horns on tripods turned on the northern gate;
+  Merel Quill and her porter wait there.
+- **The Layers' Ring** (walled camp under the Thornmarch, 3588,-1148): the thorn-layers' drystone
+  ring, their rule on the lintel, Kit and Ebb Laywood.
+- **The Greyed Ring** (strange tree, ring of sallows, 3532,-148; builder `greyed_ring`): a grey patch
+  half a mile inside the Wold, grey moss and dead-grey withies; ash-wights at night.
+- **Stave Hollow** (farmstead, 2748,-1308): the bowyer's croft under Hollin Tor where every bow is
+  made and unstrung; Aud and Hob Yewman (bows sold).
+- **The Northwold Beacon** (beacon, unlit, 3372,-1580): laid fresh every autumn by nobody seen.
+- **Colley's Hearth** (hut, 2988,-1684): the boy's mother, a burner, and a moss with nothing under it.
+- **The Hartswell** (well, spring, 3380,1700): where the harts drink and the poachers wait at dawn.
+- **The Stray Thorn** (ruins, wardstone and briar, 3708,-1700): a runner of the Briar growing the
+  wrong way; thornhounds laired under it; the Rookhold keepers' knotted measure.
+- **The Tine Barrow** (ruins, barrow, 3636,1420): the first Hart-Knights' barrow; Kenard Hartwell
+  keeps its door; the first knights walk after midnight.
+
+### Quests (all four walked to every ending: `./run.sh quests`, 4 of 4, 12 of 12 walks)
+- **The Price at the Middle** (Tosk ko-Skarl, the Skarl Bridge): Colley's Hearth, the Skarl Delving
+  and its boss; the whistle under the moss, into the Rope-Song, or on the bridge's middle stone.
+- **Custom Says Wait** (Corra Bracken, the Tallying Hide): the Hartswell at dawn, the Antler
+  Boilers' account book, the Horn Pale's bravo and price book, the Tine Barrow; burn the empty pale,
+  give it to the knights, or send the books to the Lantern Row.
+- **Grey Under the Green** (Kit Laywood, the Layers' Ring): a night in the Greyed Ring, the stem set
+  in the Briar Nursery; lay thorn round it, keep the rule, or send it to the Circle.
+- **What the Horns Heard** (Merel Quill, the Listening Horns): the Stray Thorn, the Wardstone Line,
+  the Northwold Beacon; light it, leave it laid, or turn the horns home.
+
+### Raised weak places
+People: Tosk ko-Skarl (Skarl Bridge), Wat Hurle (the Verderer's Tower), Wystan Tine (kneeling at
+the Moot Gate Stone), Ned and Aldo Pitt (the Sawpit), each with their own talk. Notes in the
+region's voice lying at Countwatch, Hollin Tor, Harrow Tor, the Grey Man, the Moot Gate Stone, the
+Antler Chapel, Blackgill Falls, the Hart Bones, the Hunters' Stand, the Charcoal Camp, the
+Verderer's Tower, the Old Quarry and the Antler Boilers (27 books in `books/places_briarwold.json`);
+foes where the story puts them (a poacher at Hollin Tor at dusk, thornhounds on Harrow Tor's road,
+a Warden among the Grey Man's brothers, ash-wights at Countwatch after midnight, thornhounds in the
+Old Quarry's spoil). Quests now send you to the Skarl Bridge, the Briar Nursery, the Wardstone
+Line and the Antler Boilers. Five rumours (`rumours/places_briarwold.json`).
+
+### Roads (`roadlife/briarwold.json`)
+14 rows (was 6): poachers (with the wounded-man bait), silk-thieves on a carter, thornhounds,
+weavers dropping at night, Woodfolk hunters (a new road person, `woodfolk_hunter`) who point you at
+the Hartswell, a Hart-Knight on the road (`hart_knight_wayfarer`) who points you at the Tine Barrow,
+oil-carriers going up to the Moot, mourners carrying a moss, a woodfolk child lost in the bracken,
+a runaway poacher with hunters behind him, a charcoal-burner pedlar, and the shared patrol, broken
+cart and pedlar. Caravans 4 (was 1): the Hollow-Hazelwick pack-trader, Tamwick's cider cart to the
+Hollow, the Moot's oil-train from Fernhold, a wagon Elderhold-Rookhold. Four sites of its own: the
+Skarl Bridge, the Foxgill Arch, the Drunk Stones' bend, the Knight's Challenge.
+
+### Placement
+Moved off the roads through their level cores (defs only; the built pads stay until the build):
+the Antler Chapel (to 3042,1482), the Charcoal Camp (2759,680), the Oiled Stone (2409,891), the Old
+Quarry (2263,-1351, pad 32 for its 28 m reach), the Sawpit (2238,1174), the Sentinels (2964,1080).
+Pads for pieces past their pad: the Poachers' Cache 22, the Ringing Oak 24. Each previewed and
+seated with `region_check --godot --edited`: all clean of floating, buried, sunk and on-road.
+
+### Measured (audit with `--probe`, `docs/review/world_life/audit_briarwold.md`)
+| | before (w4096f) | after | target |
+|---|---|---|---|
+| land > 200 m from anything | 19% (1.16 km2) | 5% (0.31 km2) | <= 9% |
+| largest empty stretch | 0.36 km2 | < 0.04 km2 (none listed) | <= 0.15 |
+| weak share (non-wayside) | 0.51 (19 of 37) | 0.12 (6 of 49) | <= 0.25 |
+| strong (>= 8) | 0 | 9 | >= 6 |
+| POIs | 74 | 86 | >= 84 |
+| placement problems | 50 at 30 POIs | 54 at 33 (the moved six still counted at their built pads) | |
+
+Strong: the Skarl Delving 11, the Horn Pale 9, the Layers' Ring 9, the Tallying Hide 8, the
+Listening Horns 8, the Hunters' Stand 8, the Charcoal Camp 8, the Old Quarry 8, the Verderer's
+Tower 8. The new places' own cost: 5-114 draws, 1-216 k triangles (the Horn Pale the largest).
+
+### Tests
+- `region_check.py briarwold`: PASS; `--godot --edited ...`: PASS (21 raised).
+- `pytest test_content_split.py test_region_check.py`: 8 passed.
+- `./run.sh test --filter=objects_seated_briarwold,test_poi_preview,test_pois,test_sites_briarwold,
+  test_road_life,test_map_quests,test_quest_givers,test_kill_places,test_waymarks,test_quest_items,
+  test_content_db`: 108 tests, 1 failed: `test_map_quests.test_every_objective_resolves...` for the
+  three site bosses (the Kilnway's and Scathe's too, so not this region's: see below).
+- `test_sites_briarwold` (new, 3 tests): the delving built, every room on one navigation mesh from
+  the way in, 19 foes, the boss in its arena, left by the way out; its mouth's door and tally-board;
+  the Horn Pale staked round (35 of 36 bearings) with a gate, garrison of 7 with the bravo.
+- `./run.sh quests --only=...`: 4 of 4 quests end every way they can, 12 of 12 walks, 0 errors.
+
+### Sheets and the render cost
+- `poi_sheet.py listening_horns greyed_ring skarl_delving horn_pale` was stopped by the coordinator
+  after 80 min with 2 of 16 shots; a 3-shot diagnostic plan (the built Charcoal Camp, the Listening
+  Horns clear and in rain) was stopped after 93 min with 1. Seen: the Listening Horns' second view
+  (the three brass horns on their tripods read, at the camp's east side, but as fat gourds more than
+  flared horns; the camp builder's tents read near-white in the gloom) and the Charcoal Camp. No
+  sheet is committed.
+- **Where the time went** (measured, not guessed): in the diagnostic the world was up at 21:44:26,
+  then 42 min passed with no log line while the Greatwood's cells streamed in, and the shot itself
+  took 41 frames in under 3 min (about 4 s a frame, 1482 draws, 1.41 M primitives). Headless, the
+  same country walked on the Hollow-Moot road past the Charcoal Camp with road life on
+  (`./run.sh roads --only=grandfather_hollow_standing_moot --max-m=700 --roadlife=on`): 6229 frames
+  in 100 s, p99 39 ms, one 4.2 s frame (the Hollow's fabric nav bake), road life's pieces at most
+  110 ms. So nothing of the region's scripts, builders, road life or previews costs per frame;
+  the hour is the paced streaming of Briarwold cells drawn frame by frame on llvmpipe at 1.4-1.5 M
+  primitives a view (the canopy's leaf cards, at the design budget's limit), which Skerrow's open
+  fells do not have. The shot that stalled is of a place I did not build. Worth the coordinator
+  checking the same shot on main to confirm; I have not run it, to save the machine.
+
+### Not done / for the coordinator
+- **SiteDress `_ledge` reads `z["span"]`, SitePlan writes `"len"`** (site_dress.gd:728 vs
+  site_plan.gd:691): any generated layout with a ledge (a large room without a set-piece, or a
+  chasm that falls back to a ledge) throws a script error and leaves that room undressed. I wrote
+  the delving's rooms by hand to avoid it.
+- **Mine insides are not walkable end to end**: 13 of 14 `mine` layouts I tried (seeds 811,
+  1031-1052, generated and hand-written rooms) left 2-9 rooms off the navigation mesh from the way
+  in (`test_sites` checks every kind's *plan* but walks only the two showcases). The delving is a
+  `cave` for that reason; the story says the Skarl's adit broke into caverns.
+- **QuestWalk says a site interior holds no boss**: `test_map_quests.test_every_objective_resolves`
+  fails for `the_kilnway`, `scathe_undercroft` and `skarl_delving` ("holds 0"), though the site
+  stands its boss (test_sites) and the quest walker closes the kill.
+- **Only the world build settles**: the six moved POIs' built pads (and the roads through them), the
+  new places' pads (flattened, scatter cleared), and `steep_skirt` at 15 existing POIs.
+- **Shared builders**: the cave builder buries its throat and sinks its boulders (briar_root,
+  rafters_locker, root_hollow: seat buried/sunk/overlap); the tower hide's giant oak reaches past
+  any pad (hunters_stand 43 m, verderers_tower 38 m, tallying_hide 41 m on a 38 m pad); the sallow
+  ring overlaps its own willows (greyed_ring, ringing_oak); bridges and Fern Gully reach past their
+  pads by their spans (mossbridge, foxgill_arch, fern_gully), which a bigger pad would flatten into
+  the ravine, so I left them.
+- Countwatch stands on the Fernhold road on a tor steep on both sides (18-20 deg): not moved.
+- bark_camp, burnt_lodge and rafters_locker stand on another region's ground by the region map.
+- Still weak: Foxfire Falls, the Sentinels, the Poachers' Lee, the Knight's Mound, the Bark Camp,
+  Pellow's Pale.
+- Sheets for the flagship places (see above): not made; a render of Briarwold is an hour.
+- `poi-probe` aborts on exit after writing its file ("Aborted" from run.sh), harmless here.
