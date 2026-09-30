@@ -116,6 +116,10 @@ func test_every_placement_names_a_real_place_and_spot() -> void:
 			continue
 		var meta := _meta_of(where)
 		var found: bool = (meta.get("chambers", {}) as Dictionary).has(spot)
+		var def := ContentDB.get_or_empty(where)
+		if def.get("site", null) is Dictionary:
+			# a large site's inside has no meta: its rooms are its plan's (SiteDress.compat_meta)
+			found = found or not SitePlan.make(def).room(spot).is_empty()
 		for r in meta.get("rooms", []):
 			found = found or str((r as Dictionary).get("id", "")) == spot
 		assert_true(found, "%s names %s in %s, which has no such chamber or room" % [row["key"], spot, where])

@@ -1788,6 +1788,48 @@
     8,
     8
    ]
+  },
+  "castle_ruin": {
+   "file": "markers/castle_ruin.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "delve": {
+   "file": "markers/delve.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "gibbet": {
+   "file": "markers/gibbet.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "stockade": {
+   "file": "markers/stockade.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "walled_camp": {
+   "file": "markers/walled_camp.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "watchtower": {
+   "file": "markers/watchtower.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1919,15 +1961,18 @@
   "bridge",
   "cairn",
   "camp",
+  "castle_ruin",
   "cave",
   "city",
   "deep_place",
   "default",
+  "delve",
   "edge",
   "farmstead",
   "fold",
   "fort",
   "giant_bones",
+  "gibbet",
   "grave",
   "hamlet",
   "hidden_valley",
@@ -1949,6 +1994,7 @@
   "shieling",
   "shrine",
   "standing_stones",
+  "stockade",
   "strange",
   "strange_tree",
   "tally_post",
@@ -1956,6 +2002,8 @@
   "town",
   "village",
   "vista",
+  "walled_camp",
+  "watchtower",
   "waterfall",
   "waystone",
   "well",

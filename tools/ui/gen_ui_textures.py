@@ -1285,6 +1285,69 @@ def _m_default(n, ink, ac):
     n.stroke([(0.14, 0.50), (0.86, 0.50)], MW * 0.6, ink)
 
 
+def _m_gibbet(n, ink, ac):
+    # a post, its arm, and the cage hung from it
+    n.stroke([(0.34, 0.90), (0.34, 0.14), (0.72, 0.14)], MW, ink)
+    n.stroke([(0.34, 0.30), (0.50, 0.14)], MW * 0.6, ink)
+    n.stroke([(0.66, 0.14), (0.66, 0.34)], MW * 0.5, ink, jitter=0.006)
+    cage = [(0.56, 0.34), (0.76, 0.34), (0.74, 0.64), (0.58, 0.64)]
+    n.poly(cage, ac, alpha=60)
+    n.stroke(cage, MW * 0.7, ink, closed=True)
+    n.stroke([(0.66, 0.34), (0.66, 0.64)], MW * 0.45, ink)
+    n.stroke([(0.20, 0.90), (0.50, 0.90)], MW * 0.7, ink)
+
+
+def _m_stockade(n, ink, ac):
+    # a ring of pointed stakes with a gap for its gate
+    for i, x in enumerate((0.20, 0.30, 0.40, 0.60, 0.70, 0.80)):
+        top = 0.30 if i % 2 == 0 else 0.34
+        n.poly([(x - 0.045, 0.84), (x - 0.045, top + 0.06), (x, top), (x + 0.045, top + 0.06), (x + 0.045, 0.84)], ac, alpha=70)
+        n.stroke([(x - 0.045, 0.84), (x - 0.045, top + 0.06), (x, top), (x + 0.045, top + 0.06), (x + 0.045, 0.84)], MW * 0.6, ink)
+    n.stroke([(0.14, 0.62), (0.86, 0.62)], MW * 0.5, ink, jitter=0.008)
+
+
+def _m_walled_camp(n, ink, ac):
+    # a low wall round a tent
+    wall = [(0.16, 0.86), (0.16, 0.62), (0.84, 0.62), (0.84, 0.86)]
+    n.stroke(wall, MW * 0.8, ink)
+    tent = [(0.32, 0.62), (0.50, 0.26), (0.68, 0.62)]
+    n.poly(tent, ac, alpha=70)
+    n.stroke(tent, MW, ink, closed=True)
+    n.stroke([(0.50, 0.26), (0.50, 0.62)], MW * 0.5, ink)
+
+
+def _m_castle_ruin(n, ink, ac):
+    # a keep with its top broken off and a fallen block beside it
+    body = [(0.26, 0.86), (0.26, 0.34), (0.40, 0.34), (0.40, 0.26), (0.52, 0.26), (0.58, 0.44), (0.66, 0.40), (0.72, 0.58), (0.72, 0.86)]
+    n.poly(body, ac, alpha=60)
+    n.stroke(body, MW, ink, closed=True, jitter=0.01)
+    n.stroke([(0.44, 0.86), (0.44, 0.70), (0.54, 0.70), (0.54, 0.86)], MW * 0.6, ink)
+    n.poly([(0.78, 0.86), (0.78, 0.76), (0.88, 0.76), (0.88, 0.86)], ink, alpha=200)
+
+
+def _m_watchtower(n, ink, ac):
+    # a timber tower on four legs with a roofed platform
+    n.stroke([(0.34, 0.90), (0.42, 0.40)], MW * 0.8, ink)
+    n.stroke([(0.66, 0.90), (0.58, 0.40)], MW * 0.8, ink)
+    n.stroke([(0.36, 0.78), (0.64, 0.60)], MW * 0.5, ink)
+    n.stroke([(0.64, 0.78), (0.36, 0.60)], MW * 0.5, ink)
+    deck = [(0.32, 0.40), (0.68, 0.40), (0.68, 0.30), (0.32, 0.30)]
+    n.poly(deck, ac, alpha=70)
+    n.stroke(deck, MW * 0.8, ink, closed=True)
+    n.stroke([(0.28, 0.30), (0.50, 0.14), (0.72, 0.30)], MW * 0.8, ink)
+
+
+def _m_delve(n, ink, ac):
+    # a mouth in a hill with steps going down into it
+    hill = [(0.10, 0.86), (0.32, 0.36), (0.50, 0.26), (0.70, 0.38), (0.90, 0.86)]
+    n.poly(hill, ac, alpha=60)
+    n.stroke(hill, MW, ink, jitter=0.01)
+    mouth = [(0.36, 0.86), (0.38, 0.58), (0.50, 0.50), (0.62, 0.58), (0.64, 0.86)]
+    n.poly(mouth, ink, alpha=230)
+    for y, w in ((0.66, 0.08), (0.74, 0.10), (0.82, 0.12)):
+        n.stroke([(0.50 - w, y), (0.50 + w, y)], MW * 0.4, ac)
+
+
 MARKERS = {
     "town": _m_town, "city": _m_city, "village": _m_village, "hamlet": _m_hamlet,
     "camp": _m_camp, "fort": _m_fort, "lodge": _m_lodge, "deep_place": _m_deep_place,
@@ -1298,6 +1361,8 @@ MARKERS = {
     "market_field": _m_market_field, "quarry": _m_quarry, "shieling": _m_shieling, "vista": _m_vista,
     "cairn": _m_cairn, "tally_post": _m_tally_post, "fold": _m_fold, "lantern_post": _m_lantern_post,
     "well": _m_well, "hut": _m_hut, "grave": _m_grave, "beacon": _m_beacon, "peat_cut": _m_peat_cut,
+    "gibbet": _m_gibbet, "stockade": _m_stockade, "walled_camp": _m_walled_camp,
+    "castle_ruin": _m_castle_ruin, "watchtower": _m_watchtower, "delve": _m_delve,
     "player": _m_player, "reticle": _m_reticle, "default": _m_default,
 }
 

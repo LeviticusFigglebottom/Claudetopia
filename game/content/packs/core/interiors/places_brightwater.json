@@ -113,6 +113,7 @@
   },
   {
     "id": "core:interior/gull_holm_cellars",
+    "door_at": "core:poi/gull_holm",
     "name": "The Cellars under Gull Holm",
     "scene": "res://world/sites/site_interior.tscn",
     "kind": "deep_place",

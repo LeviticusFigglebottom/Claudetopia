@@ -128,26 +128,17 @@
     ],
     "sites": [
       {
-        "at": [
-          -1560,
-          2800
-        ],
+        "at": {"place": "core:poi/cold_fire_camp", "offset": [40, -30]},
         "kind": "bend",
         "tell": "injured_traveller"
       },
       {
-        "at": [
-          -2740,
-          2330
-        ],
+        "at": {"place": "core:poi/bell_pit", "offset": [10, 80]},
         "kind": "bend",
         "tell": "crows"
       },
       {
-        "at": [
-          -2980,
-          2640
-        ],
+        "at": {"place": "core:poi/last_milestone", "offset": [-30, -10]},
         "kind": "bend",
         "tell": "crows"
       }

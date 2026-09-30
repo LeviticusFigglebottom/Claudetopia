@@ -50,9 +50,13 @@ func _drop(node: Node) -> void:
 ## Crows and a flock move from the frame they stand (their own _process): where they have got to is
 ## not what was built.
 static func _alive(n: Node, d: PoiDressing) -> bool:
+	# a body that moves itself (a fort's garrison, stood up with the place) settles onto the ground
+	# in the frames a stepwise raise takes: where it stands is its own, not the dressing's
+	if n is CharacterBody3D:
+		return true
 	var p := n.get_parent()
 	while p != null and p != d:
-		if p is Crows or p is Livestock:
+		if p is Crows or p is Livestock or p is CharacterBody3D:
 			return true
 		p = p.get_parent()
 	return false

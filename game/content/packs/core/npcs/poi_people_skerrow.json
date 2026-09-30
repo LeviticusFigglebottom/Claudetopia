@@ -16,7 +16,7 @@
       ]
     },
     "appearance": {
-      "seed": 7101,
+      "seed": 9006,
       "build": "tall_stooped",
       "age": 63.0,
       "feminine": 0.0,
@@ -65,7 +65,7 @@
       ]
     },
     "appearance": {
-      "seed": 7102,
+      "seed": 9007,
       "build": "square_short",
       "age": 49.0,
       "feminine": 1.0,
@@ -114,7 +114,7 @@
       ]
     },
     "appearance": {
-      "seed": 7103,
+      "seed": 9008,
       "build": "lean_weathered",
       "age": 34.0,
       "feminine": 0.0,
@@ -163,7 +163,7 @@
       ]
     },
     "appearance": {
-      "seed": 7104,
+      "seed": 9009,
       "build": "wiry",
       "age": 41.0,
       "feminine": 1.0,
@@ -253,12 +253,7 @@
     "bio": "Quarry-master at Skerrfall thirty years: he cut the lintels over half the doors in the heights and knows every hold by the stone he sent it. Last autumn his face opened on a giant's bone laid in the rock like a lintel, and warm. His men went home. He did not, and sits at his bench by the face every day, waiting for it to tell him whether he is to go on cutting.",
     "unique_habit": "Taps whatever stone he sits on with a knuckle before he sits, and listens, and moves to another if he does not like the note.",
     "personality": {
-      "traits": [
-        "quiet",
-        "proud",
-        "brave",
-        "humble"
-      ]
+      "traits": ["quiet", "proud", "brave"]
     },
     "appearance": {
       "seed": 7106,
@@ -302,12 +297,7 @@
     "bio": "An Oskel widow who walks out to the Skerry Watch every day and sits in it, though nobody has watched for a boat from it in forty years. Her husband and her son sailed as pilots with the last Salt Isles boat, the winter it broke on the skerries, the winter the watch-fire was not lit. She has never let anybody say the name of the woman who was keeping the watch, and somebody has been sweeping it.",
     "unique_habit": "Keeps her back to the land and her face to the sea whatever she is doing, and turns her whole body, not her head, when you speak.",
     "personality": {
-      "traits": [
-        "proud",
-        "quiet",
-        "pious",
-        "cynical"
-      ]
+      "traits": ["proud", "quiet", "pious"]
     },
     "appearance": {
       "seed": 7107,

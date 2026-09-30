@@ -38,9 +38,26 @@ func test_every_shipping_interior_has_a_way_in() -> void:
 			var interior := str((row as Dictionary).get("interior", ""))
 			assert_true(ContentDB.has(interior), "%s: unknown interior %s" % [plan["id"], interior])
 			planned[interior] = true
+	# a large site's inside is entered by the way its point of interest's builder cuts (the delve's
+	# mouth, the keep's undercroft stair: `site.interior` or `site.keep` on the POI), not by a
+	# settlement's door
+	for poi in ContentDB.all("poi"):
+		var site: Variant = poi.get("site", null)
+		if not (site is Dictionary):
+			continue
+		for key in ["interior", "keep"]:
+			var inside := str((site as Dictionary).get(key, ""))
+			if inside != "":
+				assert_true(ContentDB.has(inside), "%s leads into %s, which does not exist" % [poi["id"], inside])
+				planned[inside] = true
 	for interior in ContentDB.all("interior"):
 		var id := str(interior["id"])
 		if bool(interior.get("test_only", false)) or bool(interior.get("no_door", false)):
+			continue
+		# a door a place's own builder stands (Gull Holm's hinge-less door) says which place it is at
+		var door_at := str(interior.get("door_at", ""))
+		if door_at != "":
+			assert_true(ContentDB.has(door_at), "%s's door is at %s, which does not exist" % [id, door_at])
 			continue
 		assert_true(planned.has(id), "%s has no door anywhere in the world" % id)
 

@@ -8,16 +8,11 @@
   "bio": "Foreman of the Skarl Delving in the two years the clan cut tin out of the Northwold, and the one who carries its debt: when the spoil slid in 1033 and buried a woodfolk boy, the clan offered blood-price and went home, and Tosk stayed on the border and has paid it every month since, at the middle of the Skarl Bridge, to nobody.",
   "unique_habit": "Stands exactly on the bridge's middle stone, one boot in each country, and will step off it to talk to you but always steps back on before he answers.",
   "personality": {
-   "traits": [
-    "proud",
-    "quiet",
-    "brave",
-    "humble"
-   ]
+   "traits": ["proud", "quiet", "brave"]
   },
   "appearance": {
    "feminine": 0.0,
-   "seed": 7311,
+   "seed": 9011,
    "build": "square_short",
    "age": 58,
    "hair": "grey_braided_under_a_felt_cap",
@@ -704,12 +699,7 @@
   "bio": "The pit-man at the Sawpit: he stands in the pit under the log and pulls the saw down, and gets the sawdust in his eyes, and has for thirty years, eleven of them without a word to his brother on the top of the log. They fell out over a woman who married neither of them.",
   "unique_habit": "Blinks sawdust out of his eyes in threes, and says 'hup' on every down-stroke though he has not said anything else to his brother in eleven years.",
   "personality": {
-   "traits": [
-    "proud",
-    "quiet",
-    "cynical",
-    "humble"
-   ]
+   "traits": ["proud", "quiet", "cynical"]
   },
   "appearance": {
    "feminine": 0.0,

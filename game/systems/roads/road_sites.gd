@@ -13,7 +13,7 @@ extends RefCounted
 ## are found, which is what the tests give roads for. Features are worked out a road at a time the
 ## first time something asks about that road, and kept.
 ##
-## Content adds its own: a region's roadtable `sites` ([{at: [x, z], kind, tell}]) are sites on
+## Content adds its own: a region's roadtable `sites` ([{at: {place, offset}, kind, tell}]) are sites on
 ## the nearest road, found as well as the land's.
 
 const STEP_M := 20.0
@@ -237,9 +237,15 @@ static func _near_bridge(at: Vector2) -> bool:
 ## A site content names: on the nearest road to `at`, of `kind`, and whatever else it carries.
 static func add_site(site: Dictionary) -> bool:
 	var raw: Variant = site.get("at", [])
-	if not (raw is Array) or (raw as Array).size() < 2:
+	var p := Vector2.INF
+	if PlaceRef.is_spec(raw):
+		# said beside a place ({"place", "offset"}), so it goes where the place goes when the map is
+		# redrawn (docs/COORDINATES.md)
+		p = PlaceRef.point_xz(raw as Dictionary)
+	elif raw is Array and (raw as Array).size() >= 2:
+		p = Vector2(float(raw[0]), float(raw[1]))
+	if p == Vector2.INF:
 		return false
-	var p := Vector2(float(raw[0]), float(raw[1]))
 	var near := nearest(p, 120.0)
 	if near.is_empty():
 		return false

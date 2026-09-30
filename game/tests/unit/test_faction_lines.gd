@@ -1135,10 +1135,19 @@ func authored_quests(layer: String) -> Array[Dictionary]:
 
 func test_every_faction_and_side_quest_is_offered_by_its_own_giver() -> void:
 	var offered := offered_quests()
+	# a large site's own quest may be taken up from a thing at its gate rather than from a person:
+	# the site's `hook` (the Kilnway's cairn, the notices at Scathe's gate), which its builder stands
+	var hooks := {}
+	for poi in ContentDB.all("poi"):
+		var site: Variant = poi.get("site", null)
+		if site is Dictionary and str((site as Dictionary).get("hook", "")) != "":
+			hooks[str(site["hook"])] = true
 	for layer in ["faction", "side"]:
 		for def in authored_quests(layer):
 			var quest := str(def["id"])
 			var giver := str(def.get("giver", ""))
+			if giver == "" and offered.has(quest) and (offered[quest] as Array).all(func(d: Variant) -> bool: return hooks.has(str(d))):
+				continue
 			assert_ne(giver, "", "%s has no giver, so nobody can hand it over" % quest)
 			assert_true(ContentDB.has(giver), "%s is given by somebody who does not exist" % quest)
 			assert_true(offered.has(quest), "%s is in no dialogue: there is no way to take it" % quest)
