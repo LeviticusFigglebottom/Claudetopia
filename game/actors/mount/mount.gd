@@ -148,6 +148,7 @@ var _way_at := -100.0
 var _replans := 0
 var _shut: Dictionary = {}
 var _answer_at := -1.0
+var _look_at := 0.0
 ## A point to turn and face, standing (Vector3.INF for none).
 var _face := Vector3.INF
 var _bolt_to := Vector3.INF
@@ -459,15 +460,27 @@ func _think_coming(delta: float) -> void:
 	var left := d
 	if _way.state == HorseWay.FOUND:
 		var pts := _way.points
-		# on past each bend once it is close, sooner the faster it goes
-		var reach := 1.6 + absf(speed) * 0.35
-		while _way_i < pts.size() and _flat(pts[_way_i] - global_position) < reach:
-			_way_i += 1
+		# on past each bend once it is there, or sooner when the way to the next one is open from
+		# here (looked at four times a second): never by cutting a corner into an edge
+		while _way_i < pts.size():
+			if _flat(pts[_way_i] - global_position) < 1.2:
+				_way_i += 1
+			elif _way_i + 1 < pts.size() and _clock >= _look_at:
+				_look_at = _clock + 0.25
+				if _way.line_open(global_position, pts[_way_i + 1]):
+					_way_i += 1
+				else:
+					break
+			else:
+				break
 		if _way_i < pts.size():
 			aim = pts[_way_i]
 			left = _flat(aim - global_position)
 			for k in range(_way_i + 1, pts.size()):
 				left += _flat(pts[k] - pts[k - 1])
+			# through a gap, round a trunk: at a walk
+			if _flat(aim - global_position) < 6.0 and _way.tight_at(aim):
+				left = minf(left, 8.0)
 			# a sharp bend close ahead is not taken at a canter
 			if _way_i + 1 < pts.size() and _flat(aim - global_position) < 6.0:
 				var a := aim - global_position

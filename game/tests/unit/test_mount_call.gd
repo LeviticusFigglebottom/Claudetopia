@@ -204,31 +204,36 @@ func _whistle_and_watch(limit: float) -> Dictionary:
 	Foley.played.connect(listen)
 	await _tap(KEY_H)
 	var box := BoxShape3D.new()
-	box.size = Vector3(0.55, 1.0, 1.8)
+	box.size = Vector3(0.5, 1.0, 1.6)
 	var space := horse.get_world_3d().direct_space_state
 	var worst_fall := 0.0
 	var deepest := 0.0
 	var fall := 0.0
+	var most_points := 0
 	var inside := 0
-	var last_y := horse.global_position.y
 	var arrived := -1.0
 	var hz := Engine.physics_ticks_per_second
 	for i in int(limit * hz):
 		await _tree().physics_frame
+		# in the air over the ground under it (a fall off a bank leaves it high over the foot)
 		var y := horse.global_position.y
-		if horse.is_on_floor():
-			fall = 0.0
-		else:
-			fall += maxf(0.0, last_y - y)
-			worst_fall = maxf(worst_fall, fall)
-		last_y = y
+		# the ground under its middle and under each pair of hooves: it stands on the highest
+		var g := -INF
+		for k in [-1.0, 0.0, 1.0]:
+			var p := horse.global_position + horse.forward() * Mount.HALF_BASE * float(k)
+			g = maxf(g, float(World.terrain().call("get_height", p.x, p.z)))
+		fall = y - g
+		worst_fall = maxf(worst_fall, fall)
+		most_points = maxi(most_points, horse.way_points().size())
 		deepest = maxf(deepest, horse.water_depth(horse.global_position))
 		var q := PhysicsShapeQueryParameters3D.new()
 		q.shape = box
 		q.transform = Transform3D(Basis(Vector3.UP, horse.heading), horse.global_position + Vector3(0.0, 0.75, 0.0))
 		q.collision_mask = Actor.LAYER_WORLD
-		if not space.intersect_shape(q, 1).is_empty():
-			inside += 1
+		for hit in space.intersect_shape(q, 4):
+			if _solids.has(hit.get("collider")):
+				inside += 1
+				break
 		if horse.mode == Mount.Mode.STAND and i > hz:
 			arrived = float(i) / float(hz)
 			break
@@ -237,7 +242,7 @@ func _whistle_and_watch(limit: float) -> Dictionary:
 	to.y = 0.0
 	var facing := rad_to_deg(absf(wrapf(atan2(-to.x, -to.z) - horse.heading, -PI, PI)))
 	return {"arrived": arrived, "fall": worst_fall, "inside": inside, "dist": to.length(),
-			"facing": facing, "heard": heard, "way": horse.way_points().size(), "deepest": deepest}
+			"facing": facing, "heard": heard, "way": most_points, "deepest": deepest}
 
 
 func _assert_came(r: Dictionary, what: String, limit: float) -> void:

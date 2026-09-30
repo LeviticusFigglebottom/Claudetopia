@@ -16,8 +16,9 @@ extends RefCounted
 ## open, so the horse goes from bend to bend rather than square to square.
 
 const CELL_M := 1.5
-## Round the horse and the caller, the grid runs this far out (m), and never past MAX_CELLS a side.
-const MARGIN_M := 30.0
+## Round the horse and the caller, the grid runs this far out (m), and never past MAX_CELLS a side:
+## far enough for the way round a long bank or the ford of a stream.
+const MARGIN_M := 60.0
 const MAX_CELLS := 220
 ## What a square costs to look at is a shape query and two height reads: this many a frame.
 const LOOKS_A_FRAME := 90
@@ -38,6 +39,9 @@ const WET_COST := 1.6
 const ROAD_COST := 0.6
 const VERGE_COST := 0.8
 const VERGE_M := 3.0
+## A square beside a closed one is dear (the way keeps off walls and trunks, and takes a gap by its
+## middle), and a straight line is never pulled through one: the way comes square on to a gap.
+const TIGHT_COST := 2.2
 
 ## A way is pulled straight across at most this many squares at once (the line checks' cost).
 const PULL_CELLS := 40
@@ -62,6 +66,7 @@ var _arrive := 0.0
 var _cost: Dictionary = {}
 var _height: Dictionary = {}
 var _closed: Dictionary = {}          # cells a stuck horse found shut, whatever they look like
+var _tight: Dictionary = {}
 var _g: Dictionary = {}
 var _came: Dictionary = {}
 var _done: Dictionary = {}
@@ -177,6 +182,8 @@ func line_open(a: Vector3, b: Vector3) -> bool:
 			continue
 		if not _inside(c) or _step_cost(prev, c) == INF:
 			return false
+		if c != cb and is_tight(c):
+			return false
 		# a diagonal slip between two closed squares is not open
 		if c.x != prev.x and c.y != prev.y:
 			if cost_of(Vector2i(c.x, prev.y)) == INF and cost_of(Vector2i(prev.x, c.y)) == INF:
@@ -197,6 +204,29 @@ func cost_of(c: Vector2i) -> float:
 	return v
 
 
+## Whether cell `c` is beside a closed one, or a step too steep to take (the edge of a bank, the
+## side of a ramp): looking at its neighbours.
+func is_tight(c: Vector2i) -> bool:
+	if not _inside(c):
+		return true
+	var i := _index(c)
+	if _tight.has(i):
+		return bool(_tight[i])
+	var t := false
+	for dy in [-1, 0, 1]:
+		for dx in [-1, 0, 1]:
+			if (dx != 0 or dy != 0) and not t:
+				var n := c + Vector2i(dx, dy)
+				t = cost_of(n) == INF or _steep(c, n)
+	_tight[i] = t
+	return t
+
+
+## Whether the way at world point `p` runs close by something (see is_tight).
+func tight_at(p: Vector3) -> bool:
+	return is_tight(cell_of(p))
+
+
 ## Marks the cells round world point `p` closed (a horse stuck there), `r` cells out.
 func shut_round(p: Vector3, r := 0) -> void:
 	var c := cell_of(p)
@@ -206,6 +236,7 @@ func shut_round(p: Vector3, r := 0) -> void:
 			if _inside(n):
 				_closed[_index(n)] = true
 				_cost[_index(n)] = INF
+	_tight.clear()
 
 
 func shut_cells() -> Dictionary:
@@ -216,16 +247,25 @@ func shut_cells() -> Dictionary:
 
 func _step_cost(a: Vector2i, b: Vector2i) -> float:
 	var cb := cost_of(b)
-	if cb == INF:
+	if cb == INF or _steep(a, b):
 		return INF
 	var run := CELL_M * (1.41421356 if a.x != b.x and a.y != b.y else 1.0)
-	var rise := _ground_of(b) - _ground_of(a)
-	var deg := rad_to_deg(atan2(rise, run))
-	if deg > UP_DEG or -deg > DOWN_DEG:
-		return INF
+	var deg := rad_to_deg(atan2(_ground_of(b) - _ground_of(a), run))
 	# a hillside is dear the steeper it is, up more than down
 	var hill := 1.0 + pow(absf(deg) / (24.0 if deg > 0.0 else 30.0), 2.0)
-	return run * cb * hill
+	# beside something closed, or an edge: dear, so the way keeps to the middle of a gap or a ramp
+	return run * cb * hill * (TIGHT_COST if is_tight(b) else 1.0)
+
+
+## Whether the step from cell `a` to its neighbour `b` climbs or falls too steeply to take.
+func _steep(a: Vector2i, b: Vector2i) -> bool:
+	var ha := _ground_of(a)
+	var hb := _ground_of(b)
+	if ha == -INF or hb == -INF:
+		return true
+	var run := CELL_M * (1.41421356 if a.x != b.x and a.y != b.y else 1.0)
+	var deg := rad_to_deg(atan2(hb - ha, run))
+	return deg > UP_DEG or -deg > DOWN_DEG
 
 
 func _look(c: Vector2i) -> float:
