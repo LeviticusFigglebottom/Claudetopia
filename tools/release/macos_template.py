@@ -44,6 +44,7 @@ def main() -> int:
     if not todo:
         print(f"macos_template: {path} already has the x86_64 names; nothing to do")
         return 0
+    mode = os.stat(path).st_mode & 0o777
     fd, tmp = tempfile.mkstemp(suffix=".zip", dir=os.path.dirname(path))
     os.close(fd)
     try:
@@ -57,6 +58,7 @@ def main() -> int:
                 with src.open(info) as fin, dst.open(out, "w", force_zip64=True) as fout:
                     shutil.copyfileobj(fin, fout, 1 << 20)
                 print(f"macos_template: added {out.filename} (the universal binary, {info.file_size} bytes)")
+        os.chmod(tmp, mode)
         os.replace(tmp, path)
     finally:
         if os.path.exists(tmp):
