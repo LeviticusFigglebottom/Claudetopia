@@ -14762,3 +14762,70 @@ the whole account.
     GitHub.
   - Re-run `./run.sh shader-warm` when materials or shaders change (docs/FIRST_LAUNCH.md says
     when). A new threaded read must go through ThreadedLoads.
+
+## The Mac has a release: one universal Wickmere.app, built on Linux beside the Windows zip (macos, 2026-09-30)
+
+- **Preset** `macOS` (preset.1; preset.0 "Windows Desktop" byte for byte as it was):
+  - com.wickmere.game, "Wickmere", Games, high-res;
+  - minimum macOS 10.15 (Intel) and 11.0 (Apple Silicon);
+  - the Windows export filters;
+  - signed ad hoc by Godot's built-in signer, not notarized. The only entitlement is
+    disable-library-validation, which an ad hoc app needs to load a framework;
+  - shader baker off.
+- **Universal without ETC2/ASTC.** Godot refuses a universal or arm64 export unless the project
+  imports ETC2/ASTC, which here would re-import ~1,600 textures and rewrite every `.import`. So the
+  preset asks for x86_64, and `tools/release/macos_template.py` gives that template name the
+  official universal binary. Apple Silicon reads the BC textures through Metal.
+- **Terrain3D 1.0.2's framework is universal** (x86_64 + arm64), unsigned as shipped, and built
+  for macOS 15.0 (LC_BUILD_VERSION minos). The export signs it and writes its Info.plist. Older
+  macOS gets the coarse ground, as world_status already says.
+- **The export here** (headless, 2026-09-30) made a 916 MB zip. Checked with
+  `tools/release/macos_check.py`:
+  - `Contents/MacOS/Wickmere`: x86_64 + arm64, each signed ad hoc with hardened runtime;
+  - `Contents/Frameworks/libterrain.macos.release.framework`: x86_64 + arm64, signed, with its
+    own seal;
+  - `Contents/Resources/Wickmere.pck` (1.31 GB);
+  - the Info.plist;
+  - `_CodeSignature/CodeResources` sealing the pack, the icon and the framework.
+- **The renderer.** Forward+ on a Mac is Metal on Apple Silicon (only the template's arm64 half
+  has the Metal driver) and MoltenVK on Intel or Rosetta. Compatibility stays the fallback.
+- **The shaders.** A Linux export under xvfb and lavapipe baked **0** shaders into the Mac pack:
+  the baker bakes for Metal, which only a Mac can. So a Mac compiles its shaders on first launch,
+  and ThreadedLoads keeps that from deadlocking.
+- **The workflow.** `.github/workflows/game-build.yml` replaces windows-build.yml (the deletion
+  is in the preset commit). It has these jobs:
+  - prepare: pick the build, skip it if already built, import once, save the cache;
+  - windows: its steps unchanged;
+  - macos: on ubuntu, headless export, the app check, a README in the zip, a raw split over 2 GB;
+  - publish: both zips on nightly, playtest or the tag; nothing is published if a platform that
+    was asked for failed;
+  - mac-smoke: optional. Run by hand with `mac_smoke` ticked, on macos-15 (Terrain3D's floor,
+    not macos-14). It runs `codesign --verify`, `lipo`, and `tools/release/mac_smoke.sh`, which
+    starts a new game headless natively and under Rosetta and needs
+    `[World] ready: terrain=terrain3d`. The exported game has no smoke runner (tests/ is not
+    exported) and a release template ignores `--script`, both found here.
+
+  The run-by-hand form picks the platforms (both, windows, macos). The schedule builds a nightly
+  again if it lacks either zip. Validated with PyYAML and actionlint 1.7.7 with shellcheck: clean.
+- **Game:** no backslash paths or OS checks that miss macOS. `OS.shell_open` on the logs folder
+  works on a Mac. The Open log folder tooltip now shows the folder's path on every platform.
+  Controls were left as they are and documented in docs/MAC.md:
+  - Ctrl is dodge, and Godot makes Ctrl-click a right-click on the Mac;
+  - lock on is the middle button, which a trackpad lacks;
+  - the F-keys need fn.
+- **Docs:** docs/MAC.md (download, Gatekeeper per macOS version, requirements, saves and logs,
+  controls, how it is built, and what only a Mac can check), a "Play a build" section in the
+  README, and FIRST_LAUNCH.
+- **Tests:** test_ui_fits_at_every_scale: 6 tests, 0 failed. mac_smoke.sh was run on Linux
+  against the Mac pack with the Linux release template: it reported terrain=fallback and failed,
+  as it should there.
+- **Not done / for the coordinator:**
+  - The workflow is untested until it runs on GitHub. Run it once by hand with `mac_smoke` ticked.
+  - Only a real Mac with a screen can check:
+    - that Metal draws the game;
+    - that BC textures show on Apple Silicon;
+    - the first-launch compile time;
+    - Gatekeeper as a player meets it;
+    - the controls on a trackpad.
+  - Notarization needs an Apple Developer ID. docs/MAC.md says what to add.
+  - The Actions page lists the workflow as "Game build" now.

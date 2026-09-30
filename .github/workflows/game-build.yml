@@ -1,0 +1,442 @@
+# Builds copies of Wickmere that play without the Godot editor, for Windows and for the Mac, and
+# publishes them together as the "nightly" pre-release (Releases, on the right of the repository's
+# page on GitHub): Wickmere-windows-<commit>.zip and Wickmere-macos-<commit>.zip.
+#
+# When it runs:
+#   - every four hours, if main has changed since the last build (or the nightly lacks a platform);
+#   - by hand: Actions > "Game build" > "Run workflow" (always builds; on main it is the nightly,
+#     on any other branch that branch is built and published as the "playtest" pre-release). The
+#     form picks the platforms (both, windows or macos) and can ask for the Mac smoke test. A run
+#     for one platform replaces the whole pre-release with that platform's zip;
+#   - on a pushed tag v* (for example v0.1), which also makes a release of its own under that tag.
+# It does not run on every push: main moves many times a day, and a private repository has a monthly
+# allowance of Actions minutes (every push would spend it in about a fortnight). Every build job runs
+# on Linux; only the optional Mac smoke test takes a macOS runner (ten times the minutes), and only
+# when asked.
+#
+# Jobs:
+#   prepare  - picks what to build, imports the assets once and saves the import cache for this commit
+#   windows  - exports the "Windows Desktop" preset and zips it
+#   macos    - exports the "macOS" preset (Wickmere.app, universal, signed ad hoc) and zips it
+#   publish  - puts every zip that was built on the release; if a platform that was asked for failed,
+#              nothing is published and the last release stays
+#   mac-smoke (optional) - opens the Mac zip on a real Mac (macos-15, Apple Silicon), checks its
+#              signature and starts a new game headless, natively and under Rosetta
+#              (tools/release/mac_smoke.sh)
+#
+# How: the Godot editor (headless) and its export templates are downloaded at the same version the
+# project is made with (tools/release/get_godot.sh), the assets are imported (the import cache is
+# kept between runs, so later runs import only what changed), and each preset in
+# game/export_presets.cfg is exported. The export is made by the editor with a Vulkan device (Mesa's
+# software one, lavapipe, under a virtual screen), not headless: the export's shader baker compiles
+# every shader the game uses into the pack only when it has a rendering device, and a pack without
+# them compiled each one on the player's first launch, on the main thread, behind the title
+# (docs/FIRST_LAUNCH.md). The Windows job fails if the pack has no baked shaders. The Mac export is
+# headless: its shaders are Metal's, which only a Mac can bake, so a Mac compiles them on its first
+# launch. The Windows zip
+# holds Wickmere.exe, Wickmere.pck, the Terrain3D library and a console build (Wickmere.console.exe)
+# that shows the log. The Mac zip holds Wickmere.app and a README; docs/MAC.md says what is in it and
+# why (the ad hoc signature, the universal binary, the shaders a Mac compiles itself).
+name: Game build
+
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "Platforms to build"
+        type: choice
+        options: [both, windows, macos]
+        default: both
+      mac_smoke:
+        description: "Also run the Mac build on a macOS runner (costs ten times the minutes)"
+        type: boolean
+        default: false
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: game-build
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: "4.7.2"
+  MAIN_BRANCH: "claude/blissful-volta-dg80e6"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    outputs:
+      ref: ${{ steps.pick.outputs.ref }}
+      release: ${{ steps.pick.outputs.release }}
+      windows: ${{ steps.pick.outputs.windows }}
+      macos: ${{ steps.pick.outputs.macos }}
+      sha: ${{ steps.skip.outputs.sha }}
+      short: ${{ steps.skip.outputs.short }}
+      skip: ${{ steps.skip.outputs.skip }}
+    steps:
+      - name: Choose what to build
+        id: pick
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "release=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.ref_name }}" != "$MAIN_BRANCH" ]; then
+            # run by hand on another branch: build that branch, as the "playtest" pre-release,
+            # so a branch can be played before it lands and the nightly stays main's
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "release=playtest" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$MAIN_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "release=nightly" >> "$GITHUB_OUTPUT"
+          fi
+          platforms="${{ inputs.platforms }}"
+          case "${platforms:-both}" in
+            windows) echo "windows=true" >> "$GITHUB_OUTPUT"; echo "macos=false" >> "$GITHUB_OUTPUT" ;;
+            macos) echo "windows=false" >> "$GITHUB_OUTPUT"; echo "macos=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "windows=true" >> "$GITHUB_OUTPUT"; echo "macos=true" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pick.outputs.ref }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Skip if this commit is already the nightly
+        id: skip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          built=""
+          assets=""
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            built=$(gh release view nightly --repo "$GITHUB_REPOSITORY" --json body --jq .body 2>/dev/null | grep -o 'commit [0-9a-f]\{40\}' | head -1 | cut -d' ' -f2 || true)
+            assets=$(gh release view nightly --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null || true)
+          fi
+          # a nightly made by a one-platform run by hand is built again, so it gets both
+          if [ -n "$built" ] && [ "$built" = "$sha" ] \
+             && echo "$assets" | grep -q '^Wickmere-windows-' && echo "$assets" | grep -q '^Wickmere-macos-'; then
+            echo "The nightly is already at $sha; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get Godot
+        if: steps.skip.outputs.skip == 'false'
+        run: tools/release/get_godot.sh
+
+      - name: Restore the import cache
+        if: steps.skip.outputs.skip == 'false'
+        uses: actions/cache/restore@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ steps.skip.outputs.sha }}
+          restore-keys: godot-import-${{ env.GODOT_VERSION }}-
+
+      - name: Import the assets
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          godot --headless --path game --import 2>&1 | tail -40
+          du -sh game/.godot/imported
+
+      - name: Save the import cache
+        if: steps.skip.outputs.skip == 'false'
+        uses: actions/cache/save@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ steps.skip.outputs.sha }}
+
+  windows:
+    needs: prepare
+    if: needs.prepare.outputs.skip == 'false' && needs.prepare.outputs.windows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Get a software Vulkan device and a virtual screen (for the shader baker)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends mesa-vulkan-drivers libvulkan1 xvfb xauth
+
+      - name: Get Godot and its export templates
+        run: |
+          tools/release/get_godot.sh windows_release_x86_64.exe windows_release_x86_64_console.exe \
+            windows_debug_x86_64.exe windows_debug_x86_64_console.exe
+
+      - name: Restore the import cache
+        uses: actions/cache/restore@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ needs.prepare.outputs.sha }}
+          fail-on-cache-miss: true
+
+      - name: Export for Windows
+        run: |
+          set -o pipefail
+          mkdir -p build/windows
+          # not --headless: the shader baker needs a rendering device (see the top of this file)
+          xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver vulkan \
+            --rendering-method forward_plus --export-release "Windows Desktop" ../build/windows/Wickmere.exe \
+            2>&1 | tee export.log | tail -40
+          test -s build/windows/Wickmere.exe
+          test -s build/windows/Wickmere.pck
+          ls -la build/windows
+
+      - name: Check the shaders were baked into the pack
+        run: |
+          # 168 material shaders were baked on 2026-09-30 (46 before the warm set,
+          # game/assets/shader_warm/); far fewer means the warm set or the baker went missing
+          python3 tools/debug/pck_shader_cache.py build/windows/Wickmere.pck --min-scene=150
+
+      - name: Package
+        run: |
+          set -eu
+          cat > build/windows/README.txt <<EOF
+          Wickmere, built from commit ${{ needs.prepare.outputs.sha }}.
+
+          Unzip everything into one folder and run Wickmere.exe. Keep the other files beside it:
+          Wickmere.pck is the game's content and libterrain.windows.release.x86_64.dll draws the
+          ground. Wickmere.console.exe is the same game with a window that shows its log, useful
+          when reporting a problem. Saves and settings go to %APPDATA%\Godot\app_userdata\Wickmere.
+          It needs a graphics card with Vulkan or Direct3D 12.
+          EOF
+          cd build/windows
+          name="Wickmere-windows-${{ needs.prepare.outputs.short }}"
+          zip -q -r -9 "../$name.zip" .
+          cd ..
+          size=$(stat -c %s "$name.zip")
+          echo "zip is $size bytes"
+          # A release file may be at most 2 GiB: a larger zip goes up in parts that 7-Zip joins.
+          if [ "$size" -gt 2000000000 ]; then
+            rm "$name.zip"
+            7z a -v1900m "$name.7z" ./windows > /dev/null
+            ls -la
+          fi
+
+      - name: Hand the zip to the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-windows
+          path: build/Wickmere-windows-*
+          compression-level: 0
+          retention-days: 2
+          if-no-files-found: error
+
+  macos:
+    needs: prepare
+    if: needs.prepare.outputs.skip == 'false' && needs.prepare.outputs.macos == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Get Godot and its Mac export template
+        run: |
+          tools/release/get_godot.sh macos.zip
+          # the preset asks for x86_64 so Godot does not demand ETC2/ASTC textures; this gives
+          # that name the template's universal binary, so the app is universal (docs/MAC.md)
+          python3 tools/release/macos_template.py
+
+      - name: Restore the import cache
+        uses: actions/cache/restore@v4
+        with:
+          path: game/.godot/imported
+          key: godot-import-${{ env.GODOT_VERSION }}-${{ needs.prepare.outputs.sha }}
+          fail-on-cache-miss: true
+
+      - name: Export for macOS
+        run: |
+          set -o pipefail
+          mkdir -p build/macos
+          # headless: the preset's shader baker is off. A Mac draws Forward+ with Metal (Apple
+          # Silicon) or MoltenVK (Intel, Rosetta), and the baker bakes only for the platform's
+          # driver, Metal, which only an editor on a Mac can bake. So a Mac compiles its shaders
+          # on its first launch, with ThreadedLoads keeping a thread free for the compiles
+          # (docs/FIRST_LAUNCH.md, docs/MAC.md).
+          godot --headless --path game --export-release "macOS" ../build/macos/Wickmere.zip \
+            2>&1 | tee export.log | tail -40
+          test -s build/macos/Wickmere.zip
+
+      - name: Check the app
+        run: |
+          # one universal, signed Wickmere.app with Terrain3D's framework and the pack
+          python3 tools/release/macos_check.py build/macos/Wickmere.zip
+
+      - name: Package
+        run: |
+          set -eu
+          cd build/macos
+          name="Wickmere-macos-${{ needs.prepare.outputs.short }}"
+          sed "s/@COMMIT@/${{ needs.prepare.outputs.sha }}/" ../../tools/release/README-macos.txt > README.txt
+          zip -q "Wickmere.zip" README.txt
+          mv Wickmere.zip "../$name.zip"
+          cd ..
+          size=$(stat -c %s "$name.zip")
+          echo "zip is $size bytes"
+          # A release file may be at most 2 GiB: a larger zip goes up in plain parts that
+          # `cat` joins on the Mac (the release notes say how); a split zip or a 7-Zip archive
+          # would need a program macOS does not have.
+          if [ "$size" -gt 2000000000 ]; then
+            split -b 1900m -d -a 2 "$name.zip" "$name.zip.part"
+            rm "$name.zip"
+          fi
+          ls -la
+
+      - name: Hand the zip to the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-macos
+          path: build/Wickmere-macos-*
+          compression-level: 0
+          retention-days: 2
+          if-no-files-found: error
+
+  publish:
+    needs: [prepare, windows, macos]
+    # every platform asked for was built (a platform not asked for is "skipped")
+    if: >-
+      always() && needs.prepare.result == 'success' && needs.prepare.outputs.skip == 'false' &&
+      (needs.windows.result == 'success' || needs.windows.result == 'skipped') &&
+      (needs.macos.result == 'success' || needs.macos.result == 'skipped') &&
+      (needs.windows.result == 'success' || needs.macos.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Get the zips
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          path: build
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          ls -la build
+          tag="${{ needs.prepare.outputs.release }}"
+          sha="${{ needs.prepare.outputs.sha }}"
+          short="${{ needs.prepare.outputs.short }}"
+          built=""
+          ls build/Wickmere-windows-* >/dev/null 2>&1 && built="Windows"
+          ls build/Wickmere-macos-* >/dev/null 2>&1 && built="${built:+$built and }Mac"
+          notes="$built build of Wickmere from commit $sha (${{ needs.prepare.outputs.ref }}), made $(date -u '+%Y-%m-%d %H:%M UTC')."
+          if ls build/Wickmere-windows-* >/dev/null 2>&1; then
+            notes="$notes
+
+          **Windows** (Wickmere-windows-$short): download the zip (or every part of the .7z, then open the .001 with 7-Zip), unzip it into one folder and run Wickmere.exe."
+          fi
+          if ls build/Wickmere-macos-* >/dev/null 2>&1; then
+            join=""
+            if ls build/Wickmere-macos-*.zip.part* >/dev/null 2>&1; then
+              join=" It comes in parts: download every Wickmere-macos-$short.zip.part file into one folder, then in Terminal there run \`cat Wickmere-macos-$short.zip.part* > Wickmere-macos-$short.zip\`."
+            fi
+            notes="$notes
+
+          **Mac** (Wickmere-macos-$short, one app for Apple Silicon and Intel Macs; macOS 10.15 or later, and macOS 15 or later for the full terrain):$join Double-click the zip to unpack Wickmere.app and drag it to Applications. The app is not notarized by Apple, so the first time macOS will not open it:
+          - macOS 15 (Sequoia) or later: double-click Wickmere, click Done, then open System Settings > Privacy & Security, scroll down to \"Wickmere was blocked\" and click **Open Anyway**, then **Open Anyway** again.
+          - macOS 14 or older: Control-click (or right-click) Wickmere, choose **Open**, then **Open**.
+          - Or, in Terminal: \`xattr -dr com.apple.quarantine /Applications/Wickmere.app\`, then open it as usual.
+          After that it opens like any other app. Saves and logs: ~/Library/Application Support/Godot/app_userdata/Wickmere/."
+          fi
+          if [ "$tag" = "nightly" ] || [ "$tag" = "playtest" ]; then
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --prerelease --target "$sha" \
+              --title "Wickmere $tag ($short)" --notes "$notes" build/Wickmere-*
+          else
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "Wickmere $tag" --notes "$notes" build/Wickmere-*
+          fi
+
+  mac-smoke:
+    needs: [prepare, macos]
+    if: github.event_name == 'workflow_dispatch' && inputs.mac_smoke && needs.macos.result == 'success'
+    # Apple Silicon, macOS 15: Terrain3D 1.0.2's framework is built for macOS 15 or later
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Check out the smoke script
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 1
+          sparse-checkout: tools/release
+
+      - name: Get the Mac zip
+        uses: actions/download-artifact@v4
+        with:
+          name: build-macos
+          path: dl
+
+      - name: Unpack it as a player would
+        run: |
+          set -eu
+          cd dl
+          parts=(./*.zip.part*)
+          if [ -e "${parts[0]}" ]; then
+            cat "${parts[@]}" > "${parts[0]%.part*}"; rm "${parts[@]}"
+          fi
+          ditto -x -k Wickmere-macos-*.zip "$RUNNER_TEMP/out"
+          ls -la "$RUNNER_TEMP/out"
+          echo "APP=$RUNNER_TEMP/out/Wickmere.app" >> "$GITHUB_ENV"
+
+      - name: Check the signature and the architectures
+        run: |
+          set -x
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          codesign -dv --verbose=4 "$APP" 2>&1 | head -20
+          lipo -info "$APP/Contents/MacOS/Wickmere"
+          lipo -info "$APP/Contents/Frameworks/libterrain.macos.release.framework/libterrain.macos.release"
+          # Gatekeeper refuses an app that is signed ad hoc and not notarized; this only logs it
+          spctl --assess --type execute -vv "$APP" || true
+
+      - name: Start a new game natively (arm64)
+        run: tools/release/mac_smoke.sh "$APP" arm64
+
+      - name: Start a new game under Rosetta (x86_64, as an Intel Mac runs it)
+        if: ${{ !cancelled() }}
+        run: |
+          /usr/sbin/softwareupdate --install-rosetta --agree-to-license >/dev/null 2>&1 || true
+          tools/release/mac_smoke.sh "$APP" x86_64 arch -x86_64
+
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-smoke-logs
+          path: |
+            *.log
+            *.out
+          if-no-files-found: warn

@@ -86,7 +86,7 @@ func _build() -> void:
 	body.add_child(foot)
 	# where this session's error log is written, for a player asked to send it
 	var logs := UiKit.button("Open log folder", "FlatButton")
-	logs.tooltip_text = "The folder with this session's error log, to send along with a report"
+	logs.tooltip_text = "The folder with this session's error log, to send along with a report:\n%s" % ProjectSettings.globalize_path("user://logs")
 	logs.pressed.connect(func() -> void: ErrorLog.open_folder())
 	foot.add_child(logs)
 	var close := UiKit.button("Done", "FlatButton")
