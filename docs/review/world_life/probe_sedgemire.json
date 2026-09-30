@@ -46,8 +46,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@6299",
-     "asset": "@MeshInstance3D@6299",
+     "family": "@meshinstance3d@5580",
+     "asset": "@MeshInstance3D@5580",
      "x": -2371.6,
      "y": 6.56,
      "z": -43.3,
@@ -58,8 +58,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@6301",
-     "asset": "@MeshInstance3D@6301",
+     "family": "@meshinstance3d@5582",
+     "asset": "@MeshInstance3D@5582",
      "x": -2377.2,
      "y": 6.56,
      "z": -41.1,
@@ -70,8 +70,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@6303",
-     "asset": "@MeshInstance3D@6303",
+     "family": "@meshinstance3d@5584",
+     "asset": "@MeshInstance3D@5584",
      "x": -2382.8,
      "y": 6.56,
      "z": -38.9,
@@ -82,8 +82,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@6305",
-     "asset": "@MeshInstance3D@6305",
+     "family": "@meshinstance3d@5586",
+     "asset": "@MeshInstance3D@5586",
      "x": -2388.4,
      "y": 6.56,
      "z": -36.7,
@@ -94,8 +94,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@6307",
-     "asset": "@MeshInstance3D@6307",
+     "family": "@meshinstance3d@5588",
+     "asset": "@MeshInstance3D@5588",
      "x": -2393.9,
      "y": 6.56,
      "z": -34.4,
@@ -105,7 +105,7 @@
     }
    ],
    "embankment_m": 2.6,
-   "raise_ms": 9,
+   "raise_ms": 4551,
    "finished": true
   },
   {
@@ -152,7 +152,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 12,
+   "raise_ms": 118,
    "finished": true
   },
   {
@@ -329,7 +329,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 20,
+   "raise_ms": 66,
    "finished": true
   },
   {
@@ -374,7 +374,7 @@
     }
    ],
    "embankment_m": 1.2,
-   "raise_ms": 40,
+   "raise_ms": 128,
    "finished": true
   },
   {
@@ -419,7 +419,7 @@
     }
    ],
    "embankment_m": 5.7,
-   "raise_ms": 44,
+   "raise_ms": 177,
    "finished": true
   },
   {
@@ -449,7 +449,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 9,
+   "raise_ms": 95,
    "finished": true
   },
   {
@@ -479,7 +479,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 28,
+   "raise_ms": 110,
    "finished": true
   },
   {
@@ -509,7 +509,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 5,
+   "raise_ms": 44,
    "finished": true
   },
   {
@@ -539,7 +539,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 42,
+   "raise_ms": 186,
    "finished": true
   },
   {
@@ -585,8 +585,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@10095",
-     "asset": "@MeshInstance3D@10095",
+     "family": "@meshinstance3d@6024",
+     "asset": "@MeshInstance3D@6024",
      "x": -2760.0,
      "y": 6.45,
      "z": 841.0,
@@ -597,8 +597,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@10097",
-     "asset": "@MeshInstance3D@10097",
+     "family": "@meshinstance3d@6026",
+     "asset": "@MeshInstance3D@6026",
      "x": -2760.0,
      "y": 6.45,
      "z": 847.0,
@@ -609,8 +609,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@10099",
-     "asset": "@MeshInstance3D@10099",
+     "family": "@meshinstance3d@6028",
+     "asset": "@MeshInstance3D@6028",
      "x": -2760.0,
      "y": 6.45,
      "z": 853.0,
@@ -621,8 +621,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@10101",
-     "asset": "@MeshInstance3D@10101",
+     "family": "@meshinstance3d@6030",
+     "asset": "@MeshInstance3D@6030",
      "x": -2760.0,
      "y": 6.45,
      "z": 859.0,
@@ -633,8 +633,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@10103",
-     "asset": "@MeshInstance3D@10103",
+     "family": "@meshinstance3d@6032",
+     "asset": "@MeshInstance3D@6032",
      "x": -2760.0,
      "y": 6.45,
      "z": 865.0,
@@ -644,7 +644,7 @@
     }
    ],
    "embankment_m": 3.3,
-   "raise_ms": 6,
+   "raise_ms": 28,
    "finished": true
   },
   {
@@ -674,7 +674,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.5,
-   "raise_ms": 5,
+   "raise_ms": 143,
    "finished": true
   },
   {
@@ -704,7 +704,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 9,
+   "raise_ms": 58,
    "finished": true
   },
   {
@@ -734,7 +734,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 19,
+   "raise_ms": 69,
    "finished": true
   },
   {
@@ -779,7 +779,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 8,
+   "raise_ms": 24,
    "finished": true
   },
   {
@@ -809,7 +809,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 14,
+   "raise_ms": 58,
    "finished": true
   },
   {
@@ -839,7 +839,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 4,
+   "raise_ms": 23,
    "finished": true
   },
   {
@@ -871,7 +871,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 5,
+   "raise_ms": 44,
    "finished": true
   },
   {
@@ -901,7 +901,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 4,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -931,7 +931,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.2,
-   "raise_ms": 20,
+   "raise_ms": 72,
    "finished": true
   },
   {
@@ -961,7 +961,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.7,
-   "raise_ms": 5,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -991,7 +991,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 16,
+   "raise_ms": 34,
    "finished": true
   },
   {
@@ -1021,7 +1021,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 5,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1051,7 +1051,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 5,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1083,7 +1083,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 8,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -1113,7 +1113,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 21.7,
-   "raise_ms": 12,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -1143,7 +1143,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 11.5,
-   "raise_ms": 4,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1173,7 +1173,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.4,
-   "raise_ms": 15,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1218,7 +1218,7 @@
     }
    ],
    "embankment_m": 51.0,
-   "raise_ms": 5,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1264,8 +1264,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@13076",
-     "asset": "@MeshInstance3D@13076",
+     "family": "@meshinstance3d@6563",
+     "asset": "@MeshInstance3D@6563",
      "x": -1853.1,
      "y": 6.75,
      "z": 1238.5,
@@ -1276,8 +1276,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@13078",
-     "asset": "@MeshInstance3D@13078",
+     "family": "@meshinstance3d@6565",
+     "asset": "@MeshInstance3D@6565",
      "x": -1851.0,
      "y": 6.75,
      "z": 1232.8,
@@ -1288,8 +1288,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@13080",
-     "asset": "@MeshInstance3D@13080",
+     "family": "@meshinstance3d@6567",
+     "asset": "@MeshInstance3D@6567",
      "x": -1849.0,
      "y": 6.75,
      "z": 1227.2,
@@ -1300,8 +1300,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@13082",
-     "asset": "@MeshInstance3D@13082",
+     "family": "@meshinstance3d@6569",
+     "asset": "@MeshInstance3D@6569",
      "x": -1846.9,
      "y": 6.75,
      "z": 1221.5,
@@ -1312,8 +1312,8 @@
     {
      "check": "floating",
      "src": "poi:bridge",
-     "family": "@meshinstance3d@13084",
-     "asset": "@MeshInstance3D@13084",
+     "family": "@meshinstance3d@6571",
+     "asset": "@MeshInstance3D@6571",
      "x": -1844.9,
      "y": 6.75,
      "z": 1215.9,
@@ -1323,7 +1323,7 @@
     }
    ],
    "embankment_m": 2.0,
-   "raise_ms": 8,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1353,7 +1353,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 6,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -1383,7 +1383,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.1,
-   "raise_ms": 7,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1413,7 +1413,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 4,
+   "raise_ms": 6,
    "finished": true
   },
   {
@@ -1443,7 +1443,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 7,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1473,7 +1473,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 31.4,
-   "raise_ms": 7,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1503,7 +1503,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 12,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1608,7 +1608,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 8,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1653,7 +1653,7 @@
     }
    ],
    "embankment_m": 1.1,
-   "raise_ms": 7,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -1683,7 +1683,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.2,
-   "raise_ms": 7,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1713,7 +1713,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.4,
-   "raise_ms": 6,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1743,7 +1743,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 16,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1773,7 +1773,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 13,
+   "raise_ms": 33,
    "finished": true
   },
   {
@@ -1803,7 +1803,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 14,
+   "raise_ms": 40,
    "finished": true
   },
   {
@@ -1833,7 +1833,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.5,
-   "raise_ms": 7,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1891,7 +1891,491 @@
     }
    ],
    "embankment_m": 0.5,
-   "raise_ms": 121,
+   "raise_ms": 22,
+   "finished": true
+  },
+  {
+   "id": "core:poi/unsung_vault",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -2908.0,
+    4.61,
+    -1572.0
+   ],
+   "radius_flat_m": 30.0,
+   "footprint": {
+    "x": 30.5,
+    "z": 29.8,
+    "height": 11.2,
+    "reach": 31.3,
+    "top": 7.7
+   },
+   "pieces": 81,
+   "draws": 81,
+   "primitives": 92118,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {
+    "overlap": 12
+   },
+   "findings": [
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2901.2,
+     "y": 2.58,
+     "z": -1568.8,
+     "amount": 0.82,
+     "detail": "82% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2901.2,
+     "y": 2.58,
+     "z": -1568.8,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2901.2,
+     "y": 2.58,
+     "z": -1568.8,
+     "amount": 0.68,
+     "detail": "68% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2901.2,
+     "y": 2.58,
+     "z": -1568.8,
+     "amount": 0.98,
+     "detail": "98% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2899.3,
+     "y": 2.82,
+     "z": -1570.6,
+     "amount": 0.81,
+     "detail": "81% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2899.3,
+     "y": 2.82,
+     "z": -1570.6,
+     "amount": 0.62,
+     "detail": "62% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2909.0,
+     "y": 1.15,
+     "z": -1579.5,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2909.0,
+     "y": 1.15,
+     "z": -1579.5,
+     "amount": 0.99,
+     "detail": "99% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2909.0,
+     "y": 1.15,
+     "z": -1579.5,
+     "amount": 0.86,
+     "detail": "86% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2909.0,
+     "y": 1.15,
+     "z": -1579.5,
+     "amount": 1.0,
+     "detail": "100% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_a.glb",
+     "x": -2906.8,
+     "y": 2.75,
+     "z": -1580.9,
+     "amount": 0.75,
+     "detail": "75% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    },
+    {
+     "check": "overlap",
+     "src": "poi:delve",
+     "family": "boulder",
+     "asset": "sedgemire_boulder_b.glb",
+     "x": -2909.7,
+     "y": 3.67,
+     "z": -1577.1,
+     "amount": 0.68,
+     "detail": "68% of it shares its box with boulder (poi:delve)",
+     "region": "sedgemire"
+    }
+   ],
+   "embankment_m": 2.2,
+   "raise_ms": 681,
+   "finished": true
+  },
+  {
+   "id": "core:poi/greylag_fold",
+   "kind": "fold",
+   "preview": true,
+   "pos": [
+    -2516.0,
+    2.02,
+    -1820.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 19.7,
+    "z": 20.6,
+    "height": 6.6,
+    "reach": 20.3,
+    "top": 6.2
+   },
+   "pieces": 53,
+   "draws": 53,
+   "primitives": 67269,
+   "interactables": {},
+   "lights": 2,
+   "bodies": 2,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 4.6,
+   "raise_ms": 33,
+   "finished": true
+  },
+  {
+   "id": "core:poi/oulnauve_stakes",
+   "kind": "stockade",
+   "preview": true,
+   "pos": [
+    -1924.0,
+    4.33,
+    -1652.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 33.8,
+    "z": 34.8,
+    "height": 10.0,
+    "reach": 22.5,
+    "top": 9.2
+   },
+   "pieces": 118,
+   "draws": 118,
+   "primitives": 187965,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 10.7,
+   "raise_ms": 1387,
+   "finished": true
+  },
+  {
+   "id": "core:poi/eel_tally",
+   "kind": "tally_post",
+   "preview": true,
+   "pos": [
+    -2220.0,
+    3.26,
+    -740.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 17.2,
+    "z": 21.3,
+    "height": 7.1,
+    "reach": 17.7,
+    "top": 6.7
+   },
+   "pieces": 37,
+   "draws": 37,
+   "primitives": 59437,
+   "interactables": {
+    "JobBoard": 1
+   },
+   "lights": 1,
+   "bodies": 7,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.9,
+   "raise_ms": 58,
+   "finished": true
+  },
+  {
+   "id": "core:poi/hesters_stilts",
+   "kind": "farmstead",
+   "preview": true,
+   "pos": [
+    -1956.0,
+    3.19,
+    940.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 29.4,
+    "z": 29.4,
+    "height": 8.6,
+    "reach": 20.8,
+    "top": 8.2
+   },
+   "pieces": 39,
+   "draws": 39,
+   "primitives": 37221,
+   "interactables": {},
+   "lights": 5,
+   "bodies": 11,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.2,
+   "raise_ms": 44,
+   "finished": true
+  },
+  {
+   "id": "core:poi/isses_chair",
+   "kind": "shrine",
+   "preview": true,
+   "pos": [
+    -2132.0,
+    4.19,
+    108.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 12.7,
+    "z": 20.6,
+    "height": 4.2,
+    "reach": 16.8,
+    "top": 3.9
+   },
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 15319,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.2,
+   "raise_ms": 40,
+   "finished": true
+  },
+  {
+   "id": "core:poi/leech_wifes_stilts",
+   "kind": "hut",
+   "preview": true,
+   "pos": [
+    -1660.0,
+    9.11,
+    340.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 14.3,
+    "z": 27.3,
+    "height": 6.8,
+    "reach": 19.0,
+    "top": 6.4
+   },
+   "pieces": 41,
+   "draws": 41,
+   "primitives": 37145,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 8,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.9,
+   "raise_ms": 21,
+   "finished": true
+  },
+  {
+   "id": "core:poi/draining_mill",
+   "kind": "mill",
+   "preview": true,
+   "pos": [
+    -3388.0,
+    2.84,
+    -116.0
+   ],
+   "radius_flat_m": 26.0,
+   "footprint": {
+    "x": 12.4,
+    "z": 13.9,
+    "height": 17.2,
+    "reach": 13.0,
+    "top": 17.2
+   },
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 42111,
+   "interactables": {},
+   "lights": 0,
+   "bodies": 4,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.8,
+   "raise_ms": 150,
+   "finished": true
+  },
+  {
+   "id": "core:poi/drylanders_hummock",
+   "kind": "grave",
+   "preview": true,
+   "pos": [
+    -2956.0,
+    3.42,
+    20.0
+   ],
+   "radius_flat_m": 22.0,
+   "footprint": {
+    "x": 24.3,
+    "z": 25.6,
+    "height": 2.8,
+    "reach": 18.0,
+    "top": 2.2
+   },
+   "pieces": 25,
+   "draws": 25,
+   "primitives": 7222,
+   "interactables": {},
+   "lights": 3,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.1,
+   "raise_ms": 23,
+   "finished": true
+  },
+  {
+   "id": "core:poi/bog_iron_bloomery",
+   "kind": "camp",
+   "preview": true,
+   "pos": [
+    -3228.0,
+    3.95,
+    924.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 24.3,
+    "z": 21.4,
+    "height": 2.9,
+    "reach": 14.3,
+    "top": 2.7
+   },
+   "pieces": 74,
+   "draws": 74,
+   "primitives": 77234,
+   "interactables": {},
+   "lights": 3,
+   "bodies": 20,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.3,
+   "raise_ms": 123,
+   "finished": true
+  },
+  {
+   "id": "core:poi/grey_line",
+   "kind": "strange",
+   "preview": true,
+   "pos": [
+    -2556.0,
+    5.88,
+    1052.0
+   ],
+   "radius_flat_m": 24.0,
+   "footprint": {
+    "x": 24.6,
+    "z": 20.1,
+    "height": 2.5,
+    "reach": 15.4,
+    "top": 2.5
+   },
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 43941,
+   "interactables": {},
+   "lights": 1,
+   "bodies": 1,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 1.0,
+   "raise_ms": 254,
    "finished": true
   }
  ]

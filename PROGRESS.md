@@ -13354,3 +13354,58 @@ The coordinator's review of the above: the robe's calf and the coat over trouser
 - For the coordinator: land `clothing/coat_skirt/` with the others; the plain coat is unchanged
   from main. The robe's lighter use of the bones leaves it more stretch in a sprint than the long
   skirts.
+## The drowned lantern's country: world life in Sedgemire (phase 1, 2026-09-29)
+
+Sedgemire's empty land filled with eleven places of the marsh's own people and troubles, its weak
+places given people, notes and fights, five side quests sent through them, a new human foe (the
+Flood-Callers) and a road table of its own. Everything is Sedgemire's own files
+(docs/WORLD_LIFE.md §1): `pois/sedgemire.json`, `encounters/pois_sedgemire.json`,
+`roadlife/sedgemire.json`, `world/pois/regions/sedgemire.gd`, and new `*_sedgemire.json` files
+(npcs `poi_people_`, dialogues/quests/books/items/enemies/bosses/interiors `places_`).
+
+### New places (11)
+- **The Unsung Vault** (delve, -2908,-1572, the Carr): a Builders' cistern under a peat hummock where the reedfolk kept the lanterns of the drowned nobody could sing for. Crypt interior `core:interior/unsung_vault` (large, ossuary / underground lake / chasm bridge), boss **The Last Keeper** (`core:boss/keeper_of_the_unsung`, drops her lantern). Own builder: black Oroth doorway, two rows of cold lantern poles, a heap of cold lanterns.
+- **Greylag Fold** (fold, -2516,-1820): goose-herd Eune Mor and her grandson Pello; wattle fold, a flock of geese, the herd's stilt-house, punt, gate pole, dye line. Gives *The Unsung*.
+- **The Stakes at Oulnauve** (stockade, -1924,-1652): the Flood-Callers' palisade (garrison of 3 + the Caller Aunsa Mor and three of hers in the yard), heaps of cut burial lanterns, dark lantern poles at the gate. Target of *The Lanterns Taken Up*.
+- **The Eel Tally** (tally_post, -2220,-740): the Tallymen's counting-house on stilts, barrels, clerk's table, notched tally post, Guild banner, landing stage, a job board; clerk Wystan Crail, and the Guild's bravo sitting on the steps. Gives *Tithe-Day at the Tally*.
+- **Hester's House** (farmstead, -1956,940): a Vale cottage on a peat island; Hester Wrenn, whose lanterns name the Vale's drowned on the Long Jetty. Gives *Names from the Vale*.
+- **Isse's Chair** (shrine, -2132,108): nine black bog-oak stilts round a green Builders' seat, the naming-cord, a boardwalk in; tender Maue Oul.
+- **The Leech-Wife's Stilts** (hut, -1660,340): Illa Nauve's stilt-house over sunk leech-tubs, empty kennels, the collar pole with one hook bare, a landing; leech-hounds at night. Gives *The Old Bitch of the Withies*.
+- **The Draining Mill** (mill, -3388,-116): the Tallymen's failed wind-pump; the drowned come up its sump; the engineer's pumping-book.
+- **The Drylanders' Hummock** (grave, -2956,20): where Isseva buries the dry-country dead in earth, each with a lantern; the newest grave open.
+- **The Bog-Iron Bloomery** (camp, -3228,924): a clay furnace, ore and charcoal heaps, flooded ore-pits with sallowjaws.
+- **The Grey Line** (strange, -2556,1052): Nauvissa's sixty rows of year-stakes against the grey; ash grass past the last row; ash-wights at night.
+
+### Weak places raised
+Heron Watch (Tuo Lissa, keeper; gives *The Lanterns Taken Up*), the Old Crannog (Aue Sa, the Vault's runaway apprentice), the Peat Hags (Deo and Lia Oul; finds-board; 4 hounds), Wisp Hollow (4 wisps; the chimney letter), the Drowned Bell Shrine (its keeping-board; the Callers' sounding), the Long Jetty, Eel Hurdles and Withy Beds (quest targets; the Withies' hounds by day), the South Stilts, Stair of Isse, Sallow King and Eel Stews (a note each in the region's voice), the Grey Gull (sallowjaws) and the Reed Bridge (the drowned at night). 20 new books, each with its readable item.
+
+### Quests (5, `quests/places_sedgemire.json`)
+*The Unsung* (Eune Mor: crannog, Vault boss, three endings), *The Lanterns Taken Up* (Tuo Lissa: stakes, the Caller, the bell shrine, three endings), *Names from the Vale* (Hester: Long Jetty, the Hummock, three endings), *Tithe-Day at the Tally* (Wystan: the Hurdles' tally-stick, three endings), *The Old Bitch of the Withies* (Illa: the old hound at the Withy Beds, one ending).
+
+### Road life (`roadlife/sedgemire.json`)
+16 rows, 4 caravans (pack-train, eel-carriers Landing-Moreva, lantern-sellers Nauvissa-Isseva, the Guild's tithe-cart Isseva-Oulea), 4 sites of our own. New events: the Flood-Callers' ambush (a woman on the boards is bait; stops once the Caller is down), a sallowjaw log by a bridge, wisp lights, a burial procession (sing the third voice), the lamplighter at dusk, a punt in the ditch, the Guild's bailiffs, an eel-poacher with bailiffs behind. New enemy `core:enemy/guild_bailiff` (wayfarers), with the Flood-Callers' `flood_caller`, `ebb_hand`, `aunsa_mor` and `old_grey_bitch`.
+
+### Measured
+| | before (audit 2026-09-28) | after |
+|---|---|---|
+| POIs | 46 | 57 |
+| land > 200 m from anything | 16% | 7% |
+| largest empty stretch | 0.15 km2 | 0.074 km2 |
+| weak share (non-wayside) | 0.54 | 0.174 |
+| strong (>= 8) | 0 | 8 |
+(`region_audit.py sedgemire --probe`, all 57 measured; `region_check.py sedgemire --godot`: content, placement and density all **PASS**.)
+
+- New places' own cost (probe): 9-118 draws, 7-188 k tris; the Stakes 118 draws / 188 k, the Vault 81 / 92 k.
+- Quest walk: `./run.sh quests --only=` the five: **5 of 5 end every way they can, 13 of 13 walks**, 0 logged errors; one WORLD note (below).
+- Tests: first run (16 files, 198 tests): test_content_db, test_road_life, test_poi_preview, test_pois, test_quests, test_quest_stage_references, test_quest_givers, test_quest_items, test_quest_routes, test_books, test_poi_people, test_dialogue_endings, test_dialogue_keys pass. Last run (`objects_seated_sedgemire, test_poi_preview, test_pois, test_road_life, test_content_bestiary, test_content_db, test_quests, test_map_quests, test_poi_encounters`): 136 tests, 6 failed, every failure listed below (shared tables, the showcases' known ones, or the world build); 1 script error, the pre-existing `resists` read on the Kiln-Warden in test_content_bestiary. `tools/world/tests/test_content_split.py, test_region_check.py`: 8 passed.
+- Sheets looked at (`docs/review/world_life/sedgemire/`): all nine builder places once; the Stakes, Grey Line and Hummock again after fixes (masonry lantern heaps instead of 60 forge lanterns; the bloomery's whole drum was drawn emissive; the Grey Line's reeds had lost their texture to an override; pale stakes; the hummock read as a flat disc).
+
+### Not done / for the coordinator
+- **The Stakes at Oulnauve's views are over the frame budget** (2.07-2.25 M prims, 1500 draws) with the place's own pieces at 188 k: the rest is the stockade's garrison and encounter people and the rough ground behind. Cutting the garrison from 6 to 3 did not move it. Worth a look at what a dressed foe costs in a sheet (Scathe Fort may show the same).
+- `test_poi_encounters.test_every_point_of_interest_is_accounted_for` needs WHAT_STANDS rows (a shared test's table) for the eleven new places and their people (the Kilnway and Scathe Fort are missing too); `test_every_marker_an_encounter_names...` fails for `eel_tally` and `oulnauve_stakes` only because they have no built pad (the world build settles it).
+- `test_objects_seated_sedgemire`: overlap 13 against a baseline of 1; twelve are the delve kind's own crag boulders at the Unsung Vault overlapping each other (the shared cave builder, `poi:delve`), not Sedgemire's builder. The baseline wants re-writing once the coordinator agrees, or the crag's boulders spacing.
+- WHAT_STANDS also still says `nobody` for the Grey Gull and the Reed Bridge and `withy-cutters` for the Withy Beds, which now stand foes (sallowjaws; the drowned at night; the leech-wife's hounds by day).
+- `test_map_quests` counts a site interior's boss as 0 for `the_unsung` exactly as it does for the two showcases (`ring_the_warden_down`, `the_scathe_tithe`): the check does not read `site.boss`.
+- `test_content_bestiary.test_every_boss_in_the_bible_exists` expects five bosses; it already failed at main with the showcases' two, and the Last Keeper makes eight.
+- The quest walk's WORLD note: *Names from the Vale*'s lantern is put down in water at the Long Jetty (-2755, 845), which stands in the mere; the jetty's builder has no dry marker to name as a `spot`.
+- The new places stand on runtime pads until the world is built (cells' scatter moves off them); the Vault's delve crag was only seen on a runtime pad.

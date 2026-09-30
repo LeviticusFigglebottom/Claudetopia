@@ -1,0 +1,355 @@
+[
+  {
+    "id": "core:item/note_unsung_keepers_rule",
+    "name": "The Keepers' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Keeper's knot-cord and the charcoal lines copied beside it from a wall of the Unsung Vault.",
+    "reads": "core:book/unsung_keepers_rule"
+  },
+  {
+    "id": "core:item/note_unsung_keepers_last_page",
+    "name": "A Page on the Vault Steps",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A page of birch-bark left weighted with a stone on the Unsung Vault's top step, for whoever goes down.",
+    "reads": "core:book/unsung_keepers_last_page"
+  },
+  {
+    "id": "core:item/note_greylag_count",
+    "name": "The Goose-Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Eune Mor's knotted withy cord of the geese at the fold, and a clerk's copy of it on a scrap of paper.",
+    "reads": "core:book/greylag_count"
+  },
+  {
+    "id": "core:item/note_flood_callers_tract",
+    "name": "The Tide Turned Round",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of burial paper painted in indigo with the Flood-Callers' creed, pulled off the stakes' wall.",
+    "reads": "core:book/flood_callers_tract"
+  },
+  {
+    "id": "core:item/note_flood_callers_sounding",
+    "name": "A Flood-Caller's Sounding",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bundle-tag wrapped in oilskin and pushed between the Drowned Bell Shrine's stones, written on the back in a shaking hand.",
+    "reads": "core:book/flood_callers_sounding"
+  },
+  {
+    "id": "core:item/note_eel_tally_page",
+    "name": "A Page from the Tally Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A leaf torn from the back of the Eel Tally's book, the same rows written twice in two inks.",
+    "reads": "core:book/eel_tally_page"
+  },
+  {
+    "id": "core:item/note_hesters_names",
+    "name": "Hester's List",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The covers of a Vale almanac with a list of names written inside them in pencil gone over in ink.",
+    "reads": "core:book/hesters_names"
+  },
+  {
+    "id": "core:item/note_isses_chair_cord",
+    "name": "The Chair's Naming-Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the long indigo cord of names coiled on Isse's seat, as the tender reads it out.",
+    "reads": "core:book/isses_chair_cord"
+  },
+  {
+    "id": "core:item/note_leech_wifes_ledger",
+    "name": "The Leech-Wife's Ledger",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board copied from the chalk on the inside of a kennel door: leeches, hounds, and what happened to them.",
+    "reads": "core:book/leech_wifes_ledger"
+  },
+  {
+    "id": "core:item/note_draining_mill_pumping_book",
+    "name": "The Pumping-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An engineer's brass-cornered book, swollen with damp, left open on the ledge by the Draining Mill's sluice.",
+    "reads": "core:book/draining_mill_pumping_book"
+  },
+  {
+    "id": "core:item/note_drylanders_boards",
+    "name": "Rubbings from the Drylanders' Hummock",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Charcoal rubbings on reed paper of the grave-boards on the hummock west of Isseva.",
+    "reads": "core:book/drylanders_boards"
+  },
+  {
+    "id": "core:item/note_bloomers_cord",
+    "name": "The Bloomer's Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The bloomer's knotted tally of this spring's iron, cut from the furnace's wicker door.",
+    "reads": "core:book/bloomers_cord"
+  },
+  {
+    "id": "core:item/note_grey_line_knots",
+    "name": "The Row-Knots of the Grey Line",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The knots of Nauvissa's sixty rows of stakes, read off and written down by the stake-drivers.",
+    "reads": "core:book/grey_line_knots"
+  },
+  {
+    "id": "core:item/note_south_stilts_log",
+    "name": "The Watchman's Log",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The South Stilts watchman's birch-bark note for the Reed Council, which the Council never came to read.",
+    "reads": "core:book/south_stilts_log"
+  },
+  {
+    "id": "core:item/note_stair_of_isse_rubbing",
+    "name": "A Rubbing from Isse's Stair",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A soft charcoal rubbing of two inscriptions, one over the other, on the ninth step of the colonnade.",
+    "reads": "core:book/stair_of_isse_rubbing"
+  },
+  {
+    "id": "core:item/note_sallow_king_feeding_tally",
+    "name": "The Feeders' Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The cord the feeders hang from the Sallow King's lowest branch, out of reach of what they feed.",
+    "reads": "core:book/sallow_king_feeding_tally"
+  },
+  {
+    "id": "core:item/note_eel_stews_sluice_note",
+    "name": "A Stews-Keeper's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note folded small and wedged in the high pond's sluice-gate, addressed to the clerk at the Tally.",
+    "reads": "core:book/eel_stews_sluice_note"
+  },
+  {
+    "id": "core:item/note_wisp_hollow_strongbox_letter",
+    "name": "A Letter in the Chimney-Box",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A letter wrapped round a string of eel-bone beads in the strongbox wedged up the drowned house's chimney.",
+    "reads": "core:book/wisp_hollow_strongbox_letter"
+  },
+  {
+    "id": "core:item/note_peat_hags_finds",
+    "name": "The Cutters' Finds-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The peat-cutters' tally-board of things found in the peat, and what they are owed for each.",
+    "reads": "core:book/peat_hags_finds"
+  },
+  {
+    "id": "core:item/note_drowned_bell_shrine_offerings",
+    "name": "The Shrine's Keeping",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing of the board cut under the Drowned Bell Shrine's Hearthstone, where the spray does not reach.",
+    "reads": "core:book/drowned_bell_shrine_offerings"
+  },
+  {
+    "id": "core:item/unsung_keepers_lantern",
+    "name": "The Keeper's Lantern",
+    "category": "misc",
+    "weight": 1.2,
+    "value": 180,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "lantern",
+      "unique"
+    ],
+    "description": "A lantern of horn and alder older than Isseva, the horn gone the colour of honey. It is lit, and it does not want oil, and every lantern in the Unsung Vault was lit from it once. Held up, it throws the shadow of a hand that is not yours."
+  },
+  {
+    "id": "core:item/cut_burial_lanterns",
+    "name": "Cut Burial Lanterns",
+    "category": "misc",
+    "weight": 4.0,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "lantern",
+      "no_sale"
+    ],
+    "description": "Nine bundles of nine burial lanterns, indigo paper on alder frames, each cut from its boat with the oil still in it and tagged by the Flood-Callers for the Drowned Bell. Every one was measured a spoonful of oil for a year of somebody's life."
+  },
+  {
+    "id": "core:item/vale_named_lantern",
+    "name": "A Lantern with a Vale Name",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "lantern",
+      "no_sale"
+    ],
+    "description": "A burial lantern pegged in the Mor weave, indigo paper on alder, with a name painted round it in careful Vale letters by a hand that learned them for the purpose: HESTER WRENN."
+  },
+  {
+    "id": "core:item/hurdle_tally_stick",
+    "name": "The Trappers' Tally-Stick",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "no_sale"
+    ],
+    "description": "A stick of ash rubbed black with handling, notched along four faces: every barrel of eels the Oulea trappers have sent up to the Tally for eleven years, counted the way the reedfolk counted before the Guild could write."
+  },
+  {
+    "id": "core:item/old_bitchs_collar",
+    "name": "The Old Bitch's Collar",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "no_sale"
+    ],
+    "description": "A hound's collar of iron links on a leather band, chewed through at the buckle and chewed again, as if the dog that wore it had tried to get it back on."
+  }
+]
