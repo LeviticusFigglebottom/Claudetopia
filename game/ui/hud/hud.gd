@@ -774,7 +774,7 @@ func _refresh_quick() -> void:
 			if count:
 				count.text = "%d/%d" % [n, Flask.max_charges(flask)]
 			if n <= 0:
-				panel.modulate = Color(1, 1, 1, 0.55)
+				panel.modulate = Color(1, 1, 1, 0.45)
 		elif count:
 			count.text = str(n) if n > 1 else ""
 

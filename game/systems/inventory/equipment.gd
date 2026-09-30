@@ -341,9 +341,11 @@ func use_quick(slot: String) -> bool:
 	if s == null:
 		return false
 	# a torch or a lantern on the belt is taken into the off hand, and put away again
-	if s.is_equippable() and slot_of(s) != "":
-		_clear(slot_of(s))
-		return true
+	if s.is_equippable():
+		if slot_of(s) != "":
+			_clear(slot_of(s))
+			return true
+		return equip(s)
 	return inventory.use(s)
 
 
@@ -399,11 +401,11 @@ func weapon_round() -> Array[String]:
 ## was carried with; the one put away remembers its own. Returns the id now in the hand, or "" when
 ## there is nothing to cycle to (fewer than two weapons in the round).
 func cycle_weapon(step: int = 1) -> String:
-	var order := weapon_order()
+	var order: Array[String] = weapon_round()
 	if order.size() < 2:
 		return ""
 	var held := item_id("main_hand")
-	var at := order.find(held)
+	var at: int = order.find(held)
 	var next: String = order[posmod(at + signi(step), order.size())] if at >= 0 \
 			else (order[0] if step > 0 else order[order.size() - 1])
 	if next == held:

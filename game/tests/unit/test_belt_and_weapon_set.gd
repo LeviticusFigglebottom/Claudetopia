@@ -115,8 +115,7 @@ func test_the_cycle_key_goes_round_the_set_and_the_hud_shows_it() -> void:
 	wheel.pressed = true
 	player._unhandled_input(wheel)
 	assert_eq(doll.item_id("main_hand"), BOW, "the wheel gave the bow back")
-	for i in int((float((hud.get_script() as Script).get_script_constant_map()["CYCLE_NOTICE_S"]) + 0.5) * 60.0):
-		await _tree().process_frame
+	await _tree().create_timer(float((hud.get_script() as Script).get_script_constant_map()["CYCLE_NOTICE_S"]) + 0.6).timeout
 	assert_false(notice.visible, "the notice goes after a moment")
 
 

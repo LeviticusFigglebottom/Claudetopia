@@ -19,6 +19,7 @@ extends Node3D
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
 ##          "foe": [enemy id, x, y, z, yaw?], "foe_attacks": [[t, attack name], ...],
 ##          "hud": false, "menu": "", "plant_feet": true, "items": [[id, count], ...],
+##          "weapon_set": [id, ...], "belt": [[index, id], ...],
 ##          "first_person": false, "drawn": false, "pitch": radians, "spell": id,
 ##          "shots": {"from": s, "every": s, "count": n}  or  [t, t, ...]}]}
 ## A key is a real key event through the input map, so through the bindings as the game sets them
@@ -163,6 +164,19 @@ func _sequence(seq: Dictionary) -> void:
 	for it: Array in seq.get("items", []):
 		if bag != null:
 			bag.add(str(it[0]), int(it[1]) if it.size() > 1 else 1)
+	# "weapon_set": [ids] into the bag, the first taken in hand through the doll and the rest put in
+	# the set the cycle key goes round; "belt": [[index, id], ...] on the belt's keys (playtest 09-30)
+	var doll := _player.get_node_or_null("Equipment") as Equipment
+	var wset: Array = seq.get("weapon_set", [])
+	if doll != null and bag != null and not wset.is_empty():
+		for id in wset:
+			if bag.count(str(id)) == 0:
+				bag.add(str(id), 1)
+		doll.equip(str(wset[0]), "main_hand")
+		for id in wset:
+			doll.add_to_weapon_set(str(id))
+	for b: Array in seq.get("belt", []):
+		_player.set_quick_slot(int(b[0]), str(b[1]))
 	# "first_person": seen through the eyes (triage 57); "drawn": the weapon in the hand from the
 	# start; "pitch": the view's pitch, radians, up +
 	if bool(seq.get("first_person", false)):

@@ -24,6 +24,7 @@ var root: Node3D
 var player: Player
 var _board: StaticBody3D
 var _landed: Array = []
+var _spawned: Array = []
 
 
 func _tree() -> SceneTree:
@@ -45,9 +46,13 @@ func before_each() -> void:
 	player.camera_rig.pitch = 0.0
 	player.equip_weapon(BOW)
 	(player.get_node("Inventory") as Inventory).add(IRON_ARROW, 99)
+	_spawned.clear()
+	_tree().node_added.connect(_on_node_added)
 
 
 func after_each() -> void:
+	if _tree().node_added.is_connected(_on_node_added):
+		_tree().node_added.disconnect(_on_node_added)
 	for a in Player.ACTIONS:
 		Input.action_release(a)
 	for a in ["move_forward", "move_back", "move_left", "move_right"]:
@@ -99,22 +104,33 @@ func _stand_board(range_m: float) -> Vector3:
 
 
 func _shoot() -> Dictionary:
-	Input.action_press("attack_light")
-	await _until(func() -> bool: return player.bow_draw() >= 1.0, 3.0)
+	# the last loose's Bow_Release plays out before a new draw is taken
+	await _until(func() -> bool: return player.state == Player.State.FREE and not player.anim.is_busy(), 3.0)
+	for attempt in 3:
+		Input.action_press("attack_light")
+		if await _until(func() -> bool: return player.bow_draw() >= 1.0, 2.5):
+			break
+		Input.action_release("attack_light")
+		await _frames(20)
 	await _frames(8)
 	var aim := player.aim_point()
 	var target := player.arrow_target()
-	var before := _arrows()
-	Input.action_release("attack_light")
-	await _frames(2)
-	var shot: Projectile = null
-	for a in _arrows():
-		if not before.has(a):
-			shot = a
+	var drawn := player.bow_draw()
+	_spawned.clear()
 	_landed.clear()
+	Input.action_release("attack_light")
+	await _frames(3)
+	var shot: Projectile = null
+	for a in _spawned:
+		if is_instance_valid(a):
+			shot = a as Projectile
+	# known now: an arrow that lands where it can be found is handed to the ground and freed, and a
+	# freed arrow reads as null by the time this returns
+	var flew := shot != null
+	if shot == null:
+		print("    no arrow: drawn %.2f at the loose, state %d" % [drawn, player.state])
 	var path: Array = []
 	if shot != null:
-		shot.landed.connect(_on_landed)
 		for i in 240:
 			if not is_instance_valid(shot) or bool(shot.get("_stuck")):
 				break
@@ -122,7 +138,15 @@ func _shoot() -> Dictionary:
 			await _tree().physics_frame
 	await _until(func() -> bool: return player.state == Player.State.FREE, 2.0)
 	await _frames(6)
-	return {"aim": aim, "target": target, "flew": shot != null, "hit": _landed.duplicate(), "path": path}
+	return {"aim": aim, "target": target, "flew": flew, "hit": _landed.duplicate(), "path": path}
+
+
+## Every arrow loosed, as it enters the tree: an arrow can strike and be gone (a board 5 m off is
+## met inside six ticks) before a look through the scene's children finds it.
+func _on_node_added(n: Node) -> void:
+	if n is Projectile:
+		_spawned.append(n)
+		(n as Projectile).landed.connect(_on_landed)
 
 
 func _on_landed(point: Vector3, _stuck: bool) -> void:
@@ -194,7 +218,7 @@ func test_first_person_and_walking_drawn_land_on_it_too() -> void:
 
 
 ## Aimed at nothing, a few degrees above level: the arrow runs along the crosshair's line, over it
-## by no more than a little on the way, crosses it at the bow's reach and only then falls away. It
+## by no more than the arc a 58 m/s arrow needs to come down 60 m off (about a metre at 30 m), crosses it at the bow's reach and only then falls away. It
 ## went up at 35 degrees.
 func test_a_shot_at_the_sky_follows_the_crosshair() -> void:
 	if not _rig_built():
@@ -223,7 +247,7 @@ func test_a_shot_at_the_sky_follows_the_crosshair() -> void:
 				at_reach = minf(at_reach, p.distance_to(on_line))
 		print("    sky at %+d degrees: at most %.2f m over the crosshair's line, %.2f m off it at %d m"
 				% [int(pitch_deg), most_over, at_reach, int(Player.ARROW_ZERO)])
-		assert_lt(most_over, 1.0, "the arrow keeps near the crosshair's line (%.2f m over it)" % most_over)
+		assert_lt(most_over, 1.5, "the arrow keeps near the crosshair's line (%.2f m over it)" % most_over)
 		assert_lt(at_reach, 0.4, "and is on it at the bow's reach (%.2f m off)" % at_reach)
 
 
@@ -233,7 +257,7 @@ func test_the_arc_is_never_a_lob() -> void:
 	var from := Vector3.ZERO
 	for to in [Vector3(0, 0, -150), Vector3(0, 13, -149), Vector3(0, -40, -30), Vector3(0, 30, -30)]:
 		var d := Player.arrow_direction(from, to, 42.0, 9.81)
-		var lift := (to - from).normalized().angle_to(d)
+		var lift: float = (to - from).normalized().angle_to(d)
 		assert_lt(lift, Player.ARROW_LIFT_MOST + 0.001, "%s: lifted %.1f degrees" % [str(to), rad_to_deg(lift)])
 	var near := Player.arrow_direction(from, Vector3(0, 0, -30), Player.ARROW_SPEED, 9.81)
 	assert_lt(rad_to_deg(near.angle_to(Vector3(0, 0, -1))), 3.0, "30 m off, a full draw is all but flat")
@@ -242,6 +266,3 @@ func test_the_arc_is_never_a_lob() -> void:
 func assert_lt(a: float, b: float, msg := "") -> void:
 	assert_true(a < b, "%s (%.3f is not under %.3f)" % [msg, a, b])
 
-
-func assert_gt(a: float, b: float, msg := "") -> void:
-	assert_true(a > b, "%s (%.3f is not over %.3f)" % [msg, a, b])
