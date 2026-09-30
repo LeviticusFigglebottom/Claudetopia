@@ -60,7 +60,7 @@
        "objectives": [
          {"type": "kill", "target": "core:enemy/thornhound", "count": 3, "where": "core:poi/wold_force", "radius": 90, "text": "Put down the three thornhounds at Wold Force"},
          {"type": "act", "target": "arrow_hit", "against": "core:enemy/thornhound", "min_range": 12, "count": 2, "optional": true, "text": "Hit them from the high ground, before they find you"},
-         {"type": "act", "target": "swap", "optional": true, "text": "When one closes, take the knife into your hand {key:quick_4}"}
+         {"type": "act", "target": "swap", "optional": true, "text": "When one closes, take the knife into your hand {key:cycle_weapon}"}
        ],
        "on_enter": [],
        "on_complete": [{"set_flag": "cleared_wold_force"}, {"renown": 5}, {"say": ["core:npc/rosen_wyke", "That's all three. Walk back with me. Tell me at the lodge.", 1.5]}]},

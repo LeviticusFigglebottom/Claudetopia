@@ -1508,6 +1508,9 @@ func _act(o: Dictionary) -> Dictionary:
 	var on := _ActTarget.new()
 	# a prop names itself `prop:<kind>` (Pell.content_id: the ranger's butts, the rogue's sack)
 	on.id = against if Ids.is_valid(against) or against.begins_with("prop:") else ""
+	# one prop by its name (`prop`: the near, middle or far butt), as QuestSpots names it
+	if str(o.get("prop", "")) != "":
+		on.name = str(o["prop"])
 	add_child(on)
 	# as far off as the objective asks (the far butt at fifty paces)
 	on.global_position = player.global_position + Vector3(float(o.get("min_range", 0.0)) + 1.0, 0.0, 0.0)
