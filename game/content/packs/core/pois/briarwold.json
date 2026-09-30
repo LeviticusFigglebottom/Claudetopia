@@ -78,7 +78,7 @@
    "unique_feature": "a squat granite watch-tower on a tor, its walls chalked with the tally of grey patches on the Briar, nineteen and counting", "visible_from": ["core:place/fernhold", "core:poi/briar_breach"],
    "story": "Fernhold's foresters climb it every morning to count the grey patches in the thorn. Fourteen at midwinter, nineteen now; the chalk will run out before the wall does.", "encounter": "none", "hook": "The count went down by one overnight; the patch did not heal, it moved."},
   {"id": "core:poi/silked_camp", "name": "The Silked Camp", "region": "core:region/briarwold", "kind": "camp", "position": [3080, -2240], "hearthstone": false,
-   "unique_feature": "a woodfolk hunting camp abandoned in one night and strung over since with weaver silk, the bedrolls still in the tents", "visible_from": ["core:place/ormhold"],
+   "unique_feature": "a woodfolk hunting camp abandoned in one night and strung over since with weaver silk, the bedrolls still in the tents", "visible_from": [],
    "story": "Six hunters from Ormhold slept here eleven years ago and were not found. The weavers have kept the camp as a larder, and the Woodfolk have left it as a warning.", "encounter": "weavers in the silk", "hook": "Six hunters' bows are missing from Hollin Tor's thousand; the Wold counts them as hung."},
   {"id": "core:poi/verderers_tower", "name": "The Verderer's Tower", "region": "core:region/briarwold", "kind": "tower", "position": [3650, -1400], "hearthstone": false,
    "unique_feature": "a Woodfolk lookout built round a living trunk high over the High Wold's canopy", "visible_from": [],

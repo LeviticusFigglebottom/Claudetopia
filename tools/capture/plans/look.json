@@ -174,7 +174,7 @@
    "region": "core:region/sedgemire",
    "pos": [
     -2390.9,
-    11.5,
+    18.5,
     -70.1
    ],
    "look_at": [
@@ -192,12 +192,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    375.2,
+    368.4,
     1051.8
    ],
    "look_at": [
     3190.1,
-    366.2,
+    359.4,
     874.9
    ],
    "fov": 62.0,
