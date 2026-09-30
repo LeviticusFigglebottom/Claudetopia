@@ -173,5 +173,33 @@
     "author": "the lime-burners of the Whitecut",
     "category": "book",
     "body": "# At the spring\n\n*Chalked over the trough.*\n\n---\n\nDrink from the cup, not your hands. Your hands are lime.\n\nRinse the cup and hang it. Never leave it full.\n\n*Under it, this month:* Somebody leaves it full. Of us. Of the kilns. White as a burner's lungs. I poured it back into the Mere and the Mere went white for a yard round my boots."
+  },
+  {
+    "id": "core:book/wayside_the_false_lantern",
+    "title": "The Trimming Rota",
+    "author": "unsigned; a smuggler's boy, by the spelling",
+    "category": "book",
+    "body": "# Who trims\n\n*Lamp-black on tarred canvas, a finger's width to a letter.*\n\n---\n\nNO MOON. Me.\n\nNO MOON. Me.\n\nHALF MOON. Nobody, the boats dont come.\n\nNO MOON. Me. The Lamp man was on the path with his own lantern. I put mine out and lay in the reeds. He stood where I am writing this and looked at the Mere a long time and then he went home. He knows.\n\n---\n\n*Lower, smaller:* The oil is from the Lamp. Mister Quell says it is the only oil that burns the right colour for the boats to see. He says the Lamp man has more than he needs. The Lamp man does not look like a man who has more than he needs of anything."
+  },
+  {
+    "id": "core:book/wayside_the_priced_gibbet",
+    "title": "The Plate's Figures",
+    "author": "the Tallymen's gibbet-book, copied onto a slip by someone who wanted it known",
+    "category": "book",
+    "body": "# The hanging-fee, as cut on the plate\n\n*Each figure as it was cut, the year beside it; the plate itself shows only the last.*\n\n---\n\nFour marks. *The Charter's own.*\n\nSix. *The price of rope.*\n\nSix and a half. Eight. Nine. *Rope, rope, and a new arm when the old one rotted.*\n\nTwelve. *A clerk to witness.* Fifteen. *Two clerks.*\n\nTwenty. Twenty-two. Thirty. *No reason given.*\n\nForty. *The year the Quiet Hands began paying.*\n\n---\n\n*Cut this spring, under the rest, on the plate itself:* **Thirty-eight.**\n\n*On the slip, beneath:* It went down. In a hundred and eleven years it has never gone down. Either the Tallymen have found a cheaper rope, or somebody has decided a thief on the west shore is worth less than he was. Ask which, before you are taken outside the walls."
+  },
+  {
+    "id": "core:book/wayside_weedcutters_hut",
+    "title": "Rods Cut, and the Other Column",
+    "author": "Adam and Luke Sedge, weed-cutters, and a third hand",
+    "category": "book",
+    "body": "# Rods cut, the Eelweir channel\n\n*A board inside the hut door. Two columns. The left in two big chalk hands; the right in a small one, very even.*\n\n---\n\n| Rods cut | |\n|---|---|\n| Tollday. 11 rods. **A.** | 11 |\n| Tallowday. 9 rods, wind. **L.** | 22 |\n| Kindleday. 12 rods. **A.** | 33 |\n| Hushday. 12 rods, grown back in the night, cut again. **A. L.** | 44 |\n| Thornday. Grown back in rows. Straight rows, like a field. We did not cut. **A.** | 55 |\n\n---\n\n*Under the columns, in the small even hand:* Eleven a day, in rows, toward the weir. It is being measured out. Do not cut it again; you are spoiling the count.\n\n*Under that, in both big hands at once:* WHO IS WRITING ON OUR BOARD"
+  },
+  {
+    "id": "core:book/wayside_the_thousand_post",
+    "title": "The Boatman's Count",
+    "author": "Hamnet Rowe, the Tallymen's boatman on the east shore",
+    "category": "book",
+    "body": "# Slate taken off at the landing\n\n*A pocket-ledger's leaf, nailed through its corner to the Thousand Post.*\n\n---\n\nSlade: a thousand. *Boat says nine hundred and forty. Paid nine hundred and forty.*\n\nSlade: a thousand. *Boat says nine hundred and seventy. Paid as the boat says.*\n\nSlade: half a thousand. *Boat says half. Agreed, for once.*\n\n---\n\n*Then, in the same hand, pressed so hard the nib has cut the leaf:* The post has four more notches since the autumn than slate came down. Barnet says he did not cut them. Jessamy says she did not. They are cut deeper than a Slade cuts, as if with something heavier than a knife, and they are cut from the top down. I have not paid for them. I have not been asked to. I would like to know who is keeping a count of what I carry."
   }
 ]

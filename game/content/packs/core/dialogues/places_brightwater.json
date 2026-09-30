@@ -1,0 +1,1094 @@
+[
+  {
+    "id": "core:dialogue/linnet_whitlow",
+    "speaker_name": "Linnet Whitlow",
+    "notes": "The keeper of the Bleaching Green (pois/brightwater.json). Gives Writs of Protection (quests/places_brightwater.json); takes the writ-roll at its end (the hand-over at the end of a conversation).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/writs_of_protection",
+              "the_roll"
+            ]
+          }
+        ],
+        "text": "That's the Company's roll. I'd know it from here: it's the only book on the Mere bound in our own white."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/writs_of_protection"
+          }
+        ],
+        "text": "Every ell accounted for. Even the one I'll never get back. Sit on the pit-boards if you like; they're the only thing here that isn't answerable to somebody."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Linnet Whitlow",
+        "text": "Mind the frames. That cloth is the Tallymen's ledger-linen and it's worth more than you by the ell, and I say that knowing nothing about you. -- You want something, or are you only looking at the white? People do. It's the whitest thing on the Mere for a fortnight and then it goes to be written on.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Linnet Whitlow",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "the_green"
+          },
+          {
+            "text": "Why is that frame bare?",
+            "next": "the_bare_frame"
+          },
+          {
+            "text": "The Fair Company. Tell me about them.",
+            "conditions": [
+              {
+                "flag": "linnet_said_frame"
+              },
+              {
+                "quest_not_done": "core:quest/writs_of_protection"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/writs_of_protection"
+                }
+              }
+            ],
+            "next": "the_company"
+          },
+          {
+            "text": "The writ-roll. Here.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/writs_of_protection",
+                  "the_roll"
+                ]
+              }
+            ],
+            "next": "the_roll"
+          },
+          {
+            "text": "What will you do with it?",
+            "conditions": [
+              {
+                "quest_done": "core:quest/writs_of_protection"
+              }
+            ],
+            "next": "after"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_green": {
+        "speaker": "Linnet Whitlow",
+        "text": "A bleaching green, and the only one the guilds will trust. Cloth comes off the looms the colour of porridge. I buck it in lye, lay it out on the frames and water it, and the Mere's light does the rest: a fortnight of this sun and it's white as a Sayer's collar, because it will be one. -- I'm answerable for every ell by charter. If a bolt goes missing, I pay. If a bolt goes yellow, I pay. If a gull goes over it, I pay, and I've paid for a good few gulls.",
+        "next": "hub"
+      },
+      "the_bare_frame": {
+        "speaker": "Linnet Whitlow",
+        "text": "Because the Fair Company took what was on it. -- They rode over from Pennyfold in the spring and sold me a writ of protection, sealed, witnessed, all in order. A bolt a week, their choice. The charter says I must protect the cloth by any lawful means, and a writ is lawful, so I paid. I read it through twice first. It's a good writ. That's what I can't forgive it for. -- This week they chose the Circle's white. Forty ells of it. The Sayers will want to know where their collars are, and the charter says it's me who tells them.",
+        "effects": [
+          {
+            "set_flag": "linnet_said_frame"
+          },
+          {
+            "discover": "core:poi/pennyfold_keep"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_company": {
+        "speaker": "Linnet Whitlow",
+        "text": "Bravos out of Tollmere, who fought witnessed duels on the Stride for the guilds until a guild wouldn't pay one of them. That one's their captain now: Sabeline Marr. She bought Pennyfold off the Tallymen when the road went free -- the old customs fort down the shore, where they used to pen the carts overnight to count them -- and she sells the road protection from herself. -- She's never broken the letter of a writ. She reads them aloud before she does anything. She keeps a roll of every one she's sold, under the keep, where the Tallymen kept the fees. -- If that roll went into my lye-tub I'd have no writ, and no writ is a thing the charter can't ask me to honour.",
+        "choices": [
+          {
+            "text": "Then I'll fetch you the roll.",
+            "effects": [
+              {
+                "start_quest": "core:quest/writs_of_protection"
+              }
+            ],
+            "next": "offer_yes"
+          },
+          {
+            "text": "That's a fort full of bravos.",
+            "next": "offer_think"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "offer_yes": {
+        "speaker": "Linnet Whitlow",
+        "text": "Don't fight her on the Stride's rules; she wrote half of them. Fight her in her own vault. -- And Perrin says there's a board by their gate with the prices on, if you want to know what they think you're worth before you go in. Go on. I'll keep the frame bare till you're back. It's the only thing I've got to keep.",
+        "next": "hub"
+      },
+      "offer_think": {
+        "speaker": "Linnet Whitlow",
+        "text": "It is. Crossbows on the corners that were customs men before, and blades on the wall that were clerks' sons. I didn't ask you to go. I told you what would help. There's a difference and the charter knows it even if you don't.",
+        "next": "hub"
+      },
+      "the_roll": {
+        "speaker": "Linnet Whitlow",
+        "text": "*(She takes it in both lye-white hands and turns the pages until she finds her own line, and reads it, and her mouth goes thin.)* -- 'The Bleaching Green: a bolt a week, the Company's choosing. The Circle's white, where there is any.' Where there is any. -- It's going in the tub. All of it. Every line in it's a writ, and every writ in it's void once there's no roll to prove it was sold. -- Here: that's for your trouble, and it's a fair price, and I've never said those two words together before without spitting.",
+        "next": "hub"
+      },
+      "after": {
+        "speaker": "Linnet Whitlow",
+        "text": "Lye takes ink out as well as it takes out colour, if you leave it long enough. By the autumn there'll be a bolt of the whitest linen on the Mere, and I'll know what's in it, and nobody else will. I'll give it to the Sayers. They like a cloth with something said the other way in it.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Linnet Whitlow",
+        "text": "Mind the frames on your way out. Every ell.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/perrin_mull",
+    "speaker_name": "Perrin Mull",
+    "notes": "Linnet Whitlow's lad at the Bleaching Green. Talks; points to Pennyfold's charter-board.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/writs_of_protection"
+          }
+        ],
+        "text": "Linnet put the roll in the tub herself. She wouldn't let me stir it. I've never seen her let anybody not stir something."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Perrin Mull",
+        "text": "I didn't stop them. -- Sorry. People come to look at the frames and I say it before they ask. There were four of them and one was the captain and she read the writ out to me like I was the one who'd signed it, and then they took the white off the fourth frame. I was holding the scoop.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Perrin Mull",
+        "text": "D'you want to know about the cloth? Everybody wants to know about the cloth.",
+        "choices": [
+          {
+            "text": "What does the lye do?",
+            "next": "lye"
+          },
+          {
+            "text": "Where did the Company go?",
+            "next": "where"
+          },
+          {
+            "text": "You couldn't have stopped four of them.",
+            "next": "couldnt"
+          },
+          {
+            "text": "Leave you to your tubs.",
+            "next": "bye"
+          }
+        ]
+      },
+      "lye": {
+        "speaker": "Perrin Mull",
+        "text": "Takes the colour out, and the grease, and the skin off the backs of your hands if you're slow. Wood-ash and water and a fortnight of stirring. Linnet says the cloth's got to forget where it came from before it can be written on. She says that about me as well, sometimes.",
+        "next": "hub"
+      },
+      "where": {
+        "speaker": "Perrin Mull",
+        "text": "West along the shore to Pennyfold. You can see the lamp over their gate at night from the end of the green, the old Tallymen's brass one. They've got a board up by the gate with the prices on. I went and read it after. I'm on it. 'A lad, per crossing, a penny.' I've never crossed anything.",
+        "effects": [
+          {
+            "discover": "core:poi/pennyfold_keep"
+          }
+        ],
+        "next": "hub"
+      },
+      "couldnt": {
+        "speaker": "Perrin Mull",
+        "text": "That's what Linnet says. She says it every night, and then she goes out and stands by the bare frame. -- I water it anyway. The bare one. I don't know why. It's something to do.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Perrin Mull",
+        "text": "Mind the lime-pit, it's under the boards. You'd go white to the knee.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/netta_knotley",
+    "speaker_name": "Netta Knotley",
+    "notes": "The head net-mender at the Net Field (the POI's hook: a net mended with Sedgish knots by nobody in Gullhithe). Gives Knots Not Ours; its last stage is to tell her.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/knots_not_ours",
+              "the_knots"
+            ]
+          }
+        ],
+        "text": "You've a smell of the fen on you and something else. Cold stone. Come and sit and tell me, and I'll tie while you do."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/knots_not_ours"
+          }
+        ],
+        "text": "Sit. I've cut that net up and tied it again in Mere, every knot, by hand, and it's the ugliest net on the field, and it's ours."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Netta Knotley",
+        "text": "Don't step on the twine. -- Gullhithe menders, the lot of us, and I'm the one who's been doing it longest, so I'm the one who talks to people who stand about. What are you, Mere or Sedgish? Say nothing. I'll know by your bootlaces.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Netta Knotley",
+        "text": "Well. Mere, near enough. What is it?",
+        "choices": [
+          {
+            "text": "What's the difference between the knots?",
+            "next": "knots"
+          },
+          {
+            "text": "Something's troubling you about a net.",
+            "next": "the_net"
+          },
+          {
+            "text": "Where does a net like that come from?",
+            "conditions": [
+              {
+                "flag": "netta_showed_net"
+              },
+              {
+                "quest_not_done": "core:quest/knots_not_ours"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/knots_not_ours"
+                }
+              }
+            ],
+            "next": "offer"
+          },
+          {
+            "text": "It was a word. Somebody was selling a word for it.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/knots_not_ours",
+                  "the_knots"
+                ]
+              }
+            ],
+            "next": "the_word"
+          },
+          {
+            "text": "Good day to you.",
+            "next": "bye"
+          }
+        ]
+      },
+      "knots": {
+        "speaker": "Netta Knotley",
+        "text": "A Mere knot's a sheet-bend, tied left over right, pulled hard, and it'll hold an eel the length of your arm and let a sprat through. A Sedgish knot's the same bend tied right over left, pulled soft, because the reedfolk fish slow water and like their nets to give. -- Fifty years I've cut the Sedgish ones out of Gullhithe nets. Somebody's cousin marries a reed-girl, next spring there's Sedgish knots in the head-rope. I cut them out. That's the whole of my politics.",
+        "next": "hub"
+      },
+      "the_net": {
+        "speaker": "Netta Knotley",
+        "text": "*(She lifts a net off her knees, and holds a knot of it between finger and thumb.)* Feel that. Go on. -- Mere. Tied left over right, hard as you like. Now look at it. -- Sedgish. Right over left, soft. My fingers say one thing and my eyes say the other, and I've been at this fifty years and they've never once disagreed. It came off the water on Jory Wick's head-rope. Nobody in Gullhithe tied it. I cut it out and tie it back in Mere and in the morning it's Sedgish again to look at.",
+        "effects": [
+          {
+            "set_flag": "netta_showed_net"
+          }
+        ],
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Netta Knotley",
+        "text": "Off the North Fen, under the cliff, where Jory was setting his eel-lines. The fen folk say there's a hole in that cliff nobody hears anything out of: you can shout down it and your own voice doesn't come back. The smugglers use it. Everybody knows the smugglers use it, and nobody goes, because you can't hear anything in it, which means you can't hear anybody coming either. -- If somebody's tying Sedgish in Mere, it's the ones bringing Sedgish goods through Mere water. Go and find out how. I'm too old to be quiet in a cave.",
+        "choices": [
+          {
+            "text": "I'll find the hole, and whoever ties the knots.",
+            "effects": [
+              {
+                "start_quest": "core:quest/knots_not_ours"
+              },
+              {
+                "discover": "core:poi/the_hush_hole"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Netta Knotley",
+        "text": "North along the fen to the cliff. There's a lantern on the lip there that shows to the water and not the land; Cobb says the boats steer by it. The Hole'll be below it somewhere. -- And come back and tell me. I don't want the net. I want to know which of me was wrong.",
+        "next": "hub"
+      },
+      "the_word": {
+        "speaker": "Netta Knotley",
+        "text": "*(She stops tying.)* A word. -- Four marks a net, you say, on a slate, to make a Sedgish knot look Mere to a Mere eye. So my fingers were right. It was my eyes that were bought. -- Fifty years, I'd have said my eyes were the last thing on the Mere with no price on them. Here. That's what the Gullhithe boats put by for whoever stopped the knots, and it isn't much, and I'm not going to apologise for it, because I'm too pleased with my fingers.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Netta Knotley",
+        "text": "Mind the twine.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cobb_knotley",
+    "speaker_name": "Cobb Knotley",
+    "notes": "Netta's son at the Net Field, on the poles. Points to the False Lantern.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Cobb Knotley",
+        "text": "Twenty-two. -- Sorry. The poles. There's twenty-two. I count them. Mother does the knots and I do the poles, and she's never let me do a knot, and she's right.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Cobb Knotley",
+        "text": "Did you want Mother? She's at the bench. She'll know you're here already.",
+        "choices": [
+          {
+            "text": "Where did the strange net come from?",
+            "next": "the_float"
+          },
+          {
+            "text": "Anything odd on the fen at night?",
+            "next": "lantern"
+          },
+          {
+            "text": "I'll let you get on.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_float": {
+        "speaker": "Cobb Knotley",
+        "text": "Off Jory Wick's boat. -- Don't tell Mother I said. It had Jory's float on the head-rope, the one with the blue band. Jory never set a net off the North Fen in his life, only lines. So somebody else set that net, and hung Jory's float on it, and it came in with Jory's catch, and nobody asked. -- I wear a Gullhithe float for luck. I've started wondering whose luck.",
+        "next": "hub"
+      },
+      "lantern": {
+        "speaker": "Cobb Knotley",
+        "text": "A light on the fen's lip on moonless nights, showing to the water. You can't see it from Gullhithe, only from a boat. Somebody's pitched the landward side. The Lamp's keeper came down one night with his own lantern and stood there a long time. He didn't put it out. I don't know why he didn't put it out.",
+        "effects": [
+          {
+            "discover": "core:poi/the_false_lantern"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Cobb Knotley",
+        "text": "Twenty-two. Mind how you go.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kester_wick",
+    "speaker_name": "Kester Wick",
+    "notes": "The eggers' rope-master at the Eggers' Camp; his son Tam's rope was cut from below (quests/the_map.json, Cut From Below).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/cut_from_below"
+          }
+        ],
+        "text": "They say you went down to the barge. I've let a rope go over since, and it came back up whole, and I sat with it an hour after."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Kester Wick",
+        "text": "*(He does not look up from the rope running through his fist.)* A fathom. -- A fathom. -- Stand where I can see your feet, stranger, and I'll talk to you when I get to the end of this one.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Kester Wick",
+        "text": "There. Whole. What is it?",
+        "choices": [
+          {
+            "text": "Why check every rope by hand?",
+            "next": "tam"
+          },
+          {
+            "text": "What's it like over the cliff?",
+            "next": "cliff"
+          },
+          {
+            "text": "Anyone else take eggs on the Mere?",
+            "next": "gannets"
+          },
+          {
+            "text": "I'll leave you to your rope.",
+            "next": "bye"
+          }
+        ]
+      },
+      "tam": {
+        "speaker": "Kester Wick",
+        "text": "Because my son went over on a new rope in the spring and came up on half of one, cut clean from the bottom end, with the cliff below him and the water below that. -- The fibres were pulled up. Not down. Something reached up out of the Mere and cut my boy's rope and he's alive because he'd a second hitch on a knob of rock I told him never to trust. -- So I check. A fathom at a time. It's slow. Everybody waits. Nobody minds.",
+        "next": "hub"
+      },
+      "cliff": {
+        "speaker": "Kester Wick",
+        "text": "Loud. Ten thousand gulls telling you it's theirs, and it is. You go over on the rope with a bag round your neck and a stick for the birds, and you take one egg a nest and never the last. Gullhithe's done it since before there was a Gullhithe. -- It was never frightening till this year. The birds were the frightening part.",
+        "next": "hub"
+      },
+      "gannets": {
+        "speaker": "Kester Wick",
+        "text": "Merrowhithe's lot, over the water. The Gannets land on Gull Holm every spring, and come back quieter than they went. There's a story about warm eggs from a room with no nest. Their Ottilie sits up at the old arches now looking at the holm all day. I know that look. I've got it too.",
+        "effects": [
+          {
+            "discover": "core:poi/gull_holm"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Kester Wick",
+        "text": "A fathom. -- A fathom.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ottilie_gannet",
+    "speaker_name": "Ottilie Gannet",
+    "notes": "A Merrowhithe smoker and egg-collector at the Standing Arches, over the water from Gull Holm. Gives The Warm Egg; takes the light-stone's shard at its end.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_warm_egg",
+              "the_stone"
+            ]
+          }
+        ],
+        "text": "Your hands are warm. -- No. What's in them is. Show me."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_warm_egg"
+          }
+        ],
+        "text": "I went back over in the spring. Nothing warm. Not one. The gulls had the holm to themselves, and they were louder about it than I've ever heard them."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ottilie Gannet",
+        "text": "You're standing in my light. -- The holm's light, I mean. You can see it from here: Gull Holm, the white one, all gulls. That's where I look. You can stand there if you look at it too.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ottilie Gannet",
+        "text": "*(Her hand stays in her apron pocket.)* Well?",
+        "choices": [
+          {
+            "text": "What's on Gull Holm?",
+            "next": "the_holm"
+          },
+          {
+            "text": "What's in your pocket?",
+            "next": "pocket"
+          },
+          {
+            "text": "What happened to your grandfather?",
+            "conditions": [
+              {
+                "flag": "ottilie_showed_egg"
+              },
+              {
+                "quest_not_done": "core:quest/the_warm_egg"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_warm_egg"
+                }
+              }
+            ],
+            "next": "wat"
+          },
+          {
+            "text": "It's done. Here's what was lying on the warm floor.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_warm_egg",
+                  "the_stone"
+                ]
+              }
+            ],
+            "next": "the_stone"
+          },
+          {
+            "text": "I'll leave you to your watching.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_holm": {
+        "speaker": "Ottilie Gannet",
+        "text": "A Builders' pier-house on an islet, white with gull-lime, and a door on the far side of it with no hinges that faces the city. The Gannets have landed there every spring for eggs since before anybody wrote anything down. We take one a nest. And every spring, one of us finds one egg that's warm, from a room with no nest in it, and brings it back, and doesn't say much for a week.",
+        "effects": [
+          {
+            "discover": "core:poi/gull_holm"
+          }
+        ],
+        "next": "hub"
+      },
+      "pocket": {
+        "speaker": "Ottilie Gannet",
+        "text": "*(She takes her hand out, and opens it. An egg, grey-green, the size of a hen's, and when you touch it it is as warm as a hand.)* This spring's. -- A gull's egg's white, speckled. This isn't a gull's. It's been in my pocket a month and it hasn't cooled. -- Hesper Gannet brought one home in the year of the long frost and it hatched, and they drowned what came out, and nobody in Merrowhithe will say what it was. I know what it was. The Undercroft's full of them.",
+        "effects": [
+          {
+            "set_flag": "ottilie_showed_egg"
+          }
+        ],
+        "next": "hub"
+      },
+      "wat": {
+        "speaker": "Ottilie Gannet",
+        "text": "Went down the holm's cellars after the warm eggs, twice. There's a board down there, past the hinge-less door, where the egg-collectors cut a line a spring: one warm, took it home, left it, went down. Wat's second line stops half-way. Somebody else finished it for him: 'Wat.' That's all. -- I went down this spring as far as the board and cut my mark on it. The floor there's warm as a hearth. Something's been lying on it a long while, and it's been lying there since before my grandfather. -- I want it not to be there next spring. I'm a smoker, not a sword.",
+        "choices": [
+          {
+            "text": "I'll go down through the hinge-less door.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_warm_egg"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Ottilie Gannet",
+        "text": "Wade across at the low water, north of the arches, and keep to the pale stones. The door's on the far side from the city. It opens if you walk at it like you mean to go through; my grandfather said the Builders' doors don't like to be asked. -- And whatever's lying on the floor: bring me a piece of the floor. I want to know what's been keeping it warm.",
+        "next": "hub"
+      },
+      "the_stone": {
+        "speaker": "Ottilie Gannet",
+        "text": "*(She takes the shard in both hands and holds it against her cheek, and shuts her eyes.)* -- That's the Lamp. That's what the Lamp burns on, over at Gullhithe; I've stood by it. The Builders put a lamp's stone under the pier-house and it never went out, and she found it. -- Wat went down for a warm egg and there was a mother on the other end of it. *(She puts her own egg down on the arch's foot, very carefully, and does not pick it up again.)* Here. Smoker's wages. Don't argue; it's the only thing I'm sure of the price of today.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ottilie Gannet",
+        "text": "Look at it on your way. The holm. Everybody should look at it once.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/barnet_slade",
+    "speaker_name": "Barnet Slade",
+    "notes": "Quarry-master of the Cadbrae Slate Cut. Gives The Singing Slate; its last stage is to tell him what the clerk's rods said.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_singing_slate",
+              "the_pitch"
+            ]
+          }
+        ],
+        "text": "You've been to the post. I can see it in your face. Sit on the stack and say it plain."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_slate"
+          }
+        ],
+        "text": "We're cutting round the black now. It's slow. The slate that comes off it I set aside and sell to nobody, and I sleep under the old roof."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Barnet Slade",
+        "text": "*(He taps the stack beside him with a knuckle, and listens, and does not like what he hears.)* -- Blue, that. Good slate. Every roof in Tollmere's Cadbrae, you know; my grandfather's grandfather roofed the Row. You buying, or looking at the hole?",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Barnet Slade",
+        "text": "Go on, then.",
+        "choices": [
+          {
+            "text": "What's the black stone in the face?",
+            "next": "black"
+          },
+          {
+            "text": "I heard a slate here hums.",
+            "next": "hums"
+          },
+          {
+            "text": "What do you want done with it?",
+            "conditions": [
+              {
+                "flag": "barnet_showed_slate"
+              },
+              {
+                "quest_not_done": "core:quest/the_singing_slate"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_singing_slate"
+                }
+              }
+            ],
+            "next": "offer"
+          },
+          {
+            "text": "The clerk struck his rods till the fourteenth stopped it. It's the Toll's note, since the night it changed.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_singing_slate",
+                  "the_pitch"
+                ]
+              }
+            ],
+            "next": "the_pitch"
+          },
+          {
+            "text": "Good day.",
+            "next": "bye"
+          }
+        ]
+      },
+      "black": {
+        "speaker": "Barnet Slade",
+        "text": "Builders' stone. Laid through the hill like the footing of a wall, a course of it, dressed, square, going along under the brae as far as we've followed it, which is further than I'd like. -- It won't cut. I've broken three bars on it and a chisel I had from my father. It won't split, it won't chip, it won't take a mark. It's not rock. It's building. Somebody built the brae, stranger, and we've been cutting slate off the top of it for six generations and calling it a hill.",
+        "next": "hub"
+      },
+      "hums": {
+        "speaker": "Barnet Slade",
+        "text": "*(He lifts the sacking on the bench. The slate under it is ordinary blue slate, split clean. When he lays your hand on it you feel the hum in your teeth before you hear it.)* -- Off the face against the black. They all do it, for a day or so, and then stop. This one hasn't stopped since the autumn. -- Jessamy says it's the Toll's note. She's been out to the Listening Post on a still night and heard what the Sayers' horn hears, and she's got an ear like a tuning-fork, and I'd trust it over mine. Which is what worries me.",
+        "effects": [
+          {
+            "set_flag": "barnet_showed_slate"
+          }
+        ],
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Barnet Slade",
+        "text": "Carry it to the Listening Post up the shore. The Circle keep a clerk there under a brass horn, taking the pitch of the hum every night for longer than Jessamy's been alive. Let him put his rods to it and say what it is. -- I've a thousand of this on the stacks for the Row's new roof. I'd like to know if it's safe to sleep under before I send it down to the boats. The Sayers never come to anybody. Somebody's got to go to them.",
+        "choices": [
+          {
+            "text": "I'll carry it to the clerk.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_singing_slate"
+              },
+              {
+                "discover": "core:poi/the_listening_post"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Barnet Slade",
+        "text": "It's heavy for its size and it'll hum against your back all the way; you'll stop noticing by the stones. Up the shore, the tower with the horn on it. His name's Quarle. He'll hit your slate with a stick before he says good day.",
+        "next": "hub"
+      },
+      "the_pitch": {
+        "speaker": "Barnet Slade",
+        "text": "*(He sits down on the stack, heavily, and it rings under him, and he gets up again.)* -- The Toll's note. Since the night it changed. So whatever changed the Toll, the brae heard it too. -- Right. Then that thousand isn't going down to the boats. Not for the Row, not for anybody. We'll cut round the black and send them the blue from the east end, and it'll cost me, and the Tallymen will write to me about the charter. Let them. I'll not put a roof on anybody that sings. -- Here. For your back. You carried a hum across the shore for me and you never once put it down, did you. I can tell. Nobody who put it down comes back saying it plain.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Barnet Slade",
+        "text": "Mind the stacks. They answer back now.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/jessamy_slade",
+    "speaker_name": "Jessamy Slade",
+    "notes": "Barnet Slade's daughter, at the face. Perfect pitch; heard the humming slate is the Toll's note.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Jessamy Slade",
+        "text": "*(She is humming something low, and stops.)* Sorry. You were a B flat, coming up the track. Most people are. -- Jessamy. I'm on the face. If you're here about the slate, Father's at the bench, and he'll tell it slower than me.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Jessamy Slade",
+        "text": "Ask, then. I'm only holding up a bar.",
+        "choices": [
+          {
+            "text": "How do you know it's the Toll's note?",
+            "next": "note"
+          },
+          {
+            "text": "What's it like working the black course?",
+            "next": "black"
+          },
+          {
+            "text": "Who comes up here at night?",
+            "next": "night"
+          },
+          {
+            "text": "I'll let you work.",
+            "next": "bye"
+          }
+        ]
+      },
+      "note": {
+        "speaker": "Jessamy Slade",
+        "text": "I walked up to the Listening Post on a still night last summer, before any of this. The clerk let me sit under the horn. Nobody's ever asked him if they could before, he said. You can hear it through the brass: the Toll, over at Merrowby, humming, clear across the Mere. -- I'd know that note in my sleep. The slate hums it. Not near it. It. And it's been humming it since the night the clerk says the Toll's pitch changed, which is a night I remember, because I woke up singing.",
+        "next": "hub"
+      },
+      "black": {
+        "speaker": "Jessamy Slade",
+        "text": "Like hitting a bell with your eyes shut. The bar comes off it and the sound goes along under your feet, under the whole brae, and comes back up the far end a long time later. Father counts. I don't. I sing along. -- Don't tell him I sing along.",
+        "next": "hub"
+      },
+      "night": {
+        "speaker": "Jessamy Slade",
+        "text": "Cutpurses, lately. Three of them, with a sack and a bar, trying to prise a humming slate out of the face for somebody in the Undercroft who's heard. Father sits up with the lamp. They can't get the singing ones out without the black, and the black won't come. -- I hum at them from the dark. They don't like it. Nobody likes being told what note they are.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Jessamy Slade",
+        "text": "B flat. Mind how you go.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/emmet_quarle",
+    "speaker_name": "Emmet Quarle",
+    "notes": "The Sayers' Circle clerk at the Listening Post (the POI's story: 'a room with a horn, a chair and a clerk who cannot sing'). The Singing Slate is delivered to him; the hand-over at the end of a conversation completes its first stage.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_singing_slate",
+              "to_the_post"
+            ]
+          }
+        ],
+        "text": "*(He strikes a brass rod against his knee before he has even looked at you, and frowns at it.)* Something you're carrying is humming. Put it down. No, give it here."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_singing_slate"
+          }
+        ],
+        "text": "I've written the slate into the ledger. The Circle wrote back. They want the whole brae. They've been told by the Slades that they can't have it, which the Circle is not used to."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He strikes a rod against his knee and listens to it stop.)* -- Good day. Or evening. Under the horn it's always about nine o'clock. What is it? I'm to be quiet from dusk, but you're before dusk.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Emmet Quarle",
+        "text": "Ask. Quietly.",
+        "choices": [
+          {
+            "text": "What is the horn for?",
+            "next": "horn"
+          },
+          {
+            "text": "You can't sing?",
+            "next": "sing"
+          },
+          {
+            "text": "Has the hum changed?",
+            "next": "changed"
+          },
+          {
+            "text": "Barnet Slade sent a slate. It hums.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_singing_slate",
+                  "to_the_post"
+                ]
+              }
+            ],
+            "next": "slate"
+          },
+          {
+            "text": "I'll leave you to listen.",
+            "next": "bye"
+          }
+        ]
+      },
+      "horn": {
+        "speaker": "Emmet Quarle",
+        "text": "To bring the Toll to the Circle. The bell at Merrowby hums, you know, when the note it holds shifts; the Builders' account says the world is a ringing and the Toll a piece of it. The horn takes the hum off the water and brings it into this room. I sit under it with the rods and find its pitch and write it in the ledger, and the Spire reads the ledger. Ismay Ondrael reads it. Nobody else has ever asked to.",
+        "next": "hub"
+      },
+      "sing": {
+        "speaker": "Emmet Quarle",
+        "text": "Not a note. Nor hear one, not the way you do. That's why they gave me the post, forty-one years after the first clerk: a clerk who can sing starts singing along and writes down what he sang. -- *(He holds up the case of rods.)* Forty brass rods, each a note. I strike them one after another until one of them stops the horn humming. That's the pitch. I don't hear it. I see the hum stop.",
+        "next": "hub"
+      },
+      "changed": {
+        "speaker": "Emmet Quarle",
+        "text": "Once. In nineteen years. The night the Foundling came up the Stair, as the clerks before me would have called it if they'd known what to call anything. The fourteenth rod stopped it for eighteen years and then it took the fifteenth, and then back to the fourteenth, and there it stays. -- I sent it to the Spire and the Spire sent back a single word, which was 'Again', which I have taken to mean keep listening.",
+        "next": "hub"
+      },
+      "slate": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He sets the slate on his knee on its sacking and strikes the rods against it, one after another, and on the fourteenth the hum stops dead, and the room is so quiet you can hear the horn.)* -- The fourteenth. -- That's the Toll's note, since the night it changed. Not near it. It. *(He sits a long moment.)* A hill doesn't hum in the Toll's note. A building does. Tell Slade that. Tell him the Circle will want to know where the course goes, and that I said not to tell them. -- I'll keep the slate. It'll be company.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He strikes a rod and does not look up.)* Quietly, on the stair.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/crispin_tolley",
+    "speaker_name": "Crispin Tolley",
+    "notes": "The Tallymen's clerk at the Counting Tower (the POI's hook: the ledger kept by someone else, in Oroth numerals; quests/the_map.json The Charter Pins). His unsent letters lie on the step (encounters/pois_brightwater.json).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Crispin Tolley",
+        "text": "*(He is turning a capped pen over and over in his fingers, looking out of the window at the empty road.)* No cart. -- Forgive me. I say it to everybody. The post requires me to note each arrival and you are one. Crispin Tolley, clerk to the Tallymen, the Counting Tower. Ninth of my name to hold it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Crispin Tolley",
+        "text": "Is there something you need counted?",
+        "choices": [
+          {
+            "text": "What do you count here?",
+            "next": "count"
+          },
+          {
+            "text": "Your pen's capped.",
+            "next": "capped"
+          },
+          {
+            "text": "The letters on the step?",
+            "next": "letters"
+          },
+          {
+            "text": "Good day, clerk.",
+            "next": "bye"
+          }
+        ]
+      },
+      "count": {
+        "speaker": "Crispin Tolley",
+        "text": "Carts down the North Road out of Skerrow, for the tax of 942. The tax was abolished in 942. The post was not, because abolishing a post requires a charter and nobody has thought it worth the ink. So there has been a clerk at this window for three hundred years, counting carts for a tax nobody pays, which the Row calls continuity and I have come to call a window.",
+        "next": "hub"
+      },
+      "capped": {
+        "speaker": "Crispin Tolley",
+        "text": "*(He looks at it.)* I stopped counting in the spring. -- The ledger is being kept. I do not keep it. I sit at the window every hour of light and nothing comes down the road, and when I turn the page the page is full, in the Builders' numerals, the ones on the Stride's lamp-posts. I have learned to read them. They are counting carts. Carts that have not come yet. A great many of them. -- I uncapped the pen once, to write it down, and the page in front of me went on filling while I watched, and I have not uncapped it since.",
+        "next": "hub"
+      },
+      "letters": {
+        "speaker": "Crispin Tolley",
+        "text": "To the Steward of the Row, asking to be relieved. Forty-one of them. I seal them and put them on the step and I cannot make myself send them, because the Row would send another clerk, and he would sit here, and it would be worse for him because he would not know what I know. -- Read them if you like. They're the only thing in this tower I wrote myself.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Crispin Tolley",
+        "text": "*(He looks back to the window.)* No cart.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghedda_clanless",
+    "speaker_name": "Ghedda",
+    "notes": "The clanless miller of Brindle Mill (the POI's hook: the wheel turns against the water, and the beck runs uphill for a stride below it).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ghedda",
+        "text": "Ghedda. -- Not Ghedda ko-anybody. Ghedda. If you've come from Brindle to ask for the blood-price, you can grind it yourself, there's the barley. If you've come for flour, it's a mark a sack and I'll not haggle, and if you've come to look at the wheel, everybody does. Look.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ghedda",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "Why does the wheel turn against the water?",
+            "next": "wheel"
+          },
+          {
+            "text": "Why are you clanless?",
+            "next": "clanless"
+          },
+          {
+            "text": "Who do you grind for?",
+            "next": "grind"
+          },
+          {
+            "text": "I'll go.",
+            "next": "bye"
+          }
+        ]
+      },
+      "wheel": {
+        "speaker": "Ghedda",
+        "text": "Since the night the Toll hummed. Woke up and it was going the other way, and the beck below the mill was running uphill for a stride, back into the race, as neat as you like. -- I didn't try to stop it. It grinds just as well. Barley doesn't care which way the stone goes round. -- The Brindle men who came down to look went pale and went home and sent a Sayer, and the Sayer went pale and went home. Nobody's sent anybody since. That suits me.",
+        "next": "hub"
+      },
+      "clanless": {
+        "speaker": "Ghedda",
+        "text": "A debt of blood-price, owed to Kharrow for a thing my brother did. The Moot said the clan pays. I said the brother pays. The Moot said then the clan doesn't know you, and cut my braid off, and here it is, on my belt, where I can see it. -- I'll not say what he did. That's the part that's mine.",
+        "next": "hub"
+      },
+      "grind": {
+        "speaker": "Ghedda",
+        "text": "Brindlecrag's barley, that they buy off the Vale and carry down to me because the only lowland water they own is this beck. They pay me in barley. I pay nobody for the water, because a clanless woman owes nobody, which is the one thing the Moot gave me that I've kept. -- Tollmere's clerks came once to charge me for the water by the Charter. I showed them the wheel going backwards and asked which way they wanted to charge.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ghedda",
+        "text": "Ghedda. Say it right next time.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/pennyfold_charter_board",
+    "speaker_name": "The charter-board at Pennyfold's gate",
+    "notes": "Pennyfold Keep's hook: a PoiTouch on the notice post by the gate (world/sites/site_exterior.gd, _hook). Starts core:quest/writs_of_protection if Linnet Whitlow has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The charter-board at Pennyfold's gate",
+        "no_talk": true,
+        "text": "A charter-board of the Tallymen's pattern, lime-washed, the Tallymen's seal still painted at its head. Under it, in a good clerk's hand: 'THE FAIR COMPANY. Protection of the person and goods on the south shore road, by writ, sealed and witnessed. A traveller on foot, a penny a mile. A cart, a mark a wheel a mile. A lad, per crossing, a penny. A laundress, nothing, by the Captain's order. A traveller who declines protection: nothing, and none.' At the foot, smaller: 'The roll of writs is kept below. S. Marr, Captain.' Somebody has chalked a tally of bolts under it, and stopped at the Circle's white.",
+        "choices": [
+          {
+            "text": "Pull the board's nail and go in for the roll.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/writs_of_protection"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/writs_of_protection"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/writs_of_protection"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the board as it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The charter-board at Pennyfold's gate",
+        "text": "The nail comes out with a squeal. On the wall over the gate a crossbow is wound, unhurried, the way a customs man winds one: to be heard doing it.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hush_hole_net",
+    "speaker_name": "A net over the mouth",
+    "notes": "The Hush Hole's hook: a PoiTouch on the post at the mouth (world/sites/site_exterior.gd, _hook). Starts core:quest/knots_not_ours if Netta Knotley has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "A net over the mouth",
+        "no_talk": true,
+        "text": "An eel-net hung to dry across a post at the cleft's mouth, heavy with the fen's damp. Every knot in it is tied right over left and pulled soft: Sedgish. On its head-rope is a Gullhithe float, cork painted with a blue band. The air coming out of the cleft is cold and entirely still, and when you say something to yourself the words stop a pace from your mouth as if they had walked into a curtain.",
+        "choices": [
+          {
+            "text": "Take the Gullhithe float, and go down.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/knots_not_ours"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/knots_not_ours"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/knots_not_ours"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the net.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "A net over the mouth",
+        "text": "The float comes off the rope easily. Down in the dark a lamp moves across the rock and stops, and moves on, and makes no sound at all.",
+        "next": "end"
+      }
+    }
+  }
+]

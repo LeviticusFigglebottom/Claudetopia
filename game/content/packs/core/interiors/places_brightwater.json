@@ -1,0 +1,163 @@
+[
+  {
+    "id": "core:interior/pennyfold_undercroft",
+    "name": "Pennyfold's Counting-Vaults",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/pennyfold_keep",
+    "danger": 2,
+    "formed_by": "builder",
+    "resident": "Captain Sabeline Marr and the pick of the Fair Company, and the writ-press they print their protection on",
+    "story": "The Tallymen cut Pennyfold's vaults to count the south road's goods in the dry: tally-rooms, a strongroom for the fees, a lock-up for whoever argued. The Fair Company kept every room for what it was built for. The fees still go in the strongroom, the arguers still go in the lock-up, and the tally-room is where the writs are printed, sealed and entered, one line a customer.",
+    "unique_object": "the Company's writ-press, a clerk's copying-press with the Tallymen's old seal still bolted in its bed, printing protection by the ream",
+    "site": {
+      "kind": "keep",
+      "seed": 1205,
+      "region": "core:region/brightwater",
+      "size": "medium",
+      "boss": "core:boss/pennyfold_captain",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/cutpurse",
+          "core:enemy/fair_company_blade"
+        ],
+        "archers": [
+          "core:enemy/company_crossbow"
+        ],
+        "heavy": [
+          "core:enemy/bravo"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "paper_stack"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/pennyfold_price_of_protection",
+          "name": "the Company's schedule of fees"
+        }
+      ],
+      "set_pieces": [
+        "cellar_store",
+        "barracks",
+        "forge_hall"
+      ]
+    }
+  },
+  {
+    "id": "core:interior/the_hush_hole",
+    "name": "The Hush Hole",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_hush_hole",
+    "danger": 3,
+    "formed_by": "water",
+    "resident": "Ambrose Quell, the Word-Seller, and the smugglers who work his landing, with the Spire's dropouts keeping the Hush on its throat",
+    "story": "A cave the Mere cut when it stood ten metres higher, going down through the fen cliff to a lake of its own and a landing where the boats come in under the cliff from the open water. Every sound in it stops a stride from where it was made. The smugglers keep their stock on the ledges, their boats at the landing, and their word-seller in the deepest hall, where the water is so still the lamps show twice.",
+    "unique_object": "a landing stage of old Gullhithe jetty-planks under the cliff, with a Sedgemire punt and a Mere boat tied side by side at it",
+    "site": {
+      "kind": "sea_cave",
+      "seed": 1203,
+      "region": "core:region/brightwater",
+      "size": "large",
+      "boss": "core:boss/the_word_seller",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/smuggler_stash",
+      "foes": {
+        "rank": [
+          "core:enemy/cutpurse"
+        ],
+        "archers": [
+          "core:enemy/smuggler_sayer"
+        ],
+        "heavy": [
+          "core:enemy/bravo"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/hush_hole_word_list",
+          "name": "a price-list of words"
+        }
+      ],
+      "set_pieces": [
+        "underground_lake",
+        "daylight_shaft",
+        "chasm_bridge"
+      ]
+    }
+  },
+  {
+    "id": "core:interior/gull_holm_cellars",
+    "name": "The Cellars under Gull Holm",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/gull_holm",
+    "danger": 2,
+    "formed_by": "builder",
+    "resident": "gutter drakes by the hundred, and the Brood-Mother on the warm stone at the bottom",
+    "story": "The Builders' pier-house had cellars as deep as it was tall, for the lamp's oil and the keeper's stores, and at the bottom a light-stone set in the floor to feed the lamp: the same sul-stone the Lamp at Gullhithe burns. The pier-house fell; the stone did not go out. The drakes found its warmth and have laid round it since, and every spring the egg-collectors who land on the holm come back with one warm egg from a room with no nest in it.",
+    "unique_object": "a light-stone the size of a millstone set in the floor of the lowest vault, warm to stand on, ringed with eggshell a hand deep",
+    "site": {
+      "kind": "ruined_hall",
+      "seed": 2290,
+      "region": "core:region/brightwater",
+      "size": "medium",
+      "set_pieces": [
+        "collapsed_shaft",
+        "chasm_bridge"
+      ],
+      "boss": "core:boss/gull_holm_brood_mother",
+      "boss_adds": 3,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/gutter_drake"
+        ],
+        "archers": [
+          "core:enemy/gutter_drake"
+        ],
+        "heavy": [
+          "core:enemy/gutter_drake"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "basket"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/gull_holm_keepers_board",
+          "name": "the keeper's board"
+        }
+      ]
+    }
+  }
+]

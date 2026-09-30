@@ -269,6 +269,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bleaching_green",
+        "quests": [
+          "core:quest/writs_of_protection"
+        ],
+        "finds": [
+          "core:item/note_bleaching_green_writ"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/blood_price_stones",
         "quests": [
           "core:quest/forty_head_and_a_hearth"
@@ -578,6 +589,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/cadbrae_slate_cut",
+        "quests": [
+          "core:quest/the_singing_slate"
+        ],
+        "finds": [
+          "core:item/note_cadbrae_thousand_book"
+        ],
+        "encounters": [
+          "core:encounter/cadbrae_slate_cut"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/candle_cross",
         "quests": [
           "core:quest/would_anybody_say_it"
@@ -667,7 +691,9 @@
         "quests": [
           "core:quest/the_charter_pins"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_charter_stone_receipt"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -826,7 +852,9 @@
         "quests": [
           "core:quest/the_charter_pins"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_counting_tower_letters"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -1100,7 +1128,9 @@
         "finds": [
           "core:item/note_dry_jetty"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/dry_jetty"
+        ],
         "hearthstone": false
       },
       {
@@ -1670,8 +1700,12 @@
       },
       {
         "poi": "core:poi/gull_holm",
-        "quests": [],
-        "finds": [],
+        "quests": [
+          "core:quest/the_warm_egg"
+        ],
+        "finds": [
+          "core:item/note_gull_holm_door_chalk"
+        ],
         "encounters": [
           "core:encounter/gull_holm"
         ],
@@ -2822,7 +2856,9 @@
       },
       {
         "poi": "core:poi/net_field",
-        "quests": [],
+        "quests": [
+          "core:quest/knots_not_ours"
+        ],
         "finds": [
           "core:item/note_net_field"
         ],
@@ -2864,7 +2900,9 @@
         "quests": [
           "core:quest/the_lamp_is_dimmer"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_north_cliff_signals"
+        ],
         "encounters": [
           "core:encounter/north_cliff_beacon"
         ],
@@ -3151,6 +3189,17 @@
         "quests": [],
         "finds": [
           "core:item/note_pellows_pale"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pennyfold_keep",
+        "quests": [
+          "core:quest/writs_of_protection"
+        ],
+        "finds": [
+          "core:item/note_pennyfold_torn_writ"
         ],
         "encounters": [],
         "hearthstone": false
@@ -4079,9 +4128,12 @@
       {
         "poi": "core:poi/standing_arches",
         "quests": [
-          "core:quest/the_third_arch"
+          "core:quest/the_third_arch",
+          "core:quest/the_warm_egg"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_standing_arches_drip"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4223,7 +4275,9 @@
       {
         "poi": "core:poi/tallymans_folly",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_tallymans_folly_lintel"
+        ],
         "encounters": [
           "core:encounter/tallymans_folly"
         ],
@@ -4261,6 +4315,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_false_lantern",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_the_false_lantern"
+        ],
+        "encounters": [
+          "core:encounter/wayside_the_false_lantern"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_flint_pits",
         "quests": [
           "core:quest/the_warreners_burrow"
@@ -4287,6 +4352,17 @@
         ],
         "finds": [],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_hush_hole",
+        "quests": [
+          "core:quest/knots_not_ours"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_hush_hole"
+        ],
         "hearthstone": false
       },
       {
@@ -4329,7 +4405,9 @@
       },
       {
         "poi": "core:poi/the_listening_post",
-        "quests": [],
+        "quests": [
+          "core:quest/the_singing_slate"
+        ],
         "finds": [
           "core:item/note_listening_post"
         ],
@@ -4364,6 +4442,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_priced_gibbet",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_the_priced_gibbet"
+        ],
+        "encounters": [
+          "core:encounter/wayside_the_priced_gibbet"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_sawpit",
         "quests": [],
         "finds": [
@@ -4387,6 +4476,15 @@
           "core:quest/answer_it"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_thousand_post",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_the_thousand_post"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4843,6 +4941,15 @@
         "encounters": [
           "core:encounter/wayside_webbed_lodge"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/weedcutters_hut",
+        "quests": [],
+        "finds": [
+          "core:item/wayside_weedcutters_hut"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {

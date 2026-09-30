@@ -1,0 +1,257 @@
+[
+  {
+    "id": "core:quest/writs_of_protection",
+    "name": "Writs of Protection",
+    "layer": "side",
+    "giver": "core:npc/linnet_whitlow",
+    "region": "core:region/brightwater",
+    "summary": "The Fair Company sell the south shore protection from themselves out of Pennyfold, the Tallymen's old customs fort, and take a bolt a week off the Bleaching Green against their writ. This week they chose the Circle's white, and Linnet Whitlow is answerable to the Sayers for every ell.",
+    "notes": "Brightwater's world-life site (docs/WORLD_LIFE_INTERIORS.md): Pennyfold Keep (pois/brightwater.json, a fort with its undercroft) and the Bleaching Green (a camp with its own builder). Started by Linnet Whitlow at the green, or by the charter-board at Pennyfold's gate (core:dialogue/pennyfold_charter_board). The captain drops the writ-roll; Linnet takes it.",
+    "stages": [
+      {
+        "id": "the_company",
+        "journal": "The Fair Company bought Pennyfold from the Tallymen when the Charter of 998 made the south road free, and they sell writs of protection from themselves, sealed and witnessed, at a fair price. Their captain, Sabeline Marr, keeps the roll of every writ in the counting-vaults under the keep, and she has never once broken the letter of one. The Bleaching Green's line on that roll is a bolt a week, and this week's was the Circle's white.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/pennyfold_keep",
+            "count": 1,
+            "text": "Go to Pennyfold Keep on the south-west shore"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/pennyfold_captain",
+            "count": 1,
+            "where": "core:interior/pennyfold_undercroft",
+            "text": "Deal with Sabeline Marr in the counting-vaults under the keep"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/fair_company_writ_book",
+            "count": 1,
+            "text": "Take the Company's writ-roll"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/pennyfold_keep",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_roll",
+        "journal": "The writ-roll has every customer the Company ever protected, and what happened to the ones who stopped paying. The Bleaching Green's line is near the end. Linnet Whitlow will want to see it, and to put it in the lye-tub herself.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/linnet_whitlow",
+            "item": "core:item/fair_company_writ_book",
+            "count": 1,
+            "text": "Bring the writ-roll to Linnet Whitlow at the Bleaching Green"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/bleaching_green",
+          "radius": 120
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 8,
+      "morality": 2
+    }
+  },
+  {
+    "id": "core:quest/knots_not_ours",
+    "name": "Knots Not Ours",
+    "layer": "side",
+    "giver": "core:npc/netta_knotley",
+    "region": "core:region/brightwater",
+    "summary": "A net came off the water at Gullhithe mended in Sedgish knots by nobody in Gullhithe. Netta Knotley of the Net Field has cut Sedgish knots out of Mere nets for fifty years and this one she cannot cut out: the knots are Mere knots in her fingers and Sedgish to her eyes.",
+    "notes": "Brightwater's world-life site: the Hush Hole (a delve with a sea_cave inside, pois/brightwater.json). Started by Netta Knotley at the Net Field, or by the net hung over the Hole's mouth (core:dialogue/hush_hole_net). The Word-Seller drops his primer; Netta hears the end of it.",
+    "stages": [
+      {
+        "id": "the_hole",
+        "journal": "The smugglers who bring Sedgemire's goods up the fen channels at night knot them into Mere nets to pass the Gullhithe boats, and the knots look Mere to a Gullhithe eye because somebody has sold them a word that makes them. The net Netta cannot cut came off the water under the North Fen cliff, where the fen folk say there is a cave that nobody hears anything from. The word will have come from whoever sells words there.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_hush_hole",
+            "count": 1,
+            "text": "Find the Hush Hole in the North Fen's cliff"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/the_word_seller",
+            "count": 1,
+            "where": "core:interior/the_hush_hole",
+            "text": "Deal with the Word-Seller at the landing in the deepest hall"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/word_sellers_primer",
+            "count": 1,
+            "text": "Take the Word-Seller's primer"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_hush_hole",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_knots",
+        "journal": "The Word-Seller's primer is the Spire's own, with a price pencilled beside every word, and his stock-slate had the net's knots on it at four marks a net. Netta Knotley will want to know that her fingers were right and her eyes were bought.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/netta_knotley",
+            "text": "Tell Netta Knotley at the Net Field what made the knots"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/net_field",
+          "radius": 120
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 120,
+      "renown": 8,
+      "morality": 1
+    }
+  },
+  {
+    "id": "core:quest/the_warm_egg",
+    "name": "The Warm Egg",
+    "layer": "side",
+    "giver": "core:npc/ottilie_gannet",
+    "region": "core:region/brightwater",
+    "summary": "Every spring Merrowhithe's egg-collectors land on Gull Holm and come back with one warm egg from a room with no nest in it. Ottilie Gannet's grandfather went down the holm's cellars after the warm eggs and did not come up. She has been down as far as his board, and the floor there is warm as a hearth.",
+    "notes": "Brightwater's world-life site: Gull Holm's cellars (a ruined_hall inside, core:interior/gull_holm_cellars), entered by the hinge-less door the region's builder stands on the holm (world/pois/regions/brightwater.gd). Ottilie Gannet lives at the Standing Arches, over the water from the holm.",
+    "stages": [
+      {
+        "id": "the_cellars",
+        "journal": "The pier-house on Gull Holm has a door with no hinges that faces the city, and behind it the Builders cut cellars as deep as the pier-house was tall. The egg-collectors' board is down there, a line a spring, and Wat Gannet's line stops. Ottilie wants to know what has been lying on the warm floor, and she wants it not to be there next spring.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/gull_holm",
+            "count": 1,
+            "text": "Land on Gull Holm and find the hinge-less door"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/gull_holm_brood_mother",
+            "count": 1,
+            "where": "core:interior/gull_holm_cellars",
+            "text": "Put down what lays on the warm stone at the bottom of the cellars"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/gull_holm_light_stone",
+            "count": 1,
+            "text": "Take a shard of the warm stone"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/gull_holm",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 8
+          }
+        ]
+      },
+      {
+        "id": "the_stone",
+        "journal": "The floor at the bottom of the holm is a Builders' light-stone, the kind the Lamp burns on, still warm eleven hundred years after the pier-house lamp went out, and a drake the size of the vault had been laying round it since before the Gannets began to count. Ottilie should have the shard, and hear it.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/ottilie_gannet",
+            "item": "core:item/gull_holm_light_stone",
+            "count": 1,
+            "text": "Bring the shard to Ottilie Gannet at the Standing Arches"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/standing_arches",
+          "radius": 120
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 110,
+      "renown": 8,
+      "morality": 1
+    }
+  },
+  {
+    "id": "core:quest/the_singing_slate",
+    "name": "The Singing Slate",
+    "layer": "side",
+    "giver": "core:npc/barnet_slade",
+    "region": "core:region/brightwater",
+    "summary": "The Cadbrae Slate Cut has reached a course of black Builders' stone that nothing cuts, and the slate that comes off against it hums. Jessamy Slade says it hums in the Toll's own note. Barnet Slade wants the Sayers' clerk at the Listening Post to say whether a roof of it is safe to sleep under.",
+    "notes": "Brightwater's world-life quarry (pois/brightwater.json, the region's own builder). Links the Cadbrae Slate Cut and the Listening Post (Emmet Quarle, the Circle's clerk, npcs/poi_people_brightwater.json).",
+    "stages": [
+      {
+        "id": "to_the_post",
+        "journal": "Barnet Slade has wrapped one humming slate in sacking and would like it carried to the Listening Post up the shore, where the Sayers' Circle keep a clerk under a brass horn to take the pitch of the Toll's hum every night. The Slades have roofed Tollmere for six generations. They would like to know what they are roofing it with now.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/emmet_quarle",
+            "item": "core:item/singing_slate",
+            "count": 1,
+            "text": "Put the singing slate in Emmet Quarle's hands at the Listening Post"
+          }
+        ],
+        "on_enter": [
+          {
+            "give_item": [
+              "core:item/singing_slate",
+              1
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_listening_post",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_pitch",
+        "journal": "Emmet Quarle struck his rods against the slate one after another until the fourteenth stopped it humming, and then sat down under the horn and did not say anything for a while. The slate hums in the note the horn has been hearing from Merrowby for nineteen years, and it has been doing so since the night the Toll changed its pitch. Barnet Slade should hear that from somebody who was there.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/barnet_slade",
+            "text": "Tell Barnet Slade what the clerk's rods said"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/cadbrae_slate_cut",
+          "radius": 120
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 60,
+      "renown": 8,
+      "morality": 1
+    }
+  }
+]

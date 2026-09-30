@@ -1,0 +1,199 @@
+[
+  {
+    "id": "core:item/fair_company_writ_book",
+    "name": "The Fair Company's Writ-Roll",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 70,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "bandit",
+      "ledger",
+      "unique"
+    ],
+    "description": "The Company's roll of every writ of protection it has sold on the south shore, one line a customer, in a clerk's fair hand: who paid, what, and what was done to those who stopped. The Bleaching Green's line is near the end, with the Circle's white entered against it by the bolt."
+  },
+  {
+    "id": "core:item/word_sellers_primer",
+    "name": "The Word-Seller's Primer",
+    "category": "book",
+    "weight": 0.4,
+    "value": 150,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "smuggler",
+      "sayers",
+      "unique",
+      "lore"
+    ],
+    "description": "A Sayer's first primer of Hush, the Spire's own printing, with its owner's name razored off the flyleaf and every word in it priced in the margin in a clerk's hand. The last page is torn out.",
+    "reads": "core:book/word_sellers_primer"
+  },
+  {
+    "id": "core:item/gull_holm_light_stone",
+    "name": "A Shard of the Holm's Light-Stone",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 120,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "oroth",
+      "unique"
+    ],
+    "description": "A flake of the Builders' light-stone the Brood-Mother laid round, as long as a hand, grey in daylight and faintly warm in the dark, like a hearthstone an hour after the fire. The Lamp at Gullhithe burns on the same stone."
+  },
+  {
+    "id": "core:item/singing_slate",
+    "name": "The Singing Slate",
+    "category": "misc",
+    "weight": 3.0,
+    "value": 20,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "oroth",
+      "unique"
+    ],
+    "description": "A roofing slate split off the Cadbrae face where it meets the black course, wrapped in sacking. Held in the hand it hums, very low, a note you feel in the teeth before you hear it, and it has been humming since the autumn."
+  },
+  {
+    "id": "core:item/note_bleaching_green_writ",
+    "name": "Writ of Protection, the Bleaching Green",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Fair Company's writ, nailed to the bleachers' hut door, with a bleacher's chalk under it.",
+    "reads": "core:book/bleaching_green_writ"
+  },
+  {
+    "id": "core:item/note_pennyfold_torn_writ",
+    "name": "A Writ, Torn Across",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Company writ torn across and pinned back together with a thorn, dropped by Pennyfold's gate.",
+    "reads": "core:book/pennyfold_torn_writ"
+  },
+  {
+    "id": "core:item/note_cadbrae_thousand_book",
+    "name": "The Slades' Thousand-Book",
+    "category": "book",
+    "weight": 0.3,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A quarry-book in a slate cover from the splitting-bench: three generations of Slades counting slate by the thousand.",
+    "reads": "core:book/cadbrae_thousand_book"
+  },
+  {
+    "id": "core:item/note_counting_tower_letters",
+    "name": "Letters to the Row, Unsent",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A bundle of a clerk's sealed letters, tied with ledger-tape, none of them sent.",
+    "reads": "core:book/counting_tower_tolley_letters"
+  },
+  {
+    "id": "core:item/note_charter_stone_receipt",
+    "name": "A Receipt for Brass",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tallymen's receipt-form filled in for a brass pin, pushed into the Charter Stone's crack.",
+    "reads": "core:book/charter_stone_pin_receipt"
+  },
+  {
+    "id": "core:item/note_tallymans_folly_lintel",
+    "name": "The Masons' Lintel, Copied Fair",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale",
+      "quiet_hands"
+    ],
+    "description": "A fair copy of the masons' names on the Folly's lintel, with the Quiet Hands' closed-hand mark in the corner.",
+    "reads": "core:book/tallymans_folly_lintel"
+  },
+  {
+    "id": "core:item/note_north_cliff_signals",
+    "name": "Bowl-Signals, for the Undercroft Run",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale",
+      "smuggler"
+    ],
+    "description": "A smuggler's crib on oiled cloth, folded small, from under a stone at North Cliff Beacon.",
+    "reads": "core:book/north_cliff_beacon_signals"
+  },
+  {
+    "id": "core:item/note_standing_arches_drip",
+    "name": "A Smoker's Note on the Third Arch",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note pinned to the aqueduct's pier with a fish-hook by a Merrowhithe smoker.",
+    "reads": "core:book/standing_arches_drip"
+  },
+  {
+    "id": "core:item/note_gull_holm_door_chalk",
+    "name": "Chalked on the Hinge-less Door",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The egg-collectors' chalk on the pier-house door's black jamb, copied onto a scrap by the last of them and left on the step.",
+    "reads": "core:book/gull_holm_door_chalk"
+  }
+]

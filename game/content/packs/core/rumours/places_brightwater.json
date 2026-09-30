@@ -1,0 +1,32 @@
+[
+  {
+    "id": "core:rumour/pennyfold_writs",
+    "name": "Protection at a fair price",
+    "tone": "cold",
+    "text": "There's a lamp lit over the gate at Pennyfold again, the old customs fort down the south shore. Bravos in it, the Fair Company, selling you a writ against themselves. A penny a mile on foot, a mark a wheel. It's all in the Charter, they say, if you read it slowly, and their captain reads it to you before she does anything, so you know.",
+    "variants": [
+      "Don't cross the south shore without a Pennyfold writ this summer. Or do, and find out what 'and none' means on their board."
+    ],
+    "tags": ["brightwater", "grim"]
+  },
+  {
+    "id": "core:rumour/hush_hole",
+    "name": "The hole in the fen cliff",
+    "tone": "strange",
+    "text": "Under the North Fen cliff there's a cleft you can shout into and not hear yourself. The Gullhithe boats won't set lines within a cast of it. Somebody lights a lamp on the lip on moonless nights that shows to the water and not the land, and the boats that steer by it aren't Gullhithe's.",
+    "variants": [
+      "Netta at the Net Field's got a net she can't cut the knots out of. Came off the water under the fen cliff. Ask her about it and she'll make you feel it."
+    ],
+    "tags": ["brightwater", "strange"]
+  },
+  {
+    "id": "core:rumour/cadbrae_hum",
+    "name": "The slate that sings",
+    "tone": "strange",
+    "text": "The Slades at Cadbrae have cut down to something in the brae that won't cut, black and square like a wall's footing, and the slate that comes off against it hums in your hand. Somebody in the Undercroft is paying for a piece. Barnet Slade sits up at night with a lamp so nobody gets one.",
+    "variants": [
+      "Every roof in the city's Cadbrae slate. Now they say the new slate hums. I'd sleep in the street."
+    ],
+    "tags": ["brightwater", "strange"]
+  }
+]

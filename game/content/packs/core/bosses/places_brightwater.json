@@ -1,0 +1,218 @@
+[
+  {
+    "id": "core:boss/pennyfold_captain",
+    "extends": "core:enemy/bravo",
+    "name": "Sabeline Marr, Captain of the Fair Company",
+    "archetype": "boss",
+    "arena": "core:poi/pennyfold_keep",
+    "region": "core:region/brightwater",
+    "tint": "#5e2430",
+    "scale": 1.08,
+    "lore": "Sabeline Marr fought forty witnessed duels on the Long Stride for the guilds and won forty, and on the forty-first the guild that hired her would not pay, because the charter says a duel's fee is owed only if the witness signs, and the witness had been bought by the other side. She read the charter for a winter. Then she bought a fort with the forty fees and began to sell protection by the charter's own rules: a writ, sealed and witnessed, and a fair price. She has never once broken the letter of one. She reads every writ aloud before she enforces it.",
+    "stats": {
+      "hp": 430,
+      "stamina": 200,
+      "poise": 90,
+      "armour": 7,
+      "speed": 4.4
+    },
+    "behaviour": {
+      "engage_range": 2.4,
+      "circle": 0.8,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 48.0,
+      "hyper_armour": 14.0,
+      "aggression": 0.8,
+      "strafe_speed": 1.2,
+      "parries": true,
+      "parry_chance": 0.55,
+      "parry_delay": 0.25
+    },
+    "phases": [
+      {
+        "name": "the letter of it",
+        "hp": 1.0,
+        "aggression": 0.7
+      },
+      {
+        "name": "the fair price",
+        "hp": 0.5,
+        "aggression": 0.92,
+        "speed": 4.8,
+        "hyper_armour": 20.0,
+        "say": "She tears the writ across and drops it. \"Void, then. Void is also in the charter.\" The Company's men at the back of the vault stop pretending not to watch."
+      }
+    ],
+    "marks": [
+      240,
+      400
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/fair_company_writ_book"
+    ],
+    "tags": [
+      "human",
+      "bandit",
+      "duelist",
+      "boss",
+      "fair_company"
+    ]
+  },
+  {
+    "id": "core:boss/the_word_seller",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Ambrose Quell, the Word-Seller",
+    "archetype": "boss",
+    "arena": "core:poi/the_hush_hole",
+    "region": "core:region/brightwater",
+    "tint": "#263a47",
+    "scale": 1.1,
+    "lore": "Ambrose Quell came down the Sayers' stair twenty years ago with a ledger entry and every word of Hush he had been taught, and has sold them one at a time on the quays ever since: a cold lock, a quiet dog, a night with no footsteps. The Hush Hole is his shop and his warehouse. He Hushed its throat himself, and he keeps the last word he was taught for himself and has never sold it: the one that makes a name not carry.",
+    "stats": {
+      "hp": 340,
+      "stamina": 150,
+      "poise": 60,
+      "armour": 4,
+      "speed": 3.6,
+      "will": 60
+    },
+    "behaviour": {
+      "engage_range": 10.0,
+      "circle": 0.6,
+      "retreat_threshold": 0.0,
+      "patience": 4.5,
+      "leash": 44.0,
+      "keep_distance": 8.0,
+      "hyper_armour": 10.0,
+      "aggression": 0.7,
+      "strafe_speed": 1.0,
+      "retreat_time": 1.4
+    },
+    "phases": [
+      {
+        "name": "the stock",
+        "hp": 1.0,
+        "aggression": 0.65
+      },
+      {
+        "name": "the word he kept",
+        "hp": 0.45,
+        "aggression": 0.9,
+        "speed": 4.0,
+        "say": "He says something you do not hear, and the drip of the water stops, and the sound of your own feet with it. Then the landing is quiet except for him."
+      }
+    ],
+    "marks": [
+      200,
+      340
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/word_sellers_primer"
+    ],
+    "tags": [
+      "human",
+      "smuggler",
+      "caster",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/gull_holm_brood_mother",
+    "extends": "core:enemy/gutter_drake",
+    "name": "The Brood-Mother of Gull Holm",
+    "archetype": "boss",
+    "arena": "core:poi/gull_holm",
+    "region": "core:region/brightwater",
+    "tint": "#3e4a3c",
+    "scale": 2.6,
+    "lore": "Gutter drakes come up out of the Undercroft into Tollmere's drains and go no further, because they need warmth to lay and the city's is the only warmth on the Mere. Except under Gull Holm, where the Builders set a light-stone in the cellar floor for the pier-house's lamp, and it is still warm eleven hundred years after the lamp went out. One drake found it. She has been laying round it since before the egg-collectors' grandmothers, and she has grown to the size of the room.",
+    "stats": {
+      "hp": 380,
+      "stamina": 160,
+      "poise": 70,
+      "armour": 5,
+      "speed": 4.6
+    },
+    "behaviour": {
+      "engage_range": 2.6,
+      "circle": 0.5,
+      "retreat_threshold": 0.0,
+      "patience": 2.5,
+      "leash": 40.0,
+      "hyper_armour": 18.0,
+      "aggression": 0.9
+    },
+    "phases": [
+      {
+        "name": "the nest",
+        "hp": 1.0,
+        "aggression": 0.85
+      },
+      {
+        "name": "the clutch",
+        "hp": 0.4,
+        "aggression": 1.0,
+        "speed": 5.2,
+        "say": "She drags herself back over the warm stone and screams, and the cellars answer from every drain."
+      }
+    ],
+    "marks": [
+      90,
+      180
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/gull_holm_light_stone"
+    ],
+    "tags": [
+      "beast",
+      "drake",
+      "swarm",
+      "boss"
+    ],
+    "attacks": [
+      {
+        "name": "brood_bite",
+        "clip": "Attack_1",
+        "weapon_class": "bite",
+        "damage": 24.0,
+        "poise_damage": 18.0,
+        "range": 2.8,
+        "telegraph": 0.5,
+        "hit_window": 0.14,
+        "recovery": 0.55,
+        "cooldown": 1.8,
+        "gcd": 0.5,
+        "weight": 3.0,
+        "lunge": 3.2,
+        "statuses": [
+          {
+            "id": "poisoned",
+            "duration": 10.0,
+            "magnitude": 2.0
+          }
+        ]
+      },
+      {
+        "name": "over_the_clutch",
+        "clip": "Attack_2",
+        "weapon_class": "claw",
+        "damage": 30.0,
+        "poise_damage": 30.0,
+        "heavy": true,
+        "range": 3.4,
+        "telegraph": 0.85,
+        "hit_window": 0.16,
+        "recovery": 0.9,
+        "cooldown": 5.0,
+        "gcd": 0.8,
+        "weight": 1.0,
+        "lunge": 5.0,
+        "knockback": 2.5
+      }
+    ]
+  }
+]
