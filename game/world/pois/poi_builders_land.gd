@@ -711,11 +711,16 @@ static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2
 		var at := mouth + across * off + into * float(piece[1])
 		# turned any way, a boulder's box is up to its width over again on the diagonal
 		var half := bw * sc * 1.2
+		# a capstone keeps its place on the roof, crowded or not: moved back it was rubble heaped on
+		# the passage, moved aside it sat in a cheek, made smaller it sat inside the other, and left
+		# out the mouth lost its lintel
+		var crowded := _crag_crowded(laid, at, half) and not bool(piece[4])
 		for attempt in 8:
-			if not _crag_crowded(laid, at, half):
+			if not crowded:
 				break
-			# further round the mouth's side, or further back into the hill for one over the middle
+			# a cheek further round the mouth's side; the brow further back into the hill
 			at += (across * signf(x) if absf(x) >= 1.0 else into) * half * 0.6
+			crowded = _crag_crowded(laid, at, half)
 		var g := k.on_ground(at.x, at.y).y
 		var y := o.y + float(piece[2]) - bh * sc
 		if bool(piece[4]):
