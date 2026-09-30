@@ -8,6 +8,7 @@ static var STEPS: Array[Callable] = [
 	_v2_to_v3,
 	_v3_to_v4,
 	_v4_to_v5,
+	_v5_to_v6,
 ]
 
 
@@ -92,3 +93,69 @@ static func _v4_to_v5(data: Dictionary) -> Dictionary:
 			quests["tracked"] = ""
 	data["sections"] = sections
 	return data
+
+
+## v5 -> v6: the belt holds things used and has eight slots; weapons are in the weapon set, which
+## the cycle key goes round (Equipment.weapon_set, playtest 09-30). A weapon a save kept on a quick
+## key (the ranger's knife on 4) moves into the equipment section's `weapon_set`, after the weapon in
+## the hand when the bag says which that is; draughts and the rest stay where they were. The
+## player section's own copy of the belt (for sayings) loses its weapons and grows to eight.
+## A weapon is known by its id's record in the content (ContentDB), which is data, not engine state.
+const V6_QUICK_SLOTS := ["quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8"]
+const V6_WEAPON_SET_SIZE := 4
+
+static func _v5_to_v6(data: Dictionary) -> Dictionary:
+	var sections: Dictionary = data.get("sections", {})
+	var eq: Dictionary = sections.get("equipment", {}) if typeof(sections.get("equipment")) == TYPE_DICTIONARY else {}
+	if not eq.is_empty():
+		var quick: Dictionary = eq.get("quick", {})
+		var wset: Array = eq.get("weapon_set", []).duplicate()
+		var held := _v6_held_weapon(sections, eq)
+		if held != "" and not wset.has(held):
+			wset.push_front(held)
+		for q in V6_QUICK_SLOTS:
+			var id := str(quick.get(q, ""))
+			if _v6_is_weapon(id):
+				if not wset.has(id) and wset.size() < V6_WEAPON_SET_SIZE:
+					wset.append(id)
+				id = ""
+			quick[q] = id
+		eq["quick"] = quick
+		eq["weapon_set"] = wset
+		if not eq.has("set_offhand"):
+			eq["set_offhand"] = {}
+		sections["equipment"] = eq
+	var player: Dictionary = sections.get("player", {}) if typeof(sections.get("player")) == TYPE_DICTIONARY else {}
+	if player.has("quick_slots"):
+		var belt: Array = []
+		for id in player["quick_slots"]:
+			belt.append("" if _v6_is_weapon(str(id)) else str(id))
+		while belt.size() < V6_QUICK_SLOTS.size():
+			belt.append("")
+		player["quick_slots"] = belt
+		sections["player"] = player
+	data["sections"] = sections
+	return data
+
+
+static func _v6_is_weapon(id: String) -> bool:
+	if id.is_empty():
+		return false
+	var def := ContentDB.get_or_empty(id)
+	return str(def.get("category", "")) == "weapon" and not (def.get("tags", []) as Array).has("shield")
+
+
+## The id of the weapon in the saved main hand: the doll keeps a stack's uid, the bag the stack.
+static func _v6_held_weapon(sections: Dictionary, eq: Dictionary) -> String:
+	var uid := int((eq.get("slots", {}) as Dictionary).get("main_hand", 0))
+	if uid <= 0:
+		return ""
+	var bag: Variant = sections.get("inventory", {})
+	if typeof(bag) != TYPE_DICTIONARY:
+		return ""
+	for key in ["stacks", "items"]:
+		for st in (bag as Dictionary).get(key, []):
+			if typeof(st) == TYPE_DICTIONARY and int((st as Dictionary).get("uid", -1)) == uid:
+				var id := str((st as Dictionary).get("id", ""))
+				return id if _v6_is_weapon(id) else ""
+	return ""

@@ -267,6 +267,85 @@ static func _first_focusable(node: Node) -> Control:
 
 # --- content helpers -------------------------------------------------------------------
 
+## Which painted picture (ThemeBuilder.item_art) stands for an item on the belt and in the weapon
+## set: a draught by what it does, food by what it is, a weapon by its class. "" when none fits,
+## and the drawn icon (item_icon_name) stands in.
+static func item_art_name(def: Dictionary) -> String:
+	if def.has("art"):
+		return str(def["art"])
+	var id := str(def.get("id", ""))
+	var tags: Array = def.get("tags", [])
+	var category := str(def.get("category", ""))
+	if tags.has("flask"):
+		return "hearth_flask"
+	if def.has("weapon"):
+		match str((def["weapon"] as Dictionary).get("class", "")):
+			"bow": return "bow"
+			"crossbow": return "crossbow"
+			"staff": return "staff"
+			"axe", "greataxe": return "axe"
+			"mace": return "mace"
+			"hammer", "greathammer", "maul": return "hammer"
+			"spear": return "spear"
+			"dagger": return "dagger"
+			"greatsword": return "greatsword"
+			"shield": return "shield"
+			_: return "sword"
+	if tags.has("shield"):
+		return "shield"
+	if tags.has("potion"):
+		if tags.has("poison"):
+			return "poison"
+		var effects: Array = def.get("effects", [])
+		var first := str((effects[0] as Dictionary).get("effect", "")) if not effects.is_empty() and effects[0] is Dictionary else ""
+		if first.ends_with("_health"):
+			return "potion_red"
+		if first.ends_with("_mana"):
+			return "potion_blue"
+		if first.ends_with("_stamina") or first.ends_with("cure_poison") or first.ends_with("_speed"):
+			return "potion_green"
+		if first.contains("fortify") or first.contains("resist"):
+			return "potion_amber"
+		return "potion_violet"
+	if tags.has("food") or tags.has("drink"):
+		if tags.has("drink"):
+			return "drink"
+		if id.contains("pie") or id.contains("cake"):
+			return "pie"
+		if id.contains("cheese"):
+			return "cheese"
+		if id.contains("meat") or id.contains("mutton") or id.contains("eel"):
+			return "meat"
+		return "bread"
+	if category == "ingredient":
+		return "herb"
+	if tags.has("light") or tags.has("lantern"):
+		if id.contains("torch"):
+			return "torch"
+		if id.contains("candle"):
+			return "candle"
+		return "lantern"
+	if tags.has("lockpick"):
+		return "lockpick"
+	if id.contains("rope"):
+		return "rope"
+	if id.contains("bell"):
+		return "bell"
+	if category == "key" or tags.has("key"):
+		return "key"
+	if category == "consumable":
+		return "bread"
+	if category == "tool":
+		return "pouch"
+	return ""
+
+
+## The picture an item is shown with on the belt: its painting, or its drawn icon when it has none.
+static func item_picture(def: Dictionary) -> Texture2D:
+	var t := ThemeBuilder.item_art(item_art_name(def))
+	return t if t != null else ThemeBuilder.icon(item_icon_name(def))
+
+
 ## Which of the 32 drawn icons stands for an item.
 static func item_icon_name(def: Dictionary) -> String:
 	if def.has("icon"):

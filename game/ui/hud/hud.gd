@@ -1,5 +1,6 @@
 extends Control
-## The head-up display (DESIGN §5.16): three bars, four quick slots, the compass strip,
+## The head-up display (DESIGN §5.16): three bars, the belt (eight quick slots) and the weapon in
+## hand with the weapon set's cycle notice, the compass strip,
 ## the lock-on reticle, the interaction prompt, the region title card, the boss bar, status
 ## icons and the subtitle line. It fades when nothing is happening, hides behind menus, and
 ## takes its resting opacity from Settings gameplay/hud_opacity.
@@ -13,6 +14,13 @@ extends Control
 ##                     `tracked_changed(quest_id)`
 
 const IDLE_SECONDS := 7.0
+## The belt's sockets, the strap round them, and the lit socket of the weapon in the hand (px at the
+## 1280x720 base): eight sockets fit between the boss bar and the right edge.
+const SOCKET := 44.0
+const BELT_WIDTH := SOCKET * 8.0 + 3.0 * 7.0 + 24.0
+const WEAPON_SOCKET := 54.0
+## How long the weapon set shows after a cycle (s), the last 0.4 fading.
+const CYCLE_NOTICE_S := 1.8
 ## The breath gauge's wash over the Saying's fill, and how long it lingers full after surfacing.
 const BREATH_TINT := Color(0.78, 0.95, 1.0, 0.92)
 const BREATH_LINGER_S := 1.2
@@ -42,6 +50,16 @@ var _breath_bar: StatBar = null     # the breath under water (_update_breath)
 var _breath_linger := 0.0
 var _compass: Compass
 var _quick_slots: Array[Control] = []
+## The belt's strap, the weapon in the hand over its left end, and the notice that shows the weapon
+## set for a moment when the hand is cycled (show_weapon_cycle).
+var _belt: PanelContainer
+var _weapon_plate: PanelContainer
+var _weapon_art: TextureRect
+var _weapon_key: Label
+var _cycle_notice: PanelContainer
+var _cycle_name: Label
+var _cycle_row: HBoxContainer
+var _cycle_left := 0.0
 var _saying_plate: PanelContainer
 var _saying_mark: SchoolMark
 var _saying_name: Label
@@ -148,6 +166,7 @@ func _on_player_spawned(_p: Node) -> void:
 
 func _on_item_equipped(_slot: String, _item_id: String) -> void:
 	_refresh_quick()
+	_refresh_weapon_plate()
 
 
 func _on_input_device_changed(_pad: bool) -> void:
@@ -250,19 +269,28 @@ func _build() -> void:
 	_status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bars.add_child(_status_row)
 
-	# quick slots, bottom right
-	var quick := UiKit.row(8)
-	quick.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	quick.offset_left = -400.0
-	quick.offset_top = -108.0
-	quick.offset_right = -24.0
-	quick.offset_bottom = -26.0
+	# the belt, bottom right: eight sockets on a stitched strap (things used, on 1-8), with the
+	# weapon in the hand over its left end and the weapon set's notice above when it is cycled
+	_belt = PanelContainer.new()
+	_belt.add_theme_stylebox_override("panel", ThemeBuilder.box("belt_strap", PackedInt32Array([12, 5, 12, 5])))
+	_belt.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_belt.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_belt.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_belt.offset_left = -24.0 - BELT_WIDTH
+	_belt.offset_right = -24.0
+	_belt.offset_top = -24.0 - SOCKET - 10.0
+	_belt.offset_bottom = -24.0
+	_belt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_belt)
+	var quick := UiKit.row(3)
 	quick.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(quick)
-	for i in 4:
+	quick.alignment = BoxContainer.ALIGNMENT_CENTER
+	_belt.add_child(quick)
+	for i in Equipment.QUICK_SLOTS.size():
 		var slot := _make_quick_slot(i + 1)
 		quick.add_child(slot)
 		_quick_slots.append(slot)
+	_build_weapon_plate()
 
 	# the readied saying, sitting over the quick slots: the school's mark, its name, and what
 	# it costs against the breath in the bar on the other side of the screen
@@ -294,8 +322,8 @@ func _build() -> void:
 	_boss_box.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_boss_box.anchor_left = 0.5
 	_boss_box.anchor_right = 0.5
-	_boss_box.offset_left = -240.0
-	_boss_box.offset_right = 240.0
+	_boss_box.offset_left = -220.0
+	_boss_box.offset_right = 220.0
 	_boss_box.offset_top = -112.0
 	_boss_box.offset_bottom = -44.0
 	_boss_box.visible = false
@@ -482,36 +510,165 @@ func _fit_to_canvas() -> void:
 	_prompt.offset_bottom = 126.0 - lift
 
 
+## A socket of the belt: the item's painting in a sunk well, its count at the foot, its key on a
+## brass tab at the top left.
 func _make_quick_slot(number: int) -> Control:
-	var panel := UiKit.panel("ChromePanel")
-	panel.custom_minimum_size = Vector2(58, 58)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", ThemeBuilder.box("belt_socket", PackedInt32Array([4, 4, 4, 4])))
+	panel.custom_minimum_size = Vector2(SOCKET, SOCKET)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var stack := Control.new()
-	stack.custom_minimum_size = Vector2(40, 40)
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(stack)
-	var icon := UiKit.icon_rect("potion", 34)
+	var icon := TextureRect.new()
 	icon.name = "Icon"
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 	stack.add_child(icon)
 	var count := UiKit.label("", "Tiny", HORIZONTAL_ALIGNMENT_RIGHT)
 	count.name = "Count"
+	_outline(count)
 	count.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	count.offset_left = -26.0
-	count.offset_top = -14.0
-	count.offset_right = 4.0
-	count.offset_bottom = 4.0
+	count.offset_left = -30.0
+	count.offset_top = -13.0
+	count.offset_right = 1.0
+	count.offset_bottom = 3.0
 	stack.add_child(count)
-	var key := UiKit.label(str(number), "Tiny")
-	key.name = "Key"
-	key.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	key.offset_left = -4.0
-	key.offset_top = -14.0
-	key.offset_right = 22.0
-	key.offset_bottom = 4.0
-	key.modulate = Color(1, 1, 1, 0.7)
-	stack.add_child(key)
+	stack.add_child(_key_tab(str(number), "Key"))
 	return panel
+
+
+## A key's brass tab, pinned over a socket's top left corner.
+func _key_tab(text: String, label_name: String) -> Control:
+	var tab := PanelContainer.new()
+	tab.name = label_name + "Tab"
+	tab.add_theme_stylebox_override("panel", ThemeBuilder.box("belt_key_tab", PackedInt32Array([3, 0, 3, 0])))
+	tab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tab.position = Vector2(-7.0, -8.0)
+	var key := UiKit.label(text, "Tiny", HORIZONTAL_ALIGNMENT_CENTER)
+	key.name = label_name
+	key.add_theme_color_override("font_color", ThemeBuilder.colour("ink", "warm"))
+	key.add_theme_font_size_override("font_size", 11)
+	key.custom_minimum_size = Vector2(9, 0)
+	tab.add_child(key)
+	return tab
+
+
+func _outline(l: Label) -> void:
+	l.add_theme_color_override("font_color", ThemeBuilder.colour("paper", "warm"))
+	l.add_theme_color_override("font_outline_color", Color(0.08, 0.06, 0.04, 0.95))
+	l.add_theme_constant_override("outline_size", 4)
+
+
+## The weapon in the hand, in a lit socket over the belt's left end, with the cycle key on its tab;
+## and the notice that shows the whole set for a moment when the hand is cycled.
+func _build_weapon_plate() -> void:
+	_weapon_plate = PanelContainer.new()
+	_weapon_plate.name = "WeaponPlate"
+	_weapon_plate.add_theme_stylebox_override("panel", ThemeBuilder.box("belt_socket_lit", PackedInt32Array([5, 5, 5, 5])))
+	_weapon_plate.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_weapon_plate.offset_left = -24.0 - BELT_WIDTH
+	_weapon_plate.offset_right = -24.0 - BELT_WIDTH + WEAPON_SOCKET
+	_weapon_plate.offset_bottom = _belt.offset_top - 6.0
+	_weapon_plate.offset_top = _weapon_plate.offset_bottom - WEAPON_SOCKET
+	_weapon_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_weapon_plate)
+	var stack := Control.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_plate.add_child(stack)
+	_weapon_art = TextureRect.new()
+	_weapon_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_weapon_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_weapon_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	stack.add_child(_weapon_art)
+	stack.add_child(_key_tab("", "CycleKey"))
+	_weapon_key = stack.find_child("CycleKey", true, false) as Label
+
+	_cycle_notice = UiKit.panel("ChromePanel")
+	_cycle_notice.name = "WeaponCycle"
+	_cycle_notice.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_cycle_notice.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_cycle_notice.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_cycle_notice.offset_right = -24.0
+	_cycle_notice.offset_bottom = _weapon_plate.offset_top - 50.0
+	_cycle_notice.offset_left = _cycle_notice.offset_right - 10.0
+	_cycle_notice.offset_top = _cycle_notice.offset_bottom - 10.0
+	_cycle_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cycle_notice.visible = false
+	add_child(_cycle_notice)
+	var col := UiKit.column(4)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cycle_notice.add_child(UiKit.margins(col, 10, 4, 10, 6))
+	_cycle_name = UiKit.label("", "Body", HORIZONTAL_ALIGNMENT_RIGHT)
+	col.add_child(_cycle_name)
+	_cycle_row = UiKit.row(4)
+	_cycle_row.alignment = BoxContainer.ALIGNMENT_END
+	_cycle_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(_cycle_row)
+
+
+## The weapon set for a moment (CYCLE_NOTICE_S): the weapon now in the hand named and lit, the
+## others beside it in their order, and the key that goes on round.
+func show_weapon_cycle(item_id: String, weapons: Array) -> void:
+	if _cycle_notice == null:
+		return
+	for c in _cycle_row.get_children():
+		_cycle_row.remove_child(c)
+		c.queue_free()
+	for w in weapons:
+		var id := str(w)
+		var cell := PanelContainer.new()
+		cell.add_theme_stylebox_override("panel", ThemeBuilder.box("belt_socket_lit" if id == item_id else "belt_socket",
+				PackedInt32Array([4, 4, 4, 4])))
+		cell.custom_minimum_size = Vector2(40, 40) if id == item_id else Vector2(34, 34)
+		cell.size_flags_vertical = Control.SIZE_SHRINK_END
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.modulate = Color(1, 1, 1, 1.0 if id == item_id else 0.72)
+		var art := TextureRect.new()
+		art.texture = UiKit.item_picture(ContentDB.get_or_empty(id))
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(art)
+		_cycle_row.add_child(cell)
+	var def := ContentDB.get_or_empty(item_id)
+	var name_text := str(def.get("name", item_id))
+	if weapons.size() < 2:
+		name_text += "  (no other weapon in the set)"
+	_cycle_name.text = name_text
+	_cycle_notice.visible = true
+	_cycle_notice.reset_size()
+	_cycle_notice.modulate.a = 1.0
+	_cycle_left = CYCLE_NOTICE_S
+	_idle = 0.0
+	_refresh_weapon_plate()
+
+
+func _update_cycle_notice(delta: float) -> void:
+	if _cycle_notice == null or not _cycle_notice.visible:
+		return
+	_cycle_left -= delta
+	_cycle_notice.modulate.a = clampf(_cycle_left / 0.4, 0.0, 1.0)
+	if _cycle_left <= 0.0:
+		_cycle_notice.visible = false
+
+
+func _refresh_weapon_plate() -> void:
+	if _weapon_plate == null:
+		return
+	var id := ""
+	if _equipment and is_instance_valid(_equipment) and _equipment.has_method("item_id"):
+		id = str(_equipment.call("item_id", "main_hand"))
+	_weapon_plate.visible = not id.is_empty()
+	_weapon_art.texture = UiKit.item_picture(ContentDB.get_or_empty(id)) if not id.is_empty() else null
+	var many := false
+	if _equipment and is_instance_valid(_equipment) and _equipment.has_method("weapon_round"):
+		many = (_equipment.call("weapon_round") as Array).size() > 1
+	_weapon_key.text = UI.prompt_for("cycle_weapon")
+	(_weapon_key.get_parent() as Control).visible = many
 
 
 # --- world hookup -----------------------------------------------------------------------------
@@ -530,6 +687,8 @@ func _connect_world() -> void:
 			_player.connect("lock_on_changed", _on_lock_on)
 		if _player.has_signal("spell_readied") and not _player.is_connected("spell_readied", _on_spell_readied):
 			_player.connect("spell_readied", _on_spell_readied)
+		if _player.has_signal("weapon_cycled") and not _player.is_connected("weapon_cycled", show_weapon_cycle):
+			_player.connect("weapon_cycled", show_weapon_cycle)
 		var interactor := _find_interactor(_player)
 		if interactor and not interactor.is_connected("prompt_changed", _on_prompt_changed):
 			interactor.connect("prompt_changed", _on_prompt_changed)
@@ -548,6 +707,7 @@ func _connect_world() -> void:
 				bag.connect("stack_changed", _on_bag_stack_changed)
 	_refresh_stats()
 	_refresh_quick()
+	_refresh_weapon_plate()
 	_refresh_saying()
 
 
@@ -589,6 +749,8 @@ func _refresh_quick() -> void:
 		var key := panel.find_child("Key", true, false) as Label
 		if key:
 			key.text = UI.prompt_for("quick_%d" % (i + 1))
+			# a slot with no key on this device (a pad has the D-pad's three) shows no tab
+			(key.get_parent() as Control).visible = not key.text.is_empty()
 		var item_id := ""
 		var n := 0
 		if _equipment and is_instance_valid(_equipment) and _equipment.has_method("quick_item"):
@@ -600,19 +762,19 @@ func _refresh_quick() -> void:
 				icon.texture = null
 			if count:
 				count.text = ""
-			panel.modulate = Color(1, 1, 1, 0.45)
+			panel.modulate = Color(1, 1, 1, 0.62)
 			continue
 		panel.modulate = Color(1, 1, 1, 1.0)
 		var def := ContentDB.get_or_empty(item_id)
 		if icon:
-			icon.texture = ThemeBuilder.icon(UiKit.item_icon_name(def))
+			icon.texture = UiKit.item_picture(def)
 		if Flask.is_flask(item_id):
 			# The flask shows its swallows against a full filling, and goes dim when it is dry.
 			var flask := _equipment.call("quick_stack", "quick_%d" % (i + 1)) as ItemStack
 			if count:
 				count.text = "%d/%d" % [n, Flask.max_charges(flask)]
 			if n <= 0:
-				panel.modulate = Color(1, 1, 1, 0.45)
+				panel.modulate = Color(1, 1, 1, 0.55)
 		elif count:
 			count.text = str(n) if n > 1 else ""
 
@@ -813,6 +975,7 @@ func _process(delta: float) -> void:
 	_update_breath(delta)
 	_update_idle_fade(delta)
 	_update_held_card()
+	_update_cycle_notice(delta)
 
 
 ## The strip shows where the player LOOKS: the view's heading, not the body's. It always read the

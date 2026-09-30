@@ -32,7 +32,7 @@ const CAMERA_HEIGHT := 0.25
 const CAMERA_FOV_GALLOP := 9.0
 const RECENTRE_AFTER_S := 1.5
 const RECENTRE_FROM := 3.0
-const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4"]
+const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8", "cycle_weapon"]
 
 var player: Node3D = null
 var horse: Mount = null

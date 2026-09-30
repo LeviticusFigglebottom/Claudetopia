@@ -218,21 +218,73 @@ func test_a_spent_weapon_enchantment_contributes_nothing() -> void:
 	assert_empty(eq.modifiers(), "ember_burst has no passive modifier and no charge")
 
 
-## Consumables, and since the ranger's start a one-handed weapon to swap into the hand (her knife on
-## quick key 4); never a two-handed weapon or a shield.
-func test_quick_slots_bind_consumables_and_one_handed_weapons() -> void:
+## The belt (eight slots) holds things used: draughts, food, a torch, tools. Not weapons, which are
+## in the weapon set (playtest 09-30: "more slots, and they should be for items, not weapons").
+func test_quick_slots_bind_things_used_and_not_weapons() -> void:
+	assert_eq(Equipment.QUICK_SLOTS.size(), 8, "eight belt slots")
 	inv.add(POTION, 3)
 	inv.add(SWORD, 1)
 	inv.add(GREATSWORD, 1)
 	inv.add(SHIELD, 1)
+	inv.add(LANTERN, 1)
 	assert_true(eq.bind_quick("quick_1", POTION))
 	assert_eq(eq.quick_item("quick_1"), POTION)
 	assert_eq(eq.quick_count("quick_1"), 3)
-	assert_true(eq.bind_quick("quick_2", SWORD), "a one-handed sword may be kept on a quick key")
-	assert_false(eq.bind_quick("quick_3", GREATSWORD), "a greatsword is not a quick item")
-	assert_false(eq.bind_quick("quick_3", SHIELD), "a shield is not a quick item")
+	assert_false(eq.bind_quick("quick_2", SWORD), "a sword is not a belt item: it goes in the weapon set")
+	assert_false(eq.bind_quick("quick_3", GREATSWORD), "a greatsword is not a belt item")
+	assert_false(eq.bind_quick("quick_3", SHIELD), "a shield is not a belt item")
+	assert_true(eq.bind_quick("quick_8", LANTERN), "a lantern is, on the eighth key")
 	assert_true(eq.use_quick("quick_1"))
 	assert_eq(inv.count(POTION), 2)
+	assert_true(eq.use_quick("quick_8"), "the lantern on the belt is taken up")
+	assert_eq(eq.item_id("off_hand"), LANTERN)
+	assert_true(eq.use_quick("quick_8"), "and put away again")
+	assert_eq(eq.item_id("off_hand"), "")
+
+
+## The weapon set: a weapon taken in hand joins it; the cycle goes round the set in order and back,
+## skips what has left the bag, and a sword comes back with the shield it was carried with.
+func test_the_weapon_set_cycles_with_the_shield_remembered() -> void:
+	inv.is_player = true
+	inv.add(SWORD, 1)
+	inv.add(SHIELD, 1)
+	inv.add(BOW, 1)
+	inv.add(DAGGER, 1)
+	assert_true(eq.equip(SWORD, "main_hand"))
+	assert_true(eq.equip(SHIELD, "off_hand"))
+	assert_eq(Array(eq.weapon_set), [SWORD], "the sword in hand joined the set")
+	assert_false(eq.add_to_weapon_set(SHIELD), "a shield is not a weapon of the set")
+	assert_true(eq.add_to_weapon_set(BOW))
+	assert_true(eq.add_to_weapon_set(DAGGER))
+	assert_eq(eq.cycle_weapon(), BOW)
+	assert_eq(eq.item_id("main_hand"), BOW)
+	assert_eq(eq.item_id("off_hand"), "", "the bow takes both hands")
+	assert_eq(eq.cycle_weapon(), DAGGER)
+	assert_eq(eq.cycle_weapon(), SWORD, "round to the start")
+	assert_eq(eq.item_id("off_hand"), SHIELD, "the sword comes back with its shield")
+	assert_eq(eq.cycle_weapon(-1), DAGGER, "and back the other way")
+	inv.remove(DAGGER, 1)
+	assert_eq(Array(eq.weapon_round()), [SWORD, BOW], "a weapon no longer carried is not in the round")
+	eq.remove_from_weapon_set(BOW)
+	eq.equip(SWORD, "main_hand")
+	assert_eq(eq.cycle_weapon(), "", "nothing to cycle to")
+	var saved := eq.to_save()
+	var eq2 := Equipment.new()
+	eq2.inventory = inv
+	eq2.from_save(saved)
+	assert_eq(Array(eq2.weapon_set), Array(eq.weapon_set), "the set comes back from a save")
+	eq2.free()
+
+
+## A save from before the weapon set had the ranger's knife on quick key 4: loaded, it is in the set
+## and off the belt, and the draught beside it stays.
+func test_an_old_belt_weapon_moves_to_the_weapon_set() -> void:
+	inv.add(DAGGER, 1)
+	inv.add(POTION, 1)
+	eq.from_save({"slots": {}, "quick": {"quick_1": POTION, "quick_4": DAGGER}})
+	assert_eq(eq.quick_item("quick_4"), "", "the knife left the belt")
+	assert_eq(eq.quick_item("quick_1"), POTION, "the draught stayed")
+	assert_true(eq.in_weapon_set(DAGGER), "the knife is in the weapon set")
 
 
 func test_slots_dictionary_lists_every_slot() -> void:

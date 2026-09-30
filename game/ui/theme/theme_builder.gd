@@ -69,6 +69,12 @@ static func icon(name: String) -> Texture2D:
 	return texture(name) if manifest().get("icons", []).has(name) else null
 
 
+## An item's painted picture (tools/ui/gen_item_art.py: the belt's and the weapon set's), by the
+## name UiKit.item_art_name gives it; null when there is none.
+static func item_art(name: String) -> Texture2D:
+	return texture("item_" + name) if manifest().get("item_art", []).has(name) else null
+
+
 static func marker(kind: String) -> Texture2D:
 	var markers: Array = manifest().get("markers", [])
 	return texture(kind if markers.has(kind) else "default")

@@ -12,6 +12,8 @@ extends Control
 const NOTES := [
 	["Movement", "Look about", "mouse", "right stick"],
 	["Combat", "Another foe", "", "flick the right stick"],
+	["Combat", "Next or last weapon", "mouse wheel", ""],
+	["Belt", "Put a draught, food or a torch on it", "Inventory, To the belt", "Inventory, To the belt"],
 	["Menus", "What you carry, the journal, what you have learned", "", "Start, then the page"],
 ]
 

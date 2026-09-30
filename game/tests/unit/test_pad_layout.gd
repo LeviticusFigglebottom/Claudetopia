@@ -14,11 +14,11 @@ const ONE_BUTTON_TWO_PLACES := {"joy_button:0": ["interact", "ui_accept_alt"]}
 const ON_THE_PAD: Array[String] = ["move_forward", "move_back", "move_left", "move_right",
 		"look_up", "look_down", "look_left", "look_right", "jump", "sprint", "sneak",
 		"attack_light", "attack_heavy", "block", "cast", "lock_on", "interact", "gesture",
-		"quick_1", "quick_2", "quick_3", "quick_4", "pause", "map"]
+		"quick_1", "quick_2", "quick_3", "cycle_weapon", "pause", "map"]
 ## Reached on a pad another way: the roll is a tap of Sprint, walking a light stick, another foe a
 ## flick of the right stick, and these screens a page of the pause menu.
 const ANOTHER_WAY: Array[String] = ["dodge", "walk", "cycle_target", "inventory", "journal", "skills",
-		"sayings", "quick_save", "quick_load"]
+		"sayings", "quick_save", "quick_load", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8"]
 const GUIDE := "joy_button:5"
 
 
@@ -73,5 +73,7 @@ func test_an_untouched_old_default_moves_and_a_changed_one_stays() -> void:
 	assert_eq(Settings.migrated_binding("map", ["key:M", "joy_button:5"]), Settings.default_events("map"))
 	assert_eq(Settings.migrated_binding("lock_on", ["mouse:3", "joy_button:2"]), ["mouse:3", "joy_button:2"],
 			"a binding the player chose was changed")
+	assert_eq(Settings.migrated_binding("quick_4", ["key:4", "joy_button:14"]), ["key:4"],
+			"the D-pad's right went to the weapon cycle")
 	assert_eq(Settings.migrated_binding("cast", ["key:R", "joy_button:11"]), ["key:R", "joy_button:11"],
 			"a binding the player half changed was changed")

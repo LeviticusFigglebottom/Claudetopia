@@ -37,6 +37,32 @@ func test_v3_attributes_move_up_to_the_new_start() -> void:
 	assert_false(bare["sections"].has("progression"), "a save with no character sheet grows none")
 
 
+## v5 -> v6: the belt holds things used, and weapons are in the weapon set. A weapon on a quick key
+## (the ranger's knife) moves to the set, after the weapon in the hand; the draughts stay; the
+## player's copy of the belt grows to eight and loses its weapons.
+func test_v5_belt_weapons_move_to_the_weapon_set() -> void:
+	var data := {"schema_version": 5, "sections": {
+		"player": {"quick_slots": ["core:item/potion_restore_health", "", "", "core:item/hunting_knife"]},
+		"inventory": {"stacks": [{"uid": 7, "id": "core:item/hunting_bow", "count": 1},
+				{"uid": 8, "id": "core:item/hunting_knife", "count": 1}]},
+		"equipment": {"slots": {"main_hand": 7}, "quick": {"quick_1": "core:item/potion_restore_health",
+				"quick_2": "", "quick_3": "", "quick_4": "core:item/hunting_knife"}},
+	}}
+	var m := Migrations.migrate(data)
+	assert_eq(int(m["schema_version"]), SaveSystem.SCHEMA_VERSION)
+	var eq: Dictionary = m["sections"]["equipment"]
+	assert_eq(Array(eq["weapon_set"]), ["core:item/hunting_bow", "core:item/hunting_knife"], "the bow in hand, then the knife")
+	assert_eq(str(eq["quick"]["quick_4"]), "", "the knife is off the belt")
+	assert_eq(str(eq["quick"]["quick_1"]), "core:item/potion_restore_health", "the draught stayed")
+	assert_true(eq["quick"].has("quick_8"), "the belt has eight slots")
+	var belt: Array = m["sections"]["player"]["quick_slots"]
+	assert_eq(belt.size(), 8)
+	assert_eq(str(belt[3]), "", "the player's copy lost the knife")
+	assert_eq(str(belt[0]), "core:item/potion_restore_health")
+	var bare := Migrations.migrate({"schema_version": 5, "sections": {"player": {"marks": 5}}})
+	assert_false(bare["sections"].has("equipment"), "a save with no doll grows none")
+
+
 func test_current_version_is_noop() -> void:
 	var data := {"schema_version": SaveSystem.SCHEMA_VERSION, "sections": {"player": {"marks": 5}}}
 	var m := Migrations.migrate(data.duplicate(true))

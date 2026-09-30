@@ -16,6 +16,8 @@ signal equipment_changed(slot: String, item_id: String)
 ## The readied saying changed (empty when it was put away). The HUD and the sayings screen listen.
 signal spell_readied(spell_id: String)
 signal quick_slot_used(index: int, item_id: String)
+## The hand was cycled to another weapon of the set (cycle_weapon): what is in it now, and the round.
+signal weapon_cycled(item_id: String, weapons: Array)
 signal camera_mode_changed(first_person: bool)
 ## Into deep water (true) and out of it.
 signal swim_changed(swimming: bool)
@@ -108,6 +110,16 @@ const BOW_HOLD_STAMINA := 6.0
 ## what can be hit (the crosshair's point, where arrows and bolts are sent: aim_point).
 const AIM_REACH := 150.0
 const AIM_MASK := (1 << 0) | (1 << 10) | (1 << 5)
+## An arrow's speed at full draw when the bow does not say (m/s; a hunting bow's is 55-70). It was
+## 42, and to come down 60 m off an arrow that slow went up 10 degrees and hung 2.6 m over the line.
+const ARROW_SPEED := 58.0
+## The arrow comes down on the crosshair's point out to ARROW_ZERO_MOST when the aim is on something
+## (an archer aims higher for a far mark); on nothing (the sky) it is zeroed at the bow's reach
+## (`range`, ARROW_ZERO). It is never lifted more than ARROW_LIFT_MOST above the straight line to
+## the mark: past that it falls short, as an arrow does.
+const ARROW_ZERO := 60.0
+const ARROW_ZERO_MOST := 85.0
+const ARROW_LIFT_MOST := deg_to_rad(12.0)
 ## An aimed saying's crosshair is as wide as this (radians): a bolt flies true, but it is not a pin.
 const SPELL_SPREAD := deg_to_rad(0.8)
 ## A roll still counts as rolled through a blow this long after it ends (s): long enough for a roll
@@ -134,7 +146,9 @@ const LOAD_CAPACITY_BASE := 20.0
 const LOAD_CAPACITY_PER_ENDURANCE := 1.5
 const SAVE_SECTION := "player"
 const SKILL_IDS: Array[String] = ["one_handed", "two_handed", "archery", "block", "armour", "sneak", "speech", "alchemy", "smithing", "enchanting", "athletics", "kindling", "hush", "binding", "mending", "calling"]
-const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "walk", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4"]
+const ACTIONS: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact", "block", "sprint", "walk", "sneak", "lock_on", "cycle_target", "toggle_camera", "toggle_lantern", "quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8", "cycle_weapon"]
+## The belt's keys (Equipment.QUICK_SLOTS): quick_1 .. quick_8.
+const QUICK_KEYS := 8
 const BUFFERABLE: Array[String] = ["attack_light", "attack_heavy", "dodge", "jump", "cast", "interact"]
 const ARROW_SCENE := "res://systems/combat/arrow.tscn"
 
@@ -144,7 +158,7 @@ var skills: Dictionary = {}
 var equipped: Dictionary = {"main_hand": "", "off_hand": "", "body": ""}
 var weapon: WeaponInstance = null
 var offhand: Dictionary = {}
-var quick_slots: Array = ["", "", "", ""]
+var quick_slots: Array = ["", "", "", "", "", "", "", ""]
 ## The belt's answer to a quick key: Callable(index: int, item_id: String) -> bool, true when the
 ## item was used. The paper doll owns the belt and is bound here (`Equipment.use_quick_index`);
 ## a saying on a quick key is readied by this node, because a saying is not an item.
@@ -479,10 +493,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 		var mb := event as InputEventMouseButton
+		# the wheel goes round the foes while locked on, and round the weapon set otherwise
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-			lock.handle_wheel(-1, lock_point(), camera_rig.forward_flat())
+			if lock.is_locked():
+				lock.handle_wheel(-1, lock_point(), camera_rig.forward_flat())
+			else:
+				cycle_weapon(-1)
 		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			lock.handle_wheel(1, lock_point(), camera_rig.forward_flat())
+			if lock.is_locked():
+				lock.handle_wheel(1, lock_point(), camera_rig.forward_flat())
+			else:
+				cycle_weapon(1)
 		elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Escape in a conversation leaves it (the dialogue page's own key) and the view stays the player's
@@ -720,9 +741,11 @@ func _update_common_toggles() -> void:
 	if _just["cycle_target"]:
 		lock.handle_cycle_action(lock_point(), camera_rig.forward_flat())
 	lock.handle_stick(_look_stick, lock_point(), camera_rig.forward_flat())
-	for i in 4:
+	for i in QUICK_KEYS:
 		if _just["quick_%d" % (i + 1)]:
 			use_quick_slot(i)
+	if _just["cycle_weapon"]:
+		cycle_weapon(1)
 
 
 func _update_block() -> void:
@@ -1862,6 +1885,52 @@ static func ballistic_direction(from: Vector3, to: Vector3, speed: float, gravit
 	return (flat / x * cos(angle) + Vector3.UP * sin(angle)).normalized()
 
 
+## The point an arrow is sent to: the crosshair's (aim_point), on the aim ray. When the ray meets
+## nothing (the sky, a far hillside past what an arrow flies) the arrow is sent to the point on the
+## ray at the bow's reach, and comes down honestly past it. The aim ray used to end 150 m out, and
+## the arc that comes down there from a hunting bow went up at 35 degrees for a crosshair 5 degrees
+## above level (playtest 09-30: "the arrow flies way above the crosshair").
+func arrow_target() -> Vector3:
+	var cam := camera_rig.camera_position()
+	var dir := camera_rig.aim_direction()
+	var hit := aim_hit()
+	var along := (aim_point() - cam).dot(dir)
+	var reach := float(weapon.ranged.get("range", ARROW_ZERO)) if weapon != null else ARROW_ZERO
+	var most := reach if hit.get("collider") == null else ARROW_ZERO_MOST
+	return cam + dir * clampf(along, 0.5, most)
+
+
+## The direction to loose an arrow at `speed` from `from` so that it comes down on `to`: the flat
+## arc (ballistic_direction), lifted above the straight line by no more than ARROW_LIFT_MOST. A
+## point the arrow cannot reach within that lift is shot at along the lifted line and the arrow
+## falls short of it, which is what a bow does; it is never lobbed.
+static func arrow_direction(from: Vector3, to: Vector3, speed: float, gravity_accel: float) -> Vector3:
+	var line := (to - from)
+	if line.length() < 0.01:
+		return line
+	line = line.normalized()
+	var arc := Player.ballistic_direction(from, to, speed, gravity_accel)
+	var flat := Vector3(to.x - from.x, 0.0, to.z - from.z).length()
+	var d := to - from
+	var v2 := speed * speed
+	var reachable := gravity_accel <= 0.0 or flat < 0.01 \
+			or v2 * v2 - gravity_accel * (gravity_accel * flat * flat + 2.0 * d.y * v2) >= 0.0
+	var lift := line.angle_to(arc)
+	if reachable and lift <= ARROW_LIFT_MOST:
+		return arc
+	return _lift(line, ARROW_LIFT_MOST)
+
+
+## `dir` turned `angle` radians upward (toward straight up), in its own vertical plane.
+static func _lift(dir: Vector3, angle: float) -> Vector3:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length() < 0.001:
+		return dir
+	var pitch := atan2(dir.y, flat.length()) + angle
+	pitch = minf(pitch, PI * 0.5 - 0.01)
+	return (flat.normalized() * cos(pitch) + Vector3.UP * sin(pitch)).normalized()
+
+
 ## How far the bow is drawn (0..1), 0 when it is not.
 func bow_draw() -> float:
 	if state != State.BOW or weapon == null:
@@ -2125,12 +2194,12 @@ func _fire_arrow(drawn: float) -> void:
 	hit.skill_id = weapon.skill_id
 	hit.label = "arrow"
 	hit.parryable = false
-	var speed := float(weapon.ranged.get("speed", 42.0)) * lerpf(0.6, 1.0, drawn)
+	var speed := float(weapon.ranged.get("speed", ARROW_SPEED)) * lerpf(0.6, 1.0, drawn)
 	var fall := float(proj.get("gravity", gravity))
 	var from := bow_launch_origin()
-	# sent to where the crosshair is (aim_point), on the arc that comes down there, then scattered
-	# by the draw's spread (a snap shot, a tired arm)
-	var dir := Player.ballistic_direction(from, aim_point(), speed, fall)
+	# sent to where the crosshair is (arrow_target), on the arc that comes down there, then
+	# scattered by the draw's spread (a snap shot, a tired arm)
+	var dir := Player.arrow_direction(from, arrow_target(), speed, fall)
 	dir = Player.scatter(dir, bow_spread(), _bow_rng)
 	arrow.launch(from, dir, speed, hit, fall)
 	arrow.impact_sound = "arrow_hit"
@@ -2489,11 +2558,34 @@ func use_quick_slot(index: int) -> void:
 		if equip_spell(id):
 			EventBus.notify.emit("Readied %s." % ContentDB.get_or_empty(id).get("name", id), "info")
 		return
-	if str(ContentDB.get_or_empty(id).get("category", "")) == "weapon":
-		swap_to(id)
-		return
 	if not quick_slot_handler.is_valid() or not bool(quick_slot_handler.call(index, id)):
 		EventBus.notify.emit("None left.", "info")
+
+
+## Takes the next weapon of the set into the hand (Equipment.cycle_weapon; `step` -1 goes back),
+## from the cycle key, the wheel or the pad's D-pad right. Only a free body changes weapons: not
+## mid-swing, mid-draw or mid-roll, and not in the saddle. Says what is in the hand now
+## (weapon_cycled, which the HUD shows) and counts as the "swap" act a lesson may wait on.
+func cycle_weapon(step: int = 1) -> String:
+	if dead or not input_enabled or (rider != null and rider.riding()):
+		return ""
+	if state != State.FREE or not can_act():
+		return ""
+	var eq := _doll()
+	if eq == null or not eq.has_method("cycle_weapon"):
+		return ""
+	var order: Array = eq.call("weapon_round")
+	if order.size() < 2:
+		if order.size() == 1:
+			weapon_cycled.emit(str(order[0]), order)
+		return ""
+	var id := str(eq.call("cycle_weapon", step))
+	if id.is_empty():
+		return ""
+	_swapped_from = ""
+	weapon_cycled.emit(id, eq.call("weapon_round"))
+	EventBus.act_done.emit("swap", self, null, id)
+	return id
 
 
 ## The weapon a quick key keeps taken into the hand, or, when it is there already, the one it was
@@ -2826,8 +2918,13 @@ func from_save(d: Dictionary) -> void:
 	_refresh_lantern()
 	call_deferred("_validate_readied_saying")
 	var qs: Array = d.get("quick_slots", [])
+	for i in quick_slots.size():
+		quick_slots[i] = ""
 	for i in mini(qs.size(), quick_slots.size()):
-		quick_slots[i] = str(qs[i])
+		# the belt holds things used and sayings; a weapon an older save kept on it is in the
+		# weapon set now (Equipment.from_save)
+		var id := str(qs[i])
+		quick_slots[i] = "" if str(ContentDB.get_or_empty(id).get("category", "")) == "weapon" else id
 	arrows = int(d.get("arrows", arrows))
 	super.from_save(d)
 	global_position = PlaceRef.follow(global_position, d.get("near", null))

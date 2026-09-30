@@ -1,8 +1,11 @@
 class_name Equipment
 extends Node
 ## Paper-doll slots over an Inventory. Equipped items stay in the bag (so weight counts once and
-## selling or dropping one unequips it); each gear slot holds the stack's uid. Quick slots bind
-## an item id (consumables) and resolve to the first matching stack when used.
+## selling or dropping one unequips it); each gear slot holds the stack's uid. The belt's eight
+## quick slots bind an item id (things used: draughts, food, the flask, a torch, tools) and resolve
+## to the first matching stack when used. Weapons are not on the belt: they are in the weapon set,
+## up to WEAPON_SET_SIZE weapons (each remembering the off-hand it was carried with) that the
+## cycle key goes round (cycle_weapon).
 ##
 ## Rules: shields and off-hand tools (lanterns, torches) go in off_hand; daggers may go in
 ## either hand; other one-handed weapons in main_hand; two-handed weapons (2H, bow, staff clip
@@ -11,11 +14,17 @@ extends Node
 ## Emits EventBus.item_equipped(slot, item_id) ("" on unequip) for the player's equipment.
 
 signal changed(slot: String)
+## The weapon set changed (a weapon added, taken off, or the hand cycled to another).
+signal weapon_set_changed
 
 const GROUP := "equipment"
-const SLOTS: Array[String] = ["main_hand", "off_hand", "head", "body", "hands", "feet", "ring_1", "ring_2", "amulet", "quick_1", "quick_2", "quick_3", "quick_4"]
+const SLOTS: Array[String] = ["main_hand", "off_hand", "head", "body", "hands", "feet", "ring_1", "ring_2", "amulet", "quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8"]
 const GEAR_SLOTS: Array[String] = ["main_hand", "off_hand", "head", "body", "hands", "feet", "ring_1", "ring_2", "amulet"]
-const QUICK_SLOTS: Array[String] = ["quick_1", "quick_2", "quick_3", "quick_4"]
+const QUICK_SLOTS: Array[String] = ["quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8"]
+## What the belt holds: things used. Weapons, armour, books, keys and materials are not.
+const BELT_CATEGORIES: Array[String] = ["consumable", "ingredient", "tool"]
+## How many weapons the cycle key goes round.
+const WEAPON_SET_SIZE := 4
 const ARMOUR_SLOTS: Array[String] = ["head", "body", "hands", "feet"]
 const WEIGHT_CLASSES: Array[String] = ["light", "medium", "heavy"]
 const SLOT_WEIGHT := {"head": 1.0, "body": 2.0, "hands": 1.0, "feet": 1.0}
@@ -26,6 +35,10 @@ var inventory: Inventory = null:
 var _slots: Dictionary = {}     # gear slot -> uid (0 = empty)
 var _quick: Dictionary = {}     # quick slot -> item id ("" = empty)
 var _pending: Dictionary = {}   # gear slot -> uid waiting for the inventory to load
+## The weapons the cycle key goes round, in order (item ids), and the off-hand each was last carried
+## with (main id -> off-hand id, "" for none): a sword comes back with its shield.
+var weapon_set: Array[String] = []
+var _set_offhand: Dictionary = {}
 
 
 func _init() -> void:
@@ -170,6 +183,9 @@ func equip(item: Variant, slot: String = "") -> bool:
 	_slots[slot] = stack.uid
 	changed.emit(slot)
 	_broadcast(slot, stack.id)
+	# a weapon taken in hand joins the weapon set while it has room
+	if slot == "main_hand" and inventory != null and inventory.is_player:
+		add_to_weapon_set(stack.id)
 	return true
 
 
@@ -274,18 +290,22 @@ func is_equipped_id(item: String) -> bool:
 func bind_quick(slot: String, item: String) -> bool:
 	if not slot in QUICK_SLOTS:
 		return false
-	var def := ContentDB.get_or_empty(item)
-	if def.is_empty():
-		return false
-	var cat := str(def.get("category", ""))
-	# a one-handed weapon may be kept on a quick key too, to take into the hand (a ranger's knife)
-	var swappable := cat == "weapon" and not (def.get("tags", []) as Array).has("two_handed") and not (def.get("tags", []) as Array).has("shield")
-	if cat != "consumable" and cat != "ingredient" and not swappable:
+	if not belt_takes(item):
 		return false
 	_quick[slot] = item
 	changed.emit(slot)
 	_broadcast(slot, item)
 	return true
+
+
+## Whether the belt holds this item: a thing used (BELT_CATEGORIES), not a weapon. A weapon goes in
+## the weapon set (add_to_weapon_set); the belt used to take a one-handed one, and so the ranger's
+## knife sat where a draught should.
+static func belt_takes(item: String) -> bool:
+	var def := ContentDB.get_or_empty(item)
+	if def.is_empty():
+		return false
+	return BELT_CATEGORIES.has(str(def.get("category", "")))
 
 
 func clear_quick(slot: String) -> void:
@@ -320,10 +340,89 @@ func use_quick(slot: String) -> bool:
 	var s := quick_stack(slot)
 	if s == null:
 		return false
+	# a torch or a lantern on the belt is taken into the off hand, and put away again
+	if s.is_equippable() and slot_of(s) != "":
+		_clear(slot_of(s))
+		return true
 	return inventory.use(s)
 
 
-## The belt's answer to a quick key, as `Player.quick_slot_handler` wants it: key `index` (0..3)
+# --- the weapon set ------------------------------------------------------------------------
+
+## Whether `item` can be in the weapon set: a weapon held in the main hand (not a shield).
+static func set_takes(item: String) -> bool:
+	var def := ContentDB.get_or_empty(item)
+	if str(def.get("category", "")) != "weapon":
+		return false
+	return not (def.get("tags", []) as Array).has("shield") \
+			and str((def.get("weapon", {}) as Dictionary).get("class", "")) != "shield"
+
+
+## Puts a weapon in the set (at the end; not at all when the set is full or it is there already).
+func add_to_weapon_set(item: String) -> bool:
+	if not set_takes(item):
+		return false
+	if weapon_set.has(item):
+		return true
+	if weapon_set.size() >= WEAPON_SET_SIZE:
+		return false
+	weapon_set.append(item)
+	weapon_set_changed.emit()
+	return true
+
+
+func remove_from_weapon_set(item: String) -> void:
+	if weapon_set.has(item):
+		weapon_set.erase(item)
+		_set_offhand.erase(item)
+		weapon_set_changed.emit()
+
+
+func in_weapon_set(item: String) -> bool:
+	return weapon_set.has(item)
+
+
+## The set as it can be cycled now: its weapons still in the bag, and the one in the hand put in
+## first when it is not there (a weapon taken in hand from the bag with the set full).
+func weapon_round() -> Array[String]:
+	var out: Array[String] = []
+	var held := item_id("main_hand")
+	for id in weapon_set:
+		if inventory != null and inventory.find_first(id) != null:
+			out.append(id)
+	if held != "" and not out.has(held) and set_takes(held):
+		out.push_front(held)
+	return out
+
+
+## Takes the next weapon in the round into the hand (`step` 1 on, -1 back), with the off-hand it
+## was carried with; the one put away remembers its own. Returns the id now in the hand, or "" when
+## there is nothing to cycle to (fewer than two weapons in the round).
+func cycle_weapon(step: int = 1) -> String:
+	var order := weapon_order()
+	if order.size() < 2:
+		return ""
+	var held := item_id("main_hand")
+	var at := order.find(held)
+	var next: String = order[posmod(at + signi(step), order.size())] if at >= 0 \
+			else (order[0] if step > 0 else order[order.size() - 1])
+	if next == held:
+		return ""
+	if held != "":
+		_set_offhand[held] = item_id("off_hand")
+	if not equip(next, "main_hand"):
+		return ""
+	var off := str(_set_offhand.get(next, ""))
+	var main := get_slot("main_hand")
+	if off != "" and main != null and not main.is_two_handed() and inventory.find_first(off) != null:
+		equip(off, "off_hand")
+	elif off == "" and _set_offhand.has(next) and _slots["off_hand"] != 0:
+		_clear("off_hand")
+	weapon_set_changed.emit()
+	return next
+
+
+## The belt's answer to a quick key, as `Player.quick_slot_handler` wants it: key `index` (0..7)
 ## uses whatever is bound to quick_<index + 1>. The doll owns the belt, so the doll answers.
 func use_quick_index(index: int, _item_id: String = "") -> bool:
 	if index < 0 or index >= QUICK_SLOTS.size():
@@ -465,7 +564,8 @@ func _resolve_pending(drop_missing: bool) -> void:
 # --- save --------------------------------------------------------------------------------
 
 func to_save() -> Dictionary:
-	return {"slots": _slots.duplicate(), "quick": _quick.duplicate()}
+	return {"slots": _slots.duplicate(), "quick": _quick.duplicate(), "weapon_set": Array(weapon_set),
+			"set_offhand": _set_offhand.duplicate()}
 
 
 func from_save(d: Dictionary) -> void:
@@ -478,8 +578,21 @@ func from_save(d: Dictionary) -> void:
 		if GEAR_SLOTS.has(str(slot)) and uid > 0:
 			_pending[str(slot)] = uid
 	var quick: Dictionary = d.get("quick", {})
+	weapon_set.clear()
+	_set_offhand.clear()
+	for w in d.get("weapon_set", []):
+		if set_takes(str(w)) and not weapon_set.has(str(w)) and weapon_set.size() < WEAPON_SET_SIZE:
+			weapon_set.append(str(w))
+	var offs: Dictionary = d.get("set_offhand", {})
+	for k in offs:
+		_set_offhand[str(k)] = str(offs[k])
 	for q in QUICK_SLOTS:
 		var id := str(quick.get(q, ""))
-		_quick[q] = id if ContentDB.has(id) else ""
+		# a weapon left on the belt by an older game goes to the weapon set (Migrations._v5_to_v6
+		# moves them in the save file; this is the same rule for anything written in between)
+		if set_takes(id):
+			add_to_weapon_set(id)
+			id = ""
+		_quick[q] = id if belt_takes(id) else ""
 	_resolve_pending(false)
 	changed.emit("")
