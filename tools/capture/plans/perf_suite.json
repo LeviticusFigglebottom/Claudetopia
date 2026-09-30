@@ -1,0 +1,217 @@
+{
+ "note": "The performance suite's fixed spots and paths (./run.sh shots tools/capture/plans/perf_suite.json --measure=90). A dense town by day (Merrowby's street and market), a dense wood (the Briarwold from inside and from its approach), open country with long views (the Hearthvale and Skerrow vistas), a town at night with its lamps, and a first fight with the body and its foes standing. The walks go through Merrowby at a jog and ride open country into the Briarwold at a canter, streaming as play streams. Shot without --measure the plan is a plain sheet, for a pixel diff before and after a change. A shot with \"cpu_attribute\": true is profiled by script under --cpu-attribute.",
+ "shots": [
+  {
+   "label": "merrowby_street",
+   "region": "core:region/hearthvale",
+   "at": {
+    "place": "core:place/merrowby",
+    "bearing": 91.586,
+    "distance": 42.0,
+    "height": 1.7
+   },
+   "look": {
+    "place": "core:place/merrowby",
+    "bearing": 91.718,
+    "distance": 8.0,
+    "height": 2.5
+   },
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0,
+   "cpu_attribute": true
+  },
+  {
+   "label": "merrowby_market",
+   "region": "core:region/hearthvale",
+   "pos": [
+    912.0,
+    31.9,
+    2344.0
+   ],
+   "look_at": [
+    884.0,
+    31.0,
+    2356.0
+   ],
+   "fov": 62.0,
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "briarwold_wood",
+   "region": "core:region/briarwold",
+   "pos": [
+    3334.0,
+    160.1,
+    774.0
+   ],
+   "look_at": [
+    2902.9,
+    97.6,
+    483.2
+   ],
+   "fov": 60.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0,
+   "cpu_attribute": true
+  },
+  {
+   "label": "briarwold_approach",
+   "region": "core:region/briarwold",
+   "pos": [
+    2639.2,
+    198.3,
+    1259.9
+   ],
+   "look_at": [
+    2300.0,
+    87.8,
+    1100.0
+   ],
+   "fov": 55.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "hearthvale_vista",
+   "region": "core:region/hearthvale",
+   "pos": [
+    671.3,
+    134.8,
+    2334.9
+   ],
+   "look_at": [
+    -1327.7,
+    74.8,
+    2273.9
+   ],
+   "fov": 68.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "skerrow_vista",
+   "region": "core:region/skerrow",
+   "pos": [
+    -811.5,
+    662.0,
+    -4061.7
+   ],
+   "look_at": [
+    22.5,
+    602.0,
+    -2243.8
+   ],
+   "fov": 68.0,
+   "time": 14.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "cinderlea_street_night",
+   "region": "core:region/cinderlea",
+   "pos": [
+    163.6,
+    70.1,
+    2862.3
+   ],
+   "look_at": [
+    190.0,
+    70.4,
+    2900.0
+   ],
+   "fov": 58.0,
+   "time": 20.8,
+   "weather": "core:weather/still_grey",
+   "fog_scale": 1.0
+  },
+  {
+   "label": "first_fight",
+   "quests": {
+    "core:quest/the_naming": "ash_wights"
+   },
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 154.0,
+    "distance": 60.5,
+    "height": 2.3
+   },
+   "body": {
+    "place": "core:place/sunken_choir",
+    "bearing": 154.0,
+    "distance": 56.0
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "height": 8.0
+   },
+   "face_foes": true,
+   "time": 7.6,
+   "weather": "core:weather/thin_sun",
+   "fov": 70,
+   "cpu_attribute": true
+  }
+ ],
+ "walks": [
+  {
+   "label": "merrowby_jog",
+   "path": [
+    [
+     1010.0,
+     2300.0
+    ],
+    [
+     965.0,
+     2317.0
+    ],
+    [
+     912.0,
+     2344.0
+    ],
+    [
+     895.5,
+     2363.0
+    ],
+    [
+     860.0,
+     2380.0
+    ],
+    [
+     760.0,
+     2400.0
+    ]
+   ],
+   "speed": 5.5,
+   "height": 1.7,
+   "time": 10.0,
+   "weather": "core:weather/clear"
+  },
+  {
+   "label": "vale_to_briarwold_ride",
+   "path": [
+    [
+     1676.0,
+     1942.0
+    ],
+    [
+     2000.0,
+     1560.0
+    ],
+    [
+     2288.0,
+     1144.0
+    ]
+   ],
+   "speed": 12.0,
+   "height": 2.4,
+   "time": 10.5,
+   "weather": "core:weather/still"
+  }
+ ]
+}

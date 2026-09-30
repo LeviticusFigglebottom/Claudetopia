@@ -119,6 +119,19 @@ var overrides: Array[String] = []
 var horizon := true
 ## `--no-sight`: a cinematic's shots ask only for the rings round their camera and what they look
 ## at, as before ShotSight (CinematicPlayer.sight_streaming), for a before and after of bare ground.
+## `--measure=<frames>`: after each shot's exposure the game is left running that many frames and
+## timed (PerfMeasure): the wall clock and the main thread's CPU a frame, the process and physics
+## steps, what is drawn, memory and nodes, into the shot's `timing` in perf.json. A plan's `walks`
+## are only taken with it. The frames are measured after the PNG is written, so the pictures are
+## the plan's own either way.
+var measure_frames := 0
+## `--cpu-attribute`: with --measure, each shot also stops every script's processing in turn for a
+## few frames and records how much the process and physics steps fell (PerfMeasure.attribute).
+var cpu_attribute := false
+## How the run came up: when the runner was ready and how long the world took to stand.
+var _startup := {}
+var _walks: Array = []
+var _gameplay_cells_per_frame := 2
 ## The player's body a shot's `body` stands (one, moved from shot to shot).
 var _body: Node3D = null
 ## The plan's `hud` section, when it asks for the HUD over its shots.
@@ -146,6 +159,10 @@ func _ready() -> void:
 			overrides.append(a.substr(6))
 		elif a == "--no-horizon":
 			horizon = false
+		elif a.begins_with("--measure="):
+			measure_frames = int(a.substr(10))
+		elif a == "--cpu-attribute":
+			cpu_attribute = true
 		elif a == "--no-sight":
 			# a cinematic's shots ask only for the rings round their camera, as before ShotSight
 			CinematicPlayer.sight_streaming = false
@@ -188,11 +205,22 @@ func run() -> int:
 	# `"preview_pois": [ids]`: those POIs stood up where their defs say, on pads laid now, whatever
 	# the built world has (PoiPreview; tools/world/poi_sheet.py writes such a plan)
 	PoiPreview.ask(plan.get("preview_pois", []))
+	_startup["runner_ready_ms"] = Time.get_ticks_msec()
+	var mem_before := Performance.get_monitor(Performance.MEMORY_STATIC)
+	if measure_frames > 0:
+		# What is measured is the main thread: the software renderer here draws a frame in seconds,
+		# which says nothing of a player's GPU and would pace the world's standing up to its frames.
+		# Each shot's exposure is drawn; draw calls are counted there.
+		RenderingServer.render_loop_enabled = false
 	_world = await _load_world()
 	if _world == null:
 		Log.error("Capture", "world scene failed to load")
 		return 1
+	_startup["world_ready_ms"] = Time.get_ticks_msec()
+	_startup["world_load_ms"] = int(_startup["world_ready_ms"]) - int(_startup["runner_ready_ms"])
+	_startup["world_static_mem_mb"] = snappedf((Performance.get_monitor(Performance.MEMORY_STATIC) - mem_before) / 1048576.0, 0.1)
 	if _world.streamer:
+		_gameplay_cells_per_frame = _world.streamer.cells_per_frame
 		# a capture teleports across the world between shots, so build cells as fast as the
 		# machine allows rather than at the gameplay drip rate
 		_world.streamer.cells_per_frame = 12
@@ -234,6 +262,10 @@ func run() -> int:
 	for more in plan.get("gaits", []):
 		if typeof(more) == TYPE_DICTIONARY:
 			index = await _gait(index, more)
+	if measure_frames > 0:
+		for walk in plan.get("walks", []):
+			if typeof(walk) == TYPE_DICTIONARY:
+				_walks.append(await PerfMeasure.walk(self, _world, walk, _gameplay_cells_per_frame))
 	_write_perf()
 	if not _failures.is_empty():
 		for f in _failures:
@@ -464,6 +496,12 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 		(lights as Object).call("assign", float((st as Dictionary).get("night", 0.0)) if st is Dictionary else 0.0)
 	if not _hud_spec.is_empty():
 		await _settle_hud()
+	if not RenderingServer.render_loop_enabled:
+		# --measure keeps the software renderer off between exposures; it draws the shot's own
+		# frames, a few first so the shadows and the LOD fades have been drawn once
+		RenderingServer.render_loop_enabled = true
+		for _i in PerfMeasure.DRAWN_BEFORE_EXPOSURE:
+			await RenderingServer.frame_post_draw
 	await get_tree().process_frame
 	# The atmosphere rewrites the environment every frame, so the fog override only holds if
 	# its per-frame update is paused for the exposure.
@@ -493,6 +531,14 @@ func _take_shot(index: int, shot: Dictionary) -> void:
 	_write_region_copy(img, str(shot.get("region", "")), label)
 	Log.info("Capture", "%s: %s (%d draw calls, %.2f M primitives, %d frames waited)"
 		% [label, path.get_file(), int(_perf[-1]["draw_calls"]), float(_perf[-1]["primitives"]) / 1e6, waited])
+	if measure_frames > 0:
+		RenderingServer.render_loop_enabled = false
+		Log.info("Capture", "%s: measuring %d frames" % [label, measure_frames])
+		sample["timing"] = await PerfMeasure.frames(self, measure_frames)
+		Log.info("Capture", "%s: %s" % [label, PerfMeasure.line(sample["timing"])])
+		Log.info("Capture", "between: shots")
+		if cpu_attribute and bool(shot.get("cpu_attribute", false)):
+			sample["cpu_by_script"] = await PerfMeasure.attribute(self)
 	if attribute:
 		await _attribute_shot(label, cam)
 	if staged != null:
@@ -892,7 +938,8 @@ func _face_the_foes(cam: FlyCamera, pos: Vector3, label: String) -> bool:
 ## and the run fails rather than quietly recording an empty frame.
 func _wait_for_streaming() -> int:
 	var frames := 0
-	while frames < MAX_WAIT_FRAMES:
+	# undrawn (--measure), a frame is short and the streaming paced to it: many more of them
+	while frames < (MAX_WAIT_FRAMES if RenderingServer.render_loop_enabled else MAX_WAIT_FRAMES * 20):
 		await get_tree().process_frame
 		frames += 1
 		if _world.streamer == null:
@@ -902,7 +949,8 @@ func _wait_for_streaming() -> int:
 	for _i in SETTLE_FRAMES:
 		await get_tree().process_frame
 		frames += 1
-	await RenderingServer.frame_post_draw
+	if RenderingServer.render_loop_enabled:
+		await RenderingServer.frame_post_draw
 	return frames
 
 
@@ -1233,6 +1281,9 @@ func _write_perf() -> void:
 		"costs": _costs(),
 		"shots": _perf,
 	}
+	if measure_frames > 0:
+		doc["startup"] = _startup
+		doc["walks"] = _walks
 	var f := FileAccess.open("%s/perf.json" % out_dir, FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(doc, "  "))

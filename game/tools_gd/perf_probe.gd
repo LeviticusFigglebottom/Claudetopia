@@ -117,6 +117,7 @@ func _viewpoints() -> Array:
 
 
 var _views: Array = []
+var _last_us := 0
 var _view_index := 0
 
 
@@ -143,21 +144,30 @@ func _process(_d: float) -> void:
 			"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 			"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
 			"objects": int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)),
+			"process_ms": Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0,
+			"frame_ms": (Time.get_ticks_usec() - _last_us) / 1000.0,
 		})
 	elif frame > WARMUP_FRAMES + MEASURE_FRAMES:
 		_aim(_view_index + 1)
+	_last_us = Time.get_ticks_usec()
 
 
 func _finish_interior() -> void:
 	var worst := {"draw_calls": 0, "primitives": 0, "objects": 0}
+	var process_total := 0.0
+	var frame_worst := 0.0
 	for s in samples:
 		for k in worst:
 			worst[k] = maxi(int(worst[k]), int(s[k]))
+		process_total += float(s["process_ms"])
+		frame_worst = maxf(frame_worst, float(s["frame_ms"]))
 	var row := {
 		"id": current["id"], "name": current["name"], "kind": "deep" if current["deep"] else "house",
 		"viewpoints": _views.size(),
 		"worst_draw_calls": worst["draw_calls"], "worst_primitives": worst["primitives"],
 		"worst_objects": worst["objects"],
+		"mean_process_ms": snappedf(process_total / maxf(samples.size(), 1.0), 0.01),
+		"worst_frame_ms": snappedf(frame_worst, 0.1),
 		"over_draw_calls": worst["draw_calls"] > DRAW_CALL_BUDGET,
 		"over_primitives": worst["primitives"] > PRIMITIVE_BUDGET,
 	}
