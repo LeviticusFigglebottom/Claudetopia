@@ -12840,3 +12840,61 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+
+## The carved landmarks judged in the world: waystones built and turned to the way, standing stones seated, the Nave fen-dark, the fallen colossus carved whole (landmarks, 2026-09-30)
+
+Main (57526e92) merged in (make_manifest: the cliff faces and this branch's fallen colossus and
+waystones both kept; manifest.json regenerated; test_landmarks_seated keeps main's seated-depth foot
+and this branch's check round a buried body). Every carved landmark captured in the built world,
+Compatibility under xvfb, from the road, closer and at dusk (plans `tools/capture/plans/landmarks_*.json`;
+dusk is 17.35, 18.0 is already night).
+
+What the captures showed, and what changed:
+- **The Choir's standing colossi (a, b)** hold: from the plain and the camp road a line of headless
+  robed giants with lifted hands, sooted warm stone, feet in banked ash; at the foot, folds, cracks
+  and the ash drift read as carved and old. Unchanged. From the camp several pose-a figures overlap
+  into one tree-like mass of arms; the world build's model order (a/b mixed, 38 m) is what fixes it.
+- **The fallen colossus (c)** stood as a pale faceted shape: its lying upper body is its "debris"
+  part and was meshed to the rubble's 5000 triangles. Now body 10 000 + lying body/rubble 16 000
+  (LOD 26 000 / 10 400 / 3 900, was 25 000 / 5 000 / 3 750; every piece kept at every level). Its
+  paleness in the capture was also the capture runner's: a dressed scene was never drawn in the
+  painted stone; `_dress_for` now paints it and sets it down its `buried_m`, as a cell does.
+- **The Drowned Nave** stood over the overcast marsh bleached near white (albedo linear mean 0.17;
+  it is not in the painted stone). Its stone is now #403d35 with soot 0.7 (mean 0.053), with wet
+  runs rising 7 m from the fen and a moss collar a metre or two deep at the waterline (the pale
+  tide mark is gone). Geometry and triangles unchanged (36 398 / 14 558 / 5 458).
+- **Standing stones**: the slab runs 0.6 m under its packing, and the export stood that stub on the
+  ground, so in every POI (PoiKit.place, no seating) the packing stones floated at the stone's knee
+  (seen at the Choir's pilgrims'-ash road and on the review stage). The forge now writes `buried_m`
+  (0.605-0.647) and `PoiKit.place` sets any rock with `buried_m` down by it (scaled).
+- **The start's waystones** (new): built (3600 / 1440 / 540 tris each). The first carve was a
+  0.54 x 0.34 post, turned at random (gen_rocks' tilt spun it), so from the path it read as a
+  concrete fence post and the mark faced anywhere. Now 0.70 x 0.46 at the foot, frost-cracked and
+  chipped, a deeper panel and Wardens' bell; its face is +Z with no spin, and `_waymarks` turns each
+  to the way (no extra rng draw, so the camp's dressing is not re-rolled). From the camp the
+  nearest stone shows its panel and mark.
+
+Review sheets: `docs/review/landmarks/` choir_before, nave_before, waystones_after, and
+landmarks_after (the Choir, the fallen colossus stood up for its shot, the Nave, two stone rings).
+The waystones have no world "before": they were not built until this pass.
+
+Tests (targeted, 49): test_landmarks_seated, test_nothing_floats_at_the_start, test_landmarks_painted,
+test_rock_paint, test_poi_kinds, test_objects_seated: 3 failed, on the world data as built:
+- test_landmarks_seated: two colossus-a figures of the built world (at -88, 3473 and -71, 3522) stand
+  where the plateau falls away, their buried feet over the ground. The built world has the Choir at
+  52 m; this branch's build_world has 38 m, measured to put every foot in the ground. Needs the
+  world rebuild.
+- test_objects_seated hearthvale (overlap 2 vs baseline 1, a farmstead's chopping block) and
+  brightwater (overlap 3 vs 2; the example is Bell Meadow's standing stone sharing its box with its
+  bell): main's triage 37 left this test's baseline stale; judge after the rebuild.
+
+### Not done / for the coordinator
+- **Rebuild the world** (build_world's LANDMARK_SETS: the Choir at 38 m with models a/b/c in order;
+  the fallen c appears only then), then re-run test_landmarks_seated and test_objects_seated.
+- Assets already built and committed here: the three cinderlea_waystone, seven *_standing_stone,
+  sedgemire_drowned_nave_a, cinderlea_choir_colossus_c; rock_values.json current. Import after landing.
+- The world builder's scatter seating does not read `buried_m`: a scattered standing stone sinks
+  12-22% of its height, which covers the 0.6 m stub on the taller ones; a short one on a slope may
+  still show 0.1-0.2 m of stub. Adding `buried_m * scale` to the seat sink in cells.py is one line
+  but changes the world data, so it is left for a rebuild pass.
+- The Nave's position and pad, and every landmark id, are as the world data has them.
