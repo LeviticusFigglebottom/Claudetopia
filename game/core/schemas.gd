@@ -72,6 +72,10 @@ static func validate_def(def: Dictionary, source: String) -> Array[String]:
 
 ## Finds strings that look like content IDs but do not exist in the registry.
 static func find_dangling(def: Dictionary, registry: Dictionary, source: String) -> Array[String]:
+	if _not_references.is_empty():
+		for k in NON_REFERENCE_KEYS:
+			_not_references[k] = true
+		_not_references["id"] = true
 	var out: Array[String] = []
 	_walk(def, registry, source, str(def.get("id", "?")), out, "")
 	return out
@@ -83,10 +87,6 @@ static var _not_references: Dictionary = {}
 
 
 static func _walk(value: Variant, registry: Dictionary, source: String, owner: String, out: Array[String], key: String) -> void:
-	if _not_references.is_empty():
-		for k in NON_REFERENCE_KEYS:
-			_not_references[k] = true
-		_not_references["id"] = true
 	match typeof(value):
 		TYPE_DICTIONARY:
 			for k in value:
