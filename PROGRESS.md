@@ -12931,3 +12931,26 @@ logged error is test_player_body's missing-slot case).
 - Not rendered in the world or with the woman's carriage walking in real time; the SkirtDrive lag
   (`lag`) stays off.
 - The knee skirts, kilt and fitted tunic keep their knee-wear paint and leg weights.
+
+
+### The robe and the coat, again (characters, 2026-09-30)
+
+The coordinator's review of the above: the robe's calf and the coat over trousers were regressions.
+- **The coat is main's again** (legs' weights; its stride test back to 12). A new part, `coat_skirt`,
+  is the same coat half on the skirt's bones, and HumanoidModel wears it in the coat's place over a
+  long skirt or a wrap skirt (`OVER_SKIRT`, `over_skirt_cut`). Her coat over the long skirt,
+  Walk/Run/Sprint/Dodge_F: 12/19/23/23 through at 5-21 mm (main's 12/22/24/18).
+- **The robe** hangs a fifth from the bones and its calf behind the knee wholly from the legs
+  (`_skirt_weights(legs=0.8, calf=1)`): her Walk/Run/Sprint/Sneak/Dodge_F 11/20/22/9/52 through
+  (main's 12/19/20/7/32; the roll's extra are its hands and the shins at 66 mm), stretch 7/10/11/9/3
+  (main's 8/12/14/11/3). Its stride limit back to main's 18.
+- **The wrap skirt**'s calf is on the legs too: 2/15/20/7/32 (main's 4/11/32/5/29), stretch halved.
+- Rebuilt: robe, wrap_skirt (skins only; textures unchanged), coat_skirt (new). Seen: Run and Sprint
+  side, the robed mage, a Lakefolk man in coat and trousers, a Lakefolk woman in coat_skirt over the
+  long skirt (`looks/skirts_coat.json`): the man's coat is main's; her coat and skirt swing together.
+- Tests: test_garment_clips (robe's roll limit 25, its bones' share read at 0.6 of the rest: the calf
+  is on the legs), Godot test_skirt_drive (+1: the coat is cut for what is under it),
+  test_humanoid_model, test_npc_appearance, test_player_body, test_enemy_dress: 70 passed.
+- For the coordinator: land `clothing/coat_skirt/` with the others; the plain coat is unchanged
+  from main. The robe's lighter use of the bones leaves it more stretch in a sprint than the long
+  skirts.
