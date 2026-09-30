@@ -2571,9 +2571,121 @@ func _pose_every() -> int:
 	var d := cam.global_position.distance_squared_to(global_position)
 	if d > POSE_QUARTER_M * POSE_QUARTER_M:
 		return 4
-	if d > POSE_HALF_M * POSE_HALF_M:
-		return 2
-	return 1
+	var every := 2 if d > POSE_HALF_M * POSE_HALF_M else 1
+	if d > POSE_ALWAYS_M * POSE_ALWAYS_M and not _unseen_exempt() and not _seen_from(cam, sqrt(d)):
+		return POSE_UNSEEN_EVERY
+	return every
+
+
+## A body neither the eye nor its shadow can be seen in -- behind the camera, off the side of the
+## frame -- is posed every fourth frame, as a body past POSE_QUARTER_M is, with the time between
+## (a village is most of a frame's scripts, and half of it is behind you). What makes it "seen" is
+## generous: its sphere, grown with its distance so a quick turn cannot bring it into the frame
+## before it is posed again, or any stretch of the shadow the sun or the moon throws from it. The
+## player's own body, a torch-bearer (the torch's light moves with the hand) and anybody within
+## POSE_ALWAYS_M are always posed.
+const POSE_ALWAYS_M := 4.0
+const POSE_UNSEEN_EVERY := 4
+const UNSEEN_MARGIN_M := 1.5
+const UNSEEN_MARGIN_PER_M := 0.12
+## How tall a body's shadow is reckoned from, and the longest shadow reckoned with (a low sun).
+const SHADOW_FROM_M := 2.4
+const SHADOW_MOST_M := 60.0
+const SHADOW_STEP_M := 3.0
+
+## The eye's frustum and the shadow's way, worked out once a frame for every body.
+static var _view_frame := -1
+static var _view_planes: Array[Plane] = []
+static var _view_cam: Camera3D = null
+static var _shadow_way := Vector3.ZERO
+## Indoors every lamp and hearth throws shadows from any side, so nobody is let off there; and a
+## lantern or torch the player carries throws them round the player, as far as it reaches.
+static var _indoors := false
+static var _carried_at := Vector3.INF
+static var _carried_reach := 0.0
+var _exempt_checked := false
+var _is_players := false
+
+
+func _unseen_exempt() -> bool:
+	if not _exempt_checked:
+		_exempt_checked = true
+		var n: Node = self
+		while n != null:
+			if n.is_in_group("player"):
+				_is_players = true
+				break
+			n = n.get_parent()
+	return _is_players or first_person or holds_torch()
+
+
+func _seen_from(cam: Camera3D, dist: float) -> bool:
+	var f := Engine.get_process_frames()
+	if f != _view_frame or cam != _view_cam:
+		_view_frame = f
+		_view_cam = cam
+		_view_planes = cam.get_frustum()
+		_shadow_way = _shadow_way_now()
+		_read_local_shadows()
+	if _indoors:
+		return true
+	if _carried_at != Vector3.INF and global_position.distance_to(_carried_at) < _carried_reach:
+		return true
+	var r := UNSEEN_MARGIN_M + UNSEEN_MARGIN_PER_M * dist
+	var at := global_position + Vector3(0.0, 1.0, 0.0)
+	if _in_planes(at, r):
+		return true
+	if _shadow_way == Vector3.ZERO:
+		return false
+	# along the shadow, from the feet to where the top of the head's shadow lands
+	var reach := minf(SHADOW_FROM_M / maxf(-_shadow_way.y, 0.04), SHADOW_MOST_M)
+	var t := SHADOW_STEP_M
+	var foot := global_position
+	while t < reach + SHADOW_STEP_M:
+		if _in_planes(foot + _shadow_way * minf(t, reach) + Vector3(0.0, 0.5, 0.0), r):
+			return true
+		t += SHADOW_STEP_M
+	return false
+
+
+static func _in_planes(p: Vector3, r: float) -> bool:
+	for pl in _view_planes:
+		if pl.distance_to(p) > r:
+			return false
+	return true
+
+
+static func _read_local_shadows() -> void:
+	_indoors = false
+	_carried_at = Vector3.INF
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var atmos: Node = tree.get_first_node_in_group("atmosphere")
+	if atmos != null and bool(atmos.get("interior")):
+		_indoors = true
+	var player := tree.get_first_node_in_group("player")
+	if player != null:
+		var carried := player.get("_lantern_light") as OmniLight3D
+		if carried != null and is_instance_valid(carried) and carried.is_visible_in_tree():
+			_carried_at = carried.global_position
+			_carried_reach = carried.omni_range + 2.0
+
+
+## The way a shadow falls from a body (the shadow-casting light's direction), or zero when no
+## directional light casts one.
+static func _shadow_way_now() -> Vector3:
+	var tree := Engine.get_main_loop() as SceneTree
+	var atmos: Node = tree.get_first_node_in_group("atmosphere") if tree != null else null
+	if atmos == null:
+		return Vector3.ZERO
+	for key in ["sun", "moon"]:
+		var light := atmos.get(key) as DirectionalLight3D
+		if light != null and light.is_visible_in_tree() and light.shadow_enabled:
+			var way := -light.global_transform.basis.z
+			if way.y < 0.0:
+				return way.normalized()
+	return Vector3.ZERO
 
 
 func _pose(delta: float) -> void:
