@@ -12904,7 +12904,13 @@ cave-builder boulders (overlap, not a fail).
   read as a pale square lifted off the fen (now dark fen turf with boulders at its foot, the region's
   own builder); Cadbrae's quarry floor and blocks read chalk-white (now slate); the green's lime-pit and
   linen were flat plain white (now weathered painted surfaces). Gull Holm was not reached by the sheet.
-  The re-render of the two fixes is noted below.
+  Re-rendered after the fixes: `hush_hole_cadbrae_after_fixes.jpg` (788-1270 draws, 1.05-1.39 M
+  primitives a view: under the limit, over the aim in the three eye-height views, like their
+  neighbours'). The Hush Hole now has boulders at its bank's foot and a greyer turf, but its bank still
+  reads as a mound set on level ground; Cadbrae's slate floor reads right in colour, but the quarry
+  stands as a raised disc with a low ring of benches, because the preview pad levels the brae the
+  quarry was sited on (12 deg) and the kind cuts benches only where the hill rises. Both are the
+  shared kinds on a level pad: see Not done.
 
 ### Tests
 - `region_check.py brightwater` and `--godot`: PASS (content, placement, density), re-run after the
@@ -12941,5 +12947,10 @@ cave-builder boulders (overlap, not a fail).
   wants the build's own cave face (`pois.json` `cave`): on unbuilt ground the cave builder raises its
   own bank, which is its weakest look; the build settles it. The shared `_cave_bank` paints the bank
   with a ground look that reads paler than the terrain shader beside it (everywhere, not only here).
+- **Shared, cave and quarry on a level pad**: `LAND.cave`'s own bank and `LAND.quarry`'s benches both
+  want the slope their site has, and the pad (preview now, build later) levels it to 0.7 of the
+  radius; the Hush Hole reads as a mound with a door and the Cadbrae Slate Cut as a raised disc. A
+  pad that keeps the slope for these kinds (or the build's `cave` face, which the Hush Hole will get)
+  would fix both; I did not work round it in the region's builders.
 - The committed probe predates the last look fixes to the Hush Hole and Cadbrae (their scores do not
   change: region_check --godot re-measured them).
