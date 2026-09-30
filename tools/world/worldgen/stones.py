@@ -17,10 +17,14 @@ same MultiMesh as everything else and nothing downstream needs to know they were
 from __future__ import annotations
 
 import math
+import os
 
 import numpy as np
 
+from .cells import asset_buried
 from .grid import Grid, sample_bilinear
+
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
 def _assets(index: dict, region_short: str) -> list:
@@ -33,8 +37,9 @@ def _assets(index: dict, region_short: str) -> list:
 
 def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, scale: float,
          asset: str, tint) -> None:
+    # set down by the stub the forge ran on under its ground line (`buried_m`, as PoiKit.place does)
     y = float(sample_bilinear(H, grid, np.array([x], dtype=np.float32),
-                              np.array([z], dtype=np.float32))[0])
+                              np.array([z], dtype=np.float32))[0]) - asset_buried(asset, REPO) * scale
     key = grid.written_cell(x, z)
     out.setdefault(key, {}).setdefault(asset, []).append(
         [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])

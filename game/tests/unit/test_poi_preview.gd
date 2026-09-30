@@ -134,3 +134,26 @@ func test_a_regions_own_builder_builds_the_place() -> void:
 	assert_true(plain.find_child("RegionalMark", false, false) == null, "a missing builder is its kind's")
 	assert_gt(plain.mesh_count(), 0)
 	host.queue_free()
+
+
+## The build's pad shapes (tools/world/worldgen/roads.py pad_shape, trench_depth): a cave's, a quarry's
+## and a cave-mouthed delve's pad keeps the land's slope; a `trench` is sunk into its pad by the same
+## numbers the build sinks it by (test_pad_shapes.py has these values from roads.trench_depth).
+func test_a_pad_has_the_builds_shape() -> void:
+	assert_eq(PoiPreview.pad_shape({"kind": "cave"}), "slope")
+	assert_eq(PoiPreview.pad_shape({"kind": "quarry"}), "slope")
+	assert_eq(PoiPreview.pad_shape({"kind": "delve", "site": {"mouth": "lava"}}), "level")
+	assert_eq(PoiPreview.pad_shape({"kind": "delve", "site": {}}), "slope")
+	assert_eq(PoiPreview.pad_shape({"kind": "ruins"}), "level")
+	assert_eq(PoiPreview.pad_shape({"kind": "delve", "pad_shape": "trench"}), "level", "a trench needs its numbers")
+	var t := {"bearing_deg": 213, "length_m": 10, "ramp_m": 8, "width_m": 5, "depth_m": 2.3, "side_m": 2.5,
+		"behind_m": 18, "head_width_m": 20, "head_from_m": -4}
+	assert_eq(PoiPreview.pad_shape({"kind": "delve", "pad_shape": "trench", "trench": t}), "trench")
+	for row in [[0.0, 0.0, 2.3], [3.0, 4.0, 2.3], [-5.0, -8.0, 0.0331], [-6.0, -2.0, 0.6143], [20.0, -20.0, 0.0]]:
+		assert_near(TerrainProvider.trench_depth(t, float(row[0]), float(row[1])), float(row[2]), 0.002,
+				"the trench at (%s, %s)" % [row[0], row[1]])
+	# and the ground laid under a trench is its floor, whatever it was
+	assert_near(TerrainProvider._pad_height(50.0, 40.0, 14.0, 32.0, false, t, 0.0, 0.0, 0.0), 37.7, 0.001)
+	assert_near(TerrainProvider._pad_height(50.0, 40.0, 14.0, 32.0, false, {}, 10.0, 0.0, 10.0), 40.0, 0.001)
+	# and a sloped pad leaves the land as it lies
+	assert_near(TerrainProvider._pad_height(50.0, 40.0, 14.0, 32.0, true, {}, 10.0, 0.0, 10.0), 50.0, 0.001)

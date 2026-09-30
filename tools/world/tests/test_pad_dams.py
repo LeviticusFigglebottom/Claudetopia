@@ -79,6 +79,22 @@ class SyntheticDam(unittest.TestCase):
         self.assertTrue(np.array_equal(H2, H))
 
 
+    def test_a_level_core_in_a_hollow_is_left_level(self):
+        """A settlement whose level ground reaches into a hollow a skirt closed keeps it level: the
+        fill goes round it (Ormhold, 0.7 m out of level on a third of it before)."""
+        X, Z = self.g.mesh(np.float64)
+        town = {"id": "test:place/town", "kind": "village", "position": [0.0, 0.0]}
+        r = RD.pad_level_radius(town)
+        H = np.full((self.g.n, self.g.n), 60.0, dtype=np.float32)
+        # a closed hollow 9 m deep whose floor takes in the town's west side
+        H -= (9.0 * np.clip(1.0 - ((X + r) ** 2 + Z ** 2) / 30.0 ** 2, 0, 1)).astype(np.float32)
+        core = X ** 2 + Z ** 2 <= r * r
+        H = np.where(core, 51.0, H).astype(np.float32)
+        H2, report = RD.drain_pad_dams(self.g, H.copy(), [town])
+        self.assertTrue(report, "the hollow is filled")
+        self.assertTrue(np.array_equal(H2[core], H[core]), "and the town's level ground is not")
+
+
 class BuiltFernhold(unittest.TestCase):
     """The pit as the last world build left it, and what the drain makes of it (at 8 m texels)."""
 
