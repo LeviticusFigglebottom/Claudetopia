@@ -14413,3 +14413,132 @@ three new things, and everything that landed for w4096g is read by the build.
   for Chain Bridge-Windgate at 2 m.
 - Look at the Kilnway in the game after the install. The rise mesh over the dug trench hasn't been
   seen in a render.
+
+## Main made green before the rebuild (2026-09-30)
+
+The final game pass (branch `wip/final-game`, from main 266adde0, with the starts merge 64ccf009 in).
+Every shared test the landed areas broke is fixed at its cause where there was one, and the full
+suite was run twice on this machine: once on main as it stood, once on this branch.
+
+### The opening's two failing tests (test_cinematic_player)
+- **Cause.** Not one commit in 7159ada5..68fda13a. Bisected under today's load, 265b6165 (before the
+  whole range) fails `a_fade_left_down` too, and the country test passes or fails from run to run.
+  Both tests hold wall-clock time against frames that, headless, stand up every cell and **everyone
+  living in it at once** (nothing is paced headless). Measured over one opening: about a hundred
+  people stood up, 0.1-0.45 s each (53 s of 90), and a single frame of 1.6-4 s after the take-over.
+  Sedgemire's and Brightwater's people in the country the opening flies over, and a machine at load
+  8.5, pushed Merrowby's (and on other runs the Nave's) cells past the 4 s hold cap between two
+  frames of building; and the begin's three take-over frames past the fade test's 5 s.
+- **Fix.** `CinematicPlayer.begin` lays its black curtain and lifts the menus' fade with the
+  take-over, not after the three frames that stand up the hand-over's country (a real improvement on
+  a slow machine: the loading caption no longer sits over seconds of building). The fade test's hang
+  guard is five seconds *and* a dozen frames (it asks the order, not the machine's speed); the
+  country test's watched-through run holds each shot for its whole country (`hold_cap_seconds` 120:
+  "when the country comes"), the cap itself still tested by the starved and stuck runs.
+- Both pass alone and in the targeted runs since.
+
+### Shared tables and checks
+- `test_poi_encounters` WHAT_STANDS: 78 rows for every region's new places (the Kilnway and Scathe
+  Fort included, Skerrow's rows as it wrote them) and 45 stale rows fixed (the Grey Gull, Reed Bridge,
+  Withy Beds, and every row whose people are now scheduled there). The marker test now tells a place
+  the built world has no pad for yet (it waits for the build; named once in the log) from a dressing
+  that lacks its marker (still a failure).
+- `QuestWalk` counts a large site's inside by its plan (`SitePlan.make`: its rooms' foes and the
+  boss at the bottom) and a fort's `site.garrison` as holding a kill target.
+- `test_content_bestiary`: the bible's five are checked as before and every other boss (13 site and
+  place bosses) must have an arena, a region and phases; all twelve without `resists` have one now
+  (the Kiln-Warden, the Reel-Mother, the Old Hound...), each with a weakness. The two unread enemy
+  tags (`fair_company`, `woodfolk`) are gone.
+- Seats (`test_objects_seated_*`): the cave mouth's boulders (`_crag`, the flanks and the small
+  stones) are laid against one footprint list: a cheek moves round the mouth's side and the brow
+  back into the hill off one already down, a small stone inside a big one is left out, the
+  capstones keep their place on the roof (moved, shrunk or dropped they broke test_poi_kinds'
+  roof and count checks), and none is more than 55% sunk; crows' meshes are named (CrowBody/CrowWing, which the audit reads as airborne); the ruined
+  colonnade's rope coil sits on the ground; the wreck's lantern hangs from a stempost. Counts against
+  main's baseline: Skerrow overlap 17 -> 2 and sunk 11 -> 4, Briarwold overlap 12 -> 9 and sunk 4 -> 1,
+  Brightwater lamp_unhung 2 -> 0; baselines written for all six regions. What rose (Hearthvale +1,
+  Brightwater +1, Cinderlea +3 overlap) is camp and farmstead props at places the audit now samples
+  (stools in a fire's box, a barrel in a sack), not the builders changed here. The Choir colossi
+  (`test_landmarks_seated`) wait for the rebuild.
+- The Long Jetty's boardwalk puts a `last_post` marker on its deck and the *Names from the Vale*
+  lantern lies there (`spot`), not in the mere.
+- `test_roads` (tools/world): a wayside find's explicit `pad_radius_m` wins, as the build says; the
+  Poachers' Cache's 22 m (its hides and antler bundles reach past 14) is the content's choice.
+
+### Found by the full suite on main (41 failing tests) and fixed
+- **BodyGuard put every body back out of every interior.** Its "20 km from the world's middle"
+  caught the interiors' pockets (50 km out, InteriorManager.POCKET_ORIGIN): the door test failed for
+  all 25 interiors and the footsteps test heard sand in Weaverdeep. FAR_M is 1000 km now.
+- The shop was asked for three times per "show me": QuestCues read ahead through the runner's
+  `__trade` node, which asks for the shop when built. The runner hands QuestCues a peek that does
+  not build the shop or a deed.
+- NPCs: 10 duplicate face seeds, 9 people both sides of an axis, 12 schedule entries with no spot
+  (Hearthvale's POI people), in the newest content.
+- Road ambush sites said as world coordinates (20, every region) are said beside a place now
+  (`{"place", "offset"}`, RoadSites reads both; docs/WORLD_LIFE_ROADS.md).
+- Markers drawn for the six new kinds (delve, stockade, walled_camp, gibbet, castle_ruin,
+  watchtower; `tools/ui/gen_ui_textures.py --only markers`, only the six new files kept).
+- `test_world_spawn`: a POI's `site.interior`/`site.keep` is a way in; Gull Holm's cellars say
+  `door_at` (its region builder stands the door). `test_quest_items`: a site's plan rooms are real
+  spots. `test_faction_lines`: a site quest may be taken from its site's `hook` (the Kilnway's
+  cairn, Scathe's notices). `test_the_start`: counts the forge's carved waystones.
+  `test_poi_steps`: a garrison's body settles on its own; `test_settlement_steps`: "over frames"
+  is more than two, not five (a frame's budget grows with the machine's load).
+- Books: ten books had no copy (items written for each), eight copies' descriptions were short.
+
+### Small leftovers
+- `HearthSystem.rest_at` (and the respawn, which is a rest) counts `hearth_rests`; SiteFallen no
+  longer listens for it (it only began with the first site raised in a session).
+- The hint strip's "R next weapon": not a drawing fault. The review frame was taken the moment the
+  cycle key was pressed, and a lesson learned fades out over 0.6 s (`ControlHints.learn`); the item
+  is drawn exactly as the others until then.
+
+### The torches (with the starts merge)
+- A torch on the belt is the lantern key's: `Player.use_quick_slot` routes it to `use_torch`, which
+  takes it up (`take_up_torch`: HeldTorch, lit, the bow or staff put by) or puts it out
+  (`put_out_torch`: the hands given back), exactly as L does; L still works, and L puts out a belt
+  torch. A start's kit torch goes on a free belt slot as well (`Equipment.bind_free_quick`). The
+  Ranger's knife is in the weapon set and `{key:cycle_weapon}` resolves. New test
+  `test_a_torch_on_the_belt_is_the_lantern_key_s_torch`.
+
+### Before the rebuild (the prebuild agent's findings)
+- The Cadbrae Slate Cut moves 25 m east onto its bank (1725, 198) so its sloped pad has a face; the
+  Hush Hole 50 m east (-1758, -1712), 26 m inside Brightwater's `north_shore` (it stood 20 m inside
+  Sedgemire's `north_fen`). `region_check.py brightwater` passes.
+- Wayside pads: a wayside find's own `pad_radius_m` wins in the build, and test_roads now says so
+  (the Poachers' Cache 22 m, the Skarl Skull 20 m).
+- tools pytest: `test_balance` leaves the yard's sparring teachers (`training`: Dole, Jory) out of a
+  region's foes (Jory made Brightwater read safer than the downs); `test_manifest_seeds` lets tables
+  pinned to their own seeds (cliff faces, the fallen colossus, the waystones) follow the ledges;
+  `test_glb_textures` counts the heads' `_zones.png` and hair/beard `_flow.png` (loaded by path, as
+  the marks are) and a hair's `card_tris` with its shell; `test_capture_plan`: the Rib Cathedral's and
+  the Tenth Waystone's frames re-made (`make_pois_plan.py --only`), clear of what stood at the lens.
+
+### Tests run
+- Full Godot suite on main 266adde0 (before this pass): 2435 tests, **41 failed**, 4 script errors.
+- Full Godot suite on this branch (after the starts and prebuild merges, before the last cave and
+  quest-item fixes): 2439 tests, **3 failed**: `test_landmarks_seated` (the Choir colossi, for the
+  rebuild), `test_poi_kinds` cave roof (fixed since: the capstones keep their place) and
+  `test_rogue_plays` (the crouch reading at Moreva; passed alone since, and the starts agent saw it
+  pass and fail too: its message now names who is watching); 2 script errors in
+  `test_quest_items` (a spot at a place with no built pad; it now waits for the build, named in the
+  log). Targeted reruns since: test_objects_seated (6) + test_poi_kinds 36/36 with baselines
+  written; test_quest_items, test_rogue_plays, test_poi_kinds 50 with 0 script errors.
+- Targeted along the way: the cinematic pair, poi_encounters, map_quests, quest_walk, bestiary, books
+  (75); held_items, belt_and_weapon_set, start_*, styles, save, hearth, sites, control_hints, ...
+  (202/202); the 17 other failing files (151, then 135, then 127/127).
+- `./run.sh journey --style=core:style/ranger`: 6 of 6 steps pass, 1 skipped, 0 logged errors.
+- tools pytest (`tools/world/tests tools/tests`): 415 passed, 12 skipped.
+- Looked at: the six new map markers (a sheet); no world render (the cave, wreck and jetty changes
+  are seen through the seat audit and the tests; the world is being rebuilt).
+
+### Not done / for the coordinator
+- After the rebuild: `test_landmarks_seated` (the Choir colossi) and the marker/quest-item tests'
+  unbuilt places (they name them in the log) should all be asked again; the seat baselines should be
+  re-written from the rebuilt world (`SEAT_BASELINE_WRITE=1 ./run.sh test --filter=test_objects_seated`).
+- The Hush Hole's probe still says `overlap 7` from before the crag fix; the cave builder change
+  applies at run time.
+- Camp and farmstead props overlapping (a stool in a fire's box, a barrel in a sack, a chopping block
+  in a barrel) and the boardwalk's strung rope reading as floating are left in the baselines.
+- `test_cinematic_player`'s other timing tests (and test_rogue_plays' opening read, test_settlement_steps)
+  remain sensitive to a loaded machine; each passes alone.

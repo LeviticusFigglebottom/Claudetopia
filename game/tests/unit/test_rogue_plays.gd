@@ -333,7 +333,14 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	assert_true(bool(Social.quests.call("objective_done", FIRST, 0)), "crouched: the first lesson")
 	await _ticks(30)
 	var read := HUD.eye_state(HUD.watched_level(_tree(), player.global_position))
-	assert_eq(read, "unaware", "crouched at the start, with Sauve a few paces off: Unseen")
+	var watching: Array[String] = []
+	for group: String in ["enemy", "npc"]:
+		for n in _tree().get_nodes_in_group(group):
+			if n is Node3D and (n as Node3D).global_position.distance_to(player.global_position) <= HUD.EYE_RANGE_M \
+					and (group == "enemy" or "detection" in n) and Stealth.awareness_of(n) > 0.05:
+				watching.append("%s %.2f at %.1f m" % [str(n.get("npc_id") if "npc_id" in n else n.name),
+						Stealth.awareness_of(n), (n as Node3D).global_position.distance_to(player.global_position)])
+	assert_eq(read, "unaware", "crouched at the start, with Sauve a few paces off: Unseen (watching: %s)" % ", ".join(watching))
 	var sauve := NpcRegistry.instance.actor(SAUVE) as Npc
 	assert_true(sauve.is_with_you(), "Sauve is with you")
 
