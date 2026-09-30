@@ -194,7 +194,7 @@ func _watch() -> void:
 		# a tenth of WATCH_MS at a time, so quitting never waits long for it; the stall is measured on
 		# the clock, not by counting these, which a busy machine may wake late
 		for i in 10:
-			OS.delay_msec(WATCH_MS / 10)
+			OS.delay_msec(roundi(WATCH_MS / 10.0))
 			if _stop_asked():
 				return
 		_mutex.lock()
@@ -207,7 +207,7 @@ func _watch() -> void:
 			since_ms = t
 			next_line_s = STALL_S
 			continue
-		var still_s := (t - since_ms) / 1000
+		var still_s := floori((t - since_ms) / 1000.0)
 		if still_s < next_line_s:
 			continue
 		while next_line_s <= still_s:

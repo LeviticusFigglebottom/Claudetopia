@@ -522,7 +522,7 @@ func _start_reading_terrain() -> void:
 ## The worker threads the region files are read on: half of what the pool has past the two a
 ## compile is always left, at least one, and no more than there are files.
 static func region_read_tasks(pool: int, files: int) -> int:
-	return clampi((pool - 2) / 2, 1, maxi(files, 1))
+	return clampi(floori((pool - 2) / 2.0), 1, maxi(files, 1))
 
 
 ## The terrain's region files, read on worker threads into a list of their own.

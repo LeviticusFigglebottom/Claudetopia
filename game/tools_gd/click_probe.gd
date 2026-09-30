@@ -28,6 +28,11 @@ var at_s := 1.0
 var after_shown := false
 var button := "New Game"
 var out_path := ""
+## `--click-through`: on the Naming, "Be named" too, and errors are counted until the game's world
+## is ready and a few seconds after (the owner's errors came between the title and the world).
+var through := false
+var _named := false
+var _world_ready_ms := -1
 
 var _menu_ms := -1
 var _clicked_ms := -1
@@ -53,6 +58,8 @@ func _ready() -> void:
 			at_s = float(v[0].trim_prefix("shown+"))
 			if v.size() > 1:
 				button = v[1]
+		elif a == "--click-through":
+			through = true
 		elif a.begins_with("--click-out="):
 			out_path = a.trim_prefix("--click-out=")
 	_last_us = Time.get_ticks_usec()
@@ -88,6 +95,9 @@ func _process(_delta: float) -> void:
 		_longest_at = StartupTrace.last()
 	if _arrived_ms < 0 and _arrived(scene):
 		_arrived_ms = now
+	if _arrived_ms >= 0 and through:
+		_through(scene, now)
+		return
 	if _arrived_ms >= 0:
 		_frames_after += 1
 		if _frames_after >= AFTER_FRAMES:
@@ -124,6 +134,25 @@ func _on_node_added(node: Node) -> void:
 		_scene_in_us = Time.get_ticks_usec()
 
 
+func _through(scene: Node, now: int) -> void:
+	if not _named:
+		if now - _arrived_ms > 2000 and scene != null:
+			var b := _find_button(scene, "Be named")
+			if b != null:
+				_named = true
+				print("CLICK pressing Be named")
+				b.pressed.emit()
+		return
+	if _world_ready_ms < 0:
+		if World.instance != null and World.instance.is_world_ready and not World.instance.vista:
+			_world_ready_ms = now
+		elif now - _arrived_ms > 180000:
+			_finish(false)
+		return
+	if now - _world_ready_ms > 5000:
+		_finish(true)
+
+
 func _arrived(scene: Node) -> bool:
 	match button:
 		"Settings":
@@ -140,7 +169,8 @@ func _finish(went_on: bool) -> void:
 	var errors := _errors() - _errors_before
 	# a screen opened over the title (Settings) brings no scene: the click's frame is the measure
 	var click_ms := roundi((_scene_in_us - _click_us) / 1000.0) if _scene_in_us >= 0 else _first_frame_ms
-	var ok := went_on and click_ms <= GAP_LIMIT_MS and _longest_ms <= GAP_LIMIT_MS and errors == 0 \
+	# through to the world, the frames after the click are the Naming's and the world's own: said, not judged
+	var ok := went_on and click_ms <= GAP_LIMIT_MS and (through or _longest_ms <= GAP_LIMIT_MS) and errors == 0 \
 			and Log.error_count == _log_errors_before
 	var line := "CLICK at=%s%.1f button=%s went_on=%s click_ms=%d first_frame_ms=%d longest_after_ms=%d (at \"%s\") errors=%d verdict=%s" % [
 		"shown+" if after_shown else "", at_s, button, "yes" if went_on else "NO", click_ms, _first_frame_ms,
