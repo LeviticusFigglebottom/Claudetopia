@@ -14593,3 +14593,79 @@ The full quest walk (`./run.sh quests`, one process for all 127 quests and every
   - I did not run the full 127-quest walk here, to leave memory for the batches. The batches can go back to one `./run.sh quests` process.
   - RSS stays at its high-water mark after a free (glibc does not return memory to the system), so read the `static` figure for the trend.
   - No render: nothing drawn changed.
+
+## A body nobody can see is posed at a quarter rate, the trees' levels are re-sorted for less, and every spot can be timed (perf, 2026-09-30)
+
+The owner asked for a full optimisation pass that gives up no function, graphics or feel. This pass built the measuring first. Then it profiled the real costs and kept only the changes that measured better or were plainly free.
+
+- **The measuring (committed):**
+  - `./run.sh shots tools/capture/plans/perf_suite.json --measure=240` covers 8 fixed spots: Merrowby's street, a meadow at the settlements plan's old "market" point (a meadow on this map), the Briarwold wood and its approach, the Hearthvale and Skerrow vistas, Cinderlea's street at night, and the first fight with the body and foes up. It also covers 2 fixed walks at play's streaming rate: a jog through Merrowby, 274 m, and a ride from the Vale into the Briarwold, 1007 m.
+  - The renderer is off between exposures. The software renderer here takes seconds a frame, which says nothing about a player's GPU, so each frame is the main thread's own time. Draw calls, objects and primitives come from the exposure itself.
+  - Per spot it records frame mean, p95, p99 and max, main-thread CPU, static, video, texture and buffer memory, nodes, objects and resources. Per walk it records frames over 33, 50 and 100 ms, streamer build time and peak memory, and it records the world's load time.
+  - `--cpu-attribute` profiles by switching each script's processing off in turn. It is too noisy to trust under about 3 ms.
+  - `tools/perf/gd_profiler.py` stands in for the editor's debugger (`--remote-debug tcp://127.0.0.1:6010`). It adds up the engine's script profiler by function and by suite phase, and answers breakpoints with "continue".
+  - `tools/perf/pixel_diff.py` diffs two capture folders.
+  - `perf_probe` (interiors) now records process and frame time too.
+  - The engine's TIME_PROCESS and TIME_PHYSICS_PROCESS monitors are the worst step of the last second, not a frame's. The suite records them as that and does not use them.
+- **What the profile says costs the main thread**, whole suite run (9151 frames):
+  - HumanoidModel._pose: 18 s. Most of it is the AnimationTree's advance, about 330 us a body on this machine.
+  - The wild things: 10 s for flocks, plus 1.2 s drawing them.
+  - Enemies' physics: 19 s in total.
+  - WorldStreamer.update_lods: 9 s, of which 3.6 s was its own sort.
+  - NPC and foe spawns: about 40 to 110 ms each, in one frame, as scene instantiation, the rig and the first parts.
+  - Cell parsing is on worker threads.
+  - AudioGuard.barrier is deliberate waiting.
+- **Changes** (profiled ms a frame, profiler overhead included, same plan before and after):
+
+| change | measured | pixel diff |
+|---|---|---|
+| A body more than 4 m off whose sphere (grown with distance) and every stretch of its sun/moon shadow lie outside the frustum is posed every 4th frame with the time between, as bodies past 90 m already were. The player, first person, torch-bearers, anyone indoors and anyone within reach of the player's carried light are always posed. A fight's move still is. (`3515ebf8`) | _pose: Merrowby street 6.06 → 4.45, meadow 2.67 → 1.66, Hearthvale vista 2.85 → 2.25, Merrowby jog 2.87 → 2.48. Wood, night street and fight unchanged (bodies in view). | within the run-to-run noise (below) |
+| update_lods sorts due groups on integer keys (a float's bits over the index) worked out once, and skips groups that fail wants_update's cheap first test inline. (`498d89c9`) | update_lods: street 0.41 → 0.15, meadow 0.58 → 0.39, wood 0.48 → 0.32, vista 0.83 → 0.50, night 0.75 → 0.33, fight 0.45 → 0.20, jog 1.10 → 0.70, ride 2.02 → 1.65. Group.wants_update calls on the ride 187 → 17 a frame. | same order of updates, no render change |
+| ScatterSolids' per-tick logs (tick_us, tick_log, slow_joins) keep their last 8192. They grew by one entry every tick that stood anything, all game. (`5f687d60`) | memory: an unbounded leak bounded (about 1 to 3 MB an hour of travel) | none |
+| The dangling-id check at start uses a set for its non-reference keys. (`45627264`, `0846f945`) | unprofiled bench, 3 rounds: 370/294/338 → 353/253/271 ms | none |
+| A flock stops asking which bird saw you once one has. (`1350fbdc`) | plainly free; within noise | none |
+| Tried and reverted: the wild things' MultiMeshes filled from one buffer (`a3057f8b`, reverted in `459211e4`). | _draw_all 0.74 → 0.76 ms a call: no gain | exact (verified buffer layout on GLES3) |
+
+- **Script time a frame (profiled):** Merrowby street 21.7 → 18.3 ms, meadow 17.7 → 16.0, Hearthvale vista 14.7 → 13.3. The wood, the night street, the fight and the walks were unchanged within ±0.5.
+- **Before and after, the suite** (`scratchpad/perf/baseline.json` and `after.json`; Compatibility on llvmpipe, 1600x900, main-thread frame with nothing drawn):
+| spot | frame mean ms | p95 | p99 | max | main CPU ms | draws | prims (M) | static MB | nodes |
+|---|---|---|---|---|---|---|---|---|---|
+| merrowby_street | 23.6 → 28.7 | 36.0 → 43.5 | 48.4 → 59.4 | 122.4 → 101.9 | 22.4 → 27.0 | 1633 → 1625 | 1.57 → 1.57 | 665 → 660 | 6714 → 6705 |
+| merrowby_market | 12.4 → 10.1 | 20.8 → 16.8 | 30.1 → 20.9 | 36.1 → 24.4 | 11.5 → 9.4 | 863 → 863 | 0.88 → 0.88 | 615 → 636 | 6911 → 6911 |
+| briarwold_wood | 7.0 → 9.1 | 11.2 → 15.9 | 14.6 → 20.9 | 27.3 → 26.7 | 6.5 → 8.4 | 1839 → 1839 | 2.21 → 2.21 | 621 → 619 | 7116 → 7116 |
+| briarwold_approach | 6.7 → 8.1 | 11.7 → 13.6 | 19.5 → 16.9 | 20.9 → 37.6 | 6.1 → 7.5 | 1724 → 1724 | 1.86 → 1.86 | 618 → 614 | 7302 → 7302 |
+| hearthvale_vista | 11.8 → 11.5 | 17.2 → 16.5 | 19.8 → 21.2 | 33.4 → 31.4 | 11.1 → 10.8 | 1227 → 1227 | 1.22 → 1.22 | 653 → 639 | 7547 → 7547 |
+| skerrow_vista | 2.9 → 2.7 | 6.4 → 6.1 | 11.1 → 9.9 | 18.5 → 15.8 | 2.4 → 2.4 | 635 → 635 | 0.93 → 0.93 | 604 → 591 | 4981 → 4981 |
+| cinderlea_street_night | 16.9 → 21.7 | 23.4 → 35.1 | 32.7 → 42.7 | 52.3 → 50.2 | 16.0 → 20.1 | 471 → 471 | 0.59 → 0.59 | 675 → 666 | 7654 → 7654 |
+| first_fight | 14.6 → 16.1 | 20.3 → 25.1 | 31.7 → 32.2 | 40.3 → 33.5 | 13.6 → 15.2 | 946 → 946 | 1.87 → 1.87 | 663 → 650 | 7120 → 7120 |
+
+| walk | frame mean | p95 | p99 | max | frames >33 / >50 / >100 ms | peak static MB |
+|---|---|---|---|---|---|---|
+| merrowby_jog | 18.8 → 17.8 | 31.4 → 32.7 | 69.0 → 62.9 | 190.4 → 146.9 | 65/30/8 → 71/27/5 | 711 → 698 |
+| vale_to_briarwold_ride | 14.6 → 13.9 | 29.4 → 29.1 | 62.6 → 59.7 | 184.7 → 383.9 | 91/41/10 → 96/37/10 | 709 → 690 |
+
+
+  - **Read this with the noise.** Two runs of the same code differ by up to 30 % a spot: before against before gave Merrowby street 29.7 and 23.6 ms, and the wood 10.1 and 7.0. The town spots overlap NPC spawning and the nav bake. So the suite cannot resolve gains of a few percent, and frame for frame, before and after are the same within that noise. The profiled script time above is the measurement for the changes.
+  - Draw calls and primitives are unchanged. Nothing render-side changed.
+  - Startup (cpu_probe, headless warrior new game): first menu frame 8.4 → 6.8 s, world ready 9.6 → 10.0 s after "Be named", control p50 19.9 → 23.4 ms. All within this machine's run-to-run spread; no startup change is claimed.
+  - Interiors (`./run.sh perf`, before): worst 555 draws and 0.99 M primitives over 25 interiors. The interior builders were not touched.
+- **Pixel diffs** (`tools/perf/pixel_diff.py`, threshold 8/255, same plan):
+  - Before against before shows the noise floor: 0.8 to 19 % of pixels change. Clouds drift, grass sways on the shader clock, and the sun moves between set_time and the exposure.
+  - Before against after: 0.7 to 10 %, every shot within that floor.
+  - The street's sheet (`docs/review/perf/merrowby_street_before_after_diff.jpg`: before, after, diff ×4) shows only clouds, shadow edges from the sun's small move, and the villager's idle phase.
+  - Off-view posing cannot show in a picture by construction (its body and shadow are out of frame). The in-view bodies are posed at their old rates.
+- **Tests:**
+  - Targeted: test_humanoid_model, test_wildlife, test_scatter_lod, test_scatter_solids, test_world_streamer, test_content_db and test_schemas: 78 tests, 0 failed. Warnings are at the 49 baseline.
+  - `./run.sh fights`: 66 fights, 0 checks failed (6 flagged for balance, as before).
+  - `./run.sh journey --style=core:style/rogue`: 7 of 7, 0 logged errors.
+  - `./run.sh flow`: 103 checks, 1 failed: "20 s in, the world is not a black screen". The opening film is waiting for its first shot's cells before it counts as playing. The same check fails identically on 60a6b475 (base run in `scratchpad/perf/flow_base`).
+  - Full suite: 2442 tests, 2 failed, 0 script errors. The failures are test_objects_seated_cinderlea (fence gaps, floating and on-road objects in Cinderlea's data) and test_travel_set_down. Both fail identically on 60a6b475.
+- **Not done / judged not worth it or too risky:**
+  - NPC spawn hitches (40 to 110 ms): HumanoidModel._ready builds the rig synchronously, so the paced `_build_paced` path never runs for villagers. Deferring the rig would make dress_hands, apply_state and the first intents run on a body without sockets, which risks lost held items. It needs a careful follow-up.
+  - The AnimationTree itself: the gait blends keep their silent inputs running by design (sync). Changing that changes the feet.
+  - Wildlife stepping per bird (1 to 2 ms in the Vale): throttling distant flocks changes their RNG sequence and timing.
+  - FabricMesh.box's grained path allocates per triangle. It is a small share of the paced town building.
+  - The GPU side: the wood is at 2.21 M primitives against the 1.5 M budget. Trimming it means fewer or shorter-ranged trees or herbs, which is a visual change for the owner to decide, not a free win.
+- **For the coordinator:**
+  - No world rebuild and no re-import needed.
+  - The flow's 20 s black check and the two world-data tests above fail on main's 60a6b475 as well.

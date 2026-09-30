@@ -293,13 +293,31 @@ func update_lods(budget_usec: int = 0) -> void:
 	var eye := lod_eye()
 	var t0 := Time.get_ticks_usec()
 	var due: Array = []
-	for g in _lod_groups:
-		if (g as ScatterLod.Group).wants_update(eye):
+	var dist := PackedFloat32Array()
+	for g: ScatterLod.Group in _lod_groups:
+		# (wants_update's own first test, asked here: most groups fail it, most frames)
+		if g.far_ring or g.last_eye.distance_to(eye) < ScatterLod.STEP:
+			continue
+		if g.wants_update(eye):
 			due.append(g)
-	due.sort_custom(func(a: ScatterLod.Group, b: ScatterLod.Group) -> bool:
-			return a._box_distance(eye) < b._box_distance(eye))
-	for g in due:
-		(g as ScatterLod.Group).update(eye)
+			dist.append(g._box_distance(eye))
+	# nearest first, each group's distance worked out once: sorted as integer keys, a non-negative
+	# float's bits ordering as the float does, over the group's index (a sort_custom with the
+	# distance worked out in the comparison was most of what this cost as the eye moved)
+	var order := due
+	if due.size() > 1:
+		var bits := dist.to_byte_array().to_int32_array()
+		var keys := PackedInt64Array()
+		keys.resize(due.size())
+		for i in due.size():
+			keys[i] = (int(bits[i]) << 24) | i
+		keys.sort()
+		order = []
+		order.resize(due.size())
+		for i in keys.size():
+			order[i] = due[keys[i] & 0xFFFFFF]
+	for g: ScatterLod.Group in order:
+		g.update(eye)
 		if budget_usec > 0 and Time.get_ticks_usec() - t0 > budget_usec:
 			break
 	WorldPace.count("tree_lods", Time.get_ticks_usec() - t0)
