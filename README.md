@@ -7,6 +7,21 @@ Everything in it is made by this project: the meshes, the textures, the caves, t
 houses, the music, the writing. The only third-party files are two fonts and one terrain
 plugin, listed in `LICENSES.md`.
 
+## Play a build
+
+Built copies that need no Godot are on the repository's Releases page: `nightly` (main, every four
+hours when it has moved), `playtest` (a branch, built by hand) and tagged versions, made by
+`.github/workflows/game-build.yml`.
+- **Windows:** `Wickmere-windows-<commit>.zip`. Unzip it into one folder and run `Wickmere.exe`.
+  Saves and logs: `%APPDATA%\Godot\app_userdata\Wickmere\`.
+- **Mac:** `Wickmere-macos-<commit>.zip`, one app for Apple Silicon and Intel Macs, on macOS 10.15
+  or later (macOS 15 or later for the full terrain). It is not notarized. The first time, macOS
+  15 or later wants System Settings > Privacy & Security > **Open Anyway**; macOS 14 or older
+  wants Control-click > **Open**. Or run `xattr -dr com.apple.quarantine /Applications/Wickmere.app`.
+  Saves and logs: `~/Library/Application Support/Godot/app_userdata/Wickmere/`.
+  **[docs/MAC.md](docs/MAC.md)** has the details: the requirements, the controls on a Mac, and
+  how the build is made.
+
 ## Run it
 
 ```

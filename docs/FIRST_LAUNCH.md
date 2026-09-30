@@ -46,7 +46,7 @@ title freeze. A second launch skips it, because the compiled shaders are in
 1. **The export bakes.** `game/export_presets.cfg` has `shader_baker/enabled=true`. The baker only
    runs when the exporting editor has a rendering device. **An export made `--headless` bakes
    nothing**, and the pack is the same size as without it. So the Windows build
-   (`.github/workflows/windows-build.yml`) exports with the editor under `xvfb-run`, on Mesa's
+   (`.github/workflows/game-build.yml`, job `windows`) exports with the editor under `xvfb-run`, on Mesa's
    software Vulkan (lavapipe), with `--rendering-driver vulkan --rendering-method forward_plus`.
    Then `tools/debug/pck_shader_cache.py` fails the job if the pack holds no
    `.godot/shader_cache/` entries, or too few of the materials' ones. By hand:
@@ -156,6 +156,10 @@ next launch tries again, with the shaders this one compiled now in the user cach
   everything on first launch, and relies on `ThreadedLoads` not to lock up. Exporting from a
   Windows runner would bake both. `application/export_d3d12` (the Agility SDK) stays off; nothing
   here needs it.
+- **The Mac.** Its Forward+ is Metal on Apple Silicon (MoltenVK on Intel), and the baker bakes
+  only for the platform's driver, Metal, which only an editor on a Mac can bake: a Linux export
+  put 0 entries in the Mac pack. So the Mac preset does not bake, and a Mac compiles its shaders
+  on first launch behind the title, kept from locking up by `ThreadedLoads` (`docs/MAC.md`).
 - **Quitting on lavapipe.** Here the game sometimes hung, or once crashed, in the engine's
   cleanup after quitting, with the worker pool idle. This happened before and after these
   changes. It was not seen with OpenGL, and nothing here can say whether a real GPU shows it.
