@@ -604,7 +604,7 @@ static func prefetch_paths(paths: Array) -> void:
 		var path := str(path_v)
 		if path.is_empty() or _requested.has(path) or not path.begins_with("res://"):
 			continue
-		if ResourceLoader.load_threaded_request(path) == OK:
+		if ThreadedLoads.request(path) == OK:
 			_requested[path] = true
 			_done_prefixes.clear()
 	_request_mutex.unlock()
@@ -616,7 +616,7 @@ static func still_reading(path: String) -> bool:
 	_request_mutex.lock()
 	var asked := _requested.has(path)
 	_request_mutex.unlock()
-	return asked and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
+	return asked and ThreadedLoads.status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS
 
 
 ## Whether any asset under `prefix` asked for ahead is still being read. A place's builder takes its
@@ -630,7 +630,7 @@ static func reading_any(prefix: String) -> bool:
 	if done:
 		return false
 	for p in paths:
-		if str(p).begins_with(prefix) and ResourceLoader.load_threaded_get_status(str(p)) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		if str(p).begins_with(prefix) and ThreadedLoads.status(str(p)) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			return true
 	_request_mutex.lock()
 	_done_prefixes[prefix] = true
@@ -656,7 +656,7 @@ static func _load_asset(path: String, keep := true) -> Resource:
 	_requested.erase(path)
 	_request_mutex.unlock()
 	if asked:
-		res = ResourceLoader.load_threaded_get(path)
+		res = ThreadedLoads.take(path)
 	if res == null and ResourceLoader.exists(path):
 		res = load(path)
 	if res != null and keep:

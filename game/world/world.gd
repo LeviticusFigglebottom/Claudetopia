@@ -121,7 +121,7 @@ func _ready() -> void:
 	if stand_up_in_steps:
 		# the places' builders (seven thousand lines) are compiled on a loader thread while the
 		# ground is read, not in the frame the first place is raised (half a second there)
-		ResourceLoader.load_threaded_request(PoiDressing.BUILDERS_PATH)
+		ThreadedLoads.request(PoiDressing.BUILDERS_PATH)
 	provider = TerrainProvider.new()
 	provider.name = "TerrainProvider"
 	add_child(provider)        # TerrainProvider loads its maps in _ready
@@ -444,7 +444,7 @@ func _start_reading_terrain() -> void:
 	if str(status.get("terrain", "")) != "terrain3d":
 		return
 	if ResourceLoader.exists(ASSETS_RESOURCE):
-		_assets_requested = ResourceLoader.load_threaded_request(ASSETS_RESOURCE) == OK
+		_assets_requested = ThreadedLoads.request(ASSETS_RESOURCE) == OK
 	var files: Array[String] = []
 	for f in DirAccess.get_files_at(TERRAIN_DATA):
 		# an exported build lists the remapped name
@@ -485,13 +485,13 @@ func _terrain_assets() -> Resource:
 	if not _assets_requested:
 		return load(ASSETS_RESOURCE) if ResourceLoader.exists(ASSETS_RESOURCE) else null
 	while stand_up_in_steps and is_inside_tree() \
-			and ResourceLoader.load_threaded_get_status(ASSETS_RESOURCE) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			and ThreadedLoads.status(ASSETS_RESOURCE) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 		await _frame()
 	# left meanwhile: `_exit_tree` took the read, and nothing is wanted (a load here would be seconds)
 	if not is_inside_tree() or not _assets_requested:
 		return null
 	_assets_requested = false
-	return ResourceLoader.load_threaded_get(ASSETS_RESOURCE)
+	return ThreadedLoads.take(ASSETS_RESOURCE)
 
 
 ## Gives Terrain3D the regions read on the worker threads, and builds its maps once. If none were
@@ -534,7 +534,7 @@ func _exit_tree_terrain_reads() -> void:
 		WorkerThreadPool.wait_for_group_task_completion(_regions_task)
 		_regions_task = -1
 	if _assets_requested:
-		ResourceLoader.load_threaded_get(ASSETS_RESOURCE)
+		ThreadedLoads.forget(ASSETS_RESOURCE)
 	_assets_requested = false
 
 

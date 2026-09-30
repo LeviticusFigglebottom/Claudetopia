@@ -71,6 +71,8 @@ func _ready() -> void:
 			draw = true
 		elif a == "--cpu-no-vista-caps":
 			vista_caps = false
+			# and on a software rasterizer too, which the title otherwise keeps its chart on
+			TitleVista.software_allowed = true
 	var pid := OS.get_process_id()
 	var p := "/proc/%d/task/%d/schedstat" % [pid, pid]
 	if FileAccess.file_exists(p):

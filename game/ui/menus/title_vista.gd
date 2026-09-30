@@ -68,6 +68,10 @@ enum Phase { IDLE, LOADING, FIRST, PLAY, DIP_OUT, WAIT_NEXT, DIP_IN, GONE }
 
 ## A headless run never stands a world up behind a menu unless a test asks for it here.
 static var headless_allowed := false
+## A software rasterizer (lavapipe, WARP: a machine with no graphics driver yet) keeps the chart: its
+## first frames of the world are each a minute of compiling pipelines, with the menu frozen under
+## them (2026-09-30: 44, 18, 79 and 30 s on lavapipe). A tool measuring it turns this on.
+static var software_allowed := false
 ## Off, a shot asks only for the rings round its camera, as it did before ShotSight: for the title's
 ## film (`--no-sight`) to show the difference on one build.
 static var sight_streaming := true
@@ -128,9 +132,17 @@ static func wanted() -> bool:
 		return false
 	if not switched_on():
 		return false
+	if software_renderer() and not software_allowed:
+		return false
 	if not bool(WorldStatus.current().get("playable", false)):
 		return false
 	return ContentDB.has(DEF_ID)
+
+
+## Whether the screen is drawn by the CPU (Forward+ or Mobile on a software rasterizer).
+static func software_renderer() -> bool:
+	return RenderingServer.get_rendering_device() != null \
+			and RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_CPU
 
 
 func _ready() -> void:
@@ -145,7 +157,7 @@ func _ready() -> void:
 	_asked_us = _last_us
 	_capping = true
 	# the world's scene is read while the menu's first frames are drawn
-	ResourceLoader.load_threaded_request(WORLD_SCENE)
+	ThreadedLoads.request(WORLD_SCENE)
 
 
 func is_showing() -> bool:
@@ -174,11 +186,14 @@ func _process(_delta: float) -> void:
 		Phase.LOADING:
 			_frames += 1
 			if _frames >= START_DELAY_FRAMES and world == null \
-					and ResourceLoader.load_threaded_get_status(WORLD_SCENE) != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+					and ThreadedLoads.status(WORLD_SCENE) != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 				phase = Phase.IDLE
 				_stand_world_up()
 		Phase.FIRST:
 			_phase_t += raw
+			if _settle > 0:
+				# what each warming frame cost (the frame before this one drew step _settle - 1)
+				Log.info("TitleVista", "warm step %d drew in %.0f ms" % [_settle - 1, d * 1000.0])
 			if _settle > 0 or _cells_ready(index):
 				# the country is in: drawn from here, under the chart, so what the first frames cost
 				# (every shader's first use, the cells' first draw) is paid before it shows, and a
@@ -262,7 +277,7 @@ func _phase_name() -> String:
 # --- the world --------------------------------------------------------------------------------------
 
 func _stand_world_up() -> void:
-	var packed := ResourceLoader.load_threaded_get(WORLD_SCENE) as PackedScene
+	var packed := ThreadedLoads.take(WORLD_SCENE) as PackedScene
 	if packed == null:
 		packed = load(WORLD_SCENE) as PackedScene
 	if packed == null or phase == Phase.GONE:
@@ -615,5 +630,5 @@ func _exit_tree() -> void:
 	_draw_3d(true)
 	_give_clock_back()
 	# a scene read on a thread and never taken is taken here, so it is not left in the loader
-	if world == null and ResourceLoader.load_threaded_get_status(WORLD_SCENE) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-		ResourceLoader.load_threaded_get(WORLD_SCENE)
+	if world == null:
+		ThreadedLoads.forget(WORLD_SCENE)
