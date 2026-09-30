@@ -447,6 +447,10 @@ func _route(to: Vector3) -> void:
 ## beside it a body can stand (free_point_near): a stall's marker is the stall, and the grocer
 ## walked into her own counter for the rest of the morning.
 func set_move_target(pos: Vector3, validate := true) -> void:
+	if not BodyGuard.sane(pos):
+		# a walk to nowhere (an unset Vector3.INF, a NaN from a marker): not taken
+		Log.warn("Npc", "%s: a walk to %s was not taken" % [npc_id, str(pos)])
+		return
 	_wandering = false
 	if validate and (not has_target or pos.distance_to(target_position) > 0.5):
 		pos = free_point_near(pos)
@@ -934,8 +938,23 @@ func _spot_marker_node(marker_name: String) -> Node3D:
 	return null
 
 
+## Keeps this body real (BodyGuard): a NaN position was the owner's Briar crash.
+var _guard := BodyGuard.new()
+
+
+func _home_spot() -> Vector3:
+	if _home != Vector3.INF:
+		return _home
+	if NpcRegistry.instance != null:
+		return NpcRegistry.instance.spawn_position(npc_id)
+	return WorldProbe.place_position(place_id)
+
+
 func _physics_process(delta: float) -> void:
 	if not alive:
+		return
+	if _guard.check(self, delta, _on_terrain() or is_on_floor(), _home_spot):
+		_after_put_back()
 		return
 	_sense(delta)
 	if is_following():
@@ -952,6 +971,9 @@ func _physics_process(delta: float) -> void:
 	_in_the_water()
 	var wanted := Vector3(velocity.x, 0.0, velocity.z)
 	move_and_slide()
+	if _guard.check(self, 0.0, _on_terrain() or is_on_floor(), _home_spot):
+		_after_put_back()
+		return
 	# walking and getting nowhere, pressed against a wall or caught between two trunks: through
 	ScatterSolids.unstick(self, wanted, delta)
 	if has_target:
@@ -1274,9 +1296,19 @@ func _on_terrain() -> bool:
 	return WorldProbe.has_world() and not is_instance_valid(indoors)
 
 
+## Put back by the guard: the walk it was on is dropped (whatever it was walking to may be what
+## took it there), and it takes up its hour again from where it stands.
+func _after_put_back() -> void:
+	_arrive()
+	_retry_goal = Vector3.INF
+
+
 func _apply_gravity_or_snap(delta: float) -> void:
 	if _on_terrain():
 		var h := WorldProbe.get_height(global_position.x, global_position.z, global_position.y)
+		# (maxf(NaN, -INF) is -INF: a ground that was not a number sank the body without end)
+		if not is_finite(h):
+			h = global_position.y
 		global_position.y = maxf(h, _raised_floor())
 		velocity.y = 0.0
 		return

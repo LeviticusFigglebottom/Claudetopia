@@ -389,6 +389,16 @@ def landmark_yaw(place: dict, facing, H, water_d, grid, places_by_id: dict) -> f
     return float(round(math.degrees(math.atan2(vx, vz)), 1))
 
 
+def drain_dams(grid, H, pad_targets, sea, waters, river_d, river_w, hold=None):
+    """RD.drain_pad_dams with the world's outlets (the sea, the lakes, the rivers), said aloud."""
+    outlet = sea | waters.in_lake(H) | (river_d <= river_w * 0.5 + 1.0)
+    H, filled = RD.drain_pad_dams(grid, H, pad_targets, outlet=outlet, hold=hold)
+    print("[world] pad dams: %d dry hollows a skirt closed, filled to a dell (%s)" % (
+        len(filled), ", ".join("%s %.1f m" % (pid.split("/")[-1], depth) for pid, depth, _n in
+                               sorted(filled, key=lambda row: -row[1])[:12]) or "none"), flush=True)
+    return H
+
+
 def build(args) -> dict:
     t = Timer()
     # `--pack` builds against another copy of the core pack (a cartographer's places and POIs
@@ -508,6 +518,8 @@ def build(args) -> dict:
             _, river_d, river_surf, river_w = HY.carve_rivers(grid, H.copy(), rivers, bank)
         if roads_list:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
+        H = drain_dams(grid, H, pad_targets, ~GEO.land_mask(grid, atlas), waters, river_d, river_w,
+                       hold=LF.road_clear(road_d, road_w))
         sea = ~GEO.land_mask(grid, atlas)
         shore_discs = [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), p["id"])
                        for p in pad_targets]
@@ -628,6 +640,8 @@ def build(args) -> dict:
                                                     hold=road_hold, steps=steps)
             H = HY.keep_channels(grid, H, H_river, river_d, river_w, river_surf, road_d, road_w)
             t.mark("landforms")
+        # and no pad's skirt dams a valley into a dry pit (RD.drain_pad_dams: Fernhold's, 52 m)
+        H = drain_dams(grid, H, pad_targets, sea, waters, river_d, river_w, hold=road_hold)
         del road_hold
         del H_river
         # A shelf's seaward edge is broken last, at full resolution, so nothing laid after it

@@ -97,6 +97,32 @@ func test_boss_tracks_exist_at_both_intensities() -> void:
 		assert_true(ResourceLoader.exists(str(stems.get("main", ""))), "%s has no main file" % id)
 
 
+## Every film's cue is a piece there is a file for (the class-start films name their region's bed,
+## which has no `main` stem: "[Music] missing stream" at every start, the owner's Briar crash log).
+func test_every_film_cue_has_a_stream_on_disk() -> void:
+	var films := ContentDB.all("cinematic")
+	assert_gt(films.size(), 0, "no films to check")
+	var checked := 0
+	for def: Dictionary in films:
+		if not def.has("music"):
+			continue
+		var id := str(def["music"])
+		assert_true(ContentDB.has(id), "%s: no music %s" % [def.get("id", "?"), id])
+		var path := Music.overlay_path(id)
+		assert_false(path.is_empty(), "%s: %s has nothing to play" % [def.get("id", "?"), id])
+		assert_true(ResourceLoader.exists(path), "%s: %s -> %s is not on disk" % [def.get("id", "?"), id, path])
+		checked += 1
+	assert_gt(checked, 4, "the five films with music were not all checked")
+
+
+func test_a_region_bed_as_a_cue_plays_its_day_piece() -> void:
+	assert_eq(Music.overlay_path("core:music/briarwold"),
+			str(ContentDB.get_def("core:music/briarwold_day_2")["stems"]["main"]))
+	assert_true(Music.play_cue("core:music/briarwold"), "the Ranger's film cue did not play")
+	assert_eq(Music._overlay_id, "core:music/briarwold")
+	Music.end_cue()
+
+
 # --- region playback -----------------------------------------------------------------------
 
 func test_play_region_starts_every_stem() -> void:

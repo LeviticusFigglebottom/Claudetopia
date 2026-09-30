@@ -355,8 +355,10 @@ func _navigate() -> void:
 static func navmesh_settings() -> NavigationMesh:
 	var nm := NavigationMesh.new()
 	nm.agent_radius = 0.45
-	nm.agent_height = 1.8
-	nm.agent_max_climb = 0.45
+	# whole cells of cell_height, what Recast made of 1.8 and 0.45 (eight cells and one) while it
+	# warned at every bake that they lost precision
+	nm.agent_height = 2.0
+	nm.agent_max_climb = 0.25
 	nm.agent_max_slope = 40.0
 	nm.cell_size = 0.25
 	nm.cell_height = 0.25

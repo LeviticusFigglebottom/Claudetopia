@@ -767,6 +767,15 @@ func _find_skeleton(root: Node) -> Skeleton3D:
 
 # --- movement helpers ---------------------------------------------------------------------------
 
+## Keeps this body real (BodyGuard): a NaN or runaway body is put back on its last good ground.
+## Call once a physics frame after the move; `home` (() -> Vector3) is where it goes with none.
+## Returns true when it was put back.
+var body_guard := BodyGuard.new()
+
+func guard_body(delta: float, home := Callable()) -> bool:
+	return body_guard.check(self, delta, on_ground(), home)
+
+
 func apply_gravity(delta: float) -> void:
 	if not is_on_floor():
 		velocity.y -= gravity * delta

@@ -53,8 +53,11 @@ const SHAPES_A_FRAME := 250
 const CELL_M := 0.15
 const CELL_H := 0.15
 const AGENT_R := 0.3
-const AGENT_H := 1.6
-const CLIMB_M := 0.45
+## Whole cells of CELL_H, as Recast bakes them (it ceils the height and floors the climb, and warned
+## at every bake that 1.6 and 0.45 lost precision: the owner's Briar crash log, 2026-09-30). These
+## are what the bake always made of 1.6 and 0.45 in float: eleven cells and two.
+const AGENT_H := 1.65
+const CLIMB_M := 0.3
 const SLOPE_DEG := 42.0
 ## A point further than this from the mesh is not on it, and gets no path (m, flat / up).
 const ON_MESH_M := 1.6

@@ -226,7 +226,10 @@ func play_region(region_id: String, instant := false) -> bool:
 
 func _load_stream(path: String) -> AudioStream:
 	if path.is_empty() or not ResourceLoader.exists(path):
-		Log.warn("Music", "missing stream %s" % path)
+		# once for each path: a missing file is one fault, not one a minute
+		if not _missing_warned.has(path):
+			_missing_warned[path] = true
+			Log.warn("Music", "missing stream %s" % (path if not path.is_empty() else "(no path given)"))
 		return null
 	var s := load(path)
 	return s as AudioStream
@@ -707,16 +710,45 @@ func _update_overlay(delta: float) -> void:
 			_discard(p)
 
 
+var _missing_warned := {}
+
+
+## The one file a piece played over everything else (a film's cue, a boss's track) is: its `main`
+## stem. A region's bed has none -- it is five stems played together -- and the class-start films
+## name their region's (`start_ranger`: core:music/briarwold), which asked for a main stem of ""
+## and said "[Music] missing stream" at every start (the owner's Briar crash log, 2026-09-30). A
+## bed stands for its region's first day piece (`<bed>_day_2`), which is the same theme through-
+## composed, or failing that its melody stem. "" when there is nothing to play.
+static func overlay_path(music_id: String) -> String:
+	var def := ContentDB.get_or_empty(music_id)
+	var stems: Dictionary = def.get("stems", {})
+	if stems.has("main"):
+		return str(stems["main"])
+	if stems.is_empty():
+		return ""
+	var day := ContentDB.get_or_empty(music_id + "_day_2")
+	var day_main := str((day.get("stems", {}) as Dictionary).get("main", ""))
+	if not day_main.is_empty():
+		return day_main
+	return str(stems.get("melody", ""))
+
+
 func _set_overlay(kind: String, music_id: String) -> void:
 	if kind.is_empty():
 		_overlay_kind = ""
 		_overlay_id = ""
 		_duck_db = 0.0
 		return
-	var def := ContentDB.get_or_empty(music_id)
-	var stems: Dictionary = def.get("stems", {})
-	var stream := _load_stream(str(stems.get("main", "")))
+	var path := overlay_path(music_id)
+	var stream: AudioStream = null
+	if not path.is_empty() and ResourceLoader.exists(path):
+		stream = load(path) as AudioStream
 	if stream == null:
+		# said once for each piece, with its name: a film or a fight goes on without its music
+		if not _missing_warned.has(music_id):
+			_missing_warned[music_id] = true
+			Log.warn("Music", "no stream for the %s cue %s (%s); it plays without" % [
+					kind, music_id, path if not path.is_empty() else "no main stem"])
 		_overlay_kind = ""
 		_overlay_id = ""
 		return

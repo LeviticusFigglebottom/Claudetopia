@@ -91,3 +91,37 @@ func test_a_town_raised_in_pieces_is_the_town_raised_at_once() -> void:
 			differ.append("%s (%d vs %d nodes)%s" % [t[0], want.size(), got.size(), first])
 		_drop(paced)
 	assert_true(differ.is_empty(), "raised in pieces, not as raised at once:\n  %s" % "\n  ".join(differ))
+
+
+## The owner's Briar crash (2026-09-30): a town standing up stepwise was taken out of the tree between
+## two pieces (its cell let go under the Ranger's start), and the next `_wall` asked the global
+## transform of a node outside the tree. Taken out and put back, it stands as the town raised at once.
+func test_a_town_taken_out_of_the_tree_while_it_stands_up_finishes_where_it_was() -> void:
+	var whole := _raise("village", "core:region/briarwold", false)
+	var want := _described(whole)
+	_drop(whole)
+	WorldPace.paced_override = 1
+	var paced := _raise("village", "core:region/briarwold", true)
+	for i in 8:
+		await _tree().process_frame
+	var parent := paced.get_parent()
+	parent.remove_child(paced)
+	for i in 30:
+		await _tree().process_frame
+	assert_false(paced.is_raised, "it went on standing up out of the tree")
+	parent.add_child(paced)
+	var frames := 0
+	while not paced.is_raised and frames < 20000:
+		await _tree().process_frame
+		frames += 1
+	WorldPace.paced_override = -1
+	assert_true(paced.is_raised, "it never finished once back")
+	var got := _described(paced)
+	assert_eq(got.size(), want.size(), "a different town (%d nodes, not %d)" % [got.size(), want.size()])
+	var first := ""
+	for i in mini(got.size(), want.size()):
+		if got[i] != want[i]:
+			first = "at once: %s / stepwise: %s" % [want[i], got[i]]
+			break
+	assert_eq(first, "", "not the town raised at once")
+	_drop(paced)
