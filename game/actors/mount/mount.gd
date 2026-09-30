@@ -666,6 +666,10 @@ var _turning := 0.0
 var _reach: Area3D = null
 
 
+## Puts the horse back on its last good ground if it ever goes non-finite or falls without end.
+var body_guard := BodyGuard.new()
+
+
 func _integrate(delta: float) -> void:
 	var fwd := forward()
 	var v := fwd * speed
@@ -680,6 +684,9 @@ func _integrate(delta: float) -> void:
 	if absf(speed) > 0.5 and absf(along) < absf(speed) * 0.5 and get_slide_collision_count() > 0:
 		speed = move_toward(speed, along, 12.0 * delta)
 	_snap()
+	# never carry a NaN or a fall without end on (BodyGuard; the rider sits on the saddle and comes too)
+	if body_guard.check(self, delta, is_on_floor()):
+		speed = 0.0
 	# the gait shown: by the speed the body is really making, with hysteresis
 	gait = _gait_for(absf(speed), gait)
 
