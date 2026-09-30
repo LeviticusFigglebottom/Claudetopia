@@ -367,6 +367,19 @@ def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray |
     n = grid.n
     X, Z = grid.mesh()
     report = []
+    # Every pad's level core, which no fill touches: a hollow that took in a settlement's own level
+    # ground (Ormhold's, 2.2 m under the lip of the dell beside it) raised the part of it that lay in
+    # the hollow, and left the town 0.7 m out of level on its west third (test_build, 91% level).
+    core = np.zeros((n, n), dtype=bool)
+    for p in places:
+        px, pz = float(p["position"][0]), float(p["position"][1])
+        r_level = pad_level_radius(p)
+        j, i = grid.to_tex(px, pz)
+        j, i = grid.clamp_index(j, i)
+        k = int(r_level / grid.spacing) + 2
+        i0, i1 = max(0, int(i) - k), min(n, int(i) + k + 1)
+        j0, j1 = max(0, int(j) - k), min(n, int(j) + k + 1)
+        core[i0:i1, j0:j1] |= (X[:, j0:j1] - px) ** 2 + (Z[i0:i1, :] - pz) ** 2 <= r_level * r_level
     for p in places:
         px, pz = float(p["position"][0]), float(p["position"][1])
         r_level, r_reach = pad_level_radius(p), pad_reach(p)
@@ -399,7 +412,7 @@ def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray |
         if take.size == 0:
             continue
         m = np.isin(lab, take)
-        raise_m = np.where(m, np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
+        raise_m = np.where(m & ~core[i0:i1, j0:j1], np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
         if hold is not None:
             raise_m = raise_m * hold[i0:i1, j0:j1]
         H[i0:i1, j0:j1] = (sub + raise_m).astype(np.float32)
