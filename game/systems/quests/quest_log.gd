@@ -443,7 +443,8 @@ func entry(quest_id: String) -> Dictionary:
 ## that does not point at it (Waymarks). One that says `after` (an objective's index in the stage,
 ## or a list of them) is `veiled` until those are done: the journal, the tracker and the compass
 ## keep it back, so a lesson's next step is not read before the one it follows (fourth playtest:
-## "objectives spoiled early by its journal tab"). It still counts if it is done first.
+## "objectives spoiled early by its journal tab"). It still counts if it is done first, unless it says
+## `in_turn` (a lesson that must be taken in order: the butts down the range).
 func objectives_of(quest_id: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if not is_active(quest_id):
@@ -1093,6 +1094,12 @@ func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 		var want_prop := str(o.get("prop", ""))
 		if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
 			return
+		# `in_turn`: a lesson taken in order counts only once the steps it follows (`after`) are done,
+		# so an arrow in the far butt while the near one is asked for is nobody's
+		if bool(o.get("in_turn", false)):
+			var si := stage_of(quest_id)
+			if _veiled(quest_id, si, o, stage_def(quest_id, si).get("objectives", [])):
+				return
 		var want_detail := str(o.get("detail", ""))
 		if want_detail != "" and want_detail != detail:
 			return

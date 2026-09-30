@@ -93,7 +93,7 @@ func test_every_style_in_the_pack_is_whole() -> void:
 
 func test_the_kit_reads_as_words() -> void:
 	var def := _fixture_style()
-	assert_eq(StyleDef.kit_words(def), "an iron sword, an oak round shield and a pitch torch")
+	assert_eq(StyleDef.kit_words(def), "an iron sword and an oak round shield")
 
 
 # --- the opening a new game begins with ------------------------------------------------------------

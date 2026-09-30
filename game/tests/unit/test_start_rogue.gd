@@ -445,7 +445,7 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 	for spot_name in ["sauve_landing", "sauve_traps", "tella_boards", "collector_doze"]:
 		var at := spots.position_of(spot_name)
 		assert_false(foes._blocked(at), "%s stands on clear, dry ground" % spot_name)
-	var stage: Dictionary = (ContentDB.get_def(FIRST)["stages"] as Array)[3]
+	var stage: Dictionary = (ContentDB.get_def(FIRST)["stages"] as Array).filter(func(s: Dictionary) -> bool: return str(s["id"]) == "the_bravo")[0]
 	assert_eq(str(stage["id"]), "the_bravo")
 	var round_at := QuestFoes.round_of((stage["objectives"] as Array)[0] as Dictionary)
 	assert_eq(round_at.size(), 5, "a round of five points")

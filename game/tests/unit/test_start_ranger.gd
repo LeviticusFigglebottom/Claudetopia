@@ -105,17 +105,22 @@ func test_rosen_says_what_the_day_is_for_then_each_butt_counts_only_itself() -> 
 	EventBus.act_done.emit("arrow_hit", me, far, "")
 	EventBus.act_done.emit("arrow_hit", me, mid, "")
 	assert_eq(int(objs.call()[0]["count"]), 0, "the far and the middle butts do not count for the near one")
+	assert_eq(int(objs.call()[1]["count"]) + int(objs.call()[2]["count"]), 0, "nor for themselves before their turn")
 	assert_true(bool(objs.call()[1]["veiled"]) and bool(objs.call()[2]["veiled"]), "and the next butts are not shown before the near one")
+	var stage: Dictionary = ContentDB.get_def(FIRST)["stages"][1]
+	assert_eq(str(Waymarks.anchor(ContentDB.get_def(FIRST), stage, stage["objectives"][0]).get("only", "")), "butt_near", "the marker is on the near butt")
 	EventBus.act_done.emit("arrow_hit", me, near, "")
 	EventBus.act_done.emit("arrow_hit", me, near, "")
 	assert_true(bool(objs.call()[0]["done"]), "two on the near butt")
 	assert_false(bool(objs.call()[1]["veiled"]), "then the middle one is shown")
-	var anchor := Waymarks.anchor(ContentDB.get_def(FIRST), ContentDB.get_def(FIRST)["stages"][1], ContentDB.get_def(FIRST)["stages"][1]["objectives"][1])
-	assert_eq(str(anchor.get("only", "")), "butt_mid", "and the marker is on the middle butt, not the nearest")
+	assert_eq(str(Waymarks.anchor(ContentDB.get_def(FIRST), stage, stage["objectives"][1]).get("only", "")), "butt_mid", "and the marker is on the middle butt, not the nearest")
 	EventBus.act_done.emit("arrow_hit", me, near, "")
-	assert_eq(_at(FIRST), "the_butts", "a third on the near butt is not the middle one")
+	EventBus.act_done.emit("arrow_hit", me, far, "")
+	assert_eq(int(objs.call()[1]["count"]) + int(objs.call()[2]["count"]), 0, "a third on the near butt, or one on the far, is not the middle one")
 	EventBus.act_done.emit("arrow_hit", me, mid, "")
-	assert_eq(_at(FIRST), "the_briar", "each butt hit in turn: the Briar")
+	assert_true(bool(objs.call()[1]["done"]) and not bool(objs.call()[2]["veiled"]), "the middle done: the far one shown")
+	EventBus.act_done.emit("arrow_hit", me, far, "")
+	assert_eq(_at(FIRST), "the_briar", "each butt hit in its turn: the Briar")
 	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/rosen_pony"), "and Nettle is the ranger's from the first lesson (triage 52)")
 
 
@@ -289,6 +294,23 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 			assert_true(hit.is_empty(), "%s seen clear from the mark at %.1f m up (%s)" % [(b as Node).name, up, str(hit.get("collider", ""))])
 	var bag := player.get_node("Inventory") as Inventory
 	assert_eq(bag.count("core:item/torch"), 1, "a torch in the kit")
+	# everyone the tutorial stands somewhere stands on level, dry ground with no drop beside them
+	# (the owner's playtest, 2026-09-30: Alder's Briar was the rim of an 80 m drop, Rosen's its face)
+	for spot in ["rosen_butts", "alder_lodge", "nettle_tether", "alder_briar", "rosen_briar", "rosen_lip"]:
+		var at := QuestSpots.ensure().position_of(spot)
+		var grade := 0.0
+		var drop := 0.0
+		for k in 16:
+			var a := deg_to_rad(k * 22.5)
+			for d in [2.0, 5.0, 10.0]:
+				var h := WorldProbe.get_height(at.x + sin(a) * d, at.z - cos(a) * d)
+				drop = maxf(drop, absf(h - at.y))
+				if d == 2.0:
+					grade = maxf(grade, absf(h - at.y) / 2.0)
+		# the lip is over the pool by design: its shelf is level, its drop is the point of it
+		assert_true(grade < 0.3, "%s stands on level ground (grade %.2f)" % [spot, grade])
+		if spot != "rosen_lip":
+			assert_true(drop < 4.0, "%s has no drop within 10 m (%.1f m)" % [spot, drop])
 	assert_eq(str(Social.quests.call("stage_id_of", FIRST)), "hear_rosen", "and Rosen's word on the day is the first objective")
 	var worn := player.get_node("Equipment") as Equipment
 	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_bow", "the bow in hand")

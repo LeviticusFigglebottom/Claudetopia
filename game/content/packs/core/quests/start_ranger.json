@@ -2,14 +2,15 @@
   {
     "id": "core:quest/first_ranger", "name": "The Butts and the Briar", "layer": "main", "giver": "core:npc/rosen_wyke",
     "description": "You have come to Fernhold, the foresters' lodge on the High Wold, to learn the bow from Rosen Wyke; the lodge eats because she shoots. Thornhounds are drinking at Wold Force, south of the lodge, and killing the lodge's deer. This evening she means to clear them, with you.",
-    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger, made plainer for triage 51-52: one goal (clear the thornhounds from Wold Force this evening), told by Rosen at once; five stages (Rosen's word on what the day is for, the butts, the Briar, the Force, the report and the hart), the weaver in Fern Gully cut; every change of stage said out loud as it happens, each journal entry opening on why. Nettle is handed over after the first lesson (the_butts' on_complete, tethered behind the line: `nettle_tether`) and ridden out to the Briar (`mount`, Rider). The butts are Pell bodies of kind butt (QuestSpots `props`, `prop:butt`), 15, 25 and 35 m down the range from the shooting line (the start), each on open, level ground with a clear line from the mark (the owner's playtest, 2026-09-30: the far one had been 50 m off behind a trunk); each objective counts hits on its own butt only (`prop`), and the next is shown only once the one before is done (`after`), so the marker is on the butt to shoot; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). The report shows the grey hart (`saw_the_grey_hart`, which stands its lead at the clearing's edge); Alder asks you to follow it, and The Grey Hart begins with the ride. Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
+    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger, made plainer for triage 51-52: one goal (clear the thornhounds from Wold Force this evening), told by Rosen at once; five stages (Rosen's word on what the day is for, the butts, the Briar, the Force, the report and the hart), the weaver in Fern Gully cut; every change of stage said out loud as it happens, each journal entry opening on why. Nettle is handed over after the first lesson (the_butts' on_complete, tethered behind the line: `nettle_tether`) and ridden out to the Briar (`mount`, Rider). The butts are Pell bodies of kind butt (QuestSpots `props`, `prop:butt`), 15, 25 and 35 m down the range from the shooting line (the start), each on open, level ground with a clear line from the mark (the owner's playtest, 2026-09-30: the far one had been 50 m off behind a trunk); each objective counts hits on its own butt only (`prop`), and the next is shown, and counts, only once the one before is done (`after`, `in_turn`), so the marker is on the butt to shoot; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). The report shows the grey hart (`saw_the_grey_hart`, which stands its lead at the clearing's edge); Alder asks you to follow it, and The Grey Hart begins with the ride. Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
     "renamed": {"the_gully": "the_force"},
     "spots": [
       {"name": "rosen_butts", "place": "core:place/fernhold", "bearing": 73, "distance": 28, "facing": 240},
       {"name": "alder_lodge", "place": "core:place/fernhold", "bearing": 196, "distance": 16, "facing": 16},
-      {"name": "alder_briar", "place": "core:place/fernhold", "bearing": 330, "distance": 222, "facing": 150},
-      {"name": "rosen_briar", "place": "core:place/fernhold", "bearing": 327, "distance": 214, "facing": 147},
-      {"name": "rosen_lip", "place": "core:poi/wold_force", "bearing": 112, "distance": 31, "facing": 292},
+      {"name": "alder_briar", "place": "core:place/fernhold", "bearing": 115.3, "distance": 142.7, "facing": 64,
+       "notes": "by the Thornmarch road east of the lodge, looking along it towards the Briar: level, dry and clear ground the lodge's people walk to by the road (the owner's playtest, 2026-09-30: at bearing 330, 222 m, he stood on the rim of an 80 m drop, and the walk there went down a bank and stuck)"},
+      {"name": "rosen_briar", "place": "core:place/fernhold", "bearing": 114.6, "distance": 145.2, "facing": 64, "notes": "three paces from her father, on the same level ground (her old spot was on the drop's face)"},
+      {"name": "rosen_lip", "place": "core:poi/wold_force", "bearing": 115.8, "distance": 33.6, "facing": 292, "notes": "the lip over the pool, on its one level shelf (grade 0.19; the old spot was on a 59-degree face)"},
       {"name": "nettle_tether", "place": "core:place/fernhold", "bearing": 62, "distance": 32, "facing": 200,
        "notes": "behind the shooting line, off the range, where Rosen has Nettle tied when you walk back from the Force"}
     ],
@@ -32,9 +33,9 @@
        "objectives": [
          {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_near", "min_range": 10, "count": 2, "text": "Hit the near butt twice, at fifteen paces: draw with {key:attack_light}, hold, let go",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "Breathe out. Loose on the empty. The arrow doesn't care how brave you are.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_mid", "min_range": 18, "count": 1, "after": 0, "text": "Now the middle butt, at twenty-five paces",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_mid", "min_range": 18, "count": 1, "after": 0, "in_turn": true, "text": "Now the middle butt, at twenty-five paces",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "It dropped. They all drop. Aim where it's going to be, not where it is.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_far", "min_range": 26, "count": 1, "after": 1, "text": "Now the far butt, at thirty-five paces: aim a little over it"}
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_far", "min_range": 26, "count": 1, "after": 1, "in_turn": true, "text": "Now the far butt, at thirty-five paces: aim a little over it"}
        ],
        "on_enter": [{"set_flag": "hunter_at_fernhold"}],
        "on_complete": [
@@ -42,12 +43,12 @@
          {"say": ["core:npc/rosen_wyke", "Good. Pull them out of the straw; arrows are a thing that runs out. — Take Nettle, my old pony; she's tied behind the line. The Force is a long walk and you'll want legs under you after. Now come and see where the hounds are coming from. My father's on the Briar.", 1.5, 8.0]}
        ]},
       {"id": "the_briar",
-       "journal": "Before the Force, Rosen wants you to see where the thornhounds are coming from.\n\nYou can hit what you aim at. They come from the Briar, the wall of thorn the Oroth grew to keep the Hush in the south. Her father Alder walks it every morning.\n\nGet up on Nettle, the pony Rosen has given you, and ride out north-west of the lodge to the edge of the Briar. Go the last of it crouched, and find Rosen and Alder there.\n\nHow: crouched, you are harder to see and hear. You will need it at the Force.",
-       "marker": {"place_id": "core:place/fernhold", "radius": 260},
+       "journal": "Before the Force, Rosen wants you to see where the thornhounds are coming from.\n\nYou can hit what you aim at. They come from the Briar, the wall of thorn the Oroth grew to keep the Hush in the south. Her father Alder walks it every morning.\n\nGet up on Nettle, the pony Rosen has given you, and ride out east of the lodge along the Thornmarch road, the way to the Briar. They are waiting by the road a long bowshot out, looking along it to the wall. Go the last of it crouched, and find Rosen and Alder there.\n\nHow: crouched, you are harder to see and hear. You will need it at the Force.",
+       "marker": {"place_id": "core:place/fernhold", "radius": 200},
        "objectives": [
          {"type": "act", "target": "mount", "against": "core:mount/rosen_pony", "spot": "nettle_tether", "text": "Get up on Nettle {key:interact}, behind the shooting line"},
          {"type": "act", "target": "sneak", "count": 1, "where": "core:place/fernhold", "text": "Go quietly: crouch {key:sneak}"},
-         {"type": "talk", "target": "core:npc/alder_wyke", "topic": "count_the_grey", "text": "Find Alder Wyke on the Briar, north-west of the lodge, and watch him count"}
+         {"type": "talk", "target": "core:npc/alder_wyke", "topic": "count_the_grey", "text": "Find Alder Wyke by the Thornmarch road east of the lodge, and watch him count"}
        ],
        "on_enter": [],
        "on_complete": [{"set_flag": "seen_briar_grey"}, {"say": ["core:npc/rosen_wyke", "That's why they're out. The wall's going grey and what lived in it is leaving. Now the Force: they come down to drink at evening. I'll be on the high ground.", 1.0, 7.0]}]},

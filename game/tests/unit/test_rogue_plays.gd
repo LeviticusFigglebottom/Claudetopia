@@ -321,6 +321,13 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 			Stealth.instance.player_light(), Stealth.weather_sight(), look, tella.seeing_range(), tella.keen,
 			str(tella.get_node_or_null("WatchLantern") != null)])
 	assert_true(absf(angle_difference(deg_to_rad(look), deg_to_rad(150.0))) < deg_to_rad(25.0), "she looks down the way (%.0f)" % look)
+	# the night opens on Sauve's word, a few paces off: what it is for, and why (the owner's
+	# playtest, 2026-09-30); said, the box
+	var teacher := await _until(func() -> bool: return NpcRegistry.instance.actor(SAUVE) != null, 15.0)
+	assert_true(teacher, "Sauve on the boards")
+	await _come_up_to(NpcRegistry.instance.actor(SAUVE) as Node3D, 15.0)
+	assert_true(await _talk_and_choose(SAUVE, "I'll be on my way"), "Sauve is spoken to")
+	assert_eq(_stage(), "the_strongbox", "and once he has said what the night is for, the box")
 	# the start is behind her, and the HUD's eye reads her, not the teacher at your shoulder
 	await _crouched()
 	assert_true(bool(Social.quests.call("objective_done", FIRST, 0)), "crouched: the first lesson")

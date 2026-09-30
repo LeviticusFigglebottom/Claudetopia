@@ -216,6 +216,60 @@ func test_the_player_holds_what_is_equipped() -> void:
 ## A sheathed weapon hangs where it should, clear of the body standing: a blade at the left hip
 ## with its grip up and forward and its point down and back, a greatsword and a bow across the
 ## back, and nothing of any of them inside the torso or the left thigh.
+## A torch (the owner's playtest, 2026-09-30: "a torch in every start"): the lantern key takes it
+## up burning in the left hand, the bow going on the back meanwhile; its fire is drawn on it and its
+## light burns at its head; it is held up where it lights the way and, in first person, where the
+## eyes see it; the key again puts it out and gives the bow back.
+func test_a_torch_is_taken_up_burning_and_put_out_again() -> void:
+	if not _rig_built():
+		return
+	await _stand()
+	var body := player.body_model()
+	var bag := player.get_node("Inventory") as Inventory
+	var eq := player.get_node("Equipment") as Equipment
+	bag.add("core:item/hunting_bow", 1)
+	bag.add("core:item/torch", 1)
+	assert_true(eq.equip("core:item/hunting_bow", "main_hand"), "the bow in hand")
+	await _ticks(1)
+	assert_true(player.toggle_lantern(), "the lantern key takes the torch up, lit")
+	await _ticks(2)
+	assert_eq(eq.item_id("off_hand"), "core:item/torch", "the torch in the off hand")
+	assert_eq(eq.item_id("main_hand"), "", "the bow put by while the torch is up")
+	var torch := HeldItems.torch_of(body)
+	assert_true(torch != null, "the torch drawn in the left hand")
+	if torch == null:
+		return
+	assert_true(torch.lit and torch.get_node("Flame").visible, "and burning")
+	var light := torch.light
+	assert_true(light != null and light.visible and light.light_energy > 1.0 and light.omni_range >= 9.0, "a light to see by")
+	var head := torch.global_transform * Vector3(0.0, HeldTorch.FLAME_Y, 0.0)
+	if light != null:
+		assert_true(light.global_position.distance_to(head) < 0.35, "burning at the torch's head (%.2f m off)" % light.global_position.distance_to(head))
+	# held up: settle a few drawn frames for the pose
+	for i in 20:
+		await _tree().process_frame
+	var up := torch.global_transform.basis.y.normalized()
+	assert_gt(up.y, 0.6, "held head up, not hanging (%.2f)" % up.y)
+	var feet: float = (body as Node3D).global_position.y
+	var hip := feet + 0.9
+	var fire_y := (torch.global_transform * Vector3(0.0, HeldTorch.FLAME_Y, 0.0)).y
+	assert_gt(fire_y, hip, "the fire above the hip (%.2f over the feet)" % (fire_y - feet))
+	# in first person, in the picture
+	player.camera_rig.set_first_person(true)
+	for i in 40:
+		await _tree().process_frame
+	var cam := player.camera_rig.camera
+	var fire := torch.global_transform * Vector3(0.0, HeldTorch.FLAME_Y, 0.0)
+	assert_true(not cam.is_position_behind(fire) and cam.is_position_in_frustum(fire), "the torch's fire seen in first person")
+	player.camera_rig.set_first_person(false)
+	# put out, and the bow back
+	assert_false(player.toggle_lantern(), "the key again puts it out")
+	await _ticks(2)
+	assert_eq(eq.item_id("off_hand"), "", "the torch back in the bag")
+	assert_eq(eq.item_id("main_hand"), "core:item/hunting_bow", "and the bow back in the hand")
+	assert_true(HeldItems.torch_of(body) == null, "no torch in the hand")
+
+
 func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 	if not _rig_built():
 		return

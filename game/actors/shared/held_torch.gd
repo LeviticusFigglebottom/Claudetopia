@@ -1,7 +1,7 @@
 class_name HeldTorch
 extends Node3D
 ## A pitch torch in the hand (HeldItems, for an item tagged `torch`): an ash haft, a pitch-soaked
-## wrap at its head and, while it is lit, a flame standing up off the wrap. It is built here, not by
+## wrapping at its head and, while it is lit, a flame standing up off the wrapping. It is built here, not by
 ## the forge, because what it is is mostly the fire.
 ##
 ## Like every held thing it is made where the hand holds it: the grip's middle at the origin and
@@ -9,7 +9,7 @@ extends Node3D
 ## carrier's (Player's CarriedLight, with the StealthLight that makes a lit torch cost you the
 ## dark), stood at the torch's head in the same hand; this flickers it while the flame burns.
 
-## Where the wrap's middle is, and the flame's foot, along the haft from the grip (m).
+## Where the wrapping's middle is, and the flame's foot, along the haft from the grip (m).
 const HEAD_Y := 0.34
 const FLAME_Y := 0.42
 const HAFT_LENGTH := 0.56
@@ -46,19 +46,19 @@ func _ready() -> void:
 	haft.position.y = HAFT_LENGTH * 0.5 - HAFT_BELOW
 	haft.material_override = _mat(ASH, 0.85)
 	add_child(haft)
-	var wrap := MeshInstance3D.new()
-	wrap.name = "Wrap"
+	var wrapping := MeshInstance3D.new()
+	wrapping.name = "Wrap"
 	var wm := CylinderMesh.new()
 	wm.top_radius = 0.04
 	wm.bottom_radius = 0.032
 	wm.height = 0.14
 	wm.radial_segments = 10
-	wrap.mesh = wm
-	wrap.position.y = HEAD_Y
-	wrap.material_override = _mat(PITCH, 0.95)
-	add_child(wrap)
-	# two turns of cord round the wrap
-	for y in [HEAD_Y - 0.045, HEAD_Y + 0.03]:
+	wrapping.mesh = wm
+	wrapping.position.y = HEAD_Y
+	wrapping.material_override = _mat(PITCH, 0.95)
+	add_child(wrapping)
+	# two turns of cord round the wrapping
+	for y: float in [HEAD_Y - 0.045, HEAD_Y + 0.03]:
 		var cord := MeshInstance3D.new()
 		var cm := TorusMesh.new()
 		cm.inner_radius = 0.036
