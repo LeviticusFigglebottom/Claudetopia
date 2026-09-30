@@ -930,7 +930,6 @@ func _draw_all() -> void:
 		(_inst[kind] as MultiMeshInstance3D).custom_aabb = box
 		(_inst[kind] as MultiMeshInstance3D).visible = not list.is_empty()
 		var at := PackedVector3Array()
-		var buf := _buffer_for(kind, mm)
 		for i in list.size():
 			var b: Dictionary = list[i]
 			var xb := Basis.from_euler(Vector3(float(b["pitch"]), float(b["yaw"]), float(b["bank"])), EULER_ORDER_YXZ)
@@ -938,34 +937,10 @@ func _draw_all() -> void:
 			if int(b["state"]) == State.SIT and draft > 0.0 and _wet(pos.x, pos.z):
 				# a bird on the water sits in it, and rides it
 				pos.y += sin(_time * 1.3 + float(b["phase"]) * 9.0) * 0.012 - draft
-			var xf := Transform3D(xb, pos)
-			var cd := Color(fmod(float(b["phase"]), 1.0), float(b["beat"]), float(b["open"]), float(b["tuck"]))
-			var o := i * _STRIDE
-			var xb2: Basis = xf.basis
-			buf[o] = xb2.x.x
-			buf[o + 1] = xb2.y.x
-			buf[o + 2] = xb2.z.x
-			buf[o + 3] = xf.origin.x
-			buf[o + 4] = xb2.x.y
-			buf[o + 5] = xb2.y.y
-			buf[o + 6] = xb2.z.y
-			buf[o + 7] = xf.origin.y
-			buf[o + 8] = xb2.x.z
-			buf[o + 9] = xb2.y.z
-			buf[o + 10] = xb2.z.z
-			buf[o + 11] = xf.origin.z
-			buf[o + 12] = 1.0
-			buf[o + 13] = 1.0
-			buf[o + 14] = 1.0
-			buf[o + 15] = 1.0
-			buf[o + 16] = cd.r
-			buf[o + 17] = cd.g
-			buf[o + 18] = cd.b
-			buf[o + 19] = cd.a
+			mm.set_instance_transform(i, Transform3D(xb, pos))
+			mm.set_instance_color(i, Color.WHITE)
 			at.append(pos)
-		if not list.is_empty():
-			mm.buffer = buf
-			_buffers[kind] = buf
+			mm.set_instance_custom_data(i, Color(fmod(float(b["phase"]), 1.0), float(b["beat"]), float(b["open"]), float(b["tuck"])))
 		drawn[kind] = at
 	var live: Array = []
 	for rise in _rises:
@@ -976,60 +951,13 @@ func _draw_all() -> void:
 	_rings.visible_instance_count = live.size()
 	_rings_inst.custom_aabb = box
 	_rings_inst.visible = not live.is_empty()
-	var rbuf := _buffer_for("_rises", _rings)
 	for i in live.size():
 		var rise: Dictionary = live[i]
 		var at: Vector3 = rise["at"]
 		var s := 3.2 * float(rise["size"])
-		var xf := Transform3D(Basis().scaled(Vector3(s, 1.0, s)), at + Vector3(0.0, 0.03, 0.0))
-		var cd := Color(float(rise["t"]) / RISE_SECONDS, float(rise["size"]), 0.0, 0.0)
-		var o := i * _STRIDE
-		var xb2: Basis = xf.basis
-		rbuf[o] = xb2.x.x
-		rbuf[o + 1] = xb2.y.x
-		rbuf[o + 2] = xb2.z.x
-		rbuf[o + 3] = xf.origin.x
-		rbuf[o + 4] = xb2.x.y
-		rbuf[o + 5] = xb2.y.y
-		rbuf[o + 6] = xb2.z.y
-		rbuf[o + 7] = xf.origin.y
-		rbuf[o + 8] = xb2.x.z
-		rbuf[o + 9] = xb2.y.z
-		rbuf[o + 10] = xb2.z.z
-		rbuf[o + 11] = xf.origin.z
-		rbuf[o + 12] = 1.0
-		rbuf[o + 13] = 1.0
-		rbuf[o + 14] = 1.0
-		rbuf[o + 15] = 1.0
-		rbuf[o + 16] = cd.r
-		rbuf[o + 17] = cd.g
-		rbuf[o + 18] = cd.b
-		rbuf[o + 19] = cd.a
-	if not live.is_empty():
-		_rings.buffer = rbuf
-		_buffers["_rises"] = rbuf
-
-
-## Each MultiMesh's instances written into one buffer and handed over whole, a frame at a time: a
-## transform, a colour and custom data set one instance at a time were three calls to the renderer
-## for every bird on every frame. The layout is the MultiMesh's own (TRANSFORM_3D with colours and
-## custom data): twelve floats of transform, row by row, then the colour (white, see _build_draws),
-## then the custom data. Written into a local and kept, so it holds the undrawn tail as it was.
-const _STRIDE := 20
-var _buffers: Dictionary = {}          # kind -> PackedFloat32Array, kept at the MultiMesh's size
-
-
-func _buffer_for(key: String, mm: MultiMesh) -> PackedFloat32Array:
-	var buf: PackedFloat32Array = _buffers.get(key, PackedFloat32Array())
-	if buf.size() != mm.instance_count * _STRIDE:
-		# what the MultiMesh holds already, so the instances past the drawn ones stay as they were
-		buf = mm.buffer
-		if buf.size() != mm.instance_count * _STRIDE:
-			buf.resize(mm.instance_count * _STRIDE)
-		_buffers[key] = buf
-	return buf
-
-
+		_rings.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(s, 1.0, s)), at + Vector3(0.0, 0.03, 0.0)))
+		_rings.set_instance_color(i, Color.WHITE)
+		_rings.set_instance_custom_data(i, Color(float(rise["t"]) / RISE_SECONDS, float(rise["size"]), 0.0, 0.0))
 
 
 # --- for tests and the console ------------------------------------------------------------------
