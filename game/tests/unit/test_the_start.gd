@@ -829,6 +829,10 @@ func test_the_warden_is_held_at_her_fire_until_you_walk_north() -> void:
 func test_the_warden_speaks_first_and_the_hud_says_what_to_do() -> void:
 	var quests: Node = Social.quests
 	quests.call("reset_for_new_game")
+	# a new character's renown: tests before this one discover places (renown for each), and past 300
+	# Wren greets a famous stranger with Gullhithe's news, not this moment's line
+	var renown_was: int = Social.standing.renown_value
+	Social.standing.renown_value = 0
 	quests.call("start", NAMING, "wake")
 	# by day: after dark she has a line about counting bells that is just as much hers
 	var hour := WorldClock.time_hours
@@ -853,6 +857,8 @@ func test_the_warden_speaks_first_and_the_hud_says_what_to_do() -> void:
 
 ## The stair the camp lays is the stair the descent counts: its line runs from the camp down the
 ## bank, it has forty steps and more, and the fortieth is a way down it, below the head.
+	Social.standing.renown_value = renown_was
+
 func test_the_stair_is_counted_step_by_step_to_the_fortieth() -> void:
 	if provider == null:
 		skip("no built world")
