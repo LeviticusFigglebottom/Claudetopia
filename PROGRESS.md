@@ -13241,3 +13241,68 @@ Tower 8. The new places' own cost: 5-114 draws, 1-216 k triangles (the Horn Pale
   Pellow's Pale.
 - Sheets for the flagship places (see above): not made; a render of Briarwold is an hour.
 - `poi-probe` aborts on exit after writing its file ("Aborted" from run.sh), harmless here.
+
+## The Briar crash: a NaN villager by a pad-dammed pit at Fernhold (2026-09-30)
+
+The owner's debugger (Ranger start, Fernhold) showed six faults; each is now fixed at its source.
+
+- **The crash (NaN position -> height map index -2^63).** `TerrainProvider.get_height`/`sample_height`
+  now answer a non-finite point with a safe height (and say so once) instead of `clampf(NaN)` ->
+  `int(NaN)`. New `BodyGuard` (game/actors/shared/body_guard.gd): each body with its own gravity or
+  snap (Npc, and through `Actor.guard_body` the Enemy and the Player) is put back on its last good
+  ground (or its home/spawn) with its velocity zeroed when its position/velocity is not finite, it is
+  20 km out, 30 m under the ground, or has fallen more than 6 s; warned once per body. What let a NaN
+  run on: `maxf(NaN, -INF)` is -INF in Godot, so an NPC's snap `maxf(h, _raised_floor())` sank the body
+  to -INF whenever a height came back NaN, and the next move put NaN into x/z; the snap now keeps its
+  own height for a non-finite one. `Npc.set_move_target` refuses a non-finite goal. The exact first NaN
+  was not reproduced headless (no divide-by-zero found in steering, routes or slots: all guarded).
+- **Settlement `_on_ground` outside the tree.** A stepwise raise went on after the town's cell took it
+  out of the tree; every `global_position` in settlement.gd is now `_origin()` (read while in the
+  tree, kept after), and `_pace` waits for `tree_entered` rather than building on out of the tree.
+  New test: a village taken out mid-raise and put back finishes identical to one raised at once.
+- **`[Music] missing stream`.** The four class-start films name their region's bed
+  (`start_ranger` -> `core:music/briarwold`), which has stems but no `main`. `MusicDirector.overlay_path`
+  now plays a bed as its region's first day piece (`<bed>_day_2`), else its melody; a cue with nothing
+  to play warns once with its id; `_load_stream` warns once per path. Test checks every film's cue
+  against the files on disk (5 films).
+- **Jolt "exceeded the maximum number of jobs".** Not reproduced headless. Jolt's job pool is a fixed
+  engine constant (cMaxPhysicsJobs), not a project setting (none of the Jolt limits are overridden in
+  project.godot); the warning is printed once while it waits, it is not the crash. It came at 1:05,
+  under the Ranger's film while Fernhold and its cells stood up: every settlement box (wall lengths,
+  rails, stacks, posts) is a StaticBody3D of its own, hundreds per town. Merging them into one body per
+  yard was tried and reverted: test_settlements reads houses, palisade lengths and ring stakes as
+  bodies of their own (9 tests), and it is not worth that without seeing it help. A NaN body, the other
+  way to flood the broadphase, is now put back (BodyGuard).
+- **Nav bake precision spam.** NpcNav 1.6/0.45 -> 1.65/0.3 and site interiors 1.8/0.45 -> 2.0/0.25:
+  exactly what Recast was already baking (ceil/floor to cell_height in float), so nothing walkable
+  changes and the warnings stop. Note the intended climb (0.45) was never what was baked.
+- **The massive pit.** A builder artefact: a dry closed hollow 52 m deep, ~60 m across, at (3272, 216),
+  78 m west of Fernhold (floor 188 m, the lodge pad at 274 m). Fernhold's pad was levelled across the
+  head of a stream valley on the High Wold's edge, and its western skirt (84 m of fill over 33 m) closed
+  the valley's way out. Not a designed feature (no POI, river, lake or atlas valley there). New
+  `roads.drain_pad_dams`, run by build_world after the last pads (and on a reuse build): every dry
+  closed hollow deeper than 6 m that a pad's skirt touches is filled back to 1.5 m under its spill,
+  held off roads. On the built world's 8 m map it drains 62 such hollows at 60 pads (Fernhold 51.5 m,
+  Thornmarch 36.9, Clanless Camp 36.0, Frostmother's Cradle 35.2, ...), about 105 ha raised by 8 m on
+  average; at Fernhold it leaves the pit 1.5 m deep.
+
+Tests: world `test_pad_dams` 3/3 (new), `test_falls` pass, `test_roads` 27 pass / 1 fail
+(pre-existing content: `poachers_cache` wayside pad 22 m, not 14). Godot: test_npc_body_guard 4/4
+(new), test_settlement_steps 2/2 (1 new), test_settlements all, test_music_director all (2 new),
+test_cinematic_player, test_npc_actor, test_npc_getting_round, test_npc_passing, test_enemy_attack_motion,
+test_swimming all pass (last run 47/47, 0 script errors; the earlier batches 74 and 61 tests, whose only
+failures were the since-fixed test file and the reverted body merge).
+
+### Not done / for the coordinator
+- **The world build must be rerun** for the pit to go: `drain_pad_dams` prints "[world] pad dams: N
+  dry hollows ..." (expect ~60, Fernhold ~51 m first). Look at Fernhold's west edge and Thornmarch
+  after it; the pad's own bank (274 -> ~240 m over 33 m) stays steep. Until then the pit is in the
+  world; a body that falls in is walked out by BodyGuard only if it falls through, not if it stands on
+  the floor (the player needs the Hearthstone).
+- `player.gd` got one line (`guard_body(delta)` after the terrain snap); aim-hotbar works in that file.
+- `mount.gd` (horse-call's) is not guarded: one `body_guard.check(self, delta, is_on_floor())` after
+  its `_snap()` in `_integrate` would do it.
+- The other 20-odd deep dry hollows not at a pad (mountain cirques in the north, the High Wold's
+  granite stair) are left as they are.
+- No render made: the pit is read from the heights (profiles in this section), and the fix needs the
+  rebuild before there is anything to see.

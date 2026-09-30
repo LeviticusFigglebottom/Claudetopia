@@ -375,6 +375,8 @@ func _physics_process(delta: float) -> void:
 	ScatterSolids.unstick(self, wanted, delta)
 	if not floating:
 		snap_to_terrain()
+	if guard_body(delta, func() -> Vector3: return spawn_position):
+		return
 	step_sounds(delta, -3.0 if body_kind == "humanoid" else -5.0)
 	_update_anim()
 

@@ -164,6 +164,11 @@ func runtime_levels() -> PackedFloat32Array:
 
 ## Ground height in metres at a world position.
 func get_height(x: float, z: float) -> float:
+	if not (is_finite(x) and is_finite(z)):
+		# a body whose position went to NaN or inf asks for its ground: Terrain3D's lookup and the
+		# texel index below are no place for it (the owner's Briar crash, 2026-09-30: an index of
+		# -2^63 into the height map). The caller recovers the body (BodyGuard); this answers safely.
+		return _nonfinite_height()
 	if _data != null:
 		var h: float = _data.call("get_height", Vector3(x, 0.0, z))
 		if not is_nan(h):
@@ -199,6 +204,8 @@ func texture_at(x: float, z: float) -> String:
 func sample_height(x: float, z: float) -> float:
 	if _heights.is_empty():
 		return 0.0
+	if not (is_finite(x) and is_finite(z)):
+		return _nonfinite_height()
 	var fx := clampf((x - _height_origin.x) / _spacing, 0.0, float(_grid) - 1.001)
 	var fz := clampf((z - _height_origin.y) / _spacing, 0.0, float(_grid) - 1.001)
 	var x0 := int(fx)
@@ -214,6 +221,19 @@ func sample_height(x: float, z: float) -> float:
 	if _triangles:
 		return triangle_height(h00, h10, h01, h11, tx, tz)
 	return lerpf(lerpf(h00, h10, tx), lerpf(h01, h11, tx), tz)
+
+
+## What a non-finite point is answered: the ground at the middle of the map, and said once.
+var _warned_nonfinite := false
+
+func _nonfinite_height() -> float:
+	if not _warned_nonfinite:
+		_warned_nonfinite = true
+		push_warning("TerrainProvider: a height was asked at a non-finite point (a body's position went to NaN or inf)")
+	if _heights.is_empty() or _grid <= 0:
+		return 0.0
+	var mid := (_grid >> 1) * _grid + (_grid >> 1)
+	return _heights[clampi(mid, 0, _heights.size() - 1)]
 
 
 ## A point on a quad split along the diagonal from (1, 0) to (0, 1): the split Godot's

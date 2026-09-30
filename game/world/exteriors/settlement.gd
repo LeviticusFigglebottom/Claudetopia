@@ -304,7 +304,7 @@ func _ready() -> void:
 		_slice = WorldPace.Slice.new()
 	await _raise()
 	if not is_inside_tree():
-		return
+		await tree_entered
 	if _slice != null:
 		# what was done since the last pause is this frame's too
 		_slice.due("town_rest")
@@ -331,7 +331,7 @@ func _raise() -> void:
 		# town's own: up to 90 ms of one frame here, TRIAGE item 36's second pass); the same plan
 		_slice.due("town_street")
 		var out := {}
-		var at := Vector2(global_position.x, global_position.z)
+		var at := Vector2(_origin().x, _origin().z)
 		var given := street
 		var task := WorkerThreadPool.add_task(func() -> void:
 			var sp: StreetPlan = given if given != null else StreetPlan.make(place_id, kind, at, pad_radius, roads)
@@ -342,14 +342,15 @@ func _raise() -> void:
 		while not WorkerThreadPool.is_task_completed(task):
 			await WorldPace.next_frame()
 		WorkerThreadPool.wait_for_task_completion(task)
-		_slice.t0 = Time.get_ticks_usec()
 		if not is_inside_tree():
-			return
+			# let go while the plan was drawn: finished when it is back (see `_pace`)
+			await tree_entered
+		_slice.t0 = Time.get_ticks_usec()
 		street = out["street"]
 		added = int(out["added"])
 	else:
 		if street == null:
-			street = StreetPlan.make(place_id, kind, Vector2(global_position.x, global_position.z),
+			street = StreetPlan.make(place_id, kind, Vector2(_origin().x, _origin().z),
 					pad_radius, roads)
 		for r in taken:
 			street.reserve_rect(r)
@@ -407,6 +408,26 @@ var _slice: WorldPace.Slice = null
 func _pace(what := "") -> void:
 	if _slice != null:
 		await _slice.pace("town_" + what)
+		# taken out of the tree between two pieces (its cell let go while it stood up): the rest waits
+		# until it is back, rather than building on into a town nobody holds
+		if not is_inside_tree() and not is_queued_for_deletion():
+			await tree_entered
+			_slice.t0 = Time.get_ticks_usec()
+
+
+## Where this town stands in the world. Read from the tree while the node is in it and kept, so a
+## stepwise raise that runs on over frames never asks a global transform of a node its cell has
+## taken out of the tree: `_on_ground` did, from `_wall` under `_fence` under `_backland`, in the
+## owner's Briar crash (2026-09-30). Before it has ever been in a tree, its own position (a town is
+## placed by its world position under an unmoved parent).
+var _origin_at := Vector3.INF
+
+func _origin() -> Vector3:
+	if is_inside_tree():
+		_origin_at = global_position
+	elif _origin_at == Vector3.INF:
+		return position
+	return _origin_at
 
 
 ## The plots the fabric builds on: everything the plan holds that is not a real house.
@@ -484,9 +505,9 @@ func _frame_of(b: Dictionary) -> Transform3D:
 	for p in StreetPlan.corners(b):
 		low = minf(low, _ground_at(p))
 	var mid := _ground_at(c)
-	var y := minf(mid, low + 0.25) - global_position.y
+	var y := minf(mid, low + 0.25) - _origin().y
 	var orient := Basis(Vector3(u.x, 0.0, u.y), Vector3.UP, Vector3(v.x, 0.0, v.y))
-	return Transform3D(orient, Vector3(c.x - global_position.x, y, c.y - global_position.z))
+	return Transform3D(orient, Vector3(c.x - _origin().x, y, c.y - _origin().z))
 
 
 ## `_foot_lift`: how far past its ends a piece's footprint is taken (the pieces overlap the next), and
@@ -797,7 +818,7 @@ func _garden(fabric: FabricMesh, h: Dictionary, g: Dictionary) -> void:
 			# pad's edge had one end of its bed in the bank (tools_gd/paving_probe.gd)
 			var head := _ground_at(mid + v * (bed_len * 0.5))
 			var foot := _ground_at(mid - v * (bed_len * 0.5))
-			p.y = maxf(p.y, (head + foot) * 0.5 - global_position.y)
+			p.y = maxf(p.y, (head + foot) * 0.5 - _origin().y)
 			var along := Basis(Vector3.UP, atan2(-v.y, v.x)) * Basis(Vector3.BACK, atan2(head - foot, bed_len))
 			# a bed is a box, set in the ground: it carries the far rings' lift as the made ground does
 			fabric.lift = _foot_lift(mid - v * (bed_len * 0.5), mid + v * (bed_len * 0.5), 0.45)
@@ -882,7 +903,7 @@ func _crop(fabric: FabricMesh, crop: String, mid: Vector2, v: Vector2, bed_len: 
 			var head := _ground_at(mid + v * (bed_len * 0.5))
 			var foot := _ground_at(mid - v * (bed_len * 0.5))
 			var at := _on_ground(mid)
-			at.y = maxf(at.y, (head + foot) * 0.5 - global_position.y)
+			at.y = maxf(at.y, (head + foot) * 0.5 - _origin().y)
 			var along := Basis(Vector3.UP, atan2(-v.y, v.x)) * Basis(Vector3.BACK, atan2(head - foot, bed_len))
 			fabric.box("earth", Transform3D(along * Basis(Vector3.RIGHT, PI * 0.25), at + Vector3(0.0, top, 0.0)),
 					Vector3(bed_len * 0.96, 0.3, 0.3), Color(0.62, 0.54, 0.46))
@@ -1157,7 +1178,7 @@ func _far_lift(q: Array, lift: float) -> Vector3:
 	var w: Array[Vector3] = []
 	var lo := INF
 	for c in q:
-		w.append((c as Vector3) + global_position)
+		w.append((c as Vector3) + _origin())
 		lo = minf(lo, w[-1].y)
 	var x0 := minf(minf(w[0].x, w[1].x), minf(w[2].x, w[3].x))
 	var x1 := maxf(maxf(w[0].x, w[1].x), maxf(w[2].x, w[3].x))
@@ -1303,7 +1324,7 @@ func _ring_surface(s: Vector2, step: float) -> float:
 ## is nearly all of a town), along its edges and its diagonal (the line its two triangles meet on)
 ## every GROUND_EDGE_STEP_M.
 func _ground_short(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, q: Array, lift: float) -> float:
-	var gy := global_position.y
+	var gy := _origin().y
 	var lo := INF
 	var hi := -INF
 	for c in q:
@@ -1334,10 +1355,10 @@ func _ground_short(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, q: Array,
 			var s := e0.lerp(e1, float(k) / float(n))
 			at.append(s)
 			drawn.append(_drawn_ground(s))
-	var a := (q[0] as Vector3) + global_position
-	var b := (q[1] as Vector3) + global_position
-	var c3 := (q[2] as Vector3) + global_position
-	var d := (q[3] as Vector3) + global_position
+	var a := (q[0] as Vector3) + _origin()
+	var b := (q[1] as Vector3) + _origin()
+	var c3 := (q[2] as Vector3) + _origin()
+	var d := (q[3] as Vector3) + _origin()
 	var short := 0.0
 	for i in at.size():
 		# on the patch's triangles (a, b, c) and (a, c, d), as FabricMesh.quad draws it
@@ -2033,7 +2054,7 @@ func _fort(fabric: FabricMesh) -> void:
 			for p in StreetPlan.corners(g):
 				r = maxf(r, p.distance_to(c) + FORT_CLEAR_M * 0.6)
 	r = minf(r, pad_radius - FORT_EDGE_M)
-	var kit := PoiKit.new(self, global_position, pad_radius, str(REGION_OF_CULTURE.get(culture, "core:region/hearthvale")),
+	var kit := PoiKit.new(self, _origin(), pad_radius, str(REGION_OF_CULTURE.get(culture, "core:region/hearthvale")),
 			false, "fort:" + place_id)
 	var m := PoiMasonry.new(kit)
 	var stone := m.begin()
@@ -2148,7 +2169,7 @@ func _fort_tower(m: PoiMasonry, st: SurfaceTool, at: Vector2, yaw: float, size: 
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			low = minf(low, _ground_at(at + Vector2(size.x * 0.5 * float(sx), size.z * 0.5 * float(sz)).rotated(-yaw)))
-	var foot := Vector3(at.x - global_position.x, low - global_position.y - 0.4, at.y - global_position.z)
+	var foot := Vector3(at.x - _origin().x, low - _origin().y - 0.4, at.y - _origin().z)
 	var b := Basis(Vector3.UP, yaw)
 	# the body, battered a little: a wider plinth course at its foot
 	m.block(st, Transform3D(b, foot + Vector3(0.0, 0.7, 0.0)), Vector3(size.x + 0.5, 1.4, size.z + 0.5))
@@ -2290,13 +2311,13 @@ func _training_ground(fabric: FabricMesh, yard: Vector2, dir: Vector2, across: V
 	# of the yard, and as near the pells as that allows
 	var avoid: Array[Vector2] = []
 	for f in pells:
-		avoid.append(Vector2(f.x + global_position.x, f.z + global_position.z))
+		avoid.append(Vector2(f.x + _origin().x, f.z + _origin().z))
 	for t in taken_at:
 		avoid.append(t as Vector2)
 	for key in ["well", "cross", "board", "watch", "gate_0", "gate_1", "gate_2", "gate_3"]:
 		if _features.has(key):
 			var w: Vector3 = _features[key]
-			avoid.append(Vector2(w.x + global_position.x, w.z + global_position.z))
+			avoid.append(Vector2(w.x + _origin().x, w.z + _origin().z))
 	var ring := _ring_spot(yard, avoid)
 	if ring != Vector2.INF:
 		_sparring_ring(fabric, ring, yard)
@@ -2308,7 +2329,7 @@ func _training_ground(fabric: FabricMesh, yard: Vector2, dir: Vector2, across: V
 	_spot("recruit_start", yard + dir * 3.0, yard)
 	if not pells.is_empty():
 		var last: Vector3 = pells[pells.size() - 1]
-		var at := Vector2(last.x + global_position.x, last.z + global_position.z)
+		var at := Vector2(last.x + _origin().x, last.z + _origin().z)
 		_spot("tam_yard", at + dir * 1.1, at)
 	if ring != Vector2.INF:
 		_spot("dole_ring", ring - toward * 1.4, ring + toward * RING_R)
@@ -2750,7 +2771,7 @@ static func _surface(spec: Dictionary, wear: float) -> ShaderMaterial:
 func _ground_at(at: Vector2) -> float:
 	var provider: Object = World.terrain()
 	if provider == null or not provider.has_method("get_height"):
-		return global_position.y
+		return _origin().y
 	return float(provider.call("get_height", at.x, at.y))
 
 
@@ -2758,4 +2779,4 @@ func _ground_at(at: Vector2) -> float:
 ## turned or scaled, so that is the world less its own position). Everything the fabric builds,
 ## every prop and every marker is placed in this space.
 func _on_ground(p: Vector2, lift := 0.0) -> Vector3:
-	return Vector3(p.x - global_position.x, _ground_at(p) + lift - global_position.y, p.y - global_position.z)
+	return Vector3(p.x - _origin().x, _ground_at(p) + lift - _origin().y, p.y - _origin().z)

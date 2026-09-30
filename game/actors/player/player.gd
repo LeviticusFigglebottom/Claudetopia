@@ -601,6 +601,7 @@ func _physics_process(delta: float) -> void:
 			_fall_speed = maxf(-velocity.y, 0.0)
 		move_and_slide()
 		_terrain_held = snap_to_terrain()
+		guard_body(delta)
 		_read_water()
 		# Sneaking is felt through the boots as much as it is seen: a quieter step, and a
 		# sprint's a louder one.
