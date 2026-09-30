@@ -12924,12 +12924,26 @@ sites get all of it (Skerrow's Old Ghastow uses the fort outside).
 ### Measured
 - Drops: 5 of 96 plans before, 44 of 96 after (the plan test's 8 kinds x 6 seeds x 2 sizes).
 - Kilnway way in: eye 1.9 m over the floor, roof 1.9 m over it, 43 lights in the site, 24 on.
+- On real ground (Compatibility, 1280x720): Scathe Fort 1.13-1.53 M primitives a view (the gate
+  side at 34 m is 1.53 M, just over the 1.5 M budget), the Kilnway 1.78-2.02 M (the heath's own
+  scatter and horizon are most of that; the site's rise is one mesh).
 
 ### Tests
-TESTS_LINE
+`./run.sh test --filter=test_sites,test_pois,test_poi_kinds,test_interiors,test_content_db`: 80 tests,
+0 failed (the one logged error is test_interiors' deliberate unknown interior), no growth in the
+GDScript warnings. test_sites is 11 tests, 4 of them new: every kind at 3 seeds built and walked
+to every room (24 of 24; the old check would have called 11 of them unwalkable), a written site
+with a ledge built and reached at 5 seeds, the fallen staying dead in the fort and the undercroft
+until a rest, the lava mouth open from its trench to the door round the bend; the plan test now
+asks for drops in 30% of plans (44 of 96), the fort test for weathered stone carrying the ground's
+height and its gatehouse, keep, fallen merlons, pentice and trodden yard. A paced build's longest
+piece: 9-34 ms (the plan's making; 222 ms before the drop search was bounded).
 
 Sheets (before/after): `docs/review/sites/scathe_fort_sheet_before.jpg`, `scathe_fort_sheet.jpg`,
-`the_kilnway_sheet_before.jpg`, `the_kilnway_sheet.jpg`, WORLD_LINE
+`the_kilnway_sheet_before.jpg`, `the_kilnway_sheet.jpg`, and the two on real ground at their sites
+(`sites_world_sheet.jpg`, `tools/capture/plans/sites_showcase.json` with both previewed on their
+pads): Scathe's yard clear of the build's trees, the fort on the down; the Kilnway's rise going
+into the heath with no edge by day.
 
 ### Not done / for the coordinator
 - The Kilnway's trench is cut into a rise laid over the ground, since the land cannot be dug at
@@ -12952,4 +12966,10 @@ Sheets (before/after): `docs/review/sites/scathe_fort_sheet_before.jpg`, `scathe
   keep 811 and 1044) have a seam where a sloped passage meets a room: the cause in the bake (cell
   height against the ramp's steps?) is not found; the links cover it for foes, and the player is not
   held to the mesh.
-- The stockade's primitive count was not re-measured with `poi_sheet.py` (no run to spare).
+- The stockade's primitive count was not re-measured with `poi_sheet.py` (no run to spare); Scathe's
+  gate-side view is 1.53 M, just over budget: the next look is the shadow casters (every merlon
+  and prop casts in each split) and the yard's props.
+- The Kilnway on real ground: the capture's bearings do not face its trench, so the mouth is seen
+  only on the flat pad; in evening light its rise's soil reads a shade lighter than the burnt heath
+  round it (the terrain's colour map, which the rise's soil does not have). On the flat pad the
+  rise's far edge shows as a faint line.

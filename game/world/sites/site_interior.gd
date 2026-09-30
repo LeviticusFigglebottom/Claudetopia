@@ -369,7 +369,16 @@ static func passage_links(p: SitePlan) -> Array:
 		var kind := str(l["kind"])
 		if kind in ["secret", "shortcut"]:
 			continue
-		var pts: Array = l["points"]
+		# from room middle to room middle (always on the mesh; a doorway's own point can sit just off
+		# it), through the passage's bends
+		var pts: Array = [(p.room(str(l["a"]))["centre"] as Vector3) + Vector3.UP * 0.05]
+		var inner: Array = l["points"]
+		for i in range(1, inner.size() - 1):
+			pts.append(inner[i])
+		if kind == "drop":
+			# the lip, where the fall is
+			pts.append(inner[-1] if (p.room(str(l["b"]))["centre"] as Vector3).y < (inner[-1] as Vector3).y else inner[0])
+		pts.append((p.room(str(l["b"]))["centre"] as Vector3) + Vector3.UP * 0.05)
 		var down := kind == "drop"
 		for i in range(1, pts.size()):
 			var a: Vector3 = pts[i - 1]
