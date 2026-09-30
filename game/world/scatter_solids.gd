@@ -228,11 +228,25 @@ func build(eye: Vector3, budget_usec: int = BUDGET_USEC) -> int:
 	stats["stood_us_total"] += us
 	stats["stood_us_max"] = maxi(int(stats["stood_us_max"]), us)
 	stats["ticks"] += 1
-	(stats["tick_us"] as Array).append(us)
+	_keep_last(stats["tick_us"], us)
 	# what the tick did, beside what it took: on a loaded machine a tick's wall time is as much the
 	# other processes as this one, and the work says which
-	(stats["tick_log"] as Array).append([us, stood, joined_shapes, int(stats["assets"]) - assets_before, sort_us])
+	_keep_last(stats["tick_log"], [us, stood, joined_shapes, int(stats["assets"]) - assets_before, sort_us])
 	return stood
+
+
+## The per-tick logs are kept to their last STATS_KEEP entries: they grew by one every tick that
+## stood anything for as long as the game ran, a few megabytes an hour of travel that nothing read
+## outside the probes (which read the last run's worth).
+const STATS_KEEP := 8192
+
+
+static func _keep_last(entries: Array, entry: Variant) -> void:
+	entries.append(entry)
+	if entries.size() > STATS_KEEP * 2:
+		var newest := entries.slice(entries.size() - STATS_KEEP)
+		entries.clear()
+		entries.append_array(newest)
 
 
 func _join(job: Job) -> void:
@@ -248,7 +262,7 @@ func _join(job: Job) -> void:
 			_joins = _joins.slice(_joins.size() - JOIN_LOG)
 	if jus > 2000:
 		# a slow join, and what the block held: for the probe
-		(stats["slow_joins"] as Array).append([jus, job.shapes, job.paths.map(func(p: Variant) -> String: return str(p).get_file()), job.extra.size()])
+		_keep_last(stats["slow_joins"], [jus, job.shapes, job.paths.map(func(p: Variant) -> String: return str(p).get_file()), job.extra.size()])
 	job.in_space = true
 
 
