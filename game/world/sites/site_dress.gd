@@ -93,6 +93,8 @@ func _light_budget() -> void:
 				on = here
 				break
 		if over < 0:
+			for l in lights:
+				l.set_meta("budget_on", l.visible)
 			return
 		on.sort_custom(func(a: OmniLight3D, b: OmniLight3D) -> bool: return a.omni_range > b.omni_range)
 		var widest: OmniLight3D = on[0]
@@ -237,6 +239,24 @@ func _way_out() -> void:
 		_lamp(plan.exit_glow + back * 2.5, Color(0.86, 0.9, 0.98), 2.2, 9.0)
 		# and the day's light where the throat opens into the room
 		_lamp(plan.exit_at + back * 1.5 + Vector3.UP * 2.2, Color(0.8, 0.84, 0.92), 2.2, 11.0)
+		# the day falling in down the throat and across the first room's floor, fading as it goes:
+		# the first view in is the day behind you and the place's own light ahead
+		var spill := SpotLight3D.new()
+		spill.name = "DaySpill"
+		spill.position = plan.exit_glow + back * 0.8 + Vector3.DOWN * 0.3
+		var toward: Vector3 = (plan.rooms[0]["centre"] as Vector3) + back * 2.0
+		spill.look_at_from_position(spill.position, toward, Vector3.UP)
+		spill.light_color = Color(0.86, 0.9, 1.0)
+		spill.light_energy = 3.2
+		spill.spot_range = 20.0
+		spill.spot_angle = 38.0
+		spill.spot_attenuation = 1.1
+		spill.spot_angle_attenuation = 0.9
+		spill.light_specular = 0.2
+		spill.set_meta("flicker", 0.0)
+		spill.set_meta("base_energy", 3.2)
+		lights_node.add_child(spill)
+		lights.append(spill)
 	await step()
 
 
@@ -248,6 +268,9 @@ func _room(r: Dictionary) -> void:
 	var reach := Vector2(half.x, half.z).length()
 	# a cold, weak fill so the room's shape reads beyond its lamps
 	var tint := Color(0.6, 0.66, 0.8).lerp(Color(str(plan.spec.get("light_colour", "#ffb066"))), 0.3)
+	if plan.spec.has("fill_colour"):
+		# a kind lit by one hot colour (the lava tube) keeps its shadows cool, so the heat reads as heat
+		tint = Color(str(plan.spec["fill_colour"]))
 	var fill := _lamp(c + Vector3.UP * half.y * 0.7, tint, 1.0 + reach / 14.0, reach * 1.3)
 	fill.light_specular = 0.0
 	var ls: Array = plan.spec.get("lights", ["torch"])
@@ -725,7 +748,7 @@ func _ledge(r: Dictionary, z: Dictionary) -> void:
 	var c: Vector3 = r["centre"]
 	var inward := Vector3(c.x - at.x, 0.0, c.z - at.z).normalized()
 	var st := m.begin()
-	var span := float(z["span"])
+	var span := float(z.get("len", z.get("span", 6.0)))
 	var lip := at + inward * 1.7
 	for i in int(span / 2.0) + 1:
 		var p := lip + along * (float(i) * 2.0 - span * 0.5)
@@ -1069,18 +1092,34 @@ func _seal(l: Dictionary, secret: bool) -> void:
 	if secret:
 		seal.display_name = "Loose stones"
 		seal.open_prompt = "Pull the loose stones away"
-		# the region's own stones heaped across the passage, the heap a little higher than a body
+		# the region's own stones heaped across the passage from its floor to above a body's height,
+		# packed so they touch (rows of three a metre apart floated as three separate bands), fewer
+		# and smaller toward the top, the small stuff spilled at the foot
 		var boulder := kit.rock("boulder")
 		var packed := PoiKit.scene(boulder) if boulder != "" else null
-		for i in 9:
+		var bh := maxf(PoiKit.height_of(boulder), 0.3) if boulder != "" else 1.0
+		var per_row := [4, 4, 3, 2]
+		var y := -0.15
+		for row in per_row.size():
 			if packed == null:
 				break
-			var stone := packed.instantiate() as Node3D
-			var row := floorf(float(i) / 3.0)
-			stone.position = Vector3((float(i % 3) - 1.0) * w * 0.3 + kit.rng.randf_range(-0.2, 0.2), row * 1.0 - 0.2, kit.rng.randf_range(-0.25, 0.25))
-			stone.rotation = Vector3(kit.rng.randf_range(-0.4, 0.4), randf_yaw(), kit.rng.randf_range(-0.4, 0.4))
-			stone.scale = Vector3.ONE * kit.rng.randf_range(0.45, 0.7) * (1.0 - row * 0.15)
-			seal.add_child(stone)
+			var count: int = per_row[row]
+			var size := lerpf(1.05, 0.8, float(row) / 3.0)
+			for i in count:
+				var stone := packed.instantiate() as Node3D
+				var x := (float(i) + 0.5 - float(count) * 0.5) * (w / 4.0) * 1.05 + kit.rng.randf_range(-0.12, 0.12)
+				stone.position = Vector3(x, y, kit.rng.randf_range(-0.2, 0.2))
+				stone.rotation = Vector3(kit.rng.randf_range(-0.5, 0.5), randf_yaw(), kit.rng.randf_range(-0.5, 0.5))
+				stone.scale = Vector3.ONE * size / bh * kit.rng.randf_range(0.9, 1.15)
+				seal.add_child(stone)
+			y += size * 0.72
+		if packed != null:
+			for i in 5:
+				var stone := packed.instantiate() as Node3D
+				stone.position = Vector3(kit.rng.randf_range(-w * 0.45, w * 0.45), -0.1, kit.rng.randf_range(-1.1, -0.5))
+				stone.rotation = Vector3(kit.rng.randf_range(-0.6, 0.6), randf_yaw(), kit.rng.randf_range(-0.6, 0.6))
+				stone.scale = Vector3.ONE * kit.rng.randf_range(0.3, 0.5) / bh
+				seal.add_child(stone)
 	else:
 		seal.display_name = "A barred gate"
 		seal.open_prompt = "Lift the bar"
@@ -1203,7 +1242,8 @@ func people() -> void:
 	spawner.name = "Foes"
 	spawner.spawn_on_ready = false
 	site.add_child(spawner)
-	for e in plan.encounters:
+	for ei in plan.encounters.size():
+		var e: Dictionary = plan.encounters[ei]
 		var enemy_id := str(e["enemy"])
 		if not ContentDB.has(enemy_id):
 			Log.warn("SiteDress", "%s: no foe '%s'" % [plan.id, enemy_id])
@@ -1213,6 +1253,11 @@ func people() -> void:
 			continue
 		var i := 0
 		for p in e["spots"]:
+			# whoever was killed here stays dead when the place is entered again, until a rest
+			var key := "%s/%s/%d/%d" % [plan.id, e["room"], ei, i]
+			if role != "boss" and SiteFallen.is_fallen(key):
+				i += 1
+				continue
 			var at := site.to_global(floor_under(p) + Vector3.UP * 0.05)
 			var opts := {"group": "%s/%s" % [plan.id, e["room"]]}
 			if e.has("patrol"):
@@ -1226,6 +1271,8 @@ func people() -> void:
 			i += 1
 			if foe == null:
 				continue
+			if role != "boss":
+				SiteFallen.watch(foe, key)
 			match role:
 				"sleeper":
 					# lying by the fire: roused by noise, a blow, or being walked into
@@ -1275,7 +1322,38 @@ func _arena(e: Dictionary) -> void:
 
 # --- every frame ----------------------------------------------------------------------------------
 
+## Compatibility draws at most `max_renderable_lights` (32) lights in view and drops the rest in no
+## order it says: from the Kilnway's way in, looking down the tube, more than that were in the
+## frustum and the mouth room's own went, so the first view in was black (the same room lit from its
+## other doorway). So only the NEAR_LIGHTS lights nearest the eye (by how far their reach falls short
+## of it) are on at once, chosen again as the eye moves.
+const NEAR_LIGHTS := 24
+var _near_from := Vector3.INF
+
+
+func _nearest_lights() -> void:
+	var vp := site.get_viewport() if site.is_inside_tree() else null
+	var cam := vp.get_camera_3d() if vp != null else null
+	if cam == null:
+		return
+	var eye := site.to_local(cam.global_position)
+	if _near_from != Vector3.INF and eye.distance_squared_to(_near_from) < 1.0:
+		return
+	_near_from = eye
+	var order: Array = []
+	for l in lights:
+		if not bool(l.get_meta("budget_on", true)):
+			continue
+		var reach := (l as OmniLight3D).omni_range if l is OmniLight3D else ((l as SpotLight3D).spot_range if l is SpotLight3D else 0.0)
+		order.append([l.position.distance_to(eye) - reach, l])
+	order.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	for i in order.size():
+		(order[i][1] as Light3D).visible = i < NEAR_LIGHTS
+
+
 func flicker() -> void:
+	if site.is_built:
+		_nearest_lights()
 	if not _water_set and site.is_inside_tree():
 		# the water's depth is read in world space, and the interior is moved to its pocket after it
 		# is built

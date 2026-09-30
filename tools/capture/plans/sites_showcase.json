@@ -1,7 +1,9 @@
-{"shots": [
+{"preview_pois": ["core:poi/the_kilnway", "core:poi/scathe_fort"],
+ "shots": [
+ {"label": "kilnway_mouth", "at": {"place": "core:poi/the_kilnway", "bearing": 180, "distance": 20, "height": 4}, "look": {"place": "core:poi/the_kilnway", "height": 1.5}, "fov": 60, "time": 15.0},
+ {"label": "kilnway_heath", "at": {"place": "core:poi/the_kilnway", "bearing": 150, "distance": 60, "height": 14}, "look": {"place": "core:poi/the_kilnway", "height": 2}, "fov": 60, "time": 17.0},
+ {"label": "kilnway_across", "at": {"place": "core:poi/the_kilnway", "bearing": 260, "distance": 34, "height": 6}, "look": {"place": "core:poi/the_kilnway", "height": 1}, "fov": 60, "time": 10.5},
  {"label": "scathe_fort_from_the_down", "at": {"place": "core:poi/scathe_fort", "bearing": 200, "distance": 70, "height": 14}, "look": {"place": "core:poi/scathe_fort", "height": 4}, "fov": 60, "time": 11.0},
- {"label": "scathe_fort_gate", "at": {"place": "core:poi/scathe_fort", "bearing": 20, "distance": 38, "height": 3}, "look": {"place": "core:poi/scathe_fort", "height": 3}, "fov": 65, "time": 16.0},
- {"label": "scathe_fort_above", "at": {"place": "core:poi/scathe_fort", "bearing": 120, "distance": 45, "height": 40}, "look": {"place": "core:poi/scathe_fort", "height": 0}, "fov": 60, "time": 12.0},
- {"label": "kilnway_mouth", "at": {"place": "core:poi/the_kilnway", "bearing": 180, "distance": 26, "height": 4}, "look": {"place": "core:poi/the_kilnway", "height": 2}, "fov": 60, "time": 15.0},
- {"label": "kilnway_heath", "at": {"place": "core:poi/the_kilnway", "bearing": 150, "distance": 70, "height": 18}, "look": {"place": "core:poi/the_kilnway", "height": 2}, "fov": 60, "time": 17.0}
+ {"label": "scathe_fort_gate", "at": {"place": "core:poi/scathe_fort", "bearing": 200, "distance": 34, "height": 2.5}, "look": {"place": "core:poi/scathe_fort", "height": 4}, "fov": 65, "time": 16.0},
+ {"label": "scathe_fort_above", "at": {"place": "core:poi/scathe_fort", "bearing": 120, "distance": 45, "height": 40}, "look": {"place": "core:poi/scathe_fort", "height": 0}, "fov": 60, "time": 12.0}
 ]}

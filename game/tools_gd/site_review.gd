@@ -1,7 +1,7 @@
 extends Node3D
 ## Renders a large site so it can be judged as a place (docs/WORLD_LIFE_INTERIORS.md, "Testing"):
 ##   xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver opengl3 \
-##     --audio-driver Dummy res://tools_gd/site_review.tscn -- --site=<interior id> --out=<abs dir>
+##     --audio-driver Dummy res://tools_gd/site_review.tscn -- --site=<interior id>[,<id>] --out=<abs dir>
 ##   ... -- --poi=<poi id>[,<poi id>] --out=<abs dir>
 ##
 ## An inside (`--site`): the view through the way in, every room from beside its first doorway
@@ -19,11 +19,11 @@ var _sun: DirectionalLight3D
 
 
 func _ready() -> void:
-	var site_id := ""
+	var sites: Array = []
 	var pois: Array = []
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--site="):
-			site_id = a.substr(7)
+			sites = Array(a.substr(7).split(",", false))
 		elif a.begins_with("--poi="):
 			pois = Array(a.substr(6).split(",", false))
 		elif a.begins_with("--out="):
@@ -41,8 +41,13 @@ func _ready() -> void:
 	cam.current = true
 	_sun = DirectionalLight3D.new()
 	add_child(_sun)
-	if site_id != "":
-		await _inside(site_id)
+	for s in sites:
+		await _inside(str(s))
+		await _take()
+		for n in get_children():
+			if n is SiteInterior:
+				n.queue_free()
+		await get_tree().process_frame
 	for p in pois:
 		await _outside(str(p))
 	await _take()
@@ -69,12 +74,22 @@ func _inside(id: String) -> void:
 	add_child(site)
 	for i in 30:
 		await get_tree().process_frame
-	var slug := Ids.name_of(id)
+	var slug := "b_inside_" + Ids.name_of(id)
 	var plan := site.plan
 	var ent := site.get_node("Entrance") as Node3D
 	var fwd := -ent.transform.basis.z
 	var eye := ent.position + Vector3.UP * 1.65
 	shots.append({"label": "%s_00_way_in" % slug, "pos": eye + fwd * 0.3, "look": eye + fwd * 6.0 + Vector3.DOWN * 0.5})
+	# where the eye stands at the way in: the floor under it and the roof over it (a way in whose
+	# eye is in the rock renders black)
+	await get_tree().physics_frame
+	var space := get_world_3d().direct_space_state
+	var probe := func(from: Vector3, to: Vector3) -> float:
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(site.to_global(from), site.to_global(to)))
+		return -1.0 if hit.is_empty() else site.to_global(from).distance_to(hit["position"])
+	print("site review: way in eye %s: floor %.2f below, roof %.2f above, wall %.2f ahead, lights %d" % [eye,
+			probe.call(eye, eye + Vector3.DOWN * 8.0), probe.call(eye, eye + Vector3.UP * 12.0),
+			probe.call(eye, eye + fwd * 20.0), site.dress.lights.size() if site.dress != null else 0])
 	var n := 1
 	for r in plan.rooms:
 		var c: Vector3 = r["centre"]
@@ -113,14 +128,32 @@ func _outside(id: String) -> void:
 	_sun.rotation_degrees = Vector3(-32, 140, 0)
 	_sun.light_energy = 1.4
 	_sun.shadow_enabled = true
+	# the places' lamps and fires (PoiKit.light) are NightLights' sources: without its pool nothing
+	# a builder lit was lit here
+	if get_node_or_null("NightLights") == null:
+		var nl := NightLights.new()
+		nl.name = "NightLights"
+		add_child(nl)
 	var def := ContentDB.get_def(id)
 	# the pad: flat grass, standing in for the ground the next world build flattens there
 	var pad := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
 	pm.size = Vector2(240, 240)
 	pad.mesh = pm
+	# in the terrain's own texture for the region, at its own scale (PoiBuilders.GROUND_SLOTS), so
+	# what a builder lays in the ground's look meets it as it would the land
+	var region := Ids.name_of(str(def.get("region", "core:region/hearthvale")))
+	var builders: GDScript = load(PoiDressing.BUILDERS_PATH)
+	var slot := str((builders.get("REGION_GROUND") as Dictionary).get(region, "vale_grass"))
+	var spec: Array = (builders.get("GROUND_SLOTS") as Dictionary).get(slot, [2.6, 0.42])
 	var gm := StandardMaterial3D.new()
-	gm.albedo_color = Color(0.2, 0.25, 0.13) if str(def.get("region", "")).ends_with("hearthvale") else Color(0.27, 0.26, 0.25)
+	var tex_path := "res://assets/textures/terrain/%s_albedo_height.png" % slot
+	if ResourceLoader.exists(tex_path):
+		gm.albedo_texture = load(tex_path)
+	gm.albedo_color = Color(float(spec[1]), float(spec[1]), float(spec[1]))
+	gm.uv1_triplanar = true
+	gm.uv1_world_triplanar = true
+	gm.uv1_scale = Vector3.ONE / float(spec[0])
 	gm.roughness = 0.95
 	pad.material_override = gm
 	add_child(pad)
@@ -137,7 +170,7 @@ func _outside(id: String) -> void:
 	add_child(d)
 	for i in 30:
 		await get_tree().process_frame
-	var slug := Ids.name_of(id)
+	var slug := "a_outside_" + Ids.name_of(id)
 	var r := float(def.get("radius_m", 24.0))
 	for i in 4:
 		var a := TAU * float(i) / 4.0 + 0.4
@@ -150,10 +183,26 @@ func _outside(id: String) -> void:
 		if n.name == "GateLeaves" or n.name == "Hook":
 			gate = (n as Node3D).position
 	shots.append({"label": "%s_10_approach" % slug, "pos": Vector3(gate.x, 0.0, gate.z) * 2.0 + Vector3.UP * 1.7, "look": Vector3.UP * 2.0})
+	# close, from three-quarters and a little up: the look of the thing
+	var hero_a := atan2(gate.x, gate.z) + 0.7 if gate != Vector3.ZERO else 0.9
+	shots.append({"label": "%s_05_near" % slug, "pos": Vector3(sin(hero_a), 0.0, cos(hero_a)) * (r * 1.25) + Vector3.UP * (r * 0.28),
+			"look": Vector3.UP * 3.5, "ground": [pad, body]})
+	# a delve's mouth, from its approach at eye height
+	var den := d.find_child("the_mouth", true, false) as Node3D
+	if den != null and d.find_child("Garrison", true, false) == null:
+		var into := Vector3(den.position.x, 0.0, den.position.z).normalized()
+		shots.append({"label": "%s_12_the_mouth" % slug, "pos": den.position - into * 12.0 + Vector3.UP * 2.2,
+				"look": den.position - into * 3.0 + Vector3.UP * 1.7})
+		# from the head of the way down into it, standing on the ground it is cut into
+		var side := Vector3(into.z, 0.0, -into.x)
+		shots.append({"label": "%s_13_the_way_down" % slug, "pos": den.position - into * 21.0 + side * 3.0 + Vector3.UP * 4.3,
+				"look": den.position - into * 4.0 + Vector3.UP * 1.0})
 	if not door.is_empty():
 		var dp := (door[0] as Node3D).position
 		var face := (door[0] as Node3D).transform.basis.z
-		shots.append({"label": "%s_11_the_door" % slug, "pos": dp + face * 6.0 + Vector3.UP * 1.7, "look": dp + Vector3.UP * 1.4})
+		# a door round a bend says where it is seen from
+		var from: Vector3 = (door[0] as Node3D).get_meta("view_from", dp + face * 6.0)
+		shots.append({"label": "%s_11_the_door" % slug, "pos": from + Vector3.UP * 1.7, "look": dp + Vector3.UP * 1.4})
 	# up on the walls, if it has any: where a walker of the walls stands
 	var sp := d.find_child("Garrison", true, false) as EnemySpawner
 	if sp != null:

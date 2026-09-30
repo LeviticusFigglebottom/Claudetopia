@@ -79,8 +79,11 @@ func _make(def: Dictionary) -> void:
 	var wanted := _room_list()
 	_lay_main(wanted)
 	_lay_loop()
+	if bool(_site.get("drops", true)):
+		_lay_drop()
 	_lay_secret()
 	_lay_shortcut()
+	_repair_reach()
 	for r in rooms:
 		_room_ops(r)
 	for l in links:
@@ -406,11 +409,12 @@ func _lay_loop() -> void:
 
 ## A loop passage that ends on a ledge over its lower room: it runs level from the upper room and
 ## stops over the lower's floor, the fall between.
-func _make_drop(l: Dictionary) -> void:
+func _make_drop(l: Dictionary, lip_y := NAN) -> void:
 	var pts: Array = l["points"]
 	var hi := 0 if (pts[0] as Vector3).y > (pts[-1] as Vector3).y else pts.size() - 1
 	var lo := pts.size() - 1 - hi
-	var top: float = (pts[hi] as Vector3).y
+	var start: float = (pts[hi] as Vector3).y
+	var top: float = start if is_nan(lip_y) else lip_y
 	var low: Vector3 = pts[lo]
 	var fall := top - low.y
 	var lower := room(str(l["b"] if lo == pts.size() - 1 else l["a"]))
@@ -428,13 +432,190 @@ func _make_drop(l: Dictionary) -> void:
 		e = clampf(sqrt(maxf(0.0, 1.0 - s * s)), 0.3, 0.8)
 	var lip := lc + out * edge_along(lower, out) * e
 	lip.y = top
-	for i in pts.size():
-		var p: Vector3 = pts[i]
-		pts[i] = Vector3(p.x, top, p.z)
 	pts[lo] = lip
+	# from the upper room down at an even, walkable slope to the lip's height (level, where the fall
+	# was short enough to start with)
+	var order: Array = range(pts.size()) if hi == 0 else range(pts.size() - 1, -1, -1)
+	var total := _path_len(pts)
+	var along := 0.0
+	for n in order.size():
+		var i: int = order[n]
+		if n > 0:
+			var q: Vector3 = pts[order[n - 1]]
+			var p: Vector3 = pts[i]
+			along += Vector2(p.x - q.x, p.z - q.z).length()
+		var p2: Vector3 = pts[i]
+		pts[i] = Vector3(p2.x, lerpf(start, top, along / maxf(total, 0.01)), p2.z)
 	l["kind"] = "drop"
 	l["drop"] = fall
 	l["one_way_to"] = lower["id"]
+
+
+## A ledge over a lower room: a passage from a room of the walk that ends high in the wall of a room
+## further on and lower, the fall between, one way down. The spiral seldom brings a loop's two rooms
+## near enough and 2.5-5 m apart in height by itself (5 of 96 plans), so the drop is looked for on
+## its own: the nearest pair (not neighbours, the upper one past the way in, neither the boss's)
+## up to DROP_REACH apart whose passage keeps clear of every other room and whose lower room can be
+## raised to open under the lip without meeting a room or passage over it. Where the rooms are
+## further apart in height than DROP_FALL.y, the passage first goes down at a walkable slope and
+## the lip stands DROP_LIP over the lower floor. A place with `"drops": false` has none.
+const DROP_FALL := Vector2(2.5, 5.0)
+const DROP_REACH := 30.0
+const DROP_LIP := 3.4
+const DROP_DESCENT := 0.42
+
+
+func _lay_drop() -> void:
+	for l in links:
+		if l["kind"] == "drop":
+			return
+	var best: Array = []
+	var best_len := INF
+	for i in range(1, rooms.size()):
+		for j in range(i + 2, rooms.size()):
+			var up: Dictionary = rooms[i]
+			var lo: Dictionary = rooms[j]
+			if lo["role"] in ["boss", "secret", "bypass"] or up["role"] in ["boss", "secret", "bypass"]:
+				continue
+			if _linked(up["id"], lo["id"]):
+				continue
+			var cu: Vector3 = up["centre"]
+			var cl: Vector3 = lo["centre"]
+			if cu.y - cl.y < DROP_FALL.x:
+				continue
+			var flat := Vector3(cl.x - cu.x, 0.0, cl.z - cu.z)
+			if flat.length() < 0.5:
+				continue
+			var dir := flat.normalized()
+			# too far apart for any way round: no bend makes it shorter (this test first kept the
+			# plan's making within a frame: trying every pair every way was 220 ms)
+			if flat.length() - edge_along(up, dir) - edge_along(lo, -dir) > DROP_REACH + 4.0:
+				continue
+			# straight across, or out of the upper room at an angle and round one bend, where the
+			# straight way's doorway would open on another
+			for turn in [0.0, 0.6, -0.6, 1.05, -1.05]:
+				var da := dir.rotated(Vector3.UP, float(turn))
+				var via: Array = []
+				if turn != 0.0:
+					var v := cu + da * (edge_along(up, da) + 6.0)
+					via = [Vector3(v.x, cu.y, v.z)]
+				var last: Vector3 = cu if via.is_empty() else via[0]
+				var db := Vector3(last.x - cl.x, 0.0, last.z - cl.z).normalized()
+				var pa := cu + da * (edge_along(up, da) - MOUTH_IN)
+				var pb := cl + db * (edge_along(lo, db) - MOUTH_IN)
+				var run := _path_len([pa] + via + [pb])
+				if run > DROP_REACH + 6.0 or run >= best_len:
+					continue
+				# the lip: level with the upper floor where the fall is short enough, else as far
+				# down as the passage can walk, and never lower than DROP_LIP over the lower floor
+				var lip_y := cu.y
+				if cu.y - cl.y > DROP_FALL.y:
+					lip_y = maxf(cu.y - run * DROP_DESCENT, cl.y + DROP_LIP)
+				if lip_y - cl.y > DROP_FALL.y:
+					continue
+				if _mouth_near(up, da, 1.0) or _mouth_near(lo, db, 1.0):
+					continue
+				var chain: Array = [cu] + via + [Vector3(cl.x, lip_y, cl.z)]
+				var ok := true
+				for k in range(1, chain.size()):
+					var a: Vector3 = chain[k - 1]
+					var b: Vector3 = chain[k]
+					if k == chain.size() - 1 and via.size() > 0:
+						a = Vector3(a.x, lerpf(cu.y, lip_y, 0.3), a.z)
+					if not _segment_clear(a, b, [up["id"], lo["id"]], 1.0):
+						ok = false
+						break
+				if not ok or not _raise_clear(lo, lip_y - cl.y + 4.0, [up["id"]]):
+					continue
+				best = [up, lo, via, lip_y]
+				best_len = run
+				break
+	if best.is_empty():
+		return
+	var l := _join(best[0], best[1], "loop", best[2])
+	_make_drop(l, float(best[3]))
+
+
+## Whether room `r` can be made `new_h` high (half-height) without its roof coming within STACK_GAP
+## of a room over it, or cutting a passage that runs over it (those of `skip` and its own aside).
+func _raise_clear(r: Dictionary, new_h: float, skip: Array) -> bool:
+	var c: Vector3 = r["centre"]
+	var top := c.y + new_h + STACK_GAP
+	var rad := radius_of(r)
+	for o in rooms:
+		if o["id"] == r["id"] or skip.has(o["id"]):
+			continue
+		var oc: Vector3 = o["centre"]
+		if oc.y <= c.y:
+			continue
+		if Vector2(oc.x - c.x, oc.z - c.z).length() < rad + radius_of(o) + 2.5 and oc.y < top:
+			return false
+	for l in links:
+		if l["a"] == r["id"] or l["b"] == r["id"] or skip.has(l["a"]) or skip.has(l["b"]):
+			continue
+		var pts: Array = l["points"]
+		for i in range(1, pts.size()):
+			var a: Vector3 = pts[i - 1]
+			var b: Vector3 = pts[i]
+			for t in 9:
+				var p := a.lerp(b, float(t) / 8.0)
+				if p.y > c.y and p.y < top and Vector2(p.x - c.x, p.z - c.z).length() < rad + float(spec.get("tunnel_r", 1.8)) + 1.0:
+					return false
+	return true
+
+
+## Every room reached from the way in and back, whatever the seed: a room the walk left unjoined
+## (a def's own rooms can) is joined to the nearest room that is, and a secret room that cannot be
+## is left out rather than left sealed off.
+func _repair_reach() -> void:
+	for guard in rooms.size():
+		var rr := reach()
+		var from: Array = rr["from"]
+		var back: Array = rr["back"]
+		var lost: Array = []
+		for r in rooms:
+			if not from.has(r["id"]) or not back.has(r["id"]):
+				lost.append(r)
+		if lost.is_empty():
+			return
+		var r: Dictionary = lost[0]
+		if r["role"] == "secret":
+			for li in range(links.size() - 1, -1, -1):
+				if links[li]["a"] == r["id"] or links[li]["b"] == r["id"]:
+					links.remove_at(li)
+			rooms.erase(r)
+			_by_id.erase(r["id"])
+			for i in rooms.size():
+				rooms[i]["index"] = i
+			_reindex_links()
+			problems.append("%s: the secret room could not be reached and was left out" % id)
+			continue
+		var best: Dictionary = {}
+		var best_d := INF
+		for o in rooms:
+			if lost.has(o):
+				continue
+			var dd := (o["centre"] as Vector3).distance_to(r["centre"])
+			if dd < best_d:
+				best_d = dd
+				best = o
+		if best.is_empty():
+			return
+		_join(best, r, "passage")
+		problems.append("%s: %s was joined to %s to be reached" % [id, r["id"], best["id"]])
+
+
+func _reindex_links() -> void:
+	for r in rooms:
+		r["links"] = []
+	for i in links.size():
+		links[i]["index"] = i
+		var a := room(str(links[i]["a"]))
+		var b := room(str(links[i]["b"]))
+		if not a.is_empty():
+			(a["links"] as Array).append(i)
+		if not b.is_empty():
+			(b["links"] as Array).append(i)
 
 
 ## A small room off a chamber in the middle of the walk, behind a wall of loose stones: rich loot,
@@ -554,8 +735,10 @@ func _room_ops(r: Dictionary) -> void:
 		ops.append({"op": "carve", "type": "vault", "c": c, "half": half, "yaw": float(r["yaw"]),
 				"noise": _noise_amp(), "k": 0.0})
 	else:
+		# nor a small room's walls into its middle
+		var cap := minf(minf(half.x, half.z) * 0.18, half.y * 0.22)
 		ops.append({"op": "carve", "type": "dome", "c": c, "half": half, "yaw": float(r["yaw"]),
-				"noise": _noise_amp() * (1.2 if r["role"] == "boss" else 1.0), "k": 0.0})
+				"noise": minf(_noise_amp() * (1.2 if r["role"] == "boss" else 1.0), cap), "k": 0.0})
 
 
 func _link_ops(l: Dictionary) -> void:
@@ -574,12 +757,15 @@ func _link_ops(l: Dictionary) -> void:
 		var height := width * (1.25 if square else 1.3)
 		if str(l["kind"]) == "secret":
 			height = 2.6
+		# the noise never takes a passage narrower than a body can pass (a noisy kind's secret passage
+		# pinched shut on some seeds, and the room behind it was cut off)
 		if square:
 			ops.append({"op": "carve", "type": "corridor", "a": a2, "b": b2, "w": width * 0.5,
-					"h": height, "arched": _built(), "noise": _noise_amp() * 0.5, "k": 0.0})
+					"h": height, "arched": _built(), "noise": minf(_noise_amp() * 0.5, maxf(width * 0.5 - 0.95, 0.0)), "k": 0.0})
 		else:
-			ops.append({"op": "carve", "type": "tube", "a": a2, "b": b2, "r": width * 0.5 * 1.1,
-					"noise": _noise_amp() * 0.7, "k": 0.9})
+			var r := width * 0.5 * 1.1
+			ops.append({"op": "carve", "type": "tube", "a": a2, "b": b2, "r": r,
+					"noise": minf(_noise_amp() * 0.7, maxf(r - 1.25, 0.0)), "k": 0.9})
 
 
 # --- set-pieces -----------------------------------------------------------------------------------

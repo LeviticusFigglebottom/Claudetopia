@@ -99,7 +99,7 @@ const KINDS := {
 		"noise": 0.7, "noise_freq": 0.075, "tunnel_r": 2.4, "tunnel_len": [6.0, 12.0],
 		"drop": [-2.5, 0.5], "turn": [25.0, 60.0], "tube": true,
 		"palette": ["#3d3835", "#26221f", "#5a4f47"],
-		"lights": ["lava", "ember"], "light_colour": "#ff7a2e",
+		"lights": ["lava", "ember"], "light_colour": "#ff7a2e", "fill_colour": "#6f7390",
 		"props": ["basalt", "rocks"], "camp": false,
 		"set_pieces": ["lava_chasm", "daylight_shaft", "chasm_bridge", "obsidian_grotto"],
 		"loot": "core:loot/common_chest", "container": "chest",

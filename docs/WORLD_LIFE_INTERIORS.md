@@ -23,12 +23,32 @@ Review renders: `game/tools_gd/site_review.tscn`.
 
 | kind | what is built |
 |---|---|
-| `delve` | a mouth in rock (the cave builder's own crag and throat) with the door to `site.interior` at the back of its throat |
+| `delve` | a mouth in rock (the cave builder's own crag and throat) with the door to `site.interior` at the back of its throat; with `"mouth": "lava"` a lava tube breaking out of the ground instead (below) |
 | `fort` | square stone curtain, crenellated walkway, square corner towers, gatehouse, stairs up beside the gate, keep, yard |
 | `castle_ruin` | pentagon, taller walls torn down in places, round towers, some tumbled |
 | `stockade` | hexagon palisade of stakes with a plank fighting step behind it, timber watch platforms on posts |
 | `walled_camp` | a low drystone ring with a gate gap, the yard dressed as a camp |
 | `watchtower` | a tall square tower with flights of stairs round its outside and a beacon, in a low wall |
+
+The stone of every outside is the region's own (`PoiKit.SURFACES`), weathered by
+`site_stone.gdshader` as the region's weather would (`site_exterior.gd` `WEATHER`: the Vale's chalk
+taken down to a weathered ashlar, moss in the marsh and the wood, lichen on Skerrow's limestone,
+soot in the ash): broad warm and cool patches, each block its own shade, grime rising from the real
+ground under each block, rain streaks from under the parapet, moss in the tops of things and the
+low joints, lichen rosettes higher up. A stone wall has a stepped plinth, a string course, now and
+then a buttress, a paler repair, putlog holes or a crack; its merlons are of uneven height, some
+broken, some lying at its foot. A fort's gate is a gatehouse (an arch, a portcullis drawn up, towers
+either side standing out from the wall, a box over the arch); its keep has corner turrets, a
+corbelled parapet, dressed windows, a chimney and a pentice over its door; its yard is trodden
+earth with a well, a table, hay, a cart, firewood, hens; weeds grow along the walls' feet.
+
+**A lava tube's mouth** (`"mouth": "lava"`): the tube's roof a long low whaleback of the ground
+running back ~25 m, crusted black where it shows (`site_lava_ground.gdshader`: the terrain's own
+soil going over into ropy black crust, glassy at the lip, warm in its cracks); in front, a trench
+~13 m long where the roof fell in, walled by the tube's broken sides and floored with its fallen
+slabs; at its head the arch with a lip of black glass and drips, and the throat going in lit red
+from within; ember cracks spill out across the trench. It needs about 34 m of pad
+(`pad_radius_m: 34`) and faces downhill (or along the ground's grain on the flat).
 
 **The inside** is an interior def (`content/packs/core/interiors/*.json`) with
 `"scene": "res://world/sites/site_interior.tscn"` and a `site` block. Its door stands in the
@@ -42,7 +62,7 @@ needed. (A `door_plan` row still works, if you want a door on a ring round a pla
 ```json
 {
   "id": "core:poi/scathe_fort", "name": "Scathe Fort", "region": "core:region/hearthvale",
-  "kind": "fort", "position": [2456, 2224], "radius_m": 30,
+  "kind": "fort", "position": [2456, 2224], "radius_m": 30, "pad_radius_m": 38,
   "unique_feature": "...", "story": "...", "encounter": "...", "hook": "...",
   "site": {
     "style": "fort",                          // optional: the kind's own by default
@@ -59,6 +79,8 @@ needed. (A `door_plan` row still works, if you want a door on a ring round a pla
 ```
 
 For a `delve`: `"site": {"interior": "core:interior/<id>", "mouth": "lava", "hook": ..., "hook_prompt": ...}`.
+A `hook_prompt` that says "cairn" gets a pilgrim's cairn with a note under its top stone; any other
+a notice post (two notices where it says "notices").
 A garrison block is optional; without one, nobody stands in the fort (use an `encounter` def as
 for any POI if you want the POI system's day/night groups instead).
 
@@ -79,7 +101,7 @@ for any POI if you want the POI system's day/night groups instead).
     "boss": "core:boss/kiln_warden", "boss_adds": 2, "boss_loot": "core:loot/rich_chest",
     "rich_loot": "core:loot/rich_chest",                   // the secret room's chest
     "foes": {"rank": [ids], "archers": [ids], "heavy": [ids]},   // else the region's (SiteKinds.REGION_FOES)
-    "secret": true, "shortcut": true,                       // both on by default
+    "secret": true, "shortcut": true, "drops": true,        // all on by default
     "theme": {"palette": ["#3d3835", "#26221f", "#5a4f47"], "lights": ["lava", "ember"]},  // any SiteKinds key
     "features": [
       {"kind": "prop", "room": "mouth", "prop": "bedroll"},
@@ -138,8 +160,11 @@ bones), `barracks`, `cellar_store`, `fungus_grotto`, `obsidian_grotto`, `ore_gal
 
 - **A loop**, not a line: the walk is laid as a descending spiral (every turn the same way), so the
   rooms come back round and two rooms not next to each other are joined; where none can be, a side
-  room is laid bridging two rooms one apart. A loop whose rooms are 2.5-4.5 m apart in height may
-  end on a ledge over the lower room: a drop, one way down (rare in practice: see Known limits).
+  room is laid bridging two rooms one apart.
+- **A drop** in most places: a level passage from a room of the walk that ends on a ledge high in
+  the wall of a room further on and 2.5-5 m lower, one way down (a shortcut forward, never back).
+  The nearest such pair is taken whose passage keeps clear of every other room and whose lower room
+  can be raised to open under the lip without meeting anything over it. `"drops": false` for none.
 - **Levels**: rooms step down (or up) along the walk, passages are ramps no steeper than 27 degrees
   (built kinds dress them as stairs), ledges and pillars stand in big rooms.
 - **A secret**: a small room off a mid-walk chamber, behind loose stones (a `SiteSeal`: "Pull the
@@ -153,6 +178,14 @@ bones), `barracks`, `cellar_store`, `fungus_grotto`, `obsidian_grotto`, `ore_gal
   archers on a ledge, an ambusher in a passage, one walking the round between the second and
   fourth rooms, the heavy and his men in the hall, the boss in its arena behind a fog gate (not
   stood up again once `boss_deed/<id>` is set). They walk a navigation mesh baked from the rock.
+- **Every room walkable**, whatever the seed: the rock's noise never pinches a passage below a body's
+  width, a room left unjoined is joined, an unreachable secret left out, and every passage is also a
+  navigation link, so foes find their way where the baked mesh has a seam. `test_sites` walks every
+  kind at three seeds.
+- **The dead stay dead** until a Hearthstone rest, inside and out (`SiteFallen`): each foe of an
+  inside and each of a fort's garrison has a stable key (`<site>/<room or group>/<n>`), a death sets
+  the flag `site_fallen/<key>` to the count of rests then, and the place stood up again (walked away
+  from and back, entered again, a game loaded) leaves them out until a rest has been counted since.
 - **Loot**: the kind's container (chest, crate, sarcophagus) in camps and halls and a third of the
   chambers, the rich table in the secret room, `boss_loot` in the boss room; ids are stable
   (`<interior>/<room>/<n>`) so what was taken stays taken.
@@ -181,9 +214,13 @@ main-thread pieces at most 8-13 ms; a foe stood up 17-56 ms (the Enemy's own bod
 ## 6. Sizing and placing
 
 - A `delve` needs a slope or flat ground about 25 m round; `radius_m` 20-24.
-- A fort needs `radius_m` at least `site.radius + 8` (19 m walls on a 30 m pad). Pick ground under
-  about 8 degrees; the walls follow the ground in 4 m bays with one walkway level, so a steep pad
-  makes one side tall.
+- Give every site a `pad_radius_m` (docs/WORLD_LIFE.md section 2: the build levels 0.7 of it and
+  blends the rest) that holds all it stands: a fort's corner towers reach `site.radius` x 1.06 +
+  3.7 m (Scathe: 24 m) and its gate track 17 m out past the gate, so `pad_radius_m` of about
+  `(site.radius + 5) / 0.65` (Scathe: 38); a lava mouth 34; a cave's `delve` 26-30. `radius_m`
+  at least `site.radius + 8` (the walls are kept inside `radius_m - 3` while the place has no pad).
+  Pick ground under about 8 degrees; the walls follow the ground in 4 m bays with one walkway level,
+  so a steep pad makes one side tall.
 - Keep the inside's `size` to the site's importance: `medium` for a hideout, `large` for a region's
   landmark, `huge` only for a questline's end.
 - Two sites' insides never meet (each interior has its own pocket), so size is free of the map.
@@ -191,11 +228,10 @@ main-thread pieces at most 8-13 ms; a foe stood up 17-56 ms (the Enemy's own bod
 ## 7. The world build
 
 A POI written after the world was built has no flattened pad: `WorldPois.unbuilt_entries` dresses
-it on the ground as it stands (the runtime pad). The next world build flattens it, but
-`tools/world/build_world.py` reads only `pois/pois.json`: once 0-A's per-region split lands,
-make sure it reads every file in `pois/` (including `_interiors_showcase.json`), or move these
-entries into the region files. Until then the showcases are dressed on unflattened ground, and
-scatter (trees, rocks) the build put there may stand inside the fort's yard.
+it on the ground as it stands (the runtime pad, `radius_m` wide). The world build's tools read every
+file in `pois/` (docs/WORLD_LIFE.md section 1), so the next build flattens each site's
+`pad_radius_m` and keeps its scatter off it. Until then scatter (trees, rocks) the last build put
+there stands in the site: the build's trees in Scathe's yard.
 
 ## 8. Testing a site
 
@@ -220,16 +256,16 @@ scatter (trees, rocks) the build put there may stand inside the fort's yard.
 
 ## 9. Known limits
 
-- Drops (a loop ending on a ledge over the lower room) are supported but the spiral rarely
-  produces the height difference; write `drop` on rooms to get one.
 - The "rock" style's walls are smooth at 0.55 m: detail comes from the shader and props. Very
   small rooms with high noise can pinch shut; keep `tight` for passages.
-- A fort's garrison stands up again when its cell is raised again (as any POI's encounter does);
-  killed foes are not remembered across streaming.
 - Lights: the pocket's own OmniLights, up to three or four a room plus glow. Compatibility draws at
   most 12 per mesh, so chunks are 14 m and `SiteDress._light_budget` draws in the widest lights
-  until no chunk is reached by more than 11 (tested). In the Kilnway's review render the view from
-  the way in straight into the mouth room still comes out unlit (the same room is lit seen from its
-  other doorway, and physics has the arrival inside the room): not yet explained, worth a look on
-  Forward+ and in the game with the player's own light.
-- The lava tube reads red and dark; the keep's undercroft reads as cut chalk rather than ashlar.
+  until no chunk is reached by more than 11 (tested). It also draws at most 32 lights in view
+  (`max_renderable_lights`) and drops the rest in no order it says: that was the Kilnway's black
+  way in (more than 32 down the tube in view, the mouth room's own among those dropped). So only
+  the 24 lights nearest the eye are on at once (`SiteDress.NEAR_LIGHTS`, chosen again as the eye
+  moves a metre).
+- A fort's trees: until the next world build the showcases stand on the ground as the last build
+  left it, with its scatter (Scathe's yard has the build's trees in it).
+- A drop's lip is the passage's end in the lower room's wall, with nothing to mark it but the
+  fall; built kinds dress its slope as stairs.
