@@ -35,7 +35,7 @@ const RECENTRE_FROM := 3.0
 ## The first time in the saddle (any horse, any start) the player is told how to get down and how to
 ## whistle a horse up, once, in a quiet moment: kept in the save as this flag.
 const RIDE_TAUGHT_FLAG := "hint_ride_taught"
-const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4"]
+const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4", "quick_5", "quick_6", "quick_7", "quick_8", "cycle_weapon"]
 
 var player: Node3D = null
 var horse: Mount = null

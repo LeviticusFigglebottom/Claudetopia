@@ -1505,6 +1505,289 @@
     48,
     48
    ]
+  },
+  "item_axe": {
+   "file": "items/item_axe.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_bell": {
+   "file": "items/item_bell.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_bow": {
+   "file": "items/item_bow.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_bread": {
+   "file": "items/item_bread.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_candle": {
+   "file": "items/item_candle.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_cheese": {
+   "file": "items/item_cheese.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_crossbow": {
+   "file": "items/item_crossbow.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_dagger": {
+   "file": "items/item_dagger.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_drink": {
+   "file": "items/item_drink.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_greatsword": {
+   "file": "items/item_greatsword.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_hammer": {
+   "file": "items/item_hammer.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_hearth_flask": {
+   "file": "items/item_hearth_flask.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_herb": {
+   "file": "items/item_herb.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_key": {
+   "file": "items/item_key.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_lantern": {
+   "file": "items/item_lantern.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_lockpick": {
+   "file": "items/item_lockpick.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_mace": {
+   "file": "items/item_mace.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_meat": {
+   "file": "items/item_meat.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_pie": {
+   "file": "items/item_pie.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_poison": {
+   "file": "items/item_poison.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_potion_amber": {
+   "file": "items/item_potion_amber.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_potion_blue": {
+   "file": "items/item_potion_blue.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_potion_green": {
+   "file": "items/item_potion_green.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_potion_red": {
+   "file": "items/item_potion_red.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_potion_violet": {
+   "file": "items/item_potion_violet.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_pouch": {
+   "file": "items/item_pouch.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_rope": {
+   "file": "items/item_rope.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_shield": {
+   "file": "items/item_shield.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_spear": {
+   "file": "items/item_spear.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_staff": {
+   "file": "items/item_staff.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_sword": {
+   "file": "items/item_sword.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_sword_shield": {
+   "file": "items/item_sword_shield.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "item_torch": {
+   "file": "items/item_torch.png",
+   "size": [
+    96,
+    96
+   ]
+  },
+  "belt_socket": {
+   "file": "belt_socket.png",
+   "size": [
+    64,
+    64
+   ],
+   "margin": [
+    14,
+    14,
+    14,
+    14
+   ]
+  },
+  "belt_socket_lit": {
+   "file": "belt_socket_lit.png",
+   "size": [
+    64,
+    64
+   ],
+   "margin": [
+    14,
+    14,
+    14,
+    14
+   ]
+  },
+  "belt_strap": {
+   "file": "belt_strap.png",
+   "size": [
+    128,
+    48
+   ],
+   "margin": [
+    22,
+    10,
+    22,
+    10
+   ]
+  },
+  "belt_key_tab": {
+   "file": "belt_key_tab.png",
+   "size": [
+    32,
+    24
+   ],
+   "margin": [
+    8,
+    8,
+    8,
+    8
+   ]
   }
  },
  "variants": {
@@ -1895,5 +2178,40 @@
     40
    ]
   ]
- }
+ },
+ "item_art": [
+  "axe",
+  "bell",
+  "bow",
+  "bread",
+  "candle",
+  "cheese",
+  "crossbow",
+  "dagger",
+  "drink",
+  "greatsword",
+  "hammer",
+  "hearth_flask",
+  "herb",
+  "key",
+  "lantern",
+  "lockpick",
+  "mace",
+  "meat",
+  "pie",
+  "poison",
+  "potion_amber",
+  "potion_blue",
+  "potion_green",
+  "potion_red",
+  "potion_violet",
+  "pouch",
+  "rope",
+  "shield",
+  "spear",
+  "staff",
+  "sword",
+  "sword_shield",
+  "torch"
+ ]
 }

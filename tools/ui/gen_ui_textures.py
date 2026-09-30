@@ -15,10 +15,12 @@ Usage:
     python3 tools/ui/gen_ui_textures.py                 # write game/assets/ui/
     python3 tools/ui/gen_ui_textures.py --out /tmp/ui   # elsewhere
     python3 tools/ui/gen_ui_textures.py --only icons    # one group
+    python3 tools/ui/gen_ui_textures.py --only items    # the belt's painted item art (gen_item_art.py)
 """
 from __future__ import annotations
 
 import argparse
+import sys
 import json
 import math
 from pathlib import Path
@@ -27,6 +29,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 OUT_DEFAULT = ROOT / "game" / "assets" / "ui"
 FONT_DIR = ROOT / "game" / "assets" / "fonts"
 SS = 4  # supersampling factor for every drawn shape
@@ -1725,6 +1728,19 @@ def build(out: Path, only: str = "") -> dict:
             put(name, marker(name, _rng("marker" + name), pal), sub="markers")
             manifest["markers"].append(name)
 
+    if want("items"):
+        # the belt's and the weapon set's painted pictures, and the belt's chrome (gen_item_art.py)
+        import gen_item_art as items
+        (out / "items").mkdir(exist_ok=True)
+        manifest["item_art"] = []
+        for name in sorted(items.ART):
+            put("item_" + name, items.art(name, _rng("item" + name)), sub="items")
+            manifest["item_art"].append(name)
+        put("belt_socket", items.socket(_rng("belt_socket")), margin=[14, 14, 14, 14])
+        put("belt_socket_lit", items.socket(_rng("belt_socket"), lit=True), margin=[14, 14, 14, 14])
+        put("belt_strap", items.strap(_rng("belt_strap")), margin=[22, 10, 22, 10])
+        put("belt_key_tab", items.key_tab(_rng("belt_key_tab")), margin=[8, 8, 8, 8])
+
     manifest["palette"] = {k: {kk: list(vv) for kk, vv in p.items()} for k, p in PALETTES.items()}
     manifest["bar_colours"] = {k: [list(a), list(b)] for k, (a, b) in BAR_COLOURS.items()}
     (out / "ui_textures.json").write_text(json.dumps(manifest, indent=1, sort_keys=False) + "\n")
@@ -1734,7 +1750,7 @@ def build(out: Path, only: str = "") -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", type=Path, default=OUT_DEFAULT)
-    ap.add_argument("--only", default="", help="panels|buttons|widgets|bars|compass|marks|icons|markers|quest")
+    ap.add_argument("--only", default="", help="panels|buttons|widgets|bars|compass|marks|icons|markers|quest|items")
     args = ap.parse_args()
     m = build(args.out, args.only)
     print("[ui] wrote %d textures, %d icons, %d markers -> %s"

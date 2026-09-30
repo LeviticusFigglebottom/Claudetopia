@@ -324,6 +324,15 @@ func _refresh_detail() -> void:
 		var equip := UiKit.button("Equip")
 		equip.pressed.connect(func() -> void: _equip(int(it["uid"])))
 		actions.add_child(equip)
+		# a torch or a lantern is taken up from the belt as well
+		_belt_button(actions, str(it.get("item_id", "")))
+	# a weapon is kept in the weapon set, which the cycle key goes round; the belt is for things used
+	var weapon_id := str(it.get("item_id", ""))
+	if _doll != null and _doll.has_method("add_to_weapon_set") and Equipment.set_takes(weapon_id):
+		var in_set := bool(_doll.call("in_weapon_set", weapon_id))
+		var fav := UiKit.button("Out of the weapon set" if in_set else "To the weapon set", "FlatButton")
+		fav.pressed.connect(func() -> void: _weapon_set(weapon_id, in_set))
+		actions.add_child(fav)
 	if bool(it.get("consumable", false)):
 		var use := UiKit.button("Use")
 		use.pressed.connect(func() -> void: _use(int(it["uid"])))
@@ -331,11 +340,9 @@ func _refresh_detail() -> void:
 		# Only weapons and armour are `equippable`, so the Equip button above never appeared
 		# for a potion and nothing else in the game called `bind_quick`. Four slots were drawn
 		# on the HUD, dimmed, which reads as "you have nothing worth putting there".
-		var bound := _belt_slot_of(str(it.get("item_id", "")))
-		var belt := UiKit.button("Off the belt" if bound != "" else "To the belt", "FlatButton")
-		belt.pressed.connect(func() -> void: _belt(str(it.get("item_id", "")), bound))
-		actions.add_child(belt)
+		_belt_button(actions, str(it.get("item_id", "")))
 	if bool(it.get("tool", false)):
+		_belt_button(actions, str(it.get("item_id", "")))
 		# a tool is used where it is wanted and kept: the speaking stone, the sluice pin
 		var use_tool := UiKit.button("Use")
 		use_tool.pressed.connect(func() -> void: _use(int(it["uid"])))
@@ -387,11 +394,29 @@ func _use(uid: int) -> void:
 	_refresh()
 
 
+## "To the belt" / "Off the belt" for a thing the belt holds (Equipment.belt_takes).
+func _belt_button(actions: Control, item_id: String) -> void:
+	if not Equipment.belt_takes(item_id):
+		return
+	var bound := _belt_slot_of(item_id)
+	var belt := UiKit.button("Off the belt" if bound != "" else "To the belt", "FlatButton")
+	belt.pressed.connect(func() -> void: _belt(item_id, bound))
+	actions.add_child(belt)
+
+
+func _weapon_set(item_id: String, in_set: bool) -> void:
+	if in_set:
+		_doll.call("remove_from_weapon_set", item_id)
+	elif not bool(_doll.call("add_to_weapon_set", item_id)):
+		EventBus.notify.emit("The weapon set holds %d. Take one out first." % Equipment.WEAPON_SET_SIZE, "info")
+	_refresh()
+
+
 ## Which belt slot this item already sits in, or "".
 func _belt_slot_of(item_id: String) -> String:
 	if item_id.is_empty() or _doll == null or not _doll.has_method("quick_item"):
 		return ""
-	for i in 4:
+	for i in Equipment.QUICK_SLOTS.size():
 		var slot := "quick_%d" % (i + 1)
 		if str(_doll.call("quick_item", slot)) == item_id:
 			return slot
@@ -399,7 +424,7 @@ func _belt_slot_of(item_id: String) -> String:
 
 
 ## On, or off again. A thing already on the belt comes off; otherwise it takes the first empty
-## slot, and when all four are full it takes the last, because the alternative is a button that
+## slot, and when all eight are full it takes the last, because the alternative is a button that
 ## does nothing and says nothing about why.
 func _belt(item_id: String, bound: String) -> void:
 	if item_id.is_empty() or _doll == null or not _doll.has_method("bind_quick"):
@@ -408,8 +433,8 @@ func _belt(item_id: String, bound: String) -> void:
 		_set_slot(int(bound.trim_prefix("quick_")) - 1, "")
 		_refresh()
 		return
-	var target := 3
-	for i in 4:
+	var target := Equipment.QUICK_SLOTS.size() - 1
+	for i in Equipment.QUICK_SLOTS.size():
 		if str(_doll.call("quick_item", "quick_%d" % (i + 1))).is_empty():
 			target = i
 			break

@@ -250,11 +250,12 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 			"at about twenty, thirty-five and fifty paces from where the body stands: %s" % str(dists))
 	var worn := player.get_node("Equipment") as Equipment
 	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_bow", "the bow in hand")
-	assert_eq(str(worn.quick_item("quick_4")), "core:item/hunting_knife", "the knife on a quick key")
-	(player as Player).use_quick_slot(3)
-	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_knife", "the key takes the knife into the hand")
-	(player as Player).use_quick_slot(3)
-	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_bow", "and gives the bow back")
+	# the kit keeps the knife "on quick_4"; the belt is for things used, so it is in the weapon set
+	assert_eq(str(worn.quick_item("quick_4")), "", "no knife on the belt")
+	assert_eq(Array(worn.weapon_set), ["core:item/hunting_bow", "core:item/hunting_knife"], "the bow and the knife in the weapon set")
+	assert_eq(worn.cycle_weapon(), "core:item/hunting_knife", "the cycle key takes the knife into the hand")
+	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_knife")
+	assert_eq(worn.cycle_weapon(), "core:item/hunting_bow", "and gives the bow back")
 	var rosen_near := false
 	for i in 600:
 		var r := NpcRegistry.instance.actor(ROSEN) as Node3D

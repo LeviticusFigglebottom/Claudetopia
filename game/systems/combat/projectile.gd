@@ -62,7 +62,9 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 		return
 	var from := global_position
-	var next := from + velocity * delta
+	# the step along the true arc (the fall's half-square term), so a shot aimed with the arc's
+	# formula (Player.arrow_direction) comes down where it was aimed and not a hand high of it
+	var next := from + velocity * delta + Vector3.DOWN * (0.5 * gravity * delta * delta)
 	velocity.y -= gravity * delta
 	var space := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(from, next, MASK_WORLD | MASK_TERRAIN | MASK_HURTBOX, _exclude)

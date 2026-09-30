@@ -22,6 +22,9 @@ const ITEMS := [
 	["use", "use", ["interact"]],
 	["strike", "strike", ["attack_light"]],
 	["block", "block", ["block"]],
+	# only while there is another weapon to go to (the weapon set holds two or more): the ranger's
+	# bow and knife, a sword and a staff
+	["weapons", "next weapon", ["cycle_weapon"]],
 ]
 ## Seconds of play (the world running, not paused) after which the strip goes anyway.
 const LIFETIME := 900.0
@@ -62,6 +65,8 @@ func rebuild() -> void:
 	for item in ITEMS:
 		var id := str(item[0])
 		if learned.has(id):
+			continue
+		if id == "weapons" and not _has_weapon_choice():
 			continue
 		var node := _item(id, str(item[1]), item[2])
 		_items[id] = node
@@ -165,6 +170,10 @@ func _process(delta: float) -> void:
 	if _played >= LIFETIME:
 		_fade_all()
 		return
+	if not player.weapon_cycled.is_connected(_on_weapon_cycled):
+		player.weapon_cycled.connect(_on_weapon_cycled)
+	if not learned.has("weapons") and not _items.has("weapons") and _has_weapon_choice():
+		rebuild()
 	var flat := Vector2(player.velocity.x, player.velocity.z).length()
 	_accumulate("move", flat > 1.0 and player.state == Player.State.FREE, delta, MOVE_S)
 	_accumulate("sprint", player.is_sprinting, delta, SPRINT_S)
@@ -196,6 +205,19 @@ func _accumulate(id: String, doing: bool, delta: float, needed: float) -> void:
 	_held_for[id] = float(_held_for.get(id, 0.0)) + delta
 	if float(_held_for[id]) >= needed:
 		learn(id)
+
+
+func _on_weapon_cycled(_id: String, weapons: Array) -> void:
+	if weapons.size() > 1:
+		learn("weapons")
+
+
+## Whether the player has another weapon to cycle to (Equipment.weapon_round holds two or more).
+func _has_weapon_choice() -> bool:
+	if not is_inside_tree():
+		return false
+	var eq := get_tree().get_first_node_in_group("equipment")
+	return eq != null and eq.has_method("weapon_round") and (eq.call("weapon_round") as Array).size() > 1
 
 
 ## Marks a thing as learned: its item fades and goes, and once nothing is left the strip goes.

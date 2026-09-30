@@ -62,7 +62,8 @@ static func validate(def: Dictionary, source := "") -> Array[String]:
 						out.append("%s's kit puts two things in the %s" % [where, hand])
 					hands[hand] = true
 				var quick := str(row.get("quick", ""))
-				if not quick.is_empty() and not quick in ["quick_1", "quick_2", "quick_3", "quick_4"]:
+				# a kit's weapon on a quick key goes to the weapon set instead (Progression.apply_style)
+				if not quick.is_empty() and not quick in Equipment.QUICK_SLOTS:
 					out.append("%s's kit keeps %s on '%s', which is not a quick key" % [where, str(row["item"]), quick])
 		for spell in kit.get("spells", []):
 			if Ids.type_of(str(spell)) != "spell":

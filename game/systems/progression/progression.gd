@@ -124,7 +124,12 @@ func apply_style(id: String, inventory: Inventory = null, equipment: Object = nu
 			equipment.call("equip", item, hand)
 		var quick := str(row.get("quick", ""))
 		if quick != "" and equipment != null and equipment.has_method("bind_quick"):
-			equipment.call("bind_quick", quick, item)
+			# the belt holds things used; a kit's weapon "on a quick key" (the ranger's knife) is
+			# kept in the weapon set, a press of the cycle key from the hand
+			if equipment.has_method("add_to_weapon_set") and Equipment.set_takes(item):
+				equipment.call("add_to_weapon_set", item)
+			else:
+				equipment.call("bind_quick", quick, item)
 	for spell in kit.get("spells", []):
 		learn_spell(str(spell))
 	skills_changed.emit()

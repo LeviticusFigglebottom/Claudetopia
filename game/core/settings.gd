@@ -66,6 +66,8 @@ const RETIRED_DEFAULTS := {
 	"toggle_camera": ["key:V", "joy_button:8"],
 	"inventory": ["key:I", "joy_button:4"],
 	"map": ["key:M", "joy_button:5"],
+	# the D-pad's right cycles the weapon set now; the belt's fourth slot is on its key alone
+	"quick_4": ["key:4", "joy_button:14"],
 }
 
 
