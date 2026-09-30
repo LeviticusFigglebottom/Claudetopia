@@ -15,7 +15,8 @@ extends RefCounted
 ##   radius at the median of the ground under it, blended back into the land over PAD_SKIRT
 ##   radii past that (tools/world/worldgen/roads.py, apply_pads; without the tilt and roll a
 ##   built pad keeps of the land's lie), in the build's shape (`pad_shape`: a cave's, a quarry's or
-##   a delve's keeps the land's slope, and a `trench` is sunk into it; a cave's rise is not raised);
+##   a delve's pad leaves the land as it lies, which the build only softens, and a `trench` is sunk
+##   into its pad; a cave's rise is not raised);
 ## * the cells' scatter inside the pad is cleared as the build clears it, and what stands on its
 ##   skirt is let down or lifted with the ground (`clear_cell`).
 ##
@@ -25,16 +26,13 @@ extends RefCounted
 ## docs/WORLD_LIFE.md says how a region's author uses it.
 
 ## tools/world/worldgen/roads.py: PAD_DEFAULT, CAMP_PAD_M, WAYSIDE_PAD_M, PAD_LEVEL, PAD_SKIRT,
-## PAD_FIT_RING_M, and the pad shapes (pad_shape: SLOPE_KINDS, SLOPE_SHARE, SLOPE_MAX; trench_depth).
+## and the pad shapes (pad_shape, SLOPE_KINDS; trench_depth in TerrainProvider).
 const PAD_DEFAULT := 25.0
 const CAMP_PAD_M := 22.0
 const WAYSIDE_PAD_M := 14.0
 const PAD_LEVEL := 0.7
 const PAD_SKIRT := 0.9
-const PAD_FIT_RING_M := 14.0
 const SLOPE_KINDS := ["cave", "quarry"]
-const SLOPE_SHARE := 0.9
-const SLOPE_MAX := 0.7
 ## The build clears its scatter to the pad's radius (worldgen/cells.py keep_discs).
 const CLEAR_SHARE := 1.0
 const ENV := "WICKMERE_PREVIEW_POIS"
@@ -112,11 +110,11 @@ static func wanted(built: Array) -> Array[Dictionary]:
 ## The shape of a def's pad (roads.pad_shape): "level", "slope" (a cave's, a quarry's, a delve's
 ## whose mouth is the cave builder's: the land's own slope kept) or "trench" (sunk by its `trench`).
 static func pad_shape(def: Dictionary) -> String:
-	var asked := str(def.get("pad_shape", ""))
-	if asked == "trench":
+	var own := str(def.get("pad_shape", ""))
+	if own == "trench":
 		return "trench" if def.get("trench", null) is Dictionary else "level"
-	if asked == "slope" or asked == "level":
-		return asked
+	if own == "slope" or own == "level":
+		return own
 	var kind := str(def.get("kind", ""))
 	var site: Variant = def.get("site", {})
 	var mouth := str((site as Dictionary).get("mouth", "")) if site is Dictionary else ""
@@ -150,32 +148,10 @@ static func pad_for(def: Dictionary, terrain: TerrainProvider) -> Dictionary:
 	var out := {"id": str(def.get("id", "")), "x": xz.x, "z": xz.y, "level": level, "radius": r,
 		"level_radius": level_r, "reach": reach, "shape": shape}
 	if shape == "slope":
-		out["tilt"] = land_tilt(terrain, xz, reach)
+		out["keep"] = true
 	elif shape == "trench":
 		out["trench"] = trench
 	return out
-
-
-## The grade (east, south) a sloped pad keeps: SLOPE_SHARE of a plane fitted to the ground on the ring
-## just past its skirt, no steeper than SLOPE_MAX (roads.land_tilt; on a whole ring of evenly spaced
-## points the least-squares plane is these two sums).
-static func land_tilt(terrain: TerrainProvider, xz: Vector2, reach: float) -> Vector2:
-	if terrain == null:
-		return Vector2.ZERO
-	var ring := reach + 0.5 * PAD_FIT_RING_M
-	var sx := 0.0
-	var sz := 0.0
-	var norm := 0.0
-	for k in 24:
-		var a := TAU * float(k) / 24.0
-		var rx := cos(a) * ring
-		var rz := sin(a) * ring
-		var h := terrain.get_height(xz.x + rx, xz.y + rz)
-		sx += rx * h
-		sz += rz * h
-		norm += rx * rx
-	var t := Vector2(sx, sz) / maxf(norm, 1e-6) * SLOPE_SHARE
-	return t.limit_length(SLOPE_MAX)
 
 
 ## The built world's entries with the previewed ones in: a pad laid for each and its entry put in
@@ -193,7 +169,7 @@ static func apply(built: Array, terrain: TerrainProvider) -> Array:
 		ids[p["id"]] = true
 		if terrain != null:
 			terrain.lay_pad(float(p["x"]), float(p["z"]), float(p["level"]), float(p["level_radius"]), float(p["reach"]),
-					{"tilt": p.get("tilt", Vector2.ZERO), "trench": p.get("trench", {})})
+					{"keep": p.get("keep", false), "trench": p.get("trench", {})})
 	if terrain != null:
 		terrain.commit_pads()
 	pads = laid
@@ -252,9 +228,9 @@ static func clear_cell(data: Dictionary) -> void:
 				if d < float(p["radius"]) * CLEAR_SHARE:
 					drop = true
 					break
-				var tilt: Vector2 = p.get("tilt", Vector2.ZERO)
-				var target := float(p["level"]) + tilt.x * (x - float(p["x"])) + tilt.y * (z - float(p["z"]))
-				row[1] = lerpf(float(row[1]), target, weight(p, d))
+				if bool(p.get("keep", false)):
+					continue                  # a sloped pad leaves the ground, and what stands on it
+				row[1] = lerpf(float(row[1]), float(p["level"]), weight(p, d))
 				changed = true
 			if drop:
 				changed = true

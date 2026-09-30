@@ -168,9 +168,11 @@ def land_tilt(place: dict, H: np.ndarray, grid: Grid, r_reach: float, share: flo
 ## benches the slope they were cut into, and the level pad takes both away. So a pad has a shape
 ## (`pad_shape`, from the POI def, else from its kind):
 ##   "level"   the pad above (every settlement, every pad the atlas fixes, and the default);
-##   "slope"   keeps the land's own slope (SLOPE_SHARE of it, fitted as `pad_relief` fits its tilt,
-##             never steeper than SLOPE_MAX) and smooths only the bumps: kinds SLOPE_KINDS, and a
-##             delve whose mouth is the cave builder's (not a lava tube's);
+##   "slope"   keeps the land's own lie, its banks and benches, and only softens it (a gaussian of
+##             SLOPE_SMOOTH_M: the bumps go, a bank stays): kinds SLOPE_KINDS, and a delve whose
+##             mouth is the cave builder's (not a lava tube's). A plane fitted round the pad was
+##             tried first: on the 1024 preview it read the Hush Hole's and Cadbrae's broad lie
+##             (0.07 and 0.01) and levelled the local bank each is cut into, which is the point;
 ##   "trench"  the level pad with a trench sunk into it (`trench` in the def; `trench_depth`): the
 ##             Kilnway's lava tube, whose mouth is a trench cut into the heath, which the game cannot
 ##             dig at runtime.
@@ -178,8 +180,7 @@ def land_tilt(place: dict, H: np.ndarray, grid: Grid, r_reach: float, share: flo
 ## higher than it. The game lays the same shapes for a POI it previews (TerrainProvider.lay_pad,
 ## PoiPreview) and is told the shape on each pois.json entry.
 SLOPE_KINDS = ("cave", "quarry")
-SLOPE_SHARE = 0.9
-SLOPE_MAX = 0.7
+SLOPE_SMOOTH_M = 5.0
 PAD_SHAPES = ("level", "slope", "trench")
 
 
@@ -303,8 +304,9 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
         target = level
         slope = None
         if shape == "slope":
-            tx, tz = land_tilt(p, H, grid, r_reach, SLOPE_SHARE, SLOPE_MAX)
-            slope = (tx * dx + tz * dz).astype(np.float32)
+            # the land itself, softened (laid again, it softens a little more: a plane stays a plane)
+            soft = ndimage.gaussian_filter(sub.astype(np.float64), SLOPE_SMOOTH_M / grid.spacing, mode="nearest")
+            slope = (soft - (float(step.foot) if step is not None else level)).astype(np.float32)
         if step is not None:
             level = float(step.foot)
             rise = step.rise(X[:, j0:j1], Z[i0:i1, :])

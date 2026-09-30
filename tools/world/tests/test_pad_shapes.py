@@ -73,7 +73,7 @@ class PadShapeTest(unittest.TestCase):
         H0 = slope_land(g, 0.3)
         quarry = {"id": "core:poi/q", "kind": "quarry", "position": [0.0, 0.0]}
         ruin = {"id": "core:poi/r", "kind": "ruins", "position": [0.0, 0.0]}
-        for poi, want in ((quarry, 0.3 * RD.SLOPE_SHARE), (ruin, RD.PAD_TILT_MAX)):
+        for poi, want in ((quarry, 0.3), (ruin, RD.PAD_TILT_MAX)):
             H, _m, levels = RD.apply_pads(g, H0.copy(), [poi])
             hz = sample_bilinear(H, g, np.array([0.0, 0.0]), np.array([-10.0, 10.0]))
             grade = float(hz[1] - hz[0]) / 20.0
@@ -85,11 +85,20 @@ class PadShapeTest(unittest.TestCase):
         core = np.hypot(X, Z) <= RD.pad_level_radius(quarry)
         self.assertLess(float(np.abs(H2 - H1)[core].max()), 0.05)
 
-    def test_a_sloped_pad_caps_its_grade(self):
+    def test_a_sloped_pad_keeps_a_bank_and_softens_a_bump(self):
+        """A quarry cut at the foot of a bank keeps the bank; a knob on its floor is softened."""
         g = Grid(512.0, 256)
-        H, _m, _l = RD.apply_pads(g, slope_land(g, 1.2), [{"id": "core:poi/c", "kind": "quarry", "position": [0.0, 0.0]}])
-        hz = sample_bilinear(H, g, np.array([0.0, 0.0]), np.array([-6.0, 6.0]))
-        self.assertAlmostEqual(float(hz[1] - hz[0]) / 12.0, RD.SLOPE_MAX, delta=0.02)
+        X, Z = g.mesh()
+        X, Z = X + 0.0 * Z, Z + 0.0 * X
+        H0 = (100.0 + 12.0 * np.clip((X - 8.0) / 10.0, 0.0, 1.0)            # a bank from x 8 to 18
+              + 1.5 * np.exp(-((X + 8.0) ** 2 + Z ** 2) / 8.0)).astype(np.float32)   # a knob at x -8
+        poi = {"id": "core:poi/q", "kind": "quarry", "position": [0.0, 0.0]}
+        H, _m, _l = RD.apply_pads(g, H0.copy(), [poi])
+        at = lambda x: float(sample_bilinear(H, g, np.array([x]), np.array([0.0]))[0])
+        self.assertGreater(at(16.0) - at(2.0), 8.0)          # the bank is still there, inside the core
+        self.assertLess(at(-8.0) - 100.0, 0.9)               # the knob is not
+        Hl, _m, _l = RD.apply_pads(g, H0.copy(), [dict(poi, pad_shape="level")])
+        self.assertLess(float(sample_bilinear(Hl, g, np.array([16.0]), np.array([0.0]))[0]) - 100.0, 3.0)
 
     def test_a_cave_in_a_bank_keeps_the_bank(self):
         """A cave's rise over a sloped pad: the slope in front of the mouth, the face at the mouth,
@@ -102,14 +111,14 @@ class PadShapeTest(unittest.TestCase):
         self.assertLess(st.fz, -0.9)                       # faces down the slope, north
         H, _m, levels = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
         front = float(sample_bilinear(H, g, np.array([0.0]), np.array([-8.0]))[0])
-        self.assertAlmostEqual(front, levels[poi["id"]] - 8.0 * 0.35 * RD.SLOPE_SHARE, delta=0.6)
+        self.assertAlmostEqual(front, 100.0 - 8.0 * 0.35, delta=0.6)
         # behind the mouth: at least the face over the foot, and the slope carrying on up from there
         z = np.array([6.0, 12.0, 17.0])
         behind = sample_bilinear(H, g, np.zeros(3), z)
         self.assertTrue(np.all(behind >= st.foot + FA.CAVE_FACE_M - 0.3), behind)
         self.assertTrue(np.all(np.diff(behind) >= -0.05), behind)
         # and it is the slope's own line where that stands higher than the face, never raised over it
-        line = levels[poi["id"]] + 0.35 * RD.SLOPE_SHARE * z
+        line = 100.0 + 0.35 * z
         self.assertTrue(np.all(behind - line <= FA.CAVE_FACE_M + 0.5), behind - line)
         self.assertTrue(np.all(behind >= line - 0.3), behind - line)
 

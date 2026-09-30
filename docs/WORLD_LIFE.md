@@ -43,6 +43,11 @@ Other agents at work: 0-B (road encounters, caravans, ambushes), 0-C (large inte
   camp 22, a wayside find 14). The build flattens the pad's level core to 0.7 of it and blends
   the skirt over 0.9 of it past that, so a place whose pieces reach 30 m from its middle wants
   about `pad_radius_m: 36`. The audit's `past_pad` says when pieces stand off the pad.
+- **`pad_shape`** (new): `"slope"` keeps the land's slope under the pad (a cave, a quarry and a delve
+  with the cave builder's mouth have it without asking), `"level"` asks for the level pad, and
+  `"trench"` with a `"trench"` block sinks a trench into it (the Kilnway's: `bearing_deg` the way it
+  runs out, `length_m` to the top of its `ramp_m`, `width_m` of floor, `depth_m`, and `behind_m`,
+  `head_width_m`, `head_from_m` for a wider head behind the middle). The preview lays the same.
 - **`builder`** (new): the name of a static function in `game/world/pois/regions/<region>.gd` that
   builds this place instead of its kind's builder (section 3).
 - Keep a new place 200 m and more from the next where the audit shows empty land; never put its

@@ -344,11 +344,11 @@ func max_height_around(x: float, z: float, radius: float, samples: int = 12) -> 
 ## A pad laid on the ground as it stands, for a place the world has not been built with yet
 ## (PoiPreview): level at `level` out to `level_radius`, blended back into the land by `reach`, in
 ## the runtime map and in Terrain3D's heights alike. `commit_pads` once they are all laid.
-## `shape` is the build's pad shape (tools/world/worldgen/roads.py, pad_shape): {"tilt": Vector2,
-## the grade east and south a sloped pad keeps of the land} and/or {"trench": the def's `trench`,
-## sunk into the pad as `trench_depth` says}.
+## `shape` is the build's pad shape (tools/world/worldgen/roads.py, pad_shape): {"keep": true} for a
+## sloped pad, which keeps the land as it lies (the build only softens it, by a few metres' blur), and
+## {"trench": the def's `trench`}, sunk into the pad as `trench_depth` says.
 func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float, shape: Dictionary = {}) -> void:
-	var tilt: Vector2 = shape.get("tilt", Vector2.ZERO)
+	var keep := bool(shape.get("keep", false))
 	var trench: Dictionary = shape.get("trench", {})
 	if not _heights.is_empty():
 		var i0 := maxi(int(floor((z - reach - _height_origin.y) / _spacing)), 0)
@@ -362,7 +362,7 @@ func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float
 				var d := Vector2(dx, dz).length()
 				if d < reach:
 					var k := i * _grid + j
-					_heights[k] = _pad_height(_heights[k], level, level_radius, reach, tilt, trench, dx, dz, d)
+					_heights[k] = _pad_height(_heights[k], level, level_radius, reach, keep, trench, dx, dz, d)
 	if _data == null or not _data.has_method("set_height"):
 		return
 	var s := float(_terrain.get("vertex_spacing")) if _terrain != null else 1.0
@@ -376,14 +376,16 @@ func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float
 			var h: float = _data.call("get_height", p)
 			if is_nan(h):
 				continue
-			_data.call("set_height", p, _pad_height(h, level, level_radius, reach, tilt, trench, p.x - x, p.z - z, d))
+			_data.call("set_height", p, _pad_height(h, level, level_radius, reach, keep, trench, p.x - x, p.z - z, d))
 	_pads_laid = true
 
 
 ## The ground `h` at (dx, dz) from a pad's middle, `d` out, once the pad is laid (roads.apply_pads).
-static func _pad_height(h: float, level: float, level_radius: float, reach: float, tilt: Vector2,
+static func _pad_height(h: float, level: float, level_radius: float, reach: float, keep: bool,
 		trench: Dictionary, dx: float, dz: float, d: float) -> float:
-	var target := level + tilt.x * dx + tilt.y * dz
+	if keep:
+		return h                          # a sloped pad: the land as it lies
+	var target := level
 	var w := 1.0 - smoothstep(level_radius, reach, d)
 	if not trench.is_empty():
 		var sunk := trench_depth(trench, dx, dz)
