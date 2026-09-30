@@ -90,7 +90,7 @@
       ]
     },
     "appearance": {
-      "seed": 4411,
+      "seed": 9010,
       "build": "compact_wiry",
       "age": 38.0,
       "feminine": 1.0,
@@ -154,12 +154,7 @@
     "bio": "Thalisse's younger brother, the Salt Isles boat's other oar. A climber and a bell-ringer, as the Isles' boys are raised, and he has not been ashore anywhere in his life that had a bell he was not allowed to ring.",
     "unique_habit": "Hums the Isles' landing-peal under his breath, three times through, whenever he sees the sea from a height.",
     "personality": {
-      "traits": [
-        "brave",
-        "gossip",
-        "kind",
-        "timid"
-      ]
+      "traits": ["brave", "gossip", "kind"]
     },
     "appearance": {
       "seed": 4412,
@@ -226,12 +221,7 @@
     "bio": "A novice of the Tolling Order from Tamwick, seventeen, in her first year: she has sat her day and night on the Novices' Seats without turning round, and the chapter-master has kept her at the Seats since as their keeper, to sweep them, and to sit with the next ones. She is the one who noticed that one of the seats had been turned to face the Choir.",
     "unique_habit": "Sits on the seat that was turned, facing the Choir, for exactly as long as it takes to count a hundred bells, every morning, and then turns and sits on her own facing the Hush, and looks relieved.",
     "personality": {
-      "traits": [
-        "brave",
-        "pious",
-        "gossip",
-        "timid"
-      ]
+      "traits": ["brave", "pious", "gossip"]
     },
     "appearance": {
       "seed": 1024,
@@ -508,12 +498,7 @@
     "bio": "The hermit in the arch of the Hermit's Gate: a Tollmere Sayer's clerk who walked out of the Spire thirty years ago with a satchel of Oroth grammars and has lived on pilgrims' bread in a cell in the gatehouse since, trying names on a door with no hinges that he says he saw open once. He is not mad, which is what makes the pilgrims uneasy.",
     "unique_habit": "Says each name he tries three times, at the same pitch, with his palm flat on the door, and writes it on the arch with a burnt stick when it fails, in a spiral that has reached the ground and started up the other side.",
     "personality": {
-      "traits": [
-        "quiet",
-        "proud",
-        "pious",
-        "humble"
-      ]
+      "traits": ["quiet", "proud", "pious"]
     },
     "appearance": {
       "seed": 3010,
@@ -582,12 +567,7 @@
     "bio": "Boss of the Ashgrid's scavengers for eleven years, a Tollmere docker's son who came down to dig Builders' bronze for a season and stayed because nobody tells him what to do out here. Has lost nobody to the dead city in all that time, which he says is because he listens to the ash, and which the Order says is luck. Nell, one of the three diggers down the new shaft, is his daughter.",
     "unique_habit": "Weighs everything in his hand before he speaks of it, a coin, a bronze, a stranger's question, and says what he thinks it weighs.",
     "personality": {
-      "traits": [
-        "greedy",
-        "brave",
-        "cynical",
-        "generous"
-      ]
+      "traits": ["greedy", "brave", "cynical"]
     },
     "appearance": {
       "seed": 7722,
@@ -653,12 +633,7 @@
     "bio": "A scavenger of the Ring, the rope-man: he lowered Nell Brisket and the other two down the new shaft on his own rope and was holding it when it went slack, and has not been back to the headframe since.",
     "unique_habit": "Coils and uncoils the same length of rope by the gate all day, and will not put it down.",
     "personality": {
-      "traits": [
-        "timid",
-        "kind",
-        "quiet",
-        "gossip"
-      ]
+      "traits": ["timid", "kind", "quiet"]
     },
     "appearance": {
       "seed": 7723,

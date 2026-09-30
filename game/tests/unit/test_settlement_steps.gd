@@ -80,7 +80,9 @@ func test_a_town_raised_in_pieces_is_the_town_raised_at_once() -> void:
 			frames += 1
 		WorldPace.paced_override = -1
 		assert_true(paced.is_raised, "%s raised stepwise" % t[0])
-		assert_gt(frames, 5, "%s was raised over many frames" % t[0])
+		# over frames, not in one: how many is the machine's (a frame's budget is a share of what the
+		# frames before it cost, WorldPace, so a loaded machine builds more in each)
+		assert_gt(frames, 2, "%s was raised over many frames" % t[0])
 		var got := _described(paced)
 		if got != want:
 			var first := ""

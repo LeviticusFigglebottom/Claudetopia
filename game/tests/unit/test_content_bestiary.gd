@@ -350,7 +350,15 @@ func test_every_boss_in_the_bible_exists_with_a_fight_in_it() -> void:
 			# nothing is a phase change the player cannot see.
 			if i > 0:
 				assert_false((p.get("attacks", []) as Array).is_empty(), "%s phase %d changes nothing" % [id, i])
-	assert_eq(_bosses().size(), PROMISED.size(), "the bible lists five bosses")
+	# the bible's five are the story's; every other boss is the one at the bottom of a large site or
+	# a place (sites, world life), and says where it fights and whose country it is in
+	for def in _bosses():
+		var id := str(def["id"])
+		if PROMISED.has(id):
+			continue
+		assert_true(ContentDB.has(str(def.get("arena", ""))), "%s fights nowhere" % id)
+		assert_true(ContentDB.has(str(def.get("region", ""))), "%s belongs to no region" % id)
+		assert_false((def.get("phases", []) as Array).is_empty(), "%s has no fight in it" % id)
 
 
 func test_every_boss_attack_names_a_clip_that_exists() -> void:

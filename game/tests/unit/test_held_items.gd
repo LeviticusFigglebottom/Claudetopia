@@ -270,6 +270,52 @@ func test_a_torch_is_taken_up_burning_and_put_out_again() -> void:
 	assert_true(HeldItems.torch_of(body) == null, "no torch in the hand")
 
 
+## The belt's torch is the lantern key's: pressed on the belt it is the same HeldTorch taken up
+## burning with the bow put by, and pressed again (or the key) it is put out and the bow given back.
+## A start's kit puts its torch on the belt as well as in the bag.
+func test_a_torch_on_the_belt_is_the_lantern_key_s_torch() -> void:
+	if not _rig_built():
+		return
+	await _stand()
+	var body := player.body_model()
+	var bag := player.get_node("Inventory") as Inventory
+	var eq := player.get_node("Equipment") as Equipment
+	bag.add("core:item/hunting_bow", 1)
+	bag.add("core:item/torch", 1)
+	assert_true(eq.equip("core:item/hunting_bow", "main_hand"), "the bow in hand")
+	var slot := eq.bind_free_quick("core:item/torch")
+	assert_true(slot != "", "the torch goes on a free slot of the belt")
+	await _ticks(1)
+	player.use_quick_slot(Equipment.QUICK_SLOTS.find(slot))
+	await _ticks(2)
+	assert_eq(eq.item_id("off_hand"), "core:item/torch", "the belt takes the torch into the off hand")
+	assert_eq(eq.item_id("main_hand"), "", "the bow put by, as the key does")
+	var torch := HeldItems.torch_of(body)
+	assert_true(torch != null and torch.lit, "the same torch, burning")
+	assert_true(player.lantern_lit, "and its light lit")
+	player.use_quick_slot(Equipment.QUICK_SLOTS.find(slot))
+	await _ticks(2)
+	assert_eq(eq.item_id("off_hand"), "", "pressed again, it is put out and put away")
+	assert_eq(eq.item_id("main_hand"), "core:item/hunting_bow", "and the bow given back")
+	# taken up on the belt, put out with the key: one torch, one way of carrying it
+	player.use_quick_slot(Equipment.QUICK_SLOTS.find(slot))
+	await _ticks(2)
+	assert_false(player.toggle_lantern(), "the key puts out the belt's torch")
+	await _ticks(2)
+	assert_eq(eq.item_id("main_hand"), "core:item/hunting_bow", "and gives the bow back")
+	# a start's kit: the torch on the belt
+	for i in Equipment.QUICK_SLOTS.size():
+		eq.clear_quick(Equipment.QUICK_SLOTS[i])
+	var prog := player.get_node_or_null("Progression")
+	if prog != null and prog.has_method("apply_style") and ContentDB.has("core:style/warrior"):
+		prog.call("apply_style", "core:style/warrior", bag, eq)
+		var on_belt := false
+		for q in Equipment.QUICK_SLOTS:
+			if eq.quick_item(q) == "core:item/torch":
+				on_belt = true
+		assert_true(on_belt, "the warrior's kit torch is on the belt")
+
+
 func test_a_sheathed_weapon_hangs_clear_of_the_body() -> void:
 	if not _rig_built():
 		return

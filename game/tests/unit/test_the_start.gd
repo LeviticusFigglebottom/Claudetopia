@@ -214,10 +214,16 @@ func test_the_stair_head_is_a_camp_with_the_warden_s_place_in_front() -> void:
 		assert_true(off < 35.0, "and in the way the first view looks (%.0f degrees off it)" % off)
 		var facing := -spot.transform.basis.z
 		assert_gt(Vector2(facing.x, facing.z).dot(-flat.normalized()), 0.9, "turned to face the Foundling")
-	# the waystones are one dressed-stone mesh that knows how many stones it holds
+	# the waystones: each a carved stone of the forge's (gen_rocks waystone), placed by its own name;
+	# or, where the forge has built none, one dressed-stone mesh that knows how many stones it holds
 	var marks := 0
 	for w in d.find_children("Waystones", "MeshInstance3D", true, false):
 		marks += int((w as Node).get_meta("stones", 0))
+	for c in d.find_children("*", "Node3D", true, false):
+		var nm := str(c.name).to_lower()
+		# a carved stone's own node (its mesh and body below it are not counted again)
+		if nm.contains("waystone") and str(c.name) != "Waystones" and not str(c.get_parent().name).to_lower().contains("waystone"):
+			marks += 1
 	assert_gt(marks, 15, "waystones walk away to the Choir: %d of them" % marks)
 	# they stop where reaching it counts, at the head of its avenue, and none stands in its colossus
 	# (the way the builder lays them along; a headless multimesh keeps no instance positions)

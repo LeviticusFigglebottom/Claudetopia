@@ -239,6 +239,8 @@ func _make_bird(i: int) -> Dictionary:
 	node.scale = Vector3.ONE * s
 	add_child(node)
 	var body := MeshInstance3D.new()
+	# named, so what reads the world (the seat audit) knows a crow in the air from a thing floating
+	body.name = "CrowBody"
 	body.mesh = _body_mesh
 	body.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	node.add_child(body)
@@ -248,6 +250,7 @@ func _make_bird(i: int) -> Dictionary:
 		pivot.position = Vector3(side * 0.04, 0.03, 0.02)
 		node.add_child(pivot)
 		var wing := MeshInstance3D.new()
+		wing.name = "CrowWing"
 		wing.mesh = _wing_mesh
 		wing.scale = Vector3(side, 1.0, 1.0)
 		wing.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

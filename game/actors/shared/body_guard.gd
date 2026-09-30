@@ -17,8 +17,11 @@ extends RefCounted
 const BELOW_M := 30.0
 ## falling this long with nothing under it: a fall with no floor (six seconds is 176 m)
 const FALL_S := 6.0
-## the world is 8.2 km across, centred on the origin; nothing stands 20 km out
-const FAR_M := 20000.0
+## Further out than anything stands: the world is 8.2 km across, centred on the origin, but the
+## interiors' pockets are laid 50 km out and a kilometre apart (InteriorManager.POCKET_ORIGIN), and
+## at 20 km every body that went through a door was put back outside it. A runaway body (the NaN's
+## neighbours: 1e18 and the like) is still caught.
+const FAR_M := 1000000.0
 ## how often the last good ground is taken, seconds (it need not be every frame)
 const KEEP_EVERY_S := 0.25
 

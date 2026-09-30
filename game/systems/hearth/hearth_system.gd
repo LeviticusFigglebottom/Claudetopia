@@ -42,6 +42,9 @@ func rest_at(hearthstone_id: String, position: Vector3, yaw: float, autosave := 
 	var player := _player()
 	if player and player.has_method("full_restore"):
 		player.full_restore()
+	# counted where a rest happens: SiteFallen reads it (a site's dead stand again after one), and a
+	# listener that only began with the first site raised in a session missed the rests before it
+	GameState.inc(SiteFallen.RESTS)
 	EventBus.hearthstone_rested.emit(hearthstone_id)
 	if autosave:
 		call_deferred("_autosave")
@@ -111,6 +114,7 @@ func _respawn() -> void:
 		_echo_node.set("armed", true)
 	EventBus.player_respawned.emit(last_hearthstone_id)
 	# Coming back is a rest: the world resets around you, but no autosave mid-recovery.
+	GameState.inc(SiteFallen.RESTS)
 	EventBus.hearthstone_rested.emit(last_hearthstone_id)
 
 

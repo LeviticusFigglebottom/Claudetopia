@@ -631,9 +631,18 @@ func _choice_payload() -> Array:
 func quest_cue(choice: Dictionary) -> Dictionary:
 	if ctx == null:
 		return {}
-	return QuestCues.for_choice(choice, npc_id, _node,
+	return QuestCues.for_choice(choice, npc_id, _peek_node,
 			func(conds: Variant) -> bool: return Conditions.all_of(conds if typeof(conds) == TYPE_ARRAY else [], ctx),
 			ctx.provider("quests"))
+
+
+## A node as a reader looking ahead sees it (QuestCues): the shop and a deed are things that happen
+## when they are entered, and reading ahead to them asked for the shop once per answer on the page
+## (three asks for one "Show me what you have").
+func _peek_node(node_id: String) -> Dictionary:
+	if node_id == TRADE_NODE or node_id.begins_with(DEED_NODE):
+		return {}
+	return _node(node_id)
 
 
 ## What the person spoken to is to the player's quests now (QuestCues.state_now), for the page's

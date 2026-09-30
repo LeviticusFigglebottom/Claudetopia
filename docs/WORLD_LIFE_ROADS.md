@@ -44,7 +44,7 @@ file of its own without touching the core one.
     {"event": "core:roadevent/carters_wagon", "route": ["core:place/merrowby", "core:place/tamwick"],
      "speed": 1.3, "start": 0.35}
   ],
-  "sites": [{"at": [612, 1840], "kind": "bend", "tell": "felled_tree"}]
+  "sites": [{"at": {"place": "core:poi/larkbourne_ford", "offset": [12, -30]}, "kind": "bend", "tell": "felled_tree"}]
 }
 ```
 
@@ -71,8 +71,9 @@ file of its own without touching the core one.
 
   It rests 3 game hours at each end and turns round. If it is broken, it sets out again 72 hours
   later.
-- **`sites`**: your own ambush sites, added to the road features the land has. Each is `at` (world
-  x, z), snapped to the nearest road, with a `kind` and optionally a `tell`. Use them for a place the
+- **`sites`**: your own ambush sites, added to the road features the land has. Each is `at`, said
+  beside a place (`{"place": id, "offset": [dx, dz]}`, PlaceRef, so it moves with the map), snapped
+  to the nearest road, with a `kind` and optionally a `tell`. Use them for a place the
   story wants, such as the Larkbourne ford.
 
 ## An event (`roadevent`)

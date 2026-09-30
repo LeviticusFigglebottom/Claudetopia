@@ -308,5 +308,103 @@
       "lore"
     ],
     "description": "A leather seed-bag from the Last Furrow's barn, the Hallows' mark burnt on its flap, full of seed-corn from the harvest of 865. It has been in the ash a hundred and seventy-seven years and the grains are still whole."
+  },
+  {
+    "id": "core:item/note_last_milestone_names",
+    "name": "Four Names from the Last Milestone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing in charcoal of the four names cut into the Last Milestone, taken on pilgrim's paper with the grit of the stone still in it.",
+    "reads": "core:book/four_names_at_the_milestone"
+  },
+  {
+    "id": "core:item/note_ninth_waystone_counts",
+    "name": "The Ninth Waystone's Counts, Copied",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the counts cut on the Ninth Waystone, two hands' worth of strokes set out in rows on a leaf torn from a Sayer's book.",
+    "reads": "core:book/ninth_waystone_counts"
+  },
+  {
+    "id": "core:item/note_tenth_waystone_count",
+    "name": "The Tenth Waystone's Count, Copied",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the one count cut on the Tenth Waystone, in an unknown hand, made on the back of a pilgrim's token-slip with a burnt stick.",
+    "reads": "core:book/tenth_waystone_counts"
+  },
+  {
+    "id": "core:item/note_weighhouse_pans",
+    "name": "A Reading of the Weighhouse Scales",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer's reading of the Weighhouse's great pans, the weights drawn as circles and the Builders' marks copied beside them in a careful hand.",
+    "reads": "core:book/weighhouse_pans"
+  },
+  {
+    "id": "core:item/note_greyline_reading",
+    "name": "The Greyline Stones, Set Down",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Warden's leaf listing the Greyline stones one by one, a Naming Day to each, the last few lines in a newer and shakier ink.",
+    "reads": "core:book/greyline_reading"
+  },
+  {
+    "id": "core:item/note_turnback_last_order",
+    "name": "The Last Order at Turnback",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A chapter-order on vellum with the Tolling seal broken off, its corners scorched, kept rolled in a bone case that has lost its cap.",
+    "reads": "core:book/turnback_last_order"
+  },
+  {
+    "id": "core:item/note_anthe_ondr_tally",
+    "name": "The Diggers' Last Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scavenger's tally on a strip of lead, scratched with a nail and folded twice to fit a pocket, the last lines scratched harder than the first.",
+    "reads": "core:book/anthe_ondr_tally"
   }
 ]

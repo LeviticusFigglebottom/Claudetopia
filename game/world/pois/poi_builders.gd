@@ -2648,6 +2648,10 @@ static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
 	# the lamplighter's round: on the deck, not on the marsh under it
 	var round_at := a.lerp(b, 0.35)
 	k.marker("the_lamp_round", Vector3(round_at.x, deck_y + 0.1, round_at.y), true, true, length * 0.5)
+	# the last post's foot, on the deck: what a quest leaves hung there (the Long Jetty's lantern
+	# with a Vale name on it) is put down here and not in the mere a few paces off the pad's middle
+	var last_post := b - axis * 1.2
+	k.marker("last_post", Vector3(last_post.x, deck_y + 0.05, last_post.y), false, true, 2.0)
 	var reeds: Array = []
 	for i in 70:
 		var t := k.rng.randf_range(-0.1, 1.1)
@@ -4161,7 +4165,7 @@ static func _ruins_colonnade(d: PoiDressing) -> void:
 	k.scatter(k.flora("reeds"), reeds, false, false, false)
 	var rope_at := start + up * 2.0 + perp * 2.2
 	await k.step()
-	k.place(k.prop("rope_coil"), k.on_ground(rope_at.x, rope_at.y, 0.3), k.rng.randf_range(0.0, TAU), 1.0, false)
+	k.place(k.prop("rope_coil"), k.on_ground(rope_at.x, rope_at.y), k.rng.randf_range(0.0, TAU), 1.0, false)
 	await k.step()
 	k.place(k.prop("dock_post"), k.on_ground(rope_at.x + perp.x * 1.2, rope_at.y + perp.y * 1.2), yaw, 1.1)
 
@@ -5007,10 +5011,19 @@ static func wreck(d: PoiDressing) -> void:
 	var rope := perp * (beam * 0.5 + 1.0)
 	await k.step()
 	k.place(k.prop("rope_coil"), k.on_ground(rope.x, rope.y), k.rng.randf_range(0.0, TAU), 1.0, false)
-	# a lantern still hanging off the stem, which is the last thing anybody did on her
+	# a lantern still hanging off the stempost, which is the last thing anybody did on her: the post
+	# stands at her bow, and the lantern hangs at its head (in the air 3.4 m up it hung from nothing)
+	var stem := k.prop("dock_post")
+	var stem_h := PoiKit.height_of(stem) * 1.6 if stem != "" else 0.0
+	var lamp_y := g.y + 3.4
+	if stem_h > 1.0:
+		await k.step()
+		k.place(stem, Vector3(bow.x, g.y - 0.3, bow.y), yaw, 1.6, true)
+		lamp_y = g.y - 0.3 + stem_h - 0.55
+	var hang := Vector3(bow.x, lamp_y, bow.y) + Vector3(cos(yaw), 0.0, -sin(yaw)) * 0.3
 	await k.step()
-	k.place(k.prop("lantern_hanging"), Vector3(bow.x, g.y + 3.4, bow.y), yaw, 1.2, false)
-	k.light(Vector3(bow.x, g.y + 3.2, bow.y), Color(1.0, 0.76, 0.45), 1.4, 8.0)
+	k.place(k.prop("lantern_hanging"), hang, yaw, 1.2, false)
+	k.light(hang - Vector3(0.0, 0.2, 0.0), Color(1.0, 0.76, 0.45), 1.4, 8.0)
 	# her hold is somebody's now: a chest under the shelter of the standing side
 	var lee := perp * (beam * 0.3) * (-1.0 if heel > 0.0 else 1.0)
 	await k.step()

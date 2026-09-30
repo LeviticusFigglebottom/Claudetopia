@@ -148,26 +148,17 @@
     },
     "sites": [
       {
-        "at": [
-          -1216,
-          770
-        ],
+        "at": {"place": "core:poi/pennyfold_keep", "offset": [0, 0]},
         "kind": "bend",
         "tell": "crows"
       },
       {
-        "at": [
-          -1646,
-          -1328
-        ],
+        "at": {"place": "core:poi/the_false_lantern", "offset": [0, 0]},
         "kind": "bend",
         "tell": "felled_tree"
       },
       {
-        "at": [
-          1700,
-          198
-        ],
+        "at": {"place": "core:poi/cadbrae_slate_cut", "offset": [0, 0]},
         "kind": "bend",
         "tell": "crows"
       }

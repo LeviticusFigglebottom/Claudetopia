@@ -29,10 +29,10 @@
       {"event": "core:roadevent/sedgemire_tithe_cart", "route": ["core:place/isseva", "core:place/oulea"], "speed": 1.2, "start": 0.5}
     ],
     "sites": [
-      {"at": [-2425, -673], "kind": "bend", "tell": "crows"},
-      {"at": [-2382, -40], "kind": "bridge"},
-      {"at": [-2355, 791], "kind": "bridge", "tell": "felled_tree"},
-      {"at": [-2790, -1000], "kind": "bend"}
+      {"at": {"place": "core:poi/heron_watch", "offset": [17, -13]}, "kind": "bend", "tell": "crows"},
+      {"at": {"place": "core:poi/lantern_causeway", "offset": [-2, 0]}, "kind": "bridge"},
+      {"at": {"place": "core:poi/reed_bridge", "offset": [5, 1]}, "kind": "bridge", "tell": "felled_tree"},
+      {"at": {"place": "core:place/moreva", "offset": [0, 0]}, "kind": "bend"}
     ]
   },
   {

@@ -2404,43 +2404,66 @@ var _before_torch: Dictionary = {}
 ## Strikes or shutters the carried light. Returns whether anything is lit afterwards. With a torch
 ## in the bag and no light in the off hand, the key takes the torch up burning in the left hand (a
 ## bow or a staff, which want both hands, goes on the back meanwhile, and a shield on the arm is
-## slung); with a torch in the hand it puts it out and gives the hands back what they held.
+## slung); with a torch in the hand it puts it out and gives the hands back what they held. A torch
+## on the belt does the same (use_torch), so the key and the belt are one way of carrying fire.
 func toggle_lantern() -> bool:
-	var eq := _doll()
 	if HeldItems.is_torch(offhand):
-		lantern_lit = false
-		if eq != null and eq.has_method("unequip"):
-			eq.call("unequip", "off_hand")
-			var main_id := str(_before_torch.get("main_hand", ""))
-			var off_id := str(_before_torch.get("off_hand", ""))
-			if main_id != "" and str(eq.call("item_id", "main_hand")) == "":
-				eq.call("equip", main_id, "main_hand")
-			if off_id != "" and str(eq.call("item_id", "off_hand")) == "":
-				eq.call("equip", off_id, "off_hand")
-		_before_torch = {}
-		EventBus.notify.emit("You put out the torch.", "item")
+		put_out_torch()
 		return false
 	if offhand.get("light", {}).is_empty():
-		var bag := get_node_or_null("Inventory") as Inventory
-		var torch_id := _a_torch_in(bag)
-		if torch_id == "" or eq == null or not eq.has_method("equip"):
-			EventBus.notify.emit("You have nothing to light.", "warning")
-			return false
-		_before_torch = {"main_hand": str(eq.call("item_id", "main_hand")), "off_hand": str(eq.call("item_id", "off_hand"))}
-		if not bool(eq.call("equip", torch_id, "off_hand")):
-			_before_torch = {}
-			EventBus.notify.emit("You have nothing to light.", "warning")
-			return false
-		lantern_lit = true
-		_refresh_lantern()
-		EventBus.act_done.emit("torch", self, null, torch_id)
-		EventBus.notify.emit("You light a torch.", "item")
-		return true
+		return take_up_torch(_a_torch_in(get_node_or_null("Inventory") as Inventory))
 	lantern_lit = not lantern_lit
 	_refresh_lantern()
 	var said := "The %s is lit." % str(offhand.get("name", "lantern")).to_lower() if lantern_lit else "You shutter the light."
 	EventBus.notify.emit(said, "item")
 	return lantern_lit
+
+
+## A torch pressed on the belt: taken up burning, or, with one in the hand already, put out and the
+## hands given back what they held -- the lantern key's own behaviour (toggle_lantern), whichever
+## torch the belt names. Returns whether a torch burns in the hand afterwards.
+func use_torch(torch_id: String) -> bool:
+	if HeldItems.is_torch(offhand):
+		put_out_torch()
+		return false
+	return take_up_torch(torch_id)
+
+
+## Takes `torch_id` from the bag into the left hand, burning, remembering what the hands held.
+func take_up_torch(torch_id: String) -> bool:
+	var eq := _doll()
+	if torch_id == "" or eq == null or not eq.has_method("equip"):
+		EventBus.notify.emit("You have nothing to light.", "warning")
+		return false
+	var before := {"main_hand": str(eq.call("item_id", "main_hand")), "off_hand": str(eq.call("item_id", "off_hand"))}
+	_before_torch = before
+	if not bool(eq.call("equip", torch_id, "off_hand")):
+		_before_torch = {}
+		EventBus.notify.emit("You have nothing to light.", "warning")
+		return false
+	lantern_lit = true
+	_refresh_lantern()
+	EventBus.act_done.emit("torch", self, null, torch_id)
+	EventBus.notify.emit("You light a torch.", "item")
+	return true
+
+
+## Puts out the torch in the hand and gives the hands back what they held before it was taken up.
+func put_out_torch() -> void:
+	var eq := _doll()
+	lantern_lit = false
+	if eq != null and eq.has_method("unequip"):
+		eq.call("unequip", "off_hand")
+		var main_id := str(_before_torch.get("main_hand", ""))
+		var off_id := str(_before_torch.get("off_hand", ""))
+		if main_id != "" and str(eq.call("item_id", "main_hand")) == "":
+			eq.call("equip", main_id, "main_hand")
+		if off_id != "" and str(eq.call("item_id", "off_hand")) == "":
+			eq.call("equip", off_id, "off_hand")
+	else:
+		_refresh_lantern()
+	_before_torch = {}
+	EventBus.notify.emit("You put out the torch.", "item")
 
 
 ## The first torch in the bag, or "".
@@ -2626,6 +2649,10 @@ func use_quick_slot(index: int) -> void:
 		return
 	if Flask.is_flask(id):
 		drink_flask()
+		return
+	if HeldItems.is_torch(ContentDB.get_or_empty(id)):
+		# the belt's torch is the lantern key's: the same HeldTorch, fire and hands given back
+		use_torch(id)
 		return
 	if Ids.type_of(id) == "spell":
 		if equip_spell(id):

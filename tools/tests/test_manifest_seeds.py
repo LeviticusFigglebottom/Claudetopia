@@ -43,7 +43,17 @@ class SeedsTest(unittest.TestCase):
         ledges = [e for e in self.entries if e["kind"] == "cliff_ledge"]
         self.assertEqual(len(ledges), sum(v for _k, _r, v, _p in mm.LEDGES))
         self.assertEqual(ledges[0]["seed"], mm.LEDGE_SEED)
-        self.assertIs(self.entries[-1], ledges[-1], "the ledges are the manifest's last table")
+        # after them only tables pinned to seeds of their own, which re-roll nothing before them:
+        # the cliff faces (FACE_SEED), the Choir's fallen colossus and the start's waystones
+        after = self.entries[self.entries.index(ledges[-1]) + 1:]
+        pinned = {"cliff_face": mm.FACE_SEED, "choir_colossus": mm.CHOIR_FALLEN_SEED, "waystone": mm.WAYSTONE_SEED}
+        self.assertTrue(all(e["kind"] in pinned for e in after),
+                        "the ledges are the manifest's last table but for pinned ones: %s"
+                        % sorted({e["kind"] for e in after}))
+        for kind, first in pinned.items():
+            run = [e for e in after if e["kind"] == kind]
+            if run:
+                self.assertEqual(run[0]["seed"], first, "%s starts from its own seed" % kind)
 
     def test_no_two_entries_are_the_same_asset(self):
         names = []

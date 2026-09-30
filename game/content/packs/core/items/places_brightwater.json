@@ -116,7 +116,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A bundle of a clerk's sealed letters, tied with ledger-tape, none of them sent.",
+    "description": "A bundle of a clerk's sealed letters tied with red ledger-tape, the wax on every one unbroken, and none of them ever carried anywhere.",
     "reads": "core:book/counting_tower_tolley_letters"
   },
   {
@@ -178,7 +178,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A note pinned to the aqueduct's pier with a fish-hook by a Merrowhithe smoker.",
+    "description": "A note on a torn strip of smoking-shed paper, pinned to the aqueduct's pier with a fish-hook by a Merrowhithe smoker, and smelling of it.",
     "reads": "core:book/standing_arches_drip"
   },
   {
@@ -195,5 +195,47 @@
     ],
     "description": "The egg-collectors' chalk on the pier-house door's black jamb, copied onto a scrap by the last of them and left on the step.",
     "reads": "core:book/gull_holm_door_chalk"
+  },
+  {
+    "id": "core:item/note_pennyfold_fees",
+    "name": "Schedule of Fees, the Fair Company",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A fair copy of the Fair Company's schedule of fees, on good paper with a clerk's hand, the kind of thing nailed up where a road can read it.",
+    "reads": "core:book/pennyfold_price_of_protection"
+  },
+  {
+    "id": "core:item/note_hush_hole_words",
+    "name": "Words, and What They Fetch",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A word-seller's list in a greasy wax-cloth cover, each word with a price beside it and some of the prices crossed out and raised.",
+    "reads": "core:book/hush_hole_word_list"
+  },
+  {
+    "id": "core:item/note_gull_holm_board",
+    "name": "A Rubbing of the Warm-Egg Board",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing in lamp-black of the egg-collectors' board at Gull Holm, many hands and many years of tallies, taken on a sheet of sail.",
+    "reads": "core:book/gull_holm_keepers_board"
   }
 ]

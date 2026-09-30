@@ -80,7 +80,7 @@
       "note",
       "no_sale"
     ],
-    "description": "The rule of the Woodfolk's fire-beacons, from the pole of the Northwold Beacon.",
+    "description": "A strip of birch-bark cut from the pole of the Northwold Beacon, the Woodfolk's rule for its fires burnt into it with a hot nail.",
     "reads": "core:book/beacon_rule"
   },
   {
@@ -94,7 +94,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A burner's list of the mosses of her son's grave, which has no one in it.",
+    "description": "A charcoal-burner's list of the mosses on her son's grave, written small on the back of a tally-stick; the grave has no one in it.",
     "reads": "core:book/a_moss_for_davy"
   },
   {
@@ -150,7 +150,7 @@
       "note",
       "no_sale"
     ],
-    "description": "The words the Woodfolk say when a dead hunter's bow is hung on Hollin Tor.",
+    "description": "A thong of plaited hide knotted with the words the Woodfolk say when a dead hunter's bow is hung on Hollin Tor, one knot a word.",
     "reads": "core:book/the_hanging_words"
   },
   {
@@ -178,7 +178,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A forester's note of what she heard from the top of the Grey Man.",
+    "description": "A forester's note, folded into a square the size of a thumb, of what she heard from the top of the Grey Man over three nights.",
     "reads": "core:book/what_the_grey_man_hears"
   },
   {
@@ -220,7 +220,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A Sayer's measure of the Hart Bones, interrupted.",
+    "description": "A Sayer's measuring-book, its last page taken up with the Hart Bones and ending halfway down a column, the pencil still in the fold.",
     "reads": "core:book/measuring_the_hart"
   },
   {
@@ -304,7 +304,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A Skarl exile's account of the death at the delving, hidden in its secret room.",
+    "description": "A Skarl exile's account of the death at the delving, written on the inside of a split goatskin and pushed into the secret room's wall.",
     "reads": "core:book/what_the_skarl_owe"
   },
   {

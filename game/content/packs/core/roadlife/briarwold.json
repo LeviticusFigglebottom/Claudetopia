@@ -27,10 +27,10 @@
       {"event": "core:roadevent/carters_wagon", "route": ["core:place/elderhold", "core:place/rookhold"], "speed": 1.25, "start": 0.7}
     ],
     "sites": [
-      {"at": [2060, -1850], "kind": "bridge", "tell": "felled_tree"},
-      {"at": [3110, 340], "kind": "bridge", "tell": "crows"},
-      {"at": [2560, 1077], "kind": "bend", "tell": "felled_tree"},
-      {"at": [3130, -1007], "kind": "pass", "tell": "crows"}
+      {"at": {"place": "core:poi/skarl_bridge", "offset": [0, 0]}, "kind": "bridge", "tell": "felled_tree"},
+      {"at": {"place": "core:poi/foxgill_arch", "offset": [0, 0]}, "kind": "bridge", "tell": "crows"},
+      {"at": {"place": "core:poi/drunk_stones", "offset": [0, 0]}, "kind": "bend", "tell": "felled_tree"},
+      {"at": {"place": "core:poi/knights_challenge", "offset": [0, 0]}, "kind": "pass", "tell": "crows"}
     ]
   },
   {

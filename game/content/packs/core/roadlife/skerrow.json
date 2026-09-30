@@ -25,8 +25,8 @@
       {"event": "core:roadevent/pack_train", "route": ["core:place/skarlow", "core:place/kharrow_hold"], "speed": 1.15, "start": 0.7}
     ],
     "sites": [
-      {"at": [-2150, -2650], "kind": "bridge", "tell": "crows"},
-      {"at": [-100, -2230], "kind": "pass", "tell": "crows"}
+      {"at": {"place": "core:poi/ghasts_broken_bridge", "offset": [0, 0]}, "kind": "bridge", "tell": "crows"},
+      {"at": {"place": "core:poi/blood_price_stones", "offset": [-30, 100]}, "kind": "pass", "tell": "crows"}
     ]
   },
   {
