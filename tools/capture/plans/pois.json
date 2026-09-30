@@ -2507,9 +2507,9 @@
    "label": "giant_bones_rib_cathedral",
    "region": "core:region/skerrow",
    "pos": [
-    1367.6,
-    207.0,
-    -2673.6
+    1352.5,
+    204.5,
+    -2680.7
    ],
    "look_at": [
     1380.0,
@@ -7872,7 +7872,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     -277.5,
-    77.5,
+    81.5,
     2666.1
    ],
    "look_at": [

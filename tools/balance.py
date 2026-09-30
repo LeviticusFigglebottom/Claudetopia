@@ -177,6 +177,10 @@ def enemy_rows(enemies: list, tables: dict, items: dict, vigour: int, spells: di
     player_hp = hp_max(vigour)
     rows = []
     for e in enemies:
+        # a teacher sparring in the yard (`training`: Dole, Jory) is no foe of the region's: they pull
+        # their blows, and counting them made Brightwater read safer than the downs before it
+        if e.get("training"):
+            continue
         stats = e.get("stats", {})
         hp = float(stats.get("hp", 1))
         armour = float(stats.get("armour", 0))

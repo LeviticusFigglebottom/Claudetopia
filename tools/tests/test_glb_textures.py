@@ -82,7 +82,12 @@ class TestCharacterParts(unittest.TestCase):
             meta = p.with_suffix(".meta.json")
             if not meta.exists():
                 continue
-            said = int(json.loads(meta.read_text(encoding="utf-8"))["tris"][0])
+            # a list per level of detail, or (the characters' rebuild) one count
+            m = json.loads(meta.read_text(encoding="utf-8"))
+            tris = m["tris"]
+            said = int(tris[0] if isinstance(tris, list) else tris)
+            # a hair's or a beard's cards are a mesh of their own in the same file, counted apart
+            said += int(m.get("card_tris", 0))
             held = glb.mesh_triangles(p)
             if said != held:
                 wrong.append("%s: meta says %d, file holds %d" % (p.relative_to(CHARACTERS), said, held))
@@ -100,8 +105,15 @@ class TestCharacterParts(unittest.TestCase):
             # a head part's as `<part>.glb` -> `<part>_marks.png` and the rig's default head as
             # `humanoid_rig_head_marks.png`. Used, so not strays.
             used.add(p.stem + "_marks.png")
+            # and beside them the zones (`_marks.png` -> `_zones.png`), and a hair's or a beard's
+            # flow map beside its normal map (`_normal.png` -> `_flow.png`), loaded the same way
+            used.add(p.stem + "_zones.png")
+            for img in list(used):
+                if img.endswith("_normal.png"):
+                    used.add(img[: -len("_normal.png")] + "_flow.png")
             if p.stem == "humanoid_rig":
                 used.add("humanoid_rig_head_marks.png")
+                used.add("humanoid_rig_head_zones.png")
         strays = []
         for folder, used in sorted(folders.items()):
             for png in sorted(folder.glob("*.png")):
