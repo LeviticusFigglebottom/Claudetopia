@@ -393,7 +393,7 @@ static func passage_links(p: SitePlan) -> Array:
 
 static func navmesh_settings() -> NavigationMesh:
 	var nm := NavigationMesh.new()
-	nm.agent_radius = 0.45
+	nm.agent_radius = 0.5   # two whole cells of cell_size: what Recast made of 0.45 (ceiled), said without its warning
 	# whole cells of cell_height, what Recast made of 1.8 and 0.45 (eight cells and one) while it
 	# warned at every bake that they lost precision
 	nm.agent_height = 2.0

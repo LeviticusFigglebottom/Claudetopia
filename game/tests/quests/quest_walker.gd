@@ -398,9 +398,41 @@ func _begin(q: String) -> Dictionary:
 					"" if topped.is_empty() else " (reputation made up: %s)" % ", ".join(topped)])
 			return {"ok": true, "why": ""}
 		ways.append("%s: %s" % [Ids.name_of(npc), str(r["why"])])
+	# a large site's hook: a notice or cairn at its gate whose conversation, with nobody in it,
+	# starts the site's quest (world/sites/site_exterior.gd `_hook`, PoiTouch): go there and read it
+	for hook in _hooks_starting(want):
+		await _go(hook["at"])
+		await _settle(0.5)
+		Social.dialogue.start(str(hook["dialogue"]), "", "")
+		var hr := DialogueSteer.steer(Social.dialogue, {"effect": want})
+		if log_node.is_known(q):
+			_say("QW: began %s at %s's hook" % [_short(q), Ids.name_of(str(hook["poi"]))])
+			return {"ok": true, "why": ""}
+		ways.append("%s's hook: %s" % [Ids.name_of(str(hook["poi"])), str(hr["why"])])
+		who.append(str(hook["poi"]))
 	if who.is_empty():
 		ways.append("no line starts it and it has no giver")
 	return {"ok": false, "why": "; ".join(ways)}
+
+
+## The site hooks (a POI def's `site.hook`, a dialogue with nobody in it) whose lines have `want`'s
+## effect: [{poi, dialogue, at}].
+func _hooks_starting(want: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for p_v in ContentDB.all("poi"):
+		var p: Dictionary = p_v
+		var site: Variant = p.get("site", {})
+		if typeof(site) != TYPE_DICTIONARY:
+			continue
+		var hook := str((site as Dictionary).get("hook", ""))
+		if hook == "" or not ContentDB.has(hook):
+			continue
+		var nodes: Variant = ContentDB.get_def(hook).get("nodes", {})
+		if typeof(nodes) != TYPE_DICTIONARY or not JSON.stringify(nodes).contains(JSON.stringify(want).trim_prefix("{").trim_suffix("}")):
+			continue
+		var pos: Array = p.get("position", [0, 0])
+		out.append({"poi": str(p.get("id", "")), "dialogue": hook, "at": Vector3(float(pos[0]), 0.0, float(pos[1]))})
+	return out
 
 
 # --- walking a quest ------------------------------------------------------------------------------------
