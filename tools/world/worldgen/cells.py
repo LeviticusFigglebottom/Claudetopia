@@ -323,6 +323,27 @@ def asset_bounds(path: str, repo_root: str) -> tuple:
     return out
 
 
+_BURIED: dict = {}
+
+
+def asset_buried(path: str, repo_root: str) -> float:
+    """How far under its lowest point's ground line a model was made to stand, at scale one: the
+    forge's `buried_m` (a standing stone's 0.6 m of stub under its packing), 0 where it wrote none.
+    PoiKit.place sets a rock down by it, and so does the world's seating."""
+    got = _BURIED.get(path)
+    if got is not None:
+        return got
+    rel = path.replace("res://", "game/", 1)
+    out = 0.0
+    try:
+        with open(os.path.join(repo_root, os.path.splitext(rel)[0] + ".meta.json"), "r", encoding="utf-8") as f:
+            out = max(float(json.load(f).get("buried_m", 0.0) or 0.0), 0.0)
+    except (OSError, ValueError, TypeError):
+        pass
+    _BURIED[path] = out
+    return out
+
+
 def seat_on_ground(H: np.ndarray, grid: Grid, x: np.ndarray, z: np.ndarray, y: np.ndarray,
                    half: np.ndarray, height: np.ndarray, tilt: tuple, embed: tuple,
                    rng: np.random.Generator) -> tuple:
@@ -789,9 +810,12 @@ def scatter(world: ScatterWorld, rules: dict, regions: list, seed: int, cluster_
             dims = np.array([asset_bounds(a, repo_root) for a in asset_list], dtype=np.float64)
             half = dims[pick, 0] * scale
             tall = dims[pick, 1] * scale
+            buried = np.array([asset_buried(a, repo_root) for a in asset_list], dtype=np.float64)[pick] * scale
+            # the seat is taken on what stands over the ground line; the stub under it goes in whole
             y, lean, toward = seat_on_ground(world.H, grid, x.astype(np.float64), z.astype(np.float64),
-                                             np.asarray(y, dtype=np.float32), half, tall,
+                                             np.asarray(y, dtype=np.float32), half, np.maximum(tall - buried, 0.05),
                                              seat["tilt"], seat["embed"], srng)
+            y = (y - buried).astype(np.float32)
         variants = asset_list
         rgb = pack_rgb(tints)
         # filed by the position as the cell file writes it, to the centimetre (Grid.written_cell)

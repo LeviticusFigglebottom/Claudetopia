@@ -142,8 +142,13 @@ errors.
    routed over the land plus five metres of broad unevenness (`heights.ROUTE_JITTER_M`), so a
    slope drawn as one even plane gathers into gills a few hundred metres apart instead of being
    combed with rills down the fall line (`tests/test_erosion.py`).
-5. **Pads** at every place and POI (radius by kind), raised above standing water so a
-   stilt-town stands on peat rather than in a pool. A staged build (`--only textures|cells`)
+5. **Pads** at every place and POI (radius by kind, or the def's `pad_radius_m`), raised above
+   standing water so a stilt-town stands on peat rather than in a pool. A pad has a shape
+   (`roads.pad_shape`): level (with a POI's gentle tilt and roll), `slope` for a cave, a quarry and
+   a cave-mouthed delve (the land as it lies, softened by a 5 m blur, so a bank or a bench stays; a
+   cave's rise on it where the land is not already higher), or `trench` (the def's `trench` sunk into the pad: the
+   Kilnway's lava mouth). A POI def asks for one with `"pad_shape"`; pois.json tells the game, and
+   `TerrainProvider.lay_pad` lays the same shapes for a POI previewed before a build. A staged build (`--only textures|cells`)
    refuses to reuse a heightmap whose pads were laid for places that have since moved. Then the
    authored sightlines: where the land stands into one by no more than a saddle's depth
    (`geography.NOTCH_MAX_M`, 25 m) it is cut down under the line; a line with more than that in

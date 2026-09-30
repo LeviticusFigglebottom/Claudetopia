@@ -143,15 +143,11 @@ def pad_is_natural(place: dict) -> bool:
     return ":place/" not in pid or str(place.get("kind", "")) not in FABRIC_COUNT
 
 
-def pad_relief(place: dict, dx: np.ndarray, dz: np.ndarray, H: np.ndarray, grid: Grid,
-               r_reach: float) -> np.ndarray:
-    """Metres over the pad's level at offsets (dx, dz) from its middle: the land's tilt and a
-    gentle roll, both nothing at the middle (`pad_is_natural` pads; see PAD_TILT_SHARE)."""
-    import zlib
-
+def land_tilt(place: dict, H: np.ndarray, grid: Grid, r_reach: float, share: float, cap: float) -> tuple:
+    """(grade east, grade south): `share` of the land's own tilt round a pad, a plane fitted over the
+    ring just past its skirt (where no pad has been, so a pad laid again reads the same), and never
+    steeper than `cap`."""
     px, pz = float(place["position"][0]), float(place["position"][1])
-    r = pad_radius(place)
-    # the land's tilt, a plane fitted over the ring just past the skirt (where no pad has been)
     a = np.linspace(0.0, 2.0 * math.pi, 24, endpoint=False)
     ring = r_reach + 0.5 * PAD_FIT_RING_M
     rx, rz = np.cos(a) * ring, np.sin(a) * ring
@@ -159,10 +155,85 @@ def pad_relief(place: dict, dx: np.ndarray, dz: np.ndarray, H: np.ndarray, grid:
     hr = sample_bilinear(H, grid, px + rx, pz + rz).astype(np.float64)
     A = np.stack([rx, rz, np.ones_like(rx)], axis=1)
     (gx, gz, _c), *_ = np.linalg.lstsq(A, hr, rcond=None)
-    tx, tz = PAD_TILT_SHARE * gx, PAD_TILT_SHARE * gz
+    tx, tz = share * float(gx), share * float(gz)
     t = math.hypot(tx, tz)
-    if t > PAD_TILT_MAX:
-        tx, tz = tx * PAD_TILT_MAX / t, tz * PAD_TILT_MAX / t
+    if t > cap:
+        tx, tz = tx * cap / t, tz * cap / t
+    return tx, tz
+
+
+## Pad shapes. A level pad (with a POI's tilt and roll, `pad_relief`) is right for almost everything,
+## but not for a hole in a hillside. Brightwater found the Hush Hole reading as a mound with a door and
+## Cadbrae's slate cut as a raised disc: a cave's mouth wants its own bank behind it and a quarry's
+## benches the slope they were cut into, and the level pad takes both away. So a pad has a shape
+## (`pad_shape`, from the POI def, else from its kind):
+##   "level"   the pad above (every settlement, every pad the atlas fixes, and the default);
+##   "slope"   keeps the land's own lie, its banks and benches, and only softens it (a gaussian of
+##             SLOPE_SMOOTH_M: the bumps go, a bank stays): kinds SLOPE_KINDS, and a delve whose
+##             mouth is the cave builder's (not a lava tube's). A plane fitted round the pad was
+##             tried first: on the 1024 preview it read the Hush Hole's and Cadbrae's broad lie
+##             (0.07 and 0.01) and levelled the local bank each is cut into, which is the point;
+##   "trench"  the level pad with a trench sunk into it (`trench` in the def; `trench_depth`): the
+##             Kilnway's lava tube, whose mouth is a trench cut into the heath, which the game cannot
+##             dig at runtime.
+## A cave's rise (worldgen.falls.caves) goes on over a sloped pad where the slope is not already
+## higher than it. The game lays the same shapes for a POI it previews (TerrainProvider.lay_pad,
+## PoiPreview) and is told the shape on each pois.json entry.
+SLOPE_KINDS = ("cave", "quarry")
+SLOPE_SMOOTH_M = 5.0
+PAD_SHAPES = ("level", "slope", "trench")
+
+
+def pad_shape(place: dict) -> str:
+    """"level", "slope" or "trench" (see SLOPE_KINDS): the def's own `pad_shape`, else by kind."""
+    asked = str(place.get("pad_shape", "") or "")
+    if asked in PAD_SHAPES:
+        if asked == "trench" and not isinstance(place.get("trench"), dict):
+            return "level"
+        return asked
+    if not pad_is_natural(place):
+        return "level"
+    kind = str(place.get("kind", ""))
+    if kind in SLOPE_KINDS or (kind == "delve" and str(place.get("mouth", "") or "") != "lava"):
+        return "slope"
+    return "level"
+
+
+def trench_depth(trench: dict, dx, dz) -> np.ndarray:
+    """Metres the land is sunk at offsets (dx, dz) from a pad's middle by its `trench`:
+    {bearing_deg (the way it runs out to its open end, a yaw as `PoiKit.yaw_of` measures it),
+     length_m (from the middle out to the top of its ramp), ramp_m, width_m (its floor), depth_m,
+     behind_m (how far its floor runs back behind the middle), head_width_m and head_from_m (a wider
+     floor behind `head_from_m` metres out, which may be negative: room for a throat that bends),
+     side_m (over how far its sides come up to the land)}."""
+    dx = np.asarray(dx, dtype=np.float64)
+    dz = np.asarray(dz, dtype=np.float64)
+    b = math.radians(float(trench.get("bearing_deg", 0.0)))
+    fx, fz = math.sin(b), math.cos(b)
+    depth = float(trench.get("depth_m", 2.0))
+    side = float(trench.get("side_m", max(2.5, 1.3 * depth)))
+    length = float(trench.get("length_m", 10.0))
+    ramp = min(float(trench.get("ramp_m", 6.0)), length)
+    behind = float(trench.get("behind_m", 0.0))
+    half = 0.5 * float(trench.get("width_m", 5.0))
+    head = 0.5 * float(trench.get("head_width_m", 2.0 * half))
+    head_from = float(trench.get("head_from_m", 0.0))
+    u = dx * fx + dz * fz
+    v = np.abs(-dx * fz + dz * fx)
+    h = half + (head - half) * (1.0 - smoothstep(head_from - side, head_from, u))
+    across = 1.0 - smoothstep(h, h + side, v)
+    along = (1.0 - smoothstep(length - ramp, length, u)) * smoothstep(-behind - side, -behind, u)
+    return (depth * across * along).astype(np.float32)
+
+
+def pad_relief(place: dict, dx: np.ndarray, dz: np.ndarray, H: np.ndarray, grid: Grid,
+               r_reach: float) -> np.ndarray:
+    """Metres over the pad's level at offsets (dx, dz) from its middle: the land's tilt and a
+    gentle roll, both nothing at the middle (`pad_is_natural` pads; see PAD_TILT_SHARE)."""
+    import zlib
+
+    r = pad_radius(place)
+    tx, tz = land_tilt(place, H, grid, r_reach, PAD_TILT_SHARE, PAD_TILT_MAX)
     # the roll: three long waves at their own bearings, seeded by the place
     rng = np.random.default_rng(zlib.crc32(("pad-roll:" + str(place.get("id", ""))).encode("utf-8")))
     roll = np.zeros(np.broadcast(dx, dz).shape, dtype=np.float64)
@@ -217,7 +288,11 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
         dx = X[:, j0:j1] - px
         dz = Z[i0:i1, :] - pz
         d = np.sqrt(dx * dx + dz * dz)
+        shape = pad_shape(p) if not (fixed_levels is not None and p["id"] in fixed_levels) else "level"
+        sunk = trench_depth(p["trench"], dx, dz) if shape == "trench" else None
         inner = d <= r * 0.75
+        if sunk is not None and (inner & (sunk <= 0.0)).any():
+            inner = inner & (sunk <= 0.0)            # the level from the land, not the trench in it
         level = float(np.median(sub[inner])) if inner.any() else float(H[int(i), int(j)])
         if min_levels is not None and p["id"] in min_levels:
             level = max(level, float(min_levels[p["id"]]))
@@ -227,15 +302,31 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             level = float(fixed_levels[p["id"]])
         step = steps.get(p["id"]) if steps else None
         target = level
+        slope = None
+        if shape == "slope":
+            # the land itself, softened (laid again, it softens a little more: a plane stays a plane)
+            soft = ndimage.gaussian_filter(sub.astype(np.float64), SLOPE_SMOOTH_M / grid.spacing, mode="nearest")
+            slope = (soft - (float(step.foot) if step is not None else level)).astype(np.float32)
         if step is not None:
             level = float(step.foot)
-            target = (level + step.rise(X[:, j0:j1], Z[i0:i1, :])).astype(np.float32)
+            rise = step.rise(X[:, j0:j1], Z[i0:i1, :])
+            if slope is not None:
+                # the land's slope, and the rise only where it stands higher than the slope does
+                target = (level + slope + np.maximum(rise - np.maximum(slope, 0.0), 0.0)).astype(np.float32)
+            else:
+                target = (level + rise).astype(np.float32)
+        elif slope is not None:
+            target = (level + slope).astype(np.float32)
         elif pad_is_natural(p) and not (fixed_levels is not None and p["id"] in fixed_levels):
             target = (level + pad_relief(p, dx, dz, H, grid, r_reach)).astype(np.float32)
         levels[p["id"]] = level
         w = 1.0 - smoothstep(r_level, r_reach, d)
         if hold is not None:
             w = np.where(d <= r_level, w, w * hold[i0:i1, j0:j1])
+        if sunk is not None:
+            # the trench is the pad's own, laid whole wherever it reaches (it lies inside the level core)
+            target = (target - sunk).astype(np.float32)
+            w = np.where(sunk > 0.0, 1.0, w)
         if fixed_levels is not None and p["id"] in fixed_levels:
             # An authored pad is a landing on a shelf or at a cliff's foot. Its skirt takes the
             # ground down to it, but builds nothing out over a drop: blended over the edge of the
@@ -276,6 +367,19 @@ def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray |
     n = grid.n
     X, Z = grid.mesh()
     report = []
+    # Every pad's level core, which no fill touches: a hollow that took in a settlement's own level
+    # ground (Ormhold's, 2.2 m under the lip of the dell beside it) raised the part of it that lay in
+    # the hollow, and left the town 0.7 m out of level on its west third (test_build, 91% level).
+    core = np.zeros((n, n), dtype=bool)
+    for p in places:
+        px, pz = float(p["position"][0]), float(p["position"][1])
+        r_level = pad_level_radius(p)
+        j, i = grid.to_tex(px, pz)
+        j, i = grid.clamp_index(j, i)
+        k = int(r_level / grid.spacing) + 2
+        i0, i1 = max(0, int(i) - k), min(n, int(i) + k + 1)
+        j0, j1 = max(0, int(j) - k), min(n, int(j) + k + 1)
+        core[i0:i1, j0:j1] |= (X[:, j0:j1] - px) ** 2 + (Z[i0:i1, :] - pz) ** 2 <= r_level * r_level
     for p in places:
         px, pz = float(p["position"][0]), float(p["position"][1])
         r_level, r_reach = pad_level_radius(p), pad_reach(p)
@@ -308,7 +412,7 @@ def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray |
         if take.size == 0:
             continue
         m = np.isin(lab, take)
-        raise_m = np.where(m, np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
+        raise_m = np.where(m & ~core[i0:i1, j0:j1], np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
         if hold is not None:
             raise_m = raise_m * hold[i0:i1, j0:j1]
         H[i0:i1, j0:j1] = (sub + raise_m).astype(np.float32)

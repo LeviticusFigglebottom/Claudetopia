@@ -288,6 +288,10 @@ the ground is made of at a point.
   (a quarter of the radius on a small pad) it is level but for the tilt. A 4 m footprint anywhere
   on it lies within about a quarter metre of level, so a dressing sets each prop on the ground
   under it (`PoiKit.on_ground`), not at `pos`'s y.
+  An entry may carry `"pad_shape"`: `"slope"` (a cave's, a quarry's, a cave-mouthed delve's, or a
+  def that asks: the land as it lies, its banks and benches kept, only softened by a 5 m blur) or `"trench"`, with the def's
+  `"trench"` ({bearing_deg, length_m, ramp_m, width_m, depth_m, behind_m, head_width_m, head_from_m,
+  side_m}; roads.trench_depth) sunk into the pad. Absent, the pad is the level one above.
 * `cells/<cx>_<cz>.json`: `{"cell": [cx, cz], "region": id, "instances": {"<asset_path>": [[x, y, z, yaw_deg, scale, tint_hex], ...]}, "scenes": [{"scene": "res://...", "pos", "yaw", "props": {...}}], "spawns": [{"kind": "enemy|npc|animal", "def": id, "pos", "yaw", "group"}], "lights": [...]}`
   An instance row may carry two more fields, `[.., lean_deg, lean_toward_deg]`: the instance is
   tipped `lean_deg` from upright, its top carried toward the ground direction

@@ -14320,3 +14320,96 @@ and the probes' walk-watch above. The owner judges the look on their GPU.
   (outside a settlement's pad plus 25 m). The fix here is the spot. A route by road for far holds,
   as schedules have, would be the general fix.
 - test_cinematic_player's timing tests are flaky on the loaded machine (see above).
+
+## The builder ready for w4096g (2026-09-30)
+
+Branch `wip/prebuild` (from main 266adde0). The world builder and the game's preview of a pad agree on
+three new things, and everything that landed for w4096g is read by the build.
+
+**What changed**
+- **Standing stones set down by their stub.** `cells.asset_buried` reads the forge's `buried_m` from
+  each model's meta. The scatter's seating takes its lean and embed on the part above the ground line
+  and then sinks the stub whole (`buried_m * scale`). `stones.py` placed its rings, road pairs and
+  skyline stones at the ground with no sink at all, so all 0.6 m of stub stood on show; they now sink by it too.
+- **Pad shapes** (`roads.pad_shape`, CONTRACTS §6, WORLD_LIFE, README step 5):
+  - `level` is the old pad.
+  - `slope` is used by kinds `cave`, `quarry` and a `delve` whose mouth is not lava, or by a def that
+    asks for it. It keeps the land as it lies and only softens it (a 5 m gaussian), so a bank or a
+    bench stays. A cave's rise goes on top only where the land is not already higher.
+    I tried a plane fitted round the pad first. On the first 1024 preview it read only the broad lie
+    (a grade of 0.07 at the Hush Hole, 0.01 at Cadbrae) and flattened the local bank, so I replaced it.
+  - `trench` sinks the def's `trench` block into the pad (`roads.trench_depth`). The trench is laid
+    whole inside the level core, and the level is taken from the ground outside the trench.
+  - pois.json entries carry `pad_shape` and `trench`. `pad_fingerprint` includes the shape.
+  - `TerrainProvider.lay_pad(..., shape)` has the same trench (`trench_depth`, `_pad_height`).
+  - For a sloped pad, PoiPreview leaves the ground as it lies and does not move the scatter on its skirt.
+- **The Kilnway's trench.** `pois/_interiors_showcase.json` now has `"pad_shape": "trench"` with
+  `{bearing 213, length 10, ramp 8, width 5, depth 2.3, side 2.5, behind 18, head_width 20, head_from -4}`.
+  Those are the lava mouth's own numbers:
+  - the floor sits 2.3 m (`RISE`) under the heath and is TUBE_W - 0.5 wide either side of the line;
+  - the ramp runs from 2 m to 10 m out;
+  - the throat's head is 20 m wide from the mouth to 18 m back, so the tube's bend is dug on
+    whichever side it goes.
+
+  `site_exterior.lava_mouth` faces along the trench's bearing when the def has one. The rise is kept
+  unchanged. Laid on the dug floor, it stands level with the heath round it, so it stays under the
+  ground there and shows only as the trench's crust walls, the swell over the throat and the fill
+  round the head. Without a trench it stands proud as before. The bearing points the mouth toward the
+  West Walk road, 490 m to the south-west. The old heath there is flat, so `downhill()` gave nothing and
+  the facing was random.
+- **Pad dams no longer bend a town's level ground.** `drain_pad_dams` filled a whole closed hollow,
+  including the part of a settlement's level core lying in it. test_build found Ormhold 0.7 m out of
+  level on a third of its pad (91%, needs 95%). The fill now goes round every pad's level core.
+
+**Checked as ready**
+- Every file in `pois/` is read, `_interiors_showcase.json` included (content.rows; the test reaches
+  the Kilnway through the registry).
+- `pad_radius_m` is carried by `pad_targets_for` and wins over kind and wayside.
+- `drain_pad_dams` runs after the landforms. On the preview it filled 91 hollows; Fernhold's 53 m pit
+  is gone and the pad at (3272, 216) is a level disc.
+- The Choir's `LANDMARK_SETS` (spacing 38 m, models [1,0,0,1,2,0,1,1,2,0,1]) are in `build_world.py`.
+- The wayside rule: a def's own `pad_radius_m` wins over `wayside` (14 m). That is the builder's rule
+  and it is sound. `test_the_pack_s_wayside_pois_have_small_pads` fails on content: skarl_skull is
+  20 m (the first it meets) and poachers_cache is 22 m, and both are `wayside: true`. Either drop
+  `wayside` or drop the pad (final-game's call).
+- Chain Bridge-Windgate: it can't be reproduced without a 4096 build (the installed world keeps no
+  heights.r32). On the 1024 preview, `WICKMERE_GENERATED=<build>` shows the same road 2.49 m off at
+  (6, -2444) and ruddow_fallen_hand 2.86 m off at (757, -2977), allowed 2.33, plus two rivers dry at
+  8 m texels. None of these is near a shaped pad. At 8 m a centreline sample takes in shoulder texels,
+  so they are resolution artefacts until the 4096 check says otherwise.
+
+**Measured on the 1024 preview (built twice, 2077 s and 2206 s wall on a loaded machine, 1.54 GB peak)**
+- 583 pads: 561 level, 21 slope, 1 trench.
+- Relief inside the level core of the sloped pads: 6.4 m at the Hush Hole (was a flat disc), 11-16 m
+  at the Kharrow, Root and Rafters' holes, 8 m at the Old Quarry and Lime Bay.
+- Cadbrae's slate cut stays 0.5 m: its position is on a flat valley floor, with the bank 25-50 m
+  east. That is content. Brightwater should move it about 25 m east, onto the bank, for the cut to
+  have a face.
+- The Kilnway's trench is a 2 m dip across the centre even at 8 m texels. At 2 m the build lays it as
+  designed (unit tests).
+- Review sheets: `docs/review/prebuild/pads_w1024_preview.jpg` (hillshade crops of Fernhold, the
+  Kilnway, the Hush Hole, Cadbrae, the Kharrow Hole and the Old Quarry, second preview) and
+  `map_w1024_preview.jpg` (the atlas render, first preview; the whole map is unchanged apart from pads).
+
+**Tests**
+- `tools/world/tests/test_pad_shapes.py` (new): 8 tests.
+- test_pad_dams: +1 (a level core left level).
+- test_poi_preview.gd: +1 (shapes, trench parity with Python, `_pad_height`).
+- `./run.sh test --filter=poi_preview,sites_cinderlea`: 9 passed, warnings at baseline.
+- `python3 -m pytest -q tools/world/tests tools/tests`: 406 passed, 8 failed, 12 skipped (71 min).
+  - The Ormhold failure is fixed here, after that run.
+  - Wayside content (above).
+  - `test_atlas_map`: the_hush_hole stands in the province north_fen, not a Brightwater one (content).
+  - Not in this area: test_balance (brightwater vs hearthvale danger), test_capture_plan (two POI
+    frames blocked), test_glb_textures (43 unreferenced character textures, a triangle count),
+    test_manifest_seeds (cliff ledges not pinned last).
+
+**Not done / for the coordinator**
+- The dam fix wasn't in either preview. It is unit-tested, and the 4096 build is its first run.
+- Build w4096g: `tools/world/build_when_free.sh /tmp/w4096g /tmp/w4096g.log` (MEM_GB default 10, so
+  it waits for 10 GB free; expect about 6.5 GB peak and 17 min on an idle machine, longer under load),
+  then `install_world.sh /tmp/w4096g`. Then run `WICKMERE_GENERATED=/tmp/w4096g python3 -m pytest -q
+  tools/world/tests/test_roads.py tools/world/tests/test_pad_dams.py tools/world/tests/test_sightlines.py`
+  for Chain Bridge-Windgate at 2 m.
+- Look at the Kilnway in the game after the install. The rise mesh over the dug trench hasn't been
+  seen in a render.
