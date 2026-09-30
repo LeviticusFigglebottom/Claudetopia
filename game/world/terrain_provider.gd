@@ -344,7 +344,12 @@ func max_height_around(x: float, z: float, radius: float, samples: int = 12) -> 
 ## A pad laid on the ground as it stands, for a place the world has not been built with yet
 ## (PoiPreview): level at `level` out to `level_radius`, blended back into the land by `reach`, in
 ## the runtime map and in Terrain3D's heights alike. `commit_pads` once they are all laid.
-func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float) -> void:
+## `shape` is the build's pad shape (tools/world/worldgen/roads.py, pad_shape): {"tilt": Vector2,
+## the grade east and south a sloped pad keeps of the land} and/or {"trench": the def's `trench`,
+## sunk into the pad as `trench_depth` says}.
+func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float, shape: Dictionary = {}) -> void:
+	var tilt: Vector2 = shape.get("tilt", Vector2.ZERO)
+	var trench: Dictionary = shape.get("trench", {})
 	if not _heights.is_empty():
 		var i0 := maxi(int(floor((z - reach - _height_origin.y) / _spacing)), 0)
 		var i1 := mini(int(ceil((z + reach - _height_origin.y) / _spacing)), _grid - 1)
@@ -352,10 +357,12 @@ func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float
 		var j1 := mini(int(ceil((x + reach - _height_origin.x) / _spacing)), _grid - 1)
 		for i in range(i0, i1 + 1):
 			for j in range(j0, j1 + 1):
-				var d := Vector2(_height_origin.x + j * _spacing - x, _height_origin.y + i * _spacing - z).length()
+				var dx := _height_origin.x + j * _spacing - x
+				var dz := _height_origin.y + i * _spacing - z
+				var d := Vector2(dx, dz).length()
 				if d < reach:
 					var k := i * _grid + j
-					_heights[k] = lerpf(_heights[k], level, 1.0 - smoothstep(level_radius, reach, d))
+					_heights[k] = _pad_height(_heights[k], level, level_radius, reach, tilt, trench, dx, dz, d)
 	if _data == null or not _data.has_method("set_height"):
 		return
 	var s := float(_terrain.get("vertex_spacing")) if _terrain != null else 1.0
@@ -369,8 +376,43 @@ func lay_pad(x: float, z: float, level: float, level_radius: float, reach: float
 			var h: float = _data.call("get_height", p)
 			if is_nan(h):
 				continue
-			_data.call("set_height", p, lerpf(h, level, 1.0 - smoothstep(level_radius, reach, d)))
+			_data.call("set_height", p, _pad_height(h, level, level_radius, reach, tilt, trench, p.x - x, p.z - z, d))
 	_pads_laid = true
+
+
+## The ground `h` at (dx, dz) from a pad's middle, `d` out, once the pad is laid (roads.apply_pads).
+static func _pad_height(h: float, level: float, level_radius: float, reach: float, tilt: Vector2,
+		trench: Dictionary, dx: float, dz: float, d: float) -> float:
+	var target := level + tilt.x * dx + tilt.y * dz
+	var w := 1.0 - smoothstep(level_radius, reach, d)
+	if not trench.is_empty():
+		var sunk := trench_depth(trench, dx, dz)
+		if sunk > 0.0:
+			return target - sunk          # the trench is the pad's own, laid whole where it reaches
+	return lerpf(h, target, w)
+
+
+## Metres a pad's `trench` sinks the land at (dx, dz) from its middle: roads.trench_depth, the same
+## numbers ({bearing_deg, length_m, ramp_m, width_m, depth_m, behind_m, head_width_m, head_from_m,
+## side_m}; the trench runs out along the bearing, a yaw as PoiKit.yaw_of measures it).
+static func trench_depth(t: Dictionary, dx: float, dz: float) -> float:
+	var b := deg_to_rad(float(t.get("bearing_deg", 0.0)))
+	var fx := sin(b)
+	var fz := cos(b)
+	var depth := float(t.get("depth_m", 2.0))
+	var side := float(t.get("side_m", maxf(2.5, 1.3 * depth)))
+	var length := float(t.get("length_m", 10.0))
+	var ramp := minf(float(t.get("ramp_m", 6.0)), length)
+	var behind := float(t.get("behind_m", 0.0))
+	var half := 0.5 * float(t.get("width_m", 5.0))
+	var head := 0.5 * float(t.get("head_width_m", 2.0 * half))
+	var head_from := float(t.get("head_from_m", 0.0))
+	var u := dx * fx + dz * fz
+	var v := absf(-dx * fz + dz * fx)
+	var h := half + (head - half) * (1.0 - smoothstep(head_from - side, head_from, u))
+	var across := 1.0 - smoothstep(h, h + side, v)
+	var along := (1.0 - smoothstep(length - ramp, length, u)) * smoothstep(-behind - side, -behind, u)
+	return depth * across * along
 
 
 

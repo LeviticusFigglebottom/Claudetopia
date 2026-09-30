@@ -151,6 +151,13 @@ def pad_targets_for(places: list, pois: list) -> list:
         if p.get("pad_radius_m"):
             # a larger place asks for its own pad (docs/WORLD_LIFE.md); the atlas's `pads` still win
             entry["pad_radius_m"] = float(p["pad_radius_m"])
+        # the pad's shape (roads.pad_shape): the def's own, and what a delve's mouth is
+        if p.get("pad_shape"):
+            entry["pad_shape"] = str(p["pad_shape"])
+        if isinstance(p.get("trench"), dict):
+            entry["trench"] = dict(p["trench"])
+        if isinstance(p.get("site"), dict) and p["site"].get("mouth"):
+            entry["mouth"] = str(p["site"]["mouth"])
         out.append(entry)
     return out
 
@@ -193,6 +200,8 @@ def pad_fingerprint(pad_targets: list, fixed_levels: dict | None = None) -> str:
     rows = sorted((str(p["id"]), str(p.get("kind", "")), round(float(p["position"][0]), 2),
                    round(float(p["position"][1]), 2), round(RD.pad_radius(p), 2))
                   + ((round(float(fixed[p["id"]]), 2),) if p["id"] in fixed else ())
+                  + ((RD.pad_shape(p), json.dumps(p.get("trench"), sort_keys=True))
+                     if RD.pad_shape(p) != "level" else ())
                   for p in pad_targets)
     return "%08x" % zlib.crc32(json.dumps(rows).encode("utf-8"))
 
@@ -732,6 +741,12 @@ def build(args) -> dict:
         entry = {"place_id": p["id"], "pos": [round(x, 2), round(y, 2), round(z, 2)],
                  "yaw": 0.0, "radius_flat_m": RD.pad_radius(p),
                  "radius_level_m": RD.pad_level_radius(p)}
+        shape = RD.pad_shape(p) if p["id"] not in fixed_levels else "level"
+        if shape != "level":
+            # what the pad keeps of the land, or cuts into it (roads.pad_shape), for the game's preview
+            entry["pad_shape"] = shape
+            if shape == "trench":
+                entry["trench"] = p["trench"]
         if p["id"] in steps:
             # where the land steps for the fall (or rises behind the cave's mouth), so the dressing
             # stands its face on it

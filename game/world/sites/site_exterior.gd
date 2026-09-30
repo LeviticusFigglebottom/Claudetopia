@@ -337,8 +337,14 @@ static func _hook(d: PoiDressing, site: Dictionary, near: Vector3, on_y := NAN) 
 ## breaks through the soil in patches. The skirts are the terrain's own soil at the terrain's own
 ## scale, going under it at their edges: no edge to find.
 ##
-## The land cannot be dug at runtime, so the trench is cut into the rise rather than the ground:
-## its floor is the ground. (The world build could sink it for real; see WORLD_LIFE_INTERIORS.)
+## The land cannot be dug at runtime, so the world build digs it: a def with `"pad_shape": "trench"`
+## has its `trench` sunk into its pad (tools/world/worldgen/roads.py, trench_depth; TerrainProvider
+## lay_pad for a preview), the trench's floor RISE under the heath, and a head behind the mouth wide
+## enough for the throat whichever way it bends. The mouth then faces out along the trench's bearing,
+## and the rise below is the same rise: laid on the trench's floor, it stands level with the heath
+## round it (so under the ground, and not drawn) and shows only where the land is dug, as the
+## trench's broken walls, the swell over the throat and the ground round it. Without a trench (a
+## lava mouth elsewhere) it stands over the ground as it always did.
 ## The first mouth was the cave builder's crag and bank on a flat pad (a raw lumpy mound, an odd
 ## bank, a boulder in a black box at the door); the second a mound with a painted glow in its throat.
 const TUBE_W := 3.0          ## the tube's half-width at its mouth
@@ -438,7 +444,14 @@ class Tube:
 
 static func lava_mouth(d: PoiDressing, site: Dictionary) -> void:
 	var k := d.kit
-	var face := k.downhill()
+	var face := Vector2.ZERO
+	var trench: Variant = ContentDB.get_or_empty(d.poi_id).get("trench", null)
+	if trench is Dictionary and (trench as Dictionary).has("bearing_deg"):
+		# the way the trench the world dug runs out (the def's `trench`)
+		var b := deg_to_rad(float((trench as Dictionary)["bearing_deg"]))
+		face = Vector2(sin(b), cos(b))
+	if face == Vector2.ZERO:
+		face = k.downhill()
 	if face == Vector2.ZERO:
 		face = k.grain()
 	if face == Vector2.ZERO:
