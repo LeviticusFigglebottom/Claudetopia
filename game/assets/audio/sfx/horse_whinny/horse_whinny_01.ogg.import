@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://b6lbog53s3sfb"
+path="res://.godot/imported/horse_whinny_01.ogg-1a7a8a70c47afe15866d3965da29d0c9.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/horse_whinny/horse_whinny_01.ogg"
+dest_files=["res://.godot/imported/horse_whinny_01.ogg-1a7a8a70c47afe15866d3965da29d0c9.oggvorbisstr"]
 
 [params]
 

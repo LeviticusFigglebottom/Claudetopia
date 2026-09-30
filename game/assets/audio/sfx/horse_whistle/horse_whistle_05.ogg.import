@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://c14dpikp2lseb"
+path="res://.godot/imported/horse_whistle_05.ogg-524eb213de3831334d4a7ef4304a30ae.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/horse_whistle/horse_whistle_05.ogg"
+dest_files=["res://.godot/imported/horse_whistle_05.ogg-524eb213de3831334d4a7ef4304a30ae.oggvorbisstr"]
 
 [params]
 

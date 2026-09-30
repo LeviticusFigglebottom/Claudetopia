@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://c8t6cph817nhq"
+path="res://.godot/imported/horse_snort_01.ogg-b82415d57f9803fb2c4708ef03d42e0d.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/sfx/horse_snort/horse_snort_01.ogg"
+dest_files=["res://.godot/imported/horse_snort_01.ogg-b82415d57f9803fb2c4708ef03d42e0d.oggvorbisstr"]
 
 [params]
 
