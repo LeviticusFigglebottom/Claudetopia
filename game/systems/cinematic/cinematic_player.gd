@@ -324,6 +324,12 @@ func is_playing() -> bool:
 	return _phase in [Phase.HOLD, Phase.PLAY, Phase.SKIPPING]
 
 
+## Between taking the screen over (the curtain down, the menus' fade lifted onto it) and its first
+## shot: the frames that stand up the country round the hand-over, seconds each on a slow machine.
+func is_starting() -> bool:
+	return _phase == Phase.STARTING
+
+
 func current_shot() -> int:
 	return _index
 
