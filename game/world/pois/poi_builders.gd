@@ -1452,7 +1452,16 @@ static func _dressed_waystones(k: PoiKit, m: PoiMasonry, stones: Array) -> void:
 ## own position, which is inside its first colossus, and the stones followed it into the stone.
 static func way_of(path: Dictionary) -> Array:
 	var points: Array = WorldProbe.road_points(str(path.get("built_road", "")))
-	if points.size() < 2:
+	if points.size() >= 2:
+		# round what the built world stands solid on it, as PoiDressing.way_points goes
+		var line: Array[Vector2] = []
+		for p in points:
+			if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
+				line.append(Vector2(float(p[0]), float(p[1])))
+		points = []
+		for p in WorldPois.round_solids(line):
+			points.append([p.x, p.y])
+	else:
 		points = path.get("via", [])
 	var to := WorldProbe.xz_of(ContentDB.get_or_empty(str(path.get("to", "")))) if str(path.get("to", "")) != "" else Vector2.ZERO
 	if to == Vector2.ZERO or points.size() < 2:

@@ -269,6 +269,94 @@ static func road_between(from_id: String, to_id: String, named := "") -> Array[V
 	return out
 
 
+## A marked way sent round what the built world stands solid on it. The land's roads are drawn
+## before the landmarks are set on them: the Stair Head's road to the Choir runs up the avenue
+## between the colossi, and w4096g's fallen colossus (38 m spacing, the figure lying 48 m out along
+## the plain from its stump) reached over it, so the waystones walked into the stone. Every leg
+## that comes within a solid scene's reach (the widest of its bounds across the ground, as its
+## meta gives them, plus WAY_CLEAR_M for the body and the stones set 1.7 m to the way's sides) is
+## cut into steps of WAY_STEP_M and each step pushed straight out of the reach, a few times over so
+## that one pushed out of one stone's reach is not left in its neighbour's. Legs clear of
+## everything are left exactly as the land drew them.
+const WAY_CLEAR_M := 4.0
+const WAY_STEP_M := 4.0
+const CELLS_DIR := "res://world/generated/cells"
+
+
+static func round_solids(points: Array[Vector2]) -> Array[Vector2]:
+	if points.size() < 2:
+		return points
+	var solids := _solids_near(points)
+	if solids.is_empty():
+		return points
+	var out: Array[Vector2] = [points[0]]
+	var moved := false
+	for i in range(1, points.size()):
+		var a := points[i - 1]
+		var b := points[i]
+		var near := false
+		for c: Vector3 in solids:
+			var q := Geometry2D.get_closest_point_to_segment(Vector2(c.x, c.y), a, b)
+			near = near or q.distance_to(Vector2(c.x, c.y)) < c.z
+		if not near:
+			out.append(b)
+			continue
+		moved = true
+		var n := maxi(int(ceil(a.distance_to(b) / WAY_STEP_M)), 1)
+		for k in range(1, n + 1):
+			out.append(a.lerp(b, float(k) / float(n)))
+	if not moved:
+		return points
+	# push every step out of every reach it is in (the ends stay: they are the places themselves)
+	for _pass in 6:
+		var still := false
+		for i in range(1, out.size() - 1):
+			for c: Vector3 in solids:
+				var centre := Vector2(c.x, c.y)
+				var d := out[i].distance_to(centre)
+				if d < c.z + 0.25:
+					var away := (out[i] - centre) / d if d > 0.01 else Vector2.RIGHT
+					out[i] = centre + away * (c.z + 0.5)
+					still = true
+		if not still:
+			break
+	return out
+
+
+## [x, z, reach] of every scene the built world stands solid (it has a collision) within reach of
+## the points' bounding box.
+static func _solids_near(points: Array[Vector2]) -> Array[Vector3]:
+	var lo := points[0]
+	var hi := points[0]
+	for p in points:
+		lo = Vector2(minf(lo.x, p.x), minf(lo.y, p.y))
+		hi = Vector2(maxf(hi.x, p.x), maxf(hi.y, p.y))
+	var out: Array[Vector3] = []
+	var c0 := WorldProbe.cell_of(Vector3(lo.x - 64.0, 0.0, lo.y - 64.0))
+	var c1 := WorldProbe.cell_of(Vector3(hi.x + 64.0, 0.0, hi.y + 64.0))
+	for cz in range(c0.y, c1.y + 1):
+		for cx in range(c0.x, c1.x + 1):
+			var path := "%s/%d_%d.json" % [CELLS_DIR, cx, cz]
+			if not FileAccess.file_exists(path):
+				continue
+			var cell: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if not (cell is Dictionary):
+				continue
+			for s_v in (cell as Dictionary).get("scenes", []):
+				if not (s_v is Dictionary) or str((s_v as Dictionary).get("collision", "")).is_empty():
+					continue
+				var scene: Dictionary = s_v
+				var b: Dictionary = PoiKit.meta(str(scene.get("scene", ""))).get("bounds", {})
+				var bl: Array = b.get("min", [0, 0, 0])
+				var bh: Array = b.get("max", [0, 0, 0])
+				var reach := maxf(maxf(absf(float(bl[0])), absf(float(bh[0]))), maxf(absf(float(bl[2])), absf(float(bh[2]))))
+				if reach <= 0.0:
+					continue
+				var pos: Array = scene.get("pos", [0, 0, 0])
+				out.append(Vector3(float(pos[0]), float(pos[2]), reach + WAY_CLEAR_M))
+	return out
+
+
 ## roads.json as written, read once per build of it (the file's modified time says which).
 static func _roads_with_ids() -> Array:
 	if not FileAccess.file_exists(ROADS_PATH):

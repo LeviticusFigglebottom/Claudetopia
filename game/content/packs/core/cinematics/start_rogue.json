@@ -26,8 +26,8 @@
          {"at": 4.6, "for": 3.8, "text": "I lift every one before the watch wakes."}]},
       {"id": "the_channel", "duration": 8.0, "time": 5.25, "weather": "core:weather/mist", "fov": 54,
        "keys": [
-         {"t": 0.0, "at": {"place": "core:place/moreva", "bearing": 185, "distance": 70, "height": 6}, "look": {"place": "core:place/moreva", "height": 2}},
-         {"t": 1.0, "at": {"place": "core:place/moreva", "bearing": 175, "distance": 52, "height": 4.5}, "look": {"place": "core:place/moreva", "height": 2}}],
+         {"t": 0.0, "at": {"place": "core:place/moreva", "bearing": 188, "distance": 70, "height": 6}, "look": {"place": "core:place/moreva", "height": 2}},
+         {"t": 1.0, "at": {"place": "core:place/moreva", "bearing": 180, "distance": 52, "height": 4.5}, "look": {"place": "core:place/moreva", "height": 2}}],
        "lines": [
          {"at": 0.5, "for": 3.4, "text": "They look where it's loud."},
          {"at": 4.3, "for": 3.2, "text": "Be where it isn't."}]},
