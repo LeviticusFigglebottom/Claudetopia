@@ -454,8 +454,9 @@ func _build() -> void:
 	hints.anchor_right = 0.5
 	hints.offset_left = -330.0
 	hints.offset_right = 330.0
-	hints.offset_top = -148.0
-	hints.offset_bottom = -116.0
+	# over the belt's weapon socket, which stands up to 150 px off the foot at the right
+	hints.offset_top = -192.0
+	hints.offset_bottom = -160.0
 	hints.grow_horizontal = Control.GROW_DIRECTION_BOTH      # wider than its rect, still centred
 	add_child(hints)
 	_hints = hints
@@ -494,17 +495,18 @@ func _fit_to_canvas() -> void:
 			_hints.grow_horizontal = Control.GROW_DIRECTION_BOTH
 			_hints.offset_left = -330.0
 			_hints.offset_right = 330.0
-			_hints.offset_top = -148.0
-			_hints.offset_bottom = -116.0
+			# over the belt's weapon socket, which stands up to 150 px off the foot at the right
+			_hints.offset_top = -192.0
+			_hints.offset_bottom = -160.0
 	# the saying in hand, bottom right, a little narrower beside the controls
 	_saying_plate.offset_left = -250.0 if narrow else -300.0
 	var sub_half := minf(420.0, canvas.x * 0.5 - 24.0)
 	_subtitle.offset_left = -sub_half
 	_subtitle.offset_right = sub_half
-	_subtitle.offset_top = -216.0 if narrow else -176.0
-	_subtitle.offset_bottom = -180.0 if narrow else -140.0
+	_subtitle.offset_top = -216.0 if narrow else -232.0
+	_subtitle.offset_bottom = -180.0 if narrow else -196.0
 	# the prompt a little below the middle, but never down among the subtitle and the bars
-	var lowest := canvas.y * 0.5 + (-224.0 if narrow else -184.0)
+	var lowest := canvas.y * 0.5 + (-224.0 if narrow else -240.0)
 	var lift := maxf(126.0 - lowest, 0.0)
 	_prompt.offset_top = 76.0 - lift
 	_prompt.offset_bottom = 126.0 - lift
@@ -965,6 +967,10 @@ func _update_breath(delta: float) -> void:
 func _process(delta: float) -> void:
 	_wall.step()
 	_idle += delta
+	# a body put away and another stood up without a spawn (a bench, a test) is found again
+	if Engine.get_process_frames() % 30 == 0 and (_player == null or not is_instance_valid(_player)
+			or _player != get_tree().get_first_node_in_group("player")):
+		_connect_world()
 	_update_waymarks()
 	_update_compass(delta)
 	_update_reticle()

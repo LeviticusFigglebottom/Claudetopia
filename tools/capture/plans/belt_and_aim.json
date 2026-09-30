@@ -1,19 +1,150 @@
 {
-  "note": "Playtest 09-30: the arrow to the crosshair, the belt of eight things used and the weapon set. The HUD in the player's own over-the-shoulder view with the bow drawn on a post, the belt filled; then the cycle key taking the knife into the hand with the weapon set's notice up. Run through tools_gd/motion_studio.tscn (tools/capture/film_motion.sh).",
-  "sequences": [
-    {"label": "belt_bow_drawn", "view": "player", "hud": true, "weapon_set": ["core:item/hunting_bow", "core:item/hunting_knife"],
-     "items": [["core:item/iron_arrow", 20], ["core:item/potion_restore_health", 3], ["core:item/potion_restore_mana", 2],
-               ["core:item/potion_restore_stamina", 1], ["core:item/bread", 4], ["core:item/torch", 2], ["core:item/farm_cheese", 1]],
-     "belt": [[0, "core:item/potion_restore_health"], [1, "core:item/potion_restore_mana"], [2, "core:item/potion_restore_stamina"],
-              [3, "core:item/bread"], [4, "core:item/farm_cheese"], [5, "core:item/torch"]],
-     "pitch": 0.08,
-     "target": [0.0, 0.0, -14.0],
-     "keys": [[0.3, "LMB", true], [2.2, "LMB", false]],
-     "shots": [1.9, 2.5]},
-    {"label": "weapon_cycle", "view": "player", "hud": true, "weapon_set": ["core:item/hunting_bow", "core:item/hunting_knife"],
-     "items": [["core:item/iron_arrow", 20], ["core:item/potion_restore_health", 3], ["core:item/bread", 4], ["core:item/torch", 2]],
-     "belt": [[0, "core:item/potion_restore_health"], [3, "core:item/bread"], [5, "core:item/torch"]],
-     "keys": [[0.5, "R", true], [0.6, "R", false]],
-     "shots": [0.4, 0.9, 1.5]}
-  ]
+ "note": "Playtest 09-30: the arrow to the crosshair, the belt of eight things used and the weapon set. The HUD in the player's own over-the-shoulder view with the bow drawn on a post, the belt filled; then the cycle key taking the knife into the hand with the weapon set's notice up. Run through tools_gd/motion_studio.tscn (tools/capture/film_motion.sh).",
+ "sequences": [
+  {
+   "label": "weapon_cycle",
+   "view": "player",
+   "hud": true,
+   "weapon_set": [
+    "core:item/hunting_bow",
+    "core:item/hunting_knife"
+   ],
+   "items": [
+    [
+     "core:item/iron_arrow",
+     20
+    ],
+    [
+     "core:item/potion_restore_health",
+     3
+    ],
+    [
+     "core:item/bread",
+     4
+    ],
+    [
+     "core:item/torch",
+     2
+    ]
+   ],
+   "belt": [
+    [
+     0,
+     "core:item/potion_restore_health"
+    ],
+    [
+     3,
+     "core:item/bread"
+    ],
+    [
+     5,
+     "core:item/torch"
+    ]
+   ],
+   "keys": [
+    [
+     0.5,
+     "R",
+     true
+    ],
+    [
+     0.6,
+     "R",
+     false
+    ]
+   ],
+   "shots": [
+    0.4,
+    0.9,
+    1.5
+   ]
+  },
+  {
+   "label": "belt_bow_drawn",
+   "view": "player",
+   "hud": true,
+   "weapon_set": [
+    "core:item/hunting_bow",
+    "core:item/hunting_knife"
+   ],
+   "items": [
+    [
+     "core:item/iron_arrow",
+     20
+    ],
+    [
+     "core:item/potion_restore_health",
+     3
+    ],
+    [
+     "core:item/potion_restore_mana",
+     2
+    ],
+    [
+     "core:item/potion_restore_stamina",
+     1
+    ],
+    [
+     "core:item/bread",
+     4
+    ],
+    [
+     "core:item/torch",
+     2
+    ],
+    [
+     "core:item/farm_cheese",
+     1
+    ]
+   ],
+   "belt": [
+    [
+     0,
+     "core:item/potion_restore_health"
+    ],
+    [
+     1,
+     "core:item/potion_restore_mana"
+    ],
+    [
+     2,
+     "core:item/potion_restore_stamina"
+    ],
+    [
+     3,
+     "core:item/bread"
+    ],
+    [
+     4,
+     "core:item/farm_cheese"
+    ],
+    [
+     5,
+     "core:item/torch"
+    ]
+   ],
+   "pitch": 0.08,
+   "target": [
+    0.0,
+    0.0,
+    -14.0
+   ],
+   "keys": [
+    [
+     0.3,
+     "LMB",
+     true
+    ],
+    [
+     2.2,
+     "LMB",
+     false
+    ]
+   ],
+   "shots": [
+    1.9,
+    2.5
+   ]
+  }
+ ]
 }

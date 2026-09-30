@@ -13241,3 +13241,99 @@ Tower 8. The new places' own cost: 5-114 draws, 1-216 k triangles (the Horn Pale
   Pellow's Pale.
 - Sheets for the flagship places (see above): not made; a render of Briarwold is an hour.
 - `poi-probe` aborts on exit after writing its file ("Aborted" from run.sh), harmless here.
+
+## The arrow flies to the crosshair, and a bar for things you use (2026-09-30)
+
+The owner's Ranger playtest, four items.
+
+**1. The arrow went far above the crosshair when aiming a little above level.** Why: the aim ray
+(`Player.aim_point`) ends 150 m out when it meets nothing, and the arrow was sent on the arc that
+comes down exactly there (`ballistic_direction`). For a hunting bow at 42 m/s, a crosshair 5 degrees
+above level was a lob at about 35 degrees; a point out of reach was a lob at 45. Aimed at a wall it
+was right, which is why test_bow_draw (a wall 25 m off) never saw it. Now:
+- `Player.arrow_target()`: the crosshair's point on the aim ray; when the ray meets nothing the
+  arrow is zeroed at the bow's reach (`range`, ARROW_ZERO 60 m), and on something it comes down on
+  it out to ARROW_ZERO_MOST (85 m).
+- `Player.arrow_direction()`: the arc to that point, never lifted more than ARROW_LIFT_MOST
+  (12 degrees) over the straight line. A mark out of reach is shot on the lifted line and the arrow
+  falls short. It is never a lob.
+- ARROW_SPEED 58 m/s (was 42) when a bow does not give its own speed. That is a hunting bow's speed, and
+  the arc to 60 m rises about 1.2 m over the line instead of 2.6.
+- Projectile steps along the true arc (the half-g-dt-squared term). Aimed with the arc's formula,
+  the arrow now lands on the point, not a hand high of it.
+- test_arrow_to_crosshair (new, 4 tests): a real body and bow on a platform 60 m up, with a board
+  square to the view on the crosshair's ray. Third person: 7 pitches (-30 to +45 degrees) times
+  4 ranges (5, 15, 30, 60 m), 28 shots, the worst 0.000 m off the crosshair point (the limit is 0.3).
+  Walking drawn: 6 shots, 0.000. First person: 12 shots, 0.001. At the open sky at +5 and +12
+  degrees, the arrow stays at most 1.19 m over the crosshair line before 60 m and is 0.30 m off it
+  at 60 m (it went up at 35 degrees). The arc's cap: no mark out of reach lifts it past
+  12 degrees, and a full draw at 30 m is under 3 degrees.
+- Mounted: the rider still cannot draw a bow in the saddle (triage 55's "Not done"). The aim is
+  the same code, so mounted archery will inherit it when it lands.
+
+**2. The bar's icons looked primitive.** They were the journal's ink glyphs. Now there are painted
+pictures: `tools/ui/gen_item_art.py`, run by `gen_ui_textures.py --only items`, writes 33 pictures
+to game/assets/ui/items/ (manifest `item_art`). Each part is a filled shape in the parchment, brass
+and dark-oak palette, lit from the upper left, darkened to its edges, grained, with glass and metal
+glazed, drawn round in the UI's ink, with a soft shadow. The set: six draughts (by effect: red
+health, blue breath, green stamina and cures, amber fortify and resist, violet, bile poison), the
+Hearth Flask, bread, cheese, meat, drink, pie, herb, torch, lantern, candle, lockpick, rope, bell,
+pouch, key, and the weapons (sword, greatsword, dagger, axe, mace, hammer, spear, bow, crossbow,
+staff, shield, sword and shield). Also the belt's chrome: a sunk dark-oak socket with a brass bezel
+and rivets, a lit one for the weapon in hand, a stitched strap with brass end caps, and a brass key
+tab. `UiKit.item_art_name` / `item_picture` choose a picture from the item's tags, effects and
+weapon class, and fall back to the glyph. Review: docs/review/aim-hotbar/item_art.jpg.
+
+**3. More slots, for items, not weapons.** The belt has eight slots now (`Equipment.QUICK_SLOTS`,
+keys 1-8, labelled "Belt slot N" under a Belt heading). It takes BELT_CATEGORIES only (consumable,
+ingredient, tool): draughts, food, the flask, a torch or lantern (taken into the off hand, and put
+away again), tools. Weapons are refused. The inventory offers "To the belt" for all of these,
+including the torch. On the HUD the belt is eight 44 px sockets on the strap, bottom right, with the
+count at the foot of each. The boss bar is 440 wide so they do not meet.
+
+**4. Cycling weapons.** There is now a weapon set on the doll (`Equipment.weapon_set`, up to 4). A
+weapon taken in hand joins it, and the inventory has "To/Out of the weapon set". Each weapon
+remembers the off-hand it was carried with, so a sword comes back with its shield after the bow.
+`cycle_weapon` is on R, and on the pad on the D-pad's right (joy 14, taken from quick 4, whose old
+default is migrated in Settings.RETIRED_DEFAULTS). The mouse wheel also cycles when nothing is
+locked on (locked on, the wheel still picks the foe). You can only cycle when the body is free,
+not mid-swing, mid-draw or in the saddle. It counts as the "swap" act. The HUD shows the weapon in
+hand in a lit socket over the belt's left end with the cycle key on its tab. On a cycle, a notice
+shows the whole set for 1.8 s, with the weapon now in hand named and lit. It is taught on the
+control-hints strip ("R next weapon") while there is another weapon to go to, and let go once
+used. The strip and the subtitles moved up 44 px to clear the weapon socket. The Controls page lists
+it (from the bindings) with a line for the wheel and one for putting things on the belt. A style
+kit's weapon "on a quick key" (the ranger's knife) goes into the weapon set
+(Progression.apply_style).
+
+**Saves**: schema 6. `Migrations._v5_to_v6` moves weapons off the saved belt into
+`equipment.weapon_set`, after the weapon in the hand (read from the bag's uid). Draughts stay, and
+the player's copy of the belt grows to eight and loses its weapons. `Equipment.from_save` applies
+the same rule to anything written in between.
+
+**Looked at** (Compatibility, xvfb, motion_studio plan tools/capture/plans/belt_and_aim.json; the
+plan can now fill `belt` and `weapon_set`): docs/review/aim-hotbar/hud_bow_belt_and_cycle.jpg. Left:
+third person with the bow at full draw, the crosshair closed on the post, the belt holding the
+three draughts, bread, cheese and a torch, and the bow in the lit socket. Right: R pressed, the
+knife in hand and the "Hunting Knife" notice with both weapons. The first capture showed the hint
+strip lying over the weapon socket (moved) and the HUD not finding a body stood up without a spawn
+(it now looks again when its body is gone or another is the player).
+
+**Tests**: test_arrow_to_crosshair (new, 4), test_belt_and_weapon_set (new, 4), test_bow_draw 8,
+test_inventory_equipment (+2, and the belt test rewritten: weapons refused, lantern taken up and
+put away), test_save (+1: v5 to v6), test_pad_layout (cycle on the pad, quick 4 migrated),
+test_start_ranger (the knife in the weapon set and cycled), test_inventory_screen, test_hooks_wired,
+test_control_hints, test_hearth_flask, test_rebind_capture, test_inventory_bag,
+test_inventory_contract, test_first_person, test_start_mage, test_ui_fits_at_every_scale,
+test_progression_perks, test_perks_do_what_they_say: 231 tests, 0 failed, 0 script errors, warnings at the baseline (49), import check PASS.
+
+### Not done / for the coordinator
+- **quests/start_ranger.json (the starts agent's)**, objective line 55: "take the knife into your
+  hand {key:quick_4}" should read `{key:cycle_weapon}`. The act it waits on ("swap") still
+  completes: a cycle emits it. styles.json's ranger kit row `"quick": "quick_4"` for the knife
+  can stay (it now goes to the weapon set) or drop the key.
+- Mounted archery (drawing in the saddle) is still not there.
+- On a pad, only belt slots 1-3 have buttons (the D-pad's up, down and left). 4-8 are keyboard
+  only; a pad belt wheel would be the next step.
+- Assets: game/assets/ui/items/*.png and belt_*.png are committed with their imports. Nothing to
+  rebuild, and no world build is needed.
