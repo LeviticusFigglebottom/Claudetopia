@@ -1,0 +1,157 @@
+{
+ "note": "The Choir's colossi from the road at the camp, the avenue, the plain, a foot, at dusk; the fallen colossus stood up beside the avenue for its shot (it is in the world only after a rebuild).",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "label": "choir_from_the_camp",
+   "pos": [
+    10.0,
+    107.66,
+    3670.0
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    -190.0,
+    150.0,
+    3300.0
+   ],
+   "time": 17.0,
+   "weather": "core:weather/clear",
+   "fov": 60
+  },
+  {
+   "label": "avenue_to_pilgrims_ash",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 229.635,
+    "distance": 60,
+    "height": 2.2
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 49.635,
+    "distance": 150,
+    "height": 1.0
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "choir_from_the_plain",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 40.0,
+    "distance": 190,
+    "height": 2.4
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 0.0,
+    "distance": 0,
+    "height": 20.0
+   },
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "avenue_inside",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 153.5,
+    "distance": 75,
+    "height": 2.2
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 153.5,
+    "distance": 320,
+    "height": 16.0
+   },
+   "time": 16.5,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "colossus_foot",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 200.0,
+    "distance": 30,
+    "height": 1.8
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 0.0,
+    "distance": 0,
+    "height": 9.0
+   },
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 70
+  },
+  {
+   "label": "choir_dusk_from_the_road",
+   "pos": [
+    -158.0,
+    0,
+    3380.9
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    -150.0,
+    150.0,
+    3300.0
+   ],
+   "time": 17.35,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "choir_dusk_avenue",
+   "at": {
+    "place": "core:place/sunken_choir",
+    "bearing": 229.635,
+    "distance": 60,
+    "height": 2.2
+   },
+   "look": {
+    "place": "core:place/sunken_choir",
+    "bearing": 49.635,
+    "distance": 150,
+    "height": 8.0
+   },
+   "time": 17.35,
+   "weather": "core:weather/clear",
+   "fov": 65
+  },
+  {
+   "label": "fallen_colossus_staged",
+   "pos": [
+    -150.0,
+    0,
+    3180.0
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    -185.0,
+    135.0,
+    3215.0
+   ],
+   "time": 11.0,
+   "weather": "core:weather/clear",
+   "fov": 65,
+   "dress": {
+    "scene": "res://assets/models/landmarks/cinderlea_choir_colossus_c/cinderlea_choir_colossus_c.glb",
+    "at": [
+     -185.0,
+     3215.0
+    ],
+    "yaw": 20.0
+   }
+  }
+ ]
+}

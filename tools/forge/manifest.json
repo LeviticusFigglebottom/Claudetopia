@@ -3917,6 +3917,37 @@
    "palette": "core:region/brightwater",
    "variant": "c",
    "seed": 10157
+  },
+  {
+   "generator": "gen_landmarks",
+   "kind": "choir_colossus",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 9811,
+   "params": {
+    "pose": "c"
+   }
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "a",
+   "seed": 9851
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "b",
+   "seed": 9868
+  },
+  {
+   "generator": "gen_rocks",
+   "kind": "waystone",
+   "palette": "core:region/cinderlea",
+   "variant": "c",
+   "seed": 9885
   }
  ]
 }

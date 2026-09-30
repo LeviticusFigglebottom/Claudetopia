@@ -329,75 +329,180 @@ def fallen_hand(pal, rng, params, variant):
                            "place": "core:place/fallen_hand"}}
 
 
+# --- carved stone (the Choir, the Nave) -------------------------------------------------------
+
+def carved_stone(pal, name, ground_z=0.0, base_hex="#6a6258", soot=0.75, lichen=0.35, gilding=0.12,
+                 ash=0.5, scale=1.0, drowned_z=None, weed_hex="#2c3326", lichen_hex="#7d806a"):
+    """Weathered carved stone, warm grey and painted rather than photographed: broad patches
+    of tone, soot run down the faces from every ledge, pale wear on the proud edges, lichen on
+    the weather side, the dust of the country on the tops and heaped at the foot, and in the
+    deepest folds the last of an old gilding. Object space, metres; `ground_z` is where the
+    ground line is on the object, `drowned_z` a waterline below which the stone is weed-black.
+
+    Warm, never cool: the Choir's first stone took the region's "cool" role and stood slate
+    blue on the ash (the user's playtest), so nothing here reads the palette's cool colours."""
+    nb = M.NB(name)
+    base = P.lin(base_hex)
+    dark, mid, light = M.trio(base, 1.25)
+    v = nb.coord(1.0 / scale)
+    # big soft patches of tone, and vertical strokes laid in the way the stone was weathered
+    col = M.paint_blocks(nb, nb.coord(0.07 / scale), [dark, mid, light], distortion=1.4, detail=2.5)
+    col = nb.mix(0.45, col, M.paint_blocks(nb, nb.coord(0.3 / scale), [M.shade(mid, 0.8), mid, M.shade(light, 1.05)],
+                                           distortion=1.0, detail=2.0))
+    col = M.strokes(nb, 0.6 / scale, col, strength=0.1, scale=2.0, along="Z")
+    geo = nb.node("ShaderNodeNewGeometry")
+    nz = nb.node("ShaderNodeSeparateXYZ", inputs={"Vector": geo.outputs["Normal"]}).outputs["Z"]
+    nx = nb.node("ShaderNodeSeparateXYZ", inputs={"Vector": geo.outputs["Normal"]}).outputs["X"]
+    # soot: long dark runs down the steep faces, heaviest under overhangs and high up, where the
+    # smoke of the Ash Winter lay against the stone
+    sn = nb.noise(nb.coord((0.9 / scale, 0.9 / scale, 0.045 / scale)), scale=1.0, detail=3.0, rough=0.55)
+    sm = nb.map_range(sn.outputs["Fac"], 0.5, 0.72, 0.0, 1.0)
+    steep = nb.map_range(nz, 0.75, 0.2, 0.0, 1.0)
+    under = nb.map_range(nz, 0.0, -0.6, 0.0, 0.6)
+    sm = nb.math("MULTIPLY", sm, nb.math("ADD", steep, under), clamp=True)
+    col = nb.mix(nb.math("MULTIPLY", sm, soot, clamp=True), col, P.lin("#2a2623"))
+    # the grime of the hollows and the pale proud edges
+    col, _ = M.cavity_dirt(nb, col, P.lin("#3a3430"), amount=0.55, distance=1.2, breakup_vec=v)
+    col, _ = M.edge_wear(nb, col, M.shade(light, 1.22, 0.7), amount=0.55, lo=0.505, hi=0.56, breakup_vec=v,
+                         breakup_scale=0.8)
+    # crackle: the fine cracks of a thousand years, dark hairlines in cells a metre or two across
+    cw = nb.noise(nb.coord(0.4 / scale), scale=1.0, detail=2.0, rough=0.5)
+    cell = nb.voronoi(nb.vwarp(nb.coord(0.55 / scale), cw.outputs["Color"], 0.6), scale=1.0,
+                      feature="DISTANCE_TO_EDGE", randomness=1.0)
+    # thin, and only where a patch of noise lets them through: over the whole figure at full
+    # strength they drew a crazy-paving net on it, cells like a giraffe's
+    crack = nb.map_range(cell.outputs["Distance"], 0.0, 0.018, 1.0, 0.0)
+    cg = nb.noise(nb.coord(0.12 / scale), scale=1.0, detail=2.0, rough=0.5)
+    crack = nb.math("MULTIPLY", crack, nb.map_range(cg.outputs["Fac"], 0.52, 0.66, 0.0, 0.55), clamp=True)
+    col = nb.mix(crack, col, P.lin("#231f1c"))
+    # lichen, on the faces the weather comes from (west, -X) and the tops: grey-green crusts and
+    # a few rosettes of ochre
+    if lichen > 0:
+        ln = nb.noise(nb.coord(1.1 / scale), scale=1.0, detail=3.0, rough=0.6, distortion=0.5)
+        lm = nb.map_range(ln.outputs["Fac"], 0.66 - 0.12 * lichen, 0.74, 0.0, 1.0)
+        west = nb.map_range(nx, 0.2, -0.7, 0.25, 1.0)
+        lm = nb.math("MULTIPLY", lm, west, clamp=True)
+        col = nb.mix(nb.math("MULTIPLY", lm, 0.85, clamp=True), col, P.lin(lichen_hex))
+        on = nb.noise(nb.coord(3.0 / scale), scale=1.0, detail=2.0, rough=0.5)
+        om = nb.math("MULTIPLY", nb.map_range(on.outputs["Fac"], 0.7, 0.76, 0.0, lichen), west, clamp=True)
+        col = nb.mix(om, col, P.lin("#a88a45"))
+    # old gilding in the deepest folds, almost gone
+    metal = 0.0
+    if gilding > 0:
+        occ = nb.ao(distance=1.5)
+        gm = nb.map_range(occ, 0.35, 0.7, 1.0, 0.0)
+        gn = nb.noise(nb.coord(0.8 / scale), scale=1.0, detail=2.0, rough=0.5)
+        gm = nb.math("MULTIPLY", gm, nb.map_range(gn.outputs["Fac"], 0.55, 0.7, 0.0, gilding * 2.0), clamp=True)
+        col = nb.mix(gm, col, P.lin("#8c7440"))
+        metal = nb.math("MULTIPLY", gm, 0.5)
+    # the country's dust: on every upward face, and banked at the foot
+    if ash > 0:
+        an = nb.noise(nb.coord(0.9 / scale), scale=1.0, detail=3.0, rough=0.55)
+        am = nb.math("MULTIPLY", nb.map_range(nz, 0.45, 0.85, 0.0, 1.0),
+                     nb.map_range(an.outputs["Fac"], 0.35, 0.6, 0.2, 1.0), clamp=True)
+        col = nb.mix(nb.math("MULTIPLY", am, ash, clamp=True), col, P.lin("#7d766c"))
+        # the bank of ash at the foot is the ground's colour, not the stone's: dark, and up
+        # over the whole drift (it stands two metres and more against the robe)
+        foot = nb.map_range(nb.separate_z(), ground_z + 3.2, ground_z + 0.6, 0.0, 1.0)
+        fn_ = nb.noise(nb.coord(0.5 / scale), scale=1.0, detail=2.0, rough=0.5)
+        foot = nb.math("MULTIPLY", foot, nb.map_range(fn_.outputs["Fac"], 0.3, 0.6, 0.55, 1.0), clamp=True)
+        col = nb.mix(foot, col, P.lin("#2e2a26"))
+    if drowned_z is not None:
+        wz = nb.separate_z()
+        wn = nb.noise(nb.coord(0.35 / scale), scale=1.0, detail=2.0, rough=0.5)
+        wline = nb.math("ADD", wz, nb.math("MULTIPLY", wn.outputs["Fac"], 1.4))
+        # the wet: stone the fen has soaked, dark from the water up to a man's height and more,
+        # in runs down the faces where the rain comes off the walls into it
+        rn = nb.noise(nb.coord((0.8 / scale, 0.8 / scale, 0.06 / scale)), scale=1.0, detail=3.0, rough=0.55)
+        runs = nb.map_range(rn.outputs["Fac"], 0.42, 0.7, 0.35, 1.0)
+        wet = nb.math("MULTIPLY", nb.map_range(wline, drowned_z + 7.5, drowned_z + 1.8, 0.0, 0.85), runs, clamp=True)
+        col = nb.mix(wet, col, P.lin("#1c1f1a"))
+        wm = nb.map_range(wline, drowned_z + 1.6, drowned_z + 0.4, 0.0, 1.0)
+        col = nb.mix(wm, col, P.lin(weed_hex))
+        # moss at the waterline, a green collar a metre or two deep, thickest on the ledges and
+        # broken where the stone stands proud
+        mn = nb.noise(nb.coord(0.9 / scale), scale=1.0, detail=3.0, rough=0.6, distortion=0.4)
+        band = nb.math("MULTIPLY", nb.map_range(wline, drowned_z + 3.6, drowned_z + 2.0, 0.0, 1.0),
+                       nb.map_range(wline, drowned_z + 0.5, drowned_z + 1.3, 0.0, 1.0), clamp=True)
+        ledge = nb.map_range(nz, 0.1, 0.7, 0.55, 1.0)
+        moss = nb.math("MULTIPLY", nb.math("MULTIPLY", band, ledge, clamp=True),
+                       nb.map_range(mn.outputs["Fac"], 0.38, 0.6, 0.0, 0.95), clamp=True)
+        col = nb.mix(moss, col, P.lin("#3a4527"))
+    # relief: pitting at a hand's scale and the crackle cut in, broad enough to survive the bake
+    hn = nb.noise(nb.coord(1.6 / scale), scale=1.0, detail=4.0, rough=0.6)
+    height = nb.math("SUBTRACT", hn.outputs["Fac"], nb.math("MULTIPLY", crack, 0.6))
+    normal = nb.bump(height, strength=0.45, distance=0.12)
+    rough = M.rough_var(nb, v, 0.86, 0.06)
+    return nb.finish(col, rough, metal, normal)
+
+
+def _carved(name, V, T, mat, target_tris=0):
+    """A carved mesh (lib/carve) as a Blender object, decimated to `target_tris` if it is over."""
+    ob = S.mesh_from_pydata(name, V, T, mat=mat)
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(ob.data)
+    bm.free()
+    tris = S.tri_count(ob)
+    if target_tris and tris > target_tris:
+        S.decimate(ob, target_tris / float(tris))
+    S.shade_smooth(ob, 60.0)
+    return ob
+
+
 # --- the Sunken Choir colossus (Cinderlea) -------------------------------------------------
 
-def choir_colossus(pal, rng, params, variant):
-    """One of the twelve headless robed colossi, ~50 m, weathered fused stone, old gilding
-    in the folds (WORLD_BIBLE §6.6). Twelve of these make the Choir ring."""
-    h = params.get("height", 50.0)
-    stone = M.fused_stone(pal, wear=0.45, age=0.85, gilding=params.get("gilding", 0.35),
-                          scale=h * 0.05)
-    parts = []
-    # Robe: a lathed bell of cloth, wider at the hem, with vertical folds.
-    hem_r = h * 0.20
-    prof = [
-        (hem_r * 1.02, 0.0), (hem_r * 1.04, h * 0.02), (hem_r * 0.97, h * 0.10),
-        (hem_r * 0.90, h * 0.24), (hem_r * 0.84, h * 0.38), (hem_r * 0.79, h * 0.50),
-        (hem_r * 0.76, h * 0.60), (hem_r * 0.78, h * 0.68), (hem_r * 0.72, h * 0.75),
-        (hem_r * 0.58, h * 0.80), (hem_r * 0.40, h * 0.83),
-    ]
-    folds = int(params.get("folds", 26))
-    robe = S.lathe("robe", prof, segments=folds * 2, mat=stone, close=True)
-    for v in robe.data.vertices:
-        a = math.atan2(v.co.y, v.co.x)
-        k = math.cos(a * folds)
-        f = 1.0 + 0.035 * k * (0.35 + 0.65 * min(1.0, v.co.z / (h * 0.7)))
-        v.co.x *= f
-        v.co.y *= f
-    S.shade_smooth(robe, 34.0)
-    parts.append(robe)
-    # Shoulders and chest above the robe.
-    torso = S.lathe("torso", [(hem_r * 0.40, h * 0.82), (hem_r * 0.52, h * 0.86),
-                              (hem_r * 0.60, h * 0.90), (hem_r * 0.56, h * 0.95),
-                              (hem_r * 0.34, h * 0.975)], segments=folds, mat=stone)
-    parts.append(torso)
-    # The neck, snapped off: the Choir is headless, and the break is the point.
-    neck = S.cylinder("neck", radius=hem_r * 0.20, radius_top=hem_r * 0.17, depth=h * 0.035,
-                      vertices=18, location=(0, 0, h * 0.97), mat=stone)
-    _weather(neck, rng, amount=h * 0.004, scale=h * 0.02, seed=rng.randrange(999))
-    parts.append(neck)
-    # Arms folded across the body: upper arms hang close to the sides, forearms come in and
-    # meet at the waist. Built as swept tubes rather than cylinders so the elbow bends;
-    # straight cylinders off the shoulders read as a crossbar, not as arms.
-    for sgn in (-1, 1):
-        shoulder = Vector((sgn * hem_r * 0.52, 0.0, h * 0.905))
-        elbow = Vector((sgn * hem_r * 0.60, -hem_r * 0.16, h * 0.775))
-        wrist = Vector((sgn * hem_r * 0.26, -hem_r * 0.40, h * 0.715))
-        arm = S.tube_along("arm%d" % sgn, [shoulder,
-                                           shoulder.lerp(elbow, 0.55) + Vector((sgn * hem_r * 0.03, 0, 0)),
-                                           elbow,
-                                           elbow.lerp(wrist, 0.5) + Vector((0, -hem_r * 0.05, 0)),
-                                           wrist],
-                           radius=hem_r * 0.135, segments=12, radius_end=hem_r * 0.085, mat=stone)
-        parts.append(arm)
-        hand = S.sphere("hand%d" % sgn, radius=hem_r * 0.105, subdivisions=3,
-                        location=(sgn * hem_r * 0.13, -hem_r * 0.44, h * 0.705), mat=stone,
-                        scale=(1.0, 1.3, 0.72))
-        S.apply_transforms(hand)
-        parts.append(hand)
-    # Plinth of fused stone, cracked and sunk.
-    plinth = S.cylinder("plinth", radius=hem_r * 1.35, radius_top=hem_r * 1.22, depth=h * 0.045,
-                        vertices=folds, location=(0, 0, -h * 0.042), mat=stone)
-    _weather(plinth, rng, amount=h * 0.004, scale=h * 0.06, seed=rng.randrange(999))
-    parts.append(plinth)
+CHOIR_POSES = {"a": "a", "b": "b", "c": "c"}
 
-    for p in parts:
-        _weather(p, rng, amount=h * 0.0016, scale=h * 0.11, seed=rng.randrange(999))
-    S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
-            "materials_used": ["fused_stone"],
-            "extra_meta": {"height_m": h, "headless": True, "place": "core:place/sunken_choir",
-                           "ring_count": 12}}
+
+def choir_colossus(pal, rng, params, variant):
+    """One of the twelve headless colossi of the Sunken Choir (WORLD_BIBLE §6.6), carved: a
+    robed singer fifty metres tall, its head gone at the neck, standing to the ankles in a drift
+    of ash with the pieces that have come off it round its foot (lib/choir.py). Pose a lifts
+    both hands, b raises one (snapped at the forearm, which lies in the ash) and lays the other
+    on its breast, c is broken at the knees with its upper body lying behind it.
+
+    The first colossi were lathed -- a bell of robe with a cosine for folds, tube arms, a
+    plinth drum -- and on the ash plain they read as ribbed slate-blue water tanks on a blue
+    ring. This one has no plinth: the robe runs on under the ground line (choir.BURY_M) and the
+    ash is banked against it, so it stands in the ground at any pad height the builder gives."""
+    from lib import carve as CV
+    from lib import choir as CH
+    pose = CHOIR_POSES.get(str(params.get("pose", "abc"[min(variant, 2)])), "a")
+    fig = CH.figure(pose, seed=int(params.get("seed_shape", 7 + 13 * variant)))
+    spacing = float(params.get("spacing", 0.42))
+    Vb, Tb = CV.keep_largest(*CV.mesh(fig["body"], spacing))
+    Vd, Td = CV.keep_largest(*CV.mesh(fig["debris"], spacing * 0.85), min_tris=60)
+    lo_z = float(min(Vb[:, 2].min(), Vd[:, 2].min() if len(Vd) else 0.0))
+    ground_z = -lo_z                     # where the ground line lies once the model is dropped
+    stone = carved_stone(pal, "choir_stone", ground_z=ground_z, scale=1.0)
+    # the fallen c's "debris" is most of the figure -- its whole upper body lying in the ash, arms
+    # and hands and all -- and at the rubble's 5000 triangles it stood beside its sooted
+    # neighbours as a pale faceted shape of flat planes; its stump is only the lower robe
+    lying = pose == "c"
+    body = _carved("colossus_body", Vb, Tb, stone,
+                   target_tris=int(params.get("body_tris", 10000 if lying else 20000)))
+    parts = [body]
+    if len(Td):
+        parts.append(_carved("colossus_debris", Vd, Td, stone,
+                             target_tris=int(params.get("debris_tris", 16000 if lying else 5000))))
+    cols = []
+    for kind, prim in fig["collision"]:
+        sc = CV.sdf.Scene().add(prim)
+        Vc, Tc = CV.mesh(sc, 1.2, smooth_iters=1)
+        if len(Tc):
+            cols.append(_carved("col_%d" % len(cols), Vc, Tc, None))
+    everything = parts + cols
+    for o in everything:
+        o.location.z -= lo_z
+        S.apply_transforms(o)
+    return {"opaque_objs": parts, "collision": "col_glb", "collision_objs": cols, "tier": "hero",
+            "materials_used": ["choir_stone"], "ground": False, "lod_keep_parts": True,
+            "extra_meta": {"height_m": round(float(max(Vb[:, 2].max(), Vd[:, 2].max() if len(Vd) else 0) - lo_z), 2),
+                           "headless": True, "pose": pose, "place": "core:place/sunken_choir",
+                           "ring_count": 12, "buried_m": round(ground_z, 2)}}
 
 
 # --- the Lamp (Brightwater lighthouse) ------------------------------------------------------
@@ -873,99 +978,56 @@ def chalk_hound(pal, rng, params, variant):
 # --- the Drowned Nave (Sedgemire) ----------------------------------------------------------
 
 def drowned_nave(pal, rng, params, variant):
-    """An Oroth spire leaning fifteen degrees out of the marsh, its lower half flooded.
+    """The Drowned Nave (Isse-Anthe, WORLD_BIBLE §6.3), carved from the ground up (lib/nave.py):
+    an Oroth tower leaning fifteen degrees out of the fen, broadest at its foot and buttressed,
+    and the nave it belonged to running away from it with its roof gone, its walls broken down
+    bay by bay toward the water, its floor flooded, and the fallen stone heaped round it.
 
-    WORLD_BIBLE Sedgemire: 120 m, leaning 15 degrees, lower half under water. What is built
-    here is what shows -- the upper spire and the tops of the nave arcade around its foot,
-    with the waterline written on the stone: black weed below it, pale fused stone above.
-    It is the thing you see before you go down, so the lean is the whole silhouette and it
-    must be unmistakable from across the fen.
-    """
-    h = params.get("height", 120.0)
-    lean = math.radians(params.get("lean_deg", 15.0))
-    # How much of it stands above the fen. The rest is the deep place.
-    show = params.get("above_water", 0.52)
-    stone = M.fused_stone(pal, wear=0.4, age=0.8, gilding=params.get("gilding", 0.18), scale=h * 0.045)
-    drowned = M.drowned_stone(pal, age=0.9, scale=h * 0.03, name="nave_drowned")
+    The first Nave was the whole 120 m spire stood on the ground with its arcade and gable at
+    the waterline it had been drawn for, 58 m up: from the marsh, a mass forty metres wide
+    hanging at 50-80 m on a shaft twenty wide, and a box in the sky where trees hid the shaft.
+    Now every height of it comes down in steps to the ground: tower, buttresses, walls, rubble.
+    The rest of its hundred and twenty metres is the deep place under the fen."""
+    from lib import carve as CV
+    from lib import nave as NV
+    r = NV.ruin(int(params.get("seed_shape", 3)))
+    sp = float(params.get("spacing", 0.5))
+    meshes = {}
+    for key, s_mul in (("tower", 1.0), ("nave", 1.0), ("fallen", 0.8), ("water", 2.0)):
+        V, T = CV.mesh(r[key], sp * s_mul, smooth_iters=2 if key != "water" else 1)
+        V, T = CV.keep_largest(V, T, min_tris=60)
+        meshes[key] = (V, T)
+    lo_z = float(min(v[0][:, 2].min() for v in meshes.values() if len(v[0])))
+    ground_z = -lo_z
+    # fen-dark stone: at #5c584e (a linear mean of 0.17, and not drawn in the painted stone, whose
+    # ceiling holds the Choir under 0.08) the tower stood over the overcast marsh bleached near
+    # white, a chalk spire, not a church a thousand years in the water; soot and weed streak it
+    stone = carved_stone(pal, "nave_stone", ground_z=ground_z, base_hex="#403d35", soot=0.7, lichen=0.6,
+                         gilding=0.04, ash=0.0, drowned_z=ground_z + 1.1, lichen_hex="#4a5438")
+    water = M.NB("nave_water")
+    wn = water.noise(water.coord(0.4), scale=1.0, detail=2.0, rough=0.5)
+    wcol = water.ramp(wn.outputs["Fac"], [(0.35, P.lin("#161c19")), (0.65, P.lin("#243029"))])
+    water = water.finish(wcol, 0.06, 0.0, None)
+    budget = {"tower": int(params.get("tower_tris", 16000)), "nave": int(params.get("nave_tris", 14000)),
+              "fallen": int(params.get("fallen_tris", 6000)), "water": 400}
     parts = []
-
-    # The spire: an Oroth tower, square-shouldered at the base and drawn to a point, with
-    # the flutes that mark Builders' work.
-    flutes = int(params.get("flutes", 16))
-    # A hundred-and-twenty-metre tower ten metres across its foot. At h * 0.055 it came out
-    # a needle: correct in height and unreadable as a building, which for the thing the fen
-    # is named after is the wrong failure.
-    base_r = h * 0.092
-    # Square-shouldered for two thirds and then drawn to a point: a tower with a spire on
-    # it, which is a different silhouette from a cone and the one a nave actually has.
-    prof = [
-        (base_r * 1.22, 0.0), (base_r * 1.12, h * 0.05), (base_r * 1.04, h * 0.14),
-        (base_r * 1.00, h * 0.28), (base_r * 0.97, h * 0.44), (base_r * 0.95, h * 0.58),
-        (base_r * 1.06, h * 0.62), (base_r * 0.99, h * 0.655),
-        (base_r * 0.74, h * 0.72), (base_r * 0.52, h * 0.82), (base_r * 0.30, h * 0.91),
-        (base_r * 0.12, h * 0.97), (0.0, h),
-    ]
-    spire = S.lathe("spire", prof, segments=flutes * 2, mat=stone, close=True)
-    for v in spire.data.vertices:
-        a = math.atan2(v.co.y, v.co.x)
-        f = 1.0 + 0.045 * math.cos(a * flutes)
-        v.co.x *= f
-        v.co.y *= f
-    S.shade_smooth(spire, 34.0)
-    _weather(spire, rng, amount=base_r * 0.05, scale=h * 0.08, seed=rng.randrange(999))
-    # Below the waterline the stone is black with weed. The line is the point of the thing.
-    water_z = h * (1.0 - show)
-    S.assign_material_to_faces(spire, drowned, lambda poly: poly.center.z < water_z)
-    parts.append(spire)
-
-    # The nave arcade: what is left of the church around the spire's foot, gable ends and
-    # column tops breaking the water in two rows.
-    bays = int(params.get("bays", 9))
-    span = base_r * 1.9
-    for row in (-1, 1):
-        for i in range(bays):
-            t = (i - (bays - 1) * 0.5) / max(1, bays - 1)
-            x = t * h * 0.30
-            drop = abs(t) * h * 0.06          # the far bays have sunk further
-            col_h = h * 0.13 - drop + rng.uniform(-1.5, 1.5)
-            if col_h < h * 0.02:
-                continue
-            col = S.cylinder("pier_%d_%d" % (row, i), radius=base_r * 0.17,
-                             radius_top=base_r * 0.145, depth=col_h, vertices=10,
-                             location=(x, row * span, water_z - h * 0.03), mat=stone)
-            S.assign_material_to_faces(col, drowned, lambda poly: poly.center.z < water_z)
-            parts.append(col)
-            # a broken length of the arcade's head, where the arch has not yet fallen
-            if rng.random() < 0.55:
-                cap = S.box_centered("arcade_%d_%d" % (row, i),
-                                     size=(base_r * rng.uniform(0.5, 1.0), base_r * 0.5,
-                                           base_r * 0.34),
-                                     location=(x, row * span, water_z - h * 0.03 + col_h),
-                                     rotation=(rng.uniform(-8, 8), rng.uniform(-6, 6), 0),
-                                     mat=stone)
-                parts.append(cap)
-    # The west gable, the one wall still standing to its full height.
-    gable_verts = [(-h * 0.34, 0.0, water_z - h * 0.04), (-h * 0.34, 0.0, water_z + h * 0.16),
-                   (-h * 0.30, 0.0, water_z + h * 0.24), (-h * 0.26, 0.0, water_z + h * 0.15),
-                   (-h * 0.26, 0.0, water_z - h * 0.04)]
-    gable = S.mesh_from_pydata("gable", [(x, -span * 1.05, z) for (x, _y, z) in gable_verts],
-                               [(0, 1, 2, 3, 4)], smooth=False)
-    gable.data.materials.append(stone)
-    S.solidify(gable, thickness=span * 2.1, offset=1.0)
-    S.bevel(gable, width=base_r * 0.05, segments=2, angle_deg=40)
-    _weather(gable, rng, amount=base_r * 0.06, scale=h * 0.05, seed=rng.randrange(999))
-    S.assign_material_to_faces(gable, drowned, lambda poly: poly.center.z < water_z)
-    parts.append(gable)
-
-    # Lean the whole ruin. Everything tilts together: it went down as one building.
-    for o in parts:
-        o.rotation_euler = Euler((lean, 0.0, 0.0), "XYZ")
+    for key in ("tower", "nave", "fallen", "water"):
+        V, T = meshes[key]
+        if len(T):
+            parts.append(_carved("nave_" + key, V, T, water if key == "water" else stone, target_tris=budget[key]))
+    cols = []
+    for kind, prim in r["collision"]:
+        Vc, Tc = CV.mesh(CV.sdf.Scene().add(prim), 1.5, smooth_iters=1)
+        if len(Tc):
+            cols.append(_carved("col_%d" % len(cols), Vc, Tc, None))
+    for o in parts + cols:
+        o.location.z -= lo_z
         S.apply_transforms(o)
-    S.drop_to_ground(parts)
-    return {"opaque_objs": parts, "collision": "col_glb", "tier": "hero",
-            "materials_used": ["fused_stone", "drowned_stone"],
-            "extra_meta": {"height_m": h, "lean_deg": params.get("lean_deg", 15.0),
-                           "waterline_m": round(water_z, 2), "leads_to_deep_place": True,
+    top = max(float(v[0][:, 2].max()) for v in meshes.values() if len(v[0])) - lo_z
+    return {"opaque_objs": parts, "collision": "col_glb", "collision_objs": cols, "tier": "hero",
+            "materials_used": ["nave_stone", "nave_water"], "ground": False, "lod_keep_parts": True,
+            "extra_meta": {"height_m": round(top, 2), "lean_deg": r["lean_deg"], "buried_m": round(ground_z, 2),
+                           "waterline_m": round(ground_z + r["flood_z"], 2), "leads_to_deep_place": True,
                            "place": "core:place/drowned_nave"}}
 
 

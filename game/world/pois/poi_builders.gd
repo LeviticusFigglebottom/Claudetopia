@@ -1372,7 +1372,10 @@ static func _waymarks(d: PoiDressing, timber: SurfaceTool) -> void:
 			var g := k.on_ground(p.x, p.y)
 			var turn := k.rng.randf_range(0.0, TAU)
 			var size := k.rng.randf_range(0.48, 0.55)
-			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05))])
+			# toward the way from the stone's side of it, for a carved stone whose face is +Z
+			var toward := -side * (1.0 if n % 2 == 0 else -1.0)
+			var face := atan2(toward.x, toward.y) + (turn / TAU - 0.5) * 0.6
+			stones.append([g, turn, size, Vector3(k.rng.randf_range(-0.05, 0.05), 0.0, k.rng.randf_range(-0.05, 0.05)), face])
 			if n % 3 == 1:
 				await _lamp_post(k, m, timber, a + dir * s - side * (1.7 if n % 2 == 0 else -1.7), PoiKit.yaw_of(dir))
 			n += 1
@@ -1393,8 +1396,24 @@ const WAYSTONE_SUNK_M := 0.45
 ## it borrowed Briarwold's, a pale grey rough-hewn stone with a cleft down its middle, which in
 ## the evening light stood by the camp's woodpile as a tall white sheet with a gap in it. A way
 ## somebody marked is marked with worked stone. One mesh, silhouette-capable, and a body each.
+##
+## Carved now where the forge has built them (gen_rocks waystone): the masonry's two boxes and a
+## bar read from the camp as a stack of plain dark boxes. The forge's stone is a worn pillar with a
+## ridged head, a dressed panel on its face and the Wardens' mark cut in it, drawn in the painted
+## stone (RockPaint) like every rock round it, its foot `buried_m` into the heath.
 static func _dressed_waystones(k: PoiKit, m: PoiMasonry, stones: Array) -> void:
 	if stones.is_empty():
+		return
+	if k.rock("waystone", 0) != "":
+		for i in stones.size():
+			var s: Array = stones[i]
+			var path := k.rock("waystone", i)
+			var scale := float(s[2]) / 0.515
+			var lean: Vector3 = s[3]
+			# its face (+Z, the panel and the mark) turned to the way, a little off square; set
+			# down its `buried_m` by PoiKit.place
+			var face: float = float(s[4]) if s.size() > 4 else float(s[1])
+			k.place(path, s[0] as Vector3, face, scale, true, Vector3(lean.z, 0.0, -lean.x), true)
 		return
 	var st := m.begin()
 	for s in stones:

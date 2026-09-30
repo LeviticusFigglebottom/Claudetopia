@@ -1,0 +1,173 @@
+{
+ "note": "Three rings of standing stones (Hearthvale, Skerrow, Briarwold): the POI sheet's frame, the same line from 90 m back, and at dusk.",
+ "flags": {
+  "new_game": true
+ },
+ "shots": [
+  {
+   "region": "core:region/hearthvale",
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.6,
+   "label": "bell_meadow_stones_road",
+   "pos": [
+    378.1701377335091,
+    0,
+    1010.311464922698
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    420.0,
+    45.1,
+    1090.0
+   ]
+  },
+  {
+   "region": "core:region/hearthvale",
+   "fov": 58.0,
+   "time": 9.0,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.6,
+   "label": "bell_meadow_stones_close",
+   "pos": [
+    404.2,
+    44.1,
+    1059.9
+   ],
+   "look_at": [
+    420.0,
+    43.6,
+    1090.0
+   ]
+  },
+  {
+   "region": "core:region/hearthvale",
+   "fov": 58.0,
+   "time": 17.35,
+   "weather": "core:weather/clear",
+   "fog_scale": 0.6,
+   "label": "bell_meadow_stones_dusk",
+   "pos": [
+    404.2,
+    44.1,
+    1059.9
+   ],
+   "look_at": [
+    420.0,
+    43.6,
+    1090.0
+   ]
+  },
+  {
+   "region": "core:region/skerrow",
+   "fov": 58.0,
+   "time": 14.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 0.6,
+   "label": "blood_price_stones_road",
+   "pos": [
+    4.9522874944954935,
+    0,
+    -2280.1787736065994
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    -70.0,
+    117.5,
+    -2330.0
+   ]
+  },
+  {
+   "region": "core:region/skerrow",
+   "fov": 58.0,
+   "time": 14.0,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 0.6,
+   "label": "blood_price_stones_close",
+   "pos": [
+    -53.0,
+    122.0,
+    -2318.7
+   ],
+   "look_at": [
+    -70.0,
+    116.0,
+    -2330.0
+   ]
+  },
+  {
+   "region": "core:region/skerrow",
+   "fov": 58.0,
+   "time": 17.35,
+   "weather": "core:weather/clear_cold",
+   "fog_scale": 0.6,
+   "label": "blood_price_stones_dusk",
+   "pos": [
+    -53.0,
+    122.0,
+    -2318.7
+   ],
+   "look_at": [
+    -70.0,
+    116.0,
+    -2330.0
+   ]
+  },
+  {
+   "region": "core:region/briarwold",
+   "fov": 58.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 0.6,
+   "label": "the_sentinels_road",
+   "pos": [
+    2876.2535941878155,
+    0,
+    1151.589413931393
+   ],
+   "height_above_ground": 1.8,
+   "look_at": [
+    2950.0,
+    209.8,
+    1100.0
+   ]
+  },
+  {
+   "region": "core:region/briarwold",
+   "fov": 58.0,
+   "time": 10.5,
+   "weather": "core:weather/still",
+   "fog_scale": 0.6,
+   "label": "the_sentinels_close",
+   "pos": [
+    2927.7,
+    208.2,
+    1115.6
+   ],
+   "look_at": [
+    2950.0,
+    208.3,
+    1100.0
+   ]
+  },
+  {
+   "region": "core:region/briarwold",
+   "fov": 58.0,
+   "time": 17.35,
+   "weather": "core:weather/still",
+   "fog_scale": 0.6,
+   "label": "the_sentinels_dusk",
+   "pos": [
+    2927.7,
+    208.2,
+    1115.6
+   ],
+   "look_at": [
+    2950.0,
+    208.3,
+    1100.0
+   ]
+  }
+ ]
+}

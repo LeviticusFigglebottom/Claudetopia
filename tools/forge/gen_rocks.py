@@ -354,58 +354,177 @@ def scree(pal, rng, params, variant):
 
 
 def standing_stone(pal, rng, params, variant):
-    """A raised menhir; Briarwold's are carved with lines kept oiled (WORLD_BIBLE §6.4)."""
+    """A raised menhir; Briarwold's are carved with lines kept oiled (WORLD_BIBLE §6.4).
+
+    Carved from a signed-distance slab (lib/carve.py), not displaced from a lathe: the old stone
+    was a nine-sided lathe subdivided and pushed about by Voronoi facets, and near the camera
+    (the Stair Head road's pair by the Choir, the first thing a new game walks past) it read as
+    crumpled paper -- low-poly facets lit one by one. A standing stone is a slab: broad faces,
+    a rounded weathered head, rain runnels down its faces, its edges eaten back, and its foot
+    in a packing of smaller stones, all smooth masses for the painted stone to draw on."""
+    import numpy as np
+    from lib import carve as CV
+    from lib import sdf as SD
     mat, stone = stone_material(pal, params, rng, kind_default=params.get("stone"))
     h = params.get("height", rng.uniform(2.6, 4.2))
-    w = h * rng.uniform(0.22, 0.34)
-    d = w * rng.uniform(0.45, 0.75)
-    prof = []
-    steps = 9
-    for i in range(steps + 1):
-        t = i / steps
-        # tapers toward the top, widest a third of the way up
-        k = (0.78 + 0.32 * math.sin(math.pi * min(1.0, t * 1.35))) * (1.0 - 0.28 * t)
-        prof.append((w * 0.5 * k, t * h))
-    ob = S.lathe("menhir", prof, segments=9, mat=mat, close=True, twist=rng.uniform(-0.05, 0.05))
-    ob.scale = Vector((1.0, d / w, 1.0))
-    S.apply_transforms(ob)
-    S.subdivide(ob, levels=2, simple=True)
+    w = h * rng.uniform(0.26, 0.36)
+    d = w * rng.uniform(0.42, 0.62)
     seed = rng.randrange(9999)
-    _displace_stack(ob, rng, facet=w * 0.22, mass=w * 0.12, grain=w * 0.03,
-                    facet_scale=1.4 / h, mass_scale=0.6 / h, grain_scale=0.2 / h, seed=seed)
-    S.shade_smooth(ob, 30.0)
-    parts = [ob]
-    carve = params.get("carved", pal.short == "briarwold")
+    g = np.random.default_rng(seed)
+    lean = rng.uniform(-0.06, 0.06)
+
+    def slab_fn(P):
+        z = P[:, 2]
+        t = np.clip(z / h, 0.0, 1.0)
+        # widest a third of the way up, drawn in to a rounded shoulder, and leaning a little
+        k = (0.9 + 0.14 * np.sin(np.pi * np.minimum(1.0, t * 1.4))) * (1.0 - 0.16 * t ** 2.0)
+        hx, hy = w * 0.5 * k, d * 0.5 * (1.0 - 0.18 * t)
+        x = P[:, 0] - lean * z * w
+        q = np.stack([np.abs(x) - hx + d * 0.3, np.abs(P[:, 1]) - hy + d * 0.3], axis=1)
+        side = np.linalg.norm(np.maximum(q, 0.0), axis=1) + np.minimum(q.max(axis=1), 0.0) - d * 0.3
+        # the head: an ellipse over the top, lopsided
+        top = (z - h * (0.9 + 0.1 * np.cos((x / w) * 2.2 + 0.6))) * 0.8
+        return np.maximum(side, np.maximum(top, -0.6 - z))
+    slab = CV.custom(slab_fn, (-w, -d, -0.7), (w, d, h * 1.05))
+    body = CV.worn(slab, amp=w * 0.07, freq=0.9 / w, seed=seed, octaves=4)
+    sc = SD.Scene().add(body)
+    # chips out of the edges and the head, where frost has taken a flake off
+    for i in range(int(g.integers(3, 6))):
+        zc = h * g.uniform(0.25, 0.95)
+        sx = 1.0 if g.random() < 0.5 else -1.0
+        sc.add(SD.ellipsoid((sx * w * g.uniform(0.35, 0.5), g.uniform(-0.5, 0.5) * d, zc),
+                            np.array([w * 0.16, d * 0.35, w * 0.22]) * g.uniform(0.7, 1.3), k=w * 0.05, op="subtract"))
+    # rain runnels down the broad faces
+    for i in range(int(g.integers(3, 6))):
+        x0 = g.uniform(-0.35, 0.35) * w
+        sgn = 1.0 if g.random() < 0.5 else -1.0
+        sc.add(SD.round_cone((x0, sgn * d * 0.52, h * g.uniform(0.35, 0.7)),
+                             (x0 + g.uniform(-0.1, 0.1) * w, sgn * d * 0.55, h * g.uniform(0.95, 1.05)),
+                             w * 0.035, w * 0.06, k=w * 0.04, op="subtract"))
+    carve = params.get("carve", params.get("carved", pal.short == "briarwold"))
     if carve:
-        # carved lines: shallow grooves cut around the stone with a boolean of thin boxes
         lines = int(params.get("carve_lines", rng.randint(4, 7)))
-        cutters = []
         for i in range(lines):
             z = h * (0.28 + 0.55 * i / max(1, lines - 1)) + rng.uniform(-0.04, 0.04) * h
-            box = S.box_centered("cut_%d" % i, size=(w * 2.4, d * 2.4, h * 0.016), location=(0, 0, z),
-                                 rotation=(rng.uniform(-6, 6), rng.uniform(-4, 4), 0))
-            cutters.append(box)
-        for c in cutters:
-            S.boolean(ob, c, "DIFFERENCE")
-        S.shade_smooth(ob, 30.0)
+            sc.add(CV.slab((0, 0, z), (w * 1.2, d * 1.2, h * 0.012), CV.rot([1, 0.3, 0], rng.uniform(-5, 5)),
+                           round_r=h * 0.006, op="subtract"))
+    spacing = max(0.035, h * 0.018)
+    V, T = CV.keep_largest(*CV.mesh(sc, spacing, smooth_iters=3))
+    ob = S.mesh_from_pydata("menhir", V, T, mat=mat)
     tris = S.tri_count(ob)
-    if tris > 2600:
-        S.decimate(ob, 2600.0 / tris)
-        S.shade_smooth(ob, 30.0)
-    # base stones packed round the foot
-    for i in range(rng.randint(3, 6)):
-        c = _rock_body("base_%d" % i, rng, radius=w * rng.uniform(0.18, 0.34), subdiv=3,
-                       squash=(1.0, 0.8, 0.55), facet=0.42, mass=0.18, grain=0.05, mat=mat,
-                       seed=rng.randrange(9999), budget=200)
-        a = math.tau * i / 5 + rng.uniform(-0.4, 0.4)
-        c.location = Vector((math.cos(a) * w * 0.62, math.sin(a) * d * 0.7, 0.0))
-        S.tilt(c, rng, max_deg=22.0)
-        S.apply_transforms(c)
-        parts.append(c)
-    S.tilt(ob, rng, max_deg=3.5)
+    if tris > 2400:
+        S.decimate(ob, 2400.0 / tris)
+    S.shade_smooth(ob, 70.0)
+    parts = [ob]
+    # base stones packed round the foot, rounded, half in the ground
+    packing = SD.Scene()
+    n = rng.randint(3, 6)
+    for i in range(n):
+        a = math.tau * i / n + rng.uniform(-0.4, 0.4)
+        r = w * rng.uniform(0.14, 0.26)
+        c = (math.cos(a) * w * 0.62, math.sin(a) * max(d, w * 0.5) * 0.75, r * 0.1)
+        R = CV.rot([rng.uniform(-1, 1), rng.uniform(-1, 1), 0.3], rng.uniform(0, 40)) @ CV.rot([0, 0, 1], rng.uniform(0, 360))
+        packing.add(CV.worn(CV.slab(c, (r * 1.2, r, r * 0.7), R, round_r=r * 0.45), amp=r * 0.12, freq=1.5 / r,
+                            seed=seed + i))
+    Vp, Tp = CV.keep_largest(*CV.mesh(packing, spacing * 0.8, smooth_iters=2), min_tris=30)
+    if len(Tp):
+        pk = S.mesh_from_pydata("packing", Vp, Tp, mat=mat)
+        tp = S.tri_count(pk)
+        if tp > 700:
+            S.decimate(pk, 700.0 / tp)
+        S.shade_smooth(pk, 70.0)
+        parts.append(pk)
+    S.tilt(ob, rng, max_deg=3.0)
+    # the slab runs on 0.6 m under the ground line (z = 0), where its packing lies; the export
+    # stands the lowest point on the origin, so say how far the ground line is above it
+    # (`buried_m`, which PoiKit.place and the world builder's seating set it down by). Without it
+    # the stub stood on the ground and the packing floated at the stone's knee.
+    buried = -float(S.bounds(parts)[0].z)
     S.drop_to_ground(parts)
     return {"opaque_objs": parts, "collision": "convex", "materials_used": [stone],
-            "unwrap_mode": "sphere", "extra_meta": {"carved": bool(carve)}}
+            "unwrap_mode": "smart", "smooth_angle": 70.0,
+            "extra_meta": {"carved": bool(carve), "buried_m": round(max(buried, 0.0), 3)}}
+
+
+def waystone(pal, rng, params, variant):
+    """A waystone: a dressed pillar somebody set to mark a way, worn by weather (the start's way
+    from Wren's camp to the Choir, poi_builders._dressed_waystones). Carved from signed distance
+    (lib/carve.py) like the standing stones: a slab a little narrower at the head than the foot,
+    its arrises rounded off by rain, a ridged head, a dressed panel on its face worn smooth by
+    hands, and cut in it the Wardens' mark (a ring with a stroke through it, a bell's shape) --
+    and chips out of the corners where frost and carts have had them. The foot runs on under the
+    ground: the model's lowest 0.45 m (`buried_m`) is set into the heath, so no slope shows under it.
+
+    The first waystones were two masonry boxes and a bar, which from the camp read as a stack of
+    plain dark boxes (the coordinator's look at the start, 2026-09-26)."""
+    import numpy as np
+    from lib import carve as CV
+    from lib import sdf as SD
+    mat, stone = stone_material(pal, params, rng, kind_default=params.get("stone", "granite"))
+    bury = 0.45
+    h = params.get("height", rng.uniform(1.3, 1.5)) + bury
+    # stout, not a post: the first carved ones (0.54 by 0.34, 1.6 m) stood on the heath as a row
+    # of concrete fence posts, and from their narrow side the panel never showed
+    w0, w1 = 0.70, 0.56                      # across the face, at the foot and at the head
+    d0, d1 = 0.46, 0.38
+    seed = rng.randrange(9999)
+    g = np.random.default_rng(seed)
+    # frost has taken more off one shoulder than the other
+    slump = g.uniform(0.05, 0.12) * (1.0 if g.random() < 0.5 else -1.0)
+
+    def pillar(P):
+        z = P[:, 2]
+        t = np.clip(z / h, 0.0, 1.0)
+        hx = (w0 + (w1 - w0) * t) * 0.5
+        hy = (d0 + (d1 - d0) * t) * 0.5
+        r = 0.09
+        q = np.stack([np.abs(P[:, 0]) - hx + r, np.abs(P[:, 1]) - hy + r], axis=1)
+        side = np.linalg.norm(np.maximum(q, 0.0), axis=1) + np.minimum(q.max(axis=1), 0.0) - r
+        # the ridged head: two slopes meeting over the face's width, worn round at the ridge and
+        # down at one shoulder
+        ridge = (h - 0.03 - np.abs(P[:, 1]) * 0.8 - 0.1 * (np.abs(P[:, 0]) / w1) ** 2
+                 - slump * np.clip(P[:, 0] / w1 * 2.0, -1.0, 1.0) - abs(slump))
+        top = (z - ridge) * 0.75
+        return np.maximum(side, np.maximum(top, -z))
+    body = CV.custom(pillar, (-w0, -d0, -0.05), (w0, d0, h + 0.1))
+    # old stone: pitted all over at a hand's scale, and cracked across by frost
+    body = CV.worn(body, amp=0.03, freq=2.6, seed=seed, octaves=4, cracks=0.012, crack_freq=1.6, crack_w=0.05)
+    sc = SD.Scene().add(body)
+    # chips: corners knocked off, more of them low down where carts pass
+    for i in range(int(g.integers(5, 9))):
+        zc = h * g.uniform(0.35, 0.97) if i % 2 else bury + g.uniform(0.0, 0.35)
+        sx = 1.0 if g.random() < 0.5 else -1.0
+        sy = 1.0 if g.random() < 0.5 else -1.0
+        t = zc / h
+        c = (sx * (w0 + (w1 - w0) * t) * 0.5, sy * (d0 + (d1 - d0) * t) * 0.5, zc)
+        sc.add(CV.worn(SD.ellipsoid(c, np.array([0.08, 0.07, 0.11]) * g.uniform(0.8, 1.7), k=0.025, op="subtract"),
+                       amp=0.012, freq=10.0, seed=seed + i))
+    # the dressed panel on the face (-Y), sunk a finger by the mason and worn smooth by hands,
+    # and cut in it the Wardens' mark: a bell (a ring, a stroke through it, a lip at its mouth)
+    face_y = -(d0 + (d1 - d0) * 0.7) * 0.5
+    mz = bury + (h - bury) * 0.58
+    sc.add(CV.slab((0.0, face_y - 0.03, mz - 0.02), (0.2, 0.05, 0.34), round_r=0.04, k=0.03, op="subtract"))
+    cut = face_y + 0.018                     # the panel's floor
+    ring = CV.moved(SD.torus((0, 0, 0), 0.12, 0.03, axis=np.array([0.0, 1.0, 0.0])), np.eye(3), (0.0, cut, mz + 0.07))
+    ring.op = "subtract"
+    ring.k = 0.01
+    sc.add(ring)
+    sc.add(SD.round_cone((0.0, cut, mz - 0.2), (0.0, cut, mz + 0.24), 0.028, 0.028, k=0.01, op="subtract"))
+    sc.add(SD.round_cone((-0.09, cut, mz - 0.06), (0.09, cut, mz - 0.06), 0.024, 0.024, k=0.01, op="subtract"))
+    V, T = CV.keep_largest(*CV.mesh(sc, float(params.get("spacing", 0.012)), smooth_iters=2))
+    ob = S.mesh_from_pydata("waystone", V, T, mat=mat)
+    tris = S.tri_count(ob)
+    budget = int(params.get("tris", 3600))
+    if tris > budget:
+        S.decimate(ob, budget / float(tris))
+    S.shade_smooth(ob, 70.0)
+    # a lean, never a turn: the face is -Y (+Z in Godot), which _dressed_waystones turns to the way
+    ob.rotation_euler = Euler((math.radians(rng.uniform(-2.0, 2.0)), math.radians(rng.uniform(-2.0, 2.0)), 0.0), "XYZ")
+    S.apply_transforms(ob)
+    S.drop_to_ground([ob])
+    return {"opaque_objs": [ob], "collision": "convex", "materials_used": [stone],
+            "unwrap_mode": "smart", "smooth_angle": 70.0,
+            "extra_meta": {"buried_m": bury, "mark": "wardens_bell", "face": "+z"}}
 
 
 # --- giant bones (Skerrow: bones you can walk inside) ---------------------------------------
@@ -995,6 +1114,7 @@ KINDS = {
     "driftwood": driftwood,
     "scree": scree,
     "standing_stone": standing_stone,
+    "waystone": waystone,
     "sunken_masonry": sunken_masonry,
     "bone_rib": bone_rib,
     "bone_finger": bone_finger,

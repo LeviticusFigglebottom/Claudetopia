@@ -416,7 +416,8 @@ func _landmark(id: String, s: Dictionary) -> Proxy:
 	var at := _vec(s.get("pos", [0, 0, 0]))
 	var holder := Node3D.new()
 	holder.name = "A_" + Ids.name_of(id)
-	holder.position = at
+	# set into the ground as its cell sets it (a carved landmark runs on under its ground line)
+	holder.position = at - Vector3(0.0, WorldStreamer.seated_depth(path), 0.0)
 	holder.rotation.y = deg_to_rad(float(s.get("yaw", 0.0)))
 	var p := Proxy.new()
 	for src_v in inst.find_children("*", "MeshInstance3D", true, false):

@@ -497,6 +497,14 @@ static func mesh(path: String) -> Mesh:
 
 
 ## The forge's meta file beside the glb: collision kind, bounds, capsule parameters.
+## How far below its lowest point a rock's ground line is (the forge's `buried_m`), 0 for a model
+## that stands on its lowest point. Rocks only: a landmark's is the streamer's (seated_depth).
+static func buried_m(path: String) -> float:
+	if not path.contains("/rocks/"):
+		return 0.0
+	return float(meta(path).get("buried_m", 0.0))
+
+
 static func meta(path: String) -> Dictionary:
 	if _metas.has(path):
 		return _metas[path]
@@ -729,7 +737,9 @@ func place(path: String, at: Vector3, yaw := 0.0, scale := 1.0, collide := true,
 		node.queue_free()
 		return null
 	var inst: Node3D = node
-	inst.position = at
+	# a stone the forge ran on under its ground line (`buried_m`: a standing stone's foot, a
+	# waystone's) is set down that far, or its foot stands on the ground and its packing floats
+	inst.position = at - Vector3(0.0, buried_m(path) * scale, 0.0)
 	inst.rotation = Vector3(tilt.x, yaw, tilt.z)
 	inst.scale = Vector3.ONE * scale
 	inst.name = path.get_file().get_basename()

@@ -429,6 +429,8 @@ LEDGES = [
     ("cliff_ledge", "brightwater", 2, None),
 ]
 LEDGE_SEED = 9611
+CHOIR_FALLEN_SEED = 9811
+WAYSTONE_SEED = 9851
 
 # The cliff kit (gen_rocks.py's cliff_face): per region, in the stone its ledges are, big faces
 # of 10-24 m that the world builder's crags pass (cliff_faces) sinks into a steep wall, rotated
@@ -494,6 +496,14 @@ def build() -> list[dict]:
             entries.append({"generator": "gen_rocks", "kind": kind, "palette": region(reg),
                             "variant": LETTERS[i], "seed": seed + i * 17})
         seed += 53
+    # the Choir's fallen colossus (gen_landmarks choir_colossus pose c), pinned after everything so
+    # nothing else re-rolls; the standing a and b keep their places in LANDMARKS
+    entries.append({"generator": "gen_landmarks", "kind": "choir_colossus", "palette": region("cinderlea"),
+                    "variant": "c", "seed": CHOIR_FALLEN_SEED, "params": {"pose": "c"}})
+    # the start's waystones (gen_rocks waystone), pinned after everything too
+    for i in range(3):
+        entries.append({"generator": "gen_rocks", "kind": "waystone", "palette": region("cinderlea"),
+                        "variant": LETTERS[i], "seed": WAYSTONE_SEED + i * 17})
     return entries
 
 

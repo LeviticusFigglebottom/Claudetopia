@@ -31,7 +31,8 @@ def mean_linear(path):
 
 
 ## Landmarks drawn in the painted stone (RockPaint.LANDMARKS), measured alike.
-LANDMARKS = ['hearthvale_cracked_toll_a']
+LANDMARKS = ['hearthvale_cracked_toll_a', 'cinderlea_choir_colossus_a', 'cinderlea_choir_colossus_b',
+             'cinderlea_choir_colossus_c']
 
 
 def table():

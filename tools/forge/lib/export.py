@@ -90,7 +90,7 @@ def drop_small_parts(obj, target_tris: int) -> None:
     me.update()
 
 
-def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float = 35.0) -> list:
+def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float = 35.0, keep_parts: bool = False) -> list:
     """Decimated copies named <obj>_LOD1, _LOD2, hitting a triangle target rather than
     merely asking for one.
 
@@ -107,7 +107,7 @@ def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float =
         target = max(floor, int(base * r))
         d = S.duplicate(obj, "%s_LOD%d" % (obj.name, i))
         tris = base
-        if target < base * 0.5:
+        if target < base * 0.5 and not keep_parts:
             # Drop the small pieces before decimating, not after. A collapse cannot take a
             # closed tube below its minimal form, so on a branching trunk it spends its
             # whole budget shattering the trunk into shards while the twigs survive intact.
@@ -122,7 +122,7 @@ def make_lods(obj, ratios=LOD_RATIOS, floors=LOD_MIN_TRIS, smooth_angle: float =
             if got >= tris * 0.97:  # no further progress to be had
                 break
             tris = got
-        if tris > target * 1.4:
+        if tris > target * 1.4 and not keep_parts:
             # Still over: the decimator has stalled on what is left, so drop pieces again.
             drop_small_parts(d, target)
             tris = S.tri_count(d)
@@ -419,7 +419,8 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
                  alpha: bool = False, orm_scale: float = 0.0, write_import: bool = True, extra_meta: dict | None = None,
                  version: int = FORGE_VERSION, rng=None, materials_used: list[str] | None = None,
                  impostor=None, impostor_textures: dict | None = None,
-                 unwrap_mode: str = "smart", ground: bool = True) -> dict:
+                 unwrap_mode: str = "smart", ground: bool = True, collision_objs=None,
+                 lod_keep_parts: bool = False) -> dict:
     """Bake, LOD, export and describe one asset. Returns the meta dict written to disk.
 
     opaque_objs: procedural-material parts, joined into one mesh and baked to one atlas.
@@ -427,6 +428,13 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     baked_objs:  parts that were baked separately already (own textures), exported as-is.
     impostor:    an object that *replaces* the whole asset at LOD2 (crossed-card billboard);
                  when given, only one decimated level is generated below LOD0.
+    lod_keep_parts: decimate every piece at each level rather than dropping the smaller ones; for
+                 a landmark whose pieces are all silhouette (the fallen colossus's stump is
+                 shorter than the body lying beside it, and a level without it was a body on
+                 the ash with nothing standing).
+    collision_objs: with collision "col_glb", the volumes a body walks round, each hulled on its
+                 own, instead of one hull over everything drawn (a colossus's hull took in the
+                 rubble at its feet and stopped a player eight metres short of its robe).
     """
     t0 = time.time()
     verbose = bool(os.environ.get("FORGE_TRACE"))
@@ -468,7 +476,8 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
         meta_textures += list(info["textures"].values())
         slot_map.update(texture_slots(info["material"], info["textures"]))
         stage("lods")
-        parts.append(make_lods(main, lod_ratios, smooth_angle=smooth_angle) if (lods and not quick) else [main])
+        parts.append(make_lods(main, lod_ratios, smooth_angle=smooth_angle, keep_parts=lod_keep_parts)
+                     if (lods and not quick) else [main])
     for bo in (baked_objs or []):
         # (obj, textures) or (obj, textures, [LOD1, ...]): a part whose lower levels its generator
         # authored itself -- a grown tree's wood trimmed of whole twigs -- is never decimated here.
@@ -508,7 +517,17 @@ def finish_asset(*, out_root, category: str, name: str, generator: str, seed: in
     extra_glbs = []
     col_value = collision
     col_params = dict(collision_params or {})
-    if collision == "col_glb":
+    if collision == "col_glb" and collision_objs:
+        hulls = [collision_mesh(o, "%s_col_%d" % (name, i), max_tris=64) for i, o in enumerate(collision_objs)]
+        for o in collision_objs:
+            bpy.data.objects.remove(o)
+        col = S.join(hulls, "%s_col" % name) if len(hulls) > 1 else hulls[0]
+        col.name = "%s_col" % name
+        col_path = out_dir / ("%s_col.glb" % name)
+        export_glb([col], col_path, {})
+        extra_glbs.append(col_path.name)
+        col_value = col_path.name
+    elif collision == "col_glb":
         src = main or lod0[0]
         col = collision_mesh(src, "%s_col" % name)
         col_path = out_dir / ("%s_col.glb" % name)

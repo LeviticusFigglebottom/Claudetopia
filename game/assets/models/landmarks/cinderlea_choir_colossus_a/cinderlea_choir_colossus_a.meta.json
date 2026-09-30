@@ -1,19 +1,20 @@
 {
  "bounds": {
-  "height": 52.392,
+  "height": 61.364,
   "max": [
-   13.404,
-   52.392,
-   13.491
+   14.605,
+   61.364,
+   13.849
   ],
   "min": [
-   -13.425,
+   -14.607,
    0.0,
-   -13.5
+   -12.51
   ],
-  "radius": 32.378
+  "radius": 36.447
  },
- "built_seconds": 77.29,
+ "built_seconds": 170.61,
+ "buried_m": 4.11,
  "category": "landmarks",
  "collision": "cinderlea_choir_colossus_a_col.glb",
  "collision_params": {},
@@ -21,31 +22,32 @@
  "glb": "cinderlea_choir_colossus_a.glb",
  "hash": "cb849597429ae237",
  "headless": true,
- "height_m": 50.0,
+ "height_m": 61.36,
  "kind": "choir_colossus",
  "materials": [
   "cinderlea_choir_colossus_a_mat"
  ],
  "materials_used": [
-  "fused_stone"
+  "choir_stone"
  ],
  "meshes": [
   {
    "name": "cinderlea_choir_colossus_a",
-   "tris": 2436
+   "tris": 25000
   },
   {
    "name": "cinderlea_choir_colossus_a_LOD1",
-   "tris": 974
+   "tris": 10000
   },
   {
    "name": "cinderlea_choir_colossus_a_LOD2",
-   "tris": 364
+   "tris": 3750
   }
  ],
  "name": "cinderlea_choir_colossus_a",
  "params": {},
  "place": "core:place/sunken_choir",
+ "pose": "a",
  "region_palette": {
   "colors": [
    "#8b8a86",
@@ -75,9 +77,9 @@
   "cinderlea_choir_colossus_a_orm.png"
  ],
  "tris": [
-  2436,
-  974,
-  364
+  25000,
+  10000,
+  3750
  ],
  "version": 3
 }
