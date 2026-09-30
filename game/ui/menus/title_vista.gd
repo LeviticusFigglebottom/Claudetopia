@@ -37,9 +37,12 @@ const FIRST_SHOT_CAP_S := 40.0
 ## its cells, the first frames that draw it), at most this long; then the vista is given up for
 ## this visit and the chart stays (`first_show_cap_s`).
 const FIRST_SHOW_CAP_S := 90.0
-## One frame this long before the first shot is shown -- a machine compiling every shader from source
-## on its first launch, or one that cannot draw the world at all -- gives the vista up at once: the
-## next frames would cost the same, and the menu is worth more than the picture (`long_frame_s`).
+## One frame this long while the first shot's country is first drawn under the chart (Phase.FIRST,
+## `World.warm_layers`) -- a machine compiling every shader from source on its first launch, or one
+## that cannot draw the world at all -- gives the vista up at once: the next frames would cost the
+## same, and the menu is worth more than the picture (`long_frame_s`). The world standing up before
+## it is paced and read on threads, and has its one known long frame (the provider's maps, 2.4 s of
+## CPU on the software renderer here): the whole wait's cap covers that.
 const LONG_FRAME_S := 4.0
 ## A shot holds on its last frame at most this long for the next one's cells, then the next is shown.
 const NEXT_WAIT_CAP_S := 8.0
@@ -232,14 +235,14 @@ func _before_first_shot() -> bool:
 	return _capping and shown.is_empty() and phase in [Phase.LOADING, Phase.IDLE, Phase.FIRST]
 
 
-## The safety net before the first shot (docs/FIRST_LAUNCH.md: a first launch froze behind the title). One frame of
-## `frame_s` longer than `long_frame_s`, or more than `first_show_cap_s` since the world was asked
-## for, and the vista is given up with a warning: the world goes, the chart stays drawn and the menu
+## The safety net before the first shot (docs/FIRST_LAUNCH.md: a first launch froze behind the
+## title). One frame of `frame_s` longer than `long_frame_s` while it warms (Phase.FIRST), or more
+## than `first_show_cap_s` since the world was asked for, and the vista is given up with a warning: the world goes, the chart stays drawn and the menu
 ## goes on answering. True when it gave up.
 func _over_budget(now_us: int, frame_s: float) -> bool:
 	_longest_s = maxf(_longest_s, frame_s)
 	var why := ""
-	if frame_s > long_frame_s:
+	if frame_s > long_frame_s and phase == Phase.FIRST:
 		why = "long_frame"
 		Log.warn("TitleVista", "one frame took %.1f s while the country stood up behind the title (%s); the chart stays" % [frame_s, _phase_name()])
 	elif float(now_us - _asked_us) / 1000000.0 > first_show_cap_s:

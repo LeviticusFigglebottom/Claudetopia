@@ -486,14 +486,15 @@ case "$cmd" in
     # The warm set the export's shader baker compiles (game/assets/shader_warm/warm_set.tres,
     # docs/FIRST_LAUNCH.md): every material the game was seen drawing with, gathered by the census
     # (tools_gd/material_census.gd) over the title, drawn (the only way to read Terrain3D's shader),
-    # the smoke (every region, place and interior), a new game's opening (the
-    # flow's first way in), the fights and the journey. Added to, never replaced; --fresh starts
-    # it again. Re-run it when a material, a shader or the code that makes one changes.
-    #   ./run.sh shader-warm [--fresh] [--only=title,smoke,flow,fights,journey]
+    # the title again on the coarse ground, the smoke (every region, place and interior), a new
+    # game's opening (the flow's first way in), the fights and the journey. Added to, never
+    # replaced; --fresh starts it again. Re-run it when a material, a shader or the code that
+    # makes one changes.
+    #   ./run.sh shader-warm [--fresh] [--only=title,title-coarse,smoke,flow,fights,journey]
     need_godot
     warm_out="$GAME/assets/shader_warm/warm_set.tres"
     census="--material-census=res://assets/shader_warm/warm_set.tres"
-    only="title,smoke,flow,fights,journey"
+    only="title,title-coarse,smoke,flow,fights,journey"
     for a in "$@"; do
       case "$a" in
         --fresh) rm -f "$warm_out" ;;
@@ -512,6 +513,11 @@ case "$cmd" in
           xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 \
             --audio-driver Dummy --resolution 1280x720 -- "$census" \
             "--material-census-quit-after=${SHADER_WARM_TITLE_S:-300}" || warm_code=1 ;;
+        title-coarse)
+          # the coarse ground (FallbackTerrain), which a machine Terrain3D cannot run on draws
+          xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 \
+            --audio-driver Dummy --resolution 1280x720 -- "$census" --terrain=fallback \
+            "--material-census-quit-after=${SHADER_WARM_COARSE_S:-120}" || warm_code=1 ;;
         smoke|fights|journey) "$ROOT/run.sh" "$part" "$census" || warm_code=1 ;;
         flow) FLOW_OUT="${FLOW_OUT:-$ROOT/captures/flow_warm}" "$ROOT/run.sh" flow "$census" || warm_code=1 ;;
         *) echo "[shader-warm] no such part: $part"; warm_code=1 ;;

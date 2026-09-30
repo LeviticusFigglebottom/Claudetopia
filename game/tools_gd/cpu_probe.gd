@@ -23,7 +23,7 @@ extends Node
 ## and the moments between them. Writes <out>/cpu_probe.json and prints a CPU| line per phase.
 ##
 ##   xvfb-run -a godot --path game --rendering-driver opengl3 --audio-driver Dummy -- \
-##       --cpu=<abs dir> [--cpu-new=core:style/warrior] [--cpu-menu-s=30] [--cpu-draw]
+##       --cpu=<abs dir> [--cpu-new=core:style/warrior] [--cpu-menu-s=30] [--cpu-draw] [--cpu-no-vista-caps]
 ##   godot --headless --path game --audio-driver Dummy -- --cpu=<abs dir> ...   (no renderer at all:
 ##       the world is paced and the title and the film play as where they are drawn)
 ##
@@ -36,6 +36,10 @@ var out_dir := ""
 var style := ""
 var menu_s := 30.0
 var draw := false
+## Off (`--cpu-no-vista-caps`), the title's caps before its first shot (TitleVista.LONG_FRAME_S,
+## FIRST_SHOW_CAP_S) are widened, so what a first launch costs is measured to the end rather than
+## given up on (docs/FIRST_LAUNCH.md).
+var vista_caps := true
 
 var _phase := "boot"
 var _phase_began_ms := 0
@@ -65,6 +69,8 @@ func _ready() -> void:
 			menu_s = float(a.substr(13))
 		elif a == "--cpu-draw":
 			draw = true
+		elif a == "--cpu-no-vista-caps":
+			vista_caps = false
 	var pid := OS.get_process_id()
 	var p := "/proc/%d/task/%d/schedstat" % [pid, pid]
 	if FileAccess.file_exists(p):
@@ -218,6 +224,9 @@ func _advance() -> void:
 			if focus is BaseButton:
 				_mark("menu_interactive")
 			var vista := get_tree().get_first_node_in_group("title_vista") as TitleVista
+			if vista != null and not vista_caps:
+				vista.long_frame_s = 3600.0
+				vista.first_show_cap_s = 3600.0
 			if _phase == "menu_loading" and (vista == null or vista.is_showing() or vista.phase == TitleVista.Phase.GONE):
 				if vista != null and vista.is_showing():
 					_mark("vista_shown")

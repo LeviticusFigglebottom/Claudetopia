@@ -199,8 +199,8 @@ func _free_bare(v: TitleVista) -> void:
 	v.free()
 
 
-func test_one_long_frame_before_the_first_shot_gives_the_vista_up() -> void:
-	for p in [TitleVista.Phase.LOADING, TitleVista.Phase.IDLE, TitleVista.Phase.FIRST]:
+func test_one_long_frame_while_it_warms_gives_the_vista_up() -> void:
+	for p in [TitleVista.Phase.FIRST]:
 		var v := _bare_vista(p)
 		var now := Time.get_ticks_usec()
 		v._asked_us = now
@@ -233,6 +233,14 @@ func test_short_frames_and_a_shown_shot_are_left_alone() -> void:
 	assert_eq(v.phase, TitleVista.Phase.IDLE, "a 50 ms frame 5 s in changes nothing")
 	assert_eq(v.gave_up, "", "and nothing was given up")
 	_free_bare(v)
+	# the world standing up has its own long frame (the provider's maps): only the whole wait's cap
+	# covers it
+	var standing := _bare_vista(TitleVista.Phase.IDLE)
+	standing._asked_us = now
+	standing._last_us = now - int((TitleVista.LONG_FRAME_S + 1.0) * 1000000.0)
+	standing._process(0.0)
+	assert_eq(standing.phase, TitleVista.Phase.IDLE, "a long frame while the world stands up is left to the cap")
+	_free_bare(standing)
 	# once the country is shown, a long frame is a hitch in the pictures, not a reason to stop
 	var shown := _bare_vista(TitleVista.Phase.WAIT_NEXT)
 	shown._asked_us = now - int((TitleVista.FIRST_SHOW_CAP_S + 10.0) * 1000000.0)
