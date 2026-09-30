@@ -465,6 +465,25 @@ func _close_walk(q: String, started_ms: int) -> void:
 	for n in _cur["notes"]:
 		_say("QW   ~ %s" % n)
 	_cur = {}
+	_say("QW   mem %s" % mem_line())
+
+
+## What the process holds after a walk, one line: a walk that leaves more behind than it found shows
+## here long before the machine runs out (the full walk once grew to 14 GB and was killed).
+static func mem_line() -> String:
+	var rss := 0
+	var f := FileAccess.open("/proc/self/status", FileAccess.READ)
+	while f != null and not f.eof_reached():
+		var l := f.get_line()
+		if l.begins_with("VmRSS:"):
+			rss = int(l.substr(6).strip_edges().split(" ")[0].to_float() / 1024.0)
+			break
+	return "rss %d MB, static %d MB, objects %d, nodes %d, orphans %d, resources %d, nav maps %d regions %d links %d, shells %d, carriers %d" % [
+			rss, int(OS.get_static_memory_usage() / 1048576.0), int(Performance.get_monitor(Performance.OBJECT_COUNT)),
+			int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)), int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)),
+			int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT)), int(Performance.get_monitor(Performance.NAVIGATION_ACTIVE_MAPS)),
+			int(Performance.get_monitor(Performance.NAVIGATION_REGION_COUNT)), int(Performance.get_monitor(Performance.NAVIGATION_LINK_COUNT)),
+			SiteInterior.held_shells(), Adornment.carriers_held()]
 
 
 ## A quest that fails because the decision taken says it does (the pilgrim who turns back) has

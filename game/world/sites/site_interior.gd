@@ -170,11 +170,26 @@ static func _field_args(p: SitePlan) -> Array:
 static func prefetch(site_def: Dictionary) -> void:
 	if not site_def.has("site"):
 		return
+	_collect()
 	var p := SitePlan.make(site_def)
 	var key := cache_key(p)
 	if _ready_shells.has(key) or _jobs.has(key) or FileAccess.file_exists("%s/%s.bin" % [CACHE_DIR, key]):
 		return
 	_start_job(key, p)
+
+
+## Jobs that have finished: their shells join the two kept in memory (the rest are on disk), and
+## the jobs go. A job nobody walked in on used to be kept with its shell for good, one per site
+## whose entrance's cell had been raised.
+static func _collect() -> void:
+	for key in _jobs.keys():
+		var job: Dictionary = _jobs[key]
+		if not WorkerThreadPool.is_task_completed(int(job["task"])):
+			continue
+		WorkerThreadPool.wait_for_task_completion(int(job["task"]))
+		_jobs.erase(key)
+		if not (job["out"] as Array).is_empty():
+			_remember(key, (job["out"] as Array)[0])
 
 
 static func _start_job(key: String, p: SitePlan) -> void:
@@ -193,6 +208,7 @@ static func _start_job(key: String, p: SitePlan) -> void:
 ## The shell's chunks for a plan: from memory, from disk, from a job already running, or worked
 ## out now (on a worker thread when paced, waiting frames; at once when not).
 func _shell() -> Array:
+	_collect()
 	var key := cache_key(plan)
 	if _ready_shells.has(key):
 		return _ready_shells[key]
@@ -223,6 +239,11 @@ func _shell() -> Array:
 	var result: Array = (job["out"] as Array)[0] if not (job["out"] as Array).is_empty() else []
 	_remember(key, result)
 	return result
+
+
+## Shells held in memory: the ready ones and the jobs' (for the quest walk's memory line).
+static func held_shells() -> int:
+	return _ready_shells.size() + _jobs.size()
 
 
 static func _remember(key: String, shell: Array) -> void:

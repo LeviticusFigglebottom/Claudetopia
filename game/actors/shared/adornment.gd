@@ -47,6 +47,10 @@ const FACE_BOXES := {
 	"neck": Vector4(0.128, -0.178, 0.032, 0.030),
 }
 
+## What each skinned mesh is (`carrier`), for as long as that mesh and its skin are about: a person's
+## parts are loaded again once everyone wearing them has gone with their cells, as new meshes, and
+## the old readings (a megabyte a body) were kept for good -- 21 MB a walk out and back across the
+## land, and the quest walk ran out of memory at 14 GB.
 static var _carriers: Dictionary = {}
 static var _pieces: Dictionary = {}
 static var _material: ShaderMaterial = null
@@ -193,6 +197,7 @@ static func carrier(mi: MeshInstance3D, skel: Skeleton3D) -> Dictionary:
 	var key := "%d|%d" % [mesh.get_instance_id(), mi.skin.get_instance_id()]
 	if _carriers.has(key):
 		return _carriers[key]
+	_forget_gone()
 	var arrays := mesh.surface_get_arrays(0)
 	var v: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var bones: PackedInt32Array = arrays[Mesh.ARRAY_BONES] if arrays[Mesh.ARRAY_BONES] != null else PackedInt32Array()
@@ -240,8 +245,23 @@ static func carrier(mi: MeshInstance3D, skel: Skeleton3D) -> Dictionary:
 		uv2 = arrays[Mesh.ARRAY_TEX_UV2]
 	var c := {"id": key, "v": v, "n": arrays[Mesh.ARRAY_NORMAL], "uv2": uv2, "bones": bones, "weights": weights, "per": per,
 		"skin": skin, "names": names, "frames": frames, "by_bone": by_bone, "shapes": shapes}
+	# held by the mesh's id, not by the mesh (the reading must not keep it loaded), and let go with it
+	c["mesh_ref"] = weakref(mesh)
 	_carriers[key] = c
 	return c
+
+
+## Lets go of the readings of meshes no longer loaded.
+static func _forget_gone() -> void:
+	for k in _carriers.keys():
+		var c: Dictionary = _carriers[k]
+		if (c["mesh_ref"] as WeakRef).get_ref() == null:
+			_carriers.erase(k)
+
+
+## How many meshes' readings are held (for the memory tests and the quest walk's memory line).
+static func carriers_held() -> int:
+	return _carriers.size()
 
 
 ## The vertices of `c` weighted most to any of `bone_names` (all of them for an empty list) and within
