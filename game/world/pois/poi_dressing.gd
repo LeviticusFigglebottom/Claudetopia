@@ -154,7 +154,7 @@ static func way_points(for_poi: String, def: Dictionary, follow_roads := true) -
 	if follow_roads and to != "":
 		var road := WorldPois.road_between(for_poi, to, str((way as Dictionary).get("built_road", "")))
 		if road.size() >= 2:
-			return road
+			return WorldPois.round_solids(road)
 	var shape: Variant = (way as Dictionary).get("shape", null)
 	if typeof(shape) == TYPE_ARRAY:
 		return PlaceRef.along(for_poi, to, shape)
@@ -505,7 +505,7 @@ func arrival() -> Vector3:
 			var a := first + TAU * float(k) / float(steps)
 			var p := Vector2(sin(a), cos(a)) * r
 			var at := _stand_at(p, floors)
-			if _open(at, solids, wet):
+			if _open(at, solids, wet) and _clear_of_floors(at, floors):
 				_arrival = at
 				return _arrival
 		r += 1.5
@@ -527,16 +527,43 @@ func arrival() -> Vector3:
 ## stood on (a brow, a bank) where that is higher.
 func _stand_at(p: Vector2, floors: Array) -> Vector3:
 	var at := kit.on_ground(p.x, p.y)
-	var from := Vector3(p.x, at.y + 60.0, p.y)
+	at.y = maxf(at.y, _floor_at(p, at.y + 60.0, floors))
+	return at
+
+
+## The highest of the dressing's floors under local xz `p`, below `top`; -INF where there is none.
+func _floor_at(p: Vector2, top: float, floors: Array) -> float:
+	var best := -INF
+	var from := Vector3(p.x, top, p.y)
 	for faces_v in floors:
 		var faces: PackedVector3Array = faces_v
 		var i := 0
 		while i + 2 < faces.size():
 			var hit: Variant = Geometry3D.ray_intersects_triangle(from, Vector3.DOWN, faces[i], faces[i + 1], faces[i + 2])
-			if hit != null and (hit as Vector3).y > at.y:
-				at.y = (hit as Vector3).y
+			if hit != null and (hit as Vector3).y > best:
+				best = (hit as Vector3).y
 			i += 3
-	return at
+	return best
+
+
+## Whether a body set down at `at` stands clear of the floors round it, not cut into a bank. A floor
+## is stood on where it is under the middle of the body, but the body is a capsule, and on a steep
+## bank (the Lime Bay Kilns' turfed rise, where the rebuilt pad's middle lies 4 m down its face)
+## the rise beside the feet comes up into the capsule's round foot: the floor is sampled round the
+## body at two reaches and must stay under the capsule's surface there.
+func _clear_of_floors(at: Vector3, floors: Array) -> bool:
+	if floors.is_empty():
+		return true
+	var r := ARRIVAL_RADIUS_M
+	for reach in [r * 0.45, r * 0.9]:
+		var d := float(reach)
+		# the capsule's underside, this far out from its axis
+		var under := at.y + 0.08 + r - sqrt(r * r - d * d)
+		for i in 8:
+			var a := TAU * float(i) / 8.0
+			if _floor_at(Vector2(at.x + sin(a) * d, at.z + cos(a) * d), at.y + 60.0, floors) > under:
+				return false
+	return true
 
 
 func _open(at: Vector3, solids: Array[AABB], wet: Array[AABB]) -> bool:

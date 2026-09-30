@@ -77,7 +77,7 @@
               "place": "core:place/fernhold",
               "bearing": 300,
               "distance": 19,
-              "height": 5.5
+              "height": 4.5
             },
             "look": {
               "place": "core:place/fernhold",
@@ -92,7 +92,7 @@
               "place": "core:place/fernhold",
               "bearing": 305,
               "distance": 17,
-              "height": 5
+              "height": 4.2
             },
             "look": {
               "place": "core:place/fernhold",
@@ -176,7 +176,7 @@
               "place": "player",
               "bearing": 45,
               "distance": 14,
-              "height": 4.5
+              "height": 4.0
             },
             "look": {
               "place": "player",

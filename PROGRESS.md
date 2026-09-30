@@ -14542,3 +14542,25 @@ suite was run twice on this machine: once on main as it stood, once on this bran
   in a barrel) and the boardwalk's strung rope reading as floating are left in the baselines.
 - `test_cinematic_player`'s other timing tests (and test_rogue_plays' opening read, test_settlement_steps)
   remain sensitive to a loaded machine; each passes alone.
+
+## The rebuilt world's four loose ends (2026-09-30)
+
+On w4096g the full suite had 4 failures (2439 tests). All four are fixed in game code and content; no rebuild is needed.
+
+- **Film cameras in the rebuilt scatter** (`test_cinematic_paths_clear`). Nothing clears scatter along a film's path at runtime. Films were kept clear by framing them round the trees (2026-09-27, "the film out of the trees"), so each shot is reframed minimally, with its framing kept:
+  - `start_ranger/the_lodge` (still 16:24): the camera is 1 m lower, 5.5 to 4.5 m and 5 to 4.2 m, so it stays under giant_oak_a's crown base (280.2 m; the camera was at 280.1). Bearings, distances and the look are unchanged.
+  - `start_ranger/the_line`: the first key is at 4.0 m, not 4.5 m, under giant_oak_c's crown (base 279.8). It is still 4 m over the ground.
+  - `start_rogue/the_channel`: the swing is 188 to 180 degrees, not 185 to 175. It now passes west of sedgemire_willow_a, which stands at bearing 172.6, 62.5 m out.
+  - `start_warrior/the_road`: the camera drifts 304 to 308 degrees, not 301 to 305. Its start is out of hearthvale_oak_d's crown (10.4 m from the trunk, and its reach is 10.75 m).
+  - I checked the candidates with a script that copies the test's scatter rule (the scratch file `cam.py`) before editing.
+- **Blue masonry in Brightwater** (`test_no_blue_box`). The delta biome scatters Sedgemire's `sunken_masonry`. On w4096g it runs over the border onto 2 Brightwater cells, and on the region map those rocks do stand in Brightwater. The masonry's mean is a green-grey whose blue is 1.23 times its red. On RockPaint's old blue ramp (1.1 to 1.4) it was pulled only 40 % to the country's stone, and Brightwater's stone (#8e949a) is itself cool, so the drawn result was 1.16. The ramp is now 1.05 to 1.3 (`BLUE_START`/`BLUE_FULL`, which `tools/world/worldgen/rock_paint.py` reads from the .gd): the masonry is pulled 81 % and drawn at 1.11. Only stones above about 1.14 change: the masonry and Cinderlea's waystones (1.31, pulled 78 % before and fully now). Grey granite (1.04) keeps its own hue, and the ledge test passes. Retuning Brightwater's tint instead only reached 1.14 to 1.15, right at the limit.
+- **The Lime Bay Kilns' set-down** (`test_pois`). The builder does not choose that spot. `PoiDressing.arrival()` chose the pad's middle, which on the rebuilt pad lies 4 m down the turfed kiln bank. The bank is a "dirt" floor trimesh, and a floor counted as standable wherever a ray hit it, so the capsule's round foot cut into the steep bank. `arrival()` now also requires `_clear_of_floors`: the floor is sampled at 8 bearings, at 0.45 and 0.9 of the body's radius, and must stay under the capsule's underside there. This is the same rule for every POI, and it only rejects spots the capsule would cut. `_stand_at` shares the new `_floor_at`.
+- **The marked way into the fallen colossus** (`test_the_start`). The Stair Head's way follows the built road `stair_head_sunken_choir`, which was drawn before the landmarks and runs up the avenue. On w4096g the fallen colossus_c (it reaches 48 m) stands at (-136, 3335) and at (-111, 3407). The new `WorldPois.round_solids` handles this. Any leg of a way that comes within reach of a solid scene in the cells (its meta's widest bound plus 4 m) is cut into 4 m steps, and each step is pushed radially out, up to 6 passes. Legs clear of everything are left exactly as the land drew them. `PoiDressing.way_points` (the road branch) and `PoiBuilders.way_of` (the waymarks) both use it. The way now walks the avenue at x of about -187, and no scene is within reach + 1 m of any leg. The painted road itself still runs by the colossus: that needs a rebuild.
+- **Tests:**
+  - test_cinematic_paths_clear, test_no_blue_box, test_pois, test_the_start, test_poi_people, test_waymarks, test_start_mage/ranger/rogue/warrior and test_rock_paint in one run: 128 tests, 1 failed, 0 script errors. The failure was `test_the_start.test_the_warden_speaks_first...`: she greeted with a Gullhithe news line, which leaks from another test when they run in this order.
+  - test_the_start alone: 23 tests, 0 failed. That test passed in the full suite.
+  - `./run.sh journey --style=core:style/warrior`: 7 of 7 steps pass, 0 logged errors.
+- **Not done / for the coordinator:**
+  - No render: the reframed shots were checked against the scatter only.
+  - The next world build should route the Stair Head–Choir road itself round the fallen colossus (tools/world), so that the road and the waystones agree.
+  - The delta's `sunken_masonry` crossing into Brightwater is a builder rule (the biome, not the region, chooses the asset) that the next build could tighten.

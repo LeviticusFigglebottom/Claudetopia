@@ -65,8 +65,12 @@ const VALUE_CEILING := 0.24
 ## dark and lit mostly by the sky, they stood as navy boxes on a green hillside. A stone whose mean
 ## is bluer than BLUE_START (its blue over its red, linear) leans its hue further to the country's
 ## stone (REGION_ROCK's `stone`, keeping its own value), the whole way at BLUE_FULL: hue_pull_for.
-const BLUE_START := 1.1
-const BLUE_FULL := 1.4
+## The ramp is steep enough that a stone half again as blue as stone may be (1.23, Sedgemire's
+## green-grey sunken masonry, which the delta's scatter sets over the border into Brightwater) is
+## pulled most of the way: on the old 1.1-1.4 ramp it kept 60 per cent of its own hue, and against
+## Brightwater's cool grey it was drawn 1.16 times as blue as red. Grey granite (1.04) keeps its own.
+const BLUE_START := 1.05
+const BLUE_FULL := 1.3
 ## The measured means (tools/world/rock_values.py).
 const VALUES := "res://world/rock_values.json"
 const DEFAULT_STONE := {"edge": 0.5, "streaks": 0.3, "speckle": 0.2, "sheen": 0.0, "moss": 1.0}
