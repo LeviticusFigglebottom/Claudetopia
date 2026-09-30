@@ -145,6 +145,109 @@ happens before its first shot:
 It logs a warning either way, and logs each warming frame's time. The menu keeps answering. The
 next launch tries again, with the shaders this one compiled now in the user cache.
 
+## If the title freezes: what to send
+
+Every launch writes a startup trace, one line per step, flushed to disk as it is written, so a game
+killed from the Task Manager still has every line:
+
+    %APPDATA%\Godot\app_userdata\Wickmere\logs\startup_<date>_<time>.txt     (Windows)
+    ~/.local/share/godot/app_userdata/Wickmere/logs/startup_<date>_<time>.txt  (Linux)
+
+The last ten are kept. **A tester whose game froze sends the newest `startup_*.txt`**, with the
+`session_*_summary.txt` of the same time and `launch_state.json` from the folder above `logs`.
+Settings, "Open log folder" opens the folder.
+
+What the trace has (`core/startup_trace.gd`, `core/startup.gd`):
+- the machine first: GPU name, vendor and type (integrated, discrete), driver, renderer and API,
+  CPU and its threads, RAM and free RAM, the worker pool's size and how many threaded reads it
+  allows, the window, the arguments;
+- boot, the content, the title's first frame, the title asking for its world;
+- each step of the world standing up, begun and done with its milliseconds; inside the terrain
+  step, the assets asked for and received, each region file's read begun and ended with the worker
+  thread that read it, each `add_region`, `update_maps`, the first terrain frame, the material and
+  its shader parameters, and the texture arrays;
+- every threaded read asked for, done and taken, until the title's first shot is shown, and a
+  line whenever the main thread takes one that is still being read (it waits there);
+- the first frame of 3D asked for and drawn, and the title giving its country up;
+- every click on the title, and each step of tearing the title's world down;
+- memory on every line: the engine's own (static), the video memory the renderer reports (main
+  thread lines), and what the machine still has free.
+
+The steps stop being written when a game's world is ready. The **watchdog**, a thread of its own,
+writes `WATCHDOG: main thread stalled N s at step "..."` into the same file when the main thread has
+not moved for 5 s, and again every 5 s while it stays stopped, with the memory each time, so a hang
+shows where it stopped and whether memory is growing. It never touches the scene tree or the
+renderer. When the main thread goes on, it writes `main thread went on after N s`.
+
+**The window's X cannot be made to work while the main thread is stuck.** On Windows the close
+request is a message to the window, and the window's messages are read by the main thread, so no
+other thread can know the X was pressed. Windows itself offers "Close the program" on a window that
+has not read its messages for a few seconds. A watchdog killing the game on a stall alone would kill
+games that are only slow, so it does not.
+
+## Safe mode
+
+`user://launch_state.json` says how far each launch got: `starting` (written at boot), `stalled`
+(written by the watchdog while the main thread is stopped, and put back when it goes on),
+`menu_ok` (the title answered for 20 s with its country shown or given up, or a game's world stood
+up) and `clean_exit`. A launch that finds `starting` or `stalled` there starts **safely**:
+- the coarse ground (`WorldStatus.force_fallback`, as `--terrain=fallback`);
+- no country behind the title (the drawn chart);
+- one threaded read at a time;
+- one line on the title saying so, and that the Graphics settings turn the full terrain back on.
+
+It also turns the Graphics setting "Full terrain and the title's country" off, so it stays off
+until the player turns it on: it never switches back behind their back. `-- --safe-mode` asks for
+it, `-- --no-safe-mode` skips the check, `-- --terrain=terrain3d` never starts safely. Headless runs,
+tools and tests, runs from the editor's debugger, and any run with a tool's argument never check or
+write the sentinel.
+
+A debug build takes `-- --debug-stall-terrain=N` to hold the main thread N seconds in the terrain
+step, which tests the watchdog and the next launch's safe mode.
+
+## The click that froze the title
+
+The owner reproduced the freeze on a fresh user folder: the title looked fine, and any click froze
+the game for good; on the coarse ground (`--terrain=fallback`) it did not. A click tore the title's
+world down, and that teardown **waited on the main thread for work on the worker threads**:
+- `World._exit_tree` waited for the region-file reads (`wait_for_group_task_completion`);
+- `ThreadedLoads.forget` of the terrain's assets waited for their read (`load_threaded_get`): a
+  2 s hold here, on a click 2 s after the menu came up;
+- the streamer waited for the cells it was reading;
+- at quit, `ThreadedLoads.drain` waited for every read still going.
+
+A read of textures on a worker thread can itself wait for the main thread: the rendering device
+hands its uploads over at the end of a frame. A main thread waiting for that read never ends its
+frame, and nothing moves again. Nothing of this could happen on the coarse ground, which reads no
+terrain textures on a thread.
+
+Now nothing the title's world does is waited for when it goes:
+- `World.tear_down` stops its streamer and paced stand-up, and lets go of Terrain3D in the provider;
+- the region files are read by an object of their own (`World.RegionReads`), and the cells by one
+  each (`WorldStreamer.CellRead`), so a world freed while they are read leaves them to finish:
+  `ThreadedLoads.after_task` keeps them alive and collects them on a later frame;
+- `ThreadedLoads.forget` never waits: a read still going is left to finish and collected;
+- the title lets go of every read its world asked for ahead (hundreds of props; a game's world asks
+  again);
+- a quit waits at most 1.5 s for reads still going, then leaves them.
+
+(Terrain3D 1.0.2 crashes if it is given a null camera on the way out, so it is not.)
+
+The region files are read on at most half the pool's threads past two, never every thread
+(`World.region_read_tasks`), and those threads are taken off ThreadedLoads' limit while they are
+read, so the two together always leave a compile two threads.
+
+`tools/debug/click_probe.sh` presses a title button at several moments while the country stands
+up, one fresh launch each, on the Compatibility renderer, which draws Terrain3D here:
+
+    GODOT=... tools/debug/click_probe.sh --terrain=terrain3d --times="0.5 1 2 4 8" --repeat=2
+    GODOT=... tools/debug/click_probe.sh --button=Settings --times="2 8"
+    GODOT=... tools/debug/click_probe.sh --times="shown+3"     # after the first shot, caps lifted
+
+It fails a click that held the main thread more than 1 s before the next screen came, any later
+frame over 1 s, and any error reported after the click. (The Naming's own first frame is about
+1.8 s on llvmpipe with or without a country behind the title; it is reported, not judged.)
+
 ## What cannot be done ahead, and what is left
 
 - **Pipelines.** The driver compiles each shader's SPIR-V into GPU code on first draw. That

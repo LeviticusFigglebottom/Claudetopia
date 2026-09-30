@@ -120,9 +120,10 @@ var _holding_3d := false
 var _tweens: Dictionary = {}
 
 
-## Whether the Graphics tab has it on ("The country behind the title"; off on Low).
+## Whether the Graphics tab has it on ("The country behind the title"; off on Low), and the game is
+## not starting safely (SafeMode: "Full terrain and the title's country" off).
 static func switched_on() -> bool:
-	return bool(Settings.get_value("graphics", "title_vista", true))
+	return bool(Settings.get_value("graphics", "title_vista", true)) and not SafeMode.active
 
 
 ## Whether the title should show the country here: a world to show, a display to draw it on, and the
@@ -157,6 +158,7 @@ func _ready() -> void:
 	_asked_us = _last_us
 	_capping = true
 	# the world's scene is read while the menu's first frames are drawn
+	StartupTrace.step("vista: the title asks for the world")
 	ThreadedLoads.request(WORLD_SCENE)
 
 
@@ -265,6 +267,7 @@ func _over_budget(now_us: int, frame_s: float) -> bool:
 		Log.warn("TitleVista", "the first shot was not up %.0f s after the world was asked for (%s, longest frame %.1f s); the chart stays" % [first_show_cap_s, _phase_name(), _longest_s])
 	if why.is_empty():
 		return false
+	StartupTrace.step("vista: given up (%s); the chart stays" % why)
 	stop()
 	gave_up = why
 	return true
@@ -277,6 +280,7 @@ func _phase_name() -> String:
 # --- the world --------------------------------------------------------------------------------------
 
 func _stand_world_up() -> void:
+	StartupTrace.step("vista: the world's scene is read; standing it up")
 	var packed := ThreadedLoads.take(WORLD_SCENE) as PackedScene
 	if packed == null:
 		packed = load(WORLD_SCENE) as PackedScene
@@ -318,10 +322,12 @@ func _stand_world_up() -> void:
 	_draw_3d(false)
 	add_child(w)
 	camera.make_current()
+	StartupTrace.step("vista: the world is in the tree, standing up a step a frame")
 	if not w.is_world_ready:
 		await w.world_ready
 	if phase == Phase.GONE or not is_instance_valid(w):
 		return
+	StartupTrace.step("vista: the world is ready; waiting for the first shot's cells")
 	camera.far = Graphics.camera_far(Settings.data.get("graphics", {}))
 	_resolve()
 	var first := _next(-1)
@@ -497,6 +503,8 @@ func _show(i: int, came: bool) -> void:
 	shown.append({"index": i, "id": id, "cells_ready": came, "at_ms": Time.get_ticks_msec()})
 	if not came:
 		Log.warn("TitleVista", "%s shown before its country had all come" % id)
+	if shown.size() == 1:
+		StartupTrace.details_done("the title's first shot is shown (%s)" % id)
 	shot_started.emit(i, id)
 
 
@@ -507,7 +515,16 @@ func _warm(step: int) -> void:
 		return
 	if step == 0:
 		_draw_3d(true)
+		StartupTrace.step("vista: the first frame of 3D is asked for")
+		if not RenderingServer.frame_post_draw.is_connected(_first_3d_drawn):
+			RenderingServer.frame_post_draw.connect(_first_3d_drawn, CONNECT_ONE_SHOT)
+	elif StartupTrace.active:
+		StartupTrace.step("vista: warm step %d" % step)
 	world.warm_layers(step)
+
+
+func _first_3d_drawn() -> void:
+	StartupTrace.step("vista: the first frame of 3D is drawn")
 
 
 ## The streamer hurries while nothing it builds is watched (the chart or the dip covers the screen).
@@ -607,7 +624,10 @@ func stop() -> void:
 			_stop_fade(item)
 			item.modulate.a = 1.0
 	if world != null and is_instance_valid(world):
+		StartupTrace.step("vista: stopped; its world goes")
+		world.tear_down()
 		world.queue_free()
+		_let_go_of_reads()
 	world = null
 	camera = null
 	_give_clock_back()
@@ -625,10 +645,25 @@ func _give_clock_back() -> void:
 
 
 func _exit_tree() -> void:
-	# the scene the menu changes to must not meet the title's world: it goes with the title
+	# the scene the menu changes to must not meet the title's world: it goes with the title, and
+	# nothing it does is waited for (the title's freeze on a click, docs/FIRST_LAUNCH.md)
+	StartupTrace.step("vista: the title is left (%s)" % _phase_name())
 	phase = Phase.GONE
 	_draw_3d(true)
 	_give_clock_back()
-	# a scene read on a thread and never taken is taken here, so it is not left in the loader
+	if world != null and is_instance_valid(world):
+		world.tear_down()
+		_let_go_of_reads()
+	# a scene read on a thread and never taken is let go, and collected when it is read
 	if world == null:
 		ThreadedLoads.forget(WORLD_SCENE)
+	StartupTrace.step("vista: the title's world is let go")
+
+
+## What the title's world asked the loader for ahead (its cells' props, the landmarks, the places'
+## builders) is not waited for, and not wanted: queued reads are dropped and those going are left
+## to finish. A game's world asks for what it wants again.
+func _let_go_of_reads() -> void:
+	var n := WorldStreamer.let_go_of_prefetches()
+	ThreadedLoads.forget(PoiDressing.BUILDERS_PATH)
+	StartupTrace.step("vista: %d reads asked for ahead let go (%d still going, collected when done)" % [n, ThreadedLoads.left_over()])

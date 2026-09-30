@@ -13,6 +13,8 @@ extends Node
 ##                      (`./run.sh roads`), and what the world did to it is written to <dir>
 ##   --npcs=<dir>       attach the people probe (tools_gd/npc_probe.gd): a town's people watched
 ##                      getting about it, and one house's (`./run.sh npcs`)
+##   --click=<s>[:<b>]  attach the click probe (tools_gd/click_probe.gd): press the title's button <b>
+##                      (New Game) <s> seconds after the menu is up, and say whether the game went on
 ##   --cpu=<dir>        attach the CPU probe (tools_gd/cpu_probe.gd): the main thread's time per frame
 ##                      on the title and, with --cpu-new=<style>, through a new game's opening
 
@@ -20,8 +22,10 @@ extends Node
 
 
 func _ready() -> void:
+	StartupTrace.step("boot scene: waiting for the content")
 	if not ContentDB.is_loaded:
 		await ContentDB.loaded
+	StartupTrace.step("content loaded")
 	# never change scene from inside _ready: the tree is still building
 	await get_tree().process_frame
 	label.text = "Wickmere\n%d definitions in %d packs" % [ContentDB.all("region").size() + ContentDB.all("place").size(), ContentDB.packs.size()]
@@ -36,6 +40,8 @@ func _ready() -> void:
 		var cpu := _attach_probe("res://tools_gd/cpu_probe.gd", "CpuProbe")
 		if cpu != null:
 			cpu.set("out_dir", str(args["cpu"]))
+	if args.has("click"):
+		_attach_probe("res://tools_gd/click_probe.gd", "ClickProbe")
 	if args.has("smoke"):
 		_run_smoke()
 		return

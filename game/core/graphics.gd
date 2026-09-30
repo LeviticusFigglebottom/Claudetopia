@@ -73,8 +73,13 @@ const DISPLAY_DEFAULTS := {"vsync": true, "fps_cap": 0}
 ## preset touches them either: Painted does not switch the grain on, Low does not grade the
 ## world out of its colours. The atmosphere reads them (systems/atmosphere/atmosphere.gd).
 const LOOK_DEFAULTS := {"color_grade": true, "vignette": true, "film_grain": false}
+## Safe mode's own switch (SafeMode): the full terrain and the country behind the title, or the
+## coarse ground and the drawn chart. A launch after one that never got its menu going turns it off,
+## and only the player turns it on again. It is about whether this machine starts, not about
+## fidelity, so no preset touches it.
+const SAFETY_DEFAULTS := {"full_terrain": true}
 
-## The graphics section as a new settings file has it: High, plus the display and look keys.
+## The graphics section as a new settings file has it: High, plus the display, look and safety keys.
 ## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
 ## `test_graphics_settings` pins it to High, the display keys and the look keys.
 const DEFAULTS := {
@@ -88,6 +93,7 @@ const DEFAULTS := {
 	"wildlife": 1.0,
 	"title_vista": true,
 	"color_grade": true, "vignette": true, "film_grain": false,
+	"full_terrain": true,
 }
 
 ## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
@@ -175,6 +181,8 @@ const CONTROLS := [
 	{"key": "color_grade", "label": "Region colour grade", "kind": "check"},
 	{"key": "vignette", "label": "Vignette", "kind": "check"},
 	{"key": "film_grain", "label": "Film grain", "kind": "check"},
+	{"key": "full_terrain", "label": "Full terrain and the title's country", "kind": "check",
+		"note": "off is the safe start: the coarse ground, and the drawn chart behind the title. A launch after one that did not start properly turns it off"},
 ]
 
 ## Anything a test or a tool has to be able to name, because the running renderer cannot be
@@ -280,6 +288,7 @@ static func control(key: String) -> Dictionary:
 
 ## Puts every knob into the engine. Called by `Settings` whenever the graphics section changes.
 static func apply(g: Dictionary, tree: SceneTree) -> void:
+	SafeMode.follow_setting(bool(g.get("full_terrain", true)))
 	if tree == null:
 		return
 	var r := renderer()
