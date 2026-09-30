@@ -222,6 +222,9 @@ func _read(key: String) -> Variant:
 		"title_vista":
 			# read where the title reads it; a title already showing the country stops on it too
 			return TitleVista.switched_on()
+		"full_terrain":
+			# safe mode: the coarse ground, one threaded read at a time, and the title's country off
+			return [SafeMode.active, WorldStatus.force_fallback, ThreadedLoads.limit(), TitleVista.switched_on()]
 	return null
 
 
@@ -244,9 +247,10 @@ func test_defaults_are_high_and_the_display_keys() -> void:
 	var expected: Dictionary = (Graphics.PRESETS["high"] as Dictionary).duplicate()
 	expected.merge(Graphics.DISPLAY_DEFAULTS)
 	expected.merge(Graphics.LOOK_DEFAULTS)
+	expected.merge(Graphics.SAFETY_DEFAULTS)
 	expected["preset"] = "high"
-	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display and look keys")
-	for key in Graphics.LOOK_DEFAULTS:
+	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display, look and safety keys")
+	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys():
 		assert_false((Graphics.PRESETS["painted"] as Dictionary).has(key), "no preset touches %s" % key)
 	assert_eq(Settings.DEFAULTS["graphics"], Graphics.DEFAULTS, "and Settings.DEFAULTS names it")
 

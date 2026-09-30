@@ -12637,7 +12637,7 @@ each, format in `docs/WORLD_LIFE_ROADS.md`).
 - **The trade screen** titles a shop with no def by its merchant's `title` meta.
 
 ### Measured
-- **Tests:**
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
   - `test_road_life`: 12 tests;
   - with the combat, perception, POI encounter, content, save and trade tests: 330 passed, 0
     script errors;
@@ -14556,7 +14556,7 @@ On w4096g the full suite had 4 failures (2439 tests). All four are fixed in game
 - **Blue masonry in Brightwater** (`test_no_blue_box`). The delta biome scatters Sedgemire's `sunken_masonry`. On w4096g it runs over the border onto 2 Brightwater cells, and on the region map those rocks do stand in Brightwater. The masonry's mean is a green-grey whose blue is 1.23 times its red. On RockPaint's old blue ramp (1.1 to 1.4) it was pulled only 40 % to the country's stone, and Brightwater's stone (#8e949a) is itself cool, so the drawn result was 1.16. The ramp is now 1.05 to 1.3 (`BLUE_START`/`BLUE_FULL`, which `tools/world/worldgen/rock_paint.py` reads from the .gd): the masonry is pulled 81 % and drawn at 1.11. Only stones above about 1.14 change: the masonry and Cinderlea's waystones (1.31, pulled 78 % before and fully now). Grey granite (1.04) keeps its own hue, and the ledge test passes. Retuning Brightwater's tint instead only reached 1.14 to 1.15, right at the limit.
 - **The Lime Bay Kilns' set-down** (`test_pois`). The builder does not choose that spot. `PoiDressing.arrival()` chose the pad's middle, which on the rebuilt pad lies 4 m down the turfed kiln bank. The bank is a "dirt" floor trimesh, and a floor counted as standable wherever a ray hit it, so the capsule's round foot cut into the steep bank. `arrival()` now also requires `_clear_of_floors`: the floor is sampled at 8 bearings, at 0.45 and 0.9 of the body's radius, and must stay under the capsule's underside there. This is the same rule for every POI, and it only rejects spots the capsule would cut. `_stand_at` shares the new `_floor_at`.
 - **The marked way into the fallen colossus** (`test_the_start`). The Stair Head's way follows the built road `stair_head_sunken_choir`, which was drawn before the landmarks and runs up the avenue. On w4096g the fallen colossus_c (it reaches 48 m) stands at (-136, 3335) and at (-111, 3407). The new `WorldPois.round_solids` handles this. Any leg of a way that comes within reach of a solid scene in the cells (its meta's widest bound plus 4 m) is cut into 4 m steps, and each step is pushed radially out, up to 6 passes. Legs clear of everything are left exactly as the land drew them. `PoiDressing.way_points` (the road branch) and `PoiBuilders.way_of` (the waymarks) both use it. The way now walks the avenue at x of about -187, and no scene is within reach + 1 m of any leg. The painted road itself still runs by the colossus: that needs a rebuild.
-- **Tests:**
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
   - test_cinematic_paths_clear, test_no_blue_box, test_pois, test_the_start, test_poi_people, test_waymarks, test_start_mage/ranger/rogue/warrior and test_rock_paint in one run: 128 tests, 1 failed, 0 script errors. The failure was `test_the_start.test_the_warden_speaks_first...`: she greeted with a Gullhithe news line, which leaks from another test when they run in this order.
   - test_the_start alone: 23 tests, 0 failed. That test passed in the full suite.
   - `./run.sh journey --style=core:style/warrior`: 7 of 7 steps pass, 0 logged errors.
@@ -14585,7 +14585,7 @@ The full quest walk (`./run.sh quests`, one process for all 127 quests and every
   - The Kilnway entered, left and unloaded four times after a warm-up round: objects, nodes, orphans and static memory come back to the first round's, within 150 objects, 10 nodes and 24 MB. Measured: objects 2867 to 2878, nodes 106 to 106, static 305.6 to 305.7 MB.
   - Seven fresh copies of the rig's body read in turn leave at most one reading more than before. This fails on the old code.
   - Three shells worked out ahead: after `_collect` no job is kept, and no more than 2 shells are held.
-- **Tests:**
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
   - test_sites, test_interior, test_road_life, test_adornment and the new test: 70 tests, 0 failed. The 1 logged error is test_unknown_interior_refused's own. The "material is null" engine errors in test_adornment's after_each are there on main too (f_suite).
   - Test warnings are back at 99.
   - Short quest walk (a_stone_before_the_death, the_warm_egg, louder): 8 of 8 walks, 0 logged errors.
@@ -14654,7 +14654,7 @@ The owner asked for a full optimisation pass that gives up no function, graphics
   - Before against after: 0.7 to 10 %, every shot within that floor.
   - The street's sheet (`docs/review/perf/merrowby_street_before_after_diff.jpg`: before, after, diff ×4) shows only clouds, shadow edges from the sun's small move, and the villager's idle phase.
   - Off-view posing cannot show in a picture by construction (its body and shadow are out of frame). The in-view bodies are posed at their old rates.
-- **Tests:**
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
   - Targeted: test_humanoid_model, test_wildlife, test_scatter_lod, test_scatter_solids, test_world_streamer, test_content_db and test_schemas: 78 tests, 0 failed. Warnings are at the 49 baseline.
   - `./run.sh fights`: 66 fights, 0 checks failed (6 flagged for balance, as before).
   - `./run.sh journey --style=core:style/rogue`: 7 of 7, 0 logged errors.
@@ -14736,7 +14736,7 @@ the whole account.
     least 150 SceneForwardClustered entries.
 
   Everything else in the workflow is as it was.
-- **Tests:**
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
   - test_shader_warm, test_threaded_loads and test_title_vista together: 16 tests, 0 failed. The
     title tests passed alone and in pairs too.
   - One earlier run of all three crashed (signal 11) while the title's world stood up headless,
@@ -14829,3 +14829,86 @@ the whole account.
     - the controls on a trackpad.
   - Notarization needs an Apple Developer ID. docs/MAC.md says what to add.
   - The Actions page lists the workflow as "Game build" now.
+## A click on the title never waits on a worker thread, every launch leaves a startup trace, and a launch after one that hung starts safely (safemode, 2026-09-30)
+
+- **The title's freeze on a click.** The owner froze a fresh-folder build with any click on the
+  title; `--terrain=fallback` did not freeze. The click tore the title's world down, and the
+  teardown waited on the main thread for worker work:
+  - the region-file group;
+  - the terrain assets' read (`ThreadedLoads.forget` called `load_threaded_get`): 1.95 s here on a
+    click 2 s in;
+  - the streamer's cell reads;
+  - at quit, every read in flight.
+
+  A texture read on a worker thread can wait for the main thread's frame to end (the rendering
+  device's uploads), so on a GPU that wait need never end. Now nothing waits:
+  - `World.tear_down` stops the streamer and the paced stand-up;
+  - regions and cells are read by objects of their own (`World.RegionReads`,
+    `WorldStreamer.CellRead`), kept and collected later by `ThreadedLoads.after_task`;
+  - `forget` leaves a read in flight to finish;
+  - the title lets go of its world's 455 reads asked for ahead;
+  - a quit waits for reads in flight at most 1.5 s.
+
+  Terrain3D 1.0.2 segfaults on `set_camera(null)` at teardown (seen here), so it is not called.
+- **Region reads capped.** `WorkerThreadPool.add_group_task(..., -1, true)` took every pool thread.
+  Now they run on `clamp((pool-2)/2, 1, files)` threads, taken off ThreadedLoads' limit while they
+  run. On this 4-thread machine that is 1 thread; the 16 files take 1.3 s and are in before the
+  terrain assets (4.2 s). The title world's stand-up, opengl3 with `--terrain=terrain3d`, in ms:
+
+  | | assets | first frame | regions | textures | terrain total |
+  |---|---|---|---|---|---|
+  | before | 4653 | 1252 | 250 | 23 | 6178 |
+  | after | 4180 | 1162 | 280 | 23 | 5645 |
+
+- **Startup trace** (`core/startup_trace.gd`, autoload `Startup`):
+  - writes `user://logs/startup_<date>_<time>.txt`, one flushed line per step, and keeps the last 10;
+  - starts with the machine (GPU, driver, adapter type, CPU, RAM, worker pool);
+  - then boot, content, the title's first frame, the vista, every World step with its ms, and the
+    terrain's sub-steps (each region read with its thread, `add_region`, `update_maps`, the
+    material, the texture arrays);
+  - every threaded read until the first shot, and a line when the main thread takes a read still
+    in flight;
+  - the first 3D frame, every title click and each teardown step;
+  - memory (static, video, machine free) on each line;
+  - ends when a game's world is ready.
+- **Watchdog.** A plain Thread writes `WATCHDOG: main thread stalled N s at step "…"` every 5 s
+  while the main thread has not ticked, and `went on after N s` when it resumes. It measures on the
+  clock and runs at high priority. The window's X cannot be answered while the main thread is stuck
+  (Windows delivers it to the main thread), so nothing force-exits; docs/FIRST_LAUNCH.md says why.
+- **Safe mode** (`core/safe_mode.gd`):
+  - `user://launch_state.json` records starting, stalled, menu_ok and clean_exit;
+  - a launch after `starting` or `stalled` uses the coarse ground, no vista, one threaded read at a
+    time, and one line on the title;
+  - it turns off the new Graphics setting "Full terrain and the title's country", which only the
+    player turns back on;
+  - `--safe-mode`, `--no-safe-mode` and `--terrain=terrain3d` override it;
+  - it is skipped when headless, with any tool argument, a scene or script argument, or the
+    editor's debugger.
+- **Measured and looked at:**
+  - Simulated hang (`--debug-stall-terrain=12`, debug builds only), killed while stalled: the
+    trace has the WATCHDOG line and the sentinel says `stalled` at "debug: holding the main
+    thread…". The next plain launch came up safe, with the line on the title (looked at in a
+    screenshot, and narrowed to sit on the sheet).
+  - Not killed: stall lines at 5 s and 10 s, then "went on after 10 s", then `menu_ok`.
+- **Tests:** `./run.sh flow`: PASS (39 checks, 0 failed, 0 errors logged).
+  - New test_safe_mode (9) and test_startup_trace (5). With test_title_vista, test_threaded_loads,
+    test_world_status, test_graphics_settings, test_world_spawn,
+    test_world_services_go_with_the_world, test_world_streamer, test_world_data and
+    test_error_log: 92 tests, 0 failed, 0 script errors; warnings 49, at the baseline.
+  - `tools/debug/click_probe.sh`, opengl3, `--terrain=terrain3d`, a fresh user dir per launch:
+    - New Game at 0.5, 1, 2, 4 and 8 s, twice each: 10 of 10 pass, the click holding the main
+      thread 190 to 420 ms, with 0 errors;
+    - Settings at 8 s passes; at 2 s its frame was 1055 ms, over the 1 s limit, but it went on
+      with no errors;
+    - `--click-through` to the game's world on both grounds: 0 errors.
+- **Not done / for the coordinator:**
+  - The owner's 80 `get_global_transform` errors were never reproduced here, before or after.
+  - Nothing ran on a real GPU. The RD upload deadlock is the explanation that fits the evidence,
+    not one shown here.
+  - Cold-cache llvmpipe runs showed an 11 s main-thread hold in the title world's FallbackTerrain
+    build, and 18 s in the Naming's first frame; the watchdog caught both. The owner's
+    FallbackTerrain took 4.1 s, 3.5 s of it textures. It is one paced step, and worth splitting.
+  - `WaterSurface` tasks still call an instance method from a worker (`water_mesh`). They are only
+    polled, never waited on, but a water freed mid-task is a risk worth a look.
+  - The tester should send the newest `startup_*.txt`, the session summary and
+    `launch_state.json` (docs/FIRST_LAUNCH.md).

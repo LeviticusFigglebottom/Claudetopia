@@ -76,6 +76,7 @@ static func facts() -> Dictionary:
 		"manifest": false, "runtime_maps": false, "cells": 0, "cells_expected": 0, "pois": false,
 		"terrain_class": ClassDB.class_exists("Terrain3D"), "terrain_regions": 0,
 		"forced_fallback": force_fallback or forced_by(OS.get_cmdline_user_args()) or forced_by(OS.get_cmdline_args()),
+		"safe_mode": SafeMode.active,
 		"forced_terrain3d": OS.get_cmdline_user_args().has(FORCE_TERRAIN3D_ARG) or OS.get_cmdline_args().has(FORCE_TERRAIN3D_ARG),
 		"lods_asked": terrain_lods_asked(),
 		"full_maps": FileAccess.file_exists("%s/%s" % [GENERATED, FULL_HEIGHTS]),
@@ -120,7 +121,14 @@ static func evaluate(f: Dictionary) -> Dictionary:
 				+ "New Game and Continue wait until it is done.") % [lacking, BUILD_NEEDS]
 		return out
 	var why := ""
-	if bool(f.get("forced_fallback", false)):
+	if bool(f.get("safe_mode", false)):
+		why = "safe_mode"
+		out["title"] = "Started safely: the coarse ground."
+		out["detail"] = ("The game is starting safely (after a launch that did not start properly, or because it was asked to), "
+				+ "so the ground is drawn from the 8 m height map rather than by Terrain3D, and the title shows its drawn chart. "
+				+ "The Graphics setting \"Full terrain and the title's country\" turns them back on.")
+		out["command"] = ""
+	elif bool(f.get("forced_fallback", false)):
 		why = "forced"
 		out["title"] = "The coarse ground, as asked for."
 		out["detail"] = "The game was started with %s, so the ground is drawn from the 8 m height map rather than by Terrain3D." % FORCE_FALLBACK_ARG
@@ -158,8 +166,9 @@ static func evaluate(f: Dictionary) -> Dictionary:
 	out["state"] = "fallback"
 	out["terrain"] = "fallback"
 	out["reason"] = why
-	# Said on the title, on arrival and in the corner, unless the player asked for it themselves.
-	out["announce"] = why != "forced"
+	# Said on the title, on arrival and in the corner, unless the player asked for it themselves (or
+	# safe mode says it in a line of its own on the title)
+	out["announce"] = why not in ["forced", "safe_mode"]
 	out["badge"] = badge_line(why, str(out["command"]))
 	out["notice"] = "The full terrain is not drawn here: you are walking on the coarse ground. %s" % _notice_reason(why, f, str(out["command"]))
 	return out
@@ -220,6 +229,8 @@ static func badge_line(why: String, command: String) -> String:
 	match why:
 		"forced":
 			return "asked for with %s" % FORCE_FALLBACK_ARG
+		"safe_mode":
+			return "safe start: the Graphics settings turn the full terrain on"
 		"plugin_missing":
 			return "Terrain3D did not load on this machine"
 		"driver_unsafe":
@@ -279,6 +290,8 @@ static func _notice_reason(why: String, f: Dictionary, command: String) -> Strin
 	match why:
 		"forced":
 			return "(%s)" % FORCE_FALLBACK_ARG
+		"safe_mode":
+			return "(A safe start: the Graphics settings turn the full terrain back on.)"
 		"plugin_missing":
 			return "(Terrain3D did not load on %s %s.)" % [str(f.get("os", "?")), str(f.get("arch", "?"))]
 		"driver_unsafe":

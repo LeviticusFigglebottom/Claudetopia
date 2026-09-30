@@ -126,6 +126,7 @@ var _loaded: Dictionary = {}          # Vector2i -> Node3D
 var _pending: Dictionary = {}         # Vector2i -> int (ring) awaiting parse
 var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to build)
 var _tasks: Dictionary = {}           # Vector2i -> task id
+var _jobs: Dictionary = {}            # Vector2i -> CellRead (what the task runs, kept alive with it)
 ## Cells being built a piece at a time: Vector2i -> {node, ring, data, instances, assets, next, solids}.
 var _building: Dictionary = {}
 var _current_cell := Vector2i(-9999, -9999)
@@ -577,11 +578,40 @@ func _in_world(c: Vector2i) -> bool:
 func _request(cell: Vector2i, ring: int) -> void:
 	_pending[cell] = ring
 	var path := "%s/cells/%d_%d.json" % [GENERATED, cell.x, cell.y]
-	var task := WorkerThreadPool.add_task(_parse_cell.bind(cell, path), true, "wm_cell_%d_%d" % [cell.x, cell.y])
+	# read by an object of its own into the shared `_parsed`, not by this node's method: a streamer
+	# torn down while a cell is read (the title's, on a click) leaves the read to finish (`_exit_tree`)
+	var job := CellRead.new(cell, path, prefetch, _parsed, _mutex)
+	var task := WorkerThreadPool.add_task(job.run, true, "wm_cell_%d_%d" % [cell.x, cell.y])
 	_tasks[cell] = task
+	_jobs[cell] = job
 
 
-func _parse_cell(cell: Vector2i, path: String) -> void:
+## One cell's file read on a worker thread into the streamer's `_parsed` (which it shares, so a
+## streamer gone meanwhile is never touched).
+class CellRead extends RefCounted:
+	var cell: Vector2i
+	var path := ""
+	var prefetch := false
+	var into: Dictionary
+	var lock: Mutex
+
+	func _init(c: Vector2i, p: String, pre: bool, parsed: Dictionary, mutex: Mutex) -> void:
+		cell = c
+		path = p
+		prefetch = pre
+		into = parsed
+		lock = mutex
+
+	func run() -> void:
+		var data := WorldStreamer.read_cell(cell, path, prefetch)
+		lock.lock()
+		into[cell] = data
+		lock.unlock()
+
+
+## A cell's file: its data with the scatter off any pad laid since the build, and its assets asked
+## for when `prefetch_too`. Any thread.
+static func read_cell(cell: Vector2i, path: String, prefetch_too: bool) -> Dictionary:
 	var data: Dictionary = {}
 	if FileAccess.file_exists(path):
 		var text := FileAccess.get_file_as_string(path)
@@ -592,11 +622,9 @@ func _parse_cell(cell: Vector2i, path: String) -> void:
 	PoiPreview.clear_cell(data)
 	# where the trees stand, for what lives at a wood's edge (the deer)
 	TreeCover.note(cell, data)
-	if prefetch:
+	if prefetch_too:
 		_prefetch(data)
-	_mutex.lock()
-	_parsed[cell] = data
-	_mutex.unlock()
+	return data
 
 
 ## Whether a cell's assets are asked for on worker threads as its file is read (drawn worlds; the
@@ -626,6 +654,18 @@ static func prefetch_paths(paths: Array) -> void:
 			_requested[path] = true
 			_done_prefixes.clear()
 	_request_mutex.unlock()
+
+
+## Lets go of everything asked for ahead and not yet taken (the title's world is gone): queued
+## reads are dropped, reads going are left to finish, and nothing waits. How many were let go.
+static func let_go_of_prefetches() -> int:
+	_request_mutex.lock()
+	var paths: Array = _requested.keys()
+	_requested.clear()
+	_done_prefixes.clear()
+	_request_mutex.unlock()
+	ThreadedLoads.forget_all(paths)
+	return paths.size()
 
 
 ## Whether an asset asked for ahead (`prefetch_paths`) is still being read: a builder that can wait
@@ -818,6 +858,7 @@ func _finish_task(cell: Vector2i) -> void:
 	if _tasks.has(cell):
 		WorkerThreadPool.wait_for_task_completion(int(_tasks[cell]))
 		_tasks.erase(cell)
+		_jobs.erase(cell)
 
 
 ## Builds a whole cell at once (a tool or a test that wants it now).
@@ -1505,7 +1546,11 @@ func unload_all() -> void:
 	_parsed.clear()
 
 
+## Leaving, the cells still being read are not waited for: each read is left to finish and let go
+## (ThreadedLoads.after_task), so a click that tears the title's world down never waits on a worker.
 func _exit_tree() -> void:
 	hurry = false
 	for cell in _tasks.keys():
-		_finish_task(cell)
+		ThreadedLoads.after_task(int(_tasks[cell]), false, _jobs.get(cell))
+	_tasks.clear()
+	_jobs.clear()

@@ -21,6 +21,7 @@ const GRAPHICS_GROUPS := [
 	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections", "wildlife"]],
 	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
 	["The look", ["title_vista", "color_grade", "vignette", "film_grain"]],
+	["Starting safely", ["full_terrain"]],
 ]
 
 var from_menu := false

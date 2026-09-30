@@ -53,6 +53,8 @@ var fly_camera: FlyCamera = null
 var target: Node3D = null
 
 var is_world_ready := false
+## Whether `tear_down` has been: the world is going, and does nothing more.
+var torn_down := false
 ## What each step of standing the world up took on the wall clock, in milliseconds, in order
 ## (`_mark`): what a frame gap while it stands up is made of.
 var stand_up_ms: Dictionary = {}
@@ -66,9 +68,11 @@ var _mark_us := 0
 ## The terrain's files, read on worker threads from the first moment (`_start_reading_terrain`):
 ## Terrain3D reads its sixteen regions itself, on the main thread, when it is given its data
 ## directory (3.7 s here, 2.5 s of it alone), and the texture list is another 1.7 s.
-var _regions_read: Array = []           # [Vector2i location, Terrain3DRegion]
-var _regions_mutex := Mutex.new()
+var _regions: RegionReads = null
 var _regions_task := -1
+## The worker threads the region reads were given (`region_read_tasks`), held off ThreadedLoads'
+## limit until they are done.
+var _regions_reserved := 0
 var _assets_requested := false
 var _holding_3d := false
 
@@ -111,6 +115,8 @@ func _ready() -> void:
 	instance = self
 	_mark_us = Time.get_ticks_usec()
 	status = WorldStatus.current()
+	_trace("standing up (%s, %s, terrain %s)" % ["the title's" if vista else "a game's", "a step a frame" if stand_up_in_steps else "at once",
+			str(status.get("terrain", "none"))])
 	if not bool(status.get("playable", false)):
 		# There is no country to stand in. Everything that waits for world_ready -- the body, the
 		# doors, the points of interest -- goes on waiting, and the screen says why instead of
@@ -143,6 +149,7 @@ func _ready() -> void:
 	_hold_3d(true)
 	if not await _mark("provider"):
 		return
+	_trace("terrain step begins")
 	await _setup_terrain()
 	if not await _mark("terrain"):
 		return
@@ -155,9 +162,11 @@ func _ready() -> void:
 				+ "Build the world again from the repository's top folder with the command below. It needs %s.") % WorldStatus.BUILD_NEEDS
 		_stand_down()
 		return
+	_trace("atmosphere step begins")
 	_setup_atmosphere()
 	if not await _mark("atmosphere"):
 		return
+	_trace("water step begins")
 	_setup_night_lights()
 	await _setup_water()
 	if not await _mark("water"):
@@ -167,9 +176,11 @@ func _ready() -> void:
 	# before the streamer, so the cells' scatter is cleared off them as it is read
 	if not vista:
 		_pois = PoiPreview.apply(_pois, provider)
+	_trace("streamer step begins")
 	_setup_streamer()
 	if not await _mark("streamer"):
 		return
+	_trace("horizon step begins")
 	await _setup_horizon()
 	if not await _mark("horizon"):
 		return
@@ -178,6 +189,7 @@ func _ready() -> void:
 	# the other towns after, nearest the eye first
 	var doors := get_node_or_null("Doors")
 	if stand_up_in_steps and doors != null and doors.has_method("place_all_over_frames") and bool(doors.get("place_doors")):
+		_trace("doors step begins")
 		await doors.call("place_all_over_frames", _first_seen_from())
 		if not await _mark("doors"):
 			return
@@ -192,6 +204,7 @@ func _ready() -> void:
 		ground_notice = GroundNotice.make(status)
 		add_child(ground_notice)
 		EventBus.player_spawned.connect(_say_the_ground_is_coarse, CONNECT_ONE_SHOT)
+	_trace("ready (%s)" % str(stand_up_ms))
 	_mark_us = Time.get_ticks_usec()
 	world_ready.emit()
 	# what the world's listeners did on hearing it (the doors, the places, the stable, whoever stood it up)
@@ -216,7 +229,28 @@ func _draw_when_seen() -> void:
 	_hold_3d(false)
 
 
+## Stops what the world would go on doing on later frames, before it is freed: the streamer asks
+## for no more cells, the provider lets go of Terrain3D, and the paced
+## stand-up stops at its next step. The title calls it when its world goes (TitleVista.stop, and
+## its `_exit_tree` on a click), and `_exit_tree` does it for anyone else. Safe to call twice.
+func tear_down() -> void:
+	if torn_down:
+		return
+	torn_down = true
+	_trace("torn down (%s)" % ("standing up: %s" % str(stand_up_ms.keys()) if not is_world_ready else "was ready"))
+	if streamer != null and is_instance_valid(streamer):
+		streamer.enabled = false
+		streamer.also_cells = {}
+	# Terrain3D keeps its camera: set_camera(null) crashes Terrain3D 1.0.2 (a segfault in the
+	# library, here on the title's teardown). The camera is the world's own and goes with it.
+	if terrain_node != null and is_instance_valid(terrain_node) and provider != null:
+		provider.bind_terrain(null)
+	if instance == self:
+		share_clipmap(null)
+
+
 func _exit_tree() -> void:
+	tear_down()
 	if instance == self:
 		instance = null
 		share_clipmap(null)
@@ -230,17 +264,27 @@ func _note(part: String) -> void:
 	var now := Time.get_ticks_usec()
 	stand_up_ms[part] = roundi((now - _mark_us) / 1000.0)
 	_mark_us = now
+	_trace("%s done in %d ms" % [part, int(stand_up_ms[part])])
 
 
 ## Writes down how long the step just done took, and, standing up in steps, lets a frame be drawn
 ## before the next. False when the world has left the tree meanwhile: stop standing it up.
 func _mark(step: String) -> bool:
+	if torn_down:
+		return false
 	var now := Time.get_ticks_usec()
 	stand_up_ms[step] = roundi((now - _mark_us) / 1000.0)
+	_trace("%s step done in %d ms" % [step, int(stand_up_ms[step])])
 	if stand_up_in_steps:
 		await _frame()
 	_mark_us = Time.get_ticks_usec()
-	return is_inside_tree()
+	return is_inside_tree() and not torn_down
+
+
+## A line in the startup trace (StartupTrace), which costs nothing once the game has started.
+func _trace(what: String) -> void:
+	if StartupTrace.active:
+		StartupTrace.step("world%s: %s" % [" (title)" if vista else "", what])
 
 
 ## The next frame, asked of the main loop: a world taken out of the tree has no tree to ask.
@@ -359,6 +403,9 @@ func _setup_terrain3d() -> void:
 	# empty list and the ground would render as the debug checkerboard. We keep the sources,
 	# build the arrays ourselves below, and free them once they are safely in VRAM.
 	terrain_node.set("free_editor_textures", false)
+	# a debug build asked to (`-- --debug-stall-terrain=N`) holds the main thread here, for the watchdog
+	Startup.debug_stall("the terrain step")
+	_trace("terrain: waiting for the terrain's assets")
 	var assets: Resource = await _terrain_assets()
 	# a world left while its terrain was read (the title's, when New Game or Continue is pressed)
 	# stops here: a Terrain3D given regions outside the tree says "Terrain isn't inside world", and
@@ -370,6 +417,7 @@ func _setup_terrain3d() -> void:
 	if assets != null:
 		terrain_node.set("assets", assets)
 	_note("terrain_assets")
+	_trace("terrain: assets received (%s); adding Terrain3D" % ("%d textures" % int(assets.call("get_texture_count")) if assets != null else "none"))
 	add_child(terrain_node)
 	# the build's own texel (2 m at 4096): a preview world imported at its 8 m and drawn at 2 m
 	# would be a quarter of the world in its north-west corner
@@ -389,6 +437,7 @@ func _setup_terrain3d() -> void:
 	terrain_node.set("mesh_size", 32)
 	share_clipmap(terrain_node)
 	var mat: Object = terrain_node.get("material")
+	_trace("terrain: Terrain3D added, %d rings of %d; material and shader parameters" % [lods, int(terrain_node.get("mesh_size"))])
 	if mat:
 		# NONE: see tools_gd/import_terrain.gd. FLAT draws a shelf across the far distance.
 		mat.set("world_background", 0)
@@ -412,11 +461,13 @@ func _setup_terrain3d() -> void:
 		# building the shapes round its camera was work every shot paid for nothing
 		collision.set("mode", 0 if vista else 1)
 		collision.set("radius", 96)
+	_trace("terrain: material set; collision, provider, camera")
 	provider.bind_terrain(terrain_node)
 	if fly_camera:
 		terrain_node.call("set_camera", fly_camera)
 	elif target is Camera3D:
 		terrain_node.call("set_camera", target)
+	_trace("terrain: waiting for Terrain3D's first frame")
 	await _frame()
 	_note("terrain_first_frame")
 	await _add_terrain_regions()
@@ -434,6 +485,7 @@ func _setup_terrain3d() -> void:
 		terrain_node = null
 		share_clipmap(null)
 		return
+	_trace("terrain: %d regions in; building the texture arrays" % regions)
 	_build_texture_arrays(mat)
 	_note("terrain_textures")
 
@@ -443,29 +495,58 @@ func _setup_terrain3d() -> void:
 func _start_reading_terrain() -> void:
 	if str(status.get("terrain", "")) != "terrain3d":
 		return
-	if ResourceLoader.exists(ASSETS_RESOURCE):
-		_assets_requested = ThreadedLoads.request(ASSETS_RESOURCE) == OK
 	var files: Array[String] = []
 	for f in DirAccess.get_files_at(TERRAIN_DATA):
 		# an exported build lists the remapped name
 		var file := f.trim_suffix(".remap")
 		if file.begins_with("terrain3d") and file.ends_with(".res"):
 			files.append(file)
-	_regions_read.clear()
-	if files.is_empty():
-		return
-	_regions_task = WorkerThreadPool.add_group_task(_read_region.bind(files), files.size(), -1, true, "wm_terrain_regions")
+	# The region files are read by a few worker threads, not all of them (-1 was every thread in the
+	# pool): the shader compiles that the first frames need run as tasks on the same pool, and the
+	# first-launch deadlock (docs/FIRST_LAUNCH.md) was a pool with no thread left for them. The
+	# threads they are given are held off ThreadedLoads' limit meanwhile, so the two together always
+	# leave two threads free, and the assets' read is asked for after them.
+	if not files.is_empty():
+		var tasks := region_read_tasks(ThreadedLoads.pool_size(), files.size())
+		_regions_reserved = tasks
+		ThreadedLoads.reserved += tasks
+		_trace("terrain: reading %d region files on %d of the pool's %d threads" % [files.size(), tasks, ThreadedLoads.pool_size()])
+		# read by an object of its own, not this world's method: a world torn down while they are read
+		# (the title's, on a click) leaves them to finish and is freed at once (`_exit_tree_terrain_reads`)
+		_regions = RegionReads.new(files)
+		_regions_task = WorkerThreadPool.add_group_task(_regions.read, files.size(), tasks, true, "wm_terrain_regions")
+	if ResourceLoader.exists(ASSETS_RESOURCE):
+		_assets_requested = ThreadedLoads.request(ASSETS_RESOURCE) == OK
 
 
-func _read_region(i: int, files: Array[String]) -> void:
-	var file := files[i]
-	var loc := region_location(file)
-	var region: Resource = null
-	if loc != Vector2i(2147483647, 2147483647):
-		region = ResourceLoader.load("%s/%s" % [TERRAIN_DATA, file], "", ResourceLoader.CACHE_MODE_IGNORE)
-	_regions_mutex.lock()
-	_regions_read.append([loc, region])
-	_regions_mutex.unlock()
+## The worker threads the region files are read on: half of what the pool has past the two a
+## compile is always left, at least one, and no more than there are files.
+static func region_read_tasks(pool: int, files: int) -> int:
+	return clampi(floori((pool - 2) / 2.0), 1, maxi(files, 1))
+
+
+## The terrain's region files, read on worker threads into a list of their own.
+class RegionReads extends RefCounted:
+	var files: Array[String] = []
+	var read_out: Array = []           # [Vector2i location, Terrain3DRegion]
+	var mutex := Mutex.new()
+
+	func _init(names: Array[String]) -> void:
+		files = names
+
+	func read(i: int) -> void:
+		var file := files[i]
+		var loc := World.region_location(file)
+		var region: Resource = null
+		if StartupTrace.active:
+			StartupTrace.step("terrain: region %s read begins" % file)
+		if loc != Vector2i(2147483647, 2147483647):
+			region = ResourceLoader.load("%s/%s" % [World.TERRAIN_DATA, file], "", ResourceLoader.CACHE_MODE_IGNORE)
+		if StartupTrace.active:
+			StartupTrace.step("terrain: region %s read %s" % [file, "ends" if region != null else "ends, NOTHING READ"])
+		mutex.lock()
+		read_out.append([loc, region])
+		mutex.unlock()
 
 
 ## Where a region file stands, from its name as Terrain3D writes it: `terrain3d-01_02.res` is
@@ -499,23 +580,26 @@ func _terrain_assets() -> Resource:
 ## them itself, as it always was.
 func _add_terrain_regions() -> void:
 	if _regions_task >= 0:
+		_trace("terrain: waiting for the region reads")
 		while stand_up_in_steps and is_inside_tree() and not WorkerThreadPool.is_group_task_completed(_regions_task):
 			await _frame()
-		if _regions_task >= 0:
+		if _regions_task >= 0 and is_inside_tree():
 			WorkerThreadPool.wait_for_group_task_completion(_regions_task)
-		_regions_task = -1
+			_regions_task = -1
+			_release_region_threads()
 	# left while the regions were read: `_exit_tree` has waited for the readers, and there is no
 	# world to put them in (Terrain3D: "Terrain isn't inside world")
 	if not is_inside_tree() or terrain_node == null or not terrain_node.is_inside_tree():
-		_regions_read.clear()
 		return
 	var data: Object = terrain_node.get("data") if terrain_node != null else null
 	var read: Array = []
-	for pair in _regions_read:
-		if pair is Array and (pair as Array)[1] != null:
-			read.append(pair)
-	_regions_read.clear()
+	if _regions != null:
+		for pair in _regions.read_out:
+			if pair is Array and (pair as Array)[1] != null:
+				read.append(pair)
+		_regions = null
 	if data == null or read.is_empty() or not data.has_method("add_region"):
+		_trace("terrain: no regions read here; Terrain3D reads %s itself" % TERRAIN_DATA)
 		terrain_node.set("data_directory", TERRAIN_DATA)
 		await _frame()
 		return
@@ -525,17 +609,37 @@ func _add_terrain_regions() -> void:
 	for pair in read:
 		var region: Resource = pair[1]
 		region.set("location", pair[0])
+		_trace("terrain: add_region %s" % str(pair[0]))
 		data.call("add_region", region, false)
+	_trace("terrain: update_maps begins (%d regions)" % read.size())
 	data.call("update_maps")
+	_trace("terrain: update_maps ends")
 
 
+## A world leaving while its terrain is read never waits for the reads: the region readers are left
+## to finish on their own (ThreadedLoads.after_task keeps them and gives the threads back after), and
+## the assets' read is forgotten, to be collected when done. A main thread waiting on them was the
+## title's freeze on a click.
 func _exit_tree_terrain_reads() -> void:
 	if _regions_task >= 0:
-		WorkerThreadPool.wait_for_group_task_completion(_regions_task)
+		_trace("terrain: left while the regions were read; they finish on their own")
+		var reserved := _regions_reserved
+		_regions_reserved = 0
+		ThreadedLoads.after_task(_regions_task, true, _regions, func() -> void:
+			ThreadedLoads.reserved = maxi(ThreadedLoads.reserved - reserved, 0))
 		_regions_task = -1
+		_regions = null
+	_release_region_threads()
 	if _assets_requested:
 		ThreadedLoads.forget(ASSETS_RESOURCE)
 	_assets_requested = false
+
+
+## Gives ThreadedLoads back the threads the region reads held.
+func _release_region_threads() -> void:
+	if _regions_reserved > 0:
+		ThreadedLoads.reserved = maxi(ThreadedLoads.reserved - _regions_reserved, 0)
+		_regions_reserved = 0
 
 
 ## Builds the terrain texture arrays and then releases the source images.
@@ -549,6 +653,7 @@ func _build_texture_arrays(mat: Object) -> void:
 		terrain_node.set("assets", assets)
 	# built already when the node took its assets: building them again was 0.4 s of one frame
 	if not (assets.call("get_albedo_array_rid") as RID).is_valid():
+		_trace("terrain: update_texture_list begins")
 		assets.call("update_texture_list")
 	var slots := int(assets.call("get_texture_count"))
 	var albedo_rid: RID = assets.call("get_albedo_array_rid")
@@ -559,6 +664,7 @@ func _build_texture_arrays(mat: Object) -> void:
 		mat.set("show_checkered", false)
 	assets.call("clear_textures", false)      # arrays are in VRAM; drop the source images
 	Log.info("World", "terrain textures ready: %d slots" % slots)
+	_trace("terrain: texture arrays built (%d slots)" % slots)
 
 
 func _setup_atmosphere() -> void:

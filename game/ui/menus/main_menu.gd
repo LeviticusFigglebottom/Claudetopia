@@ -33,6 +33,8 @@ const BANNER_WIDTH := 330.0
 const SHEET_MARGIN := 44.0
 ## What the loading caption says while a saved name is read back in.
 const LOADING_LINE := "The Roll is read again, and your name is in it."
+## How wide safe mode's line under the buttons is wrapped (SafeMode.menu_line).
+const SAFE_LINE_WIDTH := 262.0
 ## What the notice says under its account when the way in is still open onto the coarse ground.
 const COARSE_FOOT := "New Game and Continue still go in, onto the coarse ground."
 
@@ -48,7 +50,8 @@ var world_status: Dictionary = {}
 ## The plain account of a world that is not built, or of the coarse ground the player did not ask
 ## for (see WorldNotice).
 var notice: WorldNotice = null
-## The one small line under the buttons when the coarse ground was asked for (`--terrain=fallback`).
+## The one small line under the buttons when the coarse ground was asked for (`--terrain=fallback`),
+## or the game started safely (SafeMode: then it says why, and how to have the full terrain back).
 var ground_line: Label = null
 
 
@@ -59,9 +62,13 @@ func _ready() -> void:
 	UI.hide_hud()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	EventBus.menu_opened.emit(SCREEN_ID)
+	StartupTrace.step("title: building the menu")
 	_build()
 	UiKit.focus_first(self)
 	_start_vista()
+	await get_tree().process_frame
+	StartupTrace.step("title: the menu's first frame (%s)" % ("the country is asked for" if vista != null
+			else "the chart only: safe mode" if SafeMode.active else "the chart only"))
 
 
 ## The country behind the menu: asked for after the menu is built and live, and shown when its first
@@ -215,7 +222,9 @@ func _build() -> void:
 	if not compact:
 		tagline = UiKit.label("Everything that is spoken of, stays.", "Journal", HORIZONTAL_ALIGNMENT_CENTER)
 		root.add_child(tagline)
-		root.add_child(UiKit.spacer(18 if short else 34, true))
+		# safe mode's few lines under the buttons take the room of the gap above them
+		var safe_line := coarse and str(world_status.get("reason", "")) == "safe_mode"
+		root.add_child(UiKit.spacer(10 if safe_line else (18 if short else 34), true))
 	else:
 		# No world on disk: the first thing on the sheet is what is missing and how to build it,
 		# and nothing below it leads into the world. The coarse ground: the same account, and the
@@ -247,6 +256,9 @@ func _build() -> void:
 		var b := UiKit.button(str(e[0]), "TitleButton")
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.disabled = not bool(e[2])
+		# said in the startup trace before it is done: a click that froze the game is the last line
+		var word := str(e[0])
+		b.pressed.connect(func() -> void: StartupTrace.step("title: %s pressed" % word))
 		b.pressed.connect(e[1] as Callable)
 		b.custom_minimum_size = Vector2(0, 38 if compact else 46)
 		root.add_child(b)
@@ -262,7 +274,18 @@ func _build() -> void:
 				"Small", HORIZONTAL_ALIGNMENT_CENTER)
 		root.add_child(note)
 		UiKit.ink_in(note, 1.5, 0.6)
-	if coarse and not announce:
+	if coarse and not announce and str(world_status.get("reason", "")) == "safe_mode":
+		# started safely: one line, wrapped to the banner, that says why and the way back
+		# narrower than the column: the sheet's torn edge eats the ends of a line the column's width
+		ground_line = UiKit.wrapped(SafeMode.menu_line(SafeMode.why), "Small", SAFE_LINE_WIDTH)
+		ground_line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		ground_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		ground_line.name = "GroundLine"
+		ground_line.tooltip_text = str(world_status.get("detail", ""))
+		ground_line.mouse_filter = Control.MOUSE_FILTER_PASS
+		root.add_child(ground_line)
+		UiKit.ink_in(ground_line, 1.6, 0.6)
+	elif coarse and not announce:
 		# the coarse ground was asked for: one small line is enough
 		ground_line = UiKit.label(str(world_status.get("title", "")) + " The ground will be drawn from the coarse map.",
 				"Tiny", HORIZONTAL_ALIGNMENT_CENTER)
