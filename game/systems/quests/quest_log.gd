@@ -1070,8 +1070,8 @@ func _on_item_used(item_id: String, _effects: Array = []) -> void:
 			_progress(quest_id, i, 1))
 
 
-## A lesson's act, done by the player: to what (`against`), which (`detail`), and from how far
-## (`min_range`), when the objective says.
+## A lesson's act, done by the player: to what (`against`, and `prop`, the one quest prop by its
+## name), which (`detail`), and from how far (`min_range`), when the objective says.
 func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 	if by == null or not is_instance_valid(by) or not by.is_in_group("player"):
 		return
@@ -1087,6 +1087,11 @@ func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 			return
 		var against := str(o.get("against", ""))
 		if against != "" and not _matches(against, on_id, on_def):
+			return
+		# `prop` names the one quest prop the objective is about (QuestSpots names each by its
+		# `name`): a hit on the next butt down the range does not count for this one
+		var want_prop := str(o.get("prop", ""))
+		if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
 			return
 		var want_detail := str(o.get("detail", ""))
 		if want_detail != "" and want_detail != detail:

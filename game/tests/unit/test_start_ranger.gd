@@ -49,9 +49,11 @@ class _At extends Node3D:
 		return id
 
 
-func _node(id := "", at := Vector3.ZERO, player := false) -> Node3D:
+func _node(id := "", at := Vector3.ZERO, player := false, node_name := "") -> Node3D:
 	var n := _At.new()
 	n.id = id
+	if node_name != "":
+		n.name = node_name
 	if player:
 		n.add_to_group("player")
 	_tree().root.add_child(n)
@@ -72,7 +74,7 @@ func test_the_ranger_is_a_whole_style_with_its_own_start() -> void:
 	assert_eq(CinematicDef.validate(film, "pack"), [] as Array[String])
 	var seconds := CinematicDef.total_seconds(film)
 	assert_true(seconds >= 30.0 and seconds <= 40.0, "30-40 s (%.0f s)" % seconds)
-	assert_eq(StyleDef.kit_words(def), "a hunting bow, 40 iron arrows and a hunting knife")
+	assert_eq(StyleDef.kit_words(def), "a hunting bow, 40 iron arrows, a hunting knife and a pitch torch")
 	var pony := ContentDB.get_def("core:mount/rosen_pony")
 	assert_lt_or_eq(float((pony["look"] as Dictionary)["scale"]), 0.9, "a pony, smaller than the cob")
 
@@ -81,22 +83,50 @@ func assert_lt_or_eq(a: float, b: float, msg := "") -> void:
 	assert_true(a <= b, "%s (%s > %s)" % [msg, str(a), str(b)])
 
 
-func test_the_butts_count_hits_by_how_far_they_were_shot() -> void:
+## The day opens on Rosen's word, marked as the first objective; then the three butts, each counted
+## on itself only and one after another (the owner's playtest, 2026-09-30: "hitting a different
+## target counted for it").
+func test_rosen_says_what_the_day_is_for_then_each_butt_counts_only_itself() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
+	assert_eq(_at(FIRST), "hear_rosen", "the day opens on Rosen's word")
+	var talk: Dictionary = (quests.call("objectives_of", FIRST) as Array)[0]
+	assert_true(str(talk["type"]) == "talk" and str(talk["target"]) == ROSEN, "the first objective is to speak to her")
+	EventBus.dialogue_node_entered.emit(ROSEN, "the_day")
+	assert_eq(_at(FIRST), "the_butts", "and once she has said it, the butts")
 	var me := _node("", Vector3.ZERO, true)
-	var near := _node("prop:butt", Vector3(0, 0, 20))
-	var far := _node("prop:butt", Vector3(0, 0, 50))
-	var wolf := _node("core:enemy/down_wolf", Vector3(0, 0, 50))
+	var near := _node("prop:butt", Vector3(0, 0, 15), false, "butt_near")
+	var mid := _node("prop:butt", Vector3(0, 0, 25), false, "butt_mid")
+	var far := _node("prop:butt", Vector3(0, 0, 35), false, "butt_far")
+	var wolf := _node("core:enemy/down_wolf", Vector3(0, 0, 35))
+	var objs := func() -> Array: return quests.call("objectives_of", FIRST) as Array
 	EventBus.act_done.emit("arrow_hit", me, wolf, "")
-	assert_eq(int((quests.call("objectives_of", FIRST) as Array)[0]["count"]), 0, "a wolf is not a butt")
-	EventBus.act_done.emit("arrow_hit", me, near, "")
-	EventBus.act_done.emit("arrow_hit", me, near, "")
-	assert_true(bool((quests.call("objectives_of", FIRST) as Array)[0]["done"]), "two on the near butt")
-	assert_false(bool((quests.call("objectives_of", FIRST) as Array)[1]["done"]), "and twenty paces is not thirty-five")
+	assert_eq(int(objs.call()[0]["count"]), 0, "a wolf is not a butt")
 	EventBus.act_done.emit("arrow_hit", me, far, "")
-	assert_eq(_at(FIRST), "the_briar", "the far butt counts for the middle and the far: the Briar")
+	EventBus.act_done.emit("arrow_hit", me, mid, "")
+	assert_eq(int(objs.call()[0]["count"]), 0, "the far and the middle butts do not count for the near one")
+	assert_true(bool(objs.call()[1]["veiled"]) and bool(objs.call()[2]["veiled"]), "and the next butts are not shown before the near one")
+	EventBus.act_done.emit("arrow_hit", me, near, "")
+	EventBus.act_done.emit("arrow_hit", me, near, "")
+	assert_true(bool(objs.call()[0]["done"]), "two on the near butt")
+	assert_false(bool(objs.call()[1]["veiled"]), "then the middle one is shown")
+	var anchor := Waymarks.anchor(ContentDB.get_def(FIRST), ContentDB.get_def(FIRST)["stages"][1], ContentDB.get_def(FIRST)["stages"][1]["objectives"][1])
+	assert_eq(str(anchor.get("only", "")), "butt_mid", "and the marker is on the middle butt, not the nearest")
+	EventBus.act_done.emit("arrow_hit", me, near, "")
+	assert_eq(_at(FIRST), "the_butts", "a third on the near butt is not the middle one")
+	EventBus.act_done.emit("arrow_hit", me, mid, "")
+	assert_eq(_at(FIRST), "the_briar", "each butt hit in turn: the Briar")
 	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/rosen_pony"), "and Nettle is the ranger's from the first lesson (triage 52)")
+
+
+## The butts stand 15, 25 and 35 paces from the mark, in the order the lesson asks for them.
+func test_the_butts_stand_at_fair_ranges_down_the_line() -> void:
+	var start: Dictionary = ContentDB.get_def(OPENING)["start"]
+	var mark := PlaceRef.point_xz(start)
+	var want := {"butt_near": 15.0, "butt_mid": 25.0, "butt_far": 35.0}
+	for p in ContentDB.get_def(FIRST)["props"]:
+		var d := PlaceRef.point_xz(p).distance_to(mark)
+		assert_true(absf(d - float(want[str(p["name"])])) < 0.8, "%s %.1f m from the mark" % [p["name"], d])
 
 
 func test_the_walk_and_the_report_show_the_hart_and_send_you_after_it() -> void:
@@ -246,8 +276,20 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 	for b in butts:
 		dists.append(snappedf(Vector2((b as Node3D).global_position.x - player.global_position.x, (b as Node3D).global_position.z - player.global_position.z).length(), 1.0))
 	dists.sort()
-	assert_true(dists.size() == 3 and dists[0] > 17.0 and dists[0] < 23.0 and dists[2] > 46.0 and dists[2] < 54.0,
-			"at about twenty, thirty-five and fifty paces from where the body stands: %s" % str(dists))
+	assert_true(dists.size() == 3 and absf(dists[0] - 15.0) < 1.5 and absf(dists[1] - 25.0) < 1.5 and absf(dists[2] - 35.0) < 1.5,
+			"at fifteen, twenty-five and thirty-five paces from where the body stands: %s" % str(dists))
+	# each seen whole from the mark: nothing between the eye and the butt, top, middle and foot
+	var eye := player.global_position + Vector3.UP * 1.5
+	var space := player.get_world_3d().direct_space_state
+	for b in butts:
+		for up in [0.3, 0.9, 1.5]:
+			var q := PhysicsRayQueryParameters3D.create(eye, (b as Node3D).global_position + Vector3.UP * up)
+			q.exclude = [player.get_rid(), (b as CollisionObject3D).get_rid()]
+			var hit := space.intersect_ray(q)
+			assert_true(hit.is_empty(), "%s seen clear from the mark at %.1f m up (%s)" % [(b as Node).name, up, str(hit.get("collider", ""))])
+	var bag := player.get_node("Inventory") as Inventory
+	assert_eq(bag.count("core:item/torch"), 1, "a torch in the kit")
+	assert_eq(str(Social.quests.call("stage_id_of", FIRST)), "hear_rosen", "and Rosen's word on the day is the first objective")
 	var worn := player.get_node("Equipment") as Equipment
 	assert_eq(str(worn.get_slot("main_hand").id), "core:item/hunting_bow", "the bow in hand")
 	assert_eq(str(worn.quick_item("quick_4")), "core:item/hunting_knife", "the knife on a quick key")
@@ -263,6 +305,7 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 			break
 		await _tree().process_frame
 	assert_true(rosen_near, "Rosen stands by the line")
+	Social.quests.call("set_stage", FIRST, "the_butts")
 	for i in 3:
 		Social.quests.call("complete_objective", FIRST, i)
 	await _horse_stands("core:mount/rosen_pony", QuestSpots.ensure().position_of("nettle_tether"), 9.0, player)

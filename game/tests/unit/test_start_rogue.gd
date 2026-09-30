@@ -72,7 +72,7 @@ func test_the_rogue_is_a_whole_style_with_its_own_start() -> void:
 	assert_eq(CinematicDef.validate(film, "pack"), [] as Array[String])
 	var seconds := CinematicDef.total_seconds(film)
 	assert_true(seconds >= 30.0 and seconds <= 40.0, "30-40 s (%.0f s)" % seconds)
-	assert_eq(StyleDef.kit_words(def), "an iron dagger and 6 lockpicks")
+	assert_eq(StyleDef.kit_words(def), "an iron dagger, 6 lockpicks and a pitch torch")
 	assert_true(NpcRegistry.instance == null or NpcRegistry.instance.is_gone("core:npc/tithe_courier"), "the courier is only ever a lead")
 	# the stop on the ride is a stone that is there (Merrowby keeps none)
 	for st in ContentDB.get_def(PAGE)["stages"]:
@@ -270,7 +270,9 @@ func test_the_lessons_close_on_the_acts() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
 	var me := _node("", Vector3.ZERO, true)
-	assert_eq(_at(FIRST), "the_strongbox", "the night begins at the box")
+	assert_eq(_at(FIRST), "hear_sauve", "the night opens on Sauve's word (the owner's playtest, 2026-09-30)")
+	EventBus.dialogue_node_entered.emit(SAUVE, "the_day")
+	assert_eq(_at(FIRST), "the_strongbox", "then the box")
 	EventBus.act_done.emit("sneak", me, null, "")
 	EventBus.act_done.emit("pick_lock", me, _node("", Vector3.ZERO), "")
 	assert_false(bool(quests.call("objective_done", FIRST, 1)), "a lock that is not the collector's box is not the lesson")
@@ -405,7 +407,8 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 		var d := (box as Node3D).global_position.distance_to(player.global_position)
 		assert_true(d < 40.0, "the strongbox on the landing, %.0f m off" % d)
 	var services := _tree().get_first_node_in_group("game_services")
-	assert_true(str(services.get("first_words")).contains("Pick his box, take the book"), "Sauve speaks first, and says what the night is for: %s" % str(services.get("first_words")))
+	assert_true(str(services.get("first_words")).contains("I'll tell you what tonight's for"), "Sauve speaks first, and calls you over: %s" % str(services.get("first_words")))
+	assert_eq(_at(FIRST), "hear_sauve", "his word on the night is the first objective")
 	var sauve_near := await _until(func() -> bool:
 			var t := NpcRegistry.instance.actor(SAUVE) as Node3D
 			return t != null and t.global_position.distance_to(player.global_position) < 12.0, 20.0)

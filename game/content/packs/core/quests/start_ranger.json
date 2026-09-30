@@ -2,7 +2,7 @@
   {
     "id": "core:quest/first_ranger", "name": "The Butts and the Briar", "layer": "main", "giver": "core:npc/rosen_wyke",
     "description": "You have come to Fernhold, the foresters' lodge on the High Wold, to learn the bow from Rosen Wyke; the lodge eats because she shoots. Thornhounds are drinking at Wold Force, south of the lodge, and killing the lodge's deer. This evening she means to clear them, with you.",
-    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger, made plainer for triage 51-52: one goal (clear the thornhounds from Wold Force this evening), told by Rosen at once; four stages (the butts, the Briar, the Force, the report and the hart), the weaver in Fern Gully cut; every change of stage said out loud as it happens, each journal entry opening on why. Nettle is handed over after the first lesson (the_butts' on_complete, tethered behind the line: `nettle_tether`) and ridden out to the Briar (`mount`, Rider). The butts are Pell bodies of kind butt (QuestSpots `props`, `prop:butt`), 20, 35 and 50 m down the range from the shooting line; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). The report shows the grey hart (`saw_the_grey_hart`, which stands its lead at the clearing's edge); Alder asks you to follow it, and The Grey Hart begins with the ride. Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
+    "notes": "The ranger's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.2, 3.2a), begun by core:opening/ranger, made plainer for triage 51-52: one goal (clear the thornhounds from Wold Force this evening), told by Rosen at once; five stages (Rosen's word on what the day is for, the butts, the Briar, the Force, the report and the hart), the weaver in Fern Gully cut; every change of stage said out loud as it happens, each journal entry opening on why. Nettle is handed over after the first lesson (the_butts' on_complete, tethered behind the line: `nettle_tether`) and ridden out to the Briar (`mount`, Rider). The butts are Pell bodies of kind butt (QuestSpots `props`, `prop:butt`), 15, 25 and 35 m down the range from the shooting line (the start), each on open, level ground with a clear line from the mark (the owner's playtest, 2026-09-30: the far one had been 50 m off behind a trunk); each objective counts hits on its own butt only (`prop`), and the next is shown only once the one before is done (`after`), so the marker is on the butt to shoot; the thornhounds are Wold Force's own three, and Rosen shoots only if you are hurt (`overwatch`, Sparring's sibling in Overwatch). The report shows the grey hart (`saw_the_grey_hart`, which stands its lead at the clearing's edge); Alder asks you to follow it, and The Grey Hart begins with the ride. Rosen's and Alder's lines are in their dialogues and hold them at the butts, the Briar and the lip (their npc defs' holds).",
     "renamed": {"the_gully": "the_force"},
     "spots": [
       {"name": "rosen_butts", "place": "core:place/fernhold", "bearing": 73, "distance": 28, "facing": 240},
@@ -14,20 +14,27 @@
        "notes": "behind the shooting line, off the range, where Rosen has Nettle tied when you walk back from the Force"}
     ],
     "props": [
-      {"kind": "butt", "name": "butt_near", "place": "core:place/fernhold", "bearing": 113.8, "distance": 9.2, "facing": 60},
-      {"kind": "butt", "name": "butt_mid", "place": "core:place/fernhold", "bearing": 196.1, "distance": 13.3, "facing": 60},
-      {"kind": "butt", "name": "butt_far", "place": "core:place/fernhold", "bearing": 215.8, "distance": 27.0, "facing": 60}
+      {"kind": "butt", "name": "butt_near", "place": "core:place/fernhold", "bearing": 92.0, "distance": 12.5, "facing": 70},
+      {"kind": "butt", "name": "butt_mid", "place": "core:place/fernhold", "bearing": 147.7, "distance": 9.2, "facing": 60},
+      {"kind": "butt", "name": "butt_far", "place": "core:place/fernhold", "bearing": 187.7, "distance": 15.5, "facing": 55}
     ],
     "stages": [
+      {"id": "hear_rosen",
+       "journal": "Rosen Wyke is waiting to tell you what today is for, and why you are here.\n\nShe is standing by the shooting line across Fernhold's common, a few paces from you. Go and speak to her.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/rosen_wyke", "topic": "the_day", "text": "Speak to Rosen Wyke at the shooting line {key:interact}"}
+       ],
+       "on_enter": [{"set_flag": "hunter_at_fernhold"}],
+       "on_complete": []},
       {"id": "the_butts",
-       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you.\n\nFirst she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range: the near one twice, then the middle one, then the far one.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
+       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you.\n\nFirst she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range in turn: the near one twice, then the middle one, then the far one. Only the butt you are on counts; the marker is on it.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
        "marker": {"place_id": "core:place/fernhold", "radius": 70},
        "objectives": [
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 15, "count": 2, "text": "Hit the near butt twice: draw with {key:attack_light}, hold, let go",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_near", "min_range": 10, "count": 2, "text": "Hit the near butt twice, at fifteen paces: draw with {key:attack_light}, hold, let go",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "Breathe out. Loose on the empty. The arrow doesn't care how brave you are.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 30, "count": 1, "text": "Hit the middle butt, at thirty-five paces",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_mid", "min_range": 18, "count": 1, "after": 0, "text": "Now the middle butt, at twenty-five paces",
           "on_complete": [{"say": ["core:npc/rosen_wyke", "It dropped. They all drop. Aim where it's going to be, not where it is.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "min_range": 45, "count": 1, "text": "Hit the far butt, at fifty paces: aim over it"}
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_far", "min_range": 26, "count": 1, "after": 1, "text": "Now the far butt, at thirty-five paces: aim a little over it"}
        ],
        "on_enter": [{"set_flag": "hunter_at_fernhold"}],
        "on_complete": [
