@@ -12898,12 +12898,37 @@ its child, moved and drawn with them, under the same `wildlife` setting.
   ring of herds.
 
 **Looked at** in Godot (Compatibility, ride_studio's new `deer` film: a stag, a hind and a yearling
-beside the cob in the Toll's Lip's yard, standing, walking, at the bound, grazing, alert, and the
-two heads close): they read as red deer -- a stag with a royal's rack, hinds without, the neck
-carried high, the head down in the grass and up to watch. The first build's coat read orange with
-cream half up the flanks; recoloured and rebuilt.
+beside the cob in the Toll's Lip's yard). The first build (`docs/review/tree-forge/
+red_deer_first_coat_poses.jpg`: standing, walking, at the bound, grazing, alert, the two heads)
+read as red deer in shape -- a stag with a royal's rack, hinds without, the neck carried high, the
+head down in the grass and up to watch -- but its coat was orange with cream half up the flanks.
+Recoloured (dull rust going brown on the back, buff only under the barrel, a smaller rump patch)
+and rebuilt; `red_deer_beside_cob.jpg` is the rebuilt coat standing and walking from the side and
+the three-quarter, the cob behind for scale (a stag 1.3 m at the withers against her 1.5).
 
 **Tests**: tools/forge `test_quad` 19 (Run leaves the ground, Hit and Death there and not looping,
-Death lies down and stays), `test_rig_contract`, `test_output` (64 with test_quad). Godot:
-`test_deer` (6), with `test_livestock`, `test_livestock_rigged`, `test_wildlife`,
-`test_graphics_settings`.
+Death lies down and stays), with `test_rig_contract` and `test_output`: 64 passed. Godot
+`test_deer` (6: the model and its clips, antlers hidden for a hind and kept past the body's first
+rung, the far meshes and the stag's marked antlers; herds at Briarwold wood edges on dry ground,
+the same on every visit, none at wildlife 0; hinds with one stag or stags together; heads up at
+62 m and off at a bound at 30 m, 120 m away and grazing again; a runner at 50 m puts them up; near
+deer rigged, the rest two draws), with `test_livestock`, `test_livestock_rigged`, `test_wildlife`,
+`test_graphics_settings`: 39 of 39.
+
+### Not done / for the coordinator
+- **Landing**: `game/assets/models/creatures/deer_red/` is new (GLB, maps, far meshes, sidecars):
+  the import picks it up. `world_streamer.gd` gains two lines (TreeCover's grid and note); no world
+  data changes, no world rebuild needed for the deer (they read the streamed cells at runtime).
+- The `deer_wild` film (the herds at a Briarwold edge, the far meshes at 140 m, the flight) was not
+  captured: on this loaded machine the world film ran out of its 45 min before reaching it. The
+  behaviour is covered by test_deer; a look in the Briarwold on the user's Forward+ is still owed.
+- The rebuilt coat's run, graze and head close-ups were not re-shot (the first coat's are in the
+  review sheet; the shapes are unchanged).
+- The IK falls short in the fast gaits (worst 0.31 m in Run, 0.19 in Trot); the cob's Gallop is
+  0.35, so it is the gait generator's, not the deer's. At 10 m/s it does not read; a fix is in
+  `quad_clips` for every beast.
+- One body for hind and stag: the stag's thicker rutting neck (DeerStyle.ruff) is not built into
+  it; he is the hind's body at 1.08 with the rack.
+- The grey hart's albedo is built (`deer_red_grey_coat_albedo.png`) but nothing in the game swaps
+  it in yet (the Ranger's hart could).
+- The six stray ewe files in main are still waiting on the user's `git rm` (HANDOFF).
