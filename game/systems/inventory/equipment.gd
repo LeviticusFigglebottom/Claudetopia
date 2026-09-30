@@ -298,6 +298,18 @@ func bind_quick(slot: String, item: String) -> bool:
 	return true
 
 
+## Puts `item` on the belt's first free slot (or finds it there already). Returns the slot, or ""
+## when the belt is full or does not take it.
+func bind_free_quick(item: String) -> String:
+	for slot in QUICK_SLOTS:
+		if quick_item(slot) == item:
+			return slot
+	for slot in QUICK_SLOTS:
+		if quick_item(slot) == "":
+			return slot if bind_quick(slot, item) else ""
+	return ""
+
+
 ## Whether the belt holds this item: a thing used (BELT_CATEGORIES), not a weapon. A weapon goes in
 ## the weapon set (add_to_weapon_set); the belt used to take a one-handed one, and so the ranger's
 ## knife sat where a draught should.

@@ -130,6 +130,11 @@ func apply_style(id: String, inventory: Inventory = null, equipment: Object = nu
 				equipment.call("add_to_weapon_set", item)
 			else:
 				equipment.call("bind_quick", quick, item)
+		elif quick == "" and hand == "" and equipment != null and equipment.has_method("bind_free_quick") \
+				and HeldItems.is_torch(ContentDB.get_or_empty(item)):
+			# a kit's torch is on the belt as well as in the bag: a press takes it up burning, as the
+			# lantern key does (Player.use_torch)
+			equipment.call("bind_free_quick", item)
 	for spell in kit.get("spells", []):
 		learn_spell(str(spell))
 	skills_changed.emit()
