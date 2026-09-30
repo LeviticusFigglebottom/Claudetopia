@@ -77,16 +77,25 @@ static func find_dangling(def: Dictionary, registry: Dictionary, source: String)
 	return out
 
 
+## NON_REFERENCE_KEYS and "id" as a set: the walk asks it of every string in every def at every
+## start, and a linear search of the list was a good part of what checking the packs cost.
+static var _not_references: Dictionary = {}
+
+
 static func _walk(value: Variant, registry: Dictionary, source: String, owner: String, out: Array[String], key: String) -> void:
+	if _not_references.is_empty():
+		for k in NON_REFERENCE_KEYS:
+			_not_references[k] = true
+		_not_references["id"] = true
 	match typeof(value):
 		TYPE_DICTIONARY:
-			for k in value.keys():
-				_walk(value[k], registry, source, owner, out, str(k))
+			for k in value:
+				_walk(value[k], registry, source, owner, out, k if k is String else str(k))
 		TYPE_ARRAY:
 			for v in value:
 				_walk(v, registry, source, owner, out, key)
 		TYPE_STRING:
-			if key in NON_REFERENCE_KEYS or key == "id":
+			if _not_references.has(key):
 				return
 			if Ids.looks_like_id(value) and not registry.has(value):
 				out.append("%s: %s references missing '%s' (field '%s')" % [source, owner, value, key])
