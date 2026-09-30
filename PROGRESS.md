@@ -12840,3 +12840,117 @@ Compatibility can catch this case. Its guard is geometric.
 - The title vista was not shot (a film takes up to an hour on this loaded machine).
 - The Mage's lighthouse over white crags is the brightest frame measured. That is the crag paint
   read as "bleached" in HANDOFF §00, not a film setting.
+
+## Skerrow filled in: world life in Skerrow (phase 1, 2026-09-29)
+
+Branch `wip/skerrow`. The region with the most to do (28% of its walkable land more than 200 m from
+anything, no strong place, two thirds of its places weak) now meets every target of
+`tools/world/region_targets.json`. Everything is data in the region's own files and new
+`*_skerrow.json` files, the builders in `game/world/pois/regions/skerrow.gd`, and one new test,
+`game/tests/unit/test_sites_skerrow.gd`. No shared builder, test table, atlas or places file was
+edited; what needs one is listed at the end.
+
+### Before and after (region_audit.py skerrow; after = --probe, 2026-09-30)
+
+| | before (w4096f, 2026-09-28) | after | target |
+|---|---|---|---|
+| land > 200 m from anything | 27.5% | 12.9% | at most 14% |
+| largest empty stretch | 0.23 km2 | 0.05 km2 | at most 0.15 |
+| weak share of non-wayside POIs | 0.667 (36 of 54) | 0.13 (9 of 68) | at most 0.30 |
+| strong POIs (score 8+) | 0 | 10 | at least 8 |
+| POIs | 119 | 137 | at least 131 |
+| placement problems | 95 at 59 POIs | 98 at 62 POIs (the 18 new places add 3 kinds: the two delves' crag overlaps, one pebble fixed after the probe; the three widened pads count as past_pad until the build lays them) | |
+
+### New places (18; each on gentle ground in one of the audit's empty stretches)
+- **Old Ghastow** (castle_ruin, High Moor, -1980, -3308, pad 32): the Ghast hold abandoned after the Red Moor, now the Unroped's; nine clanless on the walls and at the yard fire, broken clan chains on the gate (a touch), and **Ghastow Undercroft** (keep, medium) under the keep with **Gorrm the Unroped** (boss, extends the clanless hewer). Score 10.
+- **Orrdun** (delve, Skerrow Wall above the snow, 3372, -3708, pad 30): the Skarl's bone-hall, where they carried their dead to lie nearest the Breath; a door framed in a pair of ribs, a bier-stone (a touch), scree-hags on the crag; inside **Orrdun** (crypt, authored rooms: ossuaries, a collapsed shaft, the keepers' rest) with **the Keener of Orrdun** (boss, extends the scree-hag). Score 11.
+- **The Brakh's Drink** (delve, Skarl Fells, 2804, -3124, pad 30): where the Skarl Water goes under the fell, between a giant's knee-bones; inside **Under the Brakh's Drink** (cave, authored rooms: daylight shaft, fungus grotto, the underground lake) with **the Kneeling Brakh** (boss, extends the stone-thrall). Score 11.
+- **Pennant's Weather-House** (hut, by Blackwater Tarn, -1598, -3466): a Sayer's bothy with vane, gauge, glass, a ribbon over a shakehole and the Circle's banner; Maudry Pennant lives there. Score 7.
+- **Skerrfall Quarry** (quarry, Brindle Edge, -600, -3112): the face cut round a giant's shin-bone; Hodd ko-Brindle at his bench, a stone-thrall that walked out of it. Score 8.
+- **The Leadhouse** (ruins, the Oskel shore, -3340, -2796): the Salt Isles traders' lead store; clanless out of the wind, the Salt boat's last letter. Score 4.
+- **The Frozen Drove** (strange, own builder, the Wall, 2156, -3772): the Skarl drove lost in the Long Winter of 988, forty rimed beasts standing in the snow facing north, the drover's crook upright (a touch), crag-wolves circling. Score 7.
+- **The Sorting Ground** (giant_bones, own builder, High Moor, 1516, -3404): a limestone pavement where stone-thralls lay a giant out by kind, largest to smallest, the line of vertebrae a bone short (a touch at the gap); four thralls. Score 9.
+- **Uldra's Steading** (farmstead, under the Skarl Ridge, 2988, -2644): Uldra ko-Skarl and her son Fenn (a Valish father); wolves at the fold at night. Score 6.
+- **The Wall-Keepers' Ring** (walled_camp, below the Briar's End, 3772, -2820): a Skarl fire and a Woodfolk fire either side of a line of white stones; Durra ko-Skarl and Holt Fernby, who in eleven years have said nothing to each other that was not about the wall. Score 6.
+- **The Reckoner's Hut** (hut, Kharrow Edge over the North Road, -364, -2620): Graddo ko-Kharrow, who prices deaths, and his tally-wall (a touch). Score 5.
+- **The Broom-Wife's Bield** (shieling, under the Wall, -3068, -3372): Bressa, unroped forty years for the Skerry Watch fire, and her brooms. Score 5.
+- **The Faceless Graves** (grave, own builder, below Ghorrow, 2204, -3172): a row of five graves with their headstones face-down, the last turned up (a touch); thralls at night. Score 5.
+- **The Whelping Hole** (hidden_valley, own builder, by the Windgate road, -108, -3332): a shakehole fallen in, where the crag-wolves whelp; five wolves, a courier's letter. Score 4.
+- Wayside finds, each with a note: **the Going-Up Cairn** (cairn, on the Wall's crest, 1700, -3772), **Old Kharrow's Rest** (waystone, Kharrow Edge, -76, -2956), **the Skarl Drove-Well** (well, Skarldale, 2804, -2476), **the Unroping Post** (gibbet, own builder: ropes, not a cage, by the Oskelcrag road, -3236, -2324).
+
+### Raised places (existing POIs given people, a find, a quest, or a thing to touch)
+- **People** (`npcs/poi_people_skerrow.json`, 18 new, each with a day and a dialogue): Haska ko-Ghast at the Red Moor, Tamsk ko-Skarl at Skarl Shieling, Ossa ko-Skarl at Skarl Spout, Grenna ko-Oskel at the Skerry Watch, Ottar ko-Skarl at the Drovers' Bothy, Orsk ko-Rudd at the Bone Ford, Ymma ko-Dreugh (oath-keeper) at the Rib Cathedral, Pell Kettleby at the Tinkers' Camp, Aggi ko-Rudd at the Tappers' Camp, Varn ko-Skarl at the Moot Beacon; and the new places' Graddo, Maudry, Hodd, Bressa, Uldra, Fenn, Durra and Holt.
+- **Finds** (a note or a thing lying there, `items/`/`books/places_skerrow.json`, 31 books): the Red Moor, Ghorrow, the Hidden Tarn, the Jawbone, the Briar's End, the Deadground, Ruddale Bridge, Oskel Shieling, the Giant's Spine, the Bonefield, Ghast's Broken Bridge, the Chain Bridge, the Rib Cathedral, the Giants' Stair, and every new place.
+- **A thing to touch** (`PoiTouch` + a conversation in `dialogues/places_skerrow.json`) through a builder of the place's own: the Breathing Stones' hole, a Winter Cairn's morning pebble, the Red Moor's twelfth stone, Rudd Pike's warm ash, the Black Keep's relaid stair, Kharrow Force's iron rope, the Snow Shelter's bell, Ghastfoot's clay skull, the Watch of the Gate's frozen bell.
+- **Pads** widened where pieces stood past them, on ground that takes it: the Bonefield 25 to 40 m, Kharrow Foot 25 to 34, the Skarl Skull 14 to 20 (`region_check --edited`: PASS). The Chain Bridge's wolves are four; the Whelping Hole is a shakehole (hidden_valley), not a sixth cave mouth; Skerrfall moved to rising ground after its first sheet.
+
+### Quests (8, `quests/places_skerrow.json`; each walked to every ending)
+- **A Stone Before the Death** (Graddo ko-Kharrow, the Reckoner's Hut): coin in the Blood-Price Stones and a new stone on the Red Moor, both for Graddo's own death, paid in advance by the Unroped; Old Ghastow and Gorrm; reckon it back, cut Gorrm's name, or burn the reckoning.
+- **The Verse Nobody Sang** (Tamsk ko-Skarl, Skarl Shieling): the cattle come down to a voice from the Wall; the Giants' Stair, Orrdun and the Keener; sing the names at dusk, take the roll to Kharrow, or leave it with the dead.
+- **Tokens of No Clan** (Ossa ko-Skarl, Skarl Spout): bone tokens with a closed hand come down the water; the Faceless Graves, the Brakh's Drink and the Kneeling Brakh, Ghorrow's lintel; back to the water, into the lintel, or to the Moot. It does not name the eighth clan.
+- **Where the Breath Went** (Maudry Pennant, the Weather-House): the Breathing Stones only breathe in; the Seven Stones, Skerrfall's new face; write it as karst, as the Breath, or both.
+- **The Broom at the Watch** (Grenna ko-Oskel, the Skerry Watch): who sweeps the watch; the Frost Moot, Bressa's bield, the Leadhouse and the Salt boat's letter (the fire was lit); read it to her, take it to the Moot, or keep it.
+- **Up the Dale in Spring** (Ottar ko-Skarl, the Drovers' Bothy): the Winter Cairns' pebbles, the Hanging Falls' wrong thaw, the Frozen Drove and the lead beast's bell; ring them home, leave them facing north, or claim them.
+- **Thirty-Two** (Orsk ko-Rudd, the Bone Ford): the Giant's Spine, the Bonefield, the Sorting Ground; sing thirty-two, carry the stone to the line, or break the line.
+- **Send Word** (Varn ko-Skarl, the Moot Beacon): beacons lit with nobody sitting; Rudd Pike's ash, the Black Keep's stair, the Going-Up Cairn's ninth stone; answer, bank them, or tell the Moot. Hints at the clan that went up; resolves nothing.
+
+Every decision sets a flag its giver greets you with once the quest is done; the Rope-Song's eighth verse, the clan beyond the Wall and the Stone-Thrall King's name are touched and left for the main thread.
+
+### Road life (`roadlife/skerrow.json`)
+Budget 3 events, 60 s apart, a roll every 280-560 m. New events: **the Unroped's price** (ambush at bridges and passes, a man with a broken chain as the bait), **stones from above** (scree-hags on the gorge sides), **a thrall carrying** (a stone-thrall crossing at night), **a memory-keeper on the road** (reveals Orrdun), **blood-price on the road** (two Rudd carrying a price to the Stones; reveals the Reckoner's Hut), **Skarl drovers** (reveal the Drove-Well), **a tinker off the Edge** (a shop). Two more caravans: Brindlecrag's ore wagon to Kharrow Hold and a Skarl pack train from Skarlow; two ambush sites of the region's own (Ghast's Broken Bridge, Kharrow Gate's gorge). `test_road_life` passes.
+
+### Tests run
+- `region_check.py skerrow`: PASS (content, placement, density); `--godot --edited the_bonefield,kharrow_foot,skarl_skull`: PASS before the last builder rework (the weather-house's screen then floated 0.99 m; given a floor across its legs, re-measured only by the final audit probe, which found it clean).
+- `region_audit.py skerrow --probe`: all 137 raised; report, map and probe committed.
+- `./run.sh test`: test_sites_skerrow (new: the three insides built, every room walked on the navigation mesh, left; 2/2), test_pois, test_poi_preview, objects_seated_skerrow (overlap 17, at the baseline), test_road_life, test_content_social, test_content_db, test_quest_givers, test_books, test_npc_appearance, test_dialogue_keys, test_quest_stage_references: 103 tests in the last batch, 1 failed (test_map_quests' site-boss resolution, item 2 below; it fails on main for the showcases too). test_poi_encounters and test_quest_walk fail on the shared tables/code in items 1-2.
+- `pytest tools/world/tests/test_content_split.py test_region_check.py`: 8 passed.
+- `./run.sh quests --only=<the 8>`: 8 of 8 quests end every way they can, 24 of 24 walks, 0 world notes, 0 logged errors.
+
+### Sheets looked at
+Two six/seven-place sheets (Compatibility, every view under 2000 draws / 1.5 M; Old Ghastow's and the Sorting Ground's eye-level views 1.1-1.34 M, over the aim, the moor's own scatter): Old Ghastow (kept: `docs/review/world_life/skerrow/old_ghastow.jpg`), Orrdun, the Frozen Drove, the Sorting Ground, Pennant's Weather-House, Skerrfall. What read wrong and was changed: the delves' raw earth banks (now snow / limestone, with a rib arch and knee-bone posts), the drove's glaring white drifts and invisible white beasts, the Sorting Ground's tile grid and tiny bones, Skerrfall's slab (now its own builder cut into rising ground), the weather-house's sparseness (now a walled yard, pennant line, screen, table). The third sheet of those fixes was cancelled for the machine's queue: **the reworked Skerrfall, weather-house and Sorting Ground have been probed (seat clean) but not looked at**.
+
+### Not done / for the coordinator
+1. **`tests/unit/test_poi_encounters.gd` `WHAT_STANDS`** (a shared test's table) needs rows for the 18 new places and the ten whose people are new; the exact rows are below. Until then `test_every_point_of_interest_is_accounted_for` fails (it already failed on main for the two showcases).
+2. **`systems/quests/quest_walk.gd`** counts foes inside an interior only from a deep place's `meta` file, so a kill in a site's inside (`where` a site interior) never resolves: `test_map_quests.test_every_objective_resolves...` and `test_quest_walk.test_every_objective_of_every_quest_can_be_closed` fail for A Stone Before the Death, The Verse Nobody Sang and Tokens of No Clan, as they already did on main for Ring the Warden Down and The Scathe Tithe. The quest walker itself (`./run.sh quests`) walks all of them to every ending.
+3. **`world/sites/site_dress.gd` `_ledge`** reads `z["span"]`; `site_plan.gd` writes the ledge zone as `len`. Any generated site with a large room left without a set-piece (it is given a ledge) or a chasm that falls back to a ledge throws a SCRIPT ERROR there and that room's dressing stops. Orrdun and the Brakh's Drink have their rooms written out to avoid it.
+4. **Site layouts are seed-fragile**: of ten seeds for Orrdun's authored crypt, four left rooms off the navigation mesh (three with "no way back from the boss could be laid"); of ten for the Brakh's Drink, six left the secret or the lake unreachable. Seeds 1043 and 990 walk. A plan check that re-seeds when a room is not joined would save every region the search.
+5. **Seat findings in shared builders**, unchanged by this work: cave throats buried and crag boulders sunk and overlapping (Horn Hole, Kharrow Hole, the Oskel Drip, the Wrist Hole; and the two new delves' crags, 14 and 9 overlaps, not a failing check); a rope coil 0.26 m up at the Giants' Stair; the Rust Scar's stream 0.21 m up; a lone drystone length at the Chain Bridge, Ghast's Broken Bridge and the Watch of the Gate; standing stones in the carriageway at the Wolf Stones, the Bone Ford and the Rib Cathedral; campfire and skull boxes shared at the Brakh's Eye, the Skarl Skull, the Watcher and the Jawbone. The gibbet builder's crows are unnamed MeshInstance3Ds, which the seat audit calls floating 11.8 m up (the Unroping Post no longer uses it).
+6. **Roads through level cores** that are the place's purpose (a road ending at the Clanless Camp, the nave of the Rib Cathedral, the Bone Ford, Ghastfoot's arch, Kharrow Gate, the Watch of the Gate, the Snow Shelter, the Three Sisters, Kharrow Force, the Rust Scar, Rudd Mill): the audit's `ROAD_KINDS` or the build's routing, not a region's file.
+7. **past_pad on steep sites** (the Giant's Spine 46/25, the Wading Giant 42/25, the Bone Ford 41/25, the Chain Bridge, Ghast's Broken Bridge, the Horn and Wrist Holes): a pad wide enough would stand on 20-47 degree ground and cut deeper; the giant_bones and bridge builders lay a fixed size whatever the pad.
+8. Four Skerrow POIs stand on another region's ground by the region map (the Snow Shelter, the Brother's Seat, the Ice-Block Cairn, the Dreugh-Road Beacon); left where they are.
+9. The world build must flatten the 18 new pads and read the new `builder`s' places as they are; Old Ghastow is a castle_ruin on a 32 m pad and wants it level (8 degrees under it today). The objects-seated baseline may rise once the build's sample of places includes the delves' crags.
+10. The pale figures at the Sorting Ground in the sheet are its stone-thralls: the stone_thrall model reads as an untextured mannequin under Compatibility (forge / bestiary).
+11. `~/bin/heavy`: a waiter started under an older copy of the script skips its own ticket and never runs (my audit sat 2 h first in the queue); kill and resubmit.
+12. Optional: `test_poi_people.gd`'s `POI_PEOPLE` could name the 18 new residents.
+
+Rows for `WHAT_STANDS`:
+```
+	"core:poi/old_ghastow": "nobody: the Unroped are the fort's garrison (site.garrison) and Gorrm is in its undercroft; a note lies at the gate",
+	"core:poi/orrdun": "two scree-hags on the crag over the door; the Keener and the dead are inside (core:interior/orrdun_bone_hall)",
+	"core:poi/brakhs_drink": "crag-wolves at night out of the dry galleries; the Kneeling Brakh is inside (core:interior/brakhs_drink_under)",
+	"core:poi/pennants_weather_house": "crag-wolves at night down to the tarn, and person: core:npc/maudry_pennant",
+	"core:poi/skerrfall_quarry": "a stone-thrall out of the new face, and person: core:npc/hodd_ko_brindle",
+	"core:poi/the_leadhouse": "two clanless outriders and a raider out of the wind",
+	"core:poi/frozen_drove": "crag-wolves circling the drove",
+	"core:poi/sorting_ground": "four stone-thralls at their sorting",
+	"core:poi/uldras_steading": "crag-wolves at the fold after dark, and person: core:npc/uldra_ko_skarl, person: core:npc/fenn_ko_skarl",
+	"core:poi/wall_keepers_ring": "crag-wolves along the wall at night, and person: core:npc/durra_ko_skarl, person: core:npc/holt_fernby",
+	"core:poi/reckoners_hut": "person: core:npc/graddo_ko_kharrow",
+	"core:poi/broom_wifes_bield": "person: core:npc/bressa_unroped",
+	"core:poi/faceless_graves": "stone-thralls out of the graves after dark",
+	"core:poi/whelping_hole": "a crag-wolf pack with young in the hole (a shakehole: kind hidden_valley)",
+	"core:poi/going_up_cairn": "nobody: none",
+	"core:poi/old_kharrows_rest": "nobody: none",
+	"core:poi/skarl_drove_well": "nobody: none",
+	"core:poi/unroping_post": "nobody: none",
+	"core:poi/red_moor": "person: core:npc/haska_ko_ghast",
+	"core:poi/skerry_watch": "person: core:npc/grenna_ko_oskel",
+	"core:poi/bone_ford": "person: core:npc/orsk_ko_rudd",
+	"core:poi/drovers_bothy": "person: core:npc/ottar_ko_skarl",
+	"core:poi/skarl_shieling": "person: core:npc/tamsk_ko_skarl",
+	"core:poi/skarl_spout": "two scree-hags, and person: core:npc/ossa_ko_skarl",
+	"core:poi/tinkers_camp": "person: core:npc/pell_kettleby",
+	"core:poi/tappers_camp": "person: core:npc/aggi_ko_rudd",
+	"core:poi/rib_cathedral": "a crag-wolf pack, and person: core:npc/ymma_ko_dreugh",
+	"core:poi/moot_beacon": "person: core:npc/varn_ko_skarl",
+```

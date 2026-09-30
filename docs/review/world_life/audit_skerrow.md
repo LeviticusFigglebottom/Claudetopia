@@ -9,13 +9,13 @@ Made by `python3 tools/world/region_audit.py skerrow` from the installed world (
 | | |
 |---|---|
 | land a body walks (dry, no steeper than 32 deg, 250 m in from the map's edge) | 8.7 km2 |
-| points of interest | 119 (13.7 per km2; 0 not yet in the built world) |
-| land more than 200 m from any place, POI or roadside mark | 2.40 km2 (28%); more than 400 m: 2% |
-| share of land further than 100 / 150 / 200 / 300 / 400 m from anything | 62% / 44% / 28% / 7% / 2% |
-| largest empty stretch | 0.23 km2 |
-| weak POIs (score <= 3) | 36, and 58 wayside finds (small by design) |
-| strong POIs (score >= 8) | 0 |
-| placement problems | 95, at 59 POIs |
+| points of interest | 137 (15.7 per km2; 18 not yet in the built world) |
+| land more than 200 m from any place, POI or roadside mark | 1.13 km2 (13%); more than 400 m: 0% |
+| share of land further than 100 / 150 / 200 / 300 / 400 m from anything | 55% / 31% / 13% / 2% / 0% |
+| largest empty stretch | 0.05 km2 |
+| weak POIs (score <= 3) | 9, and 62 wayside finds (small by design) |
+| strong POIs (score >= 8) | 10 |
+| placement problems | 98, at 62 POIs |
 
 ## (a) Empty land, largest first
 
@@ -23,18 +23,8 @@ A stretch is land of the region more than 200 m from the edge of every place's, 
 
 | # | middle (x, z) | km2 | extent m | furthest m | slope mean/p75 | height | province (biome) | road | sites (x, z, slope, road m) |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | (2996, -2636) | 0.23 | 632 x 856 | 381 | 17 / 23 | 368 | The Skarl Fells (mountains) | nearest 160 m | (2980, -2636) 2 deg 360 m; (2804, -3124) 1 deg 346 m; (3020, -2916) 6 deg 416 m |
-| 2 | (-1972, -3508) | 0.20 | 824 x 792 | 373 | 9 / 12 | 418 | The High Moor (mountains) | nearest 200 m | (-1988, -3268) 1 deg 361 m; (-1764, -2996) 1 deg 271 m; (-1500, -3092) 7 deg 304 m |
-| 3 | (-372, -2540) | 0.17 | 800 x 696 | 336 | 17 / 23 | 261 | The Lower Dales (mountains) | nearest 168 m | (-44, -2988) 2 deg 272 m; (-284, -2572) 1 deg 347 m; (-676, -2940) 2 deg 328 m |
-| 4 | (3276, -3844) | 0.12 | 424 x 464 | 535 | 17 / 22 | 595 | The Skerrow Wall (mountains) | nearest 872 m | (3252, -3740) 1 deg 1108 m; (3428, -3500) 2 deg 1052 m; (3556, -3780) 5 deg 1335 m |
-| 5 | (2396, -3348) | 0.10 | 568 x 536 | 352 | 18 / 24 | 427 | The Skarl Fells (mountains) | nearest 358 m | (2116, -3004) 2 deg 519 m; (2396, -3348) 8 deg 556 m |
-| 6 | (-2932, -3356) | 0.09 | 616 x 400 | 384 | 17 / 24 | 375 | The High Moor (mountains) | nearest 258 m | (-2932, -3356) 2 deg 362 m; (-3260, -3412) 3 deg 662 m |
-| 7 | (2300, -3844) | 0.09 | 520 x 344 | 555 | 21 / 27 | 708 | The Skerrow Wall (mountains) | nearest 790 m | (2308, -3820) 4 deg 1030 m; (2020, -3804) 12 deg 1135 m; (2188, -3548) 5 deg 829 m |
-| 8 | (-3228, -2644) | 0.07 | 408 x 352 | 331 | 13 / 18 | 326 | The Upper Dales (mountains) | nearest 243 m | (-3180, -2676) 1 deg 285 m; (-3460, -2772) 0 deg 573 m |
-| 9 | (2852, -2516) | 0.07 | 464 x 352 | 340 | 13 / 17 | 289 | The Skarl Fells (mountains) | nearest 86 m | (2860, -2524) 3 deg 265 m |
-| 10 | (-124, -3236) | 0.06 | 656 x 416 | 358 | 20 / 26 | 442 | The High Moor (mountains) | nearest 64 m | (52, -3204) 1 deg 80 m; (-196, -3348) 8 deg 272 m; (-412, -3156) 5 deg 547 m |
-| 11 | (2156, -2868) | 0.05 | 376 x 432 | 321 | 20 / 26 | 357 | The Skarl Fells (mountains) | nearest 176 m | (2276, -2756) 4 deg 276 m |
-| 12 | (1476, -3844) | 0.04 | 328 x 248 | 724 | 14 / 18 | 741 | The Skerrow Wall (mountains) | nearest 749 m | (1524, -3748) 2 deg 847 m |
+| 1 | (2180, -2836) | 0.05 | 376 x 432 | 311 | 20 / 26 | 373 | The Skarl Fells (mountains) | nearest 176 m | (2276, -2756) 4 deg 276 m |
+| 2 | (-1772, -3012) | 0.04 | 408 x 320 | 269 | 10 / 14 | 415 | The Upper Dales (mountains) | nearest 200 m | (-1764, -2996) 1 deg 271 m; (-1500, -3092) 7 deg 304 m |
 
 ## (b) Points of interest, weakest first
 
@@ -57,23 +47,20 @@ Impact score, points for each: **size** footprint reach (m from the middle to it
 | 1 | The Bier Stone `bier_stone` | waystone | 2 / 14 | 7 | 7 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Patter Stone `patter_stone` | waystone | 2 / 14 | 7 | 7 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Cathedral Spring `cathedral_spring` | well | 2 / 14 | 8 | 8 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
+| 1 | The Skarl Drove-Well `skarl_drove_well` | well | 2 / 14 | 8 | 8 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside unbuilt |
 | 1 | The First Verse `first_verse` | waystone | 2 / 14 | 7 | 7 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Oathbreaker's Stone `oathbreakers_stone` | waystone | 2 / 14 | 10 | 10 | 2 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Neither Stone `neither_stone` | waystone | 2 / 14 | 7 | 7 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
+| 1 | Old Kharrow's Rest `old_kharrows_rest` | waystone | 2 / 14 | 7 | 7 | 1 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside unbuilt |
+| 1 | The Unroping Post `unroping_post` | gibbet | 3 / 14 | 4 | 4 | 9 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside unbuilt |
 | 1 | The Smelters' Stone `smelters_stone` | shrine | 3 / 14 | 24 | 24 | 17 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Falls-Road Finger `falls_road_finger` | shrine | 4 / 14 | 26 | 26 | 41 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Shaft Pebbles `shaft_pebbles` | shrine | 4 / 14 | 23 | 23 | 468 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Rudd Anchorite `rudd_anchorite` | hut | 6 / 14 | 10 | 10 | 6 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
-| 1 | Rudd Pike Beacon `rudd_pike_beacon` | tower | 6 / 25 | 15 | 15 | 73 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 1 | The Skerry Watch `skerry_watch` | tower | 6 / 25 | 12 | 12 | 50 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 1 | The Breathing Stones `breathing_stones` | standing_stones | 6 / 25 | 12 | 12 | 50 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 1 | The Moot Beacon `moot_beacon` | tower | 6 / 25 | 15 | 15 | 68 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 1 | The Black Keep `black_keep` | tower | 6 / 25 | 12 | 12 | 45 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
 | 1 | Kharrow Gate `kharrow_gate` | tower | 6 / 25 | 12 | 12 | 54 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
 | 1 | The Two-Knot Fold `two_knot_fold` | fold | 7 / 14 | 17 | 17 | 36 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Clanless Fold `clanless_fold` | fold | 7 / 14 | 15 | 15 | 15 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Drove Chain `drove_chain` | standing_stones | 7 / 25 | 12 | 12 | 50 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 1 | The Winter Cairns `winter_cairns` | standing_stones | 7 / 25 | 12 | 12 | 52 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
 | 1 | The Debtors' Lean `debtors_lean` | standing_stones | 7 / 14 | 12 | 12 | 55 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Neither Fold `neither_fold` | fold | 7 / 14 | 15 | 15 | 21 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 1 | The Oskelcrag Peat Bank `oskelcrag_peat_bank` | peat_cut | 7 / 14 | 12 | 12 | 15 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
@@ -97,79 +84,100 @@ Impact score, points for each: **size** footprint reach (m from the middle to it
 | 2 | The Wolf Stones `wolf_stones` | standing_stones | 6 / 14 | 12 | 12 | 50 | 0 | 3 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
 | 2 | The Blood-Price Stones `blood_price_stones` | standing_stones | 6 / 25 | 12 | 12 | 50 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK small |
 | 2 | The Listening Stones `listening_stones` | standing_stones | 6 / 14 | 12 | 12 | 58 | 0 | 1 | 2 | 0 |  | yes |  |  |  | WEAK small wayside |
-| 2 | The Red Moor `red_moor` | standing_stones | 7 / 25 | 12 | 12 | 51 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK small |
-| 2 | The Frost Moot `frost_moot` | ruins | 9 / 25 | 21 | 21 | 140 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
 | 2 | The Clan Stones `clan_stones` | standing_stones | 9 / 25 | 28 | 28 | 126 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
-| 2 | The Seven Stones `lichen_stones` | standing_stones | 10 / 25 | 35 | 35 | 134 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK small |
 | 2 | The Oskel Smithy `oskel_smithy` | ruins | 10 / 14 | 12 | 12 | 130 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 2 | The Rudd Mouth Bench `rudd_mouth_bench` | vista | 11 / 14 | 10 | 10 | 72 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 2 | The Skarl Brow Bench `skarl_brow_bench` | vista | 11 / 14 | 10 | 10 | 92 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 2 | The Brother's Seat `brothers_seat` | vista | 11 / 14 | 10 | 10 | 92 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 2 | The Drovers' Bothy `drovers_bothy` | camp | 13 / 22 | 62 | 62 | 57 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
 | 2 | The Bone-Carvers' Camp `bone_carvers_camp` | camp | 13 / 14 | 74 | 74 | 69 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 2 | The Cart-Wards' Post `cart_wards_post` | camp | 13 / 14 | 86 | 86 | 73 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 3 | Ghorrow `ghorrow` | ruins | 8 / 25 | 21 | 21 | 141 | 0 | 2 | 0 | 0 | yes | yes |  |  |  | WEAK small |
-| 3 | The Briar's End `briars_end` | ruins | 8 / 25 | 5 | 7 | 103 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK small |
-| 3 | The Deadground `deadground` | ruins | 9 / 25 | 21 | 21 | 140 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK small |
+| 3 | The Going-Up Cairn `going_up_cairn` | cairn | 2 / 14 | 7 | 7 | 134 | 0 | 0 | 2 | 0 | yes | yes |  |  |  | WEAK small wayside unbuilt |
 | 3 | The Hag's Hut `hags_hut` | ruins | 10 / 14 | 21 | 21 | 146 | 0 | 1 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Unroofed Hold `unroofed_hold` | ruins | 10 / 14 | 21 | 21 | 144 | 0 | 1 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Burned Ore-House `burned_ore_house` | ruins | 10 / 14 | 21 | 21 | 146 | 0 | 2 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Old Toll-House `old_toll_house` | ruins | 10 / 14 | 21 | 21 | 137 | 0 | 1 | 4 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Swearers' Rest `swearers_rest` | vista | 11 / 14 | 10 | 10 | 92 | 0 | 2 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 3 | The Watch of the Gate `watch_of_the_gate` | tower | 13 / 25 | 26 | 26 | 30 | 0 | 0 | 2 | 1 |  | yes |  |  |  | WEAK |
-| 3 | Ruddale Bridge `ruddale_bridge` | bridge | 13 / 25 | 8 | 8 | 6 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK |
-| 3 | Skarl Shieling `skarl_shieling` | shieling | 14 / 25 | 11 | 11 | 35 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK |
-| 3 | Oskel Shieling `oskel_shieling` | shieling | 14 / 25 | 11 | 11 | 31 | 0 | 0 | 0 | 0 | yes |  |  |  |  | WEAK |
 | 3 | Gann's Shieling `ganns_shieling` | shieling | 14 / 14 | 11 | 11 | 29 | 0 | 1 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Clanless Fire-Ring `clanless_fire_ring` | camp | 14 / 14 | 71 | 71 | 68 | 0 | 2 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Beacon Shieling `beacon_shieling` | shieling | 14 / 14 | 11 | 11 | 32 | 0 | 3 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 3 | The Tinkers' Camp `tinkers_camp` | camp | 14 / 22 | 71 | 71 | 80 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
 | 3 | The Link-Keeper's Fire `link_keepers_fire` | camp | 14 / 14 | 77 | 77 | 76 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
 | 3 | The Namers' Fire `namers_fire` | camp | 15 / 14 | 68 | 68 | 68 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 3 | The Tappers' Camp `tappers_camp` | camp | 15 / 22 | 59 | 59 | 53 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
-| 3 | The Hidden Tarn `hidden_tarn` | hidden_valley | 16 / 25 | 12 | 12 | 193 | 0 | 3 | 0 | 0 |  | yes |  |  |  | WEAK |
 | 3 | The Oskel Drip `oskel_drip` | cave | 16 / 14 | 49 | 49 | 98 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK wayside |
-| 3 | Ghastfoot `ghastfoot` | ruins | 17 / 25 | 21 | 21 | 144 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
-| 3 | Kharrow Force `kharrow_force` | waterfall | 18 / 25 | 14 | 14 | 220 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
-| 3 | The Snow Shelter `snow_shelter` | camp | 18 / 22 | 56 | 56 | 55 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
-| 3 | Skarl Spout `skarl_spout` | waterfall | 18 / 25 | 19 | 19 | 220 | 0 | 2 | 0 | 0 |  | yes |  |  |  | WEAK |
-| 3 | The Hanging Falls `hanging_falls` | waterfall | 18 / 25 | 19 | 19 | 234 | 0 | 0 | 2 | 0 |  | yes |  |  |  | WEAK |
-| 3 | The Giants' Stair `giants_stair` | ruins | 20 / 25 | 9 | 9 | 61 | 0 | 1 | 0 | 0 |  | yes |  |  |  | WEAK |
-| 3 | The Jawbone `the_jawbone` | giant_bones | 22 / 25 | 22 | 22 | 60 | 0 | 3 | 0 | 0 |  | yes |  |  |  | WEAK |
 | 4 | The Finger Shrine `sinkhole_shrine` | shrine | 4 / 25 | 33 | 33 | 42 | 1 | 0 | 0 | 0 | yes |  |  | yes |  | small |
+| 4 | Rudd Pike Beacon `rudd_pike_beacon` | tower | 6 / 25 | 16 | 16 | 74 | 1 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Skerry Watch `skerry_watch` | tower | 6 / 25 | 14 | 14 | 50 | 0 | 0 | 2 | 1 | yes | yes |  |  |  | small |
+| 4 | The Breathing Stones `breathing_stones` | standing_stones | 6 / 25 | 14 | 14 | 50 | 1 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Moot Beacon `moot_beacon` | tower | 6 / 25 | 15 | 15 | 68 | 0 | 0 | 2 | 1 | yes | yes |  |  |  | small |
+| 4 | The Black Keep `black_keep` | tower | 6 / 25 | 12 | 12 | 45 | 1 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Winter Cairns `winter_cairns` | standing_stones | 7 / 25 | 14 | 14 | 82 | 1 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | Ghorrow `ghorrow` | ruins | 8 / 25 | 21 | 21 | 141 | 0 | 2 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Leadhouse `the_leadhouse` | ruins | 8 / 25 | 21 | 21 | 137 | 0 | 3 | 4 | 0 | yes | yes |  |  |  | small unbuilt |
+| 4 | The Briar's End `briars_end` | ruins | 8 / 25 | 5 | 7 | 103 | 0 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Frost Moot `frost_moot` | ruins | 9 / 25 | 21 | 21 | 140 | 0 | 0 | 2 | 0 | yes | yes |  |  |  | small |
 | 4 | The Oskel Rake `oskel_rake` | ruins | 9 / 25 | 21 | 21 | 137 | 0 | 2 | 0 | 0 | yes | yes |  |  |  | small |
+| 4 | The Deadground `deadground` | ruins | 9 / 25 | 21 | 21 | 140 | 0 | 0 | 2 | 0 | yes | yes |  |  |  | small |
+| 4 | The Seven Stones `lichen_stones` | standing_stones | 10 / 25 | 35 | 35 | 134 | 0 | 0 | 2 | 0 | yes | yes |  |  |  | small |
 | 4 | Old Eld `old_eld` | ruins | 10 / 25 | 21 | 21 | 137 | 0 | 1 | 0 | 0 | yes | yes |  |  |  |  |
+| 4 | The Whelping Hole `whelping_hole` | hidden_valley | 11 / 18 | 9 | 9 | 69 | 0 | 5 | 2 | 0 |  | yes |  |  |  | unbuilt |
+| 4 | The Watch of the Gate `watch_of_the_gate` | tower | 13 / 25 | 26 | 26 | 30 | 1 | 0 | 2 | 1 |  | yes |  |  |  |  |
+| 4 | Ruddale Bridge `ruddale_bridge` | bridge | 13 / 25 | 8 | 8 | 6 | 0 | 0 | 2 | 0 | yes | yes |  |  |  |  |
 | 4 | The Oath-Takers' Fire `oath_takers_fire` | camp | 13 / 14 | 96 | 96 | 69 | 1 | 2 | 2 | 0 |  | yes |  |  |  | wayside |
+| 4 | Skarl Shieling `skarl_shieling` | shieling | 14 / 25 | 14 | 14 | 39 | 0 | 0 | 0 | 1 | yes |  |  |  |  |  |
+| 4 | Oskel Shieling `oskel_shieling` | shieling | 14 / 25 | 11 | 11 | 31 | 0 | 0 | 2 | 0 | yes | yes |  |  |  |  |
+| 4 | The Tinkers' Camp `tinkers_camp` | camp | 14 / 22 | 73 | 73 | 80 | 0 | 0 | 2 | 1 |  | yes |  |  |  |  |
 | 4 | The Gorge Porters `gorge_porters` | camp | 14 / 14 | 56 | 56 | 58 | 0 | 1 | 2 | 0 |  | yes |  |  |  | wayside |
+| 4 | The Tappers' Camp `tappers_camp` | camp | 15 / 22 | 62 | 62 | 54 | 0 | 0 | 2 | 1 |  | yes |  |  |  |  |
 | 4 | Rudd Mill `rudd_mill` | mill | 15 / 25 | 34 | 34 | 54 | 0 | 0 | 2 | 1 |  | yes |  |  |  |  |
 | 4 | The Brakh's Eye `brakhs_eye` | giant_bones | 15 / 14 | 22 | 22 | 60 | 0 | 1 | 2 | 0 |  | yes |  |  |  | wayside |
+| 4 | The Hidden Tarn `hidden_tarn` | hidden_valley | 16 / 25 | 12 | 12 | 193 | 0 | 3 | 2 | 0 |  | yes |  |  |  |  |
 | 4 | Kharrow Hole `kharrow_hole` | cave | 16 / 25 | 49 | 49 | 96 | 0 | 3 | 2 | 0 |  | yes |  |  |  |  |
 | 4 | The Horn Hole `horn_hole` | cave | 16 / 14 | 49 | 49 | 113 | 0 | 1 | 2 | 0 |  | yes |  |  |  | wayside |
 | 4 | The Wrist Hole `wrist_hole` | cave | 17 / 14 | 49 | 49 | 110 | 0 | 2 | 2 | 0 |  | yes |  |  |  | wayside |
+| 4 | Ghastfoot `ghastfoot` | ruins | 17 / 25 | 21 | 21 | 144 | 1 | 0 | 2 | 0 |  | yes |  |  |  |  |
+| 4 | Kharrow Force `kharrow_force` | waterfall | 18 / 25 | 14 | 14 | 220 | 1 | 0 | 2 | 0 |  | yes |  |  |  |  |
+| 4 | The Snow Shelter `snow_shelter` | camp | 18 / 22 | 56 | 56 | 55 | 1 | 0 | 2 | 0 |  | yes |  |  |  |  |
 | 4 | The Rust Scar `rust_scar` | waterfall | 19 / 25 | 19 | 19 | 219 | 0 | 0 | 0 | 0 | yes |  |  |  |  |  |
 | 4 | The Skarl Skull `skarl_skull` | giant_bones | 19 / 14 | 22 | 22 | 60 | 0 | 2 | 2 | 0 |  | yes |  |  |  | wayside |
+| 4 | The Jawbone `the_jawbone` | giant_bones | 22 / 25 | 22 | 22 | 60 | 0 | 3 | 2 | 0 |  | yes |  |  |  |  |
+| 5 | The Reckoner's Hut `reckoners_hut` | hut | 6 / 20 | 9 | 9 | 17 | 1 | 0 | 2 | 1 | yes | yes |  |  |  | small unbuilt |
+| 5 | The Faceless Graves `faceless_graves` | grave | 6 / 25 | 7 | 7 | 0 | 1 | 2 | 2 | 0 | yes | yes |  |  |  | small unbuilt |
+| 5 | The Drovers' Bothy `drovers_bothy` | camp | 13 / 22 | 62 | 62 | 57 | 0 | 0 | 2 | 1 | yes | yes |  |  |  |  |
+| 5 | The Broom-Wife's Bield `broom_wifes_bield` | shieling | 13 / 25 | 13 | 13 | 37 | 0 | 0 | 2 | 1 | yes | yes |  |  |  | unbuilt |
 | 5 | The Smeltings `the_smeltings` | camp | 15 / 22 | 83 | 83 | 69 | 1 | 0 | 0 | 0 | yes |  |  |  |  |  |
 | 5 | The Ice-Cutters' Camp `ice_cutters_camp` | camp | 15 / 14 | 96 | 96 | 75 | 1 | 1 | 2 | 0 |  | yes |  |  |  | wayside |
+| 5 | The Hanging Falls `hanging_falls` | waterfall | 18 / 25 | 19 | 19 | 234 | 0 | 0 | 2 | 0 | yes | yes |  |  |  |  |
 | 5 | The Clanless Camp `clanless_camp` | camp | 18 / 22 | 86 | 86 | 84 | 0 | 3 | 0 | 0 | yes | yes |  |  |  |  |
 | 5 | The Watcher `the_watcher` | giant_bones | 20 / 25 | 22 | 22 | 60 | 0 | 1 | 0 | 0 | yes | yes |  |  |  |  |
 | 5 | Kharrow Foot `kharrow_foot` | market_field | 33 / 25 | 8 | 8 | 13 | 0 | 0 | 2 | 0 |  | yes |  |  |  |  |
-| 5 | The Bonefield `the_bonefield` | giant_bones | 39 / 25 | 27 | 27 | 148 | 0 | 2 | 0 | 0 |  | yes |  |  |  |  |
-| 5 | The Bone Ford `bone_ford` | giant_bones | 41 / 25 | 27 | 27 | 157 | 0 | 0 | 2 | 0 |  | yes |  |  |  |  |
 | 5 | The Wading Giant `wading_giant` | giant_bones | 42 / 25 | 27 | 27 | 148 | 0 | 0 | 2 | 0 |  | yes |  |  |  |  |
-| 5 | The Giant's Spine `giants_spine` | giant_bones | 46 / 25 | 27 | 27 | 157 | 0 | 2 | 0 | 0 |  | yes |  |  |  |  |
+| 6 | The Red Moor `red_moor` | standing_stones | 9 / 25 | 22 | 22 | 73 | 1 | 0 | 2 | 1 | yes | yes |  |  |  | small |
+| 6 | Skarl Spout `skarl_spout` | waterfall | 18 / 25 | 25 | 25 | 232 | 0 | 2 | 0 | 1 | yes | yes |  |  |  |  |
+| 6 | The Wall-Keepers' Ring `wall_keepers_ring` | walled_camp | 19 / 25 | 62 | 62 | 64 | 0 | 3 | 2 | 2 |  | yes |  |  |  | unbuilt |
+| 6 | The Giants' Stair `giants_stair` | ruins | 20 / 25 | 9 | 9 | 61 | 0 | 1 | 2 | 0 | yes | yes |  |  |  |  |
+| 6 | Uldra's Steading `uldras_steading` | farmstead | 20 / 25 | 40 | 40 | 41 | 0 | 2 | 2 | 2 |  | yes |  |  |  | unbuilt |
 | 6 | The Three Sisters `three_sisters_falls` | waterfall | 25 / 25 | 35 | 35 | 202 | 1 | 2 | 0 | 0 |  | yes |  | yes |  |  |
-| 6 | The Chain Bridge `chain_bridge` | bridge | 32 / 25 | 19 | 19 | 67 | 0 | 3 | 0 | 1 |  | yes |  |  |  |  |
-| 6 | The Rib Cathedral `rib_cathedral` | giant_bones | 45 / 25 | 27 | 27 | 166 | 0 | 4 | 0 | 0 |  | yes |  |  |  |  |
-| 7 | Ghast's Broken Bridge `ghasts_broken_bridge` | bridge | 33 / 25 | 19 | 19 | 69 | 0 | 3 | 0 | 0 | yes | yes |  |  |  |  |
+| 7 | Pennant's Weather-House `pennants_weather_house` | hut | 11 / 20 | 33 | 33 | 152 | 1 | 2 | 2 | 1 | yes | yes |  |  |  | unbuilt |
+| 7 | Skerrfall Quarry `skerrfall_quarry` | quarry | 21 / 25 | 24 | 24 | 37 | 0 | 1 | 2 | 1 | yes | yes |  |  |  | unbuilt |
+| 7 | The Frozen Drove `frozen_drove` | strange | 21 / 28 | 9 | 9 | 26 | 1 | 3 | 2 | 0 | yes | yes |  |  |  | unbuilt |
+| 8 | The Chain Bridge `chain_bridge` | bridge | 32 / 25 | 19 | 19 | 67 | 0 | 4 | 2 | 1 |  | yes |  |  |  |  |
+| 8 | Ghast's Broken Bridge `ghasts_broken_bridge` | bridge | 33 / 25 | 19 | 19 | 69 | 0 | 3 | 2 | 0 | yes | yes |  |  |  |  |
+| 8 | The Bonefield `the_bonefield` | giant_bones | 39 / 25 | 27 | 27 | 148 | 0 | 2 | 2 | 0 | yes | yes |  |  |  |  |
+| 8 | The Bone Ford `bone_ford` | giant_bones | 41 / 25 | 27 | 27 | 157 | 0 | 0 | 2 | 1 | yes | yes |  |  |  |  |
+| 8 | The Rib Cathedral `rib_cathedral` | giant_bones | 45 / 25 | 27 | 27 | 166 | 0 | 4 | 2 | 1 |  | yes |  |  |  |  |
+| 8 | The Giant's Spine `giants_spine` | giant_bones | 46 / 25 | 27 | 27 | 157 | 0 | 2 | 2 | 0 | yes | yes |  |  |  |  |
+| 9 | The Sorting Ground `sorting_ground` | giant_bones | 29 / 30 | 5 | 5 | 32 | 1 | 4 | 2 | 0 | yes | yes |  |  |  | unbuilt |
+| 10 | Old Ghastow `old_ghastow` | castle_ruin | 30 / 32 | 61 | 61 | 47 | 2 | 0 | 2 | 0 | yes | yes | yes |  |  | unbuilt |
+| 11 | The Brakh's Drink `brakhs_drink` | delve | 31 / 30 | 53 | 53 | 94 | 2 | 2 | 2 | 0 | yes | yes | yes |  |  | unbuilt |
+| 11 | Orrdun `orrdun` | delve | 32 / 30 | 53 | 53 | 96 | 2 | 2 | 2 | 0 | yes | yes | yes |  |  | unbuilt |
 
-Weak POIs by kind (not wayside): standing_stones 10, tower 7, ruins 6, camp 4, waterfall 3, shieling 2, hidden_valley 1, giant_bones 1, bridge 1, waystone 1.
+Weak POIs by kind (not wayside): standing_stones 6, tower 2, waystone 1.
 
 
 ## (c) Placement problems
 
 `seat:*` are the seat audit's findings over the POI's own pieces (tools_gd/seat_audit.gd: floating over the ground, buried, sunk, standing in a road's carriageway, overlapping another piece, a lamp or light hung from nothing; headless, so multimesh rows are not looked at). `past_pad`: pieces stand beyond the flattened pad, on the skirt or raw ground. `steep_skirt`: the pad's skirt (from its level core to its reach) falls at more than 33 deg along some line: a cut or an embankment. `steep_site`: a POI not yet built stands on ground sloping more than 18 deg on average under its pad. `overlap_pad`: two pads overlap. `road_through`: a road crosses the level core of a place that is not road furniture. `in_water`: its middle is in water.
 
-Counts: steep_skirt 44, past_pad 11, road_through 11, seat:overlap 9, seat:on_road 6, seat:buried 5, seat:sunk 4, seat:fence_lone 3, seat:floating 2.
+Counts: steep_skirt 44, past_pad 11, seat:overlap 11, road_through 11, seat:on_road 6, seat:buried 5, seat:sunk 4, seat:fence_lone 3, seat:floating 3.
 
 | POI | problem | n | detail |
 |---|---|---|---|
@@ -205,16 +213,19 @@ Counts: steep_skirt 44, past_pad 11, road_through 11, seat:overlap 9, seat:on_ro
 | `watch_of_the_gate` | seat:fence_lone | 2 | drystone_wall skerrow_drystone_wall_a.glb at (-226, -3826): a 2.5 m length of drystone_wall joined to no other |
 | `giants_stair` | seat:floating | 1 | rope_coil sedgemire_rope_coil_b.glb at (2795, -3537): 0.26 m over the ground |
 | `rust_scar` | seat:floating | 1 | stream Stream at (781, -2896): 0.21 m over the ground |
+| `winter_cairns` | seat:floating | 1 | pebble Pebble at (2002, -2556): 0.45 m over the ground |
 | `bone_ford` | seat:on_road | 1 | standing_stone skerrow_standing_stone_b.glb at (1255, -1792): stands in the carriageway of merrowhithe_rib_cathedral |
 | `clanless_camp` | seat:on_road | 1 | windbreak Windbreak at (-1519, -2265): stands in the carriageway of three_sisters_falls_clanless_camp |
 | `kharrow_gate` | seat:on_road | 1 | drum Drum at (-100, -2120): stands in the carriageway of kharrow_gate_three_sisters_falls |
 | `oskel_drip` | seat:on_road | 5 | throat1 Throat1 at (-2801, -2276): stands in the carriageway of clanless_camp_oskelcrag |
 | `rib_cathedral` | seat:on_road | 1 | standing_stone skerrow_standing_stone_b.glb at (1376, -2713): stands in the carriageway of merrowhithe_rib_cathedral |
 | `wolf_stones` | seat:on_road | 1 | standing_stone skerrow_standing_stone_a.glb at (158, -3500): stands in the carriageway of chain_bridge_windgate |
+| `brakhs_drink` | seat:overlap | 9 | boulder skerrow_boulder_b.glb at (2806, -3130): 100% of it shares its box with boulder (poi:delve) |
 | `brakhs_eye` | seat:overlap | 1 | campfire hearthvale_campfire_b.glb at (-2534, -2179): 100% of it shares its box with bone_skull_fragment (poi:giant_bones) |
 | `clanless_camp` | seat:overlap | 1 | campfire hearthvale_campfire_b.glb at (-1522, -2273): 90% of it shares its box with stool (poi:camp) |
 | `horn_hole` | seat:overlap | 5 | boulder skerrow_boulder_b.glb at (-2331, -2385): 100% of it shares its box with boulder (poi:cave) |
 | `kharrow_hole` | seat:overlap | 5 | boulder skerrow_boulder_a.glb at (517, -2276): 64% of it shares its box with boulder (poi:cave) |
+| `orrdun` | seat:overlap | 14 | boulder skerrow_boulder_b.glb at (3378, -3707): 99% of it shares its box with boulder (poi:delve) |
 | `oskel_drip` | seat:overlap | 6 | boulder skerrow_boulder_b.glb at (-2804, -2270): 100% of it shares its box with boulder (poi:cave) |
 | `skarl_skull` | seat:overlap | 2 | bone_skull_fragment skerrow_bone_skull_fragment_b.glb at (2317, -2109): 100% of it shares its box with campfire (poi:giant_bones) |
 | `the_jawbone` | seat:overlap | 3 | bone_skull_fragment skerrow_bone_skull_fragment_a.glb at (-2350, -3350): 71% of it shares its box with bone_skull_fragment (poi:giant_bones) |

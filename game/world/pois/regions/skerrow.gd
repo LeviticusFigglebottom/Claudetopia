@@ -210,6 +210,8 @@ static func winter_cairns(d: PoiDressing) -> void:
 					k.rng.randf_range(0.16, 0.24) * (1.0 - 0.2 * tier)))
 		await k.step()
 		k.scatter(scree, heap, true)
+	# the heap is solid underfoot and under the pebble: one box for it
+	k.collider(Vector3(0.9, 0.46, 0.9), Transform3D(Basis(), k.on_ground(at.x, at.y, 0.21)), "stone")
 	var pebble := d.masonry.begin()
 	d.masonry.ellipsoid(pebble, k.on_ground(at.x, at.y, 0.5), Vector3(0.07, 0.05, 0.08))
 	await k.step()
