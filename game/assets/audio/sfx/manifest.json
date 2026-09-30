@@ -448,6 +448,50 @@
     "seconds": 5.356,
     "volume_db": -4.0
   },
+  "horse_snort": {
+    "bus": "SFX",
+    "bytes": 26370,
+    "count": 3,
+    "files": [
+      "res://assets/audio/sfx/horse_snort/horse_snort_01.ogg",
+      "res://assets/audio/sfx/horse_snort/horse_snort_02.ogg",
+      "res://assets/audio/sfx/horse_snort/horse_snort_03.ogg"
+    ],
+    "lufs": -17.64,
+    "pitch_variance": 0.07,
+    "seconds": 0.644,
+    "volume_db": -4.0
+  },
+  "horse_whinny": {
+    "bus": "SFX",
+    "bytes": 89600,
+    "count": 3,
+    "files": [
+      "res://assets/audio/sfx/horse_whinny/horse_whinny_01.ogg",
+      "res://assets/audio/sfx/horse_whinny/horse_whinny_02.ogg",
+      "res://assets/audio/sfx/horse_whinny/horse_whinny_03.ogg"
+    ],
+    "lufs": -14.48,
+    "pitch_variance": 0.05,
+    "seconds": 3.371,
+    "volume_db": -1.0
+  },
+  "horse_whistle": {
+    "bus": "SFX",
+    "bytes": 102827,
+    "count": 5,
+    "files": [
+      "res://assets/audio/sfx/horse_whistle/horse_whistle_01.ogg",
+      "res://assets/audio/sfx/horse_whistle/horse_whistle_02.ogg",
+      "res://assets/audio/sfx/horse_whistle/horse_whistle_03.ogg",
+      "res://assets/audio/sfx/horse_whistle/horse_whistle_04.ogg",
+      "res://assets/audio/sfx/horse_whistle/horse_whistle_05.ogg"
+    ],
+    "lufs": -7.12,
+    "pitch_variance": 0.03,
+    "seconds": 2.794,
+    "volume_db": 0.0
+  },
   "impact_edge": {
     "bus": "SFX",
     "bytes": 16443,

@@ -128,8 +128,9 @@ func ids() -> Array:
 # --- playing ---------------------------------------------------------------------------------
 
 ## Play `id` at a world position. Pass Vector3.INF (the default) for a non-positional sound.
-## Returns the player used, or null if nothing was played.
-func play(id: String, position: Vector3 = Vector3.INF, volume_db := 0.0) -> Node:
+## `hear_m` is how far off it is heard (MAX_HEAR_DISTANCE when 0): a whistle and a horse's answer
+## carry much further than a footstep. Returns the player used, or null if nothing was played.
+func play(id: String, position: Vector3 = Vector3.INF, volume_db := 0.0, hear_m := 0.0) -> Node:
 	if not enabled:
 		return null
 	var row := _row(id)
@@ -147,6 +148,7 @@ func play(id: String, position: Vector3 = Vector3.INF, volume_db := 0.0) -> Node
 	p.stop()
 	p.stream = stream
 	p.global_position = position
+	p.max_distance = hear_m if hear_m > 0.0 else MAX_HEAR_DISTANCE
 	p.volume_db = float(row.get("volume_db", 0.0)) + volume_db
 	p.pitch_scale = _pitch(row)
 	p.bus = _bus_for(str(row.get("bus", "SFX")))

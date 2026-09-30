@@ -71,6 +71,20 @@ const MAX_SINK := 0.5
 ## A called horse stops this far from whoever called it, and gives up after STUCK_S of no headway.
 const ARRIVE_M := 3.2
 const STUCK_S := 8.0
+## Called, it finds its way (HorseWay) and goes by it. It lifts its head and answers first (ANSWER_S
+## after the whistle), and sets off once it knows the way or THINK_S has gone. With no headway for
+## REPLAN_S it tries another way round what stopped it, and the Stable brings it round at STUCK_S.
+## The caller walking off more than REGOAL_M from where the way leads is looked for again.
+const ANSWER_S := 0.9
+const THINK_S := 1.2
+const REPLAN_S := 2.5
+const REGOAL_M := 8.0
+## At the end it turns on the spot to face the caller, to within this (degrees).
+const FACE_DEG := 12.0
+## The answer is heard this far off (m).
+const ANSWER_HEARD_M := 140.0
+## What the way is found round: what stands, not who walks.
+const WAY_MASK := Actor.LAYER_WORLD | Actor.LAYER_SCATTER
 const BOLT_M := 30.0
 const REAR_PUSH_S := 0.6
 const REAR_EVERY_S := 3.0
@@ -127,6 +141,15 @@ var _call_to: Node3D = null
 var _call_t := 0.0
 var _last_progress := Vector3.INF
 var _stuck := 0.0
+var _way: HorseWay = null
+var _way_i := 1
+var _way_goal := Vector3.INF
+var _way_at := -100.0
+var _replans := 0
+var _shut: Dictionary = {}
+var _answer_at := -1.0
+## A point to turn and face, standing (Vector3.INF for none).
+var _face := Vector3.INF
 var _bolt_to := Vector3.INF
 var _refuse_push := 0.0
 var _last_rear := -100.0
@@ -260,6 +283,8 @@ func take_rider(who: Node3D) -> void:
 	if _reach != null:
 		_reach.collision_layer = 0
 	_call_to = null
+	_way = null
+	_face = Vector3.INF
 	_bolt_to = Vector3.INF
 	model.grazing = false
 	mounted.emit(who)
@@ -276,8 +301,9 @@ func drop_rider() -> void:
 	dismounted.emit(who)
 
 
-## Whistled for: come over the ground to `who`.
-func call_to(who: Node3D) -> void:
+## Whistled for: come over the ground to `who`, finding the way round what is in it. `answer`: it
+## whinnies back (a snort when it is near) as the whistle ends.
+func call_to(who: Node3D, answer := true) -> void:
 	if mode == Mode.RIDDEN:
 		return
 	wake()
@@ -285,8 +311,30 @@ func call_to(who: Node3D) -> void:
 	_call_t = 0.0
 	_stuck = 0.0
 	_last_progress = global_position
+	_way = null
+	_replans = 0
+	_shut = {}
+	_face = Vector3.INF
 	mode = Mode.COMING
 	model.grazing = false
+	if answer:
+		_answer_at = _clock + ANSWER_S
+
+
+## The call's answer: a whinny, or a snort from close by.
+func _answer() -> void:
+	_answer_at = -1.0
+	if Foley == null or not is_inside_tree():
+		return
+	var near := _call_to != null and is_instance_valid(_call_to) \
+			and global_position.distance_to(_call_to.global_position) < 12.0
+	Foley.play("horse_snort" if near else "horse_whinny", global_position + Vector3(0.0, 1.6, 0.0),
+			4.0, ANSWER_HEARD_M)
+
+
+## The way the horse is going by (its points on the ground), for the tests and a look.
+func way_points() -> PackedVector3Array:
+	return _way.points if _way != null and _way.state == HorseWay.FOUND else PackedVector3Array()
 
 
 ## Frightened (its rider thrown): off at a gallop, away from `from`, then it stands.
@@ -349,6 +397,8 @@ func wake() -> void:
 
 func _physics_process(delta: float) -> void:
 	_clock += delta
+	if _answer_at >= 0.0 and _clock >= _answer_at:
+		_answer()
 	match mode:
 		Mode.RIDDEN: _think_ridden()
 		Mode.COMING: _think_coming(delta)
@@ -380,29 +430,112 @@ func _think_standing(delta: float) -> void:
 func _think_coming(delta: float) -> void:
 	if _call_to == null or not is_instance_valid(_call_to):
 		mode = Mode.STAND
+		_way = null
+		_face = Vector3.INF
 		return
 	_call_t += delta
-	var to := _call_to.global_position - global_position
+	var who := _call_to.global_position
+	var to := who - global_position
 	to.y = 0.0
 	var d := to.length()
 	if d <= ARRIVE_M:
+		# here, beside them: pulled up, and turned to face them
 		_wish = Vector3.ZERO
-		if absf(speed) < 0.3:
+		_face = who
+		var off := absf(wrapf(atan2(-to.x, -to.z) - heading, -PI, PI))
+		if absf(speed) < 0.3 and off < deg_to_rad(FACE_DEG):
 			mode = Mode.STAND
 			_call_to = null
+			_way = null
+			_face = Vector3.INF
 		return
-	_wish = to / d
-	_want_gait = "Canter" if d > 25.0 else ("Trot" if d > 9.0 else "Walk")
-	# no headway for STUCK_S: the Stable brings it round another way
+	_face = Vector3.INF
+	# the way: found over frames, and looked for again when the caller has walked off from it
+	if _way == null or (who.distance_to(_way_goal) > REGOAL_M and _clock - _way_at > 2.0):
+		_find_way(who)
+	if _way.state == HorseWay.WORKING:
+		_way.step()
+	var aim := who
+	var left := d
+	if _way.state == HorseWay.FOUND:
+		var pts := _way.points
+		# on past each bend once it is close, sooner the faster it goes
+		var reach := 1.6 + absf(speed) * 0.35
+		while _way_i < pts.size() and _flat(pts[_way_i] - global_position) < reach:
+			_way_i += 1
+		if _way_i < pts.size():
+			aim = pts[_way_i]
+			left = _flat(aim - global_position)
+			for k in range(_way_i + 1, pts.size()):
+				left += _flat(pts[k] - pts[k - 1])
+			# a sharp bend close ahead is not taken at a canter
+			if _way_i + 1 < pts.size() and _flat(aim - global_position) < 6.0:
+				var a := aim - global_position
+				var b := pts[_way_i + 1] - aim
+				a.y = 0.0
+				b.y = 0.0
+				if a.length() > 0.1 and b.length() > 0.1 and a.normalized().dot(b.normalized()) < 0.5:
+					left = minf(left, 20.0)
+	elif _way.state == HorseWay.WORKING:
+		if _call_t < THINK_S:
+			_wish = Vector3.ZERO
+			_note_progress(delta)
+			return
+	# (no way over the ground from here: it goes straight on while the Stable brings it round
+	# out of sight, is_stuck)
+	if _call_t < ANSWER_S and absf(speed) < 0.5:
+		# head up to the whistle, and the answer, before it sets off
+		_wish = Vector3.ZERO
+		return
+	var dir := aim - global_position
+	dir.y = 0.0
+	_wish = dir.normalized() if dir.length() > 0.01 else to / d
+	_want_gait = "Canter" if left > 25.0 else ("Trot" if left > 9.0 else "Walk")
+	_note_progress(delta)
+	# no headway: another way round, with where it stuck shut to it
+	if _stuck >= REPLAN_S * float(_replans + 1) and _replans < 2 and _stuck < STUCK_S:
+		_replans += 1
+		if _way != null:
+			_way.shut_round(global_position + forward() * (HALF_BASE + HorseWay.CELL_M * 0.5))
+			_shut = _way.shut_cells()
+		_find_way(who)
+
+
+## The search for the way to `to`, from here.
+func _find_way(to: Vector3) -> void:
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	_way = HorseWay.new(space, get_rid(), WAY_MASK, global_position, to, ARRIVE_M * 0.8, _shut)
+	_way_i = 1
+	_way_goal = to
+	_way_at = _clock
+
+
+func _note_progress(delta: float) -> void:
 	if _last_progress == Vector3.INF or global_position.distance_to(_last_progress) > 1.5:
 		_last_progress = global_position
 		_stuck = 0.0
+		_replans = 0
 	else:
 		_stuck += delta
 
 
+static func _flat(v: Vector3) -> float:
+	return Vector2(v.x, v.z).length()
+
+
 func is_stuck() -> bool:
-	return mode == Mode.COMING and _stuck >= STUCK_S
+	return mode == Mode.COMING and (_stuck >= STUCK_S or (_way != null and _way.state == HorseWay.FAILED))
+
+
+## Called off: it stands where it is.
+func give_up() -> void:
+	if mode != Mode.COMING:
+		return
+	mode = Mode.STAND
+	_call_to = null
+	_way = null
+	_wish = Vector3.ZERO
+	_face = Vector3.INF
 
 
 func _think_bolting() -> void:
@@ -454,6 +587,9 @@ func _move(delta: float) -> void:
 	var fwd := forward()
 	var want_heading := heading
 	var hard := false
+	if _wish.length() <= 0.15 and _face != Vector3.INF and absf(speed) < 0.5:
+		# standing, turned to face someone
+		want_heading = atan2(-(_face.x - global_position.x), -(_face.z - global_position.z))
 	if _wish.length() > 0.15:
 		var ahead := _wish.dot(fwd)
 		var wish_yaw := atan2(-_wish.x, -_wish.z)
