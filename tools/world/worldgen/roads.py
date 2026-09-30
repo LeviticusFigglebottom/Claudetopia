@@ -246,6 +246,77 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
     return H, pad_mask, levels
 
 
+## A pad's skirt that fills across a valley dams it. Fernhold's lodge pad (level 274 m) was laid
+## over the head of a stream valley whose floor under its western skirt was near 190 m: the skirt
+## blended from 190 to 274 over 33 m and closed the valley's way out, leaving a dry pit 52 m deep
+## and 60 m across at the settlement's edge, walled on the pad side at seventy degrees (the owner's
+## Briar crash, 2026-09-30: whatever went in did not come out). Every dry closed hollow that a
+## pad's skirt closes is filled back to where it would spill, less DAM_DELL_M, so the valley is a
+## dell under the pad and never a pit. A hollow no deeper than DAM_MIN_M is left as it is: the
+## limestone's shakeholes and the ash's buried streets are hollows by design, and the marsh's
+## pools are water. DAM_WINDOW_M is how far round a pad's skirt a hollow is looked for.
+DAM_MIN_M = 6.0
+DAM_DELL_M = 1.5
+DAM_WINDOW_M = 260.0
+
+
+def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray | None = None,
+                   hold: np.ndarray | None = None) -> tuple:
+    """Fill every dry closed hollow a pad's skirt dams (see DAM_MIN_M). Returns (heights, report).
+
+    `outlet` (bool, grid.n) is where water may leave the land: the sea, the lakes and the rivers'
+    channels; a hollow that reaches one is not closed. `hold` (0..1, 1 where the land is free) is
+    the roads' clearance: a road graded through a hollow keeps its ground. `report` is one
+    (place id, deepest m, filled texels) per hollow filled. Each pad is looked at in a window of
+    DAM_WINDOW_M past its reach, whose edge counts as open: a hollow bigger than that is a basin
+    of the country's own, not a pad's.
+    """
+    from skimage.morphology import reconstruction
+
+    n = grid.n
+    X, Z = grid.mesh()
+    report = []
+    for p in places:
+        px, pz = float(p["position"][0]), float(p["position"][1])
+        r_level, r_reach = pad_level_radius(p), pad_reach(p)
+        j, i = grid.to_tex(px, pz)
+        j, i = grid.clamp_index(j, i)
+        rad_t = int((r_reach + DAM_WINDOW_M) / grid.spacing) + 2
+        i0, i1 = max(0, int(i) - rad_t), min(n, int(i) + rad_t + 1)
+        j0, j1 = max(0, int(j) - rad_t), min(n, int(j) + rad_t + 1)
+        sub = H[i0:i1, j0:j1].astype(np.float64)
+        if sub.shape[0] < 3 or sub.shape[1] < 3:
+            continue
+        seed = np.full_like(sub, float(sub.max()))
+        edge = np.zeros(sub.shape, dtype=bool)
+        edge[0, :] = edge[-1, :] = edge[:, 0] = edge[:, -1] = True
+        if outlet is not None:
+            edge |= outlet[i0:i1, j0:j1]
+        seed[edge] = sub[edge]
+        filled = reconstruction(seed, sub, method="erosion")
+        depth = filled - sub
+        lab, count = ndimage.label(depth > 0.25)
+        if count == 0:
+            continue
+        d = np.sqrt((X[:, j0:j1] - px) ** 2 + (Z[i0:i1, :] - pz) ** 2)
+        # the skirt, and a few texels past it: where a pad's fill meets what it closed
+        skirt = (d >= r_level - grid.spacing) & (d <= r_reach + 2.0 * grid.spacing)
+        ids = np.arange(1, count + 1)
+        deepest = ndimage.maximum(depth, lab, ids)
+        touches = ndimage.maximum(skirt.astype(np.uint8), lab, ids)
+        take = ids[(deepest > DAM_MIN_M) & (touches > 0)]
+        if take.size == 0:
+            continue
+        m = np.isin(lab, take)
+        raise_m = np.where(m, np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
+        if hold is not None:
+            raise_m = raise_m * hold[i0:i1, j0:j1]
+        H[i0:i1, j0:j1] = (sub + raise_m).astype(np.float32)
+        for k in take:
+            report.append((str(p.get("id", "")), float(deepest[k - 1]), int((lab == k).sum())))
+    return H, report
+
+
 ## The design grade. A laden cart takes one in nine, and the router is what keeps a road under
 ## it -- by going round a slope, or up it in zigzags -- not the profile: the profile follows the
 ## ground, and it is never lifted off it or sunk into it to make a grade the route did not have.
