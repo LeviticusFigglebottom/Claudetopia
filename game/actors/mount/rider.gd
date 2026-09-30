@@ -32,6 +32,9 @@ const CAMERA_HEIGHT := 0.25
 const CAMERA_FOV_GALLOP := 9.0
 const RECENTRE_AFTER_S := 1.5
 const RECENTRE_FROM := 3.0
+## The first time in the saddle (any horse, any start) the player is told how to get down and how to
+## whistle a horse up, once, in a quiet moment: kept in the save as this flag.
+const RIDE_TAUGHT_FLAG := "hint_ride_taught"
 const FIGHT_ACTIONS: Array[String] = ["attack_light", "attack_heavy", "block", "cast", "dodge", "quick_1", "quick_2", "quick_3", "quick_4"]
 
 var player: Node3D = null
@@ -51,6 +54,8 @@ var _said_no_fighting := false
 var _seat_clip := ""
 var _seat: RideSeat = null
 var _prev_keys: Dictionary = {}
+## The riding hint is owed (in the saddle for the first time) and waits for a quiet moment.
+var _teach_owed := false
 ## Getting up or down on the rig's own clip (Mount_Horse, Dismount_Horse), and how long it runs.
 var _clip_way := ""
 var _clip_s := 0.0
@@ -242,6 +247,8 @@ func _set_state(s: String) -> void:
 		return
 	state = s
 	state_changed.emit(s)
+	if s == "riding" and not bool(GameState.get_flag(RIDE_TAUGHT_FLAG, false)):
+		_teach_owed = true
 
 
 ## In the saddle the body is carried: it collides with nothing, and nothing pushes it.
@@ -333,6 +340,8 @@ func _astride(w: float) -> void:
 # --- each frame -----------------------------------------------------------------------------------
 
 func _physics_process(_delta: float) -> void:
+	if _teach_owed and _quiet():
+		teach_riding()
 	if state == "" and _just("call_mount"):
 		var stable := Stable.find(player)
 		if stable != null:
@@ -560,6 +569,32 @@ func _just(action: String) -> bool:
 
 func _key_for(action: String) -> String:
 	return str(Settings.prompt_for(action, Input.get_connected_joypads().size() > 0)) if Settings != null else action
+
+
+## The riding hint: how to get down, and that the whistle brings the horse from anywhere, with the
+## keys bound now (the whistle is rebindable). Shown once, ever, and remembered with the game.
+func teach_riding() -> void:
+	_teach_owed = false
+	if bool(GameState.get_flag(RIDE_TAUGHT_FLAG, false)):
+		return
+	GameState.set_flag(RIDE_TAUGHT_FLAG, true)
+	var called := horse.display_name if horse != null and is_instance_valid(horse) else "your horse"
+	EventBus.emit_notify("In the saddle: %s to gallop, %s to jump, %s to get down. On foot, %s whistles for %s, wherever you are." % [
+			_key_for("sprint"), _key_for("jump"), _key_for("interact"), _key_for("call_mount"), called], "info")
+
+
+## No film playing, nobody talking, no fight on: a moment to be told something.
+func _quiet() -> bool:
+	if player == null or not player.is_inside_tree():
+		return false
+	if player.has_method("in_conversation") and bool(player.call("in_conversation")):
+		return false
+	for n in player.get_tree().get_nodes_in_group(CinematicPlayer.GROUP):
+		if n.has_method("is_playing") and bool(n.call("is_playing")):
+			return false
+	if Music != null and float(Music.get("combat_intensity")) > 0.01:
+		return false
+	return state != "mounting"
 
 
 static func _ease(x: float) -> float:

@@ -16,8 +16,16 @@ const FLAG_PREFIX := SocialContext.MOUNT_FLAG_PREFIX
 const SLEEP_M := 300.0
 const WAKE_M := 280.0
 const WHISTLE_M := 250.0
-## A horse brought round comes in from this far behind the player, out of the camera's view.
-const FROM_BEHIND_M := 60.0
+## A horse brought round comes in from this far behind the player, out of the camera's view, from
+## where the way to the player is open: the nearest of these that is.
+const FROM_BEHIND_M := [45.0, 30.0, 60.0]
+## Farther off than this a horse does not hear the whistle at all.
+const FAR_M := 1500.0
+## The whistle is heard this far round (m), and a horse is brought round at most this often a call.
+const WHISTLE_HEARD_M := 160.0
+const BRING_ROUND_TIMES := 2
+## A horse this close and in the camera's view is not moved: it would vanish in front of the player.
+const SEEN_M := 180.0
 const CHECK_S := 0.5
 
 var horses: Dictionary = {}         # mount id -> Mount
@@ -27,6 +35,7 @@ var _saved: Dictionary = {}         # mount id -> its save, until it is stood up
 var _riding_saved := ""
 var _ready_to_stand := false
 var _check := 0.0
+var _brought: Dictionary = {}       # mount id -> times brought round on this call
 
 
 static func find(_from: Node = null) -> Stable:
@@ -214,8 +223,11 @@ func _player() -> Node3D:
 
 # --- the whistle ------------------------------------------------------------------------------
 
-## The player whistles: the last horse ridden comes. Says why when it cannot.
+## The player whistles (always heard, a horse or none): the last horse ridden comes. Says why when
+## it cannot.
 func whistle(player: Node3D) -> Mount:
+	if Foley != null and player != null and player.is_inside_tree():
+		Foley.play("horse_whistle", player.global_position + Vector3(0.0, 1.6, 0.0), 0.0, WHISTLE_HEARD_M)
 	if horses.is_empty():
 		EventBus.emit_notify("You have no horse to whistle for.", "info")
 		return null
@@ -231,32 +243,64 @@ func whistle(player: Node3D) -> Mount:
 		EventBus.emit_notify("%s won't come into water this deep." % m.display_name, "info")
 		return null
 	var d := m.global_position.distance_to(player.global_position)
+	if d > FAR_M:
+		EventBus.emit_notify("%s is too far off to hear you." % m.display_name, "info")
+		return null
+	_brought[id] = 0
 	if d > WHISTLE_M or m.sleeping:
-		_bring_round(m, player)
+		if not _bring_round(m, player):
+			EventBus.emit_notify("%s can't find a way to you here." % m.display_name, "info")
+			return null
 	m.call_to(player)
 	return m
 
 
-## Brings a horse to FROM_BEHIND_M behind the player, where the camera is not looking, on dry
-## ground it can stand on; it then comes the rest of the way itself.
-func _bring_round(m: Mount, player: Node3D) -> void:
+## Brings a horse round to behind the player, where the camera is not looking, on dry ground it
+## can stand on with an open way from there to the player; it then comes the rest of the way itself.
+## Never in view: a horse the player can see is not moved (false, try again later), and nowhere the
+## camera looks is it put. False when it could not be brought round.
+func _bring_round(m: Mount, player: Node3D) -> bool:
+	var cam := player.get_viewport().get_camera_3d() if player.is_inside_tree() else null
+	if not m.sleeping and _seen(cam, m.global_position, player):
+		return false
 	var back := Vector3.BACK
 	var rig: Node = player.get("camera_rig")
 	if rig != null and rig.has_method("forward_flat"):
 		back = -(rig.call("forward_flat") as Vector3)
-	for turn in [0.0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6]:
-		var dir := back.rotated(Vector3.UP, float(turn))
-		var p := player.global_position + dir * FROM_BEHIND_M
-		p.y = _ground(p)
-		var yaw := atan2(dir.x, dir.z)      # facing back toward the player
-		if _clear(p, yaw):
+	var space := get_world_3d().direct_space_state if is_inside_tree() else null
+	for r in FROM_BEHIND_M:
+		for turn in [0.0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6]:
+			var dir := back.rotated(Vector3.UP, float(turn))
+			var p := player.global_position + dir * float(r)
+			p.y = _ground(p)
+			var yaw := atan2(dir.x, dir.z)      # facing back toward the player
+			if _seen(cam, p, player) or not _clear(p, yaw):
+				continue
+			# the way in open, up to where it will pull up beside the player
+			var near := p.lerp(player.global_position, 1.0 - Mount.ARRIVE_M / float(r))
+			var way := HorseWay.new(space, m.get_rid(), Mount.WAY_MASK, p, near, Mount.ARRIVE_M)
+			if way.cost_of(way.cell_of(p)) == INF or not way.line_open(p, near):
+				continue
 			m.wake()
 			m.place(p, yaw)
-			return
+			return true
 	var q := player.global_position + back * 12.0
 	q.y = _ground(q)
+	if _seen(cam, q, player) or not _clear(q, atan2(back.x, back.z)):
+		return false
 	m.wake()
 	m.place(q, atan2(back.x, back.z))
+	return true
+
+
+## Whether the camera sees a horse standing at `p` (near enough to make out).
+func _seen(cam: Camera3D, p: Vector3, player: Node3D) -> bool:
+	if cam == null or p.distance_to(player.global_position) > SEEN_M:
+		return false
+	for up in [0.3, 1.2, 2.0]:
+		if cam.is_position_in_frustum(p + Vector3(0.0, float(up), 0.0)):
+			return true
+	return false
 
 
 # --- sleeping and waking ------------------------------------------------------------------------
@@ -277,8 +321,13 @@ func _physics_process(delta: float) -> void:
 			last_ridden = str(id)
 			continue
 		if m.is_stuck():
-			_bring_round(m, p)
-			m.call_to(p)
+			var n := int(_brought.get(id, 0))
+			if n >= BRING_ROUND_TIMES:
+				m.give_up()
+				EventBus.emit_notify("%s can't find a way to you here." % m.display_name, "info")
+			elif _bring_round(m, p):
+				_brought[id] = n + 1
+				m.call_to(p, false)
 			continue
 		var d := m.global_position.distance_to(p.global_position)
 		if d > SLEEP_M and m.mode != Mount.Mode.COMING:

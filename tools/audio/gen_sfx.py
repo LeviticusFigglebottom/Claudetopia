@@ -781,6 +781,110 @@ def death_sound(rng) -> np.ndarray:
     return _limit_tail(out, 0.5)
 
 
+
+# =================================================================================================
+# The horse call
+# =================================================================================================
+
+# The whistle's shapes: two notes, each a (start Hz, held Hz, end Hz, seconds) glide, with the gap
+# between them. A fingers-in-the-mouth whistle scoops up into its note and falls off the end of the
+# last one; a shepherd's is two clean notes, low then high or high then low.
+WHISTLE_SHAPES = {
+    "up": [(1700.0, 2250.0, 2150.0, 0.26), (2150.0, 3050.0, 2500.0, 0.46)],
+    "down": [(2300.0, 3100.0, 3000.0, 0.30), (2900.0, 2300.0, 1900.0, 0.50)],
+    "swoop": [(1900.0, 2700.0, 2600.0, 0.22), (2000.0, 3200.0, 2200.0, 0.62)],
+}
+
+
+def _glide(n: int, f0: float, f1: float, f2: float, rise: float = 0.18, fall: float = 0.28):
+    """A whistled note's pitch: scooped up from f0 to f1 over its first `rise`, held (with the
+    lips' drift), and let go down to f2 over its last `fall`."""
+    t = np.linspace(0.0, 1.0, n)
+    f = np.full(n, f1)
+    a = t < rise
+    f[a] = f0 + (f1 - f0) * np.sin(0.5 * np.pi * t[a] / rise)
+    b = t > 1.0 - fall
+    k = (t[b] - (1.0 - fall)) / fall
+    f[b] = f1 + (f2 - f1) * k * k
+    return f
+
+
+def whistle(rng) -> np.ndarray:
+    """Someone whistling for a horse, fingers in the mouth: two loud, pure notes that carry, the
+    breath hissing through them. The shapes are few and each is pitched and timed anew, so no two
+    calls are quite the same."""
+    names = sorted(WHISTLE_SHAPES)
+    shape = WHISTLE_SHAPES[names[int(rng.integers(0, 1 << 30)) % len(names)]]
+    key = float(rng.uniform(-1.6, 1.6))              # semitones: somebody's own whistle
+    stretch = float(rng.uniform(0.88, 1.15))
+    gap = float(rng.uniform(0.07, 0.13))
+    parts = []
+    for i, (f0, f1, f2, secs) in enumerate(shape):
+        dur = secs * stretch
+        n = samples(dur)
+        scale = 2.0 ** (key / 12.0)
+        f = _glide(n, f0 * scale, f1 * scale, f2 * scale, rise=float(rng.uniform(0.12, 0.24)))
+        # the lips waver: a slow drift and a little quick tremble on the held note
+        f *= 1.0 + 0.006 * env.wander(n, rng, rate_hz=3.0) + 0.004 * env.lfo(n, float(rng.uniform(5.0, 6.5)))
+        tone = osc.sine(f, n) + 0.05 * osc.sine(f * 2.0, n)
+        # breath: noise sharing the note's band, loudest at the onset
+        air = filters.svf(osc.white(n, rng), f, q=6.0, mode="bp")
+        air_env = env.segments([(0, 0.0), (0.015, 1.0), (0.08, 0.35), (dur, 0.25)], n)
+        amp = env.segments([(0, 0.0), (0.025, 0.8), (0.07, 1.0), (dur * 0.8, 0.9), (dur, 0.0)], n)
+        parts.append(tone * amp * 0.8 + air * air_env * 0.22)
+        if i < len(shape) - 1:
+            parts.append(np.zeros(samples(gap)))
+    y = np.concatenate(parts)
+    y = filters.highpass(y, 600.0)
+    # outdoors: a little of the valley answering
+    y = core.to_mono(fx.reverb(y, "valley", mix=0.18, seed=int(rng.integers(1 << 30)), tail=True))
+    return _limit_tail(y, 0.25)
+
+
+def whinny(rng) -> np.ndarray:
+    """A horse answering: a squeal that breaks and falls through the pulses of a neigh, and the
+    nicker it ends on. A buzzing voice (a pulse train) through the long head's resonances."""
+    dur = float(rng.uniform(1.25, 1.6))
+    n = samples(dur)
+    t = np.linspace(0.0, 1.0, n)
+    top = float(rng.uniform(820.0, 1050.0))
+    low = float(rng.uniform(260.0, 330.0))
+    # the pitch: up to the squeal in a breath, then down in a long curve
+    f = np.where(t < 0.08, top * (0.75 + 0.25 * t / 0.08),
+                 low + (top - low) * np.exp(-(t - 0.08) * float(rng.uniform(2.6, 3.4))))
+    # the neigh's pulses (the "ha-ha-ha"), quickening as it falls
+    pulse_hz = float(rng.uniform(9.0, 12.0))
+    pulses = 0.55 + 0.45 * np.sin(2 * np.pi * np.cumsum(pulse_hz * (1.0 + 0.5 * t)) / SR) ** 2
+    f = f * (1.0 + 0.035 * env.lfo(n, pulse_hz * 1.1))
+    voice = osc.saw(f, n) * 0.6 + osc.square(f, n, pw=0.3) * 0.25
+    head = filters.formant_bank(voice, [(700, 180, 1.0), (1500, 260, 0.6), (2600, 400, 0.25),
+                                        (3800, 600, 0.08)])
+    rough = filters.bandpass(osc.pink(n, rng), 1400.0, 0.6) * 0.35
+    amp = env.segments([(0, 0.0), (0.03, 0.9), (0.12 * dur, 1.0), (0.7 * dur, 0.55), (dur, 0.0)], n)
+    y = (head + rough * (1.0 - t)) * pulses * amp
+    # the nicker it ends on: a low, fluttering breath
+    nick = snort(rng, soft=True)
+    out = np.zeros(n + len(nick))
+    out[:n] += y
+    core.mix_into(out, nick * 0.5, n - samples(0.15))
+    out = core.to_mono(fx.reverb(out, "valley", mix=0.15, seed=int(rng.integers(1 << 30)), tail=True))
+    return _limit_tail(filters.highpass(out, 90.0), 0.2)
+
+
+def snort(rng, soft: bool = False) -> np.ndarray:
+    """Air blown out through a horse's nostrils: a noisy burst, the lips flapping in it."""
+    dur = float(rng.uniform(0.45, 0.7)) * (0.8 if soft else 1.0)
+    n = samples(dur)
+    blow = filters.bandpass(osc.pink(n, rng), float(rng.uniform(520.0, 720.0)), 0.7)
+    blow += 0.4 * filters.bandpass(osc.white(n, rng), 2400.0, 0.9)
+    flap = 0.5 + 0.5 * np.sin(2 * np.pi * np.cumsum(np.full(n, float(rng.uniform(26.0, 38.0)))) / SR)
+    flap = 0.35 + 0.65 * flap ** 3
+    amp = env.segments([(0, 0.0), (0.02, 1.0), (dur * 0.35, 0.7), (dur, 0.0)], n)
+    y = blow * flap * amp
+    y += body_thump(rng, dur, float(rng.uniform(90.0, 120.0)), 0.12, bend=0.6) * 0.3
+    return _limit_tail(filters.highpass(y, 70.0), 0.05)
+
+
 # =================================================================================================
 # The catalogue
 # =================================================================================================
@@ -834,6 +938,10 @@ def _catalogue() -> dict:
         "hearthstone_rest": _e(lambda rng: hearth_chime(rng), 2, -4.0, 0.02, bus="UI"),
         "echo_recovered": _e(lambda rng: echo_tone(rng), 2, -4.0, 0.02, bus="UI"),
         "player_death": _e(lambda rng: death_sound(rng), 2, -2.0, 0.01, bus="UI"),
+        # the horse call (Stable.whistle): the player's whistle, carried far, and the horse's answer
+        "horse_whistle": _e(lambda rng: whistle(rng), 5, 0.0, 0.03),
+        "horse_whinny": _e(lambda rng: whinny(rng), 3, -1.0, 0.05),
+        "horse_snort": _e(lambda rng: snort(rng), 3, -4.0, 0.07),
     })
     for school in ("kindling", "hush", "binding", "mending", "calling"):
         c["spell_cast_%s" % school] = _e(lambda rng, s=school: spell_cast(rng, s), 3, -5.0, 0.05)

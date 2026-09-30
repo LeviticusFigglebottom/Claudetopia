@@ -328,6 +328,38 @@
       "pitch_variance": 0.02,
       "volume_db": -4.0
     },
+    "horse_snort": {
+      "bus": "SFX",
+      "files": [
+        "res://assets/audio/sfx/horse_snort/horse_snort_01.ogg",
+        "res://assets/audio/sfx/horse_snort/horse_snort_02.ogg",
+        "res://assets/audio/sfx/horse_snort/horse_snort_03.ogg"
+      ],
+      "pitch_variance": 0.07,
+      "volume_db": -4.0
+    },
+    "horse_whinny": {
+      "bus": "SFX",
+      "files": [
+        "res://assets/audio/sfx/horse_whinny/horse_whinny_01.ogg",
+        "res://assets/audio/sfx/horse_whinny/horse_whinny_02.ogg",
+        "res://assets/audio/sfx/horse_whinny/horse_whinny_03.ogg"
+      ],
+      "pitch_variance": 0.05,
+      "volume_db": -1.0
+    },
+    "horse_whistle": {
+      "bus": "SFX",
+      "files": [
+        "res://assets/audio/sfx/horse_whistle/horse_whistle_01.ogg",
+        "res://assets/audio/sfx/horse_whistle/horse_whistle_02.ogg",
+        "res://assets/audio/sfx/horse_whistle/horse_whistle_03.ogg",
+        "res://assets/audio/sfx/horse_whistle/horse_whistle_04.ogg",
+        "res://assets/audio/sfx/horse_whistle/horse_whistle_05.ogg"
+      ],
+      "pitch_variance": 0.03,
+      "volume_db": 0.0
+    },
     "impact_edge": {
       "bus": "SFX",
       "files": [

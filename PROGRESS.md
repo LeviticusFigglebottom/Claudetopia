@@ -13851,3 +13851,73 @@ failures were the since-fixed test file and the reverted body merge).
   granite stair) are left as they are.
 - No render made: the pit is read from the heights (profiles in this section), and the fix needs the
   rebuild before there is anything to see.
+## The horse comes to the whistle (2026-09-30)
+
+horse-call, from main 3bad5904. The owner's three asks about H (`call_mount`).
+
+**A proper whistle.** `tools/audio/gen_sfx.py` makes three new sounds from the toolkit (no samples):
+`horse_whistle` (5 variants: a fingers-in-the-mouth / shepherd's two-note whistle, sine notes at
+1.7-3.2 kHz that scoop into the first note and fall off the last, with breath noise tracking the
+pitch and a little valley reverb; three shapes, up, down and swoop, each pitched ±1.6 semitones and
+timed ±12% anew, so no two calls are the same), `horse_whinny` (3: a pulse-train voice through the
+head's formants, squealing at ~0.9 kHz and falling through the neigh's pulses to ~0.3 kHz, ending in
+a nicker) and `horse_snort` (3: nostril noise flapped at 26-38 Hz). All on the SFX bus, peak
+-3 dBFS, pitch-tracked to check the two notes (e.g. 2.3 kHz then 3.1 kHz; 3.1 then 2.3). There were
+no horse sounds before. `Foley.play` takes an optional `hear_m` (how far a sound carries; the pool
+default stays 42 m). `Stable.whistle` plays the whistle at the player's head, heard 160 m, on every
+press, a horse or none; the horse answers ANSWER_S (0.9 s) later with a whinny, or a snort from
+within 12 m, heard 140 m, lifting its head and standing for that moment before it sets off.
+Feedback: no horse, indoors, deep water (as before), and now "too far off to hear you" past
+FAR_M 1.5 km and "can't find a way to you here" when it cannot be brought round.
+
+**The first-ride hint.** The first time the player is in the saddle (any horse, any start: it is on
+`Rider._set_state("riding")`, so a start's own horse, a gift or a loaded game), a notice (the toast
+API, `EventBus.emit_notify`) says the bound keys now for gallop, jump, getting down and the whistle
+("... On foot, H whistles for Hollin, wherever you are."), read from the input map through
+`Settings.prompt_for` (pad names on a pad). It waits for a quiet moment (no cinematic playing, no
+conversation, `Music.combat_intensity` at rest, not mid-mount) and is kept as the GameState flag
+`hint_ride_taught`, so it is in the save and shown once a game.
+
+**The way to the whistle.** Mode.COMING went straight at the player (a wall stopped it until the
+Stable teleported it after 8 s). `HorseWay` (new, `game/actors/mount/horse_way.gd`) is an A* over a
+1.5 m grid between the horse and the caller (60 m margin, at most 220 cells a side), each square
+looked at only when the search reaches it, 90 looks a physics frame: a square is closed by water
+deeper than 1.0 m, or by anything solid (world and scatter layers: trunks, walls, fences, rocks,
+houses) in a horse-sized box above the 0.45 m it steps over; a step is closed past 32° up or 36°
+down (under the horse's own refusals). Wading past 0.45 m costs 5x, wet 1.6x, a road 0.6x and its
+verge 0.8x (RoadNetwork), a hillside more the steeper, and a square beside anything closed or any
+edge 2.2x, so it keeps to the middle of gaps and ramps. The way is pulled straight wherever the line
+crosses only open, un-cramped squares. The horse thinks up to 1.2 s (it is answering meanwhile), then
+goes by the way: a bend is passed when reached, or sooner when the line from where it is to the next
+one is open (checked four times a second, never cutting a corner into an edge); a walk through a
+gap, a trot into a sharp bend, and canter > 25 m / trot > 9 m / walk by the length of way left. No
+headway for 2.5 s shuts the square ahead and looks for another way (twice); at 8 s, or if no way
+exists, the Stable brings it round: 45, 30 or 60 m behind the player, out of the camera's frustum,
+on clear dry ground with an open line in -- and never while the horse itself is in view within
+180 m (it waits), at most twice a call. It pulls up 2.7-2.8 m from the player and turns on the spot
+to face them before it stands. Cost: no per-frame query beyond the search's budget and one line
+check every 0.25 s.
+
+Measured (test_mount_call, a Terrain3D with an arena for each case): behind a line of trees (60 m
+of trunks 0.5 m apart) 18.6 s; through a 3 m gap in a 1.8 m wall 17.5 s; up the one ramp onto a 6 m
+bank with a cliff 23.6 s; down off it 23.4 s, worst lift over the ground under its hooves 0.00 m;
+across a stream 2 m deep by its 0.3 m ford 14.8 s, never deeper than 0.3 m; from 393 m off brought
+round unseen to 45 m behind and here in 13.0 s. Every case: 0 ticks inside a solid, stood 2.7-2.8 m
+off facing the player (0°).
+
+Tests: test_mount_call (new, 11: the sounds, the no-horse whistle, trees, wall gap, up the bank, down
+the bank, stream, far off unseen, too far, the first-ride hint once with a rebound key and through the
+save, the quiet-moment gate): 11/11. Wider set (test_riding, test_riding_ground, test_mount*,
+test_audio*, test_control_hints, test_rebind_capture, test_pad_layout, test_dialogue_keys,
+test_roll_from_the_keys, test_save, with test_mount_call): 98/98, 0 script errors, GDScript warnings
+at the baseline (49). tools/audio/tests/run_tests.py: 134/134. The old whistle test (test_riding,
+40 m straight) still passes.
+
+### Not done / for the coordinator
+- No capture sequence of the horse coming round an obstacle: the machine was saturated all session
+  and the test arenas measure the way directly. Worth one look in the owner's world (a whistle from
+  behind a hedge or across the Bells' stream).
+- The coming horse never jumps (a fence it could clear is gone round, or through its gate).
+- NpcNav's town meshes are baked for a person (0.3 m) and are not used; the grid covers towns too.
+- Landing: `core:table/sfx` and the sfx manifest are regenerated by gen_sfx.py (69 rows); the three
+  new OGGs have their .import sidecars. No world build needed.
