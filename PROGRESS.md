@@ -12875,7 +12875,10 @@ What the captures showed, and what changed:
   nearest stone shows its panel and mark.
 
 Review sheets: `docs/review/landmarks/` choir_before, nave_before, waystones_after, and
-landmarks_after (the Choir, the fallen colossus stood up for its shot, the Nave, two stone rings).
+landmarks_after (the Choir from the camp, the plain, a foot and at dusk; the fallen colossus stood up
+for its shot, now smooth, sooted carved stone lying in its ash bank; the Nave from the marsh, close
+and at dusk, now a dark, stained tower against the pale fen sky). The stone rings' after shots were
+cut to save the machine: their change is seating only, seen on the review stage.
 The waystones have no world "before": they were not built until this pass.
 
 Tests (targeted, 49): test_landmarks_seated, test_nothing_floats_at_the_start, test_landmarks_painted,
