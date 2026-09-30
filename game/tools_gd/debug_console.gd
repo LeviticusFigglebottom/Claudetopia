@@ -19,13 +19,34 @@ func _ready() -> void:
 	_build_ui()
 	_register_builtins()
 	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--cmd="):
+		if a.begins_with("--material-census="):
+			_attach_census(a.substr(18))
+		elif a.begins_with("--material-census-quit-after="):
+			var secs := float(a.substr(29))
+			get_tree().create_timer(secs, true, false, true).timeout.connect(func() -> void:
+				var census := get_tree().root.get_node_or_null("MaterialCensus")
+				if census != null:
+					census.call("flush")
+				get_tree().quit())
+		elif a.begins_with("--cmd="):
 			for part in a.substr(6).split(";"):
 				if not part.strip_edges().is_empty():
 					_pending_cmdline.append(part.strip_edges())
 	if not _pending_cmdline.is_empty():
 		EventBus.player_spawned.connect(func(_p: Node) -> void: _run_pending(), CONNECT_ONE_SHOT)
 		get_tree().create_timer(3.0).timeout.connect(_run_pending)
+
+
+## Every material the run draws with, gathered into a warm set for the export's shader baker
+## (tools_gd/material_census.gd; `./run.sh shader-warm`). Here so it rides along with any run.
+func _attach_census(path: String) -> void:
+	var script := load("res://tools_gd/material_census.gd") as GDScript
+	if script == null:
+		return
+	var census: Node = script.new()
+	census.name = "MaterialCensus"
+	census.set("out_path", path if not path.is_empty() else "res://assets/shader_warm/warm_set.tres")
+	get_tree().root.add_child.call_deferred(census)
 
 
 func _run_pending() -> void:
