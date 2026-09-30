@@ -5,7 +5,7 @@ The export's shader baker (game/export_presets.cfg, shader_baker/enabled) puts e
 compiled ahead of time in the pack as .godot/shader_cache/<ShaderRD class>/<hash>.<driver>.cache.
 An export made headless bakes nothing (the baker needs a rendering device), and the pack is then
 the same size as without it, so a player's first launch compiles every shader on the main thread.
-The Windows build (.github/workflows/windows-build.yml) runs this on its pack; docs/FIRST_LAUNCH.md.
+The Windows build (.github/workflows/game-build.yml, job windows) runs this on its pack; docs/FIRST_LAUNCH.md.
 
     python3 tools/debug/pck_shader_cache.py build/windows/Wickmere.pck [--min-scene=N] [--list]
 
