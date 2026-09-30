@@ -279,6 +279,8 @@ func stand(node: Node3D, again := false) -> void:
 	for hit: Dictionary in found:
 		if not is_instance_valid(node):
 			break
+		if not _still_there(hit):
+			continue
 		faces += add_shape(source, hit["rid"], int(hit["shape"]))
 		read += 1
 		if read % SHAPES_A_FRAME == 0:
@@ -424,6 +426,15 @@ func _shapes_in(node: Node3D, bounds: AABB) -> Array:
 			_asked_us = maxi(_asked_us, Time.get_ticks_usec() - t0)
 			await get_tree().process_frame
 	return out
+
+
+## Whether a body found by a query frames ago still stands: its node, or the scatter's own body,
+## may have been freed with its cell while the bake waited a frame.
+static func _still_there(hit: Dictionary) -> bool:
+	var id := int(hit.get("collider_id", 0))
+	if id != 0:
+		return is_instance_id_valid(id)
+	return ScatterSolids.live_bodies.has(hit["rid"])
 
 
 ## Adds one shape of a physics body as triangles; returns how many. A box, a trunk, a rock, a

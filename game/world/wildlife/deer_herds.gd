@@ -222,9 +222,9 @@ func _people(cell: Vector2i) -> void:
 			stags_only, rng.randi(), cell, spots)
 
 
-## Puts a herd of `count` down round `home`: hinds (and a stag keeping them, most often), or stags
+## Puts a herd of `n_deer` down round `home`: hinds (and a stag keeping them, most often), or stags
 ## alone together. Returns it.
-func add_herd(home: Vector3, count: int, stags_only := false, seed_n := 0, cell := Vector2i(-99999, -99999),
+func add_herd(home: Vector3, n_deer: int, stags_only := false, seed_n := 0, cell := Vector2i(-99999, -99999),
 		spots: Array[Vector3] = []) -> Dictionary:
 	var r := RandomNumberGenerator.new()
 	r.seed = seed_n
@@ -233,7 +233,7 @@ func add_herd(home: Vector3, count: int, stags_only := false, seed_n := 0, cell 
 	var h := {"cell": cell, "home": home, "spots": spots, "deer": [], "r": r, "alarm": 0.0, "to": home,
 			"state": S.GRAZE}
 	var stag_kept := not stags_only and r.randf() < 0.75
-	for i in count:
+	for i in n_deer:
 		var stag := stags_only or (stag_kept and i == 0)
 		# a yearling or two among the hinds, smaller
 		var size := 1.08 if stag else (0.82 if (i >= 3 and r.randf() < 0.4) else r.randf_range(0.94, 1.0))

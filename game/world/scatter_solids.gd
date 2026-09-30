@@ -22,6 +22,9 @@ extends Node
 ## pull the camera in, as a house wall does.
 
 const LAYER := 1 << 12
+## Every scatter body standing now, so a reader that found one frames ago (NpcNav's bake) can
+## ask whether it is still there before touching it: a freed body's RID stays non-zero.
+static var live_bodies := {}
 ## A thing lower than this as it stands (m) is stepped over, not walked into.
 const MIN_HEIGHT_M := 0.45
 ## A trunk stands from under the ground to at most this (m): enough to walk into, and the crown is
@@ -144,6 +147,7 @@ func add_cell(node: Node3D, instances: Dictionary, extra: Array = []) -> void:
 		job.centre = Vector2(origin.x + (float(key.x) + 0.5) * BLOCK_M, origin.z + (float(key.y) + 0.5) * BLOCK_M)
 		job.space = space
 		job.body = PhysicsServer3D.body_create()
+		live_bodies[job.body] = true
 		PhysicsServer3D.body_set_mode(job.body, PhysicsServer3D.BODY_MODE_STATIC)
 		PhysicsServer3D.body_set_collision_layer(job.body, LAYER)
 		PhysicsServer3D.body_set_collision_mask(job.body, 0)
@@ -389,6 +393,7 @@ func _drop_cell(jobs: Array) -> void:
 	for job: Job in jobs:
 		job.gone = true
 		if job.body.is_valid():
+			live_bodies.erase(job.body)
 			PhysicsServer3D.free_rid(job.body)
 			job.body = RID()
 		_live.erase(job)

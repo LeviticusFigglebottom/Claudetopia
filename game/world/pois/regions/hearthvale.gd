@@ -168,7 +168,7 @@ static func lime_kilns(d: PoiDressing) -> void:
 	await k.step()
 	var sacks: Array = []
 	for i in 6:
-		var p := face * 12.5 - side * (2.5 + float(i % 3) * 0.7) + face * float(i / 3) * 0.7
+		var p := face * 12.5 - side * (2.5 + float(i % 3) * 0.7) + face * float(int(i / 3.0)) * 0.7
 		sacks.append([p, k.rng.randf() * TAU])
 	await _row(k, "sack", sacks, true)
 	# the south cart, loaded, its shafts down
