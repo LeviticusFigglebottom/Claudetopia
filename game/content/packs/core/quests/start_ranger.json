@@ -15,7 +15,7 @@
        "notes": "behind the shooting line, off the range, where Rosen has Nettle tied when you walk back from the Force"}
     ],
     "props": [
-      {"kind": "butt", "name": "butt_near", "place": "core:place/fernhold", "bearing": 92.0, "distance": 12.5, "facing": 70},
+      {"kind": "butt", "name": "butt_near", "place": "core:place/fernhold", "bearing": 96.3, "distance": 13.0, "facing": 66},
       {"kind": "butt", "name": "butt_mid", "place": "core:place/fernhold", "bearing": 147.7, "distance": 9.2, "facing": 60},
       {"kind": "butt", "name": "butt_far", "place": "core:place/fernhold", "bearing": 187.7, "distance": 15.5, "facing": 55}
     ],

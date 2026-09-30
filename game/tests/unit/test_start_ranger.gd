@@ -287,11 +287,14 @@ func test_a_ranger_s_new_game_begins_on_the_line_with_the_butts_down_the_range()
 	var eye := player.global_position + Vector3.UP * 1.5
 	var space := player.get_world_3d().direct_space_state
 	for b in butts:
-		for up in [0.3, 0.9, 1.5]:
-			var q := PhysicsRayQueryParameters3D.create(eye, (b as Node3D).global_position + Vector3.UP * up)
+		var to := (b as Node3D).global_position - player.global_position
+		var side := Vector3(-to.z, 0.0, to.x).normalized() * 0.55
+		# its middle, foot and top, and both edges of the boss: the whole butt, not a slit of it
+		for aim in [Vector3.UP * 0.3, Vector3.UP * 0.9, Vector3.UP * 1.5, Vector3.UP * 0.9 + side, Vector3.UP * 0.9 - side]:
+			var q := PhysicsRayQueryParameters3D.create(eye, (b as Node3D).global_position + aim)
 			q.exclude = [player.get_rid(), (b as CollisionObject3D).get_rid()]
 			var hit := space.intersect_ray(q)
-			assert_true(hit.is_empty(), "%s seen clear from the mark at %.1f m up (%s)" % [(b as Node).name, up, str(hit.get("collider", ""))])
+			assert_true(hit.is_empty(), "%s seen clear from the mark at %s (%s)" % [(b as Node).name, str(aim.snapped(Vector3.ONE * 0.01)), str(hit.get("collider", ""))])
 	var bag := player.get_node("Inventory") as Inventory
 	assert_eq(bag.count("core:item/torch"), 1, "a torch in the kit")
 	# everyone the tutorial stands somewhere stands on level, dry ground with no drop beside them
