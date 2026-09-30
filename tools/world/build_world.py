@@ -408,6 +408,16 @@ def drain_dams(grid, H, pad_targets, sea, waters, river_d, river_w, hold=None):
     return H
 
 
+def rehonour_sightlines(grid, H, pois, pad_targets) -> None:
+    """The authored sightlines once more, after the pad dams are filled: a dell raised under a line
+    (w4096g: the Silked Camp from Ormhold, 14 m; the Watch of the Gate both ways) is cut back to a
+    saddle the way the first pass cuts the land, in place, up to the same NOTCH_MAX_M."""
+    notched = GEO.honour_sightlines(grid, H, sightline_claims(pois, pad_targets), SIGHT.constants())
+    cut = [row for row in notched if row[3]]
+    print("[world] sightlines after the dams: %d cut again (deepest %.1f m), %d left" % (
+        len(cut), max([row[2] for row in cut], default=0.0), len(notched) - len(cut)), flush=True)
+
+
 def build(args) -> dict:
     t = Timer()
     # `--pack` builds against another copy of the core pack (a cartographer's places and POIs
@@ -529,6 +539,7 @@ def build(args) -> dict:
             _, road_d, road_w = RD.carve_roads(grid, H.copy(), roads_list)
         H = drain_dams(grid, H, pad_targets, ~GEO.land_mask(grid, atlas), waters, river_d, river_w,
                        hold=LF.road_clear(road_d, road_w))
+        rehonour_sightlines(grid, H, pois, pad_targets)
         sea = ~GEO.land_mask(grid, atlas)
         shore_discs = [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p), p["id"])
                        for p in pad_targets]
@@ -651,6 +662,7 @@ def build(args) -> dict:
             t.mark("landforms")
         # and no pad's skirt dams a valley into a dry pit (RD.drain_pad_dams: Fernhold's, 52 m)
         H = drain_dams(grid, H, pad_targets, sea, waters, river_d, river_w, hold=road_hold)
+        rehonour_sightlines(grid, H, pois, pad_targets)
         del road_hold
         del H_river
         # A shelf's seaward edge is broken last, at full resolution, so nothing laid after it
