@@ -4,7 +4,8 @@
 # When it runs:
 #   - every four hours, if main has changed since the last build (a build takes about six minutes
 #     once the import cache is warm);
-#   - by hand: Actions > "Windows build" > "Run workflow" (always builds);
+#   - by hand: Actions > "Windows build" > "Run workflow" (always builds; on main it is the nightly,
+#     on any other branch that branch is built and published as the "playtest" pre-release);
 #   - on a pushed tag v* (for example v0.1), which also makes a release of its own under that tag.
 # It does not run on every push: main moves many times a day, and a private repository has a monthly
 # allowance of Actions minutes (every push would spend it in about a fortnight).
@@ -48,6 +49,12 @@ jobs:
             echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
             echo "release=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
             echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.ref_name }}" != "$MAIN_BRANCH" ]; then
+            # run by hand on another branch: build that branch, as the "playtest" pre-release,
+            # so a branch can be played before it lands and the nightly stays main's
+            echo "ref=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "release=playtest" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "ref=$MAIN_BRANCH" >> "$GITHUB_OUTPUT"
             echo "release=nightly" >> "$GITHUB_OUTPUT"
@@ -171,10 +178,10 @@ jobs:
           notes="Windows build of Wickmere from commit ${{ steps.skip.outputs.sha }} (${{ steps.pick.outputs.ref }}), made $(date -u '+%Y-%m-%d %H:%M UTC').
 
           Download the zip (or every part of the .7z, then open the .001 with 7-Zip), unzip it into one folder and run Wickmere.exe."
-          if [ "$tag" = "nightly" ]; then
-            gh release delete nightly --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
-            gh release create nightly --repo "$GITHUB_REPOSITORY" --prerelease --target "${{ steps.skip.outputs.sha }}" \
-              --title "Wickmere nightly (${{ steps.skip.outputs.short }})" --notes "$notes" build/Wickmere-windows-*
+          if [ "$tag" = "nightly" ] || [ "$tag" = "playtest" ]; then
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --prerelease --target "${{ steps.skip.outputs.sha }}" \
+              --title "Wickmere $tag (${{ steps.skip.outputs.short }})" --notes "$notes" build/Wickmere-windows-*
           else
             gh release create "$tag" --repo "$GITHUB_REPOSITORY" --title "Wickmere $tag" --notes "$notes" build/Wickmere-windows-*
           fi
