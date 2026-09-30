@@ -14564,3 +14564,32 @@ On w4096g the full suite had 4 failures (2439 tests). All four are fixed in game
   - No render: the reframed shots were checked against the scatter only.
   - The next world build should route the Stair Head–Choir road itself round the fallen colossus (tools/world), so that the road and the waystones agree.
   - The delta's `sunken_masonry` crossing into Brightwater is a builder rule (the biome, not the region, chooses the asset) that the next build could tighten.
+
+## The quest walk's memory: every person's parts read for their jewellery were kept for good (2026-09-30)
+
+The full quest walk (`./run.sh quests`, one process for all 127 quests and every branch) grew to 13.9 GB and was OOM-killed after 218 walks. The cause is in the game, so a long play session had the same leak.
+
+- **What leaked:** `Adornment._carriers` (actors/shared/adornment.gd). This is the reading of each skinned mesh that jewellery and body tattoos are laid on: vertices, normals, bone weights, blend-shape moves and vertices by bone, about 1 MB per body. It was keyed by the mesh's and the skin's instance ids and never let go. When a cell unloads, the last person wearing a part goes with it, the part's scene is freed, and the next load is a new mesh with a new id. So every trip across the land added one reading per body loaded again. A mem probe (five trips to Ghastfell and back from the start, with byte sizes of every static container and autoload variable) showed `_carriers` growing 21 MB a trip while object and node counts stayed flat. That is why no orphan or object monitor caught it.
+- **The fix:** each reading holds a `WeakRef` to its mesh, and a new reading first drops those whose mesh has gone. A reading now lives exactly as long as its mesh. The cache still does its job (one reading per loaded mesh, shared by everyone wearing it).
+- **Also bounded:** `SiteInterior._jobs`. A site's rock is worked out ahead when its entrance's cell is raised (`prefetch`). A job nobody walked in on was kept with its whole shell for good, one per site passed. `_collect()` now moves finished jobs into the two shells kept in memory (the rest are on disk). It runs on each prefetch and each build.
+- **Measured, the same 25-quest list** (33 quests with what they need, 62 walks, branches on, about 10 min):
+  - Before: RSS 1839 MB at walk 1, 4448 MB at walk 62, climbing about 42 MB a walk. Static memory went 1511 to 3835 MB, and 1337 readings were held.
+  - After: RSS 1819 MB at walk 1, with a peak of 2498 MB. Static memory rises and falls with where the walk is (1282 to 1900 MB, ending at 1710 MB). 8 to 26 readings are held.
+  - At the old rate, 218 walks came to about 11 GB over the start, which matches the OOM. The full walk now plateaus at about 2.5 GB.
+- **Separately (mem probe):**
+  - Five save restores: flat (1155 to 1151 MB static).
+  - Five far trips out and back: +20 MB each before, about +4 MB each after (1211 to 1229 MB).
+  - Five site entries into Old Ghastow: flat within the site's own noise.
+- **The walker** prints a `QW   mem ...` line after every walk: RSS, static memory, objects, nodes, orphans, resources, navigation maps, regions and links, shells and readings held. A leak shows long before the machine runs out.
+- **New test:** tests/unit/test_interiors_memory.gd (3 tests).
+  - The Kilnway entered, left and unloaded four times after a warm-up round: objects, nodes, orphans and static memory come back to the first round's, within 150 objects, 10 nodes and 24 MB. Measured: objects 2867 to 2878, nodes 106 to 106, static 305.6 to 305.7 MB.
+  - Seven fresh copies of the rig's body read in turn leave at most one reading more than before. This fails on the old code.
+  - Three shells worked out ahead: after `_collect` no job is kept, and no more than 2 shells are held.
+- **Tests:**
+  - test_sites, test_interior, test_road_life, test_adornment and the new test: 70 tests, 0 failed. The 1 logged error is test_unknown_interior_refused's own. The "material is null" engine errors in test_adornment's after_each are there on main too (f_suite).
+  - Test warnings are back at 99.
+  - Short quest walk (a_stone_before_the_death, the_warm_egg, louder): 8 of 8 walks, 0 logged errors.
+- **Not done / for the coordinator:**
+  - I did not run the full 127-quest walk here, to leave memory for the batches. The batches can go back to one `./run.sh quests` process.
+  - RSS stays at its high-water mark after a free (glibc does not return memory to the system), so read the `static` figure for the trend.
+  - No render: nothing drawn changed.
