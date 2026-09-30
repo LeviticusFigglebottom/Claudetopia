@@ -7,13 +7,55 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-29, by the fifth coordinating session (see §000). Earlier: the fourth (§00). Its work is on
+**Last refreshed:** 2026-09-30, by the fifth coordinating session (see §000). Earlier: the fourth (§00). Its work is on
 `claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
 cfac2a7b) and not yet merged into it.
 
 ---
 
-## 000. The fifth coordinating session (2026-09-29, a cloud container)
+## 000. The fifth coordinating session (2026-09-29/30, a cloud container)
+
+**2026-09-30, afternoon: everything landed, the world rebuilt as w4096g, and the final checks green.**
+- **Landed in main:**
+  - world life phase 1 in all six regions (about 90 new places, 36 quests, large sites with bosses,
+    road tables);
+  - the sites follow-up (weathered forts, the Kilnway's mouth, reachability, the dead stay dead);
+  - landmarks (the fallen colossus, the Nave, stones set by their stub, waystones);
+  - characters' skirt bones;
+  - the red deer and its herds;
+  - the Briar crash fixes (BodyGuard, NaN-safe heights, the pad-dam drain that filled Fernhold's pit);
+  - the horse's whistle and pathing;
+  - the arrow to the crosshair, the 8-slot belt, weapon cycling;
+  - the four starts replayed (a teacher first, a fair archery range, Alder on safe ground, a torch in
+    every kit, the Briarwold's sun and god rays eased);
+  - the prebuild builder (sloped and trench pads);
+  - final-game's shared tests and fixes;
+  - the post-rebuild loose ends;
+  - the memory leak (Adornment's per-mesh readings, sites' prefetched rock).
+- **The world w4096g** (000bce32):
+  - built from 1afe618f's builder, which re-notches the authored sightlines after the pad-dam drain;
+  - 523 POIs, 5.75 M scatter instances;
+  - 2 m road, dam and sightline tests: 41/41.
+- **Final checks on the landed tree:**
+  - the suite: 2439 tests, the 4 w4096g failures fixed after;
+  - the four journeys, flow and fights (66, 0 failed): all passed;
+  - every quest walked, in batches after the full walker was OOM-killed by the leak, now fixed. The two
+    site-hook quests are walked from their hooks (the walker learned to start a quest at a site's hook).
+- **Windows builds.** A hand-run build on any branch but main publishes that branch as the `playtest`
+  pre-release; `playtest` was built at dc7d2985.
+- **Next (the owner's asks, TRIAGE 72-75):**
+  1. an optimization pass: net-beneficial performance only, measured and image-compared;
+  2. world life phase 2: rework the dull POIs, add large new places, set misaligned props straight,
+     give the Choir's spires collision;
+  3. then a world rebuild and the full checks.
+- **Machine notes this session:**
+  - `~/bin/heavy` is a two-class ticket queue: long runs in slots 1-3 needing 5 GB free, short runs in
+    slots 4-5; `~/bin/heavy-status` shows both.
+  - `godot` must be on PATH for `install_world.sh` (a symlink in /usr/local/bin).
+  - `./run.sh world` with the default MEM_GB=10 waits while tests run; MEM_GB=7 is enough (peak 4.3 GB).
+  - A 4096 build takes about 80-85 min here.
+
+**2026-09-29, earlier:**
 
 **Main now holds everything.** The triage branch (`claude/game-bugs-triage-fixes-6ffit0`, 1c777be3) was
 fast-forwarded into main (`claude/blissful-volta-dg80e6` = `claude/gifted-brahmagupta-29u39r`); the
