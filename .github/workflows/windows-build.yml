@@ -158,8 +158,9 @@ jobs:
       - name: Check the shaders were baked into the pack
         if: steps.skip.outputs.skip == 'false'
         run: |
-          grep -i "shader" export.log | grep -iv "warning" | tail -5 || true
-          python3 tools/debug/pck_shader_cache.py build/windows/Wickmere.pck --min-scene=100
+          # 168 material shaders were baked on 2026-09-30 (46 before the warm set,
+          # game/assets/shader_warm/); far fewer means the warm set or the baker went missing
+          python3 tools/debug/pck_shader_cache.py build/windows/Wickmere.pck --min-scene=150
 
       - name: Package
         if: steps.skip.outputs.skip == 'false'
