@@ -1,0 +1,882 @@
+[
+  {
+    "id": "core:npc/graddo_ko_kharrow",
+    "name": "Graddo ko-Kharrow",
+    "home_place": "core:poi/reckoners_hut",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/graddo_ko_kharrow",
+    "bio": "The Moot's reckoner for the North Road: when a clan owes a death, Graddo says what the life was worth, in beasts, coin, news or years of work, and in thirty-one years no price of his has been refused. He lives alone on the Edge with his tally-sticks because, he says, a reckoner who lives among people starts to reckon them, and then nobody asks him to supper.",
+    "unique_habit": "Weighs whatever he is handed on his palm before he looks at it, a cup, a coin, a letter, and says a number under his breath, and does not tell you what the number was for.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "proud",
+        "cynical",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 7101,
+      "build": "tall_stooped",
+      "age": 63.0,
+      "feminine": 0.0,
+      "hair": "grey_cropped_close_with_a_kharrow_braid_behind_one_ear",
+      "notes": "a reckoner's knife on a cord and a bundle of blank tally-sticks at the belt, ink-black thumbnails, a heavy Kharrow coat worn open in any weather"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/reckoners_hut",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/reckoners_hut",
+        "activity": "work",
+        "spot": "the_tally_wall",
+        "notes": "notching sticks at the wall; the prices on the North Road"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/reckoners_hut",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/haska_ko_ghast",
+    "name": "Haska ko-Ghast",
+    "home_place": "core:poi/red_moor",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/haska_ko_ghast",
+    "bio": "The stone-cutter who cuts the Red Moor's stones: one for every death of the year of the broken bridge, and one more whenever the Rope-Song remembers somebody the stones forgot. She has cut eleven in her life, all for the dead. This spring somebody set up a twelfth, uncut, and asked her in a letter under it to cut a living man's name, and paid in advance.",
+    "unique_habit": "Runs her thumb along every edge she passes, stone, table or doorframe, feeling for the grain, and apologises to it if it is rough.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "pious",
+        "humble",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 7102,
+      "build": "square_short",
+      "age": 49.0,
+      "feminine": 1.0,
+      "hair": "black_going_grey_under_a_stone-dust_kerchief",
+      "notes": "a leather apron white with stone-dust, a mallet and three chisels in a roll, forearms like a smith's and a cut-mark of Ghast's on one knuckle"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/red_moor",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/red_moor",
+        "activity": "work",
+        "spot": "the_cutters_bench",
+        "notes": "dressing stone at her bench under the new stone"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/red_moor",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/tamsk_ko_skarl",
+    "name": "Tamsk ko-Skarl",
+    "home_place": "core:poi/skarl_shieling",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/tamsk_ko_skarl",
+    "bio": "Herd-singer at Skarl Shieling: he sings the cattle down the fell at dusk with the Skarl verse, as his mother did and hers, and the cattle know the tune better than the words. This month they have come down to another verse, from higher up, before he has opened his mouth, and he has stopped singing to listen to it.",
+    "unique_habit": "Hums under everything he says, the same four notes, and stops dead when he notices he is doing it.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "kind",
+        "timid",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 7103,
+      "build": "lean_weathered",
+      "age": 34.0,
+      "feminine": 0.0,
+      "hair": "fair_and_wind-knotted_in_a_herder's_tail",
+      "notes": "a herder's plaid pinned at the shoulder with a cow's-horn pin, a crook worn black at the grip, a Skarl bone token on a thong"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/skarl_shieling",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/skarl_shieling",
+        "activity": "work",
+        "spot": "the_singing_stone",
+        "notes": "on the singing stone over the fell, watching the herd"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/skarl_shieling",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ossa_ko_skarl",
+    "name": "Ossa ko-Skarl",
+    "home_place": "core:poi/skarl_spout",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ossa_ko_skarl",
+    "bio": "Keeper of Skarl Spout, where the Skarl Water comes out of the cliff's face: she keeps the lip clear, reads the water's colour for the herders, and fishes out whatever the fell sends down. For a month the fell has been sending tokens of no clan, a bone token a week, each cut with the same mark, and she keeps them in a jar she will not put on the shelf.",
+    "unique_habit": "Tastes the water whenever she passes it, a cupped palm to the lips, and tells you what the moor has been doing from the taste.",
+    "personality": {
+      "traits": [
+        "brave",
+        "gossip",
+        "proud",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7104,
+      "build": "wiry",
+      "age": 41.0,
+      "feminine": 1.0,
+      "hair": "red-brown_cropped_short_for_the_spray",
+      "notes": "oiled leather against the spray, a long-handled net over one shoulder, a jar of bone tokens tied shut with gut on a cord at her hip"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/skarl_spout",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/skarl_spout",
+        "activity": "work",
+        "spot": "the_spout_lip",
+        "notes": "clearing the lip and watching the water"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/skarl_spout",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/maudry_pennant",
+    "name": "Maudry Pennant",
+    "home_place": "core:poi/pennants_weather_house",
+    "faction": "core:faction/sayers",
+    "dialogue": "core:dialogue/maudry_pennant",
+    "bio": "A Sayer of the Circle in Tollmere, sent up to the High Moor six winters ago with instruments and a commission to prove the clans' Breath is karst: air through limestone, as through any sponge. She has measured everything the moor does. The numbers agree with her; the moor does not. She has stopped writing to Tollmere about it and started writing to herself.",
+    "unique_habit": "Licks a finger and holds it up to the wind in the middle of a sentence, and finishes the sentence afterwards as though nothing had happened.",
+    "personality": {
+      "traits": [
+        "proud",
+        "cynical",
+        "brave",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 7105,
+      "build": "slight",
+      "age": 38.0,
+      "feminine": 1.0,
+      "hair": "brown_pinned_up_with_a_pencil_and_coming_down",
+      "notes": "a Sayer's grey coat gone brown at the hem with peat, fingerless gloves, a brass wind-gauge on a chain and ink on both cuffs"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/pennants_weather_house",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/pennants_weather_house",
+        "activity": "work",
+        "spot": "the_instruments",
+        "notes": "reading the gauges and writing it down"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/pennants_weather_house",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hodd_ko_brindle",
+    "name": "Hodd ko-Brindle",
+    "home_place": "core:poi/skerrfall_quarry",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/hodd_ko_brindle",
+    "bio": "Quarry-master at Skerrfall thirty years: he cut the lintels over half the doors in the heights and knows every hold by the stone he sent it. Last autumn his face opened on a giant's bone laid in the rock like a lintel, and warm. His men went home. He did not, and sits at his bench by the face every day, waiting for it to tell him whether he is to go on cutting.",
+    "unique_habit": "Taps whatever stone he sits on with a knuckle before he sits, and listens, and moves to another if he does not like the note.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "proud",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7106,
+      "build": "strong_short",
+      "age": 58.0,
+      "feminine": 0.0,
+      "hair": "iron-grey_under_a_leather_cap",
+      "notes": "a quarryman's leather jerkin scarred by thirty years of chips, a set of wedges on a ring at the belt, a white scar across the bridge of the nose"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/skerrfall_quarry",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/skerrfall_quarry",
+        "activity": "work",
+        "spot": "the_quarry_bench",
+        "notes": "at his bench by the new face, not cutting"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/skerrfall_quarry",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/grenna_ko_oskel",
+    "name": "Grenna ko-Oskel",
+    "home_place": "core:poi/skerry_watch",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/grenna_ko_oskel",
+    "bio": "An Oskel widow who walks out to the Skerry Watch every day and sits in it, though nobody has watched for a boat from it in forty years. Her husband and her son sailed as pilots with the last Salt Isles boat, the winter it broke on the skerries, the winter the watch-fire was not lit. She has never let anybody say the name of the woman who was keeping the watch, and somebody has been sweeping it.",
+    "unique_habit": "Keeps her back to the land and her face to the sea whatever she is doing, and turns her whole body, not her head, when you speak.",
+    "personality": {
+      "traits": [
+        "proud",
+        "quiet",
+        "pious",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 7107,
+      "build": "tall_upright",
+      "age": 71.0,
+      "feminine": 1.0,
+      "hair": "white_in_an_oskel_widow's_plait_to_the_waist",
+      "notes": "a sea-grey shawl pinned with a Salt Isles shell, a pilot's brass whistle she does not blow on a cord round her neck"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/skerry_watch",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 8,
+        "place": "core:poi/skerry_watch",
+        "activity": "work",
+        "spot": "the_watch_seat",
+        "notes": "in the look-out, facing the sea"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/skerry_watch",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/bressa_unroped",
+    "name": "Bressa",
+    "home_place": "core:poi/broom_wifes_bield",
+    "dialogue": "core:dialogue/bressa_unroped",
+    "bio": "Unroped forty years: she was Bressa ko-Oskel until the winter she kept the Skerry Watch and the watch-fire was found unlit on the morning the Salt boat broke on the skerries. The Moot cut her rope and hung it on the post by the road. She lives alone under the Wall and binds heather brooms and sweeps the places the clans no longer use, and she has never once said whether the fire was lit.",
+    "unique_habit": "Sweeps the ground in front of wherever she is standing, a stroke or two, while she talks, as other people fidget with their hands.",
+    "personality": {
+      "traits": [
+        "humble",
+        "quiet",
+        "kind",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 7108,
+      "build": "stooped_thin",
+      "age": 66.0,
+      "feminine": 1.0,
+      "hair": "white_and_cropped_like_a_man's_as_the_unroped_wear_it",
+      "notes": "a clanless woman's plain undyed wool, no clan token, a heather broom always in hand, and a short cut rope-end tied round one wrist"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/broom_wifes_bield",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/broom_wifes_bield",
+        "activity": "work",
+        "spot": "the_broom_stack",
+        "notes": "binding brooms at her door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/broom_wifes_bield",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ottar_ko_skarl",
+    "name": "Ottar ko-Skarl",
+    "home_place": "core:poi/drovers_bothy",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ottar_ko_skarl",
+    "bio": "The Skarl drover whose family came down last in the autumn, and so keeps the bothy fire in till the herds come down again. He has driven Skarldale forty autumns and never once seen a beast go up the dale in spring. This spring he found the bothy fire lit that he had banked, and a herd's worth of hoofprints round it, going up.",
+    "unique_habit": "Counts under his breath in drover's numbers, by fives on his fingers, whatever there is to count: people, cups, birds on a wall.",
+    "personality": {
+      "traits": [
+        "kind",
+        "gossip",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7109,
+      "build": "stocky_bowed",
+      "age": 60.0,
+      "feminine": 0.0,
+      "hair": "grizzled_and_short_under_a_felt_hat",
+      "notes": "a drover's long coat and a hazel goad, a Skarl drove-bell tucked silent in a pocket, a dog-whistle of bone"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/drovers_bothy",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/drovers_bothy",
+        "activity": "work",
+        "spot": "the_bothy_fire",
+        "notes": "keeping the bothy fire in"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/drovers_bothy",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/orsk_ko_rudd",
+    "name": "Orsk ko-Rudd",
+    "home_place": "core:poi/bone_ford",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/orsk_ko_rudd",
+    "bio": "The Rudd bone-counter at the Bone Ford: the giant's vertebrae that make the ford's stepping-stones have been counted at thirty-one for a thousand years, a Rudd counting them each spring and singing the number into the Rope-Song. Orsk counted this spring and got thirty-two. He has counted again every morning since, and got thirty-two, and he has not yet sung it.",
+    "unique_habit": "Touches each thing he mentions, as if to count it: 'this cup, this table, you'.",
+    "personality": {
+      "traits": [
+        "pious",
+        "timid",
+        "humble",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7110,
+      "build": "thin_straight",
+      "age": 29.0,
+      "feminine": 0.0,
+      "hair": "black_and_long_tied_with_a_counting-string",
+      "notes": "a Rudd counting-string of knotted gut round the neck, knees wet to the thigh from the ford, a tally-slate on a thong"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/bone_ford",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/bone_ford",
+        "activity": "work",
+        "spot": "the_count_stone",
+        "notes": "counting the stepping-stones"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/bone_ford",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/uldra_ko_skarl",
+    "name": "Uldra ko-Skarl",
+    "home_place": "core:poi/uldras_steading",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/uldra_ko_skarl",
+    "bio": "Holds the steading under the Skarl Ridge that her grandmother took up after the Long Winter emptied the dale. She keeps forty sheep and a dog that is mostly wolf, and she married a Mere wool-buyer who came up for a fortnight and stayed nineteen years, and cut his Valish name into the Skarl lintel himself, badly, and is buried under the ridge.",
+    "unique_habit": "Calls the dog, the sheep and her son by the same whistle and is not always sure which of them will come.",
+    "personality": {
+      "traits": [
+        "brave",
+        "generous",
+        "cynical",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7111,
+      "build": "rangy",
+      "age": 52.0,
+      "feminine": 1.0,
+      "hair": "grey-streaked_red_in_two_skarl_plaits",
+      "notes": "a steading woman's felted wool, a crook, a shepherd's knife and a pouch of salt for the ewes"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/uldras_steading",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/uldras_steading",
+        "activity": "work",
+        "spot": "the_yard",
+        "notes": "at the byre and the fold"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/uldras_steading",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/fenn_ko_skarl",
+    "name": "Fenn ko-Skarl",
+    "home_place": "core:poi/uldras_steading",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/fenn_ko_skarl",
+    "bio": "Uldra's son, with a Skarl mother, a Valish father and a Valish name, which the Skarl children have never let him forget and the Moot has never quite decided about. He wants to go down to the Mere and see his father's people, and has not, because the steading is two people's work and his mother is one.",
+    "unique_habit": "Answers every question twice, once in Skerrish and once in Valish, as if one of them might be the wrong one.",
+    "personality": {
+      "traits": [
+        "kind",
+        "timid",
+        "gossip",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 7112,
+      "build": "tall_raw_boned",
+      "age": 19.0,
+      "feminine": 0.0,
+      "hair": "reddish_and_cut_short_the_mere_way",
+      "notes": "his father's Valish coat, too broad in the shoulder, over a Skarl shirt; a sling and a pouch of stones for the wolves"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/uldras_steading",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/uldras_steading",
+        "activity": "work",
+        "spot": "the_door",
+        "notes": "mending the fold wall"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/uldras_steading",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/durra_ko_skarl",
+    "name": "Durra ko-Skarl",
+    "home_place": "core:poi/wall_keepers_ring",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/durra_ko_skarl",
+    "bio": "The Skarl keeper at the Briar's End: eleven years on the Skarl side of the white stones, walking the bone wall morning and night. She has not spoken a word to the Woodfolk keeper in all that time that was not about the wall, and she knows more about him than about anyone alive.",
+    "unique_habit": "Speaks of the Woodfolk keeper only as 'the other fire', and glances at it every time she does.",
+    "personality": {
+      "traits": [
+        "brave",
+        "proud",
+        "quiet",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7113,
+      "build": "tall_rangy",
+      "age": 44.0,
+      "feminine": 1.0,
+      "hair": "dark_under_a_skarl_hood_of_undyed_wool",
+      "notes": "a bone-headed spear, the keeper's horn at her hip, a Skarl token and a Woodfolk thorn tied together on the same thong, which she says is the agreement"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "work",
+        "spot": "the_skarl_fire",
+        "notes": "walking the bone wall"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/holt_fernby",
+    "name": "Holt Fernby",
+    "home_place": "core:poi/wall_keepers_ring",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/holt_fernby",
+    "bio": "The Woodfolk keeper at the Briar's End, on the Briar side of the white stones for eleven years, sent up by Grandfather Hollow as his mother was before him. He keeps the wall by the Woodfolk's custom and the clans' agreement and does not know what either is for, and neither, he is fairly sure, does the other fire.",
+    "unique_habit": "Whittles thorn-pegs while he talks and pushes each finished one into the ground in a line toward the white stones, and never past them.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "humble",
+        "kind",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 7114,
+      "build": "lean_long_armed",
+      "age": 47.0,
+      "feminine": 0.0,
+      "hair": "brown_and_long_bound_with_briar",
+      "notes": "Woodfolk greens gone grey with fell weather, a thorn-knife, a bow unstrung on his back, a bone token and a thorn tied together on a thong at his throat"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "work",
+        "spot": "the_woodfolk_fire",
+        "notes": "walking the bone wall"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/wall_keepers_ring",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ymma_ko_dreugh",
+    "name": "Ymma ko-Dreugh",
+    "home_place": "core:poi/rib_cathedral",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ymma_ko_dreugh",
+    "bio": "Oath-keeper of the Rib Cathedral: when the Moot sits in the giant's ribs she holds the oaths, and when it does not she keeps the nave swept and the oath-cracks clear, and listens to whoever comes up to swear something with nobody to hear it. Dreugh sing first at the Moot, and so a Dreugh keeps the oaths; she says it is the other way round.",
+    "unique_habit": "Repeats the last thing you said to her, slowly, word for word, before she answers it, as an oath-keeper does.",
+    "personality": {
+      "traits": [
+        "pious",
+        "proud",
+        "quiet",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 7115,
+      "build": "tall_upright",
+      "age": 57.0,
+      "feminine": 1.0,
+      "hair": "grey_under_a_dreugh-blue_hood",
+      "notes": "a Dreugh-blue mantle pinned with a giant's knuckle-bone, a staff of rib-bone taller than she is, wax and a stylus at her belt"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/rib_cathedral",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/rib_cathedral",
+        "activity": "work",
+        "spot": "the_oath_ribs",
+        "notes": "keeping the nave and the oath-cracks"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/rib_cathedral",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/pell_kettleby",
+    "name": "Pell Kettleby",
+    "home_place": "core:poi/tinkers_camp",
+    "dialogue": "core:dialogue/pell_kettleby",
+    "bio": "A tinker of the winter camp under Oskel Edge: mends the clans' pots and chains and belongs to nobody, which in the heights is a trade in itself. He carries more news than tin. The clans let the tinkers winter here because a tinker is the only news that walks, and Pell walks the most.",
+    "unique_habit": "Taps any metal thing he is handed with a fingernail and names the smith who made it by the ring.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "generous",
+        "cynical",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 7116,
+      "build": "wiry_tall",
+      "age": 45.0,
+      "feminine": 0.0,
+      "hair": "black_curls_under_a_battered_hat",
+      "notes": "a tinker's coat sewn with patches of every clan's cloth, a soldering iron in a sheath, a bag of odd chain-links that clinks when he laughs"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/tinkers_camp",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/tinkers_camp",
+        "activity": "work",
+        "spot": "the_mending_frame",
+        "notes": "mending at the frame"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/tinkers_camp",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/aggi_ko_rudd",
+    "name": "Aggi ko-Rudd",
+    "home_place": "core:poi/tappers_camp",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/aggi_ko_rudd",
+    "bio": "Resin-tapper in the Rib Pines, who keeps the clay pots on the trunks and boils the pitch that keeps the clans' chains from rusting. She has tapped the same stand for twenty years. This spring one stand has bled red, and the other tappers will not go near it; Aggi goes near it every day, and comes back quieter.",
+    "unique_habit": "Smells of pine-pitch so strongly that she apologises for it before anyone has said a word, every time.",
+    "personality": {
+      "traits": [
+        "brave",
+        "kind",
+        "gossip",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7117,
+      "build": "small_strong",
+      "age": 36.0,
+      "feminine": 1.0,
+      "hair": "brown_and_tarred_stiff_at_the_ends",
+      "notes": "a tapper's hooked knife and a pitch-pot on a strap, hands black to the wrist, a Rudd herd-mark stitched on her hood"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/tappers_camp",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/tappers_camp",
+        "activity": "work",
+        "spot": "the_pitch_pot",
+        "notes": "tapping and boiling pitch"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/tappers_camp",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/varn_ko_skarl",
+    "name": "Varn ko-Skarl",
+    "home_place": "core:poi/moot_beacon",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/varn_ko_skarl",
+    "bio": "Keeper of the Moot Beacon on the last tor of Rib Edge: he cuts and stacks the peat for it at his shieling below the tor all summer, and lights it when the Moot sits so the lowlands keep their quarrels. Thirty turves a day in the dry. This month the stack went to ash in a night with the Moot not sitting, and he woke beside it warm through, as if somebody had kept a fire for him.",
+    "unique_habit": "Knots a cord while he talks, a knot for every thing you tell him, and reads the knots back to you at the end to show he was listening.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "pious",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7118,
+      "build": "tall_raw_boned",
+      "age": 61.0,
+      "feminine": 0.0,
+      "hair": "grey_and_wild_under_a_skarl_hood",
+      "notes": "a peat-spade over one shoulder, soot to the elbows, a counting-cord of knots at his belt and a Skarl bone token blackened by the beacon"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/moot_beacon",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/moot_beacon",
+        "activity": "work",
+        "spot": "the_beacon_foot",
+        "notes": "at the beacon's foot, watching the north"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/moot_beacon",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]

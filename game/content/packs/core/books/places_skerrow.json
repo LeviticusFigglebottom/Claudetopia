@@ -1,0 +1,219 @@
+[
+  {
+    "id": "core:book/salt_boat_letter",
+    "title": "A Letter in a Salt Isles Tin",
+    "author": "Keddo ko-Oskel, pilot",
+    "category": "book",
+    "body": "# Mother\n\n*Written at the lead-house door, the night of the sailing.*\n\n---\n\nThe master will sail on the tide. Father has told him the skerries are running and he says the Salt Isles do not wait on Oskel weather, and Father says then the Salt Isles can pilot themselves, and then goes and gets his coat.\n\nSo we are going. I am writing this to leave in the tin in case, which Father says is bad luck, so do not tell him.\n\nThe fire is lit at the Watch. I can see it from here, as plain as the lamp in our window, and I know it is Bressa on the watch tonight because she keeps it too high, she always does, it throws sparks. So you are not to blame her whatever the master does. The fire is lit. I can see it.\n\nWe will be home for the thaw. Keep my boots dry.\n\n*Keddo*"
+  },
+  {
+    "id": "core:book/ghastow_unroped_roll",
+    "title": "The Unroped's Roll",
+    "author": "kept at Ghastow, in several hands",
+    "category": "book",
+    "body": "# Those who came up the moor\n\n*Name, clan that was, price asked, and paid or not.*\n\n---\n\nGorrm, that was Ghast. A hundred head, for a fall. **Not paid.** Struck: paid by us, in advance, at the stones.\n\nIlsa, that was Brindle. A year's ore, for a cart gone down the Edge. **Not paid.**\n\nDennek, that was Rudd. A verse, for a man nobody else would miss. Rudd would not sing it. **Not paid.**\n\nThe boy, that was Oskel, no name given, he will not say it. Priced at nothing. **Paid.** He says that one was fair.\n\n*At the foot, in Gorrm's hand:* A price paid is a price paid. We will pay them all, in the grooves, where the road can see. Then let the Moot say what we owe."
+  },
+  {
+    "id": "core:book/orrdun_last_bier",
+    "title": "The Last Bier-List",
+    "author": "Hethra ko-Skarl, memory-keeper",
+    "category": "book",
+    "body": "# Carried up\n\n*The last page of a Skarl keeper's bier-list, kept at Orrdun's door.*\n\n---\n\nAld ko-Skarl, herdsman, eighty winters. Carried up by his sons. Sung in. Niche nine hundred and four.\n\nThe child of Tavva, unnamed, one winter. Carried up by her mother alone, who would not be helped. Sung in. Niche nine hundred and five.\n\nOrrin ko-Skarl, drowned at the Spout. Carried up by the clan. Sung in. Niche nine hundred and six.\n\n*Then, in the same hand, smaller:* The Breath did not come for Orrin. I sang him again. It did not come. I have sent the bearers down and told them not to carry any more until I send word. I will sing the one before him. Somebody in this hall must be first in line, and it must be possible to find out who.\n\n*The rest of the page is names, the same names, over and over, in a hand that gets larger and less like writing.*"
+  },
+  {
+    "id": "core:book/brakhs_drink_spout_keeper",
+    "title": "A Spout-Keeper's Slate",
+    "author": "a Skarl keeper of the Spout, long before Ossa",
+    "category": "book",
+    "body": "# What the water said\n\n*Chalked on a slate and left where the lake begins.*\n\n---\n\nCame in on a rope to see where the tokens come from. The rope is not long enough.\n\nThe water is not cold here. It is the temperature of a hand.\n\nThere is something kneeling at the lake. It has its hands in the water. It lifts them, and something is in them, and it opens them and lets the water have it. It does this as if it had been asked to.\n\nI am going back. If the Skarl ask, the Spout is clear and the water is sweet and there is nothing to see."
+  },
+  {
+    "id": "core:book/ghastow_chain_tag",
+    "title": "A Tag of Lead",
+    "author": "stamped at Ghastow",
+    "category": "book",
+    "body": "# Hung on the gate\n\n*Stamped into lead with a nail, one letter at a time.*\n\n---\n\nKHARROW. HERDSMAN'S DEATH. 1003. A HUNDRED HEAD. NOT PAID.\n\n*On the back, scratched with a knife:* It was a fall. It was a fall. It was a fall."
+  },
+  {
+    "id": "core:book/orrdun_bier_list",
+    "title": "A Bearer's Knots",
+    "author": "a Skarl bier-bearer",
+    "category": "book",
+    "body": "# Carried up\n\n*A knot for each bier, read back by feel.*\n\n---\n\nForty knots. My mother's is the first. My father's is the twelfth.\n\n*A gap, and one knot tied very tight:* The last one. The keeper went in behind it to sing, and sent us down, and said she would send word.\n\n*No more knots. Tied to the end, a bone token of the Skarl, and a note in chalk on the hide:* We are still waiting for word. Every dusk the herd hears her. We have stopped carrying. We have not stopped listening."
+  },
+  {
+    "id": "core:book/brakhs_drink_warning",
+    "title": "Chalked at the Knees",
+    "author": "a Skarl water-keeper",
+    "category": "book",
+    "body": "# Do not drink\n\n*Chalked large enough to read by moonlight.*\n\n---\n\nThe water in there has not decided yet.\n\nIt goes in cold and comes out colder at the Spout two days on, and in between it runs past something that is still drinking.\n\nIf you go in, go on a rope, and come out on it.\n\nIf you hear it lift its hands out of the lake, you are too near."
+  },
+  {
+    "id": "core:book/pennants_weather_book",
+    "title": "The Weather on the High Moor",
+    "author": "Maudry Pennant, of the Circle",
+    "category": "book",
+    "body": "# Readings, the Breathing Stones\n\n*Kept twice a day in a Tollmere hand.*\n\n---\n\nGlass rising, hole breathing out, 14 units. Glass falling, hole breathing in, 15 units. As a sponge would. Karst.\n\nYear's sum: in, 91 units more than out.\n\nYear's sum: in, 104 units more than out.\n\n*In the margin, in the same hand but hurried:* A sponge does not take in more than it gives. Not for six years. Not with nothing coming out anywhere else.\n\n*The last line:* Stopped breathing out. Drawing in only. 3rd week. I do not know where it is going and I would like to."
+  },
+  {
+    "id": "core:book/skerrfall_lintel_book",
+    "title": "Lintels Out of Skerrfall",
+    "author": "Hodd ko-Brindle, quarry-master",
+    "category": "book",
+    "body": "# Sent\n\n*Stone, length, and whose door it went over.*\n\n---\n\nA lintel of nine feet, for the Moot hall at Kharrow. A lintel of six, for the Dreugh ninth door. A lintel of four, a child's grave at Oskelcrag, no charge.\n\n*Thirty years of them, a line each.*\n\n*The last line:* A lintel of eleven feet, already laid, over a door we did not cut, in a stone that is not stone, warm. Not sent. Not cut. Not mine."
+  },
+  {
+    "id": "core:book/wall_book",
+    "title": "The Wall-Book at the Briar's End",
+    "author": "two keepers, turn about",
+    "category": "book",
+    "body": "# Walked the wall\n\n*One line a day. Skarl hand, then Woodfolk hand, then Skarl.*\n\n---\n\nWalked it. Sound.\n\nWalked it. Sound. Briar green to the gap.\n\nWalked it. A rib loose at the third bay. Wedged.\n\nWalked it. The third bay is holding. Your wedge is good.\n\n*A long gap in the Skarl hand, then:* Walked it. Pushed out. From our side.\n\n*The Woodfolk hand, under it, the same day, which has never happened before:* I heard it too."
+  },
+  {
+    "id": "core:book/reckoners_table",
+    "title": "Prices, the North Road",
+    "author": "Graddo ko-Kharrow",
+    "category": "book",
+    "body": "# What a life is worth on the North Road\n\n*By the Moot's leave, as reckoned at the Hut.*\n\n---\n\nA herdsman in his prime: forty head, or ten years' work for the family.\n\nA smith: twelve years' work, and the forge fired for the family's use for life.\n\nA memory-keeper: a verse, sung every spring, by the clan that owes it, for as long as the clan is a clan.\n\nA child: whatever the mother says. She has never yet said a number.\n\nAn unroped man or woman: nothing. *Somebody has cut under it, deep, with a knife:* WE WILL SEE."
+  },
+  {
+    "id": "core:book/bressas_round",
+    "title": "The Sweeping Round",
+    "author": "Bressa, knotted",
+    "category": "book",
+    "body": "# Where to sweep\n\n*Heather knots on a string. Read by feel in the dark.*\n\n---\n\nA knot for each seat at the Old Moot. Eight. The clans sweep seven.\n\nA knot for the Skerry Watch. Tied twice, tight.\n\nA knot for the Unroping Post by the Oskelcrag road. That one is not for sweeping. That one is for standing at, once a year, until the rope that is mine has gone to nothing, and it has not gone to nothing yet."
+  },
+  {
+    "id": "core:book/faceless_rubbing",
+    "title": "The Turned Stone",
+    "author": "a Skarl herder, in charcoal",
+    "category": "book",
+    "body": "# What was on the face\n\n*Rubbed with charcoal on birch bark, as fast as I could.*\n\n---\n\nA closed hand, cut deep. Under it a line of Skerrish, worn nearly off: *...OW. WE KEPT THE ...*\n\nThe rest is gone into the stone.\n\n*Scrawled under it:* I did not turn it. It was turned when I came. I am not a verse in debt to the Moot. Somebody else is."
+  },
+  {
+    "id": "core:book/whelping_courier",
+    "title": "A Courier's Letter",
+    "author": "a Tollmere courier",
+    "category": "book",
+    "body": "# To the gate-warden at Windgate\n\n*Sealed with the Tallymen's wax, and never delivered.*\n\n---\n\nThe Guild asks the gate-warden what toll he is taking on a pass nobody can cross, and on whose authority, and to whom he is remitting it.\n\n*Under the seal, in pencil, the courier's own:* Caught out by the dark. Rang the shelter bell. Nobody came. The wolves came. I am going to the hole in the ground because the wolves came from there and are all out here now, and it is the only place on this moor they are not."
+  },
+  {
+    "id": "core:book/sorting_count",
+    "title": "What They Carried",
+    "author": "a Skarl herder, on the pavement",
+    "category": "book",
+    "body": "# Watched from the heather\n\n*A scratch for each bone carried.*\n\n---\n\nThree ribs, the long ones, first. Then knuckles, two at a time, in their arms, like a child carrying apples.\n\nThey lay them down very gently. They measure the gap with a hand before they lay the next.\n\nOne of them stood at the end of the line all day with nothing in its arms, facing south, toward the ford.\n\nI have not told the Rudd. I do not know how to tell a Rudd that something is counting."
+  },
+  {
+    "id": "core:book/jory_wool_book",
+    "title": "Fleece, Skarl Ridge",
+    "author": "Jory Wool, of the Mere",
+    "category": "book",
+    "body": "# Bought\n\n*In a Valish hand, the numbers in Valish and the notes in bad Skerrish.*\n\n---\n\nForty fleeces, good, off a Skarl woman with a dog like a wolf. Stayed the night. The dog has not decided about me.\n\nForty fleeces. Stayed the winter.\n\n*Nineteen years of forty fleeces.*\n\n*The last entry, in another hand, Skerrish:* No fleece bought this year. The buyer is under the ridge. His name is on the lintel, cut badly, by him. It stays."
+  },
+  {
+    "id": "core:book/leadhouse_tide_book",
+    "title": "Tides at the Oskel Shore",
+    "author": "the Salt Isles factor",
+    "category": "book",
+    "body": "# Tides, and lead\n\n*In Sedgish with a lisp, the numbers in Valish.*\n\n---\n\nHigh water two hours after the moon. Skerries running on the ebb; stand off until the Watch fire is let down.\n\nForty pigs of Oskel lead, weighed and stamped.\n\n*The last season:* Master will not wait for the Watch. Master says the Watch is Oskel business. Pilot says the Watch is the sea's business and the sea does not care whose it is. We sail on the flood."
+  },
+  {
+    "id": "core:book/red_moor_chalk_book",
+    "title": "Set Out Before Cutting",
+    "author": "Haska ko-Ghast, stone-cutter",
+    "category": "book",
+    "body": "# The stones, and who is under them\n\n*Each name chalked on a slate and copied here before the first cut.*\n\n---\n\nEleven. Ghast and Kharrow both, the year of the broken bridge, each remembered by the Song after the stones forgot them. Each set out, each cut, each sung.\n\n*The twelfth, in a hand that does not want to write it:* A living man. Paid in advance, the letter says. I have set it out. I will not cut the last three letters. A stone for the dead goes up after, not before, and if nobody else on this moor keeps that rule, I do."
+  },
+  {
+    "id": "core:book/ghorrow_door_chalk",
+    "title": "The Seven Bricked Doors",
+    "author": "a Skarl herder, sheltering",
+    "category": "book",
+    "body": "# Copied by lamplight\n\n*The chalk on each bricked door, as it is.*\n\n---\n\nThe first door: a mark, Kharrow's, and a number, one.\n\nThe second: Dreugh's, and two. And so on: Brindle, Ghast, Rudd, Oskel, Skarl, three to seven.\n\nThe open door, the eighth: no mark. A number, chalked fresh, a finger's width high: *nought*.\n\n*Under it:* I did not go down. I am telling everybody I did not go down, so that it is true."
+  },
+  {
+    "id": "core:book/tarn_catch",
+    "title": "Fished Out",
+    "author": "a scree-hag's string, read by a herder",
+    "category": "book",
+    "body": "# On the string\n\n*Counted off it, in order, by whoever took it down.*\n\n---\n\nA child's rope-toggle, Brindle-knotted. A Valish penny, no king on it. A bone token cut with a closed hand. A tooth, not human, not wolf. A key to no door in the heights.\n\n*Last on the string, tied on with a hair:* a smooth stone with a name scratched on it, and the name is mine, and I have never been to the Hidden Tarn before today."
+  },
+  {
+    "id": "core:book/jawbone_balk_tally",
+    "title": "Balked",
+    "author": "an Oskel herder",
+    "category": "book",
+    "body": "# Would not go through\n\n*A notch a beast. The Oskel sell a beast that balks.*\n\n---\n\nOne balked. Two. The whole herd.\n\nThe whole second herd.\n\n*On the flat of the stick:* Went through myself to show them. Nothing on the far side. The heather, the moor, the crag-wolves where they always are. Came back through. The herd looked at me as if I had come back from somewhere."
+  },
+  {
+    "id": "core:book/briars_end_rib",
+    "title": "On the Inner Face",
+    "author": "unknown",
+    "category": "book",
+    "body": "# Scratched with something sharp\n\n*On the side of the bone that faces the fell, not the Briar.*\n\n---\n\nKEPT FROM BOTH SIDES.\n\n*Under it, fresher, in a different hand:* by whom\n\n*Under that, fresher still, in the first hand again:* by us"
+  },
+  {
+    "id": "core:book/deadground_slate",
+    "title": "Where the Grass Is",
+    "author": "an Oskel spoil-picker, a child",
+    "category": "book",
+    "body": "# The grass\n\n*A cross for each tuft. Drawn every day.*\n\n---\n\nOne tuft, at the bottom of the spoil, by the old shed.\n\nTwo. Three. A line.\n\n*The crosses go up the slate in a line toward a circle marked MINE.*\n\n*At the top:* It's nearly at the mine now. Mam says do not walk along it. I walked along it. It's warm, like the grass is on top of something breathing."
+  },
+  {
+    "id": "core:book/ruddale_parapet_chalk",
+    "title": "On the Parapet",
+    "author": "copied by a Rudd herder",
+    "category": "book",
+    "body": "# Chalked on the parapet\n\n*In a Kharrow hand, the Rudd herder says, from the loops.*\n\n---\n\nFORTY HEAD WENT OVER THIS BRIDGE THAT OWED THE GORGE A TOLL.\n\n*Rubbed half out, and under it, in the same hand, smaller:* and we never said. and we are not saying now. we are standing here so that you know we are not saying it."
+  },
+  {
+    "id": "core:book/oskel_fire_book",
+    "title": "Kept In",
+    "author": "the Oskel herders, turn about",
+    "category": "book",
+    "body": "# The fire at the dale head\n\n*A line a night: who kept it, and the mine.*\n\n---\n\nKept in. Mine singing.\n\nKept in. Mine singing.\n\n*Years of the same line.*\n\nOut. Out, the one night, the peat wet through. Mine silent. We sat and listened to nothing till dawn.\n\nKept in. Mine singing again, and a new note in it, like somebody trying a word."
+  },
+  {
+    "id": "core:book/spine_count",
+    "title": "Counting the Spine",
+    "author": "a Rudd child, sent up to practise",
+    "category": "book",
+    "body": "# One, two\n\n*Counted out loud and written down after.*\n\n---\n\nTwenty-six bones in the heather. Twenty-six!\n\nCounted again: twenty-six.\n\n*Crossed out:* The last three have gone. There are holes where they were, and drag-lines in the heather going away. Two lines go north. One line goes south, to the beck.\n\nI am not supposed to count what is not there. Grandmother says you only sing what you can touch."
+  },
+  {
+    "id": "core:book/bonefield_complaint",
+    "title": "To the Moot, About the Bones",
+    "author": "a Skarl herder",
+    "category": "book",
+    "body": "# A complaint\n\n*To be read at the spring sitting, if the herder can bring himself to.*\n\n---\n\nThe bones in the Bonefield have lain where they lie since before the Skarl. My herd grazes among them. My herd knows where every one is.\n\nThis summer they are in rows. Ribs with ribs. Knuckles with knuckles. My herd will not graze among them now; they stand at the edge and look.\n\nI ask the Moot who gave anybody leave to tidy the Bonefield. I would like it put back."
+  },
+  {
+    "id": "core:book/far_anchor_rubbing",
+    "title": "The Mark on the Far Anchor",
+    "author": "a Ghast mason",
+    "category": "book",
+    "body": "# The far anchor\n\n*Rubbed at low water, hanging off the near end by a rope.*\n\n---\n\nThe near anchor is Ghast's, cut by us. The far anchor has three marks. Kharrow's, as the treaty says.\n\nUnder Kharrow's, older: a closed hand.\n\nUnder the hand, older still, worn nearly off, a mark I do not know, like a mouth.\n\n*A note to the clan:* The bridge had three builders. We only ever paid two."
+  },
+  {
+    "id": "core:book/chain_pitch_tally",
+    "title": "Pitch on the Chains",
+    "author": "the Rudd tappers",
+    "category": "book",
+    "body": "# Coated\n\n*Every autumn, the four chains in treaty order.*\n\n---\n\nKharrow's: coated. Dreugh's: coated. Brindle's: coated. Ghast's: coated, and loosened one link by the Moot's word, and coated again at the new link.\n\n*Twenty autumns of the same.*\n\n*This year:* The pitch from the red stand will not go on Ghast's chain. It runs off. It goes on the other three like any pitch. We have used the old pitch on Ghast's. Nobody will tell the Moot. It is only pitch."
+  },
+  {
+    "id": "core:book/oath_slip",
+    "title": "An Oath",
+    "author": "unsigned",
+    "category": "book",
+    "body": "# Pushed into the rib\n\n*Written small, on birch bark, and folded twice.*\n\n---\n\nI swear on the giant's bones, which do not forget, that I will not tell my brother what I saw on the Edge the night the herdsman fell. I swear that I will carry it. I swear it is not mine to tell.\n\n*Folded inside, a second slip, newer, in the same hand, older:* The one it would have saved is at Ghastow. I am still carrying it. The bones have not let me put it down."
+  },
+  {
+    "id": "core:book/last_riser",
+    "title": "The Last Riser",
+    "author": "whoever climbed it",
+    "category": "book",
+    "body": "# At the top of the stair\n\n*Rubbed onto a shirt, because there was nothing else.*\n\n---\n\nThe stair stops at a sheer face where the snow has never melted. The last riser is as high as a man's chest, and cut into it, in letters the size of a hand, not Skerrish and not Oroth:\n\n*A line of marks like footprints going up, and then none.*\n\nAnd under them, in Skerrish, much smaller, much newer, cut by a knife: WE WENT UP. DO NOT FOLLOW. WE WILL SEND WORD."
+  }
+]

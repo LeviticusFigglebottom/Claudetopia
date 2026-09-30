@@ -896,5 +896,61 @@
     ],
     "description": "The family's right to the bank, cut on a peg of bog-oak driven into the cut's face, nine marks down it for nine generations.",
     "reads": "core:book/wayside_oskelcrag_peat_bank"
+  },
+  {
+    "id": "core:item/wayside_going_up_cairn",
+    "name": "The Ninth Stone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A flat stone wedged in the top of the Going-Up Cairn, scratched on its underside, the lichen on it grey-green and strange.",
+    "reads": "core:book/wayside_going_up_cairn"
+  },
+  {
+    "id": "core:item/wayside_old_kharrows_rest",
+    "name": "A Name in the Dent",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy of the small name somebody has cut into the dent of Old Kharrow's Rest, chalked on a Kharrow child's naming-slate and left on the seat.",
+    "reads": "core:book/wayside_old_kharrows_rest"
+  },
+  {
+    "id": "core:item/wayside_skarl_drove_well",
+    "name": "The Well-Bell's Rope",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Skarl drover's tally tied to the bell-rope over the Drove-Well trough: the nights the bell rang with no drove.",
+    "reads": "core:book/wayside_skarl_drove_well"
+  },
+  {
+    "id": "core:item/wayside_unroping_post",
+    "name": "The Unroping Words",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The words of an unroping, carved on a board nailed to the Unroping Post under the ropes.",
+    "reads": "core:book/wayside_unroping_post"
   }
 ]

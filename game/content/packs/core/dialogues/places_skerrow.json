@@ -1,0 +1,2604 @@
+[
+  {
+    "id": "core:dialogue/graddo_ko_kharrow",
+    "speaker_name": "Graddo ko-Kharrow",
+    "notes": "The reckoner of the North Road, at the Reckoner's Hut (skerrow world life). Gives core:quest/a_stone_before_the_death.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "stone_reckoned_back"
+          },
+          {
+            "quest_done": "core:quest/a_stone_before_the_death"
+          }
+        ],
+        "text": "The coin in the grooves has a line under it now, in my hand: this is short. Travellers stop and read it. Some of them lay a coin of their own beside it. I have not reckoned what that is worth. I am not going to."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "stone_cut_for_gorrm"
+          },
+          {
+            "quest_done": "core:quest/a_stone_before_the_death"
+          }
+        ],
+        "text": "Haska cut him on the Red Moor, among the Ghast. I stopped at the stone on the way to the Moot. I did not say anything. I find I had nothing to say that was worth anything."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "stone_reckoning_burned"
+          },
+          {
+            "quest_done": "core:quest/a_stone_before_the_death"
+          }
+        ],
+        "text": "The road is square. I sleep well. I dream about a hundred head of cattle walking up the Edge, and I count them, and there are always a hundred, and I wake up tired."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Ko-Kharrow, Graddo. Reckoner. Don't touch the sticks; each of them is somebody, and they are all in order.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "When a clan owes a death, the Moot asks me what the life was worth, and I say. Forty head for a herdsman in his prime. Twelve years' work for a smith. A song, sometimes, for somebody nobody else will miss: the clan owes a verse, and has to find someone to sing it every spring. — I have never had a price refused in thirty-one years. That is the whole craft. Not being right. Being paid.",
+        "effects": [
+          {
+            "set_flag": "graddo_ko_kharrow_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "A reckoner who lives among people starts to reckon them. You sit at a man's hearth and you think: nine head, and a year's peat. Then nobody asks you to supper. — Up here there is the wind, and the road, and the sticks. The wind is not worth anything. I find that restful.",
+        "effects": [
+          {
+            "set_flag": "graddo_ko_kharrow_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Nothing. That is what unroping is: the Moot says a life is worth nothing to anyone, and cuts the rope that said otherwise. — I have priced four men into Ghastow. I do not lose sleep over them. I lose sleep over the fact that I can remember all four prices.",
+        "effects": [
+          {
+            "set_flag": "graddo_ko_kharrow_told_3"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Ask. I will tell you what it is worth, afterwards, whether you want to know or not.",
+        "choices": [
+          {
+            "text": "What does a reckoner do?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why live up here alone?",
+            "next": "topic_2"
+          },
+          {
+            "text": "The Unroped. What are they worth?",
+            "next": "topic_3"
+          },
+          {
+            "text": "The coin in the Blood-Price Stones.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/a_stone_before_the_death"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/a_stone_before_the_death"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The name on the stone is yours. Gorrm had your price in his book.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/a_stone_before_the_death",
+                  "the_reckoning"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Coin in the grooves for a death. Laid in public, on the road, as the law says: a debt seen to be paid. — Nobody has died. Nobody asked me what anybody was worth. Every price paid on the North Road for thirty-one years, I set, and I did not set this one. — And Haska ko-Ghast has sent word that somebody set up a new stone on the Red Moor and asked her to cut it. She would not tell the boy whose name. Go and look at both. I would go myself, but a reckoner seen asking about a price looks like a reckoner who has lost count.",
+        "choices": [
+          {
+            "text": "I'll look at the coin and the stone.",
+            "effects": [
+              {
+                "start_quest": "core:quest/a_stone_before_the_death"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Look at the coin first. Coin tells you who, if you let it. Stone only tells you when.",
+        "next": "hub"
+      },
+      "q_decide_reckon_it_back": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "*(A long time with a blank stick and the knife.)* A hundred head, and forty years, and a rope. I cannot make it come out. — I will lay what I can in the grooves and write under it, in public: this is short. That will have to be the price. It is the first one of mine anybody will ever see refused.",
+        "next": "hub"
+      },
+      "q_decide_cut_his_name": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "His name on the Red Moor with the dead of the broken bridge. A Ghast among Ghast. — Haska will cut it well. She cuts them all well. And I will walk past it on the way to the Moot every spring and it will cost me something each time, which is correct.",
+        "next": "hub"
+      },
+      "q_decide_burn_the_reckoning": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "*(He feeds it to the brazier a page at a time and watches each one go.)* — A price paid is a price paid. He paid mine, and you paid his. The road is square. — I will keep the coin that was in the grooves. Somebody should be paid for this, and it was not going to be me.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "*(He takes the reckoning and weighs it on his palm before he opens it, and says a number under his breath.)* — A hundred head. For a Kharrow herdsman found at the foot of the Edge, in 1003. Ghast would not pay it for him, and the Moot cut his rope. — And under it, the Moot's own finding, two winters on. He fell. — I remember the price. I did not know about the finding. Nobody reckons what a mistake is worth; there is no Moot for it. — He paid for my death in advance, in the grooves, the way the law says. It is the most lawful thing anyone has done on this road in years. Say what I am to do.",
+        "choices": [
+          {
+            "text": "Reckon what the Moot owed Gorrm, and lay it in the grooves in his name.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_stone_before_the_death",
+                  "reckon_it_back"
+                ]
+              }
+            ],
+            "next": "q_decide_reckon_it_back"
+          },
+          {
+            "text": "Let Haska cut Gorrm's name on the stone, not yours.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_stone_before_the_death",
+                  "cut_his_name"
+                ]
+              }
+            ],
+            "next": "q_decide_cut_his_name"
+          },
+          {
+            "text": "Burn the reckoning. A price paid is a price paid.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_stone_before_the_death",
+                  "burn_the_reckoning"
+                ]
+              }
+            ],
+            "next": "q_decide_burn_the_reckoning"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Graddo ko-Kharrow",
+        "text": "Mind the sticks on the way out. They are all somebody.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tamsk_ko_skarl",
+    "speaker_name": "Tamsk ko-Skarl",
+    "notes": "The herd-singer at Skarl Shieling (skerrow world life). Gives core:quest/the_verse_nobody_sang.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "verse_sung_at_dusk"
+          },
+          {
+            "quest_done": "core:quest/the_verse_nobody_sang"
+          }
+        ],
+        "text": "I'm on the forty-first name. The herd stands and listens to all of it now, the whole roll, before it'll come down. It's slow. My mother would have laughed at me."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "verse_to_the_hold"
+          },
+          {
+            "quest_done": "core:quest/the_verse_nobody_sang"
+          }
+        ],
+        "text": "The memory-keeper at the Hold unrolled it on the long table and read it all, standing up, and at the end she said, Skarl owes Hethra a verse. We're writing it. I'm to sing it."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "verse_left_quiet"
+          },
+          {
+            "quest_done": "core:quest/the_verse_nobody_sang"
+          }
+        ],
+        "text": "Quiet up on the Wall now, at dusk. The herd comes to me again. I sing the verse with the breath left in it, and some nights I leave it a bit longer than I used to."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "*(He stops humming.)* Ko-Skarl, Tamsk. You'll want to be off the fell by dusk. Or you won't. Stay, and listen.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "With the Skarl verse. My mother's mother sang it, and the cattle know it the way you know your own name called across a market. — You don't sing it at them. You sing it and they come to find out who's singing. That's all a verse is, really. Somebody wanting to know who's there.",
+        "effects": [
+          {
+            "set_flag": "tamsk_ko_skarl_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Snow, and the Watcher's skull, and the Giants' Stair going up to nothing. And Orrdun. — We don't say Orrdun much. My grandmother's grandmother carried biers up there, the last of them. We stopped carrying. Nobody will say why, which is how you know it was a good reason, or a bad one.",
+        "effects": [
+          {
+            "set_flag": "tamsk_ko_skarl_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "The herd's fine. Ask.",
+        "choices": [
+          {
+            "text": "How do you sing cattle down?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What's up on the Wall?",
+            "next": "topic_2"
+          },
+          {
+            "text": "The cattle come down to another voice?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_verse_nobody_sang"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_verse_nobody_sang"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The singer was the Keener of Orrdun. I have her roll of names.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_verse_nobody_sang",
+                  "the_names"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "At dusk, before I've opened my mouth. From high up on the Wall, the Skarl verse, sung right, better than me. And names in it, in the place where the verse leaves a breath for a name. Names I don't know, one after another, in an order, like somebody reading a roll. — The herd comes down to it. They stand at the foot of the fell looking up, and they won't come to me till it stops. — The only way up the Wall on that side is the Giants' Stair. I'm a herder. Would you go and see who's singing?",
+        "choices": [
+          {
+            "text": "I'll go up and find the singer.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_verse_nobody_sang"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Take a torch. And if she stops singing when you get near, don't stand still. That's just what my grandmother said. I don't know what it means.",
+        "next": "hub"
+      },
+      "q_decide_sing_them_in": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "At dusk. With the herd. *(He unrolls it at last and reads the first name aloud, badly, and then again, better.)* — It'll take me a year to get through it. Then I'll start again. That's what she knew. You don't finish a roll. You keep it.",
+        "next": "hub"
+      },
+      "q_decide_to_the_memory_keeper": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Kharrow keeps what the clans remember. It should be kept by people who keep things. — I'll carry it down myself. I haven't been to the Hold since I was a boy. I'll tell them Hethra ko-Skarl sent it, and see if anybody in Kharrow knows how to look surprised.",
+        "next": "hub"
+      },
+      "q_decide_leave_them_quiet": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Back with them. *(He nods, slowly, several times.)* — They were carried up there to wait for something. It isn't our business to stop them waiting. I'll sing the verse at dusk with the breath left in it, the way we always did, and they can have the breath.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Hethra ko-Skarl. *(He turns the roll in his hands and doesn't unroll it.)* — She's in the Rope-Song, the last Skarl keeper, the one who went up. We sing her as gone. She wasn't gone. She was up there singing them in, all of them, ninety years, because somebody has to. — Three hundred years of our dead, and the last line blank. What do we do with them?",
+        "choices": [
+          {
+            "text": "Sing them at dusk with the herd, the way she did. Somebody still should.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_verse_nobody_sang",
+                  "sing_them_in"
+                ]
+              }
+            ],
+            "next": "q_decide_sing_them_in"
+          },
+          {
+            "text": "Take the roll down to the memory-keepers at Kharrow Hold.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_verse_nobody_sang",
+                  "to_the_memory_keeper"
+                ]
+              }
+            ],
+            "next": "q_decide_to_the_memory_keeper"
+          },
+          {
+            "text": "Put the roll back in Orrdun. Let them wait for the Breath in quiet.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_verse_nobody_sang",
+                  "leave_them_quiet"
+                ]
+              }
+            ],
+            "next": "q_decide_leave_them_quiet"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Tamsk ko-Skarl",
+        "text": "Off the fell by dusk. Or stay and listen.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ossa_ko_skarl",
+    "speaker_name": "Ossa ko-Skarl",
+    "notes": "The keeper of Skarl Spout (skerrow world life). Gives core:quest/tokens_of_no_clan.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "tokens_to_the_water"
+          },
+          {
+            "quest_done": "core:quest/tokens_of_no_clan"
+          }
+        ],
+        "text": "Nothing out of the Spout but water since. Water and one sheep. The sheep was very surprised."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tokens_to_ghorrow"
+          },
+          {
+            "quest_done": "core:quest/tokens_of_no_clan"
+          }
+        ],
+        "text": "A Skarl herder says there's smoke out of Ghorrow some mornings now, thin, like a fire banked. I haven't been to look. You don't go calling on a hold the first year."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tokens_to_the_moot"
+          },
+          {
+            "quest_done": "core:quest/tokens_of_no_clan"
+          }
+        ],
+        "text": "The Moot sat three days on that jar. Nobody will tell me what was said. But the Rope-Song's breath, the one where the eighth verse should be, they held it longer at the spring Moot. Everybody noticed."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "*(She tastes the water from her palm before she looks up.)* Rain on the moor two days back, and peat, and something cold. Ko-Skarl, Ossa. I keep the Spout.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "Keeping the lip clear so it doesn't back up and burst the scar. Reading the water for the herders: brown is peat, white is a slip up on the fell, green means the Hidden Tarn's overflowed, and nobody wants to know why. — And fishing out what the fell sends down. It sends down a lot. Sheep, mostly. Once a cradle.",
+        "effects": [
+          {
+            "set_flag": "ossa_ko_skarl_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "The Sayers say a lot. The water goes into the fell up at the Brakh's Drink and comes out here two days later colder, and in between it runs through a lake nobody's seen the far side of. The Skarl verse says the giants drank at it. — You can call that karst if you like. It still comes out cold.",
+        "effects": [
+          {
+            "set_flag": "ossa_ko_skarl_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "Ask. Mind the lip, it's wet, it's always wet.",
+        "choices": [
+          {
+            "text": "What does keeping the Spout mean?",
+            "next": "topic_1"
+          },
+          {
+            "text": "The Sayers say it's karst.",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's in the jar?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/tokens_of_no_clan"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/tokens_of_no_clan"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The tokens came out of a giant's hands. And they fit Ghorrow's lintel.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/tokens_of_no_clan",
+                  "the_tokens"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "Tokens. *(She doesn't untie it.)* Bone, the size of a thumb-joint, a hole for a thong, a mark cut on the face. One a week for a month, out of the Spout, like the fell's paying something off. — The mark's a closed hand. That's no clan's. I know every clan's mark and every family's, and I've asked the Moot, and the Moot went very quiet. — A herder says one of the Faceless Graves under Ghorrow was turned face-up in the night. Look at it for me. Then, if you've the stomach, go in where the water goes in.",
+        "choices": [
+          {
+            "text": "I'll look at the grave, and then the water.",
+            "effects": [
+              {
+                "start_quest": "core:quest/tokens_of_no_clan"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "The Brakh's Drink is a mile up the scar. Take rope. And don't drink the water in there. It's the same water. It just hasn't decided yet.",
+        "next": "hub"
+      },
+      "q_decide_back_to_the_water": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "*(She drops them over the lip one by one and watches each one go.)* — The water knows where it's going. Better than I do. Better than the Moot. — I'll taste for them, for a while. I don't think I'll taste them.",
+        "next": "hub"
+      },
+      "q_decide_to_ghorrows_lintel": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "I'll go up with you. — *(Later, at the door, she sets the token in the socket with her thumb and it goes in with a sound like a key.)* — There. Somebody's got a door with their mark on it again. Whoever they are. — The rest at the threshold, and we walk away and don't look back. That's how you leave a gift at a hold.",
+        "next": "hub"
+      },
+      "q_decide_to_the_moot": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "The Moot went quiet when I asked about the mark. Let it go quiet with the jar on the long table in front of it. — I'll carry it down myself. Somebody at the Hold is going to have to say a word out loud they've been not saying for a thousand years, and I want to be in the room.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "*(She unties the jar at last and tips them into her palm and looks at them for a long time.)* — Somebody cut these for a clan, and gave them to the water, and the water took them to the giant, and the giant's been giving them back. — Fits the lintel. Of course it fits the lintel. What do I do with them? Tell me, because I've been holding this jar a month and I'm tired of it.",
+        "choices": [
+          {
+            "text": "Give them back to the water. It's been carrying them for somebody.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/tokens_of_no_clan",
+                  "back_to_the_water"
+                ]
+              }
+            ],
+            "next": "q_decide_back_to_the_water"
+          },
+          {
+            "text": "Set one in Ghorrow's lintel, and leave the rest at the door.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/tokens_of_no_clan",
+                  "to_ghorrows_lintel"
+                ]
+              }
+            ],
+            "next": "q_decide_to_ghorrows_lintel"
+          },
+          {
+            "text": "Take the jar down to the Moot at Kharrow Hold.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/tokens_of_no_clan",
+                  "to_the_moot"
+                ]
+              }
+            ],
+            "next": "q_decide_to_the_moot"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Ossa ko-Skarl",
+        "text": "Mind the lip.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/maudry_pennant",
+    "speaker_name": "Maudry Pennant",
+    "notes": "The Sayers' weather-watcher at Pennant's Weather-House by Blackwater Tarn (skerrow world life). The Circle's account of the Breath against the clans'. Gives core:quest/where_the_breath_went.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "breath_written_karst"
+          },
+          {
+            "quest_done": "core:quest/where_the_breath_went"
+          }
+        ],
+        "text": "The Circle wrote back. They are very pleased. They want me home. — I am staying another winter. For the appendix."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "breath_written_breath"
+          },
+          {
+            "quest_done": "core:quest/where_the_breath_went"
+          }
+        ],
+        "text": "The Circle has written three times asking me to come home and explain myself. I have explained myself. It is on page nine. — The Stones are still drawing in. I hold my own hand over them now, every morning."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "breath_written_both"
+          },
+          {
+            "quest_done": "core:quest/where_the_breath_went"
+          }
+        ],
+        "text": "Tollmere is arguing. I have letters from both sides of the Circle telling me I am on theirs. I answer them all with the same numbers. — It is the happiest I have been in six winters."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Maudry Pennant",
+        "text": "*(She licks a finger and holds it up to the wind, and lowers it.)* North-north-west and backing. — Maudry Pennant, of the Circle. The weather-house, yes. Mind the gauge.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Maudry Pennant",
+        "text": "Everything the moor does, twice a day, for six winters. Wind, glass, rain, the tarn's level, the temperature of the air coming out of every shakehole I can put a gauge in. — The clans say the world is being breathed in by something vast. The Circle says the moor is limestone and limestone is a sponge and air goes in and out of a sponge with the weather. My numbers agree with the Circle. That was the easy part.",
+        "effects": [
+          {
+            "set_flag": "maudry_pennant_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Maudry Pennant",
+        "text": "Because the letters kept saying: the numbers agree, the numbers agree, and then a paragraph at the end I did not mean to write. — The holes breathe with the weather. They also breathe in a little more than they breathe out. Every year. A little more. A sponge does not do that. — I stopped sending the letters. I have not stopped writing them.",
+        "effects": [
+          {
+            "set_flag": "maudry_pennant_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Maudry Pennant",
+        "text": "I am a Sayer. I believe that speaking the world louder keeps it. — I believe that the Breathing Stones breathed in one hundred and four units more than they breathed out last year, and ninety-one the year before, and I believe I would like very much for somebody to tell me that is karst.",
+        "effects": [
+          {
+            "set_flag": "maudry_pennant_told_3"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Maudry Pennant",
+        "text": "Go on, then. I have had nobody to argue with for a month.",
+        "choices": [
+          {
+            "text": "What are you measuring?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why stop writing to Tollmere?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Do you believe in the Breath?",
+            "next": "topic_3"
+          },
+          {
+            "text": "The Breathing Stones have stopped?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/where_the_breath_went"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/where_the_breath_went"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The breath comes out at Skerrfall now. Through the socket where a giant's bone lay.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/where_the_breath_went",
+                  "the_write_up"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Maudry Pennant",
+        "text": "Stopped breathing out. Since the new moon it has only breathed in. A steady pull. — Karst does not do that. Karst goes both ways with the glass. Something has blocked it, or the air has found another way out, or — *(she does not finish)* — I need a hand over that hole, held by somebody who has not already decided what it means. Then a reading from the Seven Stones, the highest ground on that side. I would go myself, but I have decided what it means, and I do not like it.",
+        "choices": [
+          {
+            "text": "I'll hold a hand over the hole.",
+            "effects": [
+              {
+                "start_quest": "core:quest/where_the_breath_went"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Maudry Pennant",
+        "text": "Hold it flat. Count to a hundred. If anything pulls at the hand, write down how hard, in a word. I have no instrument for that. I have tried.",
+        "next": "hub"
+      },
+      "q_decide_write_karst": {
+        "speaker": "Maudry Pennant",
+        "text": "Karst. *(A neat line under it.)* It is even true. The quarry did cut a new way out, and air does take the easiest road. — It leaves out the hundred and four units. I shall put them in an appendix. Nobody at the Circle reads the appendices. That is what they are for.",
+        "next": "hub"
+      },
+      "q_decide_write_breath": {
+        "speaker": "Maudry Pennant",
+        "text": "*(She crosses out a whole page and starts again, in a hand much less neat.)* — The Circle will say the moor got to me. The Circle has not stood on the moor with its hand over a hole feeling the world pulled in through it. — I am going to be very unpopular in Tollmere. I find I do not mind.",
+        "next": "hub"
+      },
+      "q_decide_write_both": {
+        "speaker": "Maudry Pennant",
+        "text": "Both. Every number, every hole, your hand, the socket. — It will be the longest paper the Circle has had in a century, and they will argue about it for another one. That is the most Sayerly thing I have ever done. My tutor would be appalled.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Maudry Pennant",
+        "text": "*(She writes for a long time without looking up.)* — Warm, on a falling glass. Through the bone's socket. Of course it is. — The Circle will read this. The clans will hear what the Circle read. I have to write it one way or the other, and the way I write it is the way it will be true in Tollmere for a hundred years. How do I write it?",
+        "choices": [
+          {
+            "text": "Karst. The quarry cut a new way out of the rock, and the air took it.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/where_the_breath_went",
+                  "write_karst"
+                ]
+              }
+            ],
+            "next": "q_decide_write_karst"
+          },
+          {
+            "text": "The Breath. Something vast is breathing in, and breathed out once more where a giant lay.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/where_the_breath_went",
+                  "write_breath"
+                ]
+              }
+            ],
+            "next": "q_decide_write_breath"
+          },
+          {
+            "text": "Both, and every number, and let Tollmere choose.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/where_the_breath_went",
+                  "write_both"
+                ]
+              }
+            ],
+            "next": "q_decide_write_both"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Maudry Pennant",
+        "text": "Mind the gauge. And the tarn. It is deeper than it looks, which I can prove.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/grenna_ko_oskel",
+    "speaker_name": "Grenna ko-Oskel",
+    "notes": "The Oskel widow at the Skerry Watch (skerrow world life). Gives core:quest/the_broom_at_the_watch.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "broom_letter_read"
+          },
+          {
+            "quest_done": "core:quest/the_broom_at_the_watch"
+          }
+        ],
+        "text": "I walked up to the bield. It took me all day. She had the kettle on. We didn't say anything about it. We swept the watch together last night, the two of us, and the sea didn't care at all."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "broom_rope_retied"
+          },
+          {
+            "quest_done": "core:quest/the_broom_at_the_watch"
+          }
+        ],
+        "text": "The Moot tied her rope back on the Oskel cairn, a knot for every year. Forty knots. It looks ridiculous. She came to the watch and stood in the door and said my name. I said hers."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "broom_letter_kept"
+          },
+          {
+            "quest_done": "core:quest/the_broom_at_the_watch"
+          }
+        ],
+        "text": "Still swept, most mornings. I've started leaving the door open for her. I don't know why. The sea doesn't come in."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "*(She turns her whole body from the sea to look at you, and back.)* Ko-Oskel. Grenna. Nobody watches from here. I sit.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "The Salt boats. They came round the north cape for Oskel lead, once a year, before the winter storms. The watch lit a fire when the skerries were running, so the boats would stand off till the tide turned. — My husband piloted them in. My son learned it from him. They went out on the last one, to bring her round the skerries, the winter the fire wasn't lit.",
+        "effects": [
+          {
+            "set_flag": "grenna_ko_oskel_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "*(A long silence.)* The Moot cut her rope for it. — I don't say her name. I haven't said it in forty years. If I say it I'll have to think about her, and I have spent forty years thinking about my husband and my son instead, and I will not give her one day of that.",
+        "effects": [
+          {
+            "set_flag": "grenna_ko_oskel_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "Say it to the sea. I'm listening.",
+        "choices": [
+          {
+            "text": "What did the watch watch for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who kept the watch that winter?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Somebody sweeps the watch?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_broom_at_the_watch"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_broom_at_the_watch"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The sweeper was Bressa. And there's a letter from your son.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_broom_at_the_watch",
+                  "the_letter"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "Every few nights. I come out in the morning and it's swept, the floor and the fire-shelf and the seat, and a heather broom left leaning in the door. — Nobody's swept this watch in forty years. I don't. I sit in it. — They sweep the snow off the Old Moot's seats too, under the Wall, the herders say, one seat each morning. Go and see who. I'm too old to sit up on a moor all night, and I don't want to know. Find out anyway.",
+        "choices": [
+          {
+            "text": "I'll find the sweeper.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_broom_at_the_watch"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "The broom's heather. The good heather, for binding. It doesn't grow on this shore. Somebody walks a long way to sweep a watch nobody keeps.",
+        "next": "hub"
+      },
+      "q_decide_read_it_to_her": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "*(You read it. She listens with her back to you and her face to the sea, and when you get to the fire she puts up one hand, and you stop, and then she lowers it, and you go on.)* — He saw it lit. He wrote it down. And the master sailed anyway. — Forty years. — I'll need a broom. My own. Not one of hers.",
+        "next": "hub"
+      },
+      "q_decide_to_the_moot": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "The Moot. *(She nods at the sea.)* The Moot cut it; the Moot can tie it. That's what it's for. — Don't read it to me. I'll hear it at the Moot, with everybody. It should be heard with everybody. It was done with everybody.",
+        "next": "hub"
+      },
+      "q_decide_keep_it": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "*(She looks at you for a long moment, and you think she knows, and then she turns back to the sea.)* — No harm. Good. Let her sweep, then. Somebody should. — Thank you. I don't know what for. Thank you.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "*(She doesn't take it. She turns back to the sea.)* — Bressa. — I said it. There. *(A long time.)* — You've read it. Your face says so. Don't tell me yet. Tell me what you mean to do with it, and then I'll know whether I'm to hear it.",
+        "choices": [
+          {
+            "text": "Read it to her. All of it.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_broom_at_the_watch",
+                  "read_it_to_her"
+                ]
+              }
+            ],
+            "next": "q_decide_read_it_to_her"
+          },
+          {
+            "text": "Take it to the Moot, and have Bressa's rope tied again.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_broom_at_the_watch",
+                  "to_the_moot"
+                ]
+              }
+            ],
+            "next": "q_decide_to_the_moot"
+          },
+          {
+            "text": "Keep it. Tell her only that the sweeper means no harm.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_broom_at_the_watch",
+                  "keep_it"
+                ]
+              }
+            ],
+            "next": "q_decide_keep_it"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Grenna ko-Oskel",
+        "text": "Mind the step. It's swept.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ottar_ko_skarl",
+    "speaker_name": "Ottar ko-Skarl",
+    "notes": "The Skarl drover who keeps the Drovers' Bothy fire (skerrow world life). Gives core:quest/up_the_dale_in_spring.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "drove_rung_down"
+          },
+          {
+            "quest_done": "core:quest/up_the_dale_in_spring"
+          }
+        ],
+        "text": "Rang it at the cairns at dusk. Nothing came. Next morning there was a pebble off every cairn, not on it. Four thousand pebbles, in a heap at the bothy door. I've built them into the hearth."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "drove_left_standing"
+          },
+          {
+            "quest_done": "core:quest/up_the_dale_in_spring"
+          }
+        ],
+        "text": "Some of the young ones go up to look at them now. Stand among them. Come back quiet. I don't ask what they saw. They'll tell me when they're my age."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "drove_claimed"
+          },
+          {
+            "quest_done": "core:quest/up_the_dale_in_spring"
+          }
+        ],
+        "text": "Four thousand head on the Moot's roll again, for the first time since 988, standing on the Wall where nobody can get at them. The Rudd have asked for their grazing tithe on it. I have asked the Rudd to go and collect it."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "*(He is counting something on his fingers, by fives, and finishes before he speaks.)* Ko-Skarl, Ottar. Sit. The fire's in. The fire's always in.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "Whoever comes down last in autumn keeps it in till the herds come down again. My family came down last this year and the year before and every year since my father fell out with the Rudd about the grazing. — A drove comes down the dale in a storm and sees smoke, it knows there's a bothy. That's all a fire is, up here. Somebody saying they're still there.",
+        "effects": [
+          {
+            "set_flag": "ottar_ko_skarl_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "The Long Winter of 988. Snow in the dale till midsummer. We lost four thousand head, near enough every beast the Skarl had. — A beast remembered is a beast still owned, we say. So there's a cairn up on the fell for every one. My grandfather built nine hundred of them himself. He used to say he knew every beast by its stone.",
+        "effects": [
+          {
+            "set_flag": "ottar_ko_skarl_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "Ask what you like. I'll count while you do.",
+        "choices": [
+          {
+            "text": "Why is the fire always in?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What are the Winter Cairns?",
+            "next": "topic_2"
+          },
+          {
+            "text": "The fire was lit when you came back?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/up_the_dale_in_spring"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/up_the_dale_in_spring"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The drove of 988 is standing on the Wall. I have the lead beast's bell.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/up_the_dale_in_spring",
+                  "the_bell"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "I banked it in autumn. Banked, mind: turf over the coals, low, it'll keep a week. I came up in spring expecting ash, and it was lit, burning well, and somebody had fed it. — And prints round it. Cloven, small, hundreds of them, going up the dale. Up. In spring. Nothing goes up in spring. — The old hill breed, by the prints, and nobody's kept that breed since 988. And my cousin says there's a pebble going on every one of the Winter Cairns every morning. Go up and look. I'll keep the fire in.",
+        "choices": [
+          {
+            "text": "I'll go up to the cairns.",
+            "effects": [
+              {
+                "start_quest": "core:quest/up_the_dale_in_spring"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "Count as you go. It helps. It doesn't help, but it helps.",
+        "next": "hub"
+      },
+      "q_decide_ring_them_down": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "The water note at the cairns. *(He lets the clapper go, once, and the bothy fills with it.)* — They'll know it. A drove that knows the bell comes to it from a mile off in any weather. — Whatever they come home as. I'll keep the fire in.",
+        "next": "hub"
+      },
+      "q_decide_leave_them_standing": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "*(He sits a long time with the bell in his lap.)* — Facing north. Every one. — My grandfather used to say the beasts know things before we do; that's why you watch the lead beast and not the sky. If they all went up to see something, I don't want to call them back before they've seen it.",
+        "next": "hub"
+      },
+      "q_decide_claim_them": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "Found. *(He laughs, once, and wipes his eyes.)* — The Skarl are going to be the richest clan at the Moot by four thousand head that can't be moved. The Rudd are going to be furious. — Found. My grandfather would have walked up the Wall in his socks.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "*(He takes the bell and doesn't ring it. He holds the clapper still with his thumb.)* — That's a Skarl drove-bell. That's the water note. My grandfather's, maybe. His father's. — Standing, you said. Facing north. — Four thousand cairns and there they are. What do we do with them? You've seen them. I've only counted them.",
+        "choices": [
+          {
+            "text": "Ring the bell at the Winter Cairns, the water note, and let them come home.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/up_the_dale_in_spring",
+                  "ring_them_down"
+                ]
+              }
+            ],
+            "next": "q_decide_ring_them_down"
+          },
+          {
+            "text": "Leave them on the Wall facing north. They went to see something.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/up_the_dale_in_spring",
+                  "leave_them_standing"
+                ]
+              }
+            ],
+            "next": "q_decide_leave_them_standing"
+          },
+          {
+            "text": "Tell the Skarl: a beast remembered is a beast still owned, and these are found.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/up_the_dale_in_spring",
+                  "claim_them"
+                ]
+              }
+            ],
+            "next": "q_decide_claim_them"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Ottar ko-Skarl",
+        "text": "Fire's in. It's always in.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/orsk_ko_rudd",
+    "speaker_name": "Orsk ko-Rudd",
+    "notes": "The Rudd bone-counter at the Bone Ford (skerrow world life). Gives core:quest/thirty_two.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "thirty_two_sung"
+          },
+          {
+            "quest_done": "core:quest/thirty_two"
+          }
+        ],
+        "text": "Thirty-two, sung at the Moot. Everybody stood up. I didn't know they did that. — Still thirty-two this morning. Every morning. It's the easiest job in the heights again."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "thirty_two_carried"
+          },
+          {
+            "quest_done": "core:quest/thirty_two"
+          }
+        ],
+        "text": "Thirty-one at the ford. And up on the moor, the Skarl say, the line's whole, and the thralls have stopped carrying, and they stand round it. Just stand. I went up once and counted him. I'm not going to say the number."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "thirty_two_scattered"
+          },
+          {
+            "quest_done": "core:quest/thirty_two"
+          }
+        ],
+        "text": "Thirty-one, sung. And every spring I'll count, and every spring I'll hold my breath at the fourth stone from the far side. I think that's just what counting is now."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "*(He touches the stone he's sitting on, then you, lightly on the sleeve.)* This stone. You. — Ko-Rudd, Orsk. I count the ford.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "The stones. The ford's stepping-stones are a giant's backbone, laid across the beck, one bone to a step. A Rudd counts them every spring and sings the number at the Moot, and it goes in the Rope-Song. — Thirty-one. For a thousand years. My grandmother counted thirty-one, and her mother, back and back. It's the easiest job in the heights. You can do it with your eyes shut. People have.",
+        "effects": [
+          {
+            "set_flag": "orsk_ko_rudd_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "Because a number sung is a number kept. If the Rudd stopped counting, one spring there'd be thirty and nobody would know when it went. — That's the Breath. Things go the way the oldest go, a bit at a time, while nobody's counting. We count.",
+        "effects": [
+          {
+            "set_flag": "orsk_ko_rudd_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "Ask. I'll count while you do. I always count.",
+        "choices": [
+          {
+            "text": "What is there to count?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why sing a number?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Something's wrong with the count?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/thirty_two"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/thirty_two"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Something is putting a giant back together, on the moor. It needs your thirty-second.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/thirty_two",
+                  "the_number"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "*(He touches each stone of the ford with his eyes, one by one, very fast.)* — Thirty-two. — Every morning since the spring. I've counted from both banks, and wading, and with my eyes shut. Thirty-two. The new one's the fourth from the far side, and it fits, it fits as if it had always been there, and it wasn't. — Once I sing it, it's sung. You can't unsing a number. — The Giant's Spine lies up on the moor, the rest of him, the Skarl say. If a bone's come to the ford it's come from somewhere. Count the Spine for me. I can't leave the ford. What if it's thirty-three tomorrow?",
+        "choices": [
+          {
+            "text": "I'll count the Spine.",
+            "effects": [
+              {
+                "start_quest": "core:quest/thirty_two"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "Count out loud. It keeps you honest. It doesn't, but it keeps you counting.",
+        "next": "hub"
+      },
+      "q_decide_sing_thirty_two": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "Thirty-two. *(He says it aloud, and then again, and then he smiles.)* — The first new number in the Rope-Song in a thousand years, and it's mine. — The ford keeps it. Whatever they're building up there, they'll have to build it one short, or come down and ask.",
+        "next": "hub"
+      },
+      "q_decide_carry_it_back": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "*(He wades out to the fourth stone and puts both hands on it for a long time.)* — It'll take ten of us and a sledge. The Rudd will think I've gone mad. — Thirty-one, then, at the Moot. And a line on the moor with no gap in it. — I'd like to be there when they finish. I'd like to count him.",
+        "next": "hub"
+      },
+      "q_decide_break_the_line": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "Thirty-one. *(He breathes out.)* — Scatter them. They're bones. Bones lie where they lie. — Somebody will say we should have let him be finished. Somebody always says that. I'll sing thirty-one and they can say what they like to the ford.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "*(He stops counting. It's the first time you've seen him do it.)* — Putting him back. — Largest to smallest, you said, in a line, and a gap at the end the size of my fourth stone from the far side. — I have to sing something at the Moot. Tell me what.",
+        "choices": [
+          {
+            "text": "Sing thirty-two. It's the true count now.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/thirty_two",
+                  "sing_thirty_two"
+                ]
+              }
+            ],
+            "next": "q_decide_sing_thirty_two"
+          },
+          {
+            "text": "Carry the thirty-second to the end of their line.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/thirty_two",
+                  "carry_it_back"
+                ]
+              }
+            ],
+            "next": "q_decide_carry_it_back"
+          },
+          {
+            "text": "Break the line on the Sorting Ground, and sing thirty-one.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/thirty_two",
+                  "break_the_line"
+                ]
+              }
+            ],
+            "next": "q_decide_break_the_line"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Orsk ko-Rudd",
+        "text": "This stone. That stone. You, going. Safe road.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/haska_ko_ghast",
+    "speaker_name": "Haska ko-Ghast",
+    "notes": "The stone-cutter of the Red Moor (skerrow world life). A Ghast; cuts a stone for every death of the year of the broken bridge.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Haska ko-Ghast",
+        "text": "*(Her thumb goes along the edge of the stone before she looks round.)* Ko-Ghast, Haska. Mind the chips.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Haska ko-Ghast",
+        "text": "Ghast and Kharrow fought here in the year of the broken bridge, the one battle in the Rope-Song, and it's sung as a debt. A stone for each of the dead, both sides, leaning together. — I've cut eleven in my life. Every time the Song remembers somebody the stones forgot, I cut one. Eleven dead, and all of them long dead. That's the work.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Haska ko-Ghast",
+        "text": "*(She doesn't look at it.)* Set up in the spring. Not by me. Uncut. There was a letter under it with a purse, and the letter said cut this name, the price is paid. — I've cut the letters. I haven't cut the last of them. A stone for the dead goes up after, not before. That's the only rule I've got.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Haska ko-Ghast",
+        "text": "Because we fought on it. That's what the Ghast say. The Kharrow say it's iron in the ground. — Both. It's always both, up here. That's why we have a Moot.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Haska ko-Ghast",
+        "text": "Say what you came for. I'll keep working. Stone doesn't wait, whatever they tell you.",
+        "choices": [
+          {
+            "text": "What are the stones on the Red Moor?",
+            "next": "topic_1"
+          },
+          {
+            "text": "And the new one?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why is the heather red here?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Haska ko-Ghast",
+        "text": "Mind the chips. They go further than you'd think.",
+        "next": "end"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "stone_cut_for_gorrm"
+          },
+          {
+            "quest_done": "core:quest/a_stone_before_the_death"
+          }
+        ],
+        "text": "I cut Gorrm's name on it. Ghast among Ghast. Best stone I've done. A stone for the dead goes up after, not before, and this time it went up after."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/a_stone_before_the_death"
+          }
+        ],
+        "text": "You've seen the stone, then. Go carefully. Whoever paid for it keeps his accounts."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/hodd_ko_brindle",
+    "speaker_name": "Hodd ko-Brindle",
+    "notes": "The quarry-master of Skerrfall (skerrow world life), waiting on the new face.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "*(He knocks the bench with a knuckle and listens before he answers.)* Ko-Brindle, Hodd. The quarry's shut. I'm not.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "We were cutting a lintel-stone, a long one, for the new hall at Brindlecrag, and the wedge went in and the face opened, clean, like a door, on that. *(He nods at the long white shape in the rock.)* A giant's shin-bone laid in the stone across the gap like a lintel over a door. And warm. You could feel it from here. — My men went home. They said it's somebody's door. I said doors are made to be gone through. They went home anyway.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "Because I've cut the lintels for half the holds in the heights and every one of them came out of this fell, and I have never once wondered whose fell it was. — I'm waiting for the face to tell me whether to go on. It's been a year. It's a stone. It takes its time.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "Something walked out of it the first night. Bone and rock, like the thralls on the moor, but it came out of *my* face. It stands about. It doesn't bother me. I don't bother it. We're both waiting, I think.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "Ask, then. The face isn't saying anything today.",
+        "choices": [
+          {
+            "text": "What happened to the face?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why are you still here?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Something came out of it?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Hodd ko-Brindle",
+        "text": "Mind the face. It's thinking.",
+        "next": "end"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/where_the_breath_went"
+          }
+        ],
+        "text": "The face breathes out on a falling glass. I sit with my hand in front of it some mornings. It's warm. I still haven't cut. I don't think I'm going to."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/bressa_unroped",
+    "speaker_name": "Bressa",
+    "notes": "The clanless broom-wife at the Broom-Wife's Bield (skerrow world life): unroped for the Skerry Watch fire. Her quest line is core:quest/the_broom_at_the_watch (topic node the_watch_winter).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Bressa",
+        "text": "*(A stroke or two of the broom across the ground in front of her.)* Bressa. Just Bressa. You'll have seen the post by the Oskelcrag road; mine's the grey one.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Bressa",
+        "text": "Heather's the one thing the moor gives you for nothing. You bind it, and you've a broom, and with a broom you've a reason to go anywhere. Nobody asks a woman with a broom what she's doing at the Old Moot. — I sweep the seats. One a morning. Somebody should. The clans stopped meeting there because they couldn't agree how many seats to sweep. I sweep all of them. It takes eight days.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Bressa",
+        "text": "Quiet. *(Another stroke of the broom.)* Nobody owes you anything and you owe nobody, and it turns out that's most of what talking is. — The ones who go to Ghastow can't bear the quiet. So they make a new clan and call it no clan and keep a reckoning. I'd rather sweep.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Bressa",
+        "text": "Sit if you like. The step's swept.",
+        "choices": [
+          {
+            "text": "You sweep the Skerry Watch. Grenna ko-Oskel wants to know why.",
+            "next": "the_watch_winter",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_broom_at_the_watch",
+                  "the_sweeper"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Why brooms?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What is it like, unroped?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Bressa",
+        "text": "Mind how you go. The heather's slick in the mornings.",
+        "next": "end"
+      },
+      "the_watch_winter": {
+        "speaker": "Bressa",
+        "text": "*(The broom stops.)* Grenna. — She sits in it. I know. I don't go when she's there. — I kept the watch that winter. The storm was coming and the skerries were running, and in the morning the fire was out and the boat was on the rocks, and the Moot asked me was it lit, and I said I didn't know. I'd fallen asleep in the seat. Forty years I've not known. — I'll not say it was lit. I'll not say it wasn't. — The Salt men wrote everything down, every tide, every cask of lead. They wrote it in the Leadhouse, by the shore. The clanless sleep there now when the wind's in the west. If anybody knows, the Leadhouse does.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "broom_rope_retied"
+          },
+          {
+            "quest_done": "core:quest/the_broom_at_the_watch"
+          }
+        ],
+        "text": "Forty knots on the Oskel cairn. It looks ridiculous. I go and look at it most days. — I still sweep. It turns out that was never what the rope was for."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "broom_letter_read"
+          },
+          {
+            "quest_done": "core:quest/the_broom_at_the_watch"
+          }
+        ],
+        "text": "Grenna came up. All that way, at her age. She had her own broom. — We don't talk about it. We sweep the watch together. It's cleaner than it's been in forty years."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/uldra_ko_skarl",
+    "speaker_name": "Uldra ko-Skarl",
+    "notes": "Holds Uldra's Steading under the Skarl Ridge (skerrow world life).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "*(A whistle, sharp, and the dog lies down; so, nearly, does her son.)* Not you. Ko-Skarl, Uldra. You're on my grazing. You're welcome on it.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "My husband's. Jory Wool, off the Mere, came up to buy fleece for a fortnight and stayed nineteen years. He cut his own name into the lintel with my good knife, badly, and the Skarl came from as far as Skarlow to laugh at it. — He's under the ridge now. I don't let anybody recut it. It's supposed to be bad.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "A drove-bell. Up the ridge one night, back at dawn with it in her mouth, like a pup she'd found. Skarl bell, old, the water note, and the leather on it gone to horn. — My grandmother took this steading up after the Long Winter emptied the dale. She said the bells on the drove that went up the Wall in 988 were the best ever cast. I've hung it over the byre. The ewes don't like it.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "At the fold after dark, most nights. The dog keeps them honest and Fenn keeps the dog honest and I keep Fenn honest. It's a whole system.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "Ask. I've ewes to see to, so ask fast.",
+        "choices": [
+          {
+            "text": "The Valish name on the lintel?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Your dog brought something back?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Wolves?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Uldra ko-Skarl",
+        "text": "Shut the gate. Both gates. There's always two gates.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/fenn_ko_skarl",
+    "speaker_name": "Fenn ko-Skarl",
+    "notes": "Uldra's son at Uldra's Steading (skerrow world life): Skarl mother, Valish father, Valish name.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Fenn ko-Skarl",
+        "text": "Fenn. Ko-Skarl. — Fenn Wool, my father would say. — Hello.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Fenn ko-Skarl",
+        "text": "It means marsh. My father named me for where he came from, and the Skarl children named me Bog for eleven years. — The Moot's never decided whether I can sing the Skarl verse at the spring meet. I sing it anyway. Nobody's stopped me. Nobody's said I can.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Fenn ko-Skarl",
+        "text": "*(A look at the byre, where his mother is.)* One day. To see my father's people. He had a sister in Gullhithe who smokes eels. — The steading's two people's work. My mother is one person. She'd say go. She'd mean it. That's the trouble.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Fenn ko-Skarl",
+        "text": "You've come from down the Mere way? — From anywhere?",
+        "choices": [
+          {
+            "text": "Fenn is a Valish name.",
+            "next": "topic_1"
+          },
+          {
+            "text": "Do you want to go down to the Mere?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Fenn ko-Skarl",
+        "text": "If you see anybody from Gullhithe, tell them Jory's boy says hello. They won't know who that is.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/durra_ko_skarl",
+    "speaker_name": "Durra ko-Skarl",
+    "notes": "The Skarl keeper at the Wall-Keepers' Ring below the Briar's End (skerrow world life).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Durra ko-Skarl",
+        "text": "*(A glance at the other fire across the white stones.)* Ko-Skarl, Durra. Keeper, Skarl side. Stay on this side of the stones or on that, not on them.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Durra ko-Skarl",
+        "text": "Keeping. — That's what the agreement says. It's older than the Moot, and it says Skarl and Woodfolk keep the gap at the Briar's End, one keeper each, and it doesn't say what from. I've asked. The Woodfolk don't know either. The other fire told me so, in the only sentence he's ever said to me that wasn't about the wall, and I've been wondering for six years whether that counted.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Durra ko-Skarl",
+        "text": "From this side. In the night. Bones that have stood three hundred years leaning out toward the Briar like a door somebody shouldered. — The other fire says I was asleep. I say he was. We were both awake. Neither of us will say what we heard, because that would be talking.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Durra ko-Skarl",
+        "text": "So we know which side we're on. — Eleven years. I know when he sleeps, what he eats, which tune he whistles when the wind's in the east. I know him better than my own sister. I've never said his name. He's never said mine. That's the agreement too, I think. Nobody wrote it down.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Durra ko-Skarl",
+        "text": "Ask about the wall and I'll answer. Ask about the other fire and I'll answer that too, but I'll look at it first.",
+        "choices": [
+          {
+            "text": "What is the bone wall for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "The wall was pushed outward?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why the white stones?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Durra ko-Skarl",
+        "text": "Mind the stones on your way out.",
+        "next": "end"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/nine_lights"
+          }
+        ],
+        "text": "The lights beyond the wall again last month. The other fire stood up when I did. We watched them together, each side of the stones. It's the closest we've come."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/holt_fernby",
+    "speaker_name": "Holt Fernby",
+    "notes": "The Woodfolk keeper at the Wall-Keepers' Ring below the Briar's End (skerrow world life).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Holt Fernby",
+        "text": "*(He pushes a thorn-peg into the ground in a line toward the white stones, and stops one short.)* Holt Fernby, for the Hollow. You'll have met the other fire.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Holt Fernby",
+        "text": "Because the custom says so, and the custom is older than the Hollow. — The Briar is everywhere from the Thornmarch to here, and here it gives out against the fell, and here the Builders didn't grow it. The one gap. My mother kept it, and her uncle. Nobody told any of us what we were keeping it from, only that it has to be kept from both sides at once.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Holt Fernby",
+        "text": "Something to do with my hands. One a night. A line toward the stones. — I stop short. Eleven years of pegs and I've never put one past the stones. She's never said anything about it. She's looked, though.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Holt Fernby",
+        "text": "*(He whittles for a while.)* Not the Briar. The Briar pushes in; it doesn't push out. — Whatever it was, it was on our side of the wall. Her side and mine. I heard it go past the fires in the dark, between us, over the stones. I didn't say anything. Neither did she.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Holt Fernby",
+        "text": "Ask. Quietly. Sound carries over the stones.",
+        "choices": [
+          {
+            "text": "Why does Grandfather Hollow send a keeper?",
+            "next": "topic_1"
+          },
+          {
+            "text": "The pegs?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What pushed the wall?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Holt Fernby",
+        "text": "Go quietly. The Briar hears everything and the other fire hears the rest.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ymma_ko_dreugh",
+    "speaker_name": "Ymma ko-Dreugh",
+    "notes": "The oath-keeper of the Rib Cathedral (skerrow world life): holds the Moot's oaths when it sits in the giant's ribs.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "*(She repeats your greeting back to you, slowly, word for word, before she answers it.)* — Ko-Dreugh, Ymma. Oath-keeper. You're standing in the nave.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "When the Moot sits here, in the ribs, every oath is said to me, and I say it back, and then it's kept. A giant's bones don't forget, the clans say. I'm the part of the bones that can talk. — When the Moot isn't sitting I sweep the nave and clear the oath-cracks and listen to whoever comes up to swear something with nobody else to hear it.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "The cracks in the ribs. People write oaths on slips of bark and push them in. Promises they can't say to anybody's face. — I don't read them. I clear the old ones out in spring and burn them on the altar-stone, unread. That's the oath too: kept, and nobody else's business.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "Dreugh sing first at the Moot, so a Dreugh keeps the oaths, the Moot says. I say it's the other way round: we kept the oaths first, and they let us sing first so we'd keep doing it. — Nobody at the Moot likes it when I say that. I say it back to them anyway.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "Say what you came to say. I'll say it back first. That's how you know it was heard.",
+        "choices": [
+          {
+            "text": "What does an oath-keeper do?",
+            "next": "topic_1"
+          },
+          {
+            "text": "The oath-cracks?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why a Dreugh?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Ymma ko-Dreugh",
+        "text": "Go on. I'll remember you came.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/pell_kettleby",
+    "speaker_name": "Pell Kettleby",
+    "notes": "A tinker of the winter camp under Oskel Edge (skerrow world life): mends pots and chains, belongs to nobody, carries news.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Pell Kettleby",
+        "text": "*(He taps the nearest pot with a fingernail.)* Ghast-made, that, forty year old, and never been mended till me. — Pell Kettleby. Tinker. What's broke?",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Pell Kettleby",
+        "text": "The chains. *(He doesn't laugh.)* We hang our work on the frame there, chains and pots, and they ring in the wind; that's how you find a tinkers' camp in the mist. — This month they've been ringing with no wind. At night. All together, one note, like somebody running a hand along them. — Tinkers don't belong to anybody. That means nobody minds if we go. So we're going.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Pell Kettleby",
+        "text": "The Unroped at Ghastow have more chains on their gate than people behind it; the Moot counted. Ghast want the broken bridge mended and Kharrow don't. Somebody's sweeping the Skerry Watch. And the Rudd bone-counter at the ford has gone very quiet, which, for a Rudd bone-counter, is saying something.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Pell Kettleby",
+        "text": "Nobody. That's the whole trade. — The clans let us winter here because a tinker is the only news that walks, and news that belongs to a clan is gossip. Ours is just true, mostly.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Pell Kettleby",
+        "text": "Nothing broke? Then it's news you want. Everybody wants news. Nobody wants to pay for it.",
+        "choices": [
+          {
+            "text": "Why are the tinkers packing up early?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What's the news on the Low Road?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Who do the tinkers belong to?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Pell Kettleby",
+        "text": "If you've a chain wants mending, the frame's there. If it rings on its own, don't bring it.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/aggi_ko_rudd",
+    "speaker_name": "Aggi ko-Rudd",
+    "notes": "A resin-tapper of the Tappers' Camp in the Rib Pines (skerrow world life).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Aggi ko-Rudd",
+        "text": "Sorry about the smell. It's the pitch. It's always the pitch. — Ko-Rudd, Aggi. I tap.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Aggi ko-Rudd",
+        "text": "The clans' chains. Iron up here rusts through in ten winters without it. We tap the pines, boil the resin down, and every chain in the heights gets a coat each autumn, the Chain Bridge's four first. — The Rudd do it because the Rudd do it. Nobody's ever paid us. The bridge would lean the wrong way if they did.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Aggi ko-Rudd",
+        "text": "*(She stops stirring.)* One stand, up the slope, eleven trees. Came out red this spring, red as the heather on the Red Moor, and warm. The others won't go near. — I go every day. I don't tap them. I sit. It smells like iron, not pine. — If you go up, don't cut them. They're not ours to cut, this year.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Aggi ko-Rudd",
+        "text": "Ask. I'll keep stirring or it catches.",
+        "choices": [
+          {
+            "text": "What is the pitch for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "The red resin?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Aggi ko-Rudd",
+        "text": "Sorry about the smell. It gets in everything. Even the news.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghastow_gate_chains",
+    "speaker_name": "Chains on Ghastow's gate",
+    "notes": "Old Ghastow's hook: a PoiTouch at the gate (site_exterior._hook). Part of core:quest/a_stone_before_the_death's country; starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Chains on Ghastow's gate",
+        "no_talk": true,
+        "text": "The gate is hung with chains, iron and bronze and one of plaited hide, each broken at one link and hung by the break. Clan-marks on the links: Kharrow, Dreugh, Brindle, Ghast, Rudd, Oskel, Skarl. Each is an exile's; each is the chain their clan broke over them when the Moot cut their rope. You count thirty-one. Nailed under them, on a board: THE PRICE IS PAID. On the newest chain, a tag of lead: a Kharrow name, and a date that has not come yet.",
+        "choices": [
+          {
+            "text": "Read the tag on the newest chain.",
+            "next": "more"
+          },
+          {
+            "text": "Leave the chains.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "Chains on Ghastow's gate",
+        "no_talk": true,
+        "text": "GRADDO KO-KHARROW. RECKONER. PAID IN FULL AT THE STONES. Somebody has scratched under it, with a knife point, very small: early.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/orrdun_bier_stone",
+    "speaker_name": "The bier-stone at Orrdun",
+    "notes": "Orrdun's hook: a PoiTouch at the door (site_exterior._hook). The Skarl set each bier down on it before the last carry in.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bier-stone at Orrdun",
+        "no_talk": true,
+        "text": "A slab at the door where the Skarl set each bier down before the last carry in, its top worn into a hollow the shape of a body by three hundred years of them. Cut round its edge, in Skerrish: WE CARRIED YOU AS HIGH AS WE COULD. WAIT HERE. From inside, faint, a voice is singing the Skarl verse, and in the place where the verse leaves a breath for a name, it puts one.",
+        "choices": [
+          {
+            "text": "Listen for the name.",
+            "next": "more"
+          },
+          {
+            "text": "Step back from the door.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The bier-stone at Orrdun",
+        "no_talk": true,
+        "text": "Tavva ko-Skarl. — A breath. — Orrin ko-Skarl. — A breath. — The names go on, in an order, one to a breath, and none of them is anybody you know, and you find you are listening for your own.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brakhs_drink_knees",
+    "speaker_name": "The Brakh's knee-bones",
+    "notes": "The Brakh's Drink's hook: a PoiTouch at the mouth (site_exterior._hook).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Brakh's knee-bones",
+        "no_talk": true,
+        "text": "Two giant's knee-caps, each as big as a cartwheel, set upright either side of the cave-mouth like door-posts, grown over with a skin of lime from the water that drips on them. Skarl herders have tied rag-knots to them for luck, and one of the knots, newest, is tied with a thong through a bone token: a closed hand. Cold air comes out of the dark with the sound of a great deal of water, very far down.",
+        "choices": [
+          {
+            "text": "Leave the knots be.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/breathing_stones_hole",
+    "speaker_name": "The hole in the Breathing Stones",
+    "notes": "A PoiTouch at the Breathing Stones' shakehole (skerrow.gd breathing_stones), for core:quest/where_the_breath_went and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The hole in the Breathing Stones",
+        "no_talk": true,
+        "text": "You hold a hand flat over the shakehole in the middle of the ring. The air pulls at it, steady, gentle, like a sleeper drawing breath, and goes on drawing it, and does not let it go. The heather round the rim all leans in. Somebody has tied a ribbon to a stick at the edge, a Sayer's measuring ribbon, and it points straight down the hole.",
+        "choices": [
+          {
+            "text": "Take your hand away.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/winter_cairns_pebbles",
+    "speaker_name": "A Winter Cairn",
+    "notes": "A PoiTouch at the Winter Cairns (skerrow.gd winter_cairns): the pebbles added each morning.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "A Winter Cairn",
+        "no_talk": true,
+        "text": "A cairn knee-high, one of four thousand on the fellside, one for every beast the Long Winter of 988 took from the Skarl. On its top, a pebble that was not there yesterday: round, wet, a stream-bed stone, not a fell stone. The next cairn has one too, and the next, all the way up the fell toward the Wall. In the turf between them, very small, cloven prints.",
+        "choices": [
+          {
+            "text": "Leave the pebble.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/red_moor_new_stone",
+    "speaker_name": "The new stone on the Red Moor",
+    "notes": "A PoiTouch at the twelfth stone on the Red Moor (skerrow.gd red_moor).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The new stone on the Red Moor",
+        "no_talk": true,
+        "text": "The twelfth stone leans with the others, but it is new-quarried, its edges still sharp, the lichen not yet on it. Haska ko-Ghast has cut the letters of a name into its face and stopped short of the last three, as if she will not finish a dead man's name while he is still alive. Under it, weighted with a stone, the ashes of a letter and a knot of broken chain.",
+        "choices": [
+          {
+            "text": "Read what is cut.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The new stone on the Red Moor",
+        "no_talk": true,
+        "text": "GRADDO KO-KHAR — and the chisel-marks of the rest set out in chalk, uncut.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/weather_house_gauges",
+    "speaker_name": "Maudry Pennant's gauges",
+    "notes": "A PoiTouch at the weather-house's instruments (skerrow.gd pennants_weather_house).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Maudry Pennant's gauges",
+        "no_talk": true,
+        "text": "A rain-gauge on a post, a wind-vane, a glass in a box with a brass needle, and a ribbon on a stick over a small shakehole in the turf, every one labelled in a neat Tollmere hand. The ribbon over the hole leans in. A slate hung on the post reads, in the same hand: DRAWING IN. 3RD WEEK. DO NOT TOUCH THE GLASS. Somebody has added underneath, in pencil: or do, it makes no difference.",
+        "choices": [
+          {
+            "text": "Don't touch the glass.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/frozen_drove_crook",
+    "speaker_name": "The drover's crook",
+    "notes": "A PoiTouch at the drover's crook among the Frozen Drove (skerrow.gd frozen_drove).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The drover's crook",
+        "no_talk": true,
+        "text": "A hazel crook, upright in the snow among the frozen beasts where its drover let go of it fifty-five winters ago, its horn handle polished by a hand. There is no drover. There are no prints but the drove's, going up. Every head is lifted toward the Windgate, every eye open, and the snow on their backs has been brushed off, recently, as if somebody had come to see to them.",
+        "choices": [
+          {
+            "text": "Leave the crook standing.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/sorting_ground_gap",
+    "speaker_name": "The end of the line",
+    "notes": "A PoiTouch at the gap in the line of vertebrae (skerrow.gd sorting_ground).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The end of the line",
+        "no_talk": true,
+        "text": "The line of a giant's vertebrae runs across the pavement, largest to smallest, each set exactly a hand from the next. At the small end it stops, and a hand beyond the last there is a space swept clean of grit, the size of one more bone. The marks round it are the marks a stone-thrall's feet make: it has been standing here, waiting, a long time.",
+        "choices": [
+          {
+            "text": "Leave the line as it is.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/reckoners_tally_wall",
+    "speaker_name": "Graddo's tally-wall",
+    "notes": "A PoiTouch at the tally-sticks on the Reckoner's Hut (skerrow.gd reckoners_hut).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Graddo's tally-wall",
+        "no_talk": true,
+        "text": "Tally-sticks hung in rows on pegs, hundreds of them, each notched and each tagged with a clan-mark and a year. Forty-one notches. Nine and a wolf's head. A single long cut with a verse's first word scratched beside it. The oldest are black with smoke and the newest are white. One peg near the door is empty, and has a tag on it already, with no stick: a Kharrow mark and this year.",
+        "choices": [
+          {
+            "text": "Leave the sticks.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/faceless_graves_turned",
+    "speaker_name": "The turned headstone",
+    "notes": "A PoiTouch at the one face-up headstone of the Faceless Graves (skerrow.gd faceless_graves), for core:quest/tokens_of_no_clan and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The turned headstone",
+        "no_talk": true,
+        "text": "Five long graves in a row, each with its headstone laid face-down at the head of it, the turf grown up round the edges so they seem sunk into the fell. The last stone lies face-up, and the turf where it lay is still pale. Cut deep in its face: a closed hand. Under it a line of Skerrish, worn nearly to nothing, of which three letters can still be felt with a thumb, and then the words WE KEPT THE, and then nothing.",
+        "choices": [
+          {
+            "text": "Leave it face-up.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/varn_ko_skarl",
+    "speaker_name": "Varn ko-Skarl",
+    "notes": "The keeper of the Moot Beacon on Rib Edge (skerrow world life; the author of the stack-count at the Beacon Shieling). Gives core:quest/send_word.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "beacon_answered"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "I lit it on the first clear night, with nobody sitting. Nothing answered. The next morning there was a stone in the bowl, grey-green, and warm. I've put it on the stack. I'm keeping it dry."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "beacon_banked"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "Banked, and still banked. Twice now the turf's been lifted off it in the night and laid back. Whoever it is knows how to bank a fire. That's more than most."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "beacon_told_the_moot"
+          },
+          {
+            "quest_done": "core:quest/send_word"
+          }
+        ],
+        "text": "The Moot sat three days on it and lit my beacon for the sitting, the proper way. Rudd Pike stayed dark. I watched the north all three nights. Nothing. It's the nothing I didn't like."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He ties a knot in his cord before he answers.)* Ko-Skarl, Varn. The Moot's beacon. It's not lit. It was.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Varn ko-Skarl",
+        "text": "When the Moot sits in the Rib Cathedral I light it, and every hold between here and the Mere sees it and keeps its quarrels till the Moot rises. That's the whole of it. A fire that says: not now, we're talking. — Thirty turves a day in the dry, all summer, stacked at the shieling. Enough for three sittings.",
+        "effects": [
+          {
+            "set_flag": "varn_ko_skarl_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Rudd Pike, when the Long Snow comes down on the Windgate, so every hold shuts its doors. The Dreugh road beacon, for a death on the road. That's the three. Each means one thing. — Beacons are a language with three words. You don't want a fourth.",
+        "effects": [
+          {
+            "set_flag": "varn_ko_skarl_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Go on. I'm knotting.",
+        "choices": [
+          {
+            "text": "What is the Moot Beacon for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who else lights beacons?",
+            "next": "topic_2"
+          },
+          {
+            "text": "The beacon was lit with the Moot not sitting?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/send_word"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/send_word"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The beacons are being lit from the north. There's a ninth stone on the Going-Up Cairn.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/send_word",
+                  "the_answer"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Last night. My stack gone to ash in one night, the bowl full of it, and me asleep beside it in the dew and warm through, as if somebody had sat by me and kept a fire for me. — And Rudd Pike burned the same night. No snow came down. — Two beacons lit and nobody sitting and nobody shut in. Somebody is talking over our heads, and I want to know who, and who they think is listening. Go up Rudd Pike and look at the ash. Ash says more than people think.",
+        "choices": [
+          {
+            "text": "I'll go up Rudd Pike.",
+            "effects": [
+              {
+                "start_quest": "core:quest/send_word"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Put your hand in it. If it's warm, don't say anything to the Rudd. They'll only want it to have been them.",
+        "next": "hub"
+      },
+      "q_decide_answer_it": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He looks north for a long time.)* — A fourth word. — All right. The first clear night. Just the once, and then we'll see who's listening. — If nobody answers, I've wasted a week's peat. If somebody does, I've done a thing no keeper's done since the Chain Years, and the Moot will have my token for it.",
+        "next": "hub"
+      },
+      "q_decide_bank_them": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Banked. *(Turf over the coals, low.)* — A fire banked isn't out. It's waiting. That's all I'm telling it to do. — And if the bowl's full of ash again some morning, I'll sit up and see who comes to feed it.",
+        "next": "hub"
+      },
+      "q_decide_tell_the_moot": {
+        "speaker": "Varn ko-Skarl",
+        "text": "The Moot, then. *(He knots a knot at the very end of the cord and bites it off.)* — They'll argue a week about what it means and a month about whose it is to answer. That's what the Moot is for. It's slow on purpose. Something coming down off the Wall ought to find us slow.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Varn ko-Skarl",
+        "text": "*(He stops knotting.)* — From the north. From over the Wall, where nothing's asked of anybody. — The Rope-Song says a clan went up and never came down, and every child in the heights knows the verse and none of them thinks it's true. — Nine stones. For the count. *(He reads his knots back, all of them, under his breath.)* — They lit mine to talk to Rudd's, or Rudd's to talk to mine, and I'm the one sitting beside it. What do I do with my fire?",
+        "choices": [
+          {
+            "text": "Light it in answer, on a night nobody's sitting.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "answer_it"
+                ]
+              }
+            ],
+            "next": "q_decide_answer_it"
+          },
+          {
+            "text": "Bank both, and say nothing. Whoever it is can wait.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "bank_them"
+                ]
+              }
+            ],
+            "next": "q_decide_bank_them"
+          },
+          {
+            "text": "Take it to the Moot. The beacons are being lit from the north.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/send_word",
+                  "tell_the_moot"
+                ]
+              }
+            ],
+            "next": "q_decide_tell_the_moot"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Varn ko-Skarl",
+        "text": "Go on. I'll have a knot for you.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/rudd_pike_ash",
+    "speaker_name": "Rudd Pike's fire-bowl",
+    "notes": "A PoiTouch at the foot of Rudd Pike Beacon (skerrow.gd rudd_pike_beacon), for core:quest/send_word and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Rudd Pike's fire-bowl",
+        "no_talk": true,
+        "text": "Ash spilled from the fire-bowl down the beacon's foot, still warm under the crust a finger deep. It is not peat ash: it is grey and fine and full of small white splinters, heather burned with bone, the way nobody in the heights burns anything. Trodden into it, one print of a boot soled with plaited hide, the toe to the north.",
+        "choices": [
+          {
+            "text": "Brush the ash off your hand.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/black_keep_stair",
+    "speaker_name": "The Black Keep's stair",
+    "notes": "A PoiTouch at the foot of the Black Keep (skerrow.gd black_keep), for core:quest/send_word and anybody passing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Black Keep's stair",
+        "no_talk": true,
+        "text": "The keep's inside stair burned out with the rest of it the night the Skarl and the Rudd each burned it first. It has been relaid: new steps, set dry and tight, going up the blackened wall to where the tower breaks off and stopping there, at the height that looks north over the Wall. The new stones are grey-green with a lichen that does not grow in Skarldale.",
+        "choices": [
+          {
+            "text": "Leave the stair.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kharrow_force_rope",
+    "speaker_name": "The iron rope at Kharrow Force",
+    "notes": "A PoiTouch at the iron rope over the lip of Kharrow Force (skerrow.gd kharrow_force).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The iron rope at Kharrow Force",
+        "no_talk": true,
+        "text": "A rope of forged iron links, each a hand long, pinned into the rock either side of the lip and slung across it a hand above the water. Kharrow youths cross it on their naming day, hand over hand, the Force going down under them into the gorge. The links are worn bright in two places, where hands have held on longest: the first link, and the one halfway across where you cannot go back.",
+        "choices": [
+          {
+            "text": "Let go of the rope.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/snow_shelter_bell",
+    "speaker_name": "The shelter bell",
+    "notes": "A PoiTouch at the bell on its pole by the Snow Shelter (skerrow.gd snow_shelter).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The shelter bell",
+        "no_talk": true,
+        "text": "A clan bell on a pole by the shelter door, its rope knotted short so a hand in a mitten can find it. Rung, it means: someone is caught out here, come. Whoever hears it goes; it is the one law older than the Moot. There is ice on the clapper, and a clean arc through the frost on the bell's lip, where it was rung on a clear night not long ago and nobody came in time.",
+        "choices": [
+          {
+            "text": "Leave the bell be.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghastfoot_clay_skull",
+    "speaker_name": "The skull in Ghastfoot's keystone",
+    "notes": "A PoiTouch under the arch at Ghastfoot (skerrow.gd ghastfoot).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The skull in Ghastfoot's keystone",
+        "no_talk": true,
+        "text": "Up in the keystone of the Ghast arch, where travellers going up the dale ask leave of it, a skull. It is clay. It is very well painted: the stains, the cracked eye-socket, the tooth missing on the left, all as the Ghast children have drawn it for a hundred years. Somebody knew that skull well enough to copy it by heart, and took the real one.",
+        "choices": [
+          {
+            "text": "Ask leave of it anyway.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/watch_gate_bell",
+    "speaker_name": "The frozen bell at the Watch of the Gate",
+    "notes": "A PoiTouch under the toll-house bell at the Watch of the Gate (skerrow.gd watch_of_the_gate).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The frozen bell at the Watch of the Gate",
+        "no_talk": true,
+        "text": "The toll-house bell hangs frozen mid-swing, tilted toward the pass, the ice holding it where it was when somebody last rang it for the Windgate. Nobody can say when that was. Under it, on the lintel, the toll is cut in Skerrish and Valish both: a mark a head, a name for the slate, and the pass shut until spring.",
+        "choices": [
+          {
+            "text": "Leave it frozen.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  }
+]

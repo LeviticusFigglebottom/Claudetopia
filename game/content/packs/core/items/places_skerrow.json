@@ -1,0 +1,497 @@
+[
+  {
+    "id": "core:item/gorrms_reckoning",
+    "name": "Gorrm's Reckoning",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 80,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clanless",
+      "ledger",
+      "unique"
+    ],
+    "description": "A reckoner's book kept by a man who hated reckoners: every Unroped soul at Ghastow, the price their clan was asked, and the price struck through as the Unroped say it has been paid. The first entry is Gorrm's own, a hundred head, and under it in another hand the Moot's finding that the man he was priced for fell."
+  },
+  {
+    "id": "core:item/keeners_name_roll",
+    "name": "The Keener's Roll",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clan",
+      "unique"
+    ],
+    "description": "A roll of kid-skin the length of a man, written close on both sides in a Skarl memory-keeper's hand: every name carried up to Orrdun in three hundred years, in the order they came, and the last line blank. It smells of candle-smoke and cold."
+  },
+  {
+    "id": "core:item/token_of_no_clan",
+    "name": "Token of No Clan",
+    "category": "misc",
+    "weight": 0.05,
+    "value": 25,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clan",
+      "bone",
+      "unique"
+    ],
+    "description": "A bone token the size of a thumb-joint, pierced for a thong and polished by water, cut on its face with a closed hand. Every clan in the heights has a mark, and every family, and this is none of them."
+  },
+  {
+    "id": "core:item/lead_beasts_bell",
+    "name": "The Lead Beast's Bell",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 45,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clan",
+      "bell",
+      "unique"
+    ],
+    "description": "A Skarl drove-bell of bronze gone green, its leather strap turned to horn by fifty-five winters of frost. Swung, it gives the water note, the one the young beasts learn at the drove-well: the note a drove will come to from a mile off in any weather."
+  },
+  {
+    "id": "core:item/salt_boat_letter",
+    "name": "A Letter in a Salt Isles Tin",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "lore",
+      "note",
+      "unique",
+      "no_sale"
+    ],
+    "description": "A letter never sent, folded small in a Salt Isles tin that has kept it dry under the Leadhouse hearth for forty years: an Oskel hand, a son to his mother, the night the last Salt boat sailed.",
+    "reads": "core:book/salt_boat_letter"
+  },
+  {
+    "id": "core:item/note_ghastow_chain_tag",
+    "name": "A Chain-Tag from Ghastow's Gate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tag of lead, stamped with a Kharrow mark, fallen from one of the broken chains on Old Ghastow's gate.",
+    "reads": "core:book/ghastow_chain_tag"
+  },
+  {
+    "id": "core:item/note_orrdun_bier_list",
+    "name": "A Bier-Bearer's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of hide knotted with the count of biers a Skarl bearer carried up to Orrdun, left on the bier-stone.",
+    "reads": "core:book/orrdun_bier_list"
+  },
+  {
+    "id": "core:item/note_brakhs_drink_warning",
+    "name": "A Water-Keeper's Warning",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate chalked by a Skarl water-keeper and wedged between the knee-bones at the Brakh's Drink.",
+    "reads": "core:book/brakhs_drink_warning"
+  },
+  {
+    "id": "core:item/note_pennants_weather_book",
+    "name": "Pennant's Weather-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Sayer's weather-book in oilcloth, left open on the bench by the gauges: six winters of the moor, twice a day.",
+    "reads": "core:book/pennants_weather_book"
+  },
+  {
+    "id": "core:item/note_skerrfall_lintel_book",
+    "name": "Hodd's Lintel-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The quarry-master's book of every lintel Skerrfall cut, with the hold it went to, hung on a nail by the bench.",
+    "reads": "core:book/skerrfall_lintel_book"
+  },
+  {
+    "id": "core:item/note_wall_book",
+    "name": "The Wall-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A book kept between the two fires at the Wall-Keepers' Ring, written by both keepers in turn, a line each, and never both on the same day.",
+    "reads": "core:book/wall_book"
+  },
+  {
+    "id": "core:item/note_reckoners_table",
+    "name": "A Reckoner's Table of Prices",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board chalked with the reckoner's standard prices, hung inside the Reckoner's Hut door for anybody who comes to ask.",
+    "reads": "core:book/reckoners_table"
+  },
+  {
+    "id": "core:item/note_bressas_round",
+    "name": "Bressa's Round",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A string of heather knots hung inside the bield door, each knot a place, read by feel.",
+    "reads": "core:book/bressas_round"
+  },
+  {
+    "id": "core:item/note_faceless_rubbing",
+    "name": "A Rubbing from the Turned Stone",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A charcoal rubbing on bark of the one headstone at the Faceless Graves that lies face-up.",
+    "reads": "core:book/faceless_rubbing"
+  },
+  {
+    "id": "core:item/note_whelping_courier",
+    "name": "A Courier's Letter",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Tollmere courier's letter-case, chewed at one corner, found in the Whelping Hole.",
+    "reads": "core:book/whelping_courier"
+  },
+  {
+    "id": "core:item/note_sorting_count",
+    "name": "A Herder's Count at the Sorting Ground",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Skarl herder's tally of what the thralls carried, scratched on a flake of pavement.",
+    "reads": "core:book/sorting_count"
+  },
+  {
+    "id": "core:item/note_jory_wool_book",
+    "name": "Jory Wool's Wool-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Valish wool-buyer's account book, nineteen years of it, kept on a shelf in Uldra's byre.",
+    "reads": "core:book/jory_wool_book"
+  },
+  {
+    "id": "core:item/note_leadhouse_tide_book",
+    "name": "The Leadhouse Tide-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Salt Isles tide-book, water-stained and swollen, nailed to the Leadhouse wall by a factor who expected to come back for it.",
+    "reads": "core:book/leadhouse_tide_book"
+  },
+  {
+    "id": "core:item/note_red_moor_chalk_book",
+    "name": "Haska's Chalk-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A stone-cutter's chalk-book of the Red Moor's stones, the names set out in chalk before they are cut.",
+    "reads": "core:book/red_moor_chalk_book"
+  },
+  {
+    "id": "core:item/note_ghorrow_door_chalk",
+    "name": "Chalk on the Bricked Doors",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A page torn from a Skarl herder's book, copying the chalk-marks on Ghorrow's seven bricked doors.",
+    "reads": "core:book/ghorrow_door_chalk"
+  },
+  {
+    "id": "core:item/note_tarn_catch",
+    "name": "A Scree-Hag's Catch-String",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A gut string of things fished out of the Hidden Tarn, hung on the scree and left.",
+    "reads": "core:book/tarn_catch"
+  },
+  {
+    "id": "core:item/note_jawbone_balk_tally",
+    "name": "An Oskel Herder's Balk-Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A herder's stick, notched for every beast that balked at the Jawbone this spring.",
+    "reads": "core:book/jawbone_balk_tally"
+  },
+  {
+    "id": "core:item/note_briars_end_rib",
+    "name": "Scratched on a Rib of the Wall",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rib-flake split off the bone wall at the Briar's End, scratched on the inner face.",
+    "reads": "core:book/briars_end_rib"
+  },
+  {
+    "id": "core:item/note_deadground_slate",
+    "name": "A Spoil-Picker's Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's slate from the Deadground, a line of chalk crosses on it running up toward a circle, like a map of something moving.",
+    "reads": "core:book/deadground_slate"
+  },
+  {
+    "id": "core:item/note_ruddale_parapet_chalk",
+    "name": "Chalk off Ruddale Bridge",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A copy, on the back of a Rudd herd-tally, of what somebody chalked on Ruddale Bridge's parapet.",
+    "reads": "core:book/ruddale_parapet_chalk"
+  },
+  {
+    "id": "core:item/note_oskel_fire_book",
+    "name": "The Shieling Fire-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The herders' book of the Oskel Shieling fire: who kept it each night, and whether the mine sang.",
+    "reads": "core:book/oskel_fire_book"
+  },
+  {
+    "id": "core:item/note_spine_count",
+    "name": "A Rudd Child's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's count of the Giant's Spine, pencilled on a scrap of Rudd tally-cloth and weighted with a stone in the heather.",
+    "reads": "core:book/spine_count"
+  },
+  {
+    "id": "core:item/note_bonefield_complaint",
+    "name": "A Skarl Herder's Complaint",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A complaint to the Moot, folded small and never sent, left weighted under a rib in the Bonefield by a herder who thought better of it.",
+    "reads": "core:book/bonefield_complaint"
+  },
+  {
+    "id": "core:item/note_far_anchor_rubbing",
+    "name": "A Rubbing from the Far Anchor",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A charcoal rubbing on bark of the marks cut into the far anchor of Ghast's Broken Bridge, taken from a rope at low water.",
+    "reads": "core:book/far_anchor_rubbing"
+  },
+  {
+    "id": "core:item/note_chain_pitch_tally",
+    "name": "The Chain-Wards' Pitch Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Rudd tapper's tally of pitch laid on the Chain Bridge's four chains, tied to the near post.",
+    "reads": "core:book/chain_pitch_tally"
+  },
+  {
+    "id": "core:item/note_oath_slip",
+    "name": "An Oath Fallen from the Ribs",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slip of bark fallen out of an oath-crack in the Rib Cathedral, the writing on it in a careful hand.",
+    "reads": "core:book/oath_slip"
+  },
+  {
+    "id": "core:item/note_last_riser",
+    "name": "What Is Cut in the Last Riser",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A rubbing of the last riser of the Giants' Stair, taken by somebody who climbed to where it stops.",
+    "reads": "core:book/last_riser"
+  },
+  {
+    "id": "core:item/ghastow_unroped_roll",
+    "name": "The Unroped's Roll",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roll of stitched hides kept in the secret store under Ghastow's keep, every exile who came up the moor written on it in several hands, with their price.",
+    "reads": "core:book/ghastow_unroped_roll"
+  },
+  {
+    "id": "core:item/orrdun_last_bier",
+    "name": "The Last Bier-List",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The last page of a Skarl memory-keeper's bier-list, soft with ninety years of cold, the names in it getting larger toward the foot of the page.",
+    "reads": "core:book/orrdun_last_bier"
+  },
+  {
+    "id": "core:item/brakhs_drink_spout_keeper",
+    "name": "A Spout-Keeper's Slate",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate chalked by some keeper of Skarl Spout long before Ossa, wedged in a dry niche where the underground lake begins, the chalk still legible.",
+    "reads": "core:book/brakhs_drink_spout_keeper"
+  }
+]
