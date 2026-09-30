@@ -1,44 +1,41 @@
 {
  "briarwold": {
-  "buried": 8.0,
-  "fence_gap": 37.0,
-  "fence_lone": 1.0,
-  "on_road": 7.0,
-  "overlap": 9.0,
-  "sunk": 1.0
+  "buried": 3.0,
+  "fence_gap": 65.0,
+  "on_road": 2.0,
+  "overlap": 5.0
  },
  "brightwater": {
-  "fence_gap": 83.0,
+  "fence_gap": 460.0,
   "floating": 2.0,
-  "light_unhung": 1.0,
-  "on_road": 2.0,
-  "overlap": 3.0
- },
- "cinderlea": {
-  "fence_gap": 58,
-  "floating": 2,
-  "on_road": 7,
-  "overlap": 3
- },
- "hearthvale": {
-  "fence_gap": 35.0,
-  "floating": 7.0,
   "on_road": 3.0,
-  "overlap": 2.0
- },
- "sedgemire": {
-  "fence_gap": 219.0,
-  "floating": 13.0,
-  "light_unhung": 5.0,
   "overlap": 1.0
  },
- "skerrow": {
-  "buried": 12.0,
-  "fence_gap": 2821.0,
-  "fence_lone": 3.0,
-  "floating": 1.0,
-  "on_road": 5.0,
+ "cinderlea": {
+  "fence_gap": 38,
+  "floating": 3,
+  "light_unhung": 1,
+  "on_road": 7
+ },
+ "hearthvale": {
+  "fence_gap": 21.0,
+  "on_road": 3.0,
+  "overlap": 3.0
+ },
+ "sedgemire": {
+  "buried": 5.0,
+  "fence_gap": 482.0,
+  "floating": 7.0,
+  "on_road": 3.0,
   "overlap": 2.0,
-  "sunk": 4.0
+  "sunk": 2.0
+ },
+ "skerrow": {
+  "buried": 7.0,
+  "fence_gap": 4285.0,
+  "fence_lone": 1.0,
+  "on_road": 3.0,
+  "overlap": 6.0,
+  "sunk": 2.0
  }
 }
