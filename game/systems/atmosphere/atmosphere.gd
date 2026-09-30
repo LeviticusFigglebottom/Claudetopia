@@ -36,6 +36,15 @@ const OVERLAY_LAYER := 1
 const NIGHT_LIFT := 1.4
 ## The most a pixel feeds the glow (Environment.glow_hdr_luminance_cap; Godot's default is 12).
 const GLOW_LUMINANCE_CAP := 4.0
+## A region's god rays (`god_rays`, the Briarwold) are volumetric fog on Forward+: denser than the
+## plain air's, scattering forward toward the sun, and the sun lit into it harder. At 0.02, 0.75 and
+## 2.0 the fog ate 85% of what lay 96 m off and threw the sun's light forward at about 28 times an
+## even scatter's: in an open clearing like Fernhold's, looking anywhere near the sun, the whole
+## picture went to a bright veil (the owner's playtest, 2026-09-30). Now the air 96 m off keeps
+## half of itself and the forward throw is a third of that: the shafts still stand under a canopy.
+const GOD_RAYS_DENSITY := 0.0075
+const GOD_RAYS_ANISOTROPY := 0.6
+const GOD_RAYS_SUN_ENERGY := 1.2
 
 const SUN_KEYS := [
 	[-90.0, Color("#0b1226"), Color("#1a2238"), Color("#ff6a3a"), 0.0, 0.38, 1.0, 0.0],
@@ -782,10 +791,10 @@ func _apply(_delta: float) -> void:
 	# this, and nothing in the look above depends on it.
 	if env.volumetric_fog_enabled:
 		var rays := bool(lk["god_rays"])
-		env.volumetric_fog_density = (0.02 if rays else 0.005) * float(w["fog_mult"]) * (0.0 if interior else 1.0)
+		env.volumetric_fog_density = (GOD_RAYS_DENSITY if rays else 0.005) * float(w["fog_mult"]) * (0.0 if interior else 1.0)
 		env.volumetric_fog_albedo = fogc.lerp(Color.WHITE, 0.5)
-		env.volumetric_fog_anisotropy = 0.75 if rays else 0.4
-		sun.light_volumetric_fog_energy = 2.0 if rays else 1.0
+		env.volumetric_fog_anisotropy = GOD_RAYS_ANISOTROPY if rays else 0.4
+		sun.light_volumetric_fog_energy = GOD_RAYS_SUN_ENERGY if rays else 1.0
 
 	state = {"elevation": elev, "night": night, "dusk": dusk, "rising": rising,
 		"sun_energy": sun.light_energy, "moon_energy": moon.light_energy, "haze_top": env.fog_height}

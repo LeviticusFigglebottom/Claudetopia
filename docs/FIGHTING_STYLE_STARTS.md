@@ -22,6 +22,20 @@ early for each intro". So each start now keeps to these rules, and §3 below is 
   is a step to that goal. Steps that were not (the Warrior's boar, the Ranger's weaver, the Mage's
   gutter drakes, the Rogue's walk to the traps before there was anything to carry) are cut or put
   in the order the goal needs them.
+- **The teacher's word first (the starts played again, 2026-09-30).** The owner: "There's no
+  trainer you speak with right away who explains what you're doing and why." Each tutorial now
+  opens on a stage of its own, `hear_<teacher>` (hear_dole, hear_rosen, hear_tamsin, hear_sauve):
+  one objective, *speak to the teacher* (`talk`, topic `the_day`), a few paces from where the body
+  stands. The teacher calls you over as control is handed back (a summons greeting, in each
+  Calling's own opening words), and the conversation opens on `the_day` (the dialogue's `start`
+  while that stage is current; `else` the old first node): the goal, why, and the lessons in order.
+  The first lesson begins when it has been said.
+- **The Ranger's ground, fixed (2026-09-30).** The butts stand 15, 25 and 35 m from the mark, each
+  seen whole from it (rays at 0.3, 0.9 and 1.5 m clear), and each is its own objective (`prop`),
+  counted only in its turn (`in_turn`), the marker on the one to shoot. The Briar lesson is by the
+  Thornmarch road 143 m east of the lodge (Alder and Rosen three paces apart, level and clear); it
+  was 222 m north-west on the rim of an 80 m drop, and Alder's straight walk there went down a bank
+  and stuck. Rosen's lip at the Force is on its one level shelf.
 - **Four or five stages, each said as it happens.** Every change of stage is said out loud by the
   teacher (a `say` bark) or told by a notice, and each journal entry opens on why this is the next
   thing, then says what to do and where ("Go to X. Do Y."), then how. Journal text and a quest's

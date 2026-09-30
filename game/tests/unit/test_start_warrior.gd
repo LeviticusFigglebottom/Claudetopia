@@ -66,7 +66,7 @@ func test_the_warrior_is_a_whole_style_with_its_own_start() -> void:
 	assert_eq(CinematicDef.validate(film, "pack"), [] as Array[String], "that validates")
 	var seconds := CinematicDef.total_seconds(film)
 	assert_true(seconds >= 30.0 and seconds <= 40.0, "30-40 s, as the user asked (%.0f s)" % seconds)
-	assert_eq(StyleDef.kit_words(def), "an iron sword and an oak round shield")
+	assert_eq(StyleDef.kit_words(def), "an iron sword, an oak round shield and a pitch torch")
 	assert_eq(str(def.get("tie_in", "")), RELIEF)
 
 
@@ -74,6 +74,9 @@ func test_the_teacher_greets_a_calling_from_far_away_with_a_line_of_its_own() ->
 	Social.quests.call("start", FIRST)
 	GameState.set_flag("player_calling", "core:calling/cragborn")
 	var line := str(Social.dialogue.call("greeting_for", DOLE))
+	assert_true(line.contains("long way from the fells, Cragborn") and line.ends_with("I'll say what today's for, once."), "Dole calls a Cragborn over: %s" % line)
+	Social.quests.call("set_stage", FIRST, "the_yard")
+	line = str(Social.dialogue.call("greeting_for", DOLE))
 	assert_true(line.contains("long way from the fells, Cragborn"), "Dole to a Cragborn: %s" % line)
 	GameState.set_flag("player_calling", "core:calling/hearthkeeper")
 	line = str(Social.dialogue.call("greeting_for", DOLE))
@@ -113,6 +116,12 @@ func _at() -> String:
 func test_the_yard_s_lessons_close_on_the_body_s_own_blows() -> void:
 	var quests: Node = Social.quests
 	assert_true(bool(quests.call("start", FIRST)))
+	# the day opens on Dole's word: what it is for, and why (the owner's playtest, 2026-09-30)
+	assert_eq(_at(), "hear_dole", "the day opens on Dole's word")
+	var talk: Dictionary = (quests.call("objectives_of", FIRST) as Array)[0]
+	assert_true(str(talk["type"]) == "talk" and str(talk["target"]) == DOLE, "the first objective is to speak to him")
+	EventBus.dialogue_node_entered.emit(DOLE, "the_day")
+	assert_eq(_at(), "the_yard", "and once he has said it, the pells")
 	var me := _me()
 	var pell := _foe("prop:pell")
 	# a blow at anything else is not the yard's (the marker points at the pells: `against`)
@@ -373,8 +382,8 @@ func test_a_warrior_s_new_game_begins_in_the_yard_with_dole_speaking_first() -> 
 	assert_true(off < 2.5, "the body stands at the recruit's place in the yard (%.1f m off)" % off)
 	var services := _tree().get_first_node_in_group("game_services")
 	var words := str(services.get("first_words"))
-	assert_true(words.begins_with("Recruit. The Warden at the Stair Head is a month short of her pay") and words.ends_with("Pells first. Light blows. I'll say it once."),
-			"Sergeant Dole speaks first, and says what it is for: %s" % words)
+	assert_true(words.ends_with("Here. To me. I'll say what today's for, once."), "Sergeant Dole speaks first, and calls you over: %s" % words)
+	assert_eq(str(Social.quests.call("stage_id_of", FIRST)), "hear_dole", "his word on the day is the first objective")
 	var worn := player.get_node("Equipment") as Equipment
 	assert_eq(str(worn.get_slot("main_hand").id), "core:item/iron_sword", "sword in hand")
 	assert_eq(str(worn.get_slot("off_hand").id), "core:item/oak_round_shield", "shield on the arm")
@@ -392,6 +401,7 @@ func test_a_warrior_s_new_game_begins_in_the_yard_with_dole_speaking_first() -> 
 		nearest = minf(nearest, (p as Node3D).global_position.distance_to(player.global_position))
 	assert_true(nearest < 4.0, "a pell within reach of a few steps (%.1f m)" % nearest)
 	# the first lesson done, Hollin stands across the yard, on her feet, where she can be got up on
+	Social.quests.call("set_stage", FIRST, "the_yard")
 	for i in 3:
 		Social.quests.call("complete_objective", FIRST, i)
 	var hollin := await _until(func() -> bool:

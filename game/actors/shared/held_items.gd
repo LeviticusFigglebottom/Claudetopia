@@ -95,6 +95,8 @@ static func path_of(model: String) -> String:
 ## fore-stock, its butt back along the aim to the right hand), a shield on the left forearm, the
 ## rest in the right hand.
 static func socket_for(item: Dictionary) -> String:
+	if is_torch(item):
+		return "WeaponL"
 	var model := model_for(item)
 	if model.get_file().begins_with("bow") or model.get_file().begins_with("crossbow"):
 		return "WeaponL"
@@ -107,6 +109,8 @@ static func socket_for(item: Dictionary) -> String:
 ## one-handed one, "" for one that is carried in the hand all the same (a spear or a staff, too long
 ## for a sheath, and a shield, which stays on the arm).
 static func sheath_for(item: Dictionary) -> String:
+	if is_torch(item):
+		return ""
 	var file := model_for(item).get_file()
 	if file.is_empty() or file.begins_with("shield") or file.begins_with("spear") or file.begins_with("staff") \
 			or file.begins_with("scythe"):
@@ -180,6 +184,13 @@ static func two_handed(item: Dictionary) -> bool:
 
 ## The model, instanced; null when the item has none or the forge has not made it.
 static func instance(item: Dictionary) -> Node3D:
+	if is_torch(item):
+		var torch := HeldTorch.new()
+		torch.name = "Held_torch"
+		torch.set_meta(TAG, str(item.get("id", "torch")))
+		torch.add_to_group(TAG)
+		torch.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+		return torch
 	var model := model_for(item)
 	if model.is_empty():
 		return null
@@ -200,7 +211,7 @@ static func instance(item: Dictionary) -> Node3D:
 	return node
 
 
-## Puts the weapon in the main hand and the off-hand item (a shield) on the left arm, each in its
+## Puts the weapon in the main hand and the off-hand item (a shield, or a torch in the left hand) on the left arm, each in its
 ## socket of `body` (a HumanoidModel), taking away whatever this put there before, and closes the
 ## hands round what they hold. Items are content defs ({} for an empty hand). Not `drawn`, the
 ## main weapon goes in its sheath instead (sheath_for), when it has one, and that hand stays open.
@@ -257,6 +268,25 @@ static func dress(body: Node, main: Dictionary, off: Dictionary = {}, drawn := t
 			(body.get("bow_hands") as BowHands).clear()
 			body.set("bow_hands", null)
 	return held
+
+
+## Whether an item is a torch, carried burning in the left hand (HeldTorch): an off-hand light
+## tagged `torch`. A lantern is hung at the belt instead (Player's CarriedLight on Socket.Lantern).
+static func is_torch(item: Dictionary) -> bool:
+	return (item.get("tags", []) as Array).has("torch")
+
+
+## The torch a body holds now, or null.
+static func torch_of(body: Node) -> HeldTorch:
+	if body == null or not body.has_method("socket"):
+		return null
+	var s: Node = body.call("socket", "WeaponL")
+	if s == null:
+		return null
+	for c in s.get_children():
+		if c is HeldTorch and not c.is_queued_for_deletion():
+			return c as HeldTorch
+	return null
 
 
 ## Whether an item is a bow (drawn and loosed, held in the left hand).

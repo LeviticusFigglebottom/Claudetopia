@@ -41,7 +41,7 @@ Objective types and what closes them:
 | `use_item` | item id | `item_used`; a `tool` is used without being used up |
 | `rest_at` | hearthstone/place id | `hearthstone_rested` |
 | `read_book` | book id (+`in_place?`) | `book_opened`: read from the bag, off a shelf, or where it lies; with `in_place`, the book itself is laid, fixed, at the objective's `where` and read there |
-| `act` | an act (+`against?`, `detail?`, `min_range?`) | `act_done` by the player: a lesson's own doing (`hit_light`, `hit_heavy`, `riposte`, `stagger`, `block`, `parry`, `dodge`, `lock_on`, `cast`, `arrow_hit`, `backstab`, `sneak_attack`, `descend`) |
+| `act` | an act (+`against?`, `prop?`, `in_turn?`, `detail?`, `min_range?`) | `act_done` by the player: a lesson's own doing (`hit_light`, `hit_heavy`, `riposte`, `stagger`, `block`, `parry`, `dodge`, `lock_on`, `cast`, `arrow_hit`, `backstab`, `sneak_attack`, `descend`) |
 
 **Where the things lie.** A `collect` or `use_item` objective's item, or the item that reads a
 `read_book` objective's book, is put in the world by `QuestItems` (world/pois/quest_items.gd) unless
@@ -114,6 +114,7 @@ unless nothing else is said. For an `act` objective these fields are read, first
 |---|---|
 | `marker: {place_id, radius}` | that place (overrides everything, as for any objective) |
 | `spot: "<name>"` | a QuestSpots spot of any quest's `spots` (a PlaceRef point), else a live `NpcSpot` of that name (at the stage's `marker` place) |
+| `against: "prop:<kind>"` + `prop: "<name>"` | that one prop (the objective counts a hit on it alone: the Ranger's near, middle and far butts, each its own objective, `in_turn` so one is not counted before its turn) |
 | `against: "prop:<kind>"` | the nearest live quest prop of the kind not yet done (a lit brazier and an opened strongbox are done): `kind` is a Pell's kind (`pell`, `butt`, `brazier`, `sack`), `strongbox`, `cover`, or a cover's `look` (`crates`, `traps`, `boat`); on the chart, the first of the quest's `props` of that kind |
 | `against: "<enemy id>"` / `"tag:x"` | the live foes, where the stage fights them: the objective's `where`, else a `kill` of the same enemy in the stage, else the stage's `spar` (and its `npc` until the bout begins) |
 | `against: "<npc id>"` | that person, where their day has them |

@@ -16,6 +16,13 @@
       {"kind": "brazier", "name": "brazier_far", "place": "core:place/the_lamp", "bearing": 218.2, "distance": 36.1, "facing": 20}
     ],
     "stages": [
+      {"id": "hear_tamsin",
+       "journal": "Tamsin Wick, who keeps the Lamp, is waiting to tell you what today is for, and why you are here.\n\nShe is standing on the shingle below the Lamp's door, a few paces from you. Go and speak to her.",
+       "objectives": [
+         {"type": "talk", "target": "core:npc/tamsin_wick", "topic": "the_day", "text": "Speak to Tamsin Wick below the Lamp's door {key:interact}"}
+       ],
+       "on_enter": [{"set_flag": "keeping_the_lamp"}],
+       "on_complete": []},
       {"id": "the_braziers",
        "journal": "Two smugglers are coming at dusk for the Lamp's sul-stone, and Tamsin means to keep it, with you.\n\nYou will have to burn them from where they cannot reach you, so she starts you on fire.\n\nGo down the shingle from the Lamp's door to the three iron braziers. Light the near one with Kindle-Bolt, then light the other two from where you stand.\n\nHow: a saying costs you from the pool of the Saying, the bar that fills again while you breathe. Tamsin is no Sayer. She says the Saying is only talking louder than a thing is talking to itself.",
        "marker": {"place_id": "core:place/the_lamp", "radius": 60},
