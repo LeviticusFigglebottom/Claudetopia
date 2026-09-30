@@ -537,7 +537,10 @@ class WaysidePadTest(unittest.TestCase):
         pois = BW.load_poi_registry(BW.PACK)
         wayside = [p for p in BW.pad_targets_for([], pois) if p.get("wayside")]
         for p in wayside:
-            self.assertEqual(RD.pad_radius(p), RD.WAYSIDE_PAD_M, p["id"])
+            # a find whose dressing reaches past the small pad says so in the pack (the Poachers'
+            # Cache's hides and antler bundles, 22 m), and that wins, as the test above says
+            want = float(p["pad_radius_m"]) if p.get("pad_radius_m") else RD.WAYSIDE_PAD_M
+            self.assertEqual(RD.pad_radius(p), want, p["id"])
 
 
 class StalePadsTest(unittest.TestCase):

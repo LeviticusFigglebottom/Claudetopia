@@ -331,7 +331,13 @@ func test_a_country_that_never_comes_cannot_keep_anyone_in_the_opening() -> void
 	var feet := player.global_position
 	feet.y = w.provider.get_height(feet.x, feet.z)
 	_before(w, feet)
-	var through := await _run(w, CinematicPlayer.Mode.OPENING, Callable())
+	# "When the country comes": the hold's cap is seconds on the wall, and headless nothing is paced,
+	# so a frame stands up a dozen cells and everyone living in them at once -- a hundred people over
+	# the opening, 0.1 to 0.45 s each, and on a loaded machine one frame of Merrowby's country ran
+	# past the cap before the next could find it in. The cap is the starved run's, below; here the
+	# country always comes, and each shot must wait for all of it.
+	var through := await _run(w, CinematicPlayer.Mode.OPENING, Callable(),
+			func(c: CinematicPlayer) -> void: c.hold_cap_seconds = 120.0)
 	assert_true(bool(through["finished"]) and not bool(through["gave_up"]), "watched through, it ends on its own")
 	assert_empty(through["shown_early"], "and waits for every shot's country when the country comes")
 	var end: Dictionary = through["state"]
@@ -630,9 +636,14 @@ func test_a_fade_left_down_does_not_hide_the_pictures() -> void:
 	cin.finished.connect(func(_s: bool) -> void: done[0] = true)
 	w.add_child(cin)
 	cin.begin(w, _player(w), ContentDB.get_def(OPENING), CinematicPlayer.Mode.OPENING)
+	# a hang is five seconds and a dozen frames: headless nothing is paced, and the frames of the
+	# take-over stand up the country round the hand-over and the first shots, people and all --
+	# seconds each on a loaded machine. What is asked is the order, not the machine's speed.
 	var until := Time.get_ticks_msec() + 5000
-	while (UI.is_faded_out() or not cin.is_playing()) and Time.get_ticks_msec() < until:
+	var frames := 0
+	while (UI.is_faded_out() or not cin.is_playing()) and (Time.get_ticks_msec() < until or frames < 12):
 		await _tree().process_frame
+		frames += 1
 	assert_false(UI.is_faded_out(), "the opening lifts it, under its own black")
 	assert_true(is_instance_valid(cin) and cin.is_playing() and cin.current_shot() == 0,
 			"while the Warden is still saying the name")

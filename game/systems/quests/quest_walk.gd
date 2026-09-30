@@ -21,6 +21,7 @@ const PADS_PATH := "res://world/generated/pois.json"
 static var _in_the_open: Dictionary = {}    # enemy id -> {region id: count}, off the built cells
 static var _below: Dictionary = {}          # enemy id -> [interior id], a deep place's encounters
 static var _below_count: Dictionary = {}    # "interior|enemy" -> how many its encounters stand
+static var _garrisoned: Dictionary = {}     # enemy id -> [poi id], a fort's garrison (site.garrison)
 static var _cave_hearths: Dictionary = {}   # hearthstone id -> interior id
 static var _lying_inside: Dictionary = {}   # item id -> [interior id], cave features and house placements
 static var _shelved_in: Dictionary = {}     # book id -> [interior id]
@@ -31,7 +32,7 @@ static var _built := false
 
 
 static func reset() -> void:
-	for d in [_in_the_open, _below, _below_count, _cave_hearths, _lying_inside, _shelved_in, _started_by, _pads]:
+	for d in [_in_the_open, _below, _below_count, _garrisoned, _cave_hearths, _lying_inside, _shelved_in, _started_by, _pads]:
 		(d as Dictionary).clear()
 	_cells_read = false
 	_built = false
@@ -273,6 +274,9 @@ static func _foe(target: String, region: String = "") -> Dictionary:
 		for poi in PoiEncounters.foes_at(id):
 			if region == "" or _region_of(str(poi)) == region:
 				where.append("at " + _name(str(poi)))
+		for poi in _garrisoned.get(id, []):
+			if region == "" or _region_of(str(poi)) == region:
+				where.append("in the garrison of " + _name(str(poi)))
 	if where.is_empty():
 		return _no("%s stands nowhere%s: no cell, deep place or point of interest raises one"
 				% [_name(target), "" if region == "" else " in " + _name(region)])
@@ -487,7 +491,23 @@ static func _build() -> void:
 			for e in parsed:
 				if typeof(e) == TYPE_DICTIONARY:
 					_pads[str((e as Dictionary).get("place_id", ""))] = true
+	for def in ContentDB.all("poi"):
+		var site: Variant = def.get("site", null)
+		if typeof(site) == TYPE_DICTIONARY and typeof((site as Dictionary).get("garrison", null)) == TYPE_DICTIONARY:
+			var g: Dictionary = site["garrison"]
+			for group in ["rank", "archers", "heavy"]:
+				for enemy in g.get(group, []):
+					_note(_garrisoned, str(enemy), str(def["id"]))
 	for def in ContentDB.all("interior"):
+		if typeof(def.get("site", null)) == TYPE_DICTIONARY:
+			# a large site's inside (SiteInterior): its rooms' foes and the boss at the bottom, as
+			# its plan stands them -- the same plan, the same seed, whenever it is entered
+			var plan := SitePlan.make(def)
+			for e in plan.encounters:
+				var enemy := str((e as Dictionary).get("enemy", ""))
+				_note(_below, enemy, str(def["id"]))
+				var key := "%s|%s" % [str(def["id"]), enemy]
+				_below_count[key] = int(_below_count.get(key, 0)) + maxi(1, ((e as Dictionary).get("spots", []) as Array).size())
 		var path := str(def.get("meta", ""))
 		if path == "" or not FileAccess.file_exists(path):
 			continue

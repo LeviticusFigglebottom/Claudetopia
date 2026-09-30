@@ -1,6 +1,7 @@
 [
   {
     "id": "core:boss/first_vigilant",
+    "resists": {"slash": 0.35, "pierce": 0.3, "blunt": -0.3, "silence": 0.2},
     "extends": "core:enemy/tolling_knight",
     "name": "Aveline Ash, the First Vigilant",
     "archetype": "boss",
@@ -63,6 +64,7 @@
   },
   {
     "id": "core:boss/the_precentor",
+    "resists": {"frost": 0.3, "poison": 0.5, "silence": -0.5, "fire": -0.2},
     "extends": "core:enemy/chorister",
     "name": "The Precentor of Anthe-Ondr",
     "archetype": "boss",

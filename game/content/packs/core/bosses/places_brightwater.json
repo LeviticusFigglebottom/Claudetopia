@@ -1,6 +1,7 @@
 [
   {
     "id": "core:boss/pennyfold_captain",
+    "resists": {"slash": 0.2, "pierce": 0.15, "blunt": -0.25},
     "extends": "core:enemy/bravo",
     "name": "Sabeline Marr, Captain of the Fair Company",
     "archetype": "boss",
@@ -62,6 +63,7 @@
   },
   {
     "id": "core:boss/the_word_seller",
+    "resists": {"silence": 0.3, "slash": -0.2, "pierce": -0.15},
     "extends": "core:enemy/smuggler_sayer",
     "name": "Ambrose Quell, the Word-Seller",
     "archetype": "boss",
@@ -121,6 +123,7 @@
   },
   {
     "id": "core:boss/gull_holm_brood_mother",
+    "resists": {"fire": 0.4, "poison": 0.2, "frost": -0.35},
     "extends": "core:enemy/gutter_drake",
     "name": "The Brood-Mother of Gull Holm",
     "archetype": "boss",

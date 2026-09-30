@@ -1,6 +1,7 @@
 [
   {
     "id": "core:boss/reel_mother",
+    "resists": {"poison": 0.5, "pierce": 0.2, "fire": -0.4},
     "extends": "core:enemy/weaver",
     "name": "The Reel-Mother",
     "archetype": "boss",

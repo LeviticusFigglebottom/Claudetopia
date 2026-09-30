@@ -7,9 +7,8 @@ extends RefCounted
 ##
 ## Each one who can fall has a stable key (`<site id>/<group>/<n>`, the same build to build). A death
 ## sets the flag `site_fallen/<key>` to the count of rests at that moment; the one stands again once
-## a rest has been counted since. Rests are counted in `GameState.counters["hearth_rests"]`, by this
-## class from the first time any site is raised in a session (and by anything else that counts them:
-## the count only has to grow).
+## a rest has been counted since. Rests are counted in `GameState.counters["hearth_rests"]` by
+## HearthSystem, at the rest itself (and on coming back from death, which is a rest).
 
 const FLAG := "site_fallen/"
 const RESTS := "hearth_rests"
@@ -17,14 +16,13 @@ const RESTS := "hearth_rests"
 static var _listening := false
 
 
-## Starts counting rests (idempotent). Called by whatever raises a site's people.
+## Kept for whatever raises a site's people: the rests are counted by HearthSystem now, from the
+## first rest of a session rather than from the first site raised in it.
 static func listen() -> void:
-	if _listening:
-		return
 	_listening = true
-	EventBus.hearthstone_rested.connect(_on_rested)
 
 
+## A rest counted (what HearthSystem does at one; the tests call it directly).
 static func _on_rested(_id: String) -> void:
 	GameState.inc(RESTS)
 

@@ -2648,6 +2648,10 @@ static func _bridge_boardwalk(d: PoiDressing, axis: Vector2) -> void:
 	# the lamplighter's round: on the deck, not on the marsh under it
 	var round_at := a.lerp(b, 0.35)
 	k.marker("the_lamp_round", Vector3(round_at.x, deck_y + 0.1, round_at.y), true, true, length * 0.5)
+	# the last post's foot, on the deck: what a quest leaves hung there (the Long Jetty's lantern
+	# with a Vale name on it) is put down here and not in the mere a few paces off the pad's middle
+	var last_post := b - axis * 1.2
+	k.marker("last_post", Vector3(last_post.x, deck_y + 0.05, last_post.y), false, true, 2.0)
 	var reeds: Array = []
 	for i in 70:
 		var t := k.rng.randf_range(-0.1, 1.1)

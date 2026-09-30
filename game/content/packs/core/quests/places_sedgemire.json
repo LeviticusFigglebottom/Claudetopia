@@ -128,7 +128,7 @@
         "journal": "Hester Wrenn came to the Delta from Gosford behind an eel-seller and stayed when he went into the water. Every Vale carter, drover and runaway the marsh has drowned since has come to her door first, she says, one way or another, and she has made each of them a lantern and hung it on the Long Jetty with their name on it so that the reedfolk would sing for them too. Last week a lantern was hanging on the jetty's last post that she did not make, in a reedfolk weave, with a Vale name on it. She will not say whose. She wants it brought to her.",
         "objectives": [
           {"type": "reach", "target": "core:poi/long_jetty", "text": "Walk out along the Long Jetty"},
-          {"type": "collect", "target": "core:item/vale_named_lantern", "count": 1, "where": "core:poi/long_jetty", "text": "Take down the lantern Hester did not make"}
+          {"type": "collect", "target": "core:item/vale_named_lantern", "count": 1, "where": "core:poi/long_jetty", "spot": "last_post", "text": "Take down the lantern Hester did not make"}
         ],
         "marker": {"place_id": "core:poi/long_jetty", "radius": 80}
       },

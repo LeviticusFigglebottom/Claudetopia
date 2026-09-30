@@ -284,6 +284,19 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 	add_child(_camera)
 	_camera.make_current()
 	_take_over()
+	if mode != Mode.SCRUB:
+		# The opening's black goes down now, and the menus' fade -- which may still be down: it lifts
+		# when the body stands, or later if it waits for the streaming -- is lifted onto it unseen.
+		# It sits under this curtain, which is just as black, so the opening owns the screen until
+		# the hand-over, holding on its own black while the country loads. Left down, it would hide
+		# every picture behind the subtitles. Not after the frames below: each of them stands up the
+		# country round the hand-over and the first shots, and on a slow machine (or headless, where
+		# nothing is paced) they are seconds each, the fade and its caption still down over them.
+		_overlay.set_curtain(1.0)
+		_curtain_target = 1.0
+		_bars_target = 1.0
+		if UI.is_faded_out():
+			UI.fade_from_black(0.3)
 	_decide_handover()
 	_put_player_at_handover()
 	# the rig follows and pulls its arm in out of the way once per drawn frame: the hand-over
@@ -300,15 +313,7 @@ func begin(world: World, player: Node3D, definition: Dictionary, how: Mode) -> v
 		_overlay.set_bars(1.0)
 		_phase = Phase.PLAY
 		return
-	_overlay.set_curtain(1.0)
-	_curtain_target = 1.0
-	_bars_target = 1.0
-	# The menus' fade may still be down: it lifts when the body stands, or later if it waits for
-	# the streaming. It sits under this curtain, which is just as black, so it is lifted here
-	# unseen and the opening owns the screen until the hand-over, holding on its own black while
-	# the country loads. Left down, it would hide every picture behind the subtitles.
-	if UI.is_faded_out():
-		UI.fade_from_black(0.3)
+	# (the curtain went down and the menus' fade was lifted onto it with the take-over, above)
 	if def.has("music"):
 		Music.play_cue(str(def["music"]))
 	_began_ms = Time.get_ticks_msec()
