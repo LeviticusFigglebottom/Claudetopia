@@ -61,6 +61,10 @@ func _run() -> void:
 		print("TITLE_FILM: no vista (setting off, no world, or headless)")
 		_finish(1)
 		return
+	# the software renderers here draw a frame in seconds: the caps a player's machine gets before
+	# the first shot (TitleVista.LONG_FRAME_S, FIRST_SHOW_CAP_S) would end the film before it began
+	vista.long_frame_s = 600.0
+	vista.first_show_cap_s = 3600.0
 	# the slowest frame while the world stands up behind the menu: what a player's hand would feel
 	# and every frame longer than a quarter second, with what the vista was doing: where a gap is
 	var slowest := 0.0

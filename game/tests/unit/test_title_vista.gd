@@ -51,7 +51,12 @@ func _title() -> TitleVista:
 		return null
 	_menu = (load(MENU_SCENE) as PackedScene).instantiate()
 	_tree().root.add_child(_menu)
-	return _menu.get("vista") as TitleVista
+	var vista := _menu.get("vista") as TitleVista
+	if vista != null:
+		# this shared machine may take UP_WITHIN_S; the caps a player gets are tested on their own below
+		vista.first_show_cap_s = UP_WITHIN_S * 2.0
+		vista.long_frame_s = 60.0
+	return vista
 
 
 func _wait_up(vista: TitleVista) -> bool:
@@ -173,3 +178,63 @@ func test_the_title_setting_off_keeps_the_chart() -> void:
 	Settings.data["graphics"]["title_vista"] = was
 	assert_false(bool(Graphics.PRESETS["low"]["title_vista"]), "Low keeps the chart")
 	assert_true(bool(Graphics.PRESETS["medium"]["title_vista"]), "Medium shows the country")
+
+
+## The safety net before the first shot (a first launch once froze behind the title): one frame of
+## more than LONG_FRAME_S, or more than FIRST_SHOW_CAP_S from asking for the world, and the vista is
+## given up for this visit, the chart drawn at full and the world gone. No world is needed.
+func _bare_vista(p: TitleVista.Phase) -> TitleVista:
+	var v := TitleVista.new()
+	v.phase = p
+	v._capping = true
+	v.chart = ColorRect.new()
+	v.chart.modulate.a = 0.4
+	v.dip = ColorRect.new()
+	return v
+
+
+func _free_bare(v: TitleVista) -> void:
+	v.chart.free()
+	v.dip.free()
+	v.free()
+
+
+func test_one_long_frame_before_the_first_shot_gives_the_vista_up() -> void:
+	for p in [TitleVista.Phase.LOADING, TitleVista.Phase.IDLE, TitleVista.Phase.FIRST]:
+		var v := _bare_vista(p)
+		var now := Time.get_ticks_usec()
+		v._asked_us = now
+		v._last_us = now - int((TitleVista.LONG_FRAME_S + 1.0) * 1000000.0)
+		v._process(0.0)
+		assert_eq(v.phase, TitleVista.Phase.GONE, "a %.0f s frame in %s gives it up" % [TitleVista.LONG_FRAME_S + 1.0, TitleVista.Phase.keys()[p]])
+		assert_eq(v.gave_up, "long_frame", "and says why")
+		assert_near(v.chart.modulate.a, 1.0, 0.001, "the chart is drawn at full")
+		assert_eq(v.world, null, "and no world is left")
+		_free_bare(v)
+
+
+func test_the_whole_wait_for_the_first_shot_is_capped() -> void:
+	var v := _bare_vista(TitleVista.Phase.IDLE)
+	var now := Time.get_ticks_usec()
+	v._asked_us = now - int((TitleVista.FIRST_SHOW_CAP_S + 1.0) * 1000000.0)
+	v._last_us = now - 16000
+	v._process(0.0)
+	assert_eq(v.phase, TitleVista.Phase.GONE, "past %.0f s since the world was asked for, it is given up" % TitleVista.FIRST_SHOW_CAP_S)
+	assert_eq(v.gave_up, "cap", "and says why")
+	_free_bare(v)
+
+
+func test_short_frames_and_a_shown_shot_are_left_alone() -> void:
+	var v := _bare_vista(TitleVista.Phase.IDLE)
+	var now := Time.get_ticks_usec()
+	v._asked_us = now - 5000000
+	v._last_us = now - 50000
+	v._process(0.0)
+	assert_eq(v.phase, TitleVista.Phase.IDLE, "a 50 ms frame 5 s in changes nothing")
+	assert_eq(v.gave_up, "", "and nothing was given up")
+	_free_bare(v)
+	# once the country is shown, a long frame is a hitch in the pictures, not a reason to stop
+	var shown := _bare_vista(TitleVista.Phase.WAIT_NEXT)
+	shown._asked_us = now - int((TitleVista.FIRST_SHOW_CAP_S + 10.0) * 1000000.0)
+	assert_false(shown._before_first_shot(), "after the first shot the caps do not apply")
+	_free_bare(shown)

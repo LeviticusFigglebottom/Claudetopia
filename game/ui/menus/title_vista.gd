@@ -33,6 +33,14 @@ const START_DELAY_FRAMES := 4
 ## However slowly the first shot's country comes, the chart stays up this long at most, then the
 ## vista is given up for this visit (a machine that slow is better served by the chart).
 const FIRST_SHOT_CAP_S := 40.0
+## From asking for the world to the first shot shown, however the time goes (the world standing up,
+## its cells, the first frames that draw it), at most this long; then the vista is given up for
+## this visit and the chart stays (`first_show_cap_s`).
+const FIRST_SHOW_CAP_S := 90.0
+## One frame this long before the first shot is shown -- a machine compiling every shader from source
+## on its first launch, or one that cannot draw the world at all -- gives the vista up at once: the
+## next frames would cost the same, and the menu is worth more than the picture (`long_frame_s`).
+const LONG_FRAME_S := 4.0
 ## A shot holds on its last frame at most this long for the next one's cells, then the next is shown.
 const NEXT_WAIT_CAP_S := 8.0
 ## Frames drawn at a new place, under the dark, before the dip lifts: Terrain3D's clipmap re-centres.
@@ -63,6 +71,11 @@ static var sight_streaming := true
 
 ## Tests run the pictures faster; the waits for the country stay in real seconds.
 var time_scale := 1.0
+## The caps before the first shot (FIRST_SHOW_CAP_S, LONG_FRAME_S); a test or a tool may widen them.
+var first_show_cap_s := FIRST_SHOW_CAP_S
+var long_frame_s := LONG_FRAME_S
+## Why the vista was given up before its first shot ("" while it was not): "cap", "long_frame".
+var gave_up := ""
 
 ## What the menu gives it to draw with: the dark it dips to (alpha 1 is dark), and the chart it fades
 ## out once the country is up.
@@ -86,6 +99,11 @@ var _last_us := 0
 var _clock_saved: Dictionary = {}
 var _frames := 0
 var _last_raw := 0.0
+## When the world was asked for (µs), and the longest frame since, until the first shot is shown.
+var _asked_us := 0
+var _longest_s := 0.0
+## Whether the caps before the first shot apply (from `_ready`; `scrub` turns them off).
+var _capping := false
 ## What each shot's camera sees along its path (ShotSight.seen), worked out when it is first wanted.
 var _sights: Dictionary = {}
 ## Whether the root viewport drew 3D before the vista stopped it, to give it back.
@@ -121,6 +139,8 @@ func _ready() -> void:
 		return
 	phase = Phase.LOADING
 	_last_us = Time.get_ticks_usec()
+	_asked_us = _last_us
+	_capping = true
 	# the world's scene is read while the menu's first frames are drawn
 	ResourceLoader.load_threaded_request(WORLD_SCENE)
 
@@ -144,6 +164,8 @@ func _process(_delta: float) -> void:
 	if phase != Phase.GONE and not switched_on():
 		# switched off in the settings the title opened: the chart comes back at once
 		stop()
+		return
+	if _before_first_shot() and _over_budget(now, d):
 		return
 	match phase:
 		Phase.LOADING:
@@ -201,6 +223,37 @@ func _process(_delta: float) -> void:
 				_fade(dip, 0.0, DIP_IN_S)
 				phase = Phase.PLAY
 				_hurry(false)
+
+
+## Until the first shot is shown: the world asked for, standing up, its cells coming, the first
+## frames drawn under the chart.
+## (Not a vista held still by `scrub`.)
+func _before_first_shot() -> bool:
+	return _capping and shown.is_empty() and phase in [Phase.LOADING, Phase.IDLE, Phase.FIRST]
+
+
+## The safety net before the first shot (docs/FIRST_LAUNCH.md: a first launch froze behind the title). One frame of
+## `frame_s` longer than `long_frame_s`, or more than `first_show_cap_s` since the world was asked
+## for, and the vista is given up with a warning: the world goes, the chart stays drawn and the menu
+## goes on answering. True when it gave up.
+func _over_budget(now_us: int, frame_s: float) -> bool:
+	_longest_s = maxf(_longest_s, frame_s)
+	var why := ""
+	if frame_s > long_frame_s:
+		why = "long_frame"
+		Log.warn("TitleVista", "one frame took %.1f s while the country stood up behind the title (%s); the chart stays" % [frame_s, _phase_name()])
+	elif float(now_us - _asked_us) / 1000000.0 > first_show_cap_s:
+		why = "cap"
+		Log.warn("TitleVista", "the first shot was not up %.0f s after the world was asked for (%s, longest frame %.1f s); the chart stays" % [first_show_cap_s, _phase_name(), _longest_s])
+	if why.is_empty():
+		return false
+	stop()
+	gave_up = why
+	return true
+
+
+func _phase_name() -> String:
+	return str(Phase.keys()[phase]).to_lower()
 
 
 # --- the world --------------------------------------------------------------------------------------
@@ -484,6 +537,8 @@ func scrub(i: int, u: float) -> void:
 		return
 	if phase != Phase.GONE:
 		phase = Phase.IDLE
+	# a film's stills take as long as the machine needs: the caps before the first shot are off
+	_capping = false
 	_draw_3d(true)
 	for item: CanvasItem in [dip, chart]:
 		if item != null and is_instance_valid(item):
