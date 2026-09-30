@@ -255,8 +255,8 @@ func build() -> void:
 	var builders: GDScript = _builders
 	if builders == null:
 		# read on a loader's thread when a world began to stand up (World._ready), or here
-		if ResourceLoader.load_threaded_get_status(BUILDERS_PATH) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-			builders = ResourceLoader.load_threaded_get(BUILDERS_PATH) as GDScript
+		if ThreadedLoads.status(BUILDERS_PATH) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			builders = ThreadedLoads.take(BUILDERS_PATH) as GDScript
 		if builders == null:
 			builders = load(BUILDERS_PATH)
 		_builders = builders

@@ -13,7 +13,11 @@
 # How: the Godot editor (headless) and its export templates are downloaded at the same version the
 # project is made with, the assets are imported (the import cache is kept between runs, so later
 # runs import only what changed), and the "Windows Desktop" preset in game/export_presets.cfg is
-# exported. The zip holds Wickmere.exe, Wickmere.pck, the Terrain3D library and a console build
+# exported. The export is made by the editor with a Vulkan device (Mesa's software one, lavapipe,
+# under a virtual screen), not headless: the export's shader baker compiles every shader the game
+# uses into the pack only when it has a rendering device, and a pack without them compiled each one
+# on the player's first launch, on the main thread, behind the title (docs/FIRST_LAUNCH.md). The job
+# fails if the pack has no baked shaders. The zip holds Wickmere.exe, Wickmere.pck, the Terrain3D library and a console build
 # (Wickmere.console.exe) that shows the log.
 name: Windows build
 
@@ -93,6 +97,12 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
           df -h /
 
+      - name: Get a software Vulkan device and a virtual screen (for the shader baker)
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends mesa-vulkan-drivers libvulkan1 xvfb xauth
+
       - name: Get Godot and its export templates
         if: steps.skip.outputs.skip == 'false'
         run: |
@@ -137,10 +147,20 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/windows
-          godot --headless --path game --export-release "Windows Desktop" ../build/windows/Wickmere.exe 2>&1 | tee export.log | tail -40
+          # not --headless: the shader baker needs a rendering device (see the top of this file)
+          xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-driver vulkan \
+            --rendering-method forward_plus --export-release "Windows Desktop" ../build/windows/Wickmere.exe \
+            2>&1 | tee export.log | tail -40
           test -s build/windows/Wickmere.exe
           test -s build/windows/Wickmere.pck
           ls -la build/windows
+
+      - name: Check the shaders were baked into the pack
+        if: steps.skip.outputs.skip == 'false'
+        run: |
+          # 168 material shaders were baked on 2026-09-30 (46 before the warm set,
+          # game/assets/shader_warm/); far fewer means the warm set or the baker went missing
+          python3 tools/debug/pck_shader_cache.py build/windows/Wickmere.pck --min-scene=150
 
       - name: Package
         if: steps.skip.outputs.skip == 'false'

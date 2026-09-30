@@ -10,6 +10,8 @@
 #                       would, with a screenshot at every step -> captures/flow/
 #   ./run.sh shots      headless capture plan -> captures/
 #                       (./run.sh shots <plan> --preset=high --attribute  shoots at a graphics preset)
+#   ./run.sh shader-warm  gather every material the game draws with into the warm set the export's
+#                       shader baker compiles (game/assets/shader_warm/, docs/FIRST_LAUNCH.md)
 #   ./run.sh perf       measure draw calls and primitives against the budgets
 #                       (./run.sh perf --preset=low  measures at a graphics preset)
 #   ./run.sh world      rebuild terrain/world data from recipes, then import the terrain
@@ -480,6 +482,50 @@ case "$cmd" in
     if echo "$out" | grep -E "SCRIPT ERROR|SMOKE: FAIL" >/dev/null; then echo "[smoke] FAIL"; exit 1; fi
     if ! echo "$out" | grep "SMOKE: PASS" >/dev/null; then echo "[smoke] FAIL (no verdict)"; exit 1; fi
     echo "[smoke] PASS" ;;
+  shader-warm)
+    # The warm set the export's shader baker compiles (game/assets/shader_warm/warm_set.tres,
+    # docs/FIRST_LAUNCH.md): every material the game was seen drawing with, gathered by the census
+    # (tools_gd/material_census.gd) over the title, drawn (the only way to read Terrain3D's shader),
+    # the title again on the coarse ground, the smoke (every region, place and interior), a new
+    # game's opening (the flow's first way in), the fights and the journey. Added to, never
+    # replaced; --fresh starts it again. Re-run it when a material, a shader or the code that
+    # makes one changes.
+    #   ./run.sh shader-warm [--fresh] [--only=title,title-coarse,smoke,flow,fights,journey]
+    need_godot
+    warm_out="$GAME/assets/shader_warm/warm_set.tres"
+    census="--material-census=res://assets/shader_warm/warm_set.tres"
+    only="title,title-coarse,smoke,flow,fights,journey"
+    for a in "$@"; do
+      case "$a" in
+        --fresh) rm -f "$warm_out" ;;
+        --only=*) only="${a#--only=}" ;;
+      esac
+    done
+    import_project
+    warm_code=0
+    for part in ${only//,/ }; do
+      echo "[shader-warm] $part"
+      case "$part" in
+        title)
+          # drawn (Terrain3D's shader is read from the rendering server) with OpenGL: the materials
+          # are the same as on Forward+, and this machine's software Vulkan (lavapipe) cannot draw
+          # Terrain3D and stalled behind the title (2026-09-30)
+          xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 \
+            --audio-driver Dummy --resolution 1280x720 -- "$census" \
+            "--material-census-quit-after=${SHADER_WARM_TITLE_S:-300}" || warm_code=1 ;;
+        title-coarse)
+          # the coarse ground (FallbackTerrain), which a machine Terrain3D cannot run on draws
+          xvfb "$GODOT" --path "$GAME" --rendering-driver opengl3 \
+            --audio-driver Dummy --resolution 1280x720 -- "$census" --terrain=fallback \
+            "--material-census-quit-after=${SHADER_WARM_COARSE_S:-120}" || warm_code=1 ;;
+        smoke|fights|journey) "$ROOT/run.sh" "$part" "$census" || warm_code=1 ;;
+        flow) FLOW_OUT="${FLOW_OUT:-$ROOT/captures/flow_warm}" "$ROOT/run.sh" flow "$census" || warm_code=1 ;;
+        *) echo "[shader-warm] no such part: $part"; warm_code=1 ;;
+      esac
+    done
+    grep -c "ShaderMaterial\|StandardMaterial3D\|ORMMaterial3D\|ParticleProcessMaterial\|SkyMaterial\|FogMaterial\|CanvasItemMaterial" "$warm_out" \
+      | sed 's/^/[shader-warm] material lines in the set: /' || true
+    exit $warm_code ;;
   perf)
     import_project
     mkdir -p "$ROOT/captures"

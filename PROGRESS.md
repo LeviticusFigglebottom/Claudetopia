@@ -14669,3 +14669,96 @@ The owner asked for a full optimisation pass that gives up no function, graphics
 - **For the coordinator:**
   - No world rebuild and no re-import needed.
   - The flow's 20 s black check and the two world-data tests above fail on main's 60a6b475 as well.
+## A first launch no longer deadlocks behind the title, and the build bakes the game's shaders (firstrun, 2026-09-30)
+
+The owner saw the released Windows build freeze on the title on a fresh PC. There were two causes:
+a deadlock, and every shader compiling from source on the main thread. docs/FIRST_LAUNCH.md has
+the whole account.
+
+- **The deadlock (the freeze).** It was reproduced on an unbaked first launch, from both the
+  export and the project, 110 s in. gdb shows the following, with the functions named by strings
+  near the return addresses:
+  - every worker thread is in a threaded resource load, adding an ArrayMesh surface;
+  - one of them holds ShaderRD's lock and waits in `_compile_version_end` for the shader's
+    compile group, which runs on the same worker pool;
+  - the other workers, and the main thread (drawing), wait on that lock or on that compile.
+
+  The world streamer asked for about a hundred assets at once. With a warm or baked cache nothing
+  compiles, so it was only ever the first launch. **Fix:** every `load_threaded_request` now goes
+  through `ThreadedLoads` (game/core/threaded_loads.gd). At most pool - 2 reads are in flight (1
+  to 4); the rest wait in a queue and read as in progress. A compile always has a free thread.
+  Callers changed: the world streamer, world.gd, title_vista.gd, naming.gd, poi_dressing.gd and
+  road_life.gd. The same unbaked first launch then reached its country (210 s on lavapipe) with no
+  deadlock.
+- **Shaders baked.** The export preset has `shader_baker/enabled=true`. The baker needs a
+  rendering device, so an export made `--headless` bakes nothing.
+  - **Warm set.** `game/assets/shader_warm/warm_set.tres` holds one material per feature key: 90
+    keys, of which 37 StandardMaterial3D, 49 ShaderMaterial (Terrain3D's generated shader and the
+    water's four variants among them), 3 ParticleProcessMaterial and 1 sky. Textures are shared
+    placeholders. It covers the shaders the game makes in code, which the baker cannot otherwise
+    find.
+  - **Census.** `tools_gd/material_census.gd` gathers the set; any run takes
+    `-- --material-census=<file>`. `./run.sh shader-warm` runs it over the title (with OpenGL,
+    where Terrain3D's code can be read), the title on the coarse ground, the smoke, the flow, the
+    fights and the journey. The set came from: title 46, coarse 1, smoke 33, flow 3, fights 7,
+    journey 0.
+  - **Baked entries.** A local Windows export baked 46 SceneForwardClustered entries (118 in
+    all, 14.8 MB) before the warm set. With it, 168 (247 in all, 48.6 MB). With the coarse
+    ground's material the Linux export baked 170 (249 in all, 49.3 MB).
+  - **Local exports:** delete `game/.godot/exported/` first. The editor reuses its customized
+    resources from there without baking them again (a second export baked only 77 entries).
+- **Measured.** These are Linux exports on lavapipe, with an empty user:// and Mesa cache
+  (table in docs/FIRST_LAUNCH.md).
+
+  | run | first menu frame | shaders compiled at runtime | country shown | longest frame |
+  |---|---|---|---|---|
+  | unbaked, first launch | 7.06 s | 110 | 210 s | 72 s |
+  | baked, first launch | 5.18 s | 1 | 198 s | 75 s |
+  | baked, second launch | 5.38 s | 0 new | 198 s | 68 s |
+
+  The minutes, and the 45 to 79 s warming frames, are lavapipe compiling pipelines with LLVM, cold
+  or warm. That cost is the driver's, and baking does not touch it. On a real GPU the SPIR-V
+  compiles and the deadlock were what froze the title.
+- **The title's safety nets (TitleVista).**
+  - A 90 s cap from asking for the world to the first shot.
+  - A 4 s long-frame guard while the first shot is first drawn (Phase.FIRST). It is not applied
+    while the world stands up, which has a known 2.4 s frame (the provider's maps).
+  - The chart is kept on a software rasterizer (lavapipe, or WARP on a PC with no driver yet).
+    As shipped on lavapipe the menu then ran 800 frames with a longest frame of 135 ms, and the
+    game quit cleanly.
+  - Each warming frame's time is logged.
+  - `cpu_probe --cpu-no-vista-caps` lifts all three for measuring.
+- **CI** (`.github/workflows/windows-build.yml`):
+  - installs mesa-vulkan-drivers, libvulkan1, xvfb and xauth;
+  - exports under `xvfb-run` with `--rendering-driver vulkan --rendering-method forward_plus`
+    (not headless);
+  - fails the job unless `tools/debug/pck_shader_cache.py` finds shader_cache entries and at
+    least 150 SceneForwardClustered entries.
+
+  Everything else in the workflow is as it was.
+- **Tests:**
+  - test_shader_warm, test_threaded_loads and test_title_vista together: 16 tests, 0 failed. The
+    title tests passed alone and in pairs too.
+  - One earlier run of all three crashed (signal 11) while the title's world stood up headless,
+    right after the threaded-load tests. Three later runs, in every order, did not.
+  - `./run.sh flow`: PASS (all three ways in), run last. Before the probe fix it failed twice at
+    "20 s in, the world is not a black screen". With the reads throttled, the near cells come
+    sooner, so that sample now falls in the opening's take-over. That is the curtain
+    CinematicPlayer lays down on purpose before its first shot, seconds long on this renderer.
+    The flow probe now counts that STARTING black as the opening's (new
+    `CinematicPlayer.is_starting()`). The census run's flow also passed.
+  - The census runs of `./run.sh journey` passed (all steps). The smoke fails as before: 13
+    interiors' meta are missing in this checkout, and it aborted at exit. The fights fail
+    `parry_outside` as before.
+- **Not done / for the coordinator:**
+  - D3D12 is untested. The Linux editor cannot bake D3D12 (no DXIL container), so a PC that falls
+    back to D3D12 compiles everything on first launch. It relies on ThreadedLoads not to lock up.
+    Baking both would need an export from a Windows runner.
+  - A pipeline cache cannot be shipped (it is specific to the GPU and driver).
+  - On lavapipe the game sometimes hung, or once crashed, in engine cleanup after quitting, once
+    the title's world had been drawn. This happened before and after these changes, and not when
+    the title kept its chart. Nothing here shows whether a real GPU does it.
+  - Nothing here ran on a real GPU. The Windows workflow change is untested until it runs on
+    GitHub.
+  - Re-run `./run.sh shader-warm` when materials or shaders change (docs/FIRST_LAUNCH.md says
+    when). A new threaded read must go through ThreadedLoads.

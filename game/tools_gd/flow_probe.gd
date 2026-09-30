@@ -1355,7 +1355,10 @@ func _wait_for_opening(timeout: float) -> CinematicPlayer:
 ## from, or a hold for the country with its caption up.
 func _opening_means_the_black() -> bool:
 	var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
-	if cin == null or not cin.is_playing() or cin.overlay() == null:
+	# its black from the take-over on: the frames before its first shot stand the country up under
+	# it, and on this machine's renderer they are seconds each (a New Game's 20 s sample fell there
+	# once the near cells came sooner, 2026-09-30)
+	if cin == null or not (cin.is_playing() or cin.is_starting()) or cin.overlay() == null:
 		return false
 	return cin.overlay().curtain() > 0.4 or cin.overlay().caption_shown()
 

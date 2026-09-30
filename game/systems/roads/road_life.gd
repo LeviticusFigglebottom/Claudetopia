@@ -580,7 +580,7 @@ func _ask_warm() -> void:
 	_warm_asked = true
 	for path in WARM:
 		if ResourceLoader.exists(path):
-			ResourceLoader.load_threaded_request(path)
+			ThreadedLoads.request(path)
 
 
 ## Whether everything in WARM has been read (and is held, so the cache keeps it).
@@ -589,10 +589,10 @@ func warm() -> bool:
 	if not _warm.is_empty():
 		return true
 	for path in WARM:
-		if ResourceLoader.exists(path) and ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		if ResourceLoader.exists(path) and ThreadedLoads.status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
 			return false
 	for path in WARM:
-		_warm.append(ResourceLoader.load_threaded_get(path) if ResourceLoader.exists(path) else null)
+		_warm.append(ThreadedLoads.take(path) if ResourceLoader.exists(path) else null)
 	return true
 
 
