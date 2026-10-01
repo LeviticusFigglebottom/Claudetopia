@@ -3130,6 +3130,12 @@
     "effects": [{"take_item": ["core:item/tithe_book", 1]}],
     "next": "hub"
    },
+   "traps_again": {
+    "speaker": "Sauve Mor",
+    "text": "She saw you. She's had her shout, and she's looking down the way at nothing; she'll decide it was a heron with ideas. — We go again. Down the lane on the east side, low, the stacks and the boat between you and her lantern, and stop when she stirs. I'll be at my traps.",
+    "effects": [{"if": [{"has_no_item": "core:item/tithe_book"}], "then": [{"give_item": ["core:item/tithe_book", 1]}, {"notify": "Sauve hands you the tithe-book again."}]}],
+    "next": "hub"
+   },
    "strongbox_help": {
     "speaker": "Sauve Mor",
     "text": "There's a pin inside that wants to sit, and a moment when it will. You'll feel it come round. Set it then and not before, and if you set it wrong the pick goes, and picks cost, so don't. — Sneak widens the moment. Practice widens the Sneak. The Tallymen widen nothing.",
@@ -3155,6 +3161,7 @@
     "text": "Ask slowly. The eels are listening.",
     "choices": [
      {"text": "The book. Down, and she never saw me.", "next": "traps_lifted", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag_not": "seen_on_the_boards"}]},
+     {"text": "She saw me. Again?", "next": "traps_again", "conditions": [{"quest_at": ["core:quest/first_rogue", "seen"]}]},
      {"text": "How do I pick it?", "next": "strongbox_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
      {"text": "And the collector's pocket?", "next": "pocket_help", "conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}]},
      {"text": "It's done. The bravo's in the reeds.", "next": "report_done", "conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}]},
@@ -3337,7 +3344,7 @@
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "hear_sauve"]}, {"flag_equals": ["player_calling", "core:calling/lantern_clerk"]}], "text": "A Tollmere hand. Ink under the nails. You'll know his book better than he does, then. Here, to me. Low. I'll tell you what tonight's for.", "weight": 3},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_strongbox"]}, {"flag_equals": ["player_calling", "core:calling/lantern_clerk"]}], "text": "A Tollmere hand. Ink under the nails. You'll know his book better than he does, then. We're having the collector's book tonight, before he wakes. Pick his box, take the book, and bring it down to me at my traps, past the watch. She knows me, not you.", "weight": 3},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}], "text": "Down here. Low. Have you got it? Did she see you?", "weight": 4},
-   {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_traps"]}, {"flag": "seen_on_the_boards"}], "text": "Seen. She saw you, and now she's looking where you were. Back behind the stacks, keep still till she's looking at the water again, and come again lower.", "weight": 5},
+   {"conditions": [{"quest_at": ["core:quest/first_rogue", "seen"]}], "text": "Here. Quiet. She saw you, and she's still looking where you were. Never mind it; we'll go again.", "weight": 5},
       {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_dagger"]}], "text": "The sack, at the west edge. Once, from behind. Then the bravo, the same way, before he gets to the box.", "weight": 2},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "the_bravo"]}], "text": "There he goes. Round and round, and the box at the end of it. Be where he isn't.", "weight": 2},
    {"conditions": [{"quest_at": ["core:quest/first_rogue", "report"]}], "text": "Quiet. Good. Is he down?", "weight": 2},

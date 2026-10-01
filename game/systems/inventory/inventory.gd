@@ -464,6 +464,11 @@ func use(item: Variant) -> bool:
 		return true
 	if not s.is_consumable():
 		return false
+	# a loaf a quest is carrying somewhere is not eaten on the way (unless using it is the quest)
+	var held := held_for(s.id)
+	if held != "" and not _used_by_a_quest(s.id):
+		_say_held(held)
+		return false
 	if Flask.is_flask(s.id):
 		# A flask is not used up: its swallows are, and a swallow is something the body does
 		# (Player.drink_flask, from the belt), not something a menu does to it.
@@ -481,6 +486,15 @@ func use(item: Variant) -> bool:
 	if is_player:
 		EventBus.item_used.emit(item_id, effects)
 	return true
+
+
+func _used_by_a_quest(item_id: String) -> bool:
+	if Social == null or Social.quests == null:
+		return false
+	for row in Social.quests.call("current_objectives", "use_item"):
+		if str(((row as Dictionary).get("objective", {}) as Dictionary).get("target", "")) == item_id:
+			return true
+	return false
 
 
 ## Opens a book that is being carried. The book is not used up: what it teaches — a skill, a
@@ -513,11 +527,30 @@ static func use_effects(stack: ItemStack) -> Array:
 	return out
 
 
+## The name of the quest the player's bag is keeping this item for (QuestLog.wanted_by), or "":
+## while a quest still wants it, it is not dropped, sold or eaten (triage 79). Only the player's own
+## bag keeps anything for a quest.
+func held_for(item_id: String) -> String:
+	if not is_player or Social == null or Social.quests == null:
+		return ""
+	var quest_id := str(Social.quests.call("wanted_by", item_id))
+	return "" if quest_id == "" else str((Social.quests.call("definition", quest_id) as Dictionary).get("name", quest_id))
+
+
+func _say_held(quest_name: String) -> void:
+	EventBus.notify.emit("You keep it: %s still wants it." % quest_name, "info")
+
+
 ## Removes `amount` units and places them in the world as a WorldItem in front of the carrier.
-## Returns the spawned node (null when not in a 3D scene; the items are still removed).
+## Returns the spawned node (null when not in a 3D scene; the items are still removed). A thing a
+## quest still wants stays in the bag (`held_for`): one let fall was not saved with the world.
 func drop(item: Variant, amount: int = 1) -> Node:
 	var s := resolve(item)
 	if s == null:
+		return null
+	var held := held_for(s.id)
+	if held != "":
+		_say_held(held)
 		return null
 	amount = mini(maxi(amount, 1), s.count)
 	var item_id := s.id

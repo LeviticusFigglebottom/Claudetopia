@@ -499,7 +499,7 @@ behind; (5) the report: the unsaid page and the courier. The list below is the p
    - sneak, and the eye, the detection state (Unseen, Noticed, Seen), by the watch's lantern;
    - cover: the lane down the way's east side, behind stacked traps, crates and an upturned boat;
    - the dark and the mist (sight cut in weather, light from the sun's height);
-   - seen, back into the lane's shelter, and again.
+   - seen, the try fails (triage 78): the objective becomes "go back to Sauve", he comes back up to where the night began, and speaking to him begins a clean try (the `seen` detour stage, NightWatch's `fail_stage`).
 2. *The strongbox (3 min).* Back up to the sleeping collector: the lock and the purse, and the
    Tallymen's rule that a lock picked is a crime and a crime is a bounty (`systems/crime`):
    - lockpicking the strongbox, and taking the tithe-book out of it;
