@@ -189,6 +189,8 @@ func start(quest_id: String, at: Variant = null) -> bool:
 	if not quests.has(quest_id):
 		quests[quest_id] = _blank_record(quest_id)
 	var rec: Dictionary = quests[quest_id]
+	# taken again after it failed (or a repeatable one): from nothing, not from the last try's counts
+	rec["counts"] = {}
 	rec["state"] = "active"
 	# A started quest is at its first stage when it says it has started. `quest_started` went out
 	# with the stage still at -1, and whatever it woke read that: an npc held on the quest's first
@@ -234,10 +236,21 @@ func advance(quest_id: String) -> void:
 	_run_effects(quest_id, stage.get("on_complete", []), "quest_complete_stage")
 	if not is_active(quest_id) or stage_of(quest_id) != current:
 		return
-	if current + 1 >= stages_of(quest_id).size():
+	var next := next_in_order(stages_of(quest_id), current)
+	if next < 0:
 		complete(quest_id, str(stage.get("outcome", quests[quest_id].get("outcome", ""))))
 	else:
-		_enter_stage(quest_id, current + 1)
+		_enter_stage(quest_id, next)
+
+
+## The stage a quest goes on to when one finishes in order: the next that is not a `detour` (a stage
+## only ever sent to: the Rogue's `seen`, where an attempt the watch saw is put right with Sauve
+## before it is tried again), or -1 after the last.
+static func next_in_order(stages: Array, current: int) -> int:
+	var next := current + 1
+	while next < stages.size() and typeof(stages[next]) == TYPE_DICTIONARY and bool((stages[next] as Dictionary).get("detour", false)):
+		next += 1
+	return next if next < stages.size() else -1
 
 
 func _enter_stage(quest_id: String, index: int) -> void:
@@ -246,6 +259,14 @@ func _enter_stage(quest_id: String, index: int) -> void:
 	if stage.is_empty():
 		Log.warn("Quests", "%s: stage %d does not exist (content problem)" % [quest_id, index])
 		return
+	# A stage gone back to (a `detour` sends you back to the try it put right; a branch loops) starts
+	# its objectives again: the counts of the last time through closed the Rogue's `seen` the moment
+	# it was entered a second time, and the watch's fail went nowhere.
+	if int(rec.get("stage", -1)) != index:
+		var counts: Dictionary = rec["counts"]
+		for key in counts.keys():
+			if str(key).begins_with("%d:" % index):
+				counts.erase(key)
 	rec["stage"] = index
 	rec["stage_id"] = str(stage.get("id", str(index)))
 	var journal := journal_of(stage)
