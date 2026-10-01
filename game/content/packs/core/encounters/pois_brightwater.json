@@ -58,5 +58,7 @@
    "lies": [{"item": "core:item/note_standing_arches_drip"}]},
   {"id": "core:encounter/dry_jetty", "place": "core:poi/dry_jetty",
    "notes": "gutter drakes after dark, nesting in the wet under the last pile (the POI's hook: the pile wet to the knee in a dry field)",
-   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 3, "when": "night", "spread": 2.0}]}
+   "spawns": [{"enemy": "core:enemy/gutter_drake", "count": 3, "when": "night", "spread": 2.0}]},
+  {"id": "core:encounter/the_struck_barrow", "place": "core:poi/the_struck_barrow", "notes": "resurrection men from the Undercroft at the portal by night, with their dark lanterns; at dusk two of the struck come out to the Needle to read", "spawns": [{"enemy": "core:enemy/resurrection_man", "count": 2, "when": "night", "at": "the_portal_step", "spread": 2.0}, {"enemy": "core:enemy/struck_debtor", "count": 2, "when": "dusk", "at": "the_needle_foot", "spread": 2.5}]},
+  {"id": "core:encounter/the_crown_drift", "place": "core:poi/the_crown_drift", "notes": "brass-takers at the shaft head after dark, carrying up the night's pigs of brass; one keeps the lamp on the headframe", "spawns": [{"enemy": "core:enemy/brass_taker", "count": 2, "when": "night", "at": "the_shaft_head", "spread": 2.5}, {"enemy": "core:enemy/drift_hewer", "count": 1, "when": "midnight", "at": "the_shaft_head"}]}
 ]

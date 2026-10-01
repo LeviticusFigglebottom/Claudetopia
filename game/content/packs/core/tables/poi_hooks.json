@@ -4526,6 +4526,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_crown_drift",
+        "quests": [
+          "core:quest/the_last_shift"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_crown_drift"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_false_lantern",
         "quests": [],
         "finds": [
@@ -4704,6 +4715,17 @@
         ],
         "finds": [],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_struck_barrow",
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_struck_barrow"
+        ],
         "hearthstone": false
       },
       {
@@ -5174,7 +5196,9 @@
       },
       {
         "poi": "core:poi/wash_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
         "finds": [
           "core:item/note_wash_stones"
         ],

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "core:npc/abel_rowse",
+    "name": "Abel Rowse",
+    "home_place": "core:poi/the_crown_drift",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/abel_rowse",
+    "bio": "Drift-captain of the Crown Drift when the deep level broke through in 1012, and the man who sent the last shift down. He stayed at the shaft head because a drift-captain stays at the shaft head. The Tallymen closed the drift and paid him off at a loss; he has lived in the roofless count-house by the engine-house for thirty-one years since, keeping the shift-board painted and the nine hooks empty.",
+    "unique_habit": "Counts things under his breath, people included, and starts again from one when he loses his place.",
+    "personality": {
+      "traits": [
+        "proud",
+        "stubborn",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7311,
+      "build": "stocky",
+      "age": 71.0,
+      "feminine": 0.0,
+      "hair": "grey_thinning",
+      "notes": "a mine-captain's long coat gone green at the seams with calamine dust, a brass token on a thong round his neck, a lamp he never lights"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_crown_drift",
+        "activity": "sleep",
+        "spot": "the_count_house"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_crown_drift",
+        "activity": "work",
+        "spot": "the_count_house",
+        "notes": "at the shift-board, painting it or watching the shaft"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/the_crown_drift",
+        "activity": "sleep",
+        "spot": "the_count_house"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/dorcas_pell",
+    "name": "Dorcas Pell",
+    "home_place": "core:poi/wash_stones",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/dorcas_pell",
+    "bio": "A Tollmere laundress who comes over the Stride to the Wash-Stones twice a week with the guild linen, and on her way home walks out across the meadow to the Tally Needle to chalk her father's name back over its line. Amos Pell was struck off the Roll in 1031 for a debt she has the receipt for.",
+    "unique_habit": "Keeps a stub of chalk behind her ear the way a clerk keeps a pen, and writes capitals in the air when she is thinking.",
+    "personality": {
+      "traits": [
+        "stubborn",
+        "honest",
+        "warm"
+      ]
+    },
+    "appearance": {
+      "seed": 7489,
+      "build": "strong_short",
+      "age": 44.0,
+      "feminine": 1.0,
+      "hair": "red_hair_under_a_shawl",
+      "notes": "a laundress's forearms red to the elbow, sleeves rolled and pinned, a chalk stub behind one ear, a folded paper kept in her bodice"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/wash_stones",
+        "activity": "sleep",
+        "spot": "the_beating_stone"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/wash_stones",
+        "activity": "work",
+        "spot": "the_beating_stone",
+        "notes": "beating the guild linen on the stones"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/wash_stones",
+        "activity": "sleep",
+        "spot": "the_beating_stone"
+      }
+    ]
+  }
+]
