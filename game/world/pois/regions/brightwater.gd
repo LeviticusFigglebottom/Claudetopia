@@ -1517,7 +1517,8 @@ static func beached_barge(d: PoiDressing) -> void:
 	var oak := k.tree("oak")
 	if oak != "":
 		await k.step()
-		k.place(oak, g + Vector3(0.0, -0.4, 0.0), k.rng.randf_range(0.0, TAU), 0.85, true, Vector3(0.06, 0.0, -0.05), true)
+		k.place(oak, g + Vector3(0.0, -0.4, 0.0), k.rng.randf_range(0.0, TAU), 0.85, false, Vector3(0.06, 0.0, -0.05), true)
+		k.collider(Vector3(0.9, 4.0, 0.9), Transform3D(Basis.IDENTITY, g + Vector3(0.0, 1.6, 0.0)), "wood")
 	if k.far:
 		return
 	# her cargo: baulks of Wold oak, squared, lashed in a stack on her deck either side of the trunk
@@ -1898,9 +1899,9 @@ static func ness_market(d: PoiDressing) -> void:
 			var tilt := atan2(0.55, 1.9)
 			m.block(cloth, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(face)) * Basis(Vector3.RIGHT, tilt), (hi_mid + lo_mid) * 0.5), Vector3(2.7, 0.03, 2.0))
 			await k.step()
-			m.commit(aw, k.surface("timber", 0.6), "AwningPoles")
+			m.commit(aw, k.surface("timber", 0.6), "AwningPoles%d" % tables.size())
 			var hue: Color = [Color(0.62, 0.32, 0.22), Color(0.3, 0.45, 0.58), Color(0.86, 0.84, 0.76), Color(0.55, 0.47, 0.28)][tables.size() % 4]
-			m.commit(cloth, PoiKit.plain(hue, 0.9), "Awning_bunting")
+			m.commit(cloth, PoiKit.plain(hue, 0.9), "Awning_bunting%d" % tables.size())
 			if k.far:
 				continue
 			# the catch on each table its own mesh, so each lies on its own table
@@ -1911,14 +1912,14 @@ static func ness_market(d: PoiDressing) -> void:
 				var fp := p + lane * k.rng.randf_range(-0.7, 0.7) + across * k.rng.randf_range(-0.25, 0.25)
 				_fish(m, belly, back, Vector3(fp.x, top, fp.y), PoiKit.yaw_of(across) + k.rng.randf_range(-0.4, 0.4), k.rng.randf_range(0.35, 0.7))
 			await k.step()
-			m.commit(belly, PoiKit.plain(Color(0.72, 0.74, 0.72), 0.3, 0.3), "FishCatch")
-			m.commit(back, PoiKit.plain(Color(0.3, 0.34, 0.3), 0.5), "FishBacks")
+			m.commit(belly, PoiKit.plain(Color(0.72, 0.74, 0.72), 0.3, 0.3), "FishCatch%d" % tables.size())
+			m.commit(back, PoiKit.plain(Color(0.3, 0.34, 0.3), 0.5), "FishBacks%d" % tables.size())
 	if k.far:
 		return
 	# baskets, crates and the eel-barrel down the lane
 	for i in 7:
 		var p := c + across * (k.rng.randf_range(-2.4, 2.4)) + lane * k.rng.randf_range(-8.5, 8.5)
-		p = _clear_spot(k, p, lane, 3.0, false)
+		p = _clear_spot(k, p, lane, 3.0, true)
 		await k.step()
 		k.place(k.prop(["basket", "crate", "barrel", "basket", "basket", "crate", "bucket"][i]), k.on_ground(p.x, p.y), k.rng.randf() * TAU, 1.0, true)
 	# the smoking-rack: four posts, rails across, split fish hung on them, over a slow fire
@@ -2099,17 +2100,42 @@ static func _named(d: PoiDressing, what: String) -> Array[Node3D]:
 static func _float_boats(d: PoiDressing) -> void:
 	var k := d.kit
 	for boat in _named(d, "rowboat"):
+		var box := _drawn_local(boat)
+		var g := k.on_ground(boat.position.x, boat.position.z).y
 		var wy := k.water_y(boat.position.x, boat.position.z)
-		if not is_nan(wy) and wy > boat.position.y:
-			boat.position.y = wy - 0.12
-		else:
-			boat.position.y = maxf(boat.position.y, k.on_ground(boat.position.x, boat.position.z).y)
+		# her keel on the bed where the bed is dry, her waterline at the water where it is not
+		var floor_y := g - 0.08 if is_nan(wy) or wy < g + 0.15 else wy - box.size.y * 0.35
+		boat.position.y += floor_y - box.position.y
 	for post in _named(d, "dock_post"):
-		var wy := k.water_y(post.position.x, post.position.z)
-		var h := PoiKit.height_of(post.scene_file_path) * post.scale.y
+		var box := _drawn_local(post)
 		var g := k.on_ground(post.position.x, post.position.z).y
-		var top := (wy if not is_nan(wy) else g) + 0.7
-		post.position.y = minf(g, top - h) if h > 0.0 else g
+		var wy := k.water_y(post.position.x, post.position.z)
+		var top := maxf(g, wy if not is_nan(wy) else g) + 0.8
+		# its head a hand under the water's top or the ground's, its foot a third of it in the bed
+		post.position.y += maxf(top - box.end.y, g - box.size.y * 0.3 - box.position.y)
+
+
+## A placed thing's drawn box in its parent's space (the dressing's).
+static func _drawn_local(n: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var g := mi as MeshInstance3D
+		if g.mesh == null:
+			continue
+		var xf := n.transform
+		var at: Node = g
+		var chain := Transform3D.IDENTITY
+		while at != null and at != n:
+			if at is Node3D:
+				chain = (at as Node3D).transform * chain
+			at = at.get_parent()
+		var b := (xf * chain) * g.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	if first:
+		box = AABB(n.position, Vector3.ZERO)
+	return box
 
 
 ## A stool or a bench the camp set in its own fire (Rafters' Camp: the stool 66-100% in the
@@ -2120,11 +2146,17 @@ static func _seats_off_fires(d: PoiDressing) -> void:
 		for what in ["stool", "bench", "log_seat"]:
 			for seat in _named(d, what):
 				var off := Vector2(seat.position.x - fire.position.x, seat.position.z - fire.position.z)
-				if off.length() < 1.5:
+				if off.length() < 2.2:
 					var dir := off.normalized() if off.length() > 0.05 else Vector2(1.0, 0.0)
-					var at := Vector2(fire.position.x, fire.position.z) + dir * 1.7
+					var fc := Vector2(fire.position.x, fire.position.z)
+					var at := fc + dir * 1.9
+					for t in 8:
+						var q := fc + dir.rotated(TAU * float(t) / 8.0) * 1.9
+						if k.roads.is_empty() or k.road_distance(q) > 3.5:
+							at = q
+							break
 					seat.position = k.on_ground(at.x, at.y)
-					seat.rotation.y = PoiKit.yaw_of(-dir)
+					seat.rotation.y = PoiKit.yaw_of(fc - at)
 
 
 static func hespers_boat(d: PoiDressing) -> void:
@@ -2153,6 +2185,17 @@ static func willow_isle(d: PoiDressing) -> void:
 	await PoiDressing.kind_builders().build(d)
 	_float_boats(d)
 	_seats_off_fires(d)
+	# the hermit's fire out from under the willow's trunk, to the side of it away from the water
+	var k := d.kit
+	for tree in _named(d, "willow"):
+		for fire in _named(d, "campfire"):
+			var off := Vector2(fire.position.x - tree.position.x, fire.position.z - tree.position.z)
+			if off.length() < 3.5:
+				var dir := off.normalized() if off.length() > 0.05 else k.grain()
+				var at := Vector2(tree.position.x, tree.position.z) + dir * 3.8
+				if k.is_water(at.x, at.y):
+					at = Vector2(tree.position.x, tree.position.z) - dir * 3.8
+				fire.position = k.on_ground(at.x, at.y)
 
 
 ## The Long Stride's toll: the causeway lays its table and its chest on the deck, and `place` moved
@@ -2170,8 +2213,10 @@ static func long_stride(d: PoiDressing) -> void:
 	var deck_y := maxf(k.on_ground(start.x, start.y).y + 0.3, (wl if not is_nan(wl) else 0.0) + 1.3)
 	var perp := Vector2(-dir.y, dir.x)
 	var gate := start + dir * 3.0
+	# the chest goes in under the table, where a toll-keeper keeps the day's takings
 	for chest in _named(d, "chest"):
-		chest.position = Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9) + Vector3(dir.x, 0.0, dir.y) * 1.2
+		d.remove_child(chest)
+		chest.queue_free()
 	for table in _named(d, "table_trestle"):
 		table.position = Vector3(gate.x + perp.x * 0.9, deck_y + 0.21, gate.y + perp.y * 0.9)
 
@@ -2305,8 +2350,9 @@ static func tallymans_folly(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.8), "ScaffoldAndSheers")
 	var sling := m.begin()
-	m.limb(sling, apex, apex - Vector3(0.0, 2.6, 0.0), 0.02)
-	m.block(sling, Transform3D(Basis(Vector3.UP, yaw), apex - Vector3(0.0, 2.9, 0.0)), Vector3(0.7, 0.4, 0.5))
+	var block_y := k.on_ground(apex.x, apex.z).y + 0.2
+	m.limb(sling, apex, Vector3(apex.x, block_y + 0.2, apex.z), 0.02)
+	m.block(sling, Transform3D(Basis(Vector3.UP, yaw), Vector3(apex.x, block_y, apex.z)), Vector3(0.7, 0.4, 0.5))
 	m.commit(sling, PoiKit.painted(2, {"base": "#c7c1b1", "accent": "#a9a393", "grout": "#6f6a5e", "unit": 0.42}, 0.55, 0.6), "SlungBlock")
 	# the cellar hatch inside the walls, its boards prised up, steps going down into the dark
 	var hatch := c - front * 1.5 + side * 2.0
@@ -2328,7 +2374,8 @@ static func tallymans_folly(d: PoiDressing) -> void:
 	var hammer := k.prop("hammer")
 	if hammer != "":
 		await k.step()
-		k.place(hammer, bxf.origin + Vector3(0.0, 0.85, 0.0) + Vector3(side.x, 0.0, side.y) * 0.45, k.rng.randf() * TAU, 1.0, false)
+		var hp := banker + front * 1.0 + side * 0.6
+		k.place(hammer, k.on_ground(hp.x, hp.y), k.rng.randf() * TAU, 1.0, false)
 
 
 # --- the Smoke Coppice -----------------------------------------------------------------------------------
