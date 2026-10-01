@@ -19,6 +19,14 @@ cfac2a7b) and not yet merged into it.
 - **Agents at work** (worktrees `.claude/worktrees/<area>`, branches `wip/<area>`):
   - `quest-fixes`: the Mage's brazier softlock (the second objective's `min_range` 14 left close-lit braziers uncounted), the Rogue's seen-on-the-boards softlock made a fail that sends you back to the quest giver, a softlock and marker/icon audit of every quest, and a keyboard lock-on key beside the middle mouse button (the Warrior's start doable without it);
   - world life phase 2, second pass plus 2-3 large POIs with a prominent feature and a real interior each: `wl2-hearthvale`, `wl2-briarwold`, `wl2-cinderlea` (with the Sunken Choir's spire collision); then `wl2-brightwater`, `wl2-sedgemire`, `wl2-skerrow` as worktrees free up. Briefs: the scratchpad's `wl2_<region>.md` (same text for every region).
+- **Landed 2026-10-01 (aa55e374): quest-fixes, triage 77-80.**
+  - A brazier lit for nothing goes out again with a word from Tamsin.
+  - The Rogue's seen night goes to a `seen` stage: "speak to Sauve again", then a clean retry.
+  - `tools/quests/softlock_check.py` is clean over all 122 quests: quest items cannot be dropped, sold or eaten, and the teachers hand back arrows and picks.
+  - Markers and head marks stay in step through a fail, a retry and a load.
+  - Lock-on is on Z as well as the middle mouse button; every action takes an "Or" key in Controls.
+  - Not walked by the quest walker; that waits for the full check.
+- `wl2-skerrow` started in the freed worktree; all six regions are now at work.
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
