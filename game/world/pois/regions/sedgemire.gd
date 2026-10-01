@@ -2335,14 +2335,16 @@ static func tideflat_stones(d: PoiDressing) -> void:
 		m.limb(drift, p, p + Vector3(sin(a), 0.05, cos(a)) * k.rng.randf_range(1.2, 2.6), 0.12)
 	await k.step()
 	m.commit(drift, PoiKit.plain(Color(0.6, 0.57, 0.5), 0.9), "Driftwood")
-	var crab := k.prop("crab")
-	if crab != "":
-		var xfs: Array = []
-		for i in 6:
-			var q := sea * k.rng.randf_range(0.0, 3.0) + along * k.rng.randf_range(-8.0, 8.0)
-			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y), k.rng.randf() * TAU, 1.0))
-		await k.step()
-		k.scatter(crab, xfs, false, false, false)
+	# nothing to fight here: the crabs on the old strand, going about sideways at each stone's foot
+	var crabs := Livestock.paths_of("crab", "sedgemire")
+	if not crabs.is_empty():
+		var shore := Livestock.new()
+		shore.name = "Crabs"
+		shore.seed_with(absi(("crabs:" + d.poi_id).hash()))
+		for i in 3:
+			var at := sea * (-4.5 + float(i) * 3.0) + along * k.rng.randf_range(1.5, 3.0) * (1.0 if i % 2 == 0 else -1.0)
+			shore.keep("crab", crabs, k.on_ground(at.x, at.y), 3.2, 3 + k.rng.randi_range(0, 2))
+		d.add_child(shore)
 	var wrack := k.flora("wrack")
 	if wrack != "":
 		var xfs2: Array = []

@@ -135,7 +135,7 @@
       "note",
       "no_sale"
     ],
-    "description": "The garrison's watch-book, swollen and salt-stained, the last pages run.",
+    "description": "The Saltgate garrison's watch-book, its boards swollen and white with salt, the ink of the last pages run in the water that came in.",
     "reads": "core:book/saltgate_watch_book"
   },
   {
@@ -149,7 +149,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A tally-stick and a folded page, hidden behind a loose stone.",
+    "description": "A Guild tally-stick notched to the end and a folded page wrapped round it, pushed behind a loose stone in a wall the sluice-warden kept to himself.",
     "reads": "core:book/saltgate_sluice_tally"
   }
 ]

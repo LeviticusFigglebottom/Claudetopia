@@ -36,7 +36,7 @@ const WHAT_STANDS := {
 	"core:poi/reed_wreck": "leech-hounds",
 	"core:poi/stair_of_isse": "bog-drowned",
 	"core:poi/wisp_hollow": "wisps",
-	"core:poi/tideflat_stones": "two bog-drowned along the old quay at night",
+	"core:poi/tideflat_stones": "nobody: crabs on the old strand, which are not a fight",
 	"core:poi/heron_watch": "person: core:npc/tuo_lissa",
 	"core:poi/mossbridge": "a Warden at each end, sitting unless you carry the forest's goods past it",
 	"core:poi/oiled_stone_shrine": "nobody: none",
