@@ -3314,11 +3314,31 @@ static func greyreed_decoy(d: PoiDressing) -> void:
 ## them and gone pale in the row nearest the Nave; cloth drying on lines between, the dyers' vat on its
 ## fire and the paddles leaning on it.
 static func indigo_beds(d: PoiDressing) -> void:
-	await PoiDressing.kind_builders().camp(d)
 	var k := d.kit
+	var m := d.masonry
+	# the dyers' hut, the vat on its fire, the paddles leaning on it
+	var hut: Dictionary = await stilt_house(d, Vector2(-5.0, -6.0), Vector2(0.6, 0.8), 3.6, 3.2, 0.7, "Dyers")
 	if k.far:
 		return
-	var m := d.masonry
+	k.marker("home", hut["inside"], true, true, 1.4)
+	var vat_at := Vector2(-2.0, 1.5)
+	var vat := k.prop("barrel")
+	if vat != "":
+		await k.step()
+		k.place(vat, k.on_ground(vat_at.x, vat_at.y), 0.0, 1.5, true)
+	var fire := k.prop("campfire")
+	if fire != "":
+		await k.step()
+		k.place(fire, k.on_ground(vat_at.x + 1.6, vat_at.y), 0.0, 0.8, false)
+		k.light(k.on_ground(vat_at.x + 1.6, vat_at.y, 0.5), Color(1.0, 0.6, 0.3), 1.4, 7.0)
+	var paddles := m.begin()
+	for i in 3:
+		var p := k.on_ground(vat_at.x - 0.9 + float(i) * 0.3, vat_at.y - 0.9)
+		m.limb(paddles, p, p + Vector3(0.1, 1.6, 0.25), 0.03)
+		m.block(paddles, Transform3D(Basis.IDENTITY, p + Vector3(0.02, 0.2, 0.05)), Vector3(0.14, 0.4, 0.03))
+	await k.step()
+	m.commit(paddles, k.surface("timber", 0.8), "Paddles")
+	k.marker("the_vat", k.on_ground(vat_at.x, vat_at.y - 1.8), true)
 	# the Nave is away north-west of the beds
 	var nave := Vector2(-3300.0 - d.world_position.x, -1420.0 - d.world_position.z).normalized()
 	var across := Vector2(nave.y, -nave.x)
@@ -3333,11 +3353,11 @@ static func indigo_beds(d: PoiDressing) -> void:
 			m.block(troughs, Transform3D(basis, Vector3(c.x, g + 0.25, c.y) + Vector3(nave.x, 0, nave.y) * 0.55 * float(s)), Vector3(7.5, 0.5, 0.12))
 		for s in [-1.0, 1.0]:
 			m.block(troughs, Transform3D(basis, Vector3(c.x, g + 0.25, c.y) + Vector3(across.x, 0, across.y) * 3.7 * float(s)), Vector3(0.12, 0.5, 1.2))
-		m.block(pale if r == 4 else deep, Transform3D(basis, Vector3(c.x, g + 0.2, c.y)), Vector3(7.3, 0.44, 1.0))
+		m.block(pale if r == 4 else deep, Transform3D(basis, Vector3(c.x, g + 0.21, c.y)), Vector3(7.3, 0.42, 0.98))
 	await k.step()
 	m.commit(troughs, PoiKit.painted(5, REED_WALL, 0.7), "Troughs")
-	m.commit(deep, PoiKit.plain(Color(0.08, 0.09, 0.2), 0.15), "IndigoLiquor")
-	m.commit(pale, PoiKit.plain(Color(0.42, 0.46, 0.58), 0.2), "PaleLiquor")
+	m.commit(deep, PoiKit.plain(Color(0.08, 0.09, 0.2), 0.5), "IndigoLiquor")
+	m.commit(pale, PoiKit.plain(Color(0.42, 0.46, 0.58), 0.5), "PaleLiquor")
 	k.marker("the_pale_trough", k.on_ground(nave.x * 7.2 + across.x * 9.0, nave.y * 7.2 + across.y * 9.0))
 	k.touchable("PaleTrough", k.on_ground(nave.x * 5.6 + across.x * 9.0, nave.y * 5.6 + across.y * 9.0, 0.7), "Look into the pale trough",
 			"core:dialogue/indigo_beds_pale", "", false)
@@ -3721,14 +3741,15 @@ static func peat_hags(d: PoiDressing) -> void:
 	for i in 3:
 		var off := face * (float(i) * 1.4)
 		var c := cut_c + off
-		m.block(bank, Transform3D(basis, Vector3(c.x, g + 0.55 - float(i) * 0.38, c.y)), Vector3(12.0, 1.1 - float(i) * 0.3, 1.4))
-		k.collider(Vector3(12.0, 1.1 - float(i) * 0.3, 1.4), Transform3D(basis, Vector3(c.x, g + 0.55 - float(i) * 0.38, c.y)), "dirt")
+		# the cut face steps down toward the water: each step's top lower, its face the black peat
+		var top_y := g + 0.45 - float(i) * 0.2
+		m.block(bank, Transform3D(basis, Vector3(c.x, (top_y + g - 0.3) * 0.5, c.y)), Vector3(12.0, top_y - g + 0.3, 1.4))
+		k.collider(Vector3(12.0, top_y - g + 0.3, 1.4), Transform3D(basis, Vector3(c.x, (top_y + g - 0.3) * 0.5, c.y)), "dirt")
 	await k.step()
 	m.commit(bank, peat, "CuttingBank", true)
 	if k.far:
 		return
 	var wet := cut_c + face * 4.6
-	m.block(m.begin(), Transform3D.IDENTITY, Vector3.ONE * 0.0)
 	var water := m.begin()
 	m.block(water, Transform3D(basis, k.on_ground(wet.x, wet.y, 0.04)), Vector3(11.0, 0.02, 2.4))
 	await k.step()
