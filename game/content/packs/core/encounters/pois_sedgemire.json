@@ -31,21 +31,13 @@
    "notes": "leech-hounds come up to the cuttings after dark, four and more, after the kept Warden; the cutters' finds-board stands by the stacks",
    "spawns": [{"enemy": "core:enemy/leech_hound", "count": 4, "when": "night", "spread": 3.0}],
    "lies": [{"item": "core:item/note_peat_hags_finds"}]},
-  {"id": "core:encounter/sunken_tower", "place": "core:poi/sunken_tower",
-   "notes": "sallowjaws bask on the drowned courses",
-   "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2}]},
+  {"id": "core:encounter/sunken_tower", "place": "core:poi/sunken_tower", "notes": "sallowjaws bask on the drowned courses", "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2, "at": "the_courses", "spread": 3.0}], "lies": [{"item": "core:item/note_sunken_tower_divers", "at": "the_courses"}]},
   {"id": "core:encounter/eelboat_graveyard", "place": "core:poi/eelboat_graveyard",
    "notes": "bog-drowned walk among the hulls at night",
    "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "when": "night", "spread": 3.0}]},
-  {"id": "core:encounter/crookstilts", "place": "core:poi/crookstilts",
-   "notes": "leech-hounds guard the stilts after dark",
-   "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]},
-  {"id": "core:encounter/mor_oul", "place": "core:poi/mor_oul",
-   "notes": "bog-drowned at their own doors",
-   "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "spread": 3.0}]},
-  {"id": "core:encounter/saoul", "place": "core:poi/saoul",
-   "notes": "wisps over the pool at night",
-   "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "when": "night", "spread": 3.0}]},
+  {"id": "core:encounter/crookstilts", "place": "core:poi/crookstilts", "notes": "leech-hounds guard the stilts after dark; her price is on the slate at the stair's foot", "spawns": [{"enemy": "core:enemy/leech_hound", "count": 4, "when": "night", "spread": 3.0}], "lies": [{"item": "core:item/note_name_wifes_price", "at": "the_slate"}]},
+  {"id": "core:encounter/mor_oul", "place": "core:poi/mor_oul", "notes": "bog-drowned at their own doors", "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "at": "the_doors", "spread": 6.0}]},
+  {"id": "core:encounter/saoul", "place": "core:poi/saoul", "notes": "wisps over the pool at night", "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "when": "night", "at": "the_pool", "spread": 4.0}]},
   {"id": "core:encounter/old_crannog", "place": "core:poi/old_crannog",
    "notes": "leech-hounds in the carr at night",
    "spawns": [{"enemy": "core:enemy/leech_hound", "count": 2, "when": "night"}]},
@@ -256,17 +248,7 @@
       }
     ]
   },
-  {
-    "id": "core:encounter/eel_stews",
-    "place": "core:poi/eel_stews",
-    "notes": "no foes; the stews-keeper's note to the Tally is wedged in the high pond's sluice",
-    "spawns": [],
-    "lies": [
-      {
-        "item": "core:item/note_eel_stews_sluice_note"
-      }
-    ]
-  },
+  {"id": "core:encounter/eel_stews", "place": "core:poi/eel_stews", "notes": "the stews-keeper's note to the Tally is wedged in the high pond's sluice; at night sallowjaws come up the drag-marks", "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2, "when": "night", "at": "the_sluice", "spread": 3.0}], "lies": [{"item": "core:item/note_eel_stews_sluice_note", "at": "the_sluice"}]},
   {
     "id": "core:encounter/grey_gull",
     "place": "core:poi/grey_gull",
@@ -309,5 +291,13 @@
         ]
       }
     ]
-  }
+  },
+  {"id": "core:encounter/name_wifes_hollow", "place": "core:poi/name_wifes_hollow", "notes": "her leech-hounds lie up in the cove by day by the mouth; at night wisps hang over the weep-pool", "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3, "when": "day", "at": "the_den", "spread": 3.0}, {"enemy": "core:enemy/wisp", "count": 2, "when": "night", "at": "the_fall", "spread": 3.0}]},
+  {"id": "core:encounter/the_sounding", "place": "core:poi/the_sounding", "notes": "Flood-Callers keep the bell deck day and night; Ebb-Hands at the camp by the steps; the drowned the Callers keep come up out of the mere round the platform at night", "spawns": [{"enemy": "core:enemy/flood_caller", "count": 2, "at": "the_bell_deck", "spread": 1.5}, {"enemy": "core:enemy/ebb_hand", "count": 3, "at": "the_camp", "spread": 2.5}, {"enemy": "core:enemy/bog_drowned", "count": 3, "when": "night", "at": "the_back_door", "spread": 4.0}], "lies": [{"item": "core:item/note_sounding_tide_table", "at": "the_stair_foot"}]},
+  {"id": "core:encounter/fog_bell", "place": "core:poi/fog_bell", "notes": "the drowned stand at the ringer's open door after dark", "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "night", "at": "the_door", "spread": 2.0}]},
+  {"id": "core:encounter/knuckle_cairn", "place": "core:poi/knuckle_cairn", "notes": "leech-hounds come up out of the fen at night as far as the sign-stakes", "spawns": [{"enemy": "core:enemy/leech_hound", "count": 3, "when": "night", "at": "the_cairn", "spread": 4.0}]},
+  {"id": "core:encounter/round_stones", "place": "core:poi/round_stones", "notes": "at night wisps hang over the water between the islets", "spawns": [{"enemy": "core:enemy/wisp", "count": 3, "when": "night", "at": "the_round", "spread": 6.0}]},
+  {"id": "core:encounter/tideflat_stones", "place": "core:poi/tideflat_stones", "notes": "at night the drowned walk the line of the old quay", "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 2, "when": "night", "at": "the_survey_cairn", "spread": 5.0}]},
+  {"id": "core:encounter/drowned_road", "place": "core:poi/drowned_road", "notes": "sallowjaws lie along the drowned slabs where the road goes under", "spawns": [{"enemy": "core:enemy/sallowjaw", "count": 2, "at": "the_milestone", "spread": 4.0}]},
+  {"id": "core:encounter/oskel_ford", "place": "core:poi/oskel_ford", "notes": "the drowned come back to the cart at night", "spawns": [{"enemy": "core:enemy/bog_drowned", "count": 3, "when": "night", "at": "the_cart", "spread": 3.0}]}
 ]

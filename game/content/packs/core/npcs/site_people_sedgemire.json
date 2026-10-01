@@ -1,0 +1,67 @@
+[
+  {
+    "id": "core:npc/iffo_nauve",
+    "name": "Iffo Nauve",
+    "home_place": "core:poi/south_stilts",
+    "faction": "core:faction/reed_council",
+    "dialogue": "core:dialogue/iffo_nauve",
+    "bio": "The watchman of the South Stilts, paid in eels by Nauvissa to watch the grey come up over the scarp; for twenty years it did not move. This spring his daughter had the flats-cough and he went to the Name-Wife at the dark of the moon, and paid with his dead father's name, because a dead man's name could cost nobody anything. Since then the grey has started coming in at night, and he cannot remember his father's face.",
+    "unique_habit": "Ties a knot in a cord on the watch-rail every time he sees the grey move, and counts the knots every morning with his eyes shut, as if he is afraid they will have untied themselves.",
+    "personality": {
+      "traits": [
+        "kind",
+        "quiet",
+        "brave",
+        "honest"
+      ]
+    },
+    "appearance": {
+      "seed": 6281,
+      "build": "tall_lean",
+      "age": 47.0,
+      "feminine": 0.0,
+      "hair": "black_going_grey_tied_back",
+      "notes": "a watchman's indigo cloak over one shoulder, a knot-cord round his wrist in the Nauve splice, red-rimmed eyes from watching"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_watch",
+        "notes": "watching the grey at night"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/south_stilts",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/south_stilts",
+        "activity": "eat",
+        "spot": "the_foot"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_foot",
+        "notes": "mending the ladder's lashings"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_watch",
+        "notes": "the watch, from dusk"
+      }
+    ]
+  }
+]

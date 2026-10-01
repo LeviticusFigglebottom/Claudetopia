@@ -1,0 +1,309 @@
+[
+  {
+    "id": "core:dialogue/crookstilts_saying_stone",
+    "speaker_name": "The saying stone",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The saying stone",
+        "no_talk": true,
+        "text": "A flat stone at the foot of the stair, worn hollow in two places the size of feet. Everybody who has stood here stood the same way, facing the ladder with their back to the carr, and said one name, once, plain. Over your head the cords under the deck turn a little in no wind. The hut is shut. It is not the dark of the moon.",
+        "choices": [
+          {
+            "text": "Say a name you know.",
+            "next": "say"
+          },
+          {
+            "text": "Step off the stone.",
+            "next": "end"
+          }
+        ]
+      },
+      "say": {
+        "speaker": "The saying stone",
+        "no_talk": true,
+        "text": "You say it. It goes out over the carr flat and small, the way a name does with nobody to hear it, and nothing comes back. Nobody is here to take it. — But one of the cords under the deck, a green one, stops turning, and hangs quite still until you step off the stone.",
+        "choices": [
+          {
+            "text": "Step off the stone.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/sunken_tower_face",
+    "speaker_name": "The face on the fourth course",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The face on the fourth course",
+        "no_talk": true,
+        "text": "Cut into the fourth course on the seaward side, a hand above the black water: a brow, two eyes, a long nose and a mouth set straight. The water has worn it soft, but not much. The reedfolk children dive from the top of the tower to touch it, and say it is good luck, and say it with the voice children use for things that are not luck at all. It is not a Builder's face. Anybody who has stood in the Choir's ash and looked up has seen it before: it is the face of the Thirteenth colossus, looking out to sea at something that is not there any more.",
+        "choices": [
+          {
+            "text": "Leave the face to the water.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/fog_bell_rope",
+    "speaker_name": "The bell-rope",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bell-rope",
+        "no_talk": true,
+        "text": "The rope runs down from the bell to the ringer's porch and is tied off on a cleat, worn shiny where his hands went. The quarter-glass on the sill has run out and nobody has turned it. The hut behind is cold and its door stands open.",
+        "choices": [
+          {
+            "text": "Ring the bell.",
+            "next": "ring"
+          },
+          {
+            "text": "Leave the bell alone.",
+            "next": "end"
+          }
+        ]
+      },
+      "ring": {
+        "speaker": "The bell-rope",
+        "no_talk": true,
+        "text": "You haul on the rope and the bell speaks over the channel, once, and the reeds take it and carry it a long way. A while later, from up the channel toward Moreva, a boat's horn answers: somebody out there in the fog knows where the channel is now. — Then, from the other way, from under the water off the end of the landing, something knocks twice on the stage's posts, slow, the way you knock on a door you expect to be opened.",
+        "choices": [
+          {
+            "text": "Let go of the rope.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/eel_stews_high_stew",
+    "speaker_name": "The high stew",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The high stew",
+        "no_talk": true,
+        "text": "The sixth stew is walled a man's height where the others are knee-high, and its sluice-board is down and wedged. There is no water in it. The mud at the bottom is dry and cracked and printed all over with the marks of something that lay in it a long while and turned and turned, and on the outside of the wall the stone is wet, in a broad dark band from the top down to the drag-marks, as if something very large and very slow had gone over it, and kept going, toward the channel.",
+        "choices": [
+          {
+            "text": "Step back from the wall.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/mor_oul_under_water",
+    "speaker_name": "Under the water",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Under the water",
+        "no_talk": true,
+        "text": "Through the black water, an arm's length down, the doorway of a reed house, the door open, and in it a lantern on its hook, lit. The flame does not move. Further in, past it, the shapes of a table and a bench and a pot on the hearth, all of it standing as it stood the night the water came. Every house in Mor'oul is the same. Nobody has ever found a record of a flood, and nobody in the Delta will light a lantern from one of these.",
+        "choices": [
+          {
+            "text": "Straighten up.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/saoul_lanterns",
+    "speaker_name": "The lanterns of Saoul",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The lanterns of Saoul",
+        "no_talk": true,
+        "text": "Twelve stilts, a lantern lit on every one, oil in every one, though nobody in Saeva will say they pole down to fill them. You count them round the pool, and then again to be sure, and get thirteen the second time: the thirteenth is under the water in the middle of the pool, a little below the surface, quite steady, where no stilt is.",
+        "choices": [
+          {
+            "text": "Stop counting.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/south_stilts_knots",
+    "speaker_name": "The knot-rail",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The knot-rail",
+        "no_talk": true,
+        "text": "Cords on the watch-rail, knotted close, a knot for every night the grey has come down over the scarp's lip. Thirty-one. They are tied in the boatwright's splice of the Nauves, very neat, and the last few are tied tighter than the rest, as if the hands that tied them were afraid they would come undone.",
+        "choices": [
+          {
+            "text": "Leave the knots.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/drowned_arch_under",
+    "speaker_name": "The Drowned Arch",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Drowned Arch",
+        "no_talk": true,
+        "text": "The arch stands with the mere on one side and the reeds on the other and nothing either side of it: no wall, no road, no reason. The reedfolk say it was a door and the marsh was a room. Eel-boats pass under it from the mere side for luck, every boat, every time, and never once the other way. Somebody's luck-knot hangs from the keystone at the height of a boatman's hand.",
+        "choices": [
+          {
+            "text": "Walk through it from the landward side.",
+            "next": "through"
+          },
+          {
+            "text": "Go round it, the way everybody does.",
+            "next": "end"
+          }
+        ]
+      },
+      "through": {
+        "speaker": "The Drowned Arch",
+        "no_talk": true,
+        "text": "You step through. Nothing happens. — The reeds on the far side are the same reeds, the mere the same mere. Only, when you look down, your shadow is lying a little behind you, as if it had stopped to think about it and was only now catching up; and the luck-knot on the keystone, which you are sure was tied when you passed under it, is untied.",
+        "choices": [
+          {
+            "text": "Walk on.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/knuckle_cairn_bone",
+    "speaker_name": "The knuckle-bone",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The knuckle-bone",
+        "no_talk": true,
+        "text": "A giant's knuckle, three bones of one finger-joint laid together on the top of the cairn, grey-white, pitted, each the size of a sheep. The Oskel clan set them pointing back up the dale, toward home: past this, the clans say, is not their memory's business. Somebody has turned them. They point into the fen now, and in clan sign that means follow, and under them in the cairn's top stones somebody has pushed a red wool cord in the Oskel knot, the knot a clan ties for a person, not a herd.",
+        "choices": [
+          {
+            "text": "Leave the bones where they point.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/round_stones_sing",
+    "speaker_name": "The Round Stones",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Round Stones",
+        "no_talk": true,
+        "text": "Three stones on three islets, and between them the black water, wide enough that a voice has to carry to reach the next. The round goes from stone to stone: one choir begins, the next comes in as the first reaches the third line, the third as the second does. It does not end; somebody stops, and then somebody else. There is nobody on the islets now. The mats are wet.",
+        "choices": [
+          {
+            "text": "Sing the second voice, a little flat on the fourth line.",
+            "next": "sing"
+          },
+          {
+            "text": "Keep quiet.",
+            "next": "end"
+          }
+        ]
+      },
+      "sing": {
+        "speaker": "The Round Stones",
+        "no_talk": true,
+        "text": "You sing it, badly, the way you can, and on the fourth line your voice goes flat the way the hook said. The water takes it over to the far islet. — And there, on the far islet, where there was nobody, an old woman is sitting on the wet mats with her hands in her lap, weeping, and when you look again there is nobody.",
+        "choices": [
+          {
+            "text": "Stop singing.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tideflat_stones_sight",
+    "speaker_name": "The survey-cairn",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The survey-cairn",
+        "no_talk": true,
+        "text": "A surveyor's pole on a cairn, a rag on it gone pink with weather. Sighted along it, the three stones make a dead straight line: the first on the flats, the second in the shallows, the third out in the water up to its shoulders, and the line runs on past it, out to sea, toward where the Salt Isles are said to be. The old quay's facing stones run across the line at the second stone. That was the shore. The chart in the Spire puts the shore here still.",
+        "choices": [
+          {
+            "text": "Lower the pole.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/drowned_road_milestone",
+    "speaker_name": "The milestone",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The milestone",
+        "no_talk": true,
+        "text": "A milestone of the Builders' black stone standing in the shallows past the end of the road, the water round its foot, cut on its landward face with a number in the Builders' figures. It is not a distance from anywhere in Wickmere. Read the other way, as the reedfolk say the Builders read, it is a distance to somewhere, and the somewhere is out to sea. The figures are filled with something pale that catches the light under the water.",
+        "choices": [
+          {
+            "text": "Leave the stone to the sea.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/oskel_ford_cart",
+    "speaker_name": "The ore-cart",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The ore-cart",
+        "no_talk": true,
+        "text": "An Oskel ore-cart run off the end of the ford's causeway into the fen, one wheel sunk to the axle. The silver ore is still in it, a dozen lumps of grey galena with the bright shot in them, nobody's taken a piece. The carters' boots stand in the mud beside it, side by side, laced, as if two men had stepped out of them carefully and walked on into the fen barefoot. The tracks go a little way and then stop.",
+        "choices": [
+          {
+            "text": "Leave the cart.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  }
+]

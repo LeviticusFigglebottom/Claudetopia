@@ -927,7 +927,9 @@
       {
         "poi": "core:poi/crookstilts",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_name_wifes_price"
+        ],
         "encounters": [
           "core:encounter/crookstilts"
         ],
@@ -1129,7 +1131,9 @@
         "finds": [
           "core:item/note_drowned_road"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/drowned_road"
+        ],
         "hearthstone": false
       },
       {
@@ -1213,7 +1217,9 @@
         "finds": [
           "core:item/note_eel_stews_sluice_note"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/eel_stews"
+        ],
         "hearthstone": false
       },
       {
@@ -1392,7 +1398,9 @@
           "core:quest/knots_round_nothing"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/fog_bell"
+        ],
         "hearthstone": false
       },
       {
@@ -2005,7 +2013,8 @@
       {
         "poi": "core:poi/heron_watch",
         "quests": [
-          "core:quest/lanterns_taken_up"
+          "core:quest/lanterns_taken_up",
+          "core:quest/the_sounding"
         ],
         "finds": [
           "core:item/note_heron_watch"
@@ -2385,7 +2394,9 @@
         "finds": [
           "core:item/note_knuckle_cairn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/knuckle_cairn"
+        ],
         "hearthstone": false
       },
       {
@@ -2900,6 +2911,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/name_wifes_hollow",
+        "quests": [
+          "core:quest/what_the_name_wife_took"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/name_wifes_hollow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/namers_fire",
         "quests": [],
         "finds": [
@@ -3222,7 +3244,9 @@
         "finds": [
           "core:item/note_oskel_ford"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/oskel_ford"
+        ],
         "hearthstone": false
       },
       {
@@ -3706,7 +3730,9 @@
         "finds": [
           "core:item/note_round_stones"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/round_stones"
+        ],
         "hearthstone": false
       },
       {
@@ -4274,6 +4300,7 @@
       {
         "poi": "core:poi/south_stilts",
         "quests": [
+          "core:quest/what_the_name_wife_took",
           "core:quest/which_account"
         ],
         "finds": [
@@ -4422,7 +4449,9 @@
       {
         "poi": "core:poi/sunken_tower",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_sunken_tower_divers"
+        ],
         "encounters": [
           "core:encounter/sunken_tower"
         ],
@@ -4707,6 +4736,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_sounding",
+        "quests": [
+          "core:quest/the_sounding"
+        ],
+        "finds": [
+          "core:item/note_sounding_tide_table"
+        ],
+        "encounters": [
+          "core:encounter/the_sounding"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_thousand_post",
         "quests": [],
         "finds": [
@@ -4793,7 +4835,9 @@
         "finds": [
           "core:item/note_tideflat_stones"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/tideflat_stones"
+        ],
         "hearthstone": false
       },
       {
