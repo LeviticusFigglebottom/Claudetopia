@@ -1,180 +1,5 @@
 [
   {
-    "id": "core:dialogue/abel_rowse",
-    "speaker_name": "Abel Rowse",
-    "notes": "The last drift-captain of the Crown Drift (pois/brightwater.json), at the count-house by the engine-house. Gives The Last Shift (quests/sites_brightwater.json); takes the tokens at its end.",
-    "start": "greet",
-    "greetings": [
-      {
-        "conditions": [
-          {
-            "quest_at": [
-              "core:quest/the_last_shift",
-              "the_board"
-            ]
-          }
-        ],
-        "text": "...seven, eight. -- You've been down. You've a weight in your hand like brass. I know that weight."
-      },
-      {
-        "conditions": [
-          {
-            "quest_done": "core:quest/the_last_shift"
-          }
-        ],
-        "text": "Nine on the board. I paint round them now. -- Don't stand on the shaft-cover, it's rotten; everything here's rotten but the board."
-      }
-    ],
-    "nodes": {
-      "greet": {
-        "speaker": "Abel Rowse",
-        "text": "...four, five, -- one. You made me lose my place. -- Rowse. Drift-captain, the Crown Drift, Tallymen's charter, closed at a loss. That's all of it on one line. Mind the shaft.",
-        "next": "hub"
-      },
-      "hub": {
-        "speaker": "Abel Rowse",
-        "text": "*(His thumb goes round the token at his neck.)* Well?",
-        "choices": [
-          {
-            "text": "What was mined here?",
-            "next": "the_drift"
-          },
-          {
-            "text": "Who's working the drift at night?",
-            "next": "takers"
-          },
-          {
-            "text": "What happened to the last shift?",
-            "conditions": [
-              {
-                "quest_not_done": "core:quest/the_last_shift"
-              },
-              {
-                "not": {
-                  "quest_active": "core:quest/the_last_shift"
-                }
-              }
-            ],
-            "next": "the_shift"
-          },
-          {
-            "text": "The last shift's tokens. I took them off the deep board.",
-            "conditions": [
-              {
-                "quest_at": [
-                  "core:quest/the_last_shift",
-                  "the_board"
-                ]
-              }
-            ],
-            "next": "tokens"
-          },
-          {
-            "text": "I'll let you count.",
-            "next": "bye"
-          }
-        ]
-      },
-      "the_drift": {
-        "speaker": "Abel Rowse",
-        "text": "Calamine. Grey earth, green when it's wet. Roast it with copper and it comes out brass. Every lamp on the Mere's from here, and the crown on the Spire, which the Sayers will tell you their Builders put up there, and they did, all but the crown. We put the crown up. A hundred and fifty years of brass up that shaft, and the Tallymen paid by the hundredweight and never once came down to see where it came from.",
-        "effects": [
-          {
-            "discover": "core:poi/the_crown_drift"
-          }
-        ],
-        "next": "hub"
-      },
-      "takers": {
-        "speaker": "Abel Rowse",
-        "text": "Brass-takers. Gullhithe's hungry and Tollmere's owing, with a chisel each and a sayer from the Spire's leavings to keep it quiet. They strip the old brass off the pump-rods and melt it down below and carry it out at dawn past me as if I'm the engine-house. I don't stop them. It's the Tallymen's brass and the Tallymen wrote it off. -- They don't go past the break, mind. Nobody does.",
-        "next": "hub"
-      },
-      "the_shift": {
-        "speaker": "Abel Rowse",
-        "text": "Ninth of Harvest, 1012. The deep level broke into the Builders' gallery: square, black, the ore in it stacked and dressed like it was waiting for a cart. Gideon Spall took eight down to bring it up. I stayed at the board, because the drift-captain stays at the board. Three baskets came up the rope. The third was full and nobody was on it. -- Their tokens are still on the deep board, nine of them. A token comes up, the man's up; that's the rule. I've been thirty-one years waiting for the rule.",
-        "choices": [
-          {
-            "text": "I'll go down and bring their tokens up.",
-            "effects": [
-              {
-                "start_quest": "core:quest/the_last_shift"
-              }
-            ],
-            "next": "yes"
-          },
-          {
-            "text": "Not today.",
-            "next": "hub"
-          }
-        ]
-      },
-      "yes": {
-        "speaker": "Abel Rowse",
-        "text": "The cage is gone; it's the ladders, and the takers have stripped half the irons off them. Down the shaft, along the plat, down the winze past where they melt, down again to the break. The board's on the Builders' wall past it. -- If Gideon's there, he'll be at the board. He was always at the board. Tell him it's Abel sent you, and the shift's called up. He may not listen. He never did when there was ore still to come.",
-        "next": "hub"
-      },
-      "tokens": {
-        "speaker": "Abel Rowse",
-        "text": "*(He takes the loop of tokens and goes to the shift-board at the shaft head, and hangs them one at a time on the nine empty hooks, saying each name aloud as he does: Spall, Pender, Pender, Hocking, Trago, Vosper, Udy, Udy, Rule. The last one, the boy's, he holds a while.)* -- That's the shift up. -- Here. The drift-captain's purse; it's been in the count-house thirty-one years waiting for a shift's wages, and there's nobody to pay but you.",
-        "effects": [
-          {
-            "set_flag": "crown_drift_shift_up"
-          }
-        ],
-        "next": "hub"
-      },
-      "bye": {
-        "speaker": "Abel Rowse",
-        "text": "...one, two. -- Mind the shaft.",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/crown_drift_shift_board",
-    "speaker_name": "The shift-board at the shaft head",
-    "notes": "The Crown Drift's hook: a PoiTouch on the board by the shaft (world/pois/regions/brightwater.gd). Starts core:quest/the_last_shift if Abel Rowse has not.",
-    "start": "look",
-    "nodes": {
-      "look": {
-        "speaker": "The shift-board at the shaft head",
-        "no_talk": true,
-        "text": "A board of the Tallymen's pattern, painted fresh: THE CROWN DRIFT, and under it rows of iron hooks, each with a number. A miner hangs his brass token on his hook when he goes down and takes it off when he comes up; that is the rule, painted at the foot. Every hook is bare but nine, and those nine are bare too, but somebody has painted a ring round each of them, very carefully, many times. Chalked under the ninth ring: 9th of Harvest 1012. G. SPALL & 8. NOT UP.",
-        "choices": [
-          {
-            "text": "Go down after the last shift's tokens.",
-            "conditions": [
-              {
-                "quest_not_done": "core:quest/the_last_shift"
-              },
-              {
-                "not": {
-                  "quest_active": "core:quest/the_last_shift"
-                }
-              }
-            ],
-            "effects": [
-              {
-                "start_quest": "core:quest/the_last_shift"
-              }
-            ],
-            "next": "taken"
-          },
-          {
-            "text": "Leave the board.",
-            "next": "end"
-          }
-        ]
-      },
-      "taken": {
-        "speaker": "The shift-board at the shaft head",
-        "text": "Down the shaft, very far down, something knocks twice on rock, the way a miner knocks to say the rope can come up.",
-        "next": "end"
-      }
-    }
-  },
-  {
     "id": "core:dialogue/dorcas_pell",
     "speaker_name": "Dorcas Pell",
     "notes": "A Tollmere laundress at the Wash-Stones (pois/brightwater.json), whose father was struck off the Roll in error. Gives Entered in Error (quests/sites_brightwater.json); takes the Barrow Register at its end.",
@@ -345,6 +170,291 @@
       "taken": {
         "speaker": "The Tally Needle",
         "text": "The brass cap ticks as it cools. Behind you, in the gully, the portal's door stands an inch open that was shut.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/bryony_kettle",
+    "speaker_name": "Bryony Kettle",
+    "notes": "A Gullhithe fishwife at the Ness Market (pois/brightwater.json). Sells fish (stock_fishmonger).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap. A pike the length of your arm lands on the board.)* Pike. This morning's. Look at its eye. You can't buy an eye like that in the city, because in the city it's been tolled twice and it's looking at you reproachfully.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Bryony Kettle",
+        "text": "Well? I've a queue. I haven't, but I might.",
+        "choices": [
+          {
+            "text": "Show me what you've caught.",
+            "next": "trade"
+          },
+          {
+            "text": "Why sell out here and not in the city?",
+            "next": "why"
+          },
+          {
+            "text": "Who's the clerk at the white stones?",
+            "next": "silas"
+          },
+          {
+            "text": "Good fishing.",
+            "next": "bye"
+          }
+        ]
+      },
+      "trade": {
+        "speaker": "Bryony Kettle",
+        "text": "Pike, perch, eel live in the barrel or smoked on the rack, and a lake-trout if you're early, which you're not. Everything on these boards came off the water this morning and has never been inside the Tallymen's line. That's the price, and that's why it's the price.",
+        "next": "hub"
+      },
+      "why": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap. A perch.)* The Charter says the city's toll is taken at the city's gate. The Ness is land. The Ness is not the city. Therefore a fish sold on the Ness is a fish nobody tolls. The Tallymen have spent forty years trying to move the gate out to the Ness's root, and forty years the Guild's not voted it, because half the Guild buys its fish from me.",
+        "next": "hub"
+      },
+      "silas": {
+        "speaker": "Bryony Kettle",
+        "text": "Silas Pask. They sent him out to take the toll at the root before anybody voted it, and nobody's voted it, so he doesn't take it. He just writes it down. Every fish that's passed him in forty years, entered, owed, never asked for. *(She lowers her voice, which for her is a shout.)* I take him the first eel every morning. He enters that too.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap.)* Mind the gulls; they're Gullhithe gulls and they know whose fish it is.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silas_pask",
+    "speaker_name": "Silas Pask",
+    "notes": "A Tallymen's under-clerk at the Ness Market's would-be toll-line (pois/brightwater.json).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Silas Pask",
+        "text": "*(He licks his pencil.)* Name, and what you're carrying across the line. -- Oh, you needn't pay. Nobody pays. It's owed. I enter what's owed.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Silas Pask",
+        "text": "*(The pencil waits.)*",
+        "choices": [
+          {
+            "text": "What toll is this?",
+            "next": "toll"
+          },
+          {
+            "text": "How much is owed, all told?",
+            "next": "owed"
+          },
+          {
+            "text": "Put me down for nothing.",
+            "next": "nothing"
+          },
+          {
+            "text": "Good day, clerk.",
+            "next": "bye"
+          }
+        ]
+      },
+      "toll": {
+        "speaker": "Silas Pask",
+        "text": "The Ness toll. Moved at the Guild in the spring of 1003 that the city's toll-line be carried out from the Stride's head to the Ness's root, seconded, and referred. I was sent to take it pending the vote. The vote is pending. So I take it pending, which is to say I enter it, and when the motion carries every line in these books falls due on the same morning. *(He looks at the market.)* Bryony thinks it never will. I think it's very important to be ready.",
+        "next": "hub"
+      },
+      "owed": {
+        "speaker": "Silas Pask",
+        "text": "Forty years, nine months. Two hundred and eleven thousand fish, give or take an eel she slips me, which I enter as a gift and value at nothing, as the Charter says a gift must be valued. In marks -- *(he turns back a great many pages)* -- more than the Ness is worth. More than Gullhithe. I've stopped adding it up; it frightens the gulls.",
+        "next": "hub"
+      },
+      "nothing": {
+        "speaker": "Silas Pask",
+        "text": "*(He writes, carefully.)* A traveller. Carrying: nothing, declared. Owed: nothing, pending. -- There. You're in the books now. That's more than most people can say about the Ness.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Silas Pask",
+        "text": "Pending, then. Everything is.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/abel_rowse",
+    "speaker_name": "Abel Rowse",
+    "notes": "The last drift-captain of the Crown Drift (pois/brightwater.json), at the count-house by the engine-house. Gives The Last Shift (quests/sites_brightwater.json); takes the tokens at its end.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_last_shift",
+              "the_board"
+            ]
+          }
+        ],
+        "text": "...seven, eight. -- You've been down. You've a weight in your hand like brass. I know that weight."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_last_shift"
+          }
+        ],
+        "text": "Nine on the board. I paint round them now. -- Don't stand on the shaft-cover, it's rotten; everything here's rotten but the board."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Abel Rowse",
+        "text": "...four, five, -- one. You made me lose my place. -- Rowse. Drift-captain, the Crown Drift, Tallymen's charter, closed at a loss. That's all of it on one line. Mind the shaft.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Abel Rowse",
+        "text": "*(His thumb goes round the token at his neck.)* Well?",
+        "choices": [
+          {
+            "text": "What was mined here?",
+            "next": "the_drift"
+          },
+          {
+            "text": "Who's working the drift at night?",
+            "next": "takers"
+          },
+          {
+            "text": "What happened to the last shift?",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_last_shift"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_shift"
+                }
+              }
+            ],
+            "next": "the_shift"
+          },
+          {
+            "text": "The last shift's tokens. I took them off the deep board.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_last_shift",
+                  "the_board"
+                ]
+              }
+            ],
+            "next": "tokens"
+          },
+          {
+            "text": "I'll let you count.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_drift": {
+        "speaker": "Abel Rowse",
+        "text": "Calamine. Grey earth, green when it's wet. Roast it with copper and it comes out brass. Every lamp on the Mere's from here, and the crown on the Spire, which the Sayers will tell you their Builders put up there, and they did, all but the crown. We put the crown up. A hundred and fifty years of brass up that shaft, and the Tallymen paid by the hundredweight and never once came down to see where it came from.",
+        "effects": [
+          {
+            "discover": "core:poi/the_crown_drift"
+          }
+        ],
+        "next": "hub"
+      },
+      "takers": {
+        "speaker": "Abel Rowse",
+        "text": "Brass-takers. Gullhithe's hungry and Tollmere's owing, with a chisel each and a sayer from the Spire's leavings to keep it quiet. They strip the old brass off the pump-rods and melt it down below and carry it out at dawn past me as if I'm the engine-house. I don't stop them. It's the Tallymen's brass and the Tallymen wrote it off. -- They don't go past the break, mind. Nobody does.",
+        "next": "hub"
+      },
+      "the_shift": {
+        "speaker": "Abel Rowse",
+        "text": "Ninth of Harvest, 1012. The deep level broke into the Builders' gallery: square, black, the ore in it stacked and dressed like it was waiting for a cart. Gideon Spall took eight down to bring it up. I stayed at the board, because the drift-captain stays at the board. Three baskets came up the rope. The third was full and nobody was on it. -- Their tokens are still on the deep board, nine of them. A token comes up, the man's up; that's the rule. I've been thirty-one years waiting for the rule.",
+        "choices": [
+          {
+            "text": "I'll go down and bring their tokens up.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_shift"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Abel Rowse",
+        "text": "The cage is gone; it's the ladders, and the takers have stripped half the irons off them. Down the shaft, along the plat, down the winze past where they melt, down again to the break. The board's on the Builders' wall past it. -- If Gideon's there, he'll be at the board. He was always at the board. Tell him it's Abel sent you, and the shift's called up. He may not listen. He never did when there was ore still to come.",
+        "next": "hub"
+      },
+      "tokens": {
+        "speaker": "Abel Rowse",
+        "text": "*(He takes the loop of tokens and goes to the shift-board at the shaft head, and hangs them one at a time on the nine empty hooks, saying each name aloud as he does: Spall, Pender, Pender, Hocking, Trago, Vosper, Udy, Udy, Rule. The last one, the boy's, he holds a while.)* -- That's the shift up. -- Here. The drift-captain's purse; it's been in the count-house thirty-one years waiting for a shift's wages, and there's nobody to pay but you.",
+        "effects": [
+          {
+            "set_flag": "crown_drift_shift_up"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Abel Rowse",
+        "text": "...one, two. -- Mind the shaft.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/crown_drift_shift_board",
+    "speaker_name": "The shift-board at the shaft head",
+    "notes": "The Crown Drift's hook: a PoiTouch on the board by the shaft (world/pois/regions/brightwater.gd). Starts core:quest/the_last_shift if Abel Rowse has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The shift-board at the shaft head",
+        "no_talk": true,
+        "text": "A board of the Tallymen's pattern, painted fresh: THE CROWN DRIFT, and under it rows of iron hooks, each with a number. A miner hangs his brass token on his hook when he goes down and takes it off when he comes up; that is the rule, painted at the foot. Every hook is bare but nine, and those nine are bare too, but somebody has painted a ring round each of them, very carefully, many times. Chalked under the ninth ring: 9th of Harvest 1012. G. SPALL & 8. NOT UP.",
+        "choices": [
+          {
+            "text": "Go down after the last shift's tokens.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_last_shift"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_shift"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_shift"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the board.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The shift-board at the shaft head",
+        "text": "Down the shaft, very far down, something knocks twice on rock, the way a miner knocks to say the rope can come up.",
         "next": "end"
       }
     }

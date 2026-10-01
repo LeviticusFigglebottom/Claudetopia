@@ -1,53 +1,5 @@
 [
   {
-    "id": "core:npc/abel_rowse",
-    "name": "Abel Rowse",
-    "home_place": "core:poi/the_crown_drift",
-    "no_radiant": true,
-    "dialogue": "core:dialogue/abel_rowse",
-    "bio": "Drift-captain of the Crown Drift when the deep level broke through in 1012, and the man who sent the last shift down. He stayed at the shaft head because a drift-captain stays at the shaft head. The Tallymen closed the drift and paid him off at a loss; he has lived in the roofless count-house by the engine-house for thirty-one years since, keeping the shift-board painted and the nine hooks empty.",
-    "unique_habit": "Counts things under his breath, people included, and starts again from one when he loses his place.",
-    "personality": {
-      "traits": [
-        "proud",
-        "stubborn",
-        "kind"
-      ]
-    },
-    "appearance": {
-      "seed": 7311,
-      "build": "stocky",
-      "age": 71.0,
-      "feminine": 0.0,
-      "hair": "grey_thinning",
-      "notes": "a mine-captain's long coat gone green at the seams with calamine dust, a brass token on a thong round his neck, a lamp he never lights"
-    },
-    "schedule": [
-      {
-        "days": "all",
-        "hour": 0,
-        "place": "core:poi/the_crown_drift",
-        "activity": "sleep",
-        "spot": "the_count_house"
-      },
-      {
-        "days": "all",
-        "hour": 6,
-        "place": "core:poi/the_crown_drift",
-        "activity": "work",
-        "spot": "the_count_house",
-        "notes": "at the shift-board, painting it or watching the shaft"
-      },
-      {
-        "days": "all",
-        "hour": 22,
-        "place": "core:poi/the_crown_drift",
-        "activity": "sleep",
-        "spot": "the_count_house"
-      }
-    ]
-  },
-  {
     "id": "core:npc/dorcas_pell",
     "name": "Dorcas Pell",
     "home_place": "core:poi/wash_stones",
@@ -92,6 +44,159 @@
         "place": "core:poi/wash_stones",
         "activity": "sleep",
         "spot": "the_beating_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/bryony_kettle",
+    "name": "Bryony Kettle",
+    "home_place": "core:poi/ness_market",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/bryony_kettle",
+    "bio": "A Gullhithe fishwife who sells on the Stride Ness because a fish sold on the Ness pays no city toll, and who has sold there every morning for twenty-six years at the same trestle, the one nearest the Tallymen's man, so that he has to smell it.",
+    "unique_habit": "Slaps a fish down on the board to make a point, and has a fish for every point.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "proud",
+        "generous",
+        "cynical"
+      ]
+    },
+    "appearance": {
+      "seed": 7522,
+      "build": "broad_strong",
+      "age": 49.0,
+      "feminine": 1.0,
+      "hair": "red_under_a_knotted_kerchief",
+      "notes": "a fishwife's striped apron stiff with scales, sleeves to the elbow, a gutting knife on a cord"
+    },
+    "merchant": {
+      "stock": "core:table/stock_fishmonger",
+      "marks": 90,
+      "buys": [
+        "consumable",
+        "ingredient"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/ness_market",
+        "activity": "sleep",
+        "spot": "the_fish_stall"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/ness_market",
+        "activity": "shop",
+        "spot": "the_fish_stall",
+        "notes": "the morning's catch on the boards"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/ness_market",
+        "activity": "sleep",
+        "spot": "the_fish_stall"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/silas_pask",
+    "name": "Silas Pask",
+    "home_place": "core:poi/ness_market",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/silas_pask",
+    "bio": "A Tallymen's under-clerk sent out to the Ness's root forty years ago to take a toll the Charter has never allowed, on the strength of a motion the Guild has never passed. He set out the line of white stones himself, takes nothing, and enters everything.",
+    "unique_habit": "Licks his pencil before every entry and has a grey tongue for it.",
+    "personality": {
+      "traits": [
+        "honest",
+        "stubborn",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7533,
+      "build": "slight_straight",
+      "age": 66.0,
+      "feminine": 0.0,
+      "hair": "black_oiled_flat_with_a_clerks_cap",
+      "notes": "a Tallymen's grey coat gone at the cuffs, sleeve-guards, a ledger under one arm and a pencil behind one ear"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/ness_market",
+        "activity": "sleep",
+        "spot": "the_toll_line"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/ness_market",
+        "activity": "work",
+        "spot": "the_toll_line",
+        "notes": "entering the catch as it passes the line"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/ness_market",
+        "activity": "sleep",
+        "spot": "the_toll_line"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/abel_rowse",
+    "name": "Abel Rowse",
+    "home_place": "core:poi/the_crown_drift",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/abel_rowse",
+    "bio": "Drift-captain of the Crown Drift when the deep level broke through in 1012, and the man who sent the last shift down. He stayed at the shaft head because a drift-captain stays at the shaft head. The Tallymen closed the drift and paid him off at a loss; he has lived in the roofless count-house by the engine-house for thirty-one years since, keeping the shift-board painted and the nine hooks empty.",
+    "unique_habit": "Counts things under his breath, people included, and starts again from one when he loses his place.",
+    "personality": {
+      "traits": [
+        "proud",
+        "stubborn",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 7311,
+      "build": "stocky",
+      "age": 71.0,
+      "feminine": 0.0,
+      "hair": "grey_thinning",
+      "notes": "a mine-captain's long coat gone green at the seams with calamine dust, a brass token on a thong round his neck, a lamp he never lights"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_crown_drift",
+        "activity": "sleep",
+        "spot": "the_count_house"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_crown_drift",
+        "activity": "work",
+        "spot": "the_count_house",
+        "notes": "at the shift-board, painting it or watching the shaft"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/the_crown_drift",
+        "activity": "sleep",
+        "spot": "the_count_house"
       }
     ]
   }

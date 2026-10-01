@@ -1,5 +1,89 @@
 [
   {
+    "id": "core:boss/the_receiver",
+    "extends": "core:enemy/hedge_wight",
+    "name": "Obadiah Fenn, the Receiver of the Struck",
+    "archetype": "boss",
+    "arena": "core:poi/the_struck_barrow",
+    "region": "core:region/brightwater",
+    "tint": "#5b5a52",
+    "scale": 1.14,
+    "resists": {
+      "slash": 0.15,
+      "pierce": 0.3,
+      "fire": -0.3,
+      "blunt": -0.1
+    },
+    "lore": "Obadiah Fenn received four thousand and eleven struck debtors into the barrow in forty years and entered every one in the register under a number, in a hand the Tallymen called the fairest in the city. In 1019 the post's fees fell owing, the Tallymen struck him off, and nobody came to receive the Receiver. He is still at the register. He has entered himself as four thousand and twelve, and he is waiting for somebody to carry him to his shelf, and he has decided it is you.",
+    "appearance": {
+      "seed": 6377,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "shoes",
+        "back": "hooded_cloak",
+        "belt": "belt",
+        "hands": "gloves"
+      },
+      "palette": {
+        "primary": "3e3c38",
+        "secondary": "c9c3b0",
+        "leather": "2e2a24",
+        "metal": "9a8a52"
+      },
+      "skin": "fair",
+      "hair_colour": "grey",
+      "build": 0.75,
+      "feminine": 0.0,
+      "height": 1.9
+    },
+    "stats": {
+      "hp": 480,
+      "stamina": 180,
+      "poise": 95,
+      "armour": 6,
+      "speed": 2.4
+    },
+    "behaviour": {
+      "engage_range": 2.8,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 40.0,
+      "hyper_armour": 14.0,
+      "aggression": 0.75
+    },
+    "phases": [
+      {
+        "name": "received",
+        "hp": 1.0,
+        "aggression": 0.7
+      },
+      {
+        "name": "struck",
+        "hp": 0.5,
+        "aggression": 0.9,
+        "speed": 2.9,
+        "hyper_armour": 20.0,
+        "say": "He dips his pen and draws one line across the open register. On every shelf in the barrow something sits up."
+      }
+    ],
+    "marks": [
+      200,
+      360
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/barrow_register"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "boss",
+      "tallymen"
+    ]
+  },
+  {
     "id": "core:boss/gideon_spall",
     "extends": "core:enemy/hedge_wight",
     "name": "Gideon Spall, Captain of the Last Shift",
@@ -82,90 +166,6 @@
       "humanoid",
       "boss",
       "miner"
-    ]
-  },
-  {
-    "id": "core:boss/the_receiver",
-    "extends": "core:enemy/hedge_wight",
-    "name": "Obadiah Fenn, the Receiver of the Struck",
-    "archetype": "boss",
-    "arena": "core:poi/the_struck_barrow",
-    "region": "core:region/brightwater",
-    "tint": "#5b5a52",
-    "scale": 1.14,
-    "resists": {
-      "slash": 0.15,
-      "pierce": 0.3,
-      "fire": -0.3,
-      "blunt": -0.1
-    },
-    "lore": "Obadiah Fenn received four thousand and eleven struck debtors into the barrow in forty years and entered every one in the register under a number, in a hand the Tallymen called the fairest in the city. In 1019 the post's fees fell owing, the Tallymen struck him off, and nobody came to receive the Receiver. He is still at the register. He has entered himself as four thousand and twelve, and he is waiting for somebody to carry him to his shelf, and he has decided it is you.",
-    "appearance": {
-      "seed": 6377,
-      "culture": "vale",
-      "parts": {
-        "torso": "robe",
-        "feet": "shoes",
-        "back": "hooded_cloak",
-        "belt": "belt",
-        "hands": "gloves"
-      },
-      "palette": {
-        "primary": "3e3c38",
-        "secondary": "c9c3b0",
-        "leather": "2e2a24",
-        "metal": "9a8a52"
-      },
-      "skin": "fair",
-      "hair_colour": "grey",
-      "build": 0.75,
-      "feminine": 0.0,
-      "height": 1.9
-    },
-    "stats": {
-      "hp": 480,
-      "stamina": 180,
-      "poise": 95,
-      "armour": 6,
-      "speed": 2.4
-    },
-    "behaviour": {
-      "engage_range": 2.8,
-      "retreat_threshold": 0.0,
-      "patience": 4.0,
-      "leash": 40.0,
-      "hyper_armour": 14.0,
-      "aggression": 0.75
-    },
-    "phases": [
-      {
-        "name": "received",
-        "hp": 1.0,
-        "aggression": 0.7
-      },
-      {
-        "name": "struck",
-        "hp": 0.5,
-        "aggression": 0.9,
-        "speed": 2.9,
-        "hyper_armour": 20.0,
-        "say": "He dips his pen and draws one line across the open register. On every shelf in the barrow something sits up."
-      }
-    ],
-    "marks": [
-      200,
-      360
-    ],
-    "loot": "core:loot/rich_chest",
-    "drops": [
-      "core:item/barrow_register"
-    ],
-    "tags": [
-      "undead",
-      "revenant",
-      "humanoid",
-      "boss",
-      "tallymen"
     ]
   }
 ]

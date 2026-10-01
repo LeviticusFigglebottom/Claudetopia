@@ -23,6 +23,8 @@ const PEOPLE := {
 	"core:npc/ghedda_clanless": "core:poi/brindle_mill",
 	"core:npc/abel_rowse": "core:poi/the_crown_drift",
 	"core:npc/dorcas_pell": "core:poi/wash_stones",
+	"core:npc/bryony_kettle": "core:poi/ness_market",
+	"core:npc/silas_pask": "core:poi/ness_market",
 }
 const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_hole", "core:interior/gull_holm_cellars",
 		"core:interior/the_crown_drift", "core:interior/the_struck_barrow"]
@@ -178,19 +180,20 @@ func test_the_places_stand_what_their_defs_promise() -> void:
 	# phase 2's large sites: the drift's headframe, engine-house and chimney, spoil and shift-board; the
 	# barrow's Needle with its names and brass cap, its portal and the night's people's marks
 	var drift: PoiDressing = await _dress("core:poi/the_crown_drift")
-	for what in ["Headframe", "EngineHouse", "Chimney", "Spoil", "BoardPaint", "the_shaft_head", "the_count_house"]:
+	for what in ["Headframe", "EngineHouse", "Chimney", "Spoil", "sign_ShiftBoardPaint", "the_shaft_head", "the_count_house"]:
 		assert_true(drift.find_child(what, true, false) != null, "the Crown Drift has %s" % what)
 	drift.queue_free()
 	var barrow: PoiDressing = await _dress("core:poi/the_struck_barrow")
-	for what in ["TallyNeedle", "NeedleCap", "StruckNames", "Chalk", "Portal", "the_portal_step", "the_needle_foot"]:
+	for what in ["TallyNeedle", "NeedlePlinth", "NeedleCap", "StruckNames", "Chalk", "Portal", "the_portal_step", "the_needle_foot"]:
 		assert_true(barrow.find_child(what, true, false) != null, "the Struck Barrow has %s" % what)
 	var needle := barrow.find_child("TallyNeedle", true, false) as MeshInstance3D
-	if needle != null:
-		assert_gt(needle.get_aabb().size.y, 12.0, "the Needle stands tall enough to be seen across the Mere")
+	var plinth := barrow.find_child("NeedlePlinth", true, false) as MeshInstance3D
+	if needle != null and plinth != null:
+		assert_gt(needle.get_aabb().end.y - plinth.get_aabb().position.y, 12.0, "the Needle stands tall enough to be seen across the Mere")
 	barrow.queue_free()
 	# the Wash-Stones: the spring's pool, the three dished stones, the linen, where Dorcas beats
 	var wash: PoiDressing = await _dress("core:poi/wash_stones")
-	for what in ["WashPool", "WashStones", "Dishes", "Linen", "the_beating_stone"]:
+	for what in ["WashPool", "WashStones", "Dishes", "LinenBunting", "the_beating_stone"]:
 		assert_true(wash.find_child(what, true, false) != null, "the Wash-Stones have %s" % what)
 	wash.queue_free()
 	# the slate cut: the black course, the bench, the humming slate where the thousand-book lies

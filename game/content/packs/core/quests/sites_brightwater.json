@@ -1,72 +1,5 @@
 [
   {
-    "id": "core:quest/the_last_shift",
-    "name": "The Last Shift",
-    "layer": "side",
-    "giver": "core:npc/abel_rowse",
-    "region": "core:region/brightwater",
-    "summary": "In 1012 the Crown Drift's deep level broke into a Builders' gallery and its shift-captain took eight men down for the ore stacked in it. None came up, and their brass tokens are still on the deep shift-board. Abel Rowse, the drift-captain who sent them, has waited thirty-one years at the shaft head for a token to come up.",
-    "notes": "Brightwater's world-life site, phase 2 (docs/WORLD_LIFE_INTERIORS.md): the Crown Drift (pois/brightwater.json: a delve with the region's own headframe and engine-house) and its mine (interiors/sites_brightwater.json). Started by Abel Rowse at the count-house, or by the shift-board at the shaft head (core:dialogue/crown_drift_shift_board). Gideon Spall drops the tokens; Abel takes them.",
-    "stages": [
-      {
-        "id": "the_drift",
-        "journal": "The Crown Drift's last shift went down to the Builders' gallery in 1012 and never came up: Gideon Spall, shift-captain, and eight men. Their tokens are on the deep shift-board past the break, and a token coming up is a man coming up, by the drift's rule. Brass-takers are working the old levels by night, and they do not go past the break.",
-        "objectives": [
-          {
-            "type": "reach",
-            "target": "core:poi/the_crown_drift",
-            "count": 1,
-            "text": "Go to the Crown Drift on the North Shore"
-          },
-          {
-            "type": "kill",
-            "target": "core:boss/gideon_spall",
-            "count": 1,
-            "where": "core:interior/the_crown_drift",
-            "text": "Call up the last shift's captain at the deep board"
-          },
-          {
-            "type": "collect",
-            "target": "core:item/crown_drift_tokens",
-            "count": 1,
-            "text": "Take the last shift's tokens off the deep board"
-          }
-        ],
-        "marker": {
-          "place_id": "core:poi/the_crown_drift",
-          "radius": 60
-        },
-        "on_complete": [
-          {
-            "renown": 10
-          }
-        ]
-      },
-      {
-        "id": "the_board",
-        "journal": "The nine tokens are green with forty years of calamine and the captain's is rubbed bright. Abel Rowse is at the shaft head with nine empty hooks.",
-        "objectives": [
-          {
-            "type": "deliver",
-            "target": "core:npc/abel_rowse",
-            "item": "core:item/crown_drift_tokens",
-            "count": 1,
-            "text": "Bring the tokens up to Abel Rowse at the shaft head"
-          }
-        ],
-        "marker": {
-          "place_id": "core:poi/the_crown_drift",
-          "radius": 60
-        }
-      }
-    ],
-    "rewards": {
-      "marks": 160,
-      "renown": 10,
-      "morality": 2
-    }
-  },
-  {
     "id": "core:quest/entered_in_error",
     "name": "Entered in Error",
     "layer": "side",
@@ -131,6 +64,73 @@
       "marks": 150,
       "renown": 10,
       "morality": 3
+    }
+  },
+  {
+    "id": "core:quest/the_last_shift",
+    "name": "The Last Shift",
+    "layer": "side",
+    "giver": "core:npc/abel_rowse",
+    "region": "core:region/brightwater",
+    "summary": "In 1012 the Crown Drift's deep level broke into a Builders' gallery and its shift-captain took eight men down for the ore stacked in it. None came up, and their brass tokens are still on the deep shift-board. Abel Rowse, the drift-captain who sent them, has waited thirty-one years at the shaft head for a token to come up.",
+    "notes": "Brightwater's world-life site, phase 2 (docs/WORLD_LIFE_INTERIORS.md): the Crown Drift (pois/brightwater.json: a delve with the region's own headframe and engine-house) and its mine (interiors/sites_brightwater.json). Started by Abel Rowse at the count-house, or by the shift-board at the shaft head (core:dialogue/crown_drift_shift_board). Gideon Spall drops the tokens; Abel takes them.",
+    "stages": [
+      {
+        "id": "the_drift",
+        "journal": "The Crown Drift's last shift went down to the Builders' gallery in 1012 and never came up: Gideon Spall, shift-captain, and eight men. Their tokens are on the deep shift-board past the break, and a token coming up is a man coming up, by the drift's rule. Brass-takers are working the old levels by night, and they do not go past the break.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_crown_drift",
+            "count": 1,
+            "text": "Go to the Crown Drift on the North Shore"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/gideon_spall",
+            "count": 1,
+            "where": "core:interior/the_crown_drift",
+            "text": "Call up the last shift's captain at the deep board"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/crown_drift_tokens",
+            "count": 1,
+            "text": "Take the last shift's tokens off the deep board"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_crown_drift",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_board",
+        "journal": "The nine tokens are green with forty years of calamine and the captain's is rubbed bright. Abel Rowse is at the shaft head with nine empty hooks.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/abel_rowse",
+            "item": "core:item/crown_drift_tokens",
+            "count": 1,
+            "text": "Bring the tokens up to Abel Rowse at the shaft head"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_crown_drift",
+          "radius": 60
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 10,
+      "morality": 2
     }
   }
 ]
