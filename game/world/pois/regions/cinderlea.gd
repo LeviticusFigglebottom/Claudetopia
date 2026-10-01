@@ -3139,3 +3139,418 @@ static func tower_road_bell(d: PoiDressing) -> void:
 			if box.position.y > g + 0.12:
 				n.position.y -= minf(box.position.y - g - 0.1, 0.3)
 	_settle(d)
+
+
+# === the large places (world life phase 2) ===========================================================
+#
+# Three places a body sees from a long way off and goes into: the Undertone, a doorway cut in the
+# Choir plateau's western cliff over the dark the note comes out of; the Founders' Delf, the dead
+# city's bell-foundry, its last great bell still in its mould under a gantry, its stacks over the
+# Ashgrid; and Chalkwatch, a Wardens' fort on the west heath the grey took with its garrison in it.
+
+const NOTE_BLUE := Color(0.56, 0.72, 0.9)
+const CLAY := {"base": "#5a4a3e", "accent": "#463a30", "grout": "#2a221c", "unit": 0.6}
+const BRICK := {"base": "#5d3f33", "accent": "#4a3128", "grout": "#2a1c17", "unit": 0.32}
+const SLAG := {"base": "#1d1b1d", "accent": "#2c292c", "grout": "#0d0c0d", "unit": 0.3}
+
+
+## A surface of revolution over part of the round only: `a0` to `a1` (radians), both faces drawn
+## (each its own smoothing group), for a thing broken open (the mould with a side gone).
+static func _lathe_part(st: SurfaceTool, xf: Transform3D, profile: Array, a0: float, a1: float, segments := 20) -> void:
+	for i in profile.size() - 1:
+		var p0: Vector2 = profile[i]
+		var p1: Vector2 = profile[i + 1]
+		for s in segments:
+			var b0 := lerpf(a0, a1, float(s) / float(segments))
+			var b1 := lerpf(a0, a1, float(s + 1) / float(segments))
+			var a := xf * Vector3(sin(b0) * p0.x, p0.y, cos(b0) * p0.x)
+			var b := xf * Vector3(sin(b1) * p0.x, p0.y, cos(b1) * p0.x)
+			var c := xf * Vector3(sin(b1) * p1.x, p1.y, cos(b1) * p1.x)
+			var dd := xf * Vector3(sin(b0) * p1.x, p1.y, cos(b0) * p1.x)
+			_two_sided(st, [a, dd, b, b, dd, c])
+
+
+## Where the land in front of a cliff meets it: along `into` from the middle, the last point whose
+## ground is within `rise` of the middle's, at most `reach` out. Returns its distance.
+static func _cliff_foot(k: PoiKit, into: Vector2, rise := 2.5, reach := 24.0) -> float:
+	var g0 := k.on_ground(0.0, 0.0).y
+	var best := 0.0
+	var t := 1.0
+	while t <= reach:
+		var q := into * t
+		if k.on_ground(q.x, q.y).y > g0 + rise:
+			break
+		best = t
+		t += 1.0
+	return best
+
+
+# --- the Undertone ------------------------------------------------------------------------------------
+
+## A doorway cut into the western cliff of the Choir plateau: two pilasters fifteen metres high either
+## side of an opening eleven high, a lintel and a stepped crown over it, a headless chorister carved
+## standing against each pilaster with its hands at its breast, the doors (two slabs of the Builders'
+## stone, hingeless) fallen outward across the forecourt, black glass run down the rock from a crack
+## over the crown as if the cliff had wept; inside, the throat going in dark and a cold blue light
+## at the back of it, the note-light. In the forecourt the Order's braziers, cold, burning blue.
+## To one side the Sayer's camp: her tent, her tuning-board (the site's hook), her brass fork on its
+## stand, aimed at the door.
+static func the_undertone(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var into := k.uphill()
+	if into == Vector2.ZERO:
+		into = Vector2(1.0, 0.0)
+	into = into.normalized()
+	var across := Vector2(into.y, -into.x)
+	var b := Basis(Vector3.UP, PoiKit.yaw_of(-into))         # its front faces out of the cliff
+	# the cliff's foot; the facade stands out from it, its doorway a short way in front of the rock and
+	# its back run on into the slope (the land cannot be cut: the dark of the door is at the foot)
+	var foot := clampf(_cliff_foot(k, into), 14.0, 22.0)
+	var face := into * (foot - 7.0)                           # the facade's front
+	var g := k.on_ground(face.x, face.y).y
+	var stone := m.begin()
+	var open_w := 6.2
+	var open_h := 11.0
+	var pil := 3.2
+	var deep := 11.0                                           # from its front back into the rock
+	var back := face + into * deep * 0.5
+	# the pilasters, the lintel over the opening, the stepped crown
+	for s in [-1.0, 1.0]:
+		var p := back + across * (open_w * 0.5 + pil * 0.5) * float(s)
+		var xf := Transform3D(b, Vector3(p.x, g + 7.5 - 1.0, p.y))
+		_box(stone, xf, Vector3(pil, 17.0, deep))
+		k.collider(Vector3(pil, 17.0, deep), xf, "stone")
+		# its plinth and capital, stepped out
+		_box(stone, Transform3D(b, Vector3(p.x, g + 0.4, p.y) - Vector3(into.x, 0.0, into.y) * 0.35), Vector3(pil + 0.7, 1.6, deep + 0.6))
+		_box(stone, Transform3D(b, Vector3(p.x, g + open_h + 0.3, p.y) - Vector3(into.x, 0.0, into.y) * 0.3), Vector3(pil + 0.6, 0.8, deep + 0.5))
+	var lintel := Transform3D(b, Vector3(back.x, g + open_h + 1.4, back.y))
+	_box(stone, lintel, Vector3(open_w + pil * 2.0 + 0.6, 2.8, deep))
+	k.collider(Vector3(open_w + pil * 2.0, 2.8, deep), lintel, "stone")
+	for i in 3:
+		var w := open_w + pil * 2.0 - 2.2 * float(i + 1)
+		_box(stone, Transform3D(b, Vector3(back.x, g + open_h + 3.2 + 1.1 * float(i), back.y)), Vector3(w, 1.1, deep - 0.6 * float(i)))
+	# the doorway's floor, paved, going in to the dark at the cliff's foot
+	var floor_at := face + into * 3.5
+	_box(stone, Transform3D(b, Vector3(floor_at.x, g - 0.15, floor_at.y)), Vector3(open_w + 0.4, 0.4, 7.0))
+	k.collider(Vector3(open_w + 0.4, 0.4, 7.0), Transform3D(b, Vector3(floor_at.x, g - 0.15, floor_at.y)), "stone")
+	var throat := 6.5
+	await k.step()
+	m.commit(stone, k.surface("oroth", 0.55), "Undertone", true)
+	var dark := m.begin()
+	var end_at := face + into * throat
+	_box(dark, Transform3D(b, Vector3(end_at.x, g + open_h * 0.5, end_at.y)), Vector3(open_w + 0.4, open_h + 0.4, 0.3))
+	k.collider(Vector3(open_w + 0.4, open_h + 0.4, 0.3), Transform3D(b, Vector3(end_at.x, g + open_h * 0.5, end_at.y)), "stone")
+	await k.step()
+	m.commit(dark, PoiKit.plain(HOLE, 1.0), "TheDark", true)
+	# the choristers carved against the pilasters
+	var figures := m.begin()
+	for s in [-1.0, 1.0]:
+		var p := face - into * 1.2 + across * (open_w * 0.5 + pil * 0.5) * float(s)
+		_box(figures, Transform3D(b, Vector3(p.x, g + 0.6, p.y)), Vector3(2.6, 1.2, 2.2))
+		_chorister(d, figures, Vector3(p.x, g + 1.2, p.y), PoiKit.yaw_of(-into), 8.6, false)
+		k.collider(Vector3(2.4, 9.5, 2.0), Transform3D(b, Vector3(p.x, g + 4.8, p.y)), "stone")
+	await k.step()
+	m.commit(figures, k.surface("oroth", 0.8), "Choristers", true)
+	# black glass run down the rock from the crack over the crown
+	var glass := m.begin()
+	for i in 11:
+		var x := k.rng.randf_range(-9.0, 9.0)
+		var y := g + open_h + k.rng.randf_range(4.0, 16.0)
+		var run := k.rng.randf_range(3.0, 8.0)
+		# on the rock: as far in as the cliff stands that high
+		var t := foot - 1.0
+		while t < foot + 30.0:
+			var q := into * t + across * x
+			if k.on_ground(q.x, q.y).y >= y:
+				break
+			t += 0.5
+		var at := into * (t - 0.3) + across * x
+		m.ellipsoid(glass, Vector3(at.x, y, at.y), Vector3(k.rng.randf_range(0.2, 0.5), run * 0.5, 0.3), b * Basis(Vector3.RIGHT, -0.5))
+	await k.step()
+	m.commit(glass, PoiKit.plain(PoiKit.GLASS, 0.06, 0.3), "WeptGlass", true)
+	if k.far:
+		return
+	# the fallen doors across the forecourt, one broken in two
+	var doors := m.begin()
+	for s in [-1.0, 1.0]:
+		var p := face - into * (5.5 + 1.0 * float(s)) + across * 2.0 * float(s)
+		var tilt := Basis(Vector3.UP, PoiKit.yaw_of(-into) + 0.12 * float(s)) * Basis(Vector3.RIGHT, PI * 0.5 - 0.06 * float(s))
+		if s < 0.0:
+			_box(doors, Transform3D(tilt, k.on_ground(p.x, p.y, 0.45)), Vector3(3.1, 10.5, 0.9))
+			k.collider(Vector3(3.1, 0.9, 10.5), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(-into) - 0.12), k.on_ground(p.x, p.y, 0.45)), "stone")
+		else:
+			for h in [-1.0, 1.0]:
+				var q := p - into * 2.8 * float(h) + across * 0.4 * float(h)
+				var t2 := Basis(Vector3.UP, PoiKit.yaw_of(-into) + 0.12 + 0.2 * float(h)) * Basis(Vector3.RIGHT, PI * 0.5 + 0.1 * float(h))
+				_box(doors, Transform3D(t2, k.on_ground(q.x, q.y, 0.45)), Vector3(3.1, 5.0, 0.9))
+				k.collider(Vector3(3.1, 0.9, 5.0), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(-into) + 0.12 + 0.2 * float(h)), k.on_ground(q.x, q.y, 0.45)), "stone")
+	# the forecourt's paving, broken
+	for i in 16:
+		var p := face - into * k.rng.randf_range(1.0, 13.0) + across * k.rng.randf_range(-6.0, 6.0)
+		_box(doors, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(into) + k.rng.randf_range(-0.15, 0.15)), k.on_ground(p.x, p.y, 0.03)),
+				Vector3(k.rng.randf_range(1.4, 2.4), 0.14, k.rng.randf_range(1.4, 2.4)))
+	await k.step()
+	m.commit(doors, k.surface("oroth", 0.45), "FallenDoors")
+	# the way in, at the back of the throat's lit part
+	var interior := str(site.get("interior", ""))
+	var door_at := face + into * (throat - 2.2)
+	PoiDressing.kind_builders().SITES._door(d, interior, Vector3(door_at.x, g + 0.05, door_at.y), PoiKit.yaw_of(-into))
+	k.marker("the_mouth", Vector3(door_at.x, g + 0.05, door_at.y))
+	k.light(Vector3(door_at.x, g + 2.5, door_at.y) - Vector3(into.x, 0.0, into.y) * 1.0, NOTE_BLUE, 2.2, 14.0)
+	k.puffs(Vector3(door_at.x, g + 1.5, door_at.y) - Vector3(into.x, 0.0, into.y) * 4.0, Vector3(2.5, 1.0, 2.0), 0.6, 10,
+			Color(0.62, 0.7, 0.8, 0.22), 2.6, 7.0)
+	# the Order's braziers either side of the forecourt, burning the cold blue the Seat burns
+	for s in [-1.0, 1.0]:
+		var p := face - into * 8.5 + across * 5.4 * float(s)
+		await k.step()
+		k.place(k.prop("brazier"), k.on_ground(p.x, p.y), 0.0)
+		k.light(k.on_ground(p.x, p.y, 1.4), NOTE_BLUE, 1.6, 9.0)
+	k.marker("the_forecourt", k.on_ground(face.x - into.x * 6.0, face.y - into.y * 6.0))
+	# the Sayer's camp, off to the side out of the doors' way
+	var camp := face - into * 12.0 + across * 10.0
+	if not _off_road(k, camp, 2.0):
+		camp = face - into * 12.0 - across * 10.0
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(camp.x, camp.y), PoiKit.yaw_of(-across))
+	var fire := camp - across * 3.0 - into * 1.5
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0, 0.9)
+	k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.7, 0.4), 1.8, 9.0)
+	var st_at := fire + into * 1.6
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(st_at.x, st_at.y), PoiKit.yaw_of(into))
+	k.marker("merrin_camp", k.on_ground(fire.x - across.x * 1.4, fire.y - across.y * 1.4), true)
+	# her tuning-fork on its stand, a long brass fork aimed at the door
+	var fork := m.begin()
+	var fa := camp - across * 1.0 + into * 3.0
+	var fb := k.on_ground(fa.x, fa.y)
+	for i in 3:
+		var a := TAU * float(i) / 3.0
+		m.limb(fork, fb + Vector3(sin(a) * 0.5, 0.0, cos(a) * 0.5), fb + Vector3(0.0, 1.3, 0.0), 0.03)
+	var aim := Vector3(into.x, 0.12, into.y).normalized()
+	var sideway := Vector3(across.x, 0.0, across.y)
+	m.limb(fork, fb + Vector3(0.0, 1.3, 0.0), fb + Vector3(0.0, 1.3, 0.0) + aim * 0.4, 0.04)
+	for s in [-1.0, 1.0]:
+		m.limb(fork, fb + Vector3(0.0, 1.3, 0.0) + aim * 0.4 + sideway * 0.08 * float(s), fb + Vector3(0.0, 1.3, 0.0) + aim * 1.3 + sideway * 0.08 * float(s), 0.03)
+	await k.step()
+	m.commit(fork, PoiKit.plain(PoiKit.BRONZE, 0.35, 0.8), "TuningFork")
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(camp.x, 0.0, camp.y) - Vector3(across.x, 0.0, across.y) * 1.2 + Vector3(into.x, 0.0, into.y) * 1.8)
+	await _rubble(d, face - into * 6.0, 9.0, 14, Vector2(0.4, 0.9))
+
+
+# --- the Founders' Delf -------------------------------------------------------------------------------
+
+## The dead city's bell-foundry: a casting pit ringed by its spoil, and in the pit the last great bell
+## the Builders poured, still in its mould -- a cope of fired clay twelve metres high cracked open
+## down one side, the green bronze showing through the break -- with the founders' gantry over it,
+## two A-frames of black timber and a beam across, the block and chains still hanging to the cope's
+## crown. Behind it the furnace-house, squat, its two stacks going up twenty metres over the Ashgrid,
+## its fire-mouth open on the dark of the galleries under the pit (the way in). Slag heaps black and
+## glassy. Clemency Brazier's camp by the furnace: a Vale bell-founder come to see the last casting.
+static func founders_delf(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var road := k.road_direction(160.0)
+	var out := road.normalized() if road != Vector2.ZERO else Vector2(0.0, -1.0)
+	var side := Vector2(out.y, -out.x)
+	var g := k.on_ground(0.0, 0.0).y
+	# the casting pit's rim of spoil, open towards the road
+	var pit_r := 9.0
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		var dir := Vector2(sin(a), cos(a))
+		if dir.dot(out) > 0.9:
+			continue
+		await _drift(d, dir * (pit_r + 1.8), k.rng.randf_range(3.0, 3.8), k.rng.randf_range(1.3, 1.9))
+	# the bell, and the cope round it broken open on the road side
+	var bronze := m.begin()
+	var bell_r := 4.6
+	var bell_h := 11.5
+	var base := Vector3(0.0, g - 1.2, 0.0)
+	var face_a := PoiKit.yaw_of(out)
+	_lathe(bronze, Transform3D(Basis(Vector3.UP, face_a), base), _scaled(BELL, bell_r, bell_h), 26)
+	await k.step()
+	m.commit(bronze, _bronze(), "TheLastBell", true)
+	var clay := m.begin()
+	var cope := []
+	for p: Vector2 in BELL:
+		cope.append(Vector2(p.x * (bell_r + 0.55) + 0.25, p.y * (bell_h + 0.6)))
+	# the break: a wedge of the cope gone towards the road, ragged
+	_lathe_part(clay, Transform3D(Basis(Vector3.UP, face_a), base), cope, 0.75, TAU - 0.75, 22)
+	# bands of iron round the cope
+	for y in [0.18, 0.5, 0.78]:
+		var r := _bell_r_at(float(y)) * (bell_r + 0.55) + 0.35
+		_lathe_part(clay, Transform3D(Basis(Vector3.UP, face_a), base + Vector3(0.0, float(y) * (bell_h + 0.6), 0.0)),
+				[Vector2(r, -0.15), Vector2(r + 0.05, 0.0), Vector2(r, 0.15)], 0.7, TAU - 0.7, 22)
+	await k.step()
+	m.commit(clay, PoiKit.painted(0, CLAY, 0.85, 0.7), "Cope", true)
+	var hull := PackedVector3Array()
+	for p: Vector2 in cope:
+		for s in 10:
+			var a := TAU * float(s) / 10.0
+			hull.append(base + Vector3(sin(a) * p.x, p.y, cos(a) * p.x))
+	var cs := ConvexPolygonShape3D.new()
+	cs.points = hull
+	k.collider_shape(cs, Transform3D.IDENTITY, "stone")
+	# the gantry: two A-frames either side, a beam across, the block and chains to the crown
+	var timber := m.begin()
+	var top_y := g + bell_h + 4.5
+	var tops: Array = []
+	for s in [-1.0, 1.0]:
+		var c := side * 11.0 * float(s)
+		var apex := Vector3(c.x, top_y, c.y)
+		for l in [-1.0, 1.0]:
+			var f := c + out * 4.5 * float(l) + side * 1.4 * float(s)
+			var fg := k.on_ground(f.x, f.y, -0.3)
+			m.limb(timber, fg, apex, 0.32)
+			k.collider(Vector3(0.6, 1.2, 0.6), Transform3D(Basis.IDENTITY, fg + Vector3(0.0, 0.6, 0.0)), "wood")
+		# a brace across each frame
+		m.limb(timber, k.on_ground(c.x + out.x * 3.0, c.y + out.y * 3.0, 5.0), k.on_ground(c.x - out.x * 3.0, c.y - out.y * 3.0, 5.0), 0.2)
+		tops.append(apex)
+	m.limb(timber, tops[0], tops[1], 0.38)
+	m.limb(timber, (tops[0] as Vector3) - Vector3(0.0, 1.2, 0.0), (tops[1] as Vector3) - Vector3(0.0, 1.2, 0.0), 0.26)
+	for t: Vector3 in tops:
+		var inward := Vector3(-t.x, 0.0, -t.z).normalized()
+		m.limb(timber, t - Vector3(0.0, 4.0, 0.0), t + inward * 3.5 - Vector3(0.0, 1.2, 0.0), 0.18)
+	var block := Vector3(0.0, top_y - 0.8, 0.0)
+	_box(timber, Transform3D(Basis.IDENTITY, block), Vector3(0.9, 1.2, 0.6))
+	await k.step()
+	m.commit(timber, PoiKit.painted(3, {"base": "#2b2622", "accent": "#1c1916"}, 0.8), "Gantry", true)
+	var iron := m.begin()
+	var crown := base + Vector3(0.0, bell_h + 0.6, 0.0)
+	for s in [-1.0, 1.0]:
+		m.limb(iron, block + Vector3(0.2 * float(s), -0.6, 0.0), crown + Vector3(0.6 * float(s), 0.3, 0.0), 0.06)
+	await k.step()
+	m.commit(iron, PoiKit.plain(Color(0.14, 0.12, 0.11), 0.5, 0.6), "Chains", true)
+	# the furnace-house behind the pit, its two stacks, its fire-mouth to the pit
+	var fh := -out * 19.0
+	var fb := Basis(Vector3.UP, PoiKit.yaw_of(out))
+	var fg2 := k.on_ground(fh.x, fh.y).y
+	var brick := m.begin()
+	_box(brick, Transform3D(fb, Vector3(fh.x, fg2 + 2.6, fh.y)), Vector3(12.0, 6.2, 7.0))
+	k.collider(Vector3(12.0, 6.2, 7.0), Transform3D(fb, Vector3(fh.x, fg2 + 2.6, fh.y)), "stone")
+	_box(brick, Transform3D(fb, Vector3(fh.x, fg2 + 5.9, fh.y)), Vector3(12.6, 0.5, 7.6))
+	for s in [-1.0, 1.0]:
+		var sc := fh + side * 3.6 * float(s) - out * 1.0
+		m.drum(brick, Transform3D(Basis.IDENTITY, Vector3(sc.x, fg2 + 5.5, sc.y)), 1.25 - 0.1 * float(s), 15.5 + 2.0 * float(s), 0.03, NAN, false, 0.5)
+		m.drum(brick, Transform3D(Basis.IDENTITY, Vector3(sc.x, fg2 + 20.5 + 2.0 * float(s), sc.y)), 1.45, 0.6, 0.0, NAN, false, 0.3)
+		k.collider(Vector3(2.4, 16.0, 2.4), Transform3D(Basis.IDENTITY, Vector3(sc.x, fg2 + 13.0, sc.y)), "stone")
+	# the fire-mouth: an arch in the furnace's front, the dark going down behind it
+	var mouth := fh + out * 3.6
+	_arch(d, brick, mouth, out, 2.8, 2.2, 0.8, 0.9, 0.6, 9)
+	await k.step()
+	m.commit(brick, PoiKit.painted(2, BRICK, 0.8), "Furnace", true)
+	var dark := m.begin()
+	_box(dark, Transform3D(fb, Vector3(mouth.x, fg2 + 1.5, mouth.y) - Vector3(out.x, 0.0, out.y) * 0.6), Vector3(2.8, 3.6, 0.2))
+	await k.step()
+	m.commit(dark, PoiKit.plain(HOLE, 1.0), "FireMouth", true)
+	if k.far:
+		return
+	for s in [-1.0, 1.0]:
+		var sc := fh + side * 3.6 * float(s) - out * 1.0
+		k.puffs(Vector3(sc.x, fg2 + 22.0 + 2.0 * float(s), sc.y), Vector3(0.4, 0.2, 0.4), 2.0, 8, Color(0.42, 0.4, 0.38, 0.3), 3.0, 8.0)
+	var interior := str(site.get("interior", ""))
+	var door_at := mouth - out * 0.2
+	PoiDressing.kind_builders().SITES._door(d, interior, Vector3(door_at.x, fg2 + 0.05, door_at.y), PoiKit.yaw_of(out))
+	k.marker("the_mouth", Vector3(door_at.x, fg2 + 0.05, door_at.y) + Vector3(out.x, 0.0, out.y) * 1.5)
+	k.light(Vector3(mouth.x, fg2 + 1.2, mouth.y) + Vector3(out.x, 0.0, out.y) * 0.5, Color(1.0, 0.45, 0.2), 1.6, 7.0)
+	# slag heaps, black and glassy, beside the furnace
+	for s in [-1.0, 1.0]:
+		var p := fh + side * 10.5 * float(s) + out * 2.0
+		await k.step()
+		m.mound(k.on_ground(p.x, p.y, -0.2), 3.6, 2.4, PoiKit.painted(5, SLAG, 0.4, 0.7), "Slag", true, 1.2, 6, 16)
+	# the founders' gear: an anvil, moulding boards, a barrow of loam, crucibles
+	var gear := fh + out * 6.5 + side * 6.0
+	await k.step()
+	k.place(k.prop("anvil"), k.on_ground(gear.x, gear.y), PoiKit.yaw_of(out))
+	await k.step()
+	k.place(k.prop("wheelbarrow"), k.on_ground(gear.x + side.x * 2.0, gear.y + side.y * 2.0), PoiKit.yaw_of(side))
+	# Clemency's camp, the road side of the pit
+	var camp := out * 15.0 + side * 9.0
+	if not _off_road(k, camp, 2.0):
+		camp = out * 15.0 - side * 9.0
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(camp.x, camp.y), PoiKit.yaw_of(-side))
+	var fire := camp - side * 3.0
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0, 0.9)
+	k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.7, 0.4), 1.8, 9.0)
+	k.marker("clemency_camp", k.on_ground(fire.x + out.x * 1.6, fire.y + out.y * 1.6), true)
+	await _cache(d, k.on_ground(camp.x + out.x * 2.0, camp.y + out.y * 2.0), PoiKit.yaw_of(side), "crate", "core:loot/oroth_cache", "founders_crate")
+	k.marker("the_pit", k.on_ground(out.x * 6.0, out.y * 6.0))
+	k.touchable("the_bell", Vector3(out.x, 0.0, out.y) * (bell_r + 1.6) + Vector3(0.0, g + 2.0, 0.0), "Look into the break in the mould",
+			"core:dialogue/founders_delf_bell", "", false)
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(out.x, 0.0, out.y) * 13.0 - Vector3(side.x, 0.0, side.y) * 4.0)
+	await _rubble(d, Vector2.ZERO, 22.0, 18, Vector2(0.4, 0.9))
+
+
+static func _scaled(profile: Array, r: float, h: float) -> Array:
+	var out: Array = []
+	for p: Vector2 in profile:
+		out.append(Vector2(p.x * r, p.y * h))
+	return out
+
+
+## A bell's radius (as a fraction of its mouth's) at `y` (a fraction of its height).
+static func _bell_r_at(y: float) -> float:
+	for i in BELL.size() - 1:
+		var a: Vector2 = BELL[i]
+		var b: Vector2 = BELL[i + 1]
+		if y >= a.y and y <= b.y:
+			return lerpf(a.x, b.x, (y - a.y) / maxf(b.y - a.y, 0.0001))
+	return 0.6
+
+
+# --- Chalkwatch ---------------------------------------------------------------------------------------
+
+## The Wardens' fort on the west heath, built to hold the grey line and taken by it with its garrison
+## in it: the kind's square fort (world/sites/site_exterior.gd), and over its keep the thing that is
+## seen from the West Walk, a beacon-mast twice the keep's height with the Wardens' green still on
+## it, rags now, and the fire-basket at its head cold. Outside the gate Warden Ysolde Penn's fire:
+## the relief, thirty years late.
+static func chalkwatch(d: PoiDressing) -> void:
+	await PoiDressing.kind_builders().SITES.build(d)
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var bdeg := deg_to_rad(float(site.get("gate_bearing_deg", 0.0)))
+	var gate_dir := Vector2(sin(bdeg), cos(bdeg))
+	var radius := float(site.get("radius", 18.0))
+	var wall_h := float((site.get("profile", {}) as Dictionary).get("wall_h", 5.5))
+	# the keep stands at the back of the yard (SiteExterior._keep: radius x 0.42 behind the middle)
+	var kc := -gate_dir * (radius * 0.42)
+	var g := k.on_ground(kc.x, kc.y).y
+	var keep_top := g + wall_h + 4.5
+	var timber := m.begin()
+	var mast_foot := Vector3(kc.x, keep_top - 0.5, kc.y)
+	var mast_top := mast_foot + Vector3(0.0, 14.0, 0.0)
+	m.limb(timber, mast_foot, mast_top, 0.22)
+	# the yard and its stays
+	m.limb(timber, mast_top - Vector3(0.0, 2.5, 0.0) + Vector3(gate_dir.y, 0.0, -gate_dir.x) * 1.6,
+			mast_top - Vector3(0.0, 2.5, 0.0) - Vector3(gate_dir.y, 0.0, -gate_dir.x) * 1.6, 0.1)
+	var rags := m.begin()
+	var flag_at := mast_top - Vector3(0.0, 3.4, 0.0) + Vector3(gate_dir.y, 0.0, -gate_dir.x) * 0.9
+	var fb := Basis(Vector3.UP, PoiKit.yaw_of(gate_dir))
+	_box(rags, Transform3D(fb * Basis(Vector3.BACK, 0.1), flag_at), Vector3(1.6, 1.4, 0.04))
+	_box(rags, Transform3D(fb * Basis(Vector3.BACK, -0.25), flag_at + Vector3(0.6, -1.1, 0.0)), Vector3(0.5, 0.9, 0.03))
+	var iron := m.begin()
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		m.limb(iron, mast_top + Vector3(sin(a) * 0.4, 0.0, cos(a) * 0.4), mast_top + Vector3(sin(a) * 0.8, 1.3, cos(a) * 0.8), 0.05)
+	for i in 12:
+		var a0 := TAU * float(i) / 12.0
+		var a1 := TAU * float(i + 1) / 12.0
+		m.limb(iron, mast_top + Vector3(sin(a0) * 0.8, 1.3, cos(a0) * 0.8), mast_top + Vector3(sin(a1) * 0.8, 1.3, cos(a1) * 0.8), 0.04)
+	await k.step()
+	_commit_parts(d, [[timber, k.surface("timber", 0.8)], [rags, PoiKit.painted(6, {"base": "#4d5a3f", "accent": "#3c4632", "grout": "#2a3022", "unit": 0.3}, 0.9)],
+			[iron, PoiKit.plain(Color(0.12, 0.11, 0.1), 0.55, 0.6)]], "BeaconMast", true)
+	if k.far:
+		return
+	# Ysolde's fire, outside the gate and off the track to it
+	var fire := gate_dir * (radius + 9.0) + Vector2(gate_dir.y, -gate_dir.x) * 7.0
+	if not _off_road(k, fire, 2.0):
+		fire = gate_dir * (radius + 9.0) - Vector2(gate_dir.y, -gate_dir.x) * 7.0
+	await _gate_fire(d, fire, gate_dir, "ysolde_fire")

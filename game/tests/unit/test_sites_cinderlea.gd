@@ -6,7 +6,8 @@ extends TestCase
 ## people keep and the things to touch that their content names.
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
-const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse"]
+const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse",
+		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep"]
 var player: Node3D
 
 
@@ -115,6 +116,10 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/sulion": {"spots": ["the_socket", "the_foot"]},
 		"core:poi/hush_bell": {"spots": ["the_bell_arm", "the_tower_door"], "touch": ["the_bell"]},
 		"core:poi/strand_beacon": {"spots": ["the_stair_foot"], "touch": ["the_ashes"], "boxes": 1},
+		# the large places, with their ways in, their people's spots and their hooks
+		"core:poi/the_undertone": {"spots": ["merrin_camp", "the_forecourt", "the_mouth"], "doors": ["Door_the_undertone"], "touch": ["Hook"]},
+		"core:poi/founders_delf": {"spots": ["clemency_camp", "the_pit", "the_mouth"], "doors": ["Door_founders_delf"], "touch": ["Hook", "the_bell"], "boxes": 1},
+		"core:poi/chalkwatch": {"spots": ["ysolde_fire"], "doors": ["Door_chalkwatch_keep"], "touch": ["Hook"]},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)

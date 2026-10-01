@@ -1,0 +1,305 @@
+[
+  {
+    "id": "core:interior/the_undertone",
+    "name": "The Undertone",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_undertone",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Hethra, who went down after the note when the doors fell and has held it since, and the choristers who came to sing it with her",
+    "story": "A long way in and down under the Choir plateau, cut by the Builders through rock that the Ash Winter turned partly to glass: galleries where the note runs along the walls like water, a rift, a shaft up to the plateau's light, a black lake that does not move when the note does, the knights' hall where the Order's last knight still stands his watch, and at the bottom the hall where the note was struck, with something in the middle of it holding it.",
+    "unique_object": "a tuning-stone in the hall of the struck note, a column of the Builders' black stone that hums under the hand, worn smooth to the height of a mouth",
+    "site": {
+      "kind": "cave",
+      "seed": 5150,
+      "region": "core:region/cinderlea",
+      "size": "large",
+      "boss": "core:boss/hethra_undertone",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/oroth_cache",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/tolling_knight"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#3d3d46",
+          "#25252b",
+          "#545462"
+        ],
+        "lights": [
+          "fungus",
+          "candles"
+        ],
+        "light_colour": "#8fb6d8"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/undertone_knights_last",
+          "name": "a knight's last page, folded in a gauntlet"
+        },
+        {
+          "kind": "prop",
+          "room": "throat",
+          "prop": "lantern_hand",
+          "note": "the Sayer's lantern, left at the turn"
+        },
+        {
+          "kind": "prop",
+          "room": "knights_hall",
+          "prop": "bell_medium",
+          "note": "the knight's watch-bell, clapper tied"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "throat",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_slope",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "glass_gallery",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "obsidian_grotto",
+          "note": "rock the Ash Winter turned to glass, the note running along it"
+        },
+        {
+          "id": "choristers_rest",
+          "role": "camp",
+          "size": "medium"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "drop": -2.5
+        },
+        {
+          "id": "the_well_of_light",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "daylight_shaft",
+          "note": "a shaft up to the plateau, the Choir's light coming down it"
+        },
+        {
+          "id": "the_black_water",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "drop": -2.0
+        },
+        {
+          "id": "knights_hall",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "the_struck_note",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/founders_delf",
+    "name": "The Founders' Galleries",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/founders_delf",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the founders of the dead city, who went down into the galleries in the Ash Winter to keep the metal warm, and the Last Bellwright, who is still waiting for it to be ready to pour",
+    "story": "The runs under the casting floor of the Builders' foundry: the fire-mouth going down, the gallery where the metal ran in channels cut in the rock, the pouring floor with its crucibles, the loam store where the founders slept, a shaft fallen in, the rift the metal once spilled into, the pattern-hall where the shapes of every bell the city cast are kept, and the pit under the last bell, where the Bellwright stands with his hand on its lip.",
+    "unique_object": "a channel cut in the gallery floor still lined with a skin of bronze, running down towards the pit, warm",
+    "site": {
+      "kind": "mine",
+      "seed": 7724,
+      "region": "core:region/cinderlea",
+      "size": "large",
+      "boss": "core:boss/the_last_bellwright",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/oroth_cache",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/bell_bearer"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#5b4a3e",
+          "#3a2f27",
+          "#76614f"
+        ],
+        "lights": [
+          "lantern",
+          "torch"
+        ],
+        "light_colour": "#ffa060"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "loam_store",
+          "book": "core:book/founders_last_tally",
+          "name": "a founder's tally chalked on a board"
+        },
+        {
+          "kind": "prop",
+          "room": "pouring_floor",
+          "prop": "anvil",
+          "note": "the founders' anvil, still warm"
+        },
+        {
+          "kind": "prop",
+          "room": "furnace_throat",
+          "prop": "lantern_hand"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "furnace_throat",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_run",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0,
+          "note": "the channel the metal ran down"
+        },
+        {
+          "id": "pouring_floor",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "forge_hall"
+        },
+        {
+          "id": "ore_gallery",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "ore_gallery"
+        },
+        {
+          "id": "loam_store",
+          "role": "camp",
+          "size": "medium"
+        },
+        {
+          "id": "the_crucibles",
+          "role": "chamber",
+          "size": "medium",
+          "note": "the founders' crucibles, cold, in rows"
+        },
+        {
+          "id": "the_spill",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "pattern_hall",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "under_the_bell",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/chalkwatch_keep",
+    "name": "The Undercroft of Chalkwatch",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/chalkwatch",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Captain Rook Haddow of the Wardens, who kept the watch when the grey came and keeps it still, and the garrison's dead who were off duty that night",
+    "story": "Chalkwatch's keep goes down further than the Wardens' plans of it say: a guardroom, the barracks with the beds still made, the stores, the armoury, the well, and at the bottom the captain's hall, where the roll of the garrison is kept on his table and read every evening to men who answer.",
+    "unique_object": "the garrison's roll on the captain's table, open at the last night, every name ticked present",
+    "site": {
+      "kind": "keep",
+      "seed": 6611,
+      "region": "core:region/cinderlea",
+      "size": "medium",
+      "boss": "core:boss/captain_haddow",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/tolling_knight"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#8a867c",
+          "#5a574f",
+          "#a19c90"
+        ],
+        "lights": [
+          "torch",
+          "brazier"
+        ],
+        "light_colour": "#ffb266"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/chalkwatch_last_report",
+          "name": "the captain's last report, never sent"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand"
+        }
+      ],
+      "set_pieces": [
+        "barracks",
+        "cellar_store",
+        "forge_hall"
+      ]
+    }
+  }
+]

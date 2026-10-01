@@ -1,0 +1,38 @@
+[
+  {
+    "id": "core:item/undertone_tuning_stone",
+    "name": "The Undertone's Tuning-Stone",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A finger of the Builders' black stone broken off the column in the hall of the struck note. It hums against your palm, the note the Choir holds, a quarter-tone high."
+  },
+  {
+    "id": "core:item/founders_pattern_book",
+    "name": "The Founders' Pattern-Book",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Boards of the Builders' slate bound with bronze rings, each scratched with the profile of a bell the dead city cast, its weight and its note. The last board is blank but for the profile, and a note in the margin in a founder's hand: not yet."
+  },
+  {
+    "id": "core:item/chalkwatch_roll",
+    "name": "The Roll of Chalkwatch",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "The garrison roll of Chalkwatch, forty names in a Warden clerk's hand, every one ticked present for every night of thirty years, the ticks going on in the same ink long after the clerk's hand would have given out."
+  }
+]

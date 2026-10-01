@@ -30,5 +30,7 @@
   {"id": "core:encounter/lies_driftwood_camp", "place": "core:poi/driftwood_camp", "notes": "the strand-scavengers' book of what the sea brought in, on the driftwood table", "spawns": [], "lies": [{"item": "core:item/note_driftwood_strand_tally"}]},
   {"id": "core:encounter/lies_bell_counters_hut", "place": "core:poi/bell_counters_hut", "notes": "a year's count, scored through, left on a stone for whoever wants it", "spawns": [], "lies": [{"item": "core:item/note_bell_counters_tally"}]},
   {"id": "core:encounter/lies_sayers_gauge", "place": "core:poi/sayers_gauge", "notes": "the Gauge's reading-book, its chain cut, on the step", "spawns": [], "lies": [{"item": "core:item/note_sayers_gauge_readings"}]},
-  {"id": "core:encounter/lies_scavengers_ring", "place": "core:poi/scavengers_ring", "notes": "the price-board off the gate-post", "spawns": [], "lies": [{"item": "core:item/note_scavengers_prices"}]}
+  {"id": "core:encounter/lies_scavengers_ring", "place": "core:poi/scavengers_ring", "notes": "the price-board off the gate-post", "spawns": [], "lies": [{"item": "core:item/note_scavengers_prices"}]},
+  {"id": "core:encounter/the_undertone", "place": "core:poi/the_undertone", "notes": "ash-wights stand in the forecourt after dark, facing the door, listening", "spawns": [{"at": "the_forecourt", "enemy": "core:enemy/ash_wight", "count": 3, "spread": 3.5, "when": "night"}]},
+  {"id": "core:encounter/founders_delf", "place": "core:poi/founders_delf", "notes": "ash-wights tend the cold furnace and the pit", "spawns": [{"at": "the_pit", "enemy": "core:enemy/ash_wight", "count": 3, "spread": 4.0}]}
 ]
