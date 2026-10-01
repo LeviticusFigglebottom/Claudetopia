@@ -96,5 +96,54 @@
         "spot": "home"
       }
     ]
+  },
+  {
+    "id": "core:npc/orrin_ko_kharrow",
+    "name": "Orrin ko-Kharrow",
+    "home_place": "core:poi/kharrow_gate",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/orrin_ko_kharrow",
+    "bio": "The gate-ward at Kharrow Gate, where the North Road comes up out of the Vale into the heights. He reads the law to every traveller from the slab by the road and waits until they say it back, and then he raises the bar. In nineteen years one traveller has walked on without saying it.",
+    "unique_habit": "Mouths the law along with anybody saying it back, a word behind them, as if checking it for wear.",
+    "personality": {
+      "traits": [
+        "patient",
+        "formal",
+        "dry",
+        "watchful"
+      ]
+    },
+    "appearance": {
+      "seed": 9313,
+      "build": "broad_upright",
+      "age": 47.0,
+      "feminine": 0.0,
+      "hair": "black_and_short_with_a_kharrow_braid",
+      "notes": "a ward's staff with an iron ferrule, a Kharrow coat, the law's three lines tattooed small on the back of his left hand"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/kharrow_gate",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/kharrow_gate",
+        "activity": "work",
+        "spot": "the_gate_ward",
+        "notes": "reading the law to the road"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/kharrow_gate",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
   }
 ]

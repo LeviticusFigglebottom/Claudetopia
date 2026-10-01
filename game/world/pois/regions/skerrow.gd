@@ -211,7 +211,7 @@ static func winter_cairns(d: PoiDressing) -> void:
 		await k.step()
 		k.scatter(scree, heap, true)
 	# the heap is solid underfoot and under the pebble: one box for it
-	k.collider(Vector3(0.9, 0.46, 0.9), Transform3D(Basis(), k.on_ground(at.x, at.y, 0.21)), "stone")
+	k.collider(Vector3(0.9, 0.5, 0.9), Transform3D(Basis(), k.on_ground(at.x, at.y, 0.22)), "stone")
 	var pebble := d.masonry.begin()
 	d.masonry.ellipsoid(pebble, k.on_ground(at.x, at.y, 0.5), Vector3(0.07, 0.05, 0.08))
 	await k.step()
@@ -322,7 +322,7 @@ static func tappers_camp(d: PoiDressing) -> void:
 
 ## The Bone Ford: the vertebrae in the beck, and Orsk ko-Rudd's counting stone on the bank.
 static func bone_ford(d: PoiDressing) -> void:
-	await _kind(d)
+	await _kind_tidied(d)
 	if d.kit.far:
 		return
 	_resident(d, "the_count_stone", _away(d), 6.0, 18.0)
@@ -330,7 +330,7 @@ static func bone_ford(d: PoiDressing) -> void:
 
 ## The Rib Cathedral: the ribs, and the oath-keeper's place in the nave.
 static func rib_cathedral(d: PoiDressing) -> void:
-	await _kind(d)
+	await _kind_tidied(d)
 	if d.kit.far:
 		return
 	_resident(d, "the_oath_ribs", d.kit.grain(), 3.0, 14.0)
@@ -1045,6 +1045,7 @@ static func snow_shelter(d: PoiDressing) -> void:
 ## The Watch of the Gate: the toll-house, and its bell frozen mid-swing.
 static func watch_of_the_gate(d: PoiDressing) -> void:
 	await _kind_and_touch(d, "FrozenBell", "Look at the frozen bell", "watch_gate_bell", Vector2(0.0, -1.0), 3.0, 9.0, 1.2)
+	_tidy(d)
 
 
 # --- the two delves' mouths ------------------------------------------------------------------------------
@@ -1321,7 +1322,7 @@ static func dunnow(d: PoiDressing) -> void:
 	for s in [-12.0, -6.0, 0.0, 6.0, 12.0]:
 		var p := into * front + across * float(s)
 		gb = minf(gb, k.on_ground(p.x, p.y).y)
-	var reach := d.pad_radius + 2.6
+	var reach := d.pad_radius + 0.8
 	# the storeys: [width, height, set back from the front]; each stands on the one below and goes back
 	# into the face until the rock behind it stands over its top
 	var tiers := [[24.0, 8.0, 0.0], [17.0, 6.0, 3.2], [10.0, 5.0, 6.4]]
@@ -1438,7 +1439,7 @@ static func dunnow(d: PoiDressing) -> void:
 	m.commit(stair_st, _sites().stone_look(k, gb), "DunnowSteps")
 	# the bone over the door: a giant's thigh, its knuckles either end, laid on the lintel stone
 	var bone := m.begin()
-	var lc := base + fb * Vector3(0.0, 7.55, 0.36)
+	var lc := base + fb * Vector3(0.0, 7.78, 0.32)
 	m.limb(bone, lc + fb * Vector3(-2.6, 0.0, 0.0), lc + fb * Vector3(2.6, 0.0, 0.0), 0.38)
 	for s in [-1.0, 1.0]:
 		m.ellipsoid(bone, lc + fb * Vector3(float(s) * 3.0, 0.08, 0.0), Vector3(0.62, 0.55, 0.5))
@@ -2846,7 +2847,8 @@ static func kharrow_gate(d: PoiDressing) -> void:
 	for s in [-1.0, 1.0]:
 		var c := at + across * ((gap * 0.5 + 2.0) * float(s))
 		var lo := INF
-		for q in [Vector2(-1.8, -1.8), Vector2(1.8, -1.8), Vector2(-1.8, 1.8), Vector2(1.8, 1.8)]:
+		for q_v in [Vector2(-1.8, -1.8), Vector2(1.8, -1.8), Vector2(-1.8, 1.8), Vector2(1.8, 1.8)]:
+			var q: Vector2 = q_v
 			var p := c + across * q.x + run * q.y
 			lo = minf(lo, k.on_ground(p.x, p.y).y)
 		var g := k.on_ground(c.x, c.y).y
@@ -2858,7 +2860,8 @@ static func kharrow_gate(d: PoiDressing) -> void:
 		# a batter at its foot, a string course, the parapet's merlons
 		sw.block(Transform3D(tb, Vector3(c.x, lo + 0.3, c.y)), Vector3(4.6, 1.2, 4.6))
 		sw.block(Transform3D(tb, Vector3(c.x, g + h - 1.6, c.y)), Vector3(4.25, 0.25, 4.25))
-		for e in [Vector3(1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)]:
+		for e_v in [Vector3(1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)]:
+			var e: Vector3 = e_v
 			for q in [-1.0, 1.0]:
 				var off := tb * (e * 1.75 + Vector3(e.z, 0.0, e.x) * 0.95 * float(q))
 				sw.block(Transform3D(tb, Vector3(c.x, g + h + 0.4, c.y) + off), Vector3(0.8, 0.8, 0.8))
@@ -2874,20 +2877,21 @@ static func kharrow_gate(d: PoiDressing) -> void:
 				var f2: Vector2 = face
 				m.block(dark, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(f2)), Vector3(t.x, t.y - 7.5 + float(row), t.z) + Vector3(f2.x, 0.0, f2.y) * 2.02), Vector3(0.3, 0.9, 0.04))
 	m.commit(dark, PoiKit.plain(DARK, 0.95), "Slits")
-	# the bar: a squared timber across the road, raised high on its chains, and the chains to the towers
+	# the bar: a squared timber on a pivot post at the roadside by the first tower, swung up out of the road
+	# with its counterweight of stone at the short end, the way it stands from sunrise to sunset
 	var timber := m.begin()
 	var t0: Vector3 = tops[0]
-	var t1: Vector3 = tops[1]
-	var bar_y := minf(t0.y, t1.y) - 2.6
-	var b0 := Vector3(t0.x, bar_y, t0.z) + Vector3(across.x, 0.0, across.y) * 2.0
-	var b1 := Vector3(t1.x, bar_y, t1.z) - Vector3(across.x, 0.0, across.y) * 2.0
-	m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), (b0 + b1) * 0.5), Vector3(0.36, 0.36, b0.distance_to(b1) + 0.2))
+	var pivot := at - across * (gap * 0.5 - 0.6) + run * 2.6
+	var ptop := m.post(timber, pivot, 1.2, 0.3)
+	var tilt := deg_to_rad(72.0)
+	var boom := Vector3(across.x, 0.0, across.y) * cos(tilt) + Vector3.UP * sin(tilt)
+	m.limb(timber, ptop - boom * 1.0, ptop + boom * 7.0, 0.16)
+	m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), ptop + Vector3.UP * 0.05), Vector3(0.5, 0.16, 0.5))
 	m.commit(timber, k.surface("timber", 0.7), "GateBar")
-	var chain := m.begin()
-	_chain(m, chain, b0 + Vector3.UP * 0.18, Vector3(t0.x, t0.y - 0.3, t0.z) + Vector3(across.x, 0.0, across.y) * 2.05, 0.2, 0.0)
-	_chain(m, chain, b1 + Vector3.UP * 0.18, Vector3(t1.x, t1.y - 0.3, t1.z) - Vector3(across.x, 0.0, across.y) * 2.05, 0.2, 0.0)
-	m.commit(chain, PoiKit.plain(IRON, 0.6, 0.55), "GateChains")
-	k.collider(Vector3(0.36, 0.36, b0.distance_to(b1)), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), (b0 + b1) * 0.5), "wood")
+	var weight := m.begin()
+	var wp := ptop - boom * 1.0
+	m.block(weight, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), wp + Vector3.DOWN * 0.1), Vector3(0.7, 0.6, 0.6))
+	m.commit(weight, _sites().stone_look(k, t0.y - 7.5), "GateWeight")
 	# the law-stone on the downhill side of the gate, off the road, and the ward's bench by it
 	var down := k.downhill()
 	var out := run if down.dot(run) >= 0.0 else -run
@@ -2905,6 +2909,9 @@ static func kharrow_gate(d: PoiDressing) -> void:
 	k.touchable("LawStone", lg + Vector3.UP * 1.1 - Vector3(across.x, 0.0, across.y) * 0.9, "Read the law cut in the stone", DIALOGUE + "kharrow_gate_law", "", false)
 	await _prop(d, "bench", lp + out * 1.8 - across * 0.4, PoiKit.yaw_of(-across))
 	_spot(d, "the_gate_ward", lp - across * 1.2 + out * 0.6)
+	var t1: Vector3 = tops[1]
+	var foot := Vector2(t1.x, t1.z) + out * 3.0 + across * 0.6
+	_spot(d, "home", foot)
 
 
 ## The Dale Watch: Ghast's watch-house halfway up the dale, a two-storey drystone house under turf with an
@@ -2923,7 +2930,8 @@ static func dale_watch(d: PoiDressing) -> void:
 	var hb := Basis(Vector3.UP, PoiKit.yaw_of(view))
 	var lo := INF
 	var hi := -INF
-	for q in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+	for q_v in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		var q: Vector2 = q_v
 		var p := c + side * (w * 0.5 * q.x) + view * (dp * 0.5 * q.y)
 		lo = minf(lo, k.on_ground(p.x, p.y).y)
 		hi = maxf(hi, k.on_ground(p.x, p.y).y)
@@ -3140,3 +3148,126 @@ static func oskel_gloup(d: PoiDressing) -> void:
 		m.block(pigs, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), k.on_ground(p.x, p.y, 0.06)), Vector3(0.55, 0.2, 0.26))
 	m.commit(pigs, PoiKit.plain(Color(0.33, 0.34, 0.36), 0.5, 0.6), "LeadPigs")
 	k.marker("the_rim", k.on_ground(side.x * (rx + 4.0), side.y * (rx + 4.0)))
+
+
+# --- setting the kinds' pieces straight (triage 74) ------------------------------------------------
+
+## What may hang or fly: a lamp judged by what it hangs from, a bird, a bell on a cord.
+const AIRY := ["lamp", "lantern", "bell", "crow", "raven", "gull", "banner", "torch"]
+
+
+## A placed asset's box in the dressing's own space (from its meshes), or an empty AABB.
+static func _box_of(d: PoiDressing, n: Node3D) -> AABB:
+	var out := AABB()
+	var first := true
+	for mi_v in n.find_children("*", "MeshInstance3D", true, false):
+		var mi := mi_v as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		var b: AABB = d._local_of(mi) * mi.get_aabb()
+		out = b if first else out.merge(b)
+		first = false
+	return out
+
+
+## After a kind's builder: what it stood up that a body would see is wrong, set right. A placed prop
+## floating over the ground is set down on it; a standing prop in a road's carriageway is moved off to
+## the verge; a length of drystone joined to no other is taken away. Merged masonry is left alone (it
+## is meshed later, on a worker, where a place is raised while the world is drawn).
+static func _tidy(d: PoiDressing) -> void:
+	var k := d.kit
+	if k.far:
+		return
+	var placed: Array[Node3D] = []
+	for c in d.get_children():
+		if c is Node3D and not (c is MeshInstance3D) and not (c is MultiMeshInstance3D) and str((c as Node).scene_file_path) != "":
+			placed.append(c as Node3D)
+	var walls: Array[Node3D] = []
+	for n in placed:
+		var fam := str(n.name).to_lower()
+		if fam.contains("drystone"):
+			walls.append(n)
+	for w in walls:
+		var joined := false
+		for o in walls:
+			if o != w and o.position.distance_to(w.position) < 3.4:
+				joined = true
+				break
+		if not joined:
+			placed.erase(w)
+			w.queue_free()
+	for n in placed:
+		var fam := str(n.name).to_lower()
+		var airy := false
+		for a in AIRY:
+			airy = airy or fam.contains(a)
+		var box := _box_of(d, n)
+		if box.size == Vector3.ZERO:
+			continue
+		var c := box.get_center()
+		# in a carriageway: off to the nearer verge, its half-width and a step clear
+		var at := Vector2(c.x, c.z)
+		var rd := k.road_distance(at)
+		var half := maxf(box.size.x, box.size.z) * 0.5
+		if not airy and rd < PoiKit.ROAD_CLEAR_M + half and box.size.y > 0.35 and not fam.contains("bridge"):
+			var road := _road_at(k, 60.0)
+			if not road.is_empty():
+				var run: Vector2 = road[1]
+				var perp := Vector2(-run.y, run.x)
+				var rel := at - (road[0] as Vector2)
+				var sgn := 1.0 if rel.dot(perp) >= 0.0 else -1.0
+				var push := PoiKit.ROAD_CLEAR_M + half + 0.4 - rd
+				var to := at + perp * sgn * push
+				var dy := k.on_ground(to.x, to.y).y - k.on_ground(at.x, at.y).y
+				n.position += Vector3(perp.x * sgn * push, dy, perp.y * sgn * push)
+				box = _box_of(d, n)
+		# floating: set down on the highest ground under its footprint
+		if airy:
+			continue
+		var gmax := -INF
+		var hx := box.size.x * 0.35
+		var hz := box.size.z * 0.35
+		var bc := box.get_center()
+		for q in [Vector2.ZERO, Vector2(-hx, -hz), Vector2(hx, -hz), Vector2(-hx, hz), Vector2(hx, hz)]:
+			gmax = maxf(gmax, k.on_ground(bc.x + q.x, bc.z + q.y).y)
+		if box.position.y > gmax + 0.1:
+			n.position.y -= box.position.y - gmax - 0.03
+
+
+## A kind built as it is, then set straight.
+static func _kind_tidied(d: PoiDressing) -> void:
+	await _kind(d)
+	_tidy(d)
+
+
+static func horn_hole(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func kharrow_hole(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func oskel_drip(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func wrist_hole(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func wolf_stones(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func chain_bridge(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func ghasts_broken_bridge(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+
+
+static func giants_stair(d: PoiDressing) -> void:
+	await _kind_tidied(d)
+

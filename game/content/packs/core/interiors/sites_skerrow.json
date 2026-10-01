@@ -414,7 +414,7 @@
     "unique_object": "the last shift's tally of iron, chalked on a timber at the drawing forge: forty-one hundredweight in the week before the break, and in the week after, in the same hand, a figure so much larger that somebody has since scratched it out",
     "site": {
       "kind": "mine",
-      "seed": 5311,
+      "seed": 5300,
       "region": "core:region/skerrow",
       "size": "large",
       "boss": "core:boss/chained_brakh",

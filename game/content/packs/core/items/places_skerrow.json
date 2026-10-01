@@ -493,5 +493,117 @@
     ],
     "description": "A slate chalked by some keeper of Skarl Spout long before Ossa, wedged in a dry niche where the underground lake begins, the chalk still legible.",
     "reads": "core:book/brakhs_drink_spout_keeper"
+  },
+  {
+    "id": "core:item/note_blood_price_witness",
+    "name": "A Witness-Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate from the Blood-Price Stones' post, chalked by a witness.",
+    "reads": "core:book/note_blood_price_witness"
+  },
+  {
+    "id": "core:item/note_skerr_stone_copybook",
+    "name": "A Child's Copy-Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's slate left in the grass by the Skerr Stone, letters copied on it over and over.",
+    "reads": "core:book/note_skerr_stone_copybook"
+  },
+  {
+    "id": "core:item/note_dale_watch_log",
+    "name": "The Dale Watch's Log",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Ghast watchman's log from the Dale Watch, kept on a board by the door.",
+    "reads": "core:book/note_dale_watch_log"
+  },
+  {
+    "id": "core:item/note_rope_cairn_count",
+    "name": "A Herder's Rope-Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally of the children's ropes hung on the Rope Cairn, kept by a Brindle herder.",
+    "reads": "core:book/note_rope_cairn_count"
+  },
+  {
+    "id": "core:item/note_clan_stones_paint",
+    "name": "A Painter's Note",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A note tucked under a paint-pot at the Clan Stones.",
+    "reads": "core:book/note_clan_stones_paint"
+  },
+  {
+    "id": "core:item/note_ghastfoot_leave",
+    "name": "A Ghast Leave-Token",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A clay leave-token from the cairn at Ghastfoot, scratched with a name and a word.",
+    "reads": "core:book/note_ghastfoot_leave"
+  },
+  {
+    "id": "core:item/note_kharrows_cairn_song",
+    "name": "The Kharrow Memory-Verse",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate with the opening of the Kharrow memory-verse, wedged among the name-stones.",
+    "reads": "core:book/note_kharrows_cairn_song"
+  },
+  {
+    "id": "core:item/note_brindle_swallow_bells",
+    "name": "A Miner's Bell-Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Brindle miner's tally of bells dropped into Brindle Swallow and heard at the spring.",
+    "reads": "core:book/note_brindle_swallow_bells"
   }
 ]

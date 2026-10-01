@@ -501,5 +501,75 @@
         "text": "Links as long as your forearm, drawn round and welded, lying in a long S through the grass from the forge toward the edge of the bench, rusted red. It was meant for the Gorge bridges and never carried down. The grass has grown up through every link. When you put a hand on it the iron is warmer than the air, and a long way off, under your feet, something rings back."
       }
     }
+  },
+  {
+    "id": "core:dialogue/orrin_ko_kharrow",
+    "speaker_name": "Orrin ko-Kharrow",
+    "notes": "The gate-ward at Kharrow Gate (skerrow world life, phase 2). No quest; the law, and the traveller who would not say it back.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Ko-Kharrow, Orrin. Ward of the gate. Before you go up: the law. What is taken is paid for in kind. A death is paid in blood-price. A host is never robbed. — Say it back.",
+        "choices": [
+          {
+            "text": "What is taken is paid for in kind. A death is paid in blood-price. A host is never robbed.",
+            "effects": [
+              {
+                "set_flag": "kharrow_gate_law_said"
+              }
+            ],
+            "next": "said"
+          },
+          {
+            "text": "And if I don't?",
+            "next": "refuse"
+          }
+        ]
+      },
+      "said": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "*(He mouths it after you, a word behind.)* Good. You're in the heights now. People here will remember what you do, and say it to each other, and it will be waiting for you at every fire. That is all the law is. Go up.",
+        "next": "hub"
+      },
+      "refuse": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Then you go up anyway; there's no wall. But you go up as somebody who would not say it, and that goes up ahead of you faster than you can walk. — One did, this spring. A woman, from the Vale by her boots. She listened to all of it and walked on. I've been thinking about her since.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Anything else? The road's quiet.",
+        "choices": [
+          {
+            "text": "Tell me about the woman who wouldn't say it.",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why a bar, if there's no wall?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "topic_1": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Grey cloak, Vale boots, a Sayer's ink on her fingers. She heard the law out, very polite, and said: I don't owe anything up there yet. And walked on up the gorge. — The clans want to know what she is. I've told them: she's somebody who reads the small print. That's worse than a thief.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "So you stop. A traveller who has to stop and wait for a bar to go up has time to listen. That's what the bar is for. I've never once closed it on anybody.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Mind the gorge path after rain. And mind the law.",
+        "next": "end"
+      }
+    }
   }
 ]
