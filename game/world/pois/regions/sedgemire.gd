@@ -1003,7 +1003,12 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 		if into == Vector2.ZERO:
 			into = Vector2(0, 1)
 		var face := -into
-		var floor_y := k0.on_ground(into.x * 3.0, into.y * 3.0).y + d.world_position.y
+		# the floor at the gully's lowest along the throat, so no ring of it stands proud of the ground
+		var floor_y := k0.on_ground(into.x * 3.0, into.y * 3.0).y
+		for i in 10:
+			var q := into * (5.0 + float(i) * 2.0)
+			floor_y = minf(floor_y, k0.on_ground(q.x, q.y).y)
+		floor_y += d.world_position.y
 		d.cave = {"facing_deg": rad_to_deg(atan2(face.x, face.y)), "mouth_m": floor_y, "face_top_m": floor_y + 9.5,
 				"mouth_behind_m": 3.0, "face_half_width_m": 7.0}
 	await PoiDressing.kind_builders().SITES.build(d)

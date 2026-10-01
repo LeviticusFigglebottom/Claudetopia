@@ -4877,9 +4877,7 @@
         "finds": [
           "core:item/note_tideflat_stones"
         ],
-        "encounters": [
-          "core:encounter/tideflat_stones"
-        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
