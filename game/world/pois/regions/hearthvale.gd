@@ -957,7 +957,7 @@ static func hushwatch(d: PoiDressing) -> void:
 # ===================================================================================================
 
 const FLINT := Color(0.17, 0.18, 0.2)
-const SPOIL := {"base": "#d9d3c2", "accent": "#b9b19c", "grout": "#8f8776", "unit": 0.5}
+const SPOIL := {"base": "#b5ad98", "accent": "#958d79", "grout": "#6a6455", "unit": 0.3}
 
 
 ## A bank of turf in a ring about `c` (local xz), `r` to its crest, `width` across and `height` at
@@ -1041,6 +1041,106 @@ static func _timber(d: PoiDressing, st: SurfaceTool, a: Vector3, b: Vector3, r: 
 	x = x.normalized()
 	var z := x.cross(y).normalized()
 	d.kit.collider(Vector3(r * 2.0, length, r * 2.0), Transform3D(Basis(x, y, z), (a + b) * 0.5), "wood")
+
+
+## A tapered block into `st`: a foot `w0` by `d0`, a head `w1` by `d1`, `h` high, in `xf` (its origin at
+## the middle of the foot, y up). Each face wound outward, so its normals face out.
+static func _frustum(st: SurfaceTool, xf: Transform3D, w0: float, d0: float, w1: float, d1: float, h: float) -> void:
+	var lo := [Vector3(-w0, 0.0, -d0), Vector3(w0, 0.0, -d0), Vector3(w0, 0.0, d0), Vector3(-w0, 0.0, d0)]
+	var hi := [Vector3(-w1, h, -d1), Vector3(w1, h, -d1), Vector3(w1, h, d1), Vector3(-w1, h, d1)]
+	var mid := Vector3(0.0, h * 0.5, 0.0)
+	var quads: Array = []
+	for i in 4:
+		quads.append([lo[i] * Vector3(0.5, 1.0, 0.5), lo[(i + 1) % 4] * Vector3(0.5, 1.0, 0.5), hi[(i + 1) % 4] * Vector3(0.5, 1.0, 0.5), hi[i] * Vector3(0.5, 1.0, 0.5)])
+	quads.append([hi[0] * Vector3(0.5, 1.0, 0.5), hi[1] * Vector3(0.5, 1.0, 0.5), hi[2] * Vector3(0.5, 1.0, 0.5), hi[3] * Vector3(0.5, 1.0, 0.5)])
+	for q in quads:
+		var a: Vector3 = q[0]
+		var b: Vector3 = q[1]
+		var c: Vector3 = q[2]
+		var d: Vector3 = q[3]
+		var centre := (a + b + c + d) * 0.25
+		# Godot's front faces wind clockwise seen from outside: flip a quad that winds the other way
+		var n := (b - a).cross(c - a)
+		if n.dot(centre - mid) > 0.0:
+			var t := b
+			b = d
+			d = t
+		for v in [a, b, c, a, c, d]:
+			st.add_vertex(xf * (v as Vector3))
+
+
+## A band of ground in an arc about `c` (local xz): `r` to its middle, `width` across, from bearing
+## `a0` to `a1` (radians, as PoiKit.yaw_of measures), lying a hair over the ground, into `st`.
+static func _arc_band(d: PoiDressing, st: SurfaceTool, c: Vector2, r: float, width: float, a0: float, a1: float, segs := 24) -> void:
+	var k := d.kit
+	var pts: Array = []
+	for i in 3:
+		var rr := r + (float(i) - 1.0) * width * 0.5
+		var row: Array = []
+		for j in segs + 1:
+			var a := lerpf(a0, a1, float(j) / float(segs))
+			var taper := sin(PI * float(j) / float(segs))
+			var rw := r + (rr - r) * (0.35 + 0.65 * taper)
+			var p := c + Vector2(sin(a), cos(a)) * rw
+			row.append(k.on_ground(p.x, p.y, 0.035))
+		pts.append(row)
+	for i in 2:
+		for j in segs:
+			for v in [pts[i][j], pts[i + 1][j + 1], pts[i + 1][j], pts[i][j], pts[i][j + 1], pts[i + 1][j + 1]]:
+				st.add_vertex(v)
+
+
+## The grey come up over the grass on one side of a place: a sheet over the ground (the ash country's
+## own mosaic, PoiBuilders' ash_drift shader, in the downs' greys and with no char), present in a
+## crescent about `c` from `r0` to `r1` toward `dir` and `half` radians either side of it, its edges
+## ragged, thickest at the middle of the crescent.
+static func _grey_sheet(d: PoiDressing, c: Vector2, dir: Vector2, r0: float, r1: float, half: float) -> void:
+	var k := d.kit
+	if k.far:
+		return
+	const STEP := 1.5
+	var cells := int(ceil(r1 * 2.0 / STEP)) + 2
+	var n := cells + 1
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var live := PackedByteArray()
+	live.resize(n * n)
+	var a0 := atan2(dir.x, dir.y)
+	for j in n:
+		if j % 12 == 11:
+			await k.step()
+		for i in n:
+			var q := c + Vector2((float(i) - float(cells) * 0.5) * STEP, (float(j) - float(cells) * 0.5) * STEP)
+			var off := q - c
+			var r := off.length()
+			var da := absf(wrapf(atan2(off.x, off.y) - a0, -PI, PI))
+			var wob := 1.5 * sin(3.0 * atan2(off.x, off.y) + 1.1) + sin(7.0 * atan2(off.x, off.y))
+			var mask := smoothstep(r0 - 1.0, r0 + 2.5, r + wob) * (1.0 - smoothstep(r1 - 5.0, r1 + wob, r)) \
+					* (1.0 - smoothstep(half * 0.7, half, da))
+			live[j * n + i] = 1 if mask > 0.0 else 0
+			st.set_color(Color(mask, 1.0 - smoothstep(r0, r1, r), 0.0, 1.0))
+			st.set_uv(off)
+			st.add_vertex(k.on_ground(q.x, q.y, 0.05))
+	for j in cells:
+		for i in cells:
+			var i0 := j * n + i
+			if live[i0] + live[i0 + 1] + live[i0 + n] + live[i0 + n + 1] == 0:
+				continue
+			for idx in [i0, i0 + 1, i0 + n + 1, i0, i0 + n + 1, i0 + n]:
+				st.add_index(idx)
+	await k.step()
+	var mat := ShaderMaterial.new()
+	mat.shader = _builders().ASH_DRIFT_SHADER
+	mat.set_shader_parameter("ash", Color(0.47, 0.48, 0.44))
+	mat.set_shader_parameter("char_rim", Color(0.36, 0.38, 0.32))
+	mat.set_shader_parameter("patch_m", 6.0)
+	var mi := MeshInstance3D.new()
+	k.finish_mesh(mi, st)
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.name = "TheGrey"
+	mi.visibility_range_end = 220.0
+	k.root.add_child(mi)
 
 
 # --- Knappers' Deep ---------------------------------------------------------------------------------
@@ -1154,7 +1254,7 @@ static func knappers_deep(d: PoiDressing) -> void:
 		_timber(d, timber, k.on_ground(foot.x, foot.y, -0.2), heads[2 if s < 0.0 else 3].lerp(head_c, 0.3) + Vector3(0.0, -0.2, 0.0), 0.15)
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.65), "Headframe", true)
-	m.commit(chalk, PoiKit.painted(2, {"base": "#d4cdbb", "accent": "#aaa18c", "grout": "#7c7464", "unit": 0.45}, 0.75, 0.8), "ShaftHead", true)
+	m.commit(chalk, PoiKit.painted(2, {"base": "#55565a", "accent": "#7d7b76", "grout": "#cfc8b4", "unit": 0.2}, 0.6, 0.7), "ShaftHead", true)
 	m.commit(black, PoiKit.plain(Color(0.015, 0.014, 0.013), 1.0), "TheDark")
 	# the rope: down the shaft from the front of the wheel, and from its back to the gin's drum
 	var rope := m.begin()
@@ -1184,14 +1284,16 @@ static func knappers_deep(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(earth, k.surface("earth", 0.4), "Trodden")
 	# the spoil: a hundred years tipped white down the face, three tongues of it, flints in it
-	var spoil_mat := PoiKit.painted(5, SPOIL, 0.85, 0.9)
-	var heaps := [[down * 22.0 + side * 9.0, 8.5, 4.2], [down * 25.0 - side * 5.0, 9.5, 5.2], [down * 17.0 - side * 17.0, 6.0, 3.0]]
+	var spoil_mat := PoiKit.painted(2, SPOIL, 0.85, 0.9)
+	var heaps := [[down * 22.0 + side * 9.0, 7.0, 5.0], [down * 26.0 - side * 4.0, 8.0, 6.2], [down * 17.0 - side * 16.0, 5.0, 3.2]]
 	var flint_spots: Array = []
 	for i in heaps.size():
 		var h: Array = heaps[i]
 		var c: Vector2 = h[0]
 		var r: float = h[1]
-		m.mound(k.on_ground(c.x, c.y, -0.6), r, float(h[2]), spoil_mat, "Spoil%d" % i, true, 1.25, 7, 22, true, 0.12)
+		_hump(d, c, down, r * 1.25, r * 0.8, float(h[2]), spoil_mat, "Spoil%d" % i, true, 2.6, true, 0.08)
+		_hump(d, c - down * 1.0, down, r * 1.5, r * 1.05, 0.35, _turf(), "SpoilSkirt%d" % i, false, 1.0, false, 0.05)
+		await _builders().LAND._grass(d, "grass_clump", c + down * r * 0.6, r * 0.5, 10)
 		for j in 14:
 			var a := k.rng.randf() * TAU
 			flint_spots.append(c + Vector2(sin(a), cos(a)) * r * sqrt(k.rng.randf()) * 0.85)
@@ -1213,10 +1315,9 @@ static func knappers_deep(d: PoiDressing) -> void:
 		_ring_bank(d, rings, p, k.rng.randf_range(2.2, 3.4), k.rng.randf_range(1.6, 2.4), k.rng.randf_range(0.35, 0.6), 20)
 	await k.step()
 	m.commit(rings, PoiKit.painted(5, {"base": "#6f7a45", "accent": "#596436", "grout": "#3f4826", "unit": 0.35}, 0.6), "OldShafts")
-	var hollows := m.begin()
+	var hollow_mat := PoiKit.plain(Color(0.24, 0.29, 0.15), 0.95)
 	for p in placed:
-		m.block(hollows, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), k.on_ground(p.x, p.y, 0.0)), Vector3(2.6, 0.04, 2.6))
-	m.commit(hollows, PoiKit.plain(Color(0.25, 0.3, 0.16), 0.95), "HollowFloors")
+		m.pool(p, 1.7, k.on_ground(p.x, p.y).y + 0.03, hollow_mat, "Hollow", 14)
 	# the knapper's hut, its lean-to and her floor, on the road side of the shaft
 	var hut_c := shaft + side * 11.0 + road * 4.0
 	var fabric := FabricMesh.new()
@@ -1333,47 +1434,48 @@ static func hum_stone(d: PoiDressing) -> void:
 	var fg := k.on_ground(foot.x, foot.y)
 	m.mound(fg + Vector3(0.0, -0.3, 0.0), 8.0, 2.6, turf, "Hump", true, 1.5, 7, 24, true, 0.07)
 	var base_y := fg.y + 2.2
-	# the stone: tapering courses of the fused stone, each a hair off the last, leaning toward the Hush
+	# the stone: one tapering shaft of the fused stone, a little swollen a third of the way up as
+	# their columns are, leaning toward the Hush, its crown cut on the slant
 	var stone := m.begin()
 	var lean := Basis(Vector3(side.x, 0.0, side.y), -0.055)
 	var sy := PoiKit.yaw_of(hush) + 0.2
-	var H := 14.0
-	var segs := 7
-	for i in segs:
-		var t0 := float(i) / float(segs)
-		var t1 := float(i + 1) / float(segs)
-		var w := lerpf(2.5, 1.45, (t0 + t1) * 0.5)
-		var c := Vector3(foot.x, base_y - 0.6, foot.y) + lean * Vector3(0.0, H * (t0 + t1) * 0.5, 0.0)
-		var bb := lean * Basis(Vector3.UP, sy + k.rng.randf_range(-0.03, 0.03))
-		m.block(stone, Transform3D(bb, c), Vector3(w + k.rng.randf_range(-0.05, 0.05), H / float(segs) + 0.04, w * 0.78))
-	# the crown, cut on the slant
-	var crown := Vector3(foot.x, base_y - 0.6, foot.y) + lean * Vector3(0.0, H + 0.35, 0.0)
-	m.block(stone, Transform3D(lean * Basis(Vector3.UP, sy) * Basis(Vector3.BACK, 0.35), crown), Vector3(1.5, 0.9, 1.1))
+	var H := 13.0
+	var sb := lean * Basis(Vector3.UP, sy)
+	var foot_c := Vector3(foot.x, base_y - 0.8, foot.y)
+	_frustum(stone, Transform3D(sb, foot_c), 3.0, 2.1, 3.1, 2.2, H * 0.3)
+	_frustum(stone, Transform3D(sb, foot_c + sb * Vector3(0.0, H * 0.3, 0.0)), 3.1, 2.2, 1.8, 1.25, H * 0.7)
+	var crown := foot_c + sb * Vector3(0.0, H, 0.0)
+	_frustum(stone, Transform3D(sb * Basis(Vector3.BACK, 0.32), crown + sb * Vector3(0.0, -0.25, 0.0)), 1.8, 1.25, 1.2, 0.9, 0.9)
+	# a step of the same stone round its foot, half in the turf
+	_frustum(stone, Transform3D(Basis(Vector3.UP, sy), foot_c + Vector3(0.0, 0.2, 0.0)), 4.4, 3.4, 3.8, 2.9, 0.75)
 	await k.step()
 	m.commit(stone, oroth, "HumStone", true)
-	k.collider(Vector3(2.5, H, 2.0), Transform3D(lean * Basis(Vector3.UP, sy), Vector3(foot.x, base_y - 0.6 + H * 0.5, foot.y) + lean * Vector3(0.0, 0.0, 0.0)), "stone")
+	k.collider(Vector3(2.8, H, 2.0), Transform3D(sb, foot_c + sb * Vector3(0.0, H * 0.5, 0.0)), "stone")
+	k.collider(Vector3(4.4, 0.95, 3.4), Transform3D(Basis(Vector3.UP, sy), foot_c + Vector3(0.0, 0.55, 0.0)), "stone")
 	# the bronze: four bands, the second and third cut through and peeled, bright where the chisel went
 	var bands := m.begin()
 	var cut := m.begin()
 	for b in 4:
-		var t := 0.2 + float(b) * 0.2
-		var w := lerpf(2.5, 1.45, t) + 0.1
-		var c := Vector3(foot.x, base_y - 0.6, foot.y) + lean * Vector3(0.0, H * t, 0.0)
-		var bb := lean * Basis(Vector3.UP, sy)
+		var t := 0.32 + float(b) * 0.17
+		var y := H * t
+		var u := clampf((t - 0.3) / 0.7, 0.0, 1.0)
+		var w := lerpf(3.1, 1.8, u) + 0.08
+		var dd := lerpf(2.2, 1.25, u) + 0.08
+		var c := foot_c + sb * Vector3(0.0, y, 0.0)
 		if b == 1 or b == 2:
 			# a stub of the band either side of where it was cut away, the cut edges bright
-			for s in [-1.0, 1.0]:
-				m.block(bands, Transform3D(bb, c + bb * Vector3(float(s) * w * 0.32, 0.0, w * 0.39)), Vector3(w * 0.36, 0.34, 0.06))
-				m.block(cut, Transform3D(bb, c + bb * Vector3(float(s) * w * 0.15, 0.0, w * 0.4)), Vector3(0.05, 0.34, 0.07))
+			for sgn in [-1.0, 1.0]:
+				m.block(bands, Transform3D(sb, c + sb * Vector3(float(sgn) * w * 0.33, 0.0, dd * 0.5)), Vector3(w * 0.34, 0.3, 0.05))
+				m.block(cut, Transform3D(sb, c + sb * Vector3(float(sgn) * w * 0.165, 0.0, dd * 0.5 + 0.01)), Vector3(0.04, 0.3, 0.06))
 		else:
 			for f in 4:
-				var fb := bb * Basis(Vector3.UP, float(f) * PI * 0.5)
-				var depth := (w * 0.78 if f % 2 == 0 else w) * 0.5 + 0.03
-				m.block(bands, Transform3D(fb, c + fb * Vector3(0.0, 0.0, depth)), Vector3((w if f % 2 == 0 else w * 0.78) + 0.06, 0.34, 0.06))
+				var fb := sb * Basis(Vector3.UP, float(f) * PI * 0.5)
+				var depth := (dd if f % 2 == 0 else w) * 0.5 + 0.02
+				m.block(bands, Transform3D(fb, c + fb * Vector3(0.0, 0.0, depth)), Vector3((w if f % 2 == 0 else dd) + 0.06, 0.3, 0.05))
 	await k.step()
 	m.commit(bands, bronze, "BronzeBands", true)
 	m.commit(cut, bright, "CutBronze")
-	k.touchable("TheStone", Vector3(foot.x, base_y + 0.6, foot.y) + Vector3(land.x, 0.0, land.y) * 1.6, "Lay a hand on the stone", "core:dialogue/hum_stone_hand", "", false)
+	k.touchable("TheStone", Vector3(foot.x, base_y + 0.6, foot.y) + Vector3(land.x, 0.0, land.y) * 2.4, "Lay a hand on the stone", "core:dialogue/hum_stone_hand", "", false)
 	# the kerb: the Builders' ring of dressed blocks about the hump, half of it gone
 	var kerb := m.begin()
 	var n := 18
@@ -1393,7 +1495,7 @@ static func hum_stone(d: PoiDressing) -> void:
 	# the cut: two banks of spoil either side of a way from the camp to the door, plank shoring on
 	# their inner faces, the door of three stones at the hump's foot
 	var door_at := foot + land * 7.4
-	var spoil := PoiKit.painted(5, SPOIL, 0.85, 0.9)
+	var spoil := PoiKit.painted(2, SPOIL, 0.85, 0.9)
 	for s in [-1.0, 1.0]:
 		var b := foot + land * 12.5 + side * 3.7 * float(s)
 		m.mound(k.on_ground(b.x, b.y, -0.5), 3.2, 1.9, spoil, "CutBank%d" % int(s + 1.0), true, 1.3, 6, 18, false, 0.1)
@@ -1499,15 +1601,7 @@ static func hum_stone(d: PoiDressing) -> void:
 	# on the Hush side, where they stand at night: the grass gone grey in a crescent, and the marker
 	var stand := foot + hush * 13.0
 	k.marker("where_they_listen", k.on_ground(stand.x, stand.y))
-	var grey := k.flora("grey_grass")
-	if grey != "" and not k.far:
-		var xfs: Array = []
-		for i in 70:
-			var a := PoiKit.yaw_of(hush) + k.rng.randf_range(-1.3, 1.3)
-			var p := foot + Vector2(sin(a), cos(a)) * k.rng.randf_range(9.0, 22.0)
-			xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf() * TAU, k.rng.randf_range(0.8, 1.3)))
-		await k.step()
-		k.scatter(grey, xfs, false, false, false)
+	await _grey_sheet(d, foot, hush, 8.0, 24.0, 1.4)
 	await _builders().LAND._grass(d, "grass_clump", foot + land * 14.0, 14.0, 30)
 
 
@@ -1576,6 +1670,14 @@ static func _hump_y(c: Vector2, axis: Vector2, rx: float, rz: float, height: flo
 	return height * pow(1.0 - f2, power * 0.5)
 
 
+## Ground-like stuff that must not catch the sky at a low angle (ash, ruts, a grey furrow): plain and
+## fully rough, no specular.
+static func _matte(c: Color) -> StandardMaterial3D:
+	var mat := PoiKit.plain(c, 1.0)
+	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
+	return mat
+
+
 ## A turf for barrows and banks: the downs' sward, a shade darker for being heaped.
 static func _turf() -> ShaderMaterial:
 	return PoiKit.painted(5, {"base": "#66723e", "accent": "#525d30", "grout": "#38411f", "unit": 0.35}, 0.6)
@@ -1597,7 +1699,7 @@ static func _sarsen(d: PoiDressing, st: SurfaceTool, at: Vector2, yaw: float, si
 
 ## The downs' sarsen stone: grey-white, lichened.
 static func _sarsen_look(k: PoiKit) -> ShaderMaterial:
-	return PoiKit.painted(2, {"base": "#b9b4a6", "accent": "#8e8a7c", "grout": "#5d5a50", "unit": 1.4}, 0.85, 0.9)
+	return PoiKit.painted(2, {"base": "#9a968a", "accent": "#7b7a68", "grout": "#4f4d44", "unit": 1.4}, 0.85, 0.9)
 
 
 ## Furrows: ridges of turned earth `length` long along `along`, `n` of them `pitch` apart, from `start`
@@ -1989,12 +2091,12 @@ static func wolf_holt(d: PoiDressing) -> void:
 	await _den_bones(d, den, 3.0, 9)
 	k.marker("the_den", k.on_ground(den.x - side.x * 2.5, den.y - side.y * 2.5))
 	# the marsh coming up to the thrown-down side
-	var reed := k.flora("marram")
+	var reed := k.flora("meadow_grass")
 	if reed != "" and not k.far:
 		var xfs: Array = []
-		for i in 40:
+		for i in 34:
 			var p := c - face * (dpt * 0.5 + k.rng.randf_range(1.0, 7.0)) + side * k.rng.randf_range(-w * 0.6, w * 0.6)
-			xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf() * TAU, k.rng.randf_range(0.9, 1.4)))
+			xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf() * TAU, k.rng.randf_range(0.7, 1.0)))
 		await k.step()
 		k.scatter(reed, xfs, false, false, false)
 	await _builders().LAND._grass(d, "grass_clump", c, 7.0, 22)
@@ -2036,13 +2138,14 @@ static func lambs_bottom(d: PoiDressing) -> void:
 	for i in 4:
 		var x := -2.2 + float(i) * 0.7
 		m.limb(timber, Vector3(0.0, g, 0.0) + basis * Vector3(x, 1.65, -dpt * 0.4), Vector3(0.0, g, 0.0) + basis * Vector3(x + 0.2, 0.15, dpt * 0.1), 0.06)
-	# the hurdles he stacked against the back wall
-	for i in 3:
-		var p := -face * (dpt * 0.5 + 0.5 + float(i) * 0.12) + side * 1.0
-		var hb := Basis(Vector3.UP, PoiKit.yaw_of(side)) * Basis(Vector3.RIGHT, 0.25)
-		m.block(timber, Transform3D(hb, k.on_ground(p.x, p.y, 0.6)), Vector3(1.8, 1.1, 0.06))
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.8), "RoofTimbers")
+	# the hurdles he stacked against the back wall, rotting where they lean
+	var wattle := k.prop("fence_wattle")
+	if wattle != "":
+		for i in 2:
+			var p := -face * (dpt * 0.5 + 0.55 + float(i) * 0.18) + side * (0.6 + float(i) * 0.9)
+			k.place(wattle, k.on_ground(p.x, p.y), PoiKit.yaw_of(face) + PI * 0.5, 1.0, true, Vector3(-0.22, 0.0, 0.0))
 	# the crook against the wall by the door
 	var crook := m.begin()
 	var cp := face * (dpt * 0.5 + 0.2) + side * 1.1
@@ -2107,11 +2210,12 @@ static func old_sheepwash(d: PoiDressing) -> void:
 	# the spout in the bank above the pool, dry, a lip of stone over a stain
 	var spout := c - down * (l * 0.5 + 2.6)
 	var sg := k.on_ground(spout.x, spout.y)
+	_hump(d, spout - down * 1.6, side, 3.6, 2.4, 1.5, _turf(), "SpringBank", true, 1.2)
 	var bank := m.begin()
-	m.block(bank, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(down)), sg + Vector3(0.0, 0.7, 0.0)), Vector3(3.2, 1.6, 1.4))
-	m.block(bank, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(down)), sg + Vector3(0.0, 0.9, 0.0) + Vector3(down.x, 0.0, down.y) * 0.85), Vector3(0.5, 0.12, 0.6))
-	m.commit(bank, k.surface("stone", 0.8), "SpringHead")
-	k.collider(Vector3(3.2, 1.6, 1.4), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(down)), sg + Vector3(0.0, 0.7, 0.0)), "stone")
+	var spb := Basis(Vector3.UP, PoiKit.yaw_of(down))
+	m.block(bank, Transform3D(spb, sg + Vector3(0.0, 0.45, 0.0) - Vector3(down.x, 0.0, down.y) * 0.3), Vector3(1.6, 0.9, 0.5))
+	m.block(bank, Transform3D(spb, sg + Vector3(0.0, 0.62, 0.0) + Vector3(down.x, 0.0, down.y) * 0.1), Vector3(0.4, 0.1, 0.6))
+	m.commit(bank, PoiKit.painted(2, {"base": "#55565a", "accent": "#7d7b76", "grout": "#cfc8b4", "unit": 0.2}, 0.6, 0.7), "SpringHead")
 	# the buckets, set down one after another up the hill toward where the spring is now
 	var bucket := k.prop("bucket")
 	if bucket != "":
@@ -2145,14 +2249,14 @@ static func the_last_field(d: PoiDressing) -> void:
 	# the field: two blocks of furrows, brown then grey, running down to the pad's edge
 	var brown := m.begin()
 	var grey := m.begin()
-	var n := 11
-	var pitch := 1.15
+	var n := 16
+	var pitch := 1.2
 	var start := -side * (pitch * float(n - 1) * 0.5) + side * off
-	_furrows(d, brown, start - down * 3.0, down, 10.0, n, pitch)
+	_furrows(d, brown, start - down * 3.0, down, 10.0, n, pitch, 0.32)
 	_furrows(d, grey, start + down * 8.5, down, 13.0, n, pitch, 0.16)
 	await k.step()
 	m.commit(brown, PoiKit.painted(5, {"base": "#5a4632", "accent": "#463626", "grout": "#2e2419", "unit": 0.3}, 0.8), "Furrows")
-	m.commit(grey, PoiKit.painted(5, {"base": "#8b877e", "accent": "#737068", "grout": "#57544e", "unit": 0.3}, 0.8), "GreyFurrows")
+	m.commit(grey, _matte(Color(0.19, 0.19, 0.18)), "GreyFurrows")
 	# the plough in the middle furrow where the grey begins: beam, handles, share, the mould-board
 	var pl := down * 2.2 + side * off
 	var pg := k.on_ground(pl.x, pl.y)
@@ -2168,14 +2272,16 @@ static func the_last_field(d: PoiDressing) -> void:
 	k.collider(Vector3(0.6, 0.8, 3.0), Transform3D(pb, pg + Vector3(0.0, 0.4, 0.0)), "wood")
 	k.touchable("ThePlough", pg + Vector3(0.0, 0.9, 0.0), "Look at the plough", "core:dialogue/last_field_plough", "", false)
 	k.marker("the_plough", k.on_ground(pl.x + side.x * 2.0, pl.y + side.y * 2.0))
-	var grass := k.flora("grey_grass")
-	if grass != "" and not k.far:
-		var xfs: Array = []
-		for i in 36:
-			var p := start + down * k.rng.randf_range(4.0, 15.0) + side * k.rng.randf_range(-1.0, pitch * float(n))
-			xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf() * TAU, k.rng.randf_range(0.7, 1.1)))
-		await k.step()
-		k.scatter(grass, xfs, false, false, false)
+	# the field's thorn hedge down its two sides, gappy where the grey has got at it
+	var thorn := k.tree("hawthorn")
+	if thorn != "":
+		for s in [-1.0, 1.0]:
+			for i in 5:
+				var hp: Vector2 = start + side * (s * 1.6 + (0.0 if s < 0.0 else pitch * float(n - 1) + 3.2)) - down * 6.0 + down * float(i) * 5.0
+				if i >= 3 and k.rng.randf() < 0.5:
+					continue
+				await k.step()
+				k.place(thorn, k.on_ground(hp.x, hp.y), k.rng.randf() * TAU, k.rng.randf_range(0.7, 0.95), true)
 
 
 # --- the Cliff Graves -------------------------------------------------------------------------------
@@ -2205,6 +2311,13 @@ static func cliff_graves(d: PoiDressing) -> void:
 		if i % 3 == 0:
 			perches.append(k.on_ground(head.x, head.y, 1.05))
 		await k.step()
+	# a low wall of the Brow's flint inland of the row, so the sheep keep off them, a gap to come in by
+	var fabric := FabricMesh.new()
+	for s in [-1.0, 1.0]:
+		var a0 := -hush * 2.4 + along * float(s) * 1.4
+		var a1 := -hush * 2.4 + along * float(s) * 15.0 + hush * 1.5
+		_builders().LAND._dry_wall(d, fabric, a0, a1, 0.75)
+	await _builders().LAND._commit_fabric(d, fabric)
 	var tp := along * (float(turned) - 5.5) * 2.4 + hush * sin(float(turned) * 0.7) * 0.6 - hush * 0.35
 	k.touchable("TurnedStone", k.on_ground(tp.x, tp.y, 0.8) - Vector3(hush.x, 0.0, hush.y) * 0.6, "Read the turned headstone", "core:dialogue/cliff_graves_turned", "", false)
 	k.marker("the_turned_stone", k.on_ground(tp.x - hush.x * 2.0, tp.y - hush.y * 2.0))
@@ -2231,13 +2344,16 @@ static func chalk_cell(d: PoiDressing) -> void:
 	var fg := k.on_ground(face_c.x, face_c.y)
 	var fb := Basis(Vector3.UP, PoiKit.yaw_of(out))
 	# the bank: a hump of turf behind, the chalk face cut sheer on the near side
-	_hump(d, -out * 8.5, side, 9.0, 6.0, 4.6, _turf(), "Bank")
+	_hump(d, -out * 6.5, side, 11.0, 6.0, 3.8, _turf(), "Bank", true, 1.0)
 	var chalk := m.begin()
-	m.block(chalk, Transform3D(fb, fg + Vector3(0.0, 1.7, 0.0) - Vector3(out.x, 0.0, out.y) * 0.8), Vector3(11.0, 4.4, 1.8))
-	m.block(chalk, Transform3D(fb * Basis(Vector3.UP, 0.25), fg + Vector3(0.0, 1.2, 0.0) - Vector3(out.x, 0.0, out.y) * 0.9 + Vector3(side.x, 0.0, side.y) * 5.8), Vector3(3.0, 3.2, 1.6))
-	m.block(chalk, Transform3D(fb * Basis(Vector3.UP, -0.3), fg + Vector3(0.0, 1.0, 0.0) - Vector3(out.x, 0.0, out.y) * 0.9 - Vector3(side.x, 0.0, side.y) * 5.6), Vector3(2.6, 2.8, 1.6))
+	for j in 7:
+		var x := (float(j) - 3.0) * 1.7
+		var hh := 3.3 - absf(float(j) - 3.0) * 0.28 + k.rng.randf_range(-0.12, 0.12)
+		var back := 0.8 + k.rng.randf_range(-0.25, 0.3)
+		m.block(chalk, Transform3D(fb * Basis(Vector3.UP, k.rng.randf_range(-0.05, 0.05)) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.05, 0.02)),
+				fg + Vector3(0.0, hh * 0.5 - 0.3, 0.0) - Vector3(out.x, 0.0, out.y) * back + Vector3(side.x, 0.0, side.y) * x), Vector3(2.6, hh, 1.8))
 	await k.step()
-	m.commit(chalk, PoiKit.painted(2, {"base": "#ddd7c6", "accent": "#bdb5a0", "grout": "#968e7a", "unit": 0.9}, 0.85, 0.9), "ChalkFace", true)
+	m.commit(chalk, PoiKit.painted(5, {"base": "#d2ccbb", "accent": "#b3ab96", "grout": "#8d8572", "unit": 0.7}, 0.85, 0.9), "ChalkFace", true)
 	k.collider(Vector3(11.0, 4.4, 1.8), Transform3D(fb, fg + Vector3(0.0, 1.7, 0.0) - Vector3(out.x, 0.0, out.y) * 0.8), "stone")
 	# the door, ajar, and the window: dark in the white
 	var dark := m.begin()
@@ -2306,10 +2422,11 @@ static func turned_hut(d: PoiDressing) -> void:
 	m.commit(roof, _turf(), "TurfRoof", true)
 	k.collider(Vector3(w, 0.8, dpt), Transform3D(basis, Vector3(0.0, g + 1.95, 0.0)), "dirt")
 	# the ash: drifts heaped against the Choir side to the eaves, and thinner round the ends
-	var ash := PoiKit.painted(5, {"base": "#8d8a84", "accent": "#77746e", "grout": "#5d5a55", "unit": 0.5}, 0.9)
-	_hump(d, to_choir * (dpt * 0.5 + 1.6), side, 5.2, 3.0, 1.9, ash, "AshDrift", true, 1.6)
-	_hump(d, to_choir * 3.5 + side * 4.4, side, 3.0, 2.2, 0.9, ash, "AshDrift2", true, 1.6)
-	_hump(d, to_choir * 2.5 - side * 4.6, side, 2.6, 2.0, 0.7, ash, "AshDrift3", true, 1.6)
+	var ash := _matte(Color(0.23, 0.225, 0.215))
+	_hump(d, to_choir * (dpt * 0.5 + 1.4), side, 4.8, 2.6, 1.45, ash, "AshDrift", true, 2.2, true, 0.1)
+	_hump(d, to_choir * 3.2 + side * 4.0, side, 2.6, 1.8, 0.6, ash, "AshDrift2", true, 2.0, false, 0.1)
+	_hump(d, to_choir * 2.4 - side * 4.2, side, 2.2, 1.7, 0.45, ash, "AshDrift3", true, 2.0, false, 0.1)
+	await _grey_sheet(d, Vector2.ZERO, to_choir, 2.0, 15.0, 2.2)
 	# the door side: swept, a half-circle of bare earth with the ash pushed back into a rim round it
 	var dp := door * (dpt * 0.5 + 1.6)
 	var swept := m.begin()
@@ -2330,15 +2447,6 @@ static func turned_hut(d: PoiDressing) -> void:
 	m.block(hurdle, Transform3D(basis * Basis(Vector3.RIGHT, -0.12), k.on_ground(hpos.x, hpos.y, 0.6)), Vector3(1.2, 1.1, 0.06))
 	m.commit(hurdle, k.surface("timber", 0.6), "Hurdle")
 	k.marker("the_door", k.on_ground(dp.x + door.x * 1.4, dp.y + door.y * 1.4))
-	var grey := k.flora("grey_grass")
-	if grey != "" and not k.far:
-		var xfs: Array = []
-		for i in 50:
-			var a := k.rng.randf() * TAU
-			var p := Vector2(sin(a), cos(a)) * k.rng.randf_range(4.0, 14.0)
-			xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y), k.rng.randf() * TAU, k.rng.randf_range(0.7, 1.2)))
-		await k.step()
-		k.scatter(grey, xfs, false, false, false)
 
 
 # --- the Malting Floor ------------------------------------------------------------------------------
@@ -2407,7 +2515,7 @@ static func roll_stone(d: PoiDressing) -> void:
 	var side := Vector2(face.y, -face.x)
 	var off: float = _builders()._off_the_road(k, 3.5, side)
 	var at := side * off
-	await _one_stone(d, at, PoiKit.yaw_of(face), 3.4)
+	await _one_stone(d, at, PoiKit.yaw_of(face), 4.2)
 	# the names: four cut lines down the face, a struck stroke through each, and the bare stone under
 	var cut := m.begin()
 	var g := k.on_ground(at.x, at.y)
@@ -2443,34 +2551,51 @@ static func hare_stone(d: PoiDressing) -> void:
 	var vale := Vector2(tamwick.x - k.origin.x, tamwick.y - k.origin.z)
 	vale = vale.normalized() if vale.length() > 1.0 and vale.length() < 20000.0 else _facing(k)
 	var along := Vector2(vale.y, -vale.x)
-	await _one_stone(d, Vector2.ZERO, PoiKit.yaw_of(vale), 2.2)
+	# the stone: a dressed slab of the downs' sarsen, its broad faces to the Vale and the Wold
 	var g := k.on_ground(0.0, 0.0)
 	var vb := Basis(Vector3.UP, PoiKit.yaw_of(vale))
-	# the hare: an oval body, a head, two long ears, worn pale; the oak leaf on the back, the same
+	var slab := m.begin()
+	_frustum(slab, Transform3D(vb * Basis(Vector3.BACK, 0.03), g + Vector3(0.0, -0.25, 0.0)), 1.05, 0.56, 0.78, 0.4, 2.65)
+	m.commit(slab, _sarsen_look(k), "HareStone", true)
+	k.collider(Vector3(1.0, 2.4, 0.55), Transform3D(vb, g + Vector3(0.0, 1.2, 0.0)), "stone")
+	var packing: Array = []
+	for j in 6:
+		var q := Vector2(sin(TAU * float(j) / 6.0), cos(TAU * float(j) / 6.0)) * k.rng.randf_range(0.8, 1.1)
+		packing.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.08), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.12, 0.2)))
+	await k.step()
+	k.scatter(k.rock("boulder"), packing)
+	# the hare on the Vale face and the leaf on the Wold face, cut shallow and rubbed pale by hands:
+	# each sits a hair proud of its face (the face's half depth where it is cut, the slab tapering)
+	var face_at := func(y: float) -> float: return lerpf(0.28, 0.2, (y + 0.25) / 2.65) + 0.004
 	var worn := m.begin()
-	var front := Vector3(vale.x, 0.0, vale.y) * 0.33
-	m.ellipsoid(worn, g + Vector3(0.0, 1.1, 0.0) + front, Vector3(0.22, 0.13, 0.03), vb)
-	m.ellipsoid(worn, g + Vector3(0.0, 1.27, 0.0) + front + vb * Vector3(0.2, 0.0, 0.0), Vector3(0.09, 0.08, 0.03), vb)
-	for s in [0.0, 0.06]:
-		m.ellipsoid(worn, g + Vector3(0.0, 1.43, 0.0) + front + vb * Vector3(0.18 + s, 0.0, 0.0), Vector3(0.025, 0.11, 0.025), vb * Basis(Vector3.BACK, -0.3 - s * 3.0))
-	var back := -front
-	m.ellipsoid(worn, g + Vector3(0.0, 1.15, 0.0) + back, Vector3(0.12, 0.26, 0.03), vb)
+	var vz := Vector3(vale.x, 0.0, vale.y)
+	m.ellipsoid(worn, g + Vector3(0.0, 1.1, 0.0) + vz * face_at.call(1.1), Vector3(0.22, 0.13, 0.012), vb)
+	m.ellipsoid(worn, g + Vector3(0.0, 1.27, 0.0) + vz * face_at.call(1.27) + vb * Vector3(0.2, 0.0, 0.0), Vector3(0.09, 0.08, 0.012), vb)
+	for e in [0.0, 0.06]:
+		m.ellipsoid(worn, g + Vector3(0.0, 1.43, 0.0) + vz * face_at.call(1.43) + vb * Vector3(0.18 + e, 0.0, 0.0), Vector3(0.025, 0.11, 0.012), vb * Basis(Vector3.BACK, -0.3 - e * 3.0))
+	m.ellipsoid(worn, g + Vector3(0.0, 1.15, 0.0) - vz * face_at.call(1.15), Vector3(0.12, 0.26, 0.012), vb)
 	for i in 3:
-		for s in [-1.0, 1.0]:
-			m.ellipsoid(worn, g + Vector3(0.0, 1.0 + float(i) * 0.14, 0.0) + back + vb * Vector3(float(s) * 0.11, 0.0, 0.0), Vector3(0.07, 0.05, 0.025), vb)
-	m.commit(worn, PoiKit.plain(Color(0.9, 0.88, 0.82), 0.4), "WornCarvings")
+		for e in [-1.0, 1.0]:
+			var y := 1.0 + float(i) * 0.14
+			m.ellipsoid(worn, g + Vector3(0.0, y, 0.0) - vz * face_at.call(y) + vb * Vector3(float(e) * 0.11, 0.0, 0.0), Vector3(0.07, 0.05, 0.012), vb)
+	m.commit(worn, PoiKit.plain(Color(0.78, 0.76, 0.7), 0.35), "WornCarvings")
+	var front := vz * 0.3
 	k.touchable("TheHare", g + Vector3(0.0, 1.2, 0.0) + front * 3.0, "Put your hand on the hare", "core:dialogue/hare_stone_hare", "", false)
-	# the boundary hedge either way, the gap left where the road goes over
-	var hedge := k.prop("hedge_segment")
-	if hedge != "":
-		var spots: Array = []
-		for s in [-1.0, 1.0]:
-			for i in 5:
-				var p := along * float(s) * (3.5 + float(i) * 2.2) + vale * sin(float(i) * 0.8) * 0.3
-				if k.road_distance(p) < 3.5:
-					continue
-				spots.append([p, PoiKit.yaw_of(along)])
-		await _row(k, "hedge_segment", spots, true)
+	# the boundary either way, a low wall with a thorn grown in it, the gap where the road goes over
+	var fabric := FabricMesh.new()
+	for sgn in [-1.0, 1.0]:
+		var a0: Vector2 = along * float(sgn) * 1.6
+		var a1: Vector2 = along * float(sgn) * 12.0 + vale * float(sgn) * 0.6
+		if k.road_distance(a0.lerp(a1, 0.5)) > 4.0:
+			_builders().LAND._dry_wall(d, fabric, a0, a1, 0.9)
+	await _builders().LAND._commit_fabric(d, fabric)
+	var thorn := k.tree("hawthorn")
+	if thorn != "":
+		for sgn in [-1.0, 1.0]:
+			var tp: Vector2 = along * float(sgn) * 7.5 + vale * 0.9
+			if k.road_distance(tp) > 4.0:
+				await k.step()
+				k.place(thorn, k.on_ground(tp.x, tp.y), k.rng.randf() * TAU, 0.75, true)
 	k.marker("the_boundary", k.on_ground(vale.x * 2.5, vale.y * 2.5))
 	await _builders().LAND._grass(d, "buttercup", vale * 4.0, 3.0, 10)
 	await _builders().LAND._grass(d, "grass_clump", -vale * 4.0, 3.0, 10)
@@ -2518,7 +2643,7 @@ static func the_weighing_stone(d: PoiDressing) -> void:
 		m.block(iron, Transform3D(beam_b, pivot + beam_b * Vector3(0.3 + float(i) * 0.25, 0.1, 0.0)), Vector3(0.015, 0.06, 0.17))
 	m.commit(iron, PoiKit.plain(IRON, 0.6, 0.5), "Chains")
 	var weight := m.begin()
-	m.ellipsoid(weight, long_end + Vector3(0.0, -1.15, 0.0), Vector3(0.28, 0.3, 0.28))
+	_frustum(weight, Transform3D(fb, long_end + Vector3(0.0, -1.4, 0.0)), 0.5, 0.42, 0.34, 0.3, 0.5)
 	m.commit(weight, _sarsen_look(k), "Weight")
 	k.touchable("TheBeam", Vector3(c.x, top + 1.0, c.y) + Vector3(face.x, 0.0, face.y) * 1.6, "Read the weights cut on the beam", "core:dialogue/weighing_stone_beam", "", false)
 	var cart := k.prop("cart")
@@ -2657,7 +2782,7 @@ static func southgate_stone(d: PoiDressing) -> void:
 			pts.append(start + across * float(s) + east * float(i) * 3.2 + across * sin(float(i) * 0.5) * 0.5)
 		_track(d, ruts, pts, 0.38)
 	await k.step()
-	m.commit(ruts, k.surface("earth", 0.5), "OldRuts")
+	m.commit(ruts, _matte(Color(0.27, 0.23, 0.17)), "OldRuts")
 	var wood := m.begin()
 	var wheel_at := start + east * 12.0 + across * 0.9
 	var wg := k.on_ground(wheel_at.x, wheel_at.y)
