@@ -1,0 +1,76 @@
+[
+  {
+    "id": "core:item/crown_drift_tokens",
+    "name": "The Last Shift's Tokens",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 40,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "brass",
+      "unique"
+    ],
+    "description": "Nine brass shift-tokens on a loop of wire, each stamped with a man's number and scratched on the back with his name, green with forty years of calamine: the last shift of the Crown Drift, taken off the deep board. The ninth, the captain's, is rubbed bright from being counted."
+  },
+  {
+    "id": "core:item/crown_drift_last_entry",
+    "name": "The Drift-Captain's Last Entry",
+    "category": "book",
+    "weight": 0.2,
+    "value": 25,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "ledger",
+      "unique"
+    ],
+    "description": "A torn leaf from the Crown Drift's day-book, in Abel Rowse's hand: the last shift's names, the hour they went down, and nothing after.",
+    "reads": "core:book/crown_drift_last_entry"
+  },
+  {
+    "id": "core:item/heron_egg_schedule",
+    "name": "A Schedule of Heron Eggs",
+    "category": "book",
+    "weight": 0.1,
+    "value": 8,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "ledger",
+      "tallymen"
+    ],
+    "description": "A Tallymen's printed schedule for a tax on herons' eggs taken at the dead tower above Sedgehithe, a farthing the egg, with the clerk's own column for eggs counted left blank and, under it in pencil, 'NOT ONE'.",
+    "reads": "core:book/heron_egg_schedule"
+  },
+  {
+    "id": "core:item/barrow_register",
+    "name": "The Barrow Register",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 90,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "ledger",
+      "tallymen",
+      "unique"
+    ],
+    "description": "The Struck Barrow's register: forty years of the Receiver's fair hand, a number a line, four thousand and eleven of them, and against each the date and the debt. No names. On the last page, in the same hand, a twelfth line nobody received."
+  },
+  {
+    "id": "core:item/struck_barrow_name_list",
+    "name": "The Copyists' List",
+    "category": "book",
+    "weight": 0.2,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "quiet_hands",
+      "unique"
+    ],
+    "description": "A quire of names copied out of the Struck Barrow's register by the Quiet Hands' resurrection men, each priced for sale in the Undercroft with the dead man's age and trade.",
+    "reads": "core:book/struck_barrow_name_list"
+  }
+]
