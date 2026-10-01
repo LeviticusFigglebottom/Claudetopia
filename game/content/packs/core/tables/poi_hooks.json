@@ -2157,6 +2157,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hum_stone",
+        "quests": [
+          "core:quest/the_stones_note"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/hum_stone"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/hunters_stand",
         "quests": [
           "core:quest/the_fawning_months"
@@ -2334,6 +2345,15 @@
         "poi": "core:poi/kharrows_cairn",
         "quests": [
           "core:quest/what_the_ice_keeps"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/knappers_deep",
+        "quests": [
+          "core:quest/the_night_shift"
         ],
         "finds": [],
         "encounters": [],

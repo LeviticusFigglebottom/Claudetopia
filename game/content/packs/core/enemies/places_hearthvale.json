@@ -1,0 +1,13 @@
+[
+  {"id": "core:enemy/knocker", "extends": "core:enemy/hedge_wight", "name": "Knocker", "tint": "#b9b3a2", "region": "core:region/hearthvale",
+   "lore": "One of the night shift Knappers' Deep lost to the Fall, still at the face with his pick. The Vale buries its dead with their tools so they have something to be known by; these were never buried, and their tools were in their hands. They knock on the chalk in the night shift's count, seven and then one, and they come to anything with a light the way a miner comes to the lamp at the end of a shift. The chalk has got into them. They are as white as the walls.",
+   "stats": {"hp": 105, "stamina": 100, "poise": 60, "armour": 4, "speed": 2.2},
+   "attacks": [
+     {"name": "pick_blow", "clip": "Attack_2H_Light_1", "weapon_class": "axe", "damage": 17.0, "poise_damage": 24.0, "heavy": true, "hyper_armour": true, "range": 2.7, "telegraph": 0.95, "hit_window": 0.2, "recovery": 0.8, "cooldown": 2.6, "gcd": 0.9, "weight": 3.0, "lunge": 1.4},
+     {"name": "undercut", "clip": "Attack_2H_Heavy", "weapon_class": "axe", "damage": 26.0, "poise_damage": 40.0, "heavy": true, "hyper_armour": true, "range": 2.9, "telegraph": 1.35, "hit_window": 0.22, "recovery": 1.05, "cooldown": 6.5, "gcd": 1.1, "weight": 1.0, "lunge": 2.6, "knockdown": true, "knockback": 2.4}
+   ],
+   "loot": "core:loot/wight_barrow", "marks": [10, 24], "tags": ["humanoid", "revenant", "undead"]},
+  {"id": "core:enemy/barrow_digger", "extends": "core:enemy/roadside_bandit", "name": "Barrow-Digger", "tint": "#6b5a43", "region": "core:region/hearthvale",
+   "lore": "The diggers go where the Wardens' map says there is something old under the turf, and take the turf off it. Orm's Long Barrow was theirs, and Tallow Barrow, until whatever was in Tallow walled itself back in. They are Larkbourne Boys who found that the dead pay better than carters and do not send for the Wardens. They carry spades sharpened on one edge, and they fight the way they dig: in a hurry, before anybody comes.",
+   "loot": "core:loot/pockets_common", "marks": [6, 18], "tags": ["bandit", "outlaw", "humanoid", "person"]}
+]
