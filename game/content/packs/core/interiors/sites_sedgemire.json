@@ -9,7 +9,7 @@
     "formed_by": "water",
     "resident": "the Name-Wife, the marsh-hag who takes names for cures, her leech-hounds, the wisps that are her lamps, and the forgotten: the drowned whose names she took before they were ever sung",
     "story": "The water that weeps off the South Scarp went into the rock first, and hollowed it, and came out at the foot; the Name-Wife came in by the water's door. Every name she has taken hangs in here on a cord of rush, knotted in the weave of the family it came from, in curtains down the walls and over the black water at the bottom, where she sits and knots and listens to them not being said.",
-    "unique_object": "curtains of knotted rush cords down the hollow's walls, each cord a name, the oldest gone white and the newest still green",
+    "unique_object": "the pale fungus on every wall and ledge that the reedfolk call the Wife's candles, lit in the dark like a crowd of faces turned toward whoever comes in, and the hank of names on her belt",
     "site": {
       "kind": "cave",
       "seed": 6302,
@@ -155,15 +155,16 @@
       },
       "theme": {
         "palette": [
-          "#3c4442",
-          "#22292a",
-          "#55605c"
+          "#66706b",
+          "#414946",
+          "#7e8882"
         ],
         "lights": [
           "brazier",
-          "candles"
+          "candles",
+          "torch"
         ],
-        "light_colour": "#8fc7e0"
+        "light_colour": "#ffc27a"
       },
       "rooms": [
         {

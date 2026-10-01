@@ -995,6 +995,17 @@ static func stepping_stones(d: PoiDressing, st: SurfaceTool, a: Vector2, b: Vect
 ## reads from the delta as a grey cloud against the scarp; under it what people brought to pay with
 ## besides names; and her stepping-stones out across the cove to the reeds.
 static func name_wifes_hollow(d: PoiDressing) -> void:
+	var k0 := d.kit
+	if d.cave.is_empty():
+		# The world raises no face for a delve: this one stands at the head of a gully in the scarp, and
+		# its mouth is cut into a face of the scarp's own rock, the gully's walls either side of it.
+		var into := k0.uphill()
+		if into == Vector2.ZERO:
+			into = Vector2(0, 1)
+		var face := -into
+		var floor_y := k0.on_ground(into.x * 3.0, into.y * 3.0).y + d.world_position.y
+		d.cave = {"facing_deg": rad_to_deg(atan2(face.x, face.y)), "mouth_m": floor_y, "face_top_m": floor_y + 9.5,
+				"mouth_behind_m": 3.0, "face_half_width_m": 7.0}
 	await PoiDressing.kind_builders().SITES.build(d)
 	var k := d.kit
 	var m := d.masonry
@@ -1021,9 +1032,9 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	m.commit(cord, PoiKit.plain(RUSH.lerp(Color(0.8, 0.78, 0.7), 0.35), 0.95), "TreeCords", true)
 	m.commit(knots, PoiKit.plain(INDIGO.lerp(Color(0.6, 0.6, 0.62), 0.3), 0.9), "TreeKnots", true)
 	# the weep: a thread of water off the brow beside the mouth, into a pool at its foot
-	var fall_at := m2 + across * 4.6 + out * 0.6
+	var fall_at := m2 + across * 4.6 + out * 1.0
 	var fg := k.on_ground(fall_at.x, fall_at.y).y
-	var fall_h := 7.5
+	var fall_h := maxf(float(d.cave.get("face_top_m", 0.0)) - d.world_position.y - fg - 0.3, 7.5)
 	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 1.3, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
 			"Weep", 0.5, true, 3, 6)
 	if k.far:
