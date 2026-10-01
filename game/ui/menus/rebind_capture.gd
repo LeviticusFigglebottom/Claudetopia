@@ -7,7 +7,9 @@ extends RefCounted
 ##   var r := capture.consume(event)
 ##   if r["state"] == "bound": Settings.rebind(r["action"], r["event"], r["slot"])
 
-enum { KEYBOARD = 0, PAD = 1 }
+## KEYBOARD is an action's first keyboard-and-mouse binding, SECOND its second (a key as well as the
+## middle mouse button for the lock-on, triage 80), PAD its gamepad binding.
+enum { KEYBOARD = 0, PAD = 1, SECOND = 2 }
 
 const IGNORED_ACTIONS := ["ui_cancel"]
 const AXIS_DEADZONE := 0.6
@@ -74,9 +76,13 @@ func consume(event: InputEvent) -> Dictionary:
 ## What a binding row shows: the pretty name of this action's binding for that slot.
 static func label_for(action_name: String, in_slot: int) -> String:
 	var list: Array = Settings.bindings.get(action_name, [])
+	var nth := 1 if in_slot == SECOND else 0
 	for s: String in list:
 		var is_pad := s.begins_with("joy")
 		if is_pad == (in_slot == PAD):
+			if nth > 0:
+				nth -= 1
+				continue
 			@warning_ignore("static_called_on_instance")
 			return Settings._pretty(s)
 	return "—"

@@ -1,5 +1,5 @@
 {
-  "_doc": "Default input bindings. Event strings: key:<KeyName> | mouse:<button> | joy_button:<index> | joy_axis:<axis>:<sign>. Categories group actions in the rebinding UI.",
+  "_doc": "Default input bindings. Event strings: key:<KeyName> | mouse:<button> | joy_button:<index> | joy_axis:<axis>:<sign>. An action may have two keyboard-and-mouse bindings (the Controls tab's first and second columns, in the order written) and one gamepad binding. Categories group actions in the rebinding UI.",
   "actions": [
     {"action": "move_forward",  "label": "Move forward",   "category": "Movement", "events": ["key:W", "joy_axis:1:-1"]},
     {"action": "move_back",     "label": "Move back",      "category": "Movement", "events": ["key:S", "joy_axis:1:1"]},
@@ -18,7 +18,7 @@
     {"action": "attack_heavy",  "label": "Heavy attack",   "category": "Combat",   "events": ["key:Q", "joy_axis:5:1"]},
     {"action": "block",         "label": "Block / parry",  "category": "Combat",   "events": ["mouse:2", "joy_axis:4:1"]},
     {"action": "cast",          "label": "Cast spell",     "category": "Combat",   "events": ["key:F", "joy_button:9"]},
-    {"action": "lock_on",       "label": "Lock on",        "category": "Combat",   "events": ["mouse:3", "joy_button:8"]},
+    {"action": "lock_on",       "label": "Lock on",        "category": "Combat",   "events": ["mouse:3", "key:Z", "joy_button:8"]},
     {"action": "cycle_target",  "label": "Cycle target",   "category": "Combat",   "events": ["key:Tab"]},
     {"action": "cycle_weapon",  "label": "Next weapon (the wheel too)", "category": "Combat", "events": ["key:R", "joy_button:14"]},
     {"action": "quick_1",       "label": "Belt slot 1",    "category": "Belt",     "events": ["key:1", "joy_button:11"]},

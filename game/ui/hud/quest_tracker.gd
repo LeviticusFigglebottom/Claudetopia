@@ -98,8 +98,10 @@ func _process(_delta: float) -> void:
 
 
 ## What the tracker shows: the quest's name and its open objectives, [{key, text, detail}], in
-## order. A title of "" means nothing is followed.
-func show_quest(title: String, rows: Array) -> void:
+## order. A title of "" means nothing is followed. A row no longer asked for is ticked and let go
+## when it was done; `was_done` (key -> bool) says whether it was. One that went undone (a try the
+## watch saw, the Rogue's traps: triage 79) goes at once, unticked: a tick there was a lie.
+func show_quest(title: String, rows: Array, was_done: Callable = Callable()) -> void:
 	if title != _quest:
 		# another quest, or none: what was shown goes at once, without being ticked
 		for key in _rows.keys():
@@ -140,6 +142,10 @@ func show_quest(title: String, rows: Array) -> void:
 			continue
 		var r: Dictionary = _rows[key]
 		if int(r.get("done_at", -1)) >= 0:
+			continue
+		if was_done.is_valid() and not bool(was_done.call(str(key))):
+			(r["node"] as Node).queue_free()
+			_rows.erase(key)
 			continue
 		r["done_at"] = Time.get_ticks_msec()
 		(r["bullet"] as TextureRect).texture = ThemeBuilder.texture("quest_tick")

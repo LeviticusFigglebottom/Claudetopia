@@ -915,7 +915,15 @@ func _update_waymarks() -> void:
 	var title := str(ContentDB.get_or_empty(quest_id).get("name", "")) if quest_id != "" else ""
 	if title == "" and quest_id != "" and _quest_log.has_method("definition"):
 		title = str((_quest_log.call("definition", quest_id) as Dictionary).get("name", ""))
-	_tracker.show_quest(title, rows)
+	_tracker.show_quest(title, rows, _row_was_done)
+
+
+## Whether a tracker row's objective ("quest|stage|index") was done, for the tick as it goes.
+func _row_was_done(key: String) -> bool:
+	var parts := key.split("|")
+	if parts.size() < 3 or _quest_log == null or not is_instance_valid(_quest_log) or not _quest_log.has_method("objective_done_in"):
+		return true
+	return bool(_quest_log.call("objective_done_in", parts[0], int(parts[1]), int(parts[2])))
 
 
 ## The strip's view of the waymarks from `origin`: a pin for each objective you are not yet within,
