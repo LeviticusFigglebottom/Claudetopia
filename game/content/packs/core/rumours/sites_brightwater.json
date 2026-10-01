@@ -1,18 +1,5 @@
 [
   {
-    "id": "core:rumour/tally_needle",
-    "name": "The names on the Needle",
-    "tone": "grim",
-    "text": "You'll have seen the Tally Needle from the Stride, the white stalk under the south scarp with the brass on top. Every soul the Charter struck off is cut on it and struck through. There's somebody chalks one of them back every week, and the struck come out of the barrow at dusk and stand round the Needle reading, and the Undercroft's selling names again, clean, forty marks.",
-    "variants": [
-      "Ask the laundresses at the Wash-Stones about the Needle. One of them will tell you more than you wanted, and then she'll ask you a favour."
-    ],
-    "tags": [
-      "brightwater",
-      "grim"
-    ]
-  },
-  {
     "id": "core:rumour/crown_drift",
     "name": "Brass by night",
     "tone": "strange",
@@ -23,6 +10,19 @@
     "tags": [
       "brightwater",
       "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/tally_needle",
+    "name": "The names on the Needle",
+    "tone": "grim",
+    "text": "You'll have seen the Tally Needle from the Stride, the white stalk under the south scarp with the brass on top. Every soul the Charter struck off is cut on it and struck through. There's somebody chalks one of them back every week, and the struck come out of the barrow at dusk and stand round the Needle reading, and the Undercroft's selling names again, clean, forty marks.",
+    "variants": [
+      "Ask the laundresses at the Wash-Stones about the Needle. One of them will tell you more than you wanted, and then she'll ask you a favour."
+    ],
+    "tags": [
+      "brightwater",
+      "grim"
     ]
   }
 ]

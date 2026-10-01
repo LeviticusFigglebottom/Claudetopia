@@ -1,180 +1,5 @@
 [
   {
-    "id": "core:dialogue/dorcas_pell",
-    "speaker_name": "Dorcas Pell",
-    "notes": "A Tollmere laundress at the Wash-Stones (pois/brightwater.json), whose father was struck off the Roll in error. Gives Entered in Error (quests/sites_brightwater.json); takes the Barrow Register at its end.",
-    "start": "greet",
-    "greetings": [
-      {
-        "conditions": [
-          {
-            "quest_at": [
-              "core:quest/entered_in_error",
-              "the_register"
-            ]
-          }
-        ],
-        "text": "That's a Tallymen's ledger under your arm. I'd know the binding in the dark. -- Is it the barrow's?"
-      },
-      {
-        "conditions": [
-          {
-            "quest_done": "core:quest/entered_in_error"
-          }
-        ],
-        "text": "I went out to the Needle last night and didn't take the chalk. He's in the book now. In ink. -- Mind the soap, the stones are slick."
-      }
-    ],
-    "nodes": {
-      "greet": {
-        "speaker": "Dorcas Pell",
-        "text": "*(She does not stop beating the sheet on the stone.)* If you're from the guild, it's Thursday's, and it's clean. If you're not, stand off the stones; you're in my splash.",
-        "next": "hub"
-      },
-      "hub": {
-        "speaker": "Dorcas Pell",
-        "text": "*(Thwack. Thwack.)* Go on, then.",
-        "choices": [
-          {
-            "text": "What are these stones?",
-            "next": "stones"
-          },
-          {
-            "text": "What's the Needle across the meadow?",
-            "next": "needle"
-          },
-          {
-            "text": "You've chalk behind your ear.",
-            "conditions": [
-              {
-                "quest_not_done": "core:quest/entered_in_error"
-              },
-              {
-                "not": {
-                  "quest_active": "core:quest/entered_in_error"
-                }
-              }
-            ],
-            "next": "chalk"
-          },
-          {
-            "text": "The Barrow Register. I took it from the Receiver.",
-            "conditions": [
-              {
-                "quest_at": [
-                  "core:quest/entered_in_error",
-                  "the_register"
-                ]
-              }
-            ],
-            "next": "register"
-          },
-          {
-            "text": "I'll let you work.",
-            "next": "bye"
-          }
-        ]
-      },
-      "stones": {
-        "speaker": "Dorcas Pell",
-        "text": "The Wash-Stones. Three of them, worn to dishes by hands older than the city's. The water's soft here; it comes off the hill through the chalk and it lifts the grey out of linen like nothing in Tollmere does. The guilds send their white over the Stride twice a week and we beat it here. The Builders washed here too, the old women say. I'd like to have seen their sheets.",
-        "next": "hub"
-      },
-      "needle": {
-        "speaker": "Dorcas Pell",
-        "text": "The Tally Needle. The Struck Barrow's marker, at the foot of the scarp yonder, the white stalk with the brass top. Everybody the Charter struck off is cut on it, one name a line, and every name struck through. Four thousand of them. The barrow's in the hill behind it, numbered shelves, no names. The Tallymen shut it when the Receiver died.",
-        "effects": [
-          {
-            "discover": "core:poi/the_struck_barrow"
-          }
-        ],
-        "next": "hub"
-      },
-      "chalk": {
-        "speaker": "Dorcas Pell",
-        "text": "*(She puts the beater down.)* Amos Pell. Carter. My father. Struck in 1031 for sixty-one marks owing on a cart he paid off in 1030, and I've the Tallymen's own receipt in my bodice to prove it. The Roll office says the matter's with the Receiver, and the Receiver's dead and the barrow's shut. So twice a week I walk out to the Needle and chalk him back over his line, and twice a week it rains. -- They say the Receiver's register is still down there, at the bottom. If his number had his name beside it, in ink, in the book, they'd have to un-strike him. That's how ledgers work. I'm a laundress. I don't go into barrows.",
-        "choices": [
-          {
-            "text": "I'll go into the barrow and bring you the register.",
-            "effects": [
-              {
-                "start_quest": "core:quest/entered_in_error"
-              }
-            ],
-            "next": "yes"
-          },
-          {
-            "text": "Not today.",
-            "next": "hub"
-          }
-        ]
-      },
-      "yes": {
-        "speaker": "Dorcas Pell",
-        "text": "His number's three thousand nine hundred and four. I found it scratched on the Needle's foot under his name, where the masons kept their count. -- There's men going in and out at night with dark lanterns; I've seen them from the stones. Undercroft men. They're not going in for the view. And the struck walk at dusk; don't let one take hold of you. They take hold like a creditor.",
-        "next": "hub"
-      },
-      "register": {
-        "speaker": "Dorcas Pell",
-        "text": "*(She wipes her hands on her apron three times before she takes it, and finds the page without being told the number, as if she had always known where it would be. She takes the chalk from behind her ear, looks at it, puts it back, and holds out her hand.)* Pen. -- *(You have none. She takes a laundry-mark pencil from her pocket instead, the indelible kind, and writes AMOS PELL, CARTER beside 3904 in square capitals, and under it: PAID 1030, RECEIPT HELD.)* There. It's in the book. -- Here; it's the receipt-money. I kept it twelve years to show them, and I don't need to show anybody anything now.",
-        "effects": [
-          {
-            "set_flag": "amos_pell_entered"
-          }
-        ],
-        "next": "hub"
-      },
-      "bye": {
-        "speaker": "Dorcas Pell",
-        "text": "*(Thwack.)* Mind the splash.",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/tally_needle_names",
-    "speaker_name": "The Tally Needle",
-    "notes": "The Struck Barrow's hook: a PoiTouch at the Needle's foot (world/pois/regions/brightwater.gd). Starts core:quest/entered_in_error if Dorcas Pell has not.",
-    "start": "look",
-    "nodes": {
-      "look": {
-        "speaker": "The Tally Needle",
-        "no_talk": true,
-        "text": "Names, cut small and close in the lime-washed stone, from the foot up past where you can read them: HOBB TREGEAR. SILAS MABE. WENNA PASCOE. Each struck through with one straight chisel line, the same depth every time. Over one of them, at about a woman's reach, the line has been chalked over in careful capitals, and the chalk renewed so often it has built up like paint: AMOS PELL. A number is scratched under it in the masons' way: 3904. On the portal in the gully behind, a word is cut over the door: RECEIVED.",
-        "choices": [
-          {
-            "text": "Go down into the barrow for the register with 3904 in it.",
-            "conditions": [
-              {
-                "quest_not_done": "core:quest/entered_in_error"
-              },
-              {
-                "not": {
-                  "quest_active": "core:quest/entered_in_error"
-                }
-              }
-            ],
-            "effects": [
-              {
-                "start_quest": "core:quest/entered_in_error"
-              }
-            ],
-            "next": "taken"
-          },
-          {
-            "text": "Leave the names.",
-            "next": "end"
-          }
-        ]
-      },
-      "taken": {
-        "speaker": "The Tally Needle",
-        "text": "The brass cap ticks as it cools. Behind you, in the gully, the portal's door stands an inch open that was shut.",
-        "next": "end"
-      }
-    }
-  },
-  {
     "id": "core:dialogue/bryony_kettle",
     "speaker_name": "Bryony Kettle",
     "notes": "A Gullhithe fishwife at the Ness Market (pois/brightwater.json). Sells fish (stock_fishmonger).",
@@ -455,6 +280,278 @@
       "taken": {
         "speaker": "The shift-board at the shaft head",
         "text": "Down the shaft, very far down, something knocks twice on rock, the way a miner knocks to say the rope can come up.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/beached_barge_claims",
+    "speaker_name": "The claims on her stem",
+    "notes": "The Beached Barge's claims (world/pois/regions/brightwater.gd beached_barge).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The claims on her stem",
+        "no_talk": true,
+        "text": "Two boards nailed to the barge's stem, one over the other. The under one is Woodfolk oak with an antler cut into it and a line of their marks under the antler: NOT PAID FOR. The over one is a Tallymen's printed notice, nailed through the antler's tines, its lower half rotted away: '...THE CARGO ABOARD THIS VESSEL IS NOT DELIVERED AND REMAINS AT THE RISK OF THE CONSIGNOR UNTIL...' Somebody has scratched a third line across both, with a knife, in a hand that is neither's: ASK THE OAK.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/charter_stone_lines",
+    "speaker_name": "The Charter Stone",
+    "notes": "The Charter Stone's face (world/pois/regions/brightwater.gd charter_stone); The Charter Pins' pin-drawer works here by night.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Charter Stone",
+        "no_talk": true,
+        "text": "The Charter of 712 is cut on the lake face in the close upright letters the Tallymen still use for a contract, and on the fell face the clans have cut one link of a chain, deep, the size of a hand. Across the break the stone was mended with brass staples leaded into it: there were eight, the sockets say. Two are left on the lake face, green with weather, and the lead round the empty sockets is bright, new-scratched, as if by a knife worked in the dark.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/strandline_benchmark",
+    "speaker_name": "The Sayers' benchmark",
+    "notes": "The Strandline Stones' benchmark (world/pois/regions/brightwater.gd strandline_stones).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Sayers' benchmark",
+        "no_talk": true,
+        "text": "A squat dressed stone with a brass plug leaded into its top, polished where a levelling-staff has stood on it a thousand times. Down its lake face a notch is cut for every ten years the Mere has fallen since the Toll came down: ten of them, the last two deeper and fresher than the rest. Under the notches, small, the Sayers' cipher for 'draining', and under that, smaller, scratched by somebody else: 'resting'.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hob_tench",
+    "speaker_name": "Hob Tench",
+    "notes": "The coppice-reeve at the Smoke Coppice (pois/brightwater.json). Sells what the coppice makes (stock_charcoal_burner).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hob Tench",
+        "text": "*(He does not look up from the pole he is cleaving.)* Mind the stools. They're older than the Charter and they don't like being trod on, and nor do I.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hob Tench",
+        "text": "*(Crack. The pole splits clean to the brake.)* Well?",
+        "choices": [
+          {
+            "text": "What do you sell?",
+            "next": "trade"
+          },
+          {
+            "text": "Older than the Charter?",
+            "next": "stools"
+          },
+          {
+            "text": "Why oak, and why from here?",
+            "next": "smoke"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "trade": {
+        "speaker": "Hob Tench",
+        "text": "Poles, split and round. Charcoal off the Burner's clamp down the hill. Hurdles if you wait. And I'll take what's no use to you if it's wood or iron or something I can burn.",
+        "next": "hub"
+      },
+      "stools": {
+        "speaker": "Hob Tench",
+        "text": "Cut an oak to the ground and it doesn't die, it sulks, and then it sends up twenty poles where it had one trunk. Cut those in fifteen years and it does it again. These stools were cut before the guilds wrote the Charter and they've been cut every fifteen years since. Six hundred years old and never once looked it. -- The Tallymen sent a man to count them for a tax. He counted the poles. We let him.",
+        "next": "hub"
+      },
+      "smoke": {
+        "speaker": "Hob Tench",
+        "text": "Merrowhithe smokes its pike over oak from this coppice and no other, and pays in fish, which is the only honest wage on the Mere. Ash smoke makes a pike taste of sweat. Willow makes it taste of the Mere, which nobody pays for twice. Oak from these stools makes it taste of pike, which is the point.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hob Tench",
+        "text": "*(Crack.)* Stools.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dorcas_pell",
+    "speaker_name": "Dorcas Pell",
+    "notes": "A Tollmere laundress at the Wash-Stones (pois/brightwater.json), whose father was struck off the Roll in error. Gives Entered in Error (quests/sites_brightwater.json); takes the Barrow Register at its end.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/entered_in_error",
+              "the_register"
+            ]
+          }
+        ],
+        "text": "That's a Tallymen's ledger under your arm. I'd know the binding in the dark. -- Is it the barrow's?"
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/entered_in_error"
+          }
+        ],
+        "text": "I went out to the Needle last night and didn't take the chalk. He's in the book now. In ink. -- Mind the soap, the stones are slick."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She does not stop beating the sheet on the stone.)* If you're from the guild, it's Thursday's, and it's clean. If you're not, stand off the stones; you're in my splash.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Dorcas Pell",
+        "text": "*(Thwack. Thwack.)* Go on, then.",
+        "choices": [
+          {
+            "text": "What are these stones?",
+            "next": "stones"
+          },
+          {
+            "text": "What's the Needle across the meadow?",
+            "next": "needle"
+          },
+          {
+            "text": "You've chalk behind your ear.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/entered_in_error"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/entered_in_error"
+                }
+              }
+            ],
+            "next": "chalk"
+          },
+          {
+            "text": "The Barrow Register. I took it from the Receiver.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/entered_in_error",
+                  "the_register"
+                ]
+              }
+            ],
+            "next": "register"
+          },
+          {
+            "text": "I'll let you work.",
+            "next": "bye"
+          }
+        ]
+      },
+      "stones": {
+        "speaker": "Dorcas Pell",
+        "text": "The Wash-Stones. Three of them, worn to dishes by hands older than the city's. The water's soft here; it comes off the hill through the chalk and it lifts the grey out of linen like nothing in Tollmere does. The guilds send their white over the Stride twice a week and we beat it here. The Builders washed here too, the old women say. I'd like to have seen their sheets.",
+        "next": "hub"
+      },
+      "needle": {
+        "speaker": "Dorcas Pell",
+        "text": "The Tally Needle. The Struck Barrow's marker, at the foot of the scarp yonder, the white stalk with the brass top. Everybody the Charter struck off is cut on it, one name a line, and every name struck through. Four thousand of them. The barrow's in the hill behind it, numbered shelves, no names. The Tallymen shut it when the Receiver died.",
+        "effects": [
+          {
+            "discover": "core:poi/the_struck_barrow"
+          }
+        ],
+        "next": "hub"
+      },
+      "chalk": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She puts the beater down.)* Amos Pell. Carter. My father. Struck in 1031 for sixty-one marks owing on a cart he paid off in 1030, and I've the Tallymen's own receipt in my bodice to prove it. The Roll office says the matter's with the Receiver, and the Receiver's dead and the barrow's shut. So twice a week I walk out to the Needle and chalk him back over his line, and twice a week it rains. -- They say the Receiver's register is still down there, at the bottom. If his number had his name beside it, in ink, in the book, they'd have to un-strike him. That's how ledgers work. I'm a laundress. I don't go into barrows.",
+        "choices": [
+          {
+            "text": "I'll go into the barrow and bring you the register.",
+            "effects": [
+              {
+                "start_quest": "core:quest/entered_in_error"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Dorcas Pell",
+        "text": "His number's three thousand nine hundred and four. I found it scratched on the Needle's foot under his name, where the masons kept their count. -- There's men going in and out at night with dark lanterns; I've seen them from the stones. Undercroft men. They're not going in for the view. And the struck walk at dusk; don't let one take hold of you. They take hold like a creditor.",
+        "next": "hub"
+      },
+      "register": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She wipes her hands on her apron three times before she takes it, and finds the page without being told the number, as if she had always known where it would be. She takes the chalk from behind her ear, looks at it, puts it back, and holds out her hand.)* Pen. -- *(You have none. She takes a laundry-mark pencil from her pocket instead, the indelible kind, and writes AMOS PELL, CARTER beside 3904 in square capitals, and under it: PAID 1030, RECEIPT HELD.)* There. It's in the book. -- Here; it's the receipt-money. I kept it twelve years to show them, and I don't need to show anybody anything now.",
+        "effects": [
+          {
+            "set_flag": "amos_pell_entered"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Dorcas Pell",
+        "text": "*(Thwack.)* Mind the splash.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tally_needle_names",
+    "speaker_name": "The Tally Needle",
+    "notes": "The Struck Barrow's hook: a PoiTouch at the Needle's foot (world/pois/regions/brightwater.gd). Starts core:quest/entered_in_error if Dorcas Pell has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Tally Needle",
+        "no_talk": true,
+        "text": "Names, cut small and close in the lime-washed stone, from the foot up past where you can read them: HOBB TREGEAR. SILAS MABE. WENNA PASCOE. Each struck through with one straight chisel line, the same depth every time. Over one of them, at about a woman's reach, the line has been chalked over in careful capitals, and the chalk renewed so often it has built up like paint: AMOS PELL. A number is scratched under it in the masons' way: 3904. On the portal in the gully behind, a word is cut over the door: RECEIVED.",
+        "choices": [
+          {
+            "text": "Go down into the barrow for the register with 3904 in it.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/entered_in_error"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/entered_in_error"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/entered_in_error"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the names.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Tally Needle",
+        "text": "The brass cap ticks as it cools. Behind you, in the gully, the portal's door stands an inch open that was shut.",
         "next": "end"
       }
     }

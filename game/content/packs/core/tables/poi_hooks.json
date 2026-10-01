@@ -145,7 +145,9 @@
         "finds": [
           "core:item/note_beached_barge"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/beached_barge"
+        ],
         "hearthstone": false
       },
       {
@@ -4572,7 +4574,9 @@
         "quests": [
           "core:quest/the_ruled_line"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/heron_egg_schedule"
+        ],
         "encounters": [],
         "hearthstone": false
       },

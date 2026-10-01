@@ -25,6 +25,7 @@ const PEOPLE := {
 	"core:npc/dorcas_pell": "core:poi/wash_stones",
 	"core:npc/bryony_kettle": "core:poi/ness_market",
 	"core:npc/silas_pask": "core:poi/ness_market",
+	"core:npc/hob_tench": "core:poi/smoke_coppice",
 }
 const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_hole", "core:interior/gull_holm_cellars",
 		"core:interior/the_crown_drift", "core:interior/the_struck_barrow"]

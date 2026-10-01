@@ -1,5 +1,113 @@
 [
   {
+    "id": "core:enemy/brass_taker",
+    "extends": "core:enemy/cutpurse",
+    "name": "Brass-Taker",
+    "faction": "bandits",
+    "tint": "#5f5a3c",
+    "region": "core:region/brightwater",
+    "lore": "Gullhithe's out-of-work and Tollmere's bad debts, down the Crown Drift by night with a borrowed lamp and a cold chisel, prising the old brass off the pump-rods and the ladder-irons and melting it into pigs for a buyer in the Undercroft. A taker works in felt slippers and never speaks below the first level, because the sayer they pay does not Hush what is said on purpose.",
+    "appearance": {
+      "seed": 4407,
+      "culture": "vale",
+      "parts": {
+        "torso": "tunic",
+        "legs": "trousers",
+        "feet": "boots",
+        "back": "hood",
+        "belt": "belt",
+        "hair": "hood_friendly"
+      },
+      "palette": {
+        "primary": "5c5440",
+        "secondary": "4a4a3e",
+        "leather": "3f3325",
+        "metal": "9a8a52"
+      },
+      "skin": "wheat",
+      "hair_colour": "dark_brown",
+      "build": 0.7,
+      "feminine": 0.0,
+      "height": 1.76
+    },
+    "marks": [
+      6,
+      22
+    ],
+    "tags": [
+      "bandit",
+      "outlaw",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/drift_hewer",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Drift Hewer",
+    "faction": "bandits",
+    "tint": "#4f4a36",
+    "region": "core:region/brightwater",
+    "lore": "A miner who knew the Crown Drift before it was closed and came back for what it still owes him: a sledge-hammer for the stubborn brass, shoulders for the ladders, and the only takers' man who will go as far as the break and look over. He does not go further. Nobody pays enough for that.",
+    "stats": {
+      "hp": 170,
+      "stamina": 120,
+      "poise": 78,
+      "armour": 6,
+      "speed": 2.7
+    },
+    "marks": [
+      20,
+      48
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "brute"
+    ]
+  },
+  {
+    "id": "core:enemy/held_miner",
+    "extends": "core:enemy/ash_wight",
+    "name": "Held Miner",
+    "tint": "#6d6a52",
+    "region": "core:region/brightwater",
+    "lore": "One of the last shift of 1012, who went down the Builders' gallery for the dressed ore and has been bringing it up ever since: a basket at a time to the foot of a ladder that is not there, and back again for the next. The calamine has greened him like a lamp left out. He does not mean you harm. He means to finish the shift, and you are standing in the gallery.",
+    "appearance": {
+      "seed": 5129,
+      "culture": "vale",
+      "parts": {
+        "torso": "shirt",
+        "legs": "leg_wraps",
+        "feet": "shoes",
+        "back": "ragged_cloak",
+        "hair": "long"
+      },
+      "palette": {
+        "primary": "6a6a50",
+        "secondary": "4f5446",
+        "leather": "3a342c",
+        "metal": "7a8a64"
+      },
+      "skin": "olive",
+      "hair_colour": "grey",
+      "build": 0.65,
+      "feminine": 0.0,
+      "height": 1.74
+    },
+    "marks": [
+      2,
+      9
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "swarm"
+    ]
+  },
+  {
     "id": "core:enemy/struck_debtor",
     "extends": "core:enemy/ash_wight",
     "name": "Struck Debtor",
@@ -129,114 +237,6 @@
       "outlaw",
       "humanoid",
       "person"
-    ]
-  },
-  {
-    "id": "core:enemy/brass_taker",
-    "extends": "core:enemy/cutpurse",
-    "name": "Brass-Taker",
-    "faction": "bandits",
-    "tint": "#5f5a3c",
-    "region": "core:region/brightwater",
-    "lore": "Gullhithe's out-of-work and Tollmere's bad debts, down the Crown Drift by night with a borrowed lamp and a cold chisel, prising the old brass off the pump-rods and the ladder-irons and melting it into pigs for a buyer in the Undercroft. A taker works in felt slippers and never speaks below the first level, because the sayer they pay does not Hush what is said on purpose.",
-    "appearance": {
-      "seed": 4407,
-      "culture": "vale",
-      "parts": {
-        "torso": "tunic",
-        "legs": "trousers",
-        "feet": "boots",
-        "back": "hood",
-        "belt": "belt",
-        "hair": "hood_friendly"
-      },
-      "palette": {
-        "primary": "5c5440",
-        "secondary": "4a4a3e",
-        "leather": "3f3325",
-        "metal": "9a8a52"
-      },
-      "skin": "wheat",
-      "hair_colour": "dark_brown",
-      "build": 0.7,
-      "feminine": 0.0,
-      "height": 1.76
-    },
-    "marks": [
-      6,
-      22
-    ],
-    "tags": [
-      "bandit",
-      "outlaw",
-      "humanoid",
-      "person"
-    ]
-  },
-  {
-    "id": "core:enemy/drift_hewer",
-    "extends": "core:enemy/larkbourne_bruiser",
-    "name": "Drift Hewer",
-    "faction": "bandits",
-    "tint": "#4f4a36",
-    "region": "core:region/brightwater",
-    "lore": "A miner who knew the Crown Drift before it was closed and came back for what it still owes him: a sledge-hammer for the stubborn brass, shoulders for the ladders, and the only takers' man who will go as far as the break and look over. He does not go further. Nobody pays enough for that.",
-    "stats": {
-      "hp": 170,
-      "stamina": 120,
-      "poise": 78,
-      "armour": 6,
-      "speed": 2.7
-    },
-    "marks": [
-      20,
-      48
-    ],
-    "tags": [
-      "bandit",
-      "humanoid",
-      "person",
-      "brute"
-    ]
-  },
-  {
-    "id": "core:enemy/held_miner",
-    "extends": "core:enemy/ash_wight",
-    "name": "Held Miner",
-    "tint": "#6d6a52",
-    "region": "core:region/brightwater",
-    "lore": "One of the last shift of 1012, who went down the Builders' gallery for the dressed ore and has been bringing it up ever since: a basket at a time to the foot of a ladder that is not there, and back again for the next. The calamine has greened him like a lamp left out. He does not mean you harm. He means to finish the shift, and you are standing in the gallery.",
-    "appearance": {
-      "seed": 5129,
-      "culture": "vale",
-      "parts": {
-        "torso": "shirt",
-        "legs": "leg_wraps",
-        "feet": "shoes",
-        "back": "ragged_cloak",
-        "hair": "long"
-      },
-      "palette": {
-        "primary": "6a6a50",
-        "secondary": "4f5446",
-        "leather": "3a342c",
-        "metal": "7a8a64"
-      },
-      "skin": "olive",
-      "hair_colour": "grey",
-      "build": 0.65,
-      "feminine": 0.0,
-      "height": 1.74
-    },
-    "marks": [
-      2,
-      9
-    ],
-    "tags": [
-      "undead",
-      "revenant",
-      "humanoid",
-      "swarm"
     ]
   }
 ]

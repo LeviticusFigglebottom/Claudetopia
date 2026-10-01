@@ -1,53 +1,5 @@
 [
   {
-    "id": "core:npc/dorcas_pell",
-    "name": "Dorcas Pell",
-    "home_place": "core:poi/wash_stones",
-    "no_radiant": true,
-    "dialogue": "core:dialogue/dorcas_pell",
-    "bio": "A Tollmere laundress who comes over the Stride to the Wash-Stones twice a week with the guild linen, and on her way home walks out across the meadow to the Tally Needle to chalk her father's name back over its line. Amos Pell was struck off the Roll in 1031 for a debt she has the receipt for.",
-    "unique_habit": "Keeps a stub of chalk behind her ear the way a clerk keeps a pen, and writes capitals in the air when she is thinking.",
-    "personality": {
-      "traits": [
-        "stubborn",
-        "honest",
-        "warm"
-      ]
-    },
-    "appearance": {
-      "seed": 7489,
-      "build": "strong_short",
-      "age": 44.0,
-      "feminine": 1.0,
-      "hair": "red_hair_under_a_shawl",
-      "notes": "a laundress's forearms red to the elbow, sleeves rolled and pinned, a chalk stub behind one ear, a folded paper kept in her bodice"
-    },
-    "schedule": [
-      {
-        "days": "all",
-        "hour": 0,
-        "place": "core:poi/wash_stones",
-        "activity": "sleep",
-        "spot": "the_beating_stone"
-      },
-      {
-        "days": "all",
-        "hour": 7,
-        "place": "core:poi/wash_stones",
-        "activity": "work",
-        "spot": "the_beating_stone",
-        "notes": "beating the guild linen on the stones"
-      },
-      {
-        "days": "all",
-        "hour": 21,
-        "place": "core:poi/wash_stones",
-        "activity": "sleep",
-        "spot": "the_beating_stone"
-      }
-    ]
-  },
-  {
     "id": "core:npc/bryony_kettle",
     "name": "Bryony Kettle",
     "home_place": "core:poi/ness_market",
@@ -197,6 +149,110 @@
         "place": "core:poi/the_crown_drift",
         "activity": "sleep",
         "spot": "the_count_house"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hob_tench",
+    "name": "Hob Tench",
+    "home_place": "core:poi/smoke_coppice",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/hob_tench",
+    "bio": "Coppice-reeve of the Smoke Coppice, as his father was and his father's father: he keeps the cutting-round, cleaves the poles for Merrowhithe's smokehouses, and is paid in pike.",
+    "unique_habit": "Talks to the oak stools as he passes them, by name, and the names are all of dead coppicers.",
+    "personality": {
+      "traits": [
+        "stubborn",
+        "honest",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 7611,
+      "build": "stocky_bowed",
+      "age": 58.0,
+      "feminine": 0.0,
+      "hair": "grizzled_and_short_under_a_felt_hat",
+      "notes": "a leather apron scarred by the froe, a billhook at his belt, oak-bark stain to the wrists"
+    },
+    "merchant": {
+      "stock": "core:table/stock_charcoal_burner",
+      "marks": 110,
+      "buys": [
+        "material",
+        "misc"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/smoke_coppice",
+        "activity": "sleep",
+        "spot": "the_cleaving_brake"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/smoke_coppice",
+        "activity": "work",
+        "spot": "the_cleaving_brake",
+        "notes": "cleaving poles at the brake"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/smoke_coppice",
+        "activity": "sleep",
+        "spot": "the_cleaving_brake"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/dorcas_pell",
+    "name": "Dorcas Pell",
+    "home_place": "core:poi/wash_stones",
+    "no_radiant": true,
+    "dialogue": "core:dialogue/dorcas_pell",
+    "bio": "A Tollmere laundress who comes over the Stride to the Wash-Stones twice a week with the guild linen, and on her way home walks out across the meadow to the Tally Needle to chalk her father's name back over its line. Amos Pell was struck off the Roll in 1031 for a debt she has the receipt for.",
+    "unique_habit": "Keeps a stub of chalk behind her ear the way a clerk keeps a pen, and writes capitals in the air when she is thinking.",
+    "personality": {
+      "traits": [
+        "stubborn",
+        "honest",
+        "warm"
+      ]
+    },
+    "appearance": {
+      "seed": 7489,
+      "build": "strong_short",
+      "age": 44.0,
+      "feminine": 1.0,
+      "hair": "red_hair_under_a_shawl",
+      "notes": "a laundress's forearms red to the elbow, sleeves rolled and pinned, a chalk stub behind one ear, a folded paper kept in her bodice"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/wash_stones",
+        "activity": "sleep",
+        "spot": "the_beating_stone"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/wash_stones",
+        "activity": "work",
+        "spot": "the_beating_stone",
+        "notes": "beating the guild linen on the stones"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/wash_stones",
+        "activity": "sleep",
+        "spot": "the_beating_stone"
       }
     ]
   }

@@ -1,5 +1,186 @@
 [
   {
+    "id": "core:interior/the_crown_drift",
+    "name": "The Crown Drift",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_crown_drift",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "brass-takers working the old levels by night with a Hushed sayer to keep them quiet, drakes in the warm stope, and on the Builders' level the last shift of 1012 and their captain, Gideon Spall",
+    "story": "Three levels of the Tallymen's workings, timbered and laddered, going down from the shaft's foot to where the deep level broke into the Builders' gallery. The takers have hung their lamps on the old pegs and melt what they strip in a hearth on the second level, and a smuggler-sayer stands in the winze to Hush the sound of it from the shore. Past the break nobody of theirs goes. The ore down there is still stacked in the Builders' dressed piles, and nine men are still bringing it up, a basket at a time, round and round the gallery, and putting it back.",
+    "unique_object": "the deep shift-board, nailed to the Builders' wall by the last shift in 1012: nine tokens on their hooks, and a tenth hook with a captain's brass token on it, rubbed bright",
+    "site": {
+      "kind": "mine",
+      "seed": 2312,
+      "region": "core:region/brightwater",
+      "size": "large",
+      "boss": "core:boss/gideon_spall",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/smuggler_stash",
+      "foes": {
+        "rank": [
+          "core:enemy/held_miner"
+        ],
+        "archers": [
+          "core:enemy/smuggler_sayer"
+        ],
+        "heavy": [
+          "core:enemy/drift_hewer"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#7a7466",
+          "#4c483e",
+          "#8b9479"
+        ]
+      },
+      "rooms": [
+        {
+          "id": "shaft_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_plat",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ore_gallery"
+        },
+        {
+          "id": "the_winze",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "takers_hearth",
+          "role": "camp",
+          "size": "large",
+          "set_piece": "forge_hall"
+        },
+        {
+          "id": "warm_stope",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "daylight_shaft"
+        },
+        {
+          "id": "hushed_level",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "the_break",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "encounters": [
+        {
+          "room": "shaft_foot",
+          "enemy": "core:enemy/brass_taker",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "the_plat",
+          "enemy": "core:enemy/brass_taker",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "the_plat",
+          "enemy": "core:enemy/drift_hewer",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "the_winze",
+          "enemy": "core:enemy/brass_taker",
+          "count": 1,
+          "role": "ambush"
+        },
+        {
+          "room": "takers_hearth",
+          "enemy": "core:enemy/brass_taker",
+          "count": 3,
+          "role": "sleeper"
+        },
+        {
+          "room": "takers_hearth",
+          "enemy": "core:enemy/drift_hewer",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "warm_stope",
+          "enemy": "core:enemy/gutter_drake",
+          "count": 5,
+          "role": "guard"
+        },
+        {
+          "room": "hushed_level",
+          "enemy": "core:enemy/smuggler_sayer",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "the_break",
+          "enemy": "core:enemy/held_miner",
+          "count": 3,
+          "role": "guard"
+        },
+        {
+          "room": "the_break",
+          "enemy": "core:enemy/held_miner",
+          "count": 2,
+          "role": "ambush"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "lantern_hand"
+        },
+        {
+          "kind": "prop",
+          "room": "takers_hearth",
+          "prop": "crate"
+        },
+        {
+          "kind": "note",
+          "room": "takers_hearth",
+          "book": "core:book/crown_drift_takers_tally",
+          "name": "the takers' weigh-slate"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/crown_drift_last_entry",
+          "name": "the drift-captain's last entry",
+          "item": "core:item/crown_drift_last_entry"
+        }
+      ]
+    }
+  },
+  {
     "id": "core:interior/the_struck_barrow",
     "name": "The Struck Barrow",
     "scene": "res://world/sites/site_interior.tscn",
@@ -189,187 +370,6 @@
           "room": "secret",
           "book": "core:book/struck_barrow_receivers_own",
           "name": "the Receiver's own entry"
-        }
-      ]
-    }
-  },
-  {
-    "id": "core:interior/the_crown_drift",
-    "name": "The Crown Drift",
-    "scene": "res://world/sites/site_interior.tscn",
-    "kind": "deep_place",
-    "place": "core:poi/the_crown_drift",
-    "danger": 3,
-    "formed_by": "builder",
-    "resident": "brass-takers working the old levels by night with a Hushed sayer to keep them quiet, drakes in the warm stope, and on the Builders' level the last shift of 1012 and their captain, Gideon Spall",
-    "story": "Three levels of the Tallymen's workings, timbered and laddered, going down from the shaft's foot to where the deep level broke into the Builders' gallery. The takers have hung their lamps on the old pegs and melt what they strip in a hearth on the second level, and a smuggler-sayer stands in the winze to Hush the sound of it from the shore. Past the break nobody of theirs goes. The ore down there is still stacked in the Builders' dressed piles, and nine men are still bringing it up, a basket at a time, round and round the gallery, and putting it back.",
-    "unique_object": "the deep shift-board, nailed to the Builders' wall by the last shift in 1012: nine tokens on their hooks, and a tenth hook with a captain's brass token on it, rubbed bright",
-    "site": {
-      "kind": "mine",
-      "seed": 2312,
-      "region": "core:region/brightwater",
-      "size": "large",
-      "boss": "core:boss/gideon_spall",
-      "boss_adds": 2,
-      "boss_loot": "core:loot/rich_chest",
-      "rich_loot": "core:loot/smuggler_stash",
-      "foes": {
-        "rank": [
-          "core:enemy/held_miner"
-        ],
-        "archers": [
-          "core:enemy/smuggler_sayer"
-        ],
-        "heavy": [
-          "core:enemy/drift_hewer"
-        ]
-      },
-      "theme": {
-        "palette": [
-          "#7a7466",
-          "#4c483e",
-          "#8b9479"
-        ]
-      },
-      "rooms": [
-        {
-          "id": "shaft_foot",
-          "role": "entrance",
-          "size": "medium"
-        },
-        {
-          "id": "the_plat",
-          "role": "chamber",
-          "size": "large",
-          "set_piece": "ore_gallery"
-        },
-        {
-          "id": "the_winze",
-          "role": "passage",
-          "size": "small",
-          "drop": -2.5
-        },
-        {
-          "id": "takers_hearth",
-          "role": "camp",
-          "size": "large",
-          "set_piece": "forge_hall"
-        },
-        {
-          "id": "warm_stope",
-          "role": "chamber",
-          "size": "large",
-          "set_piece": "daylight_shaft"
-        },
-        {
-          "id": "hushed_level",
-          "role": "passage",
-          "size": "small",
-          "drop": -2.5
-        },
-        {
-          "id": "the_break",
-          "role": "hall",
-          "size": "large",
-          "set_piece": "chasm_bridge"
-        },
-        {
-          "id": "boss",
-          "role": "boss",
-          "size": "huge",
-          "set_piece": "boss_arena"
-        }
-      ],
-      "encounters": [
-        {
-          "room": "shaft_foot",
-          "enemy": "core:enemy/brass_taker",
-          "count": 2,
-          "role": "guard"
-        },
-        {
-          "room": "the_plat",
-          "enemy": "core:enemy/brass_taker",
-          "count": 2,
-          "role": "guard"
-        },
-        {
-          "room": "the_plat",
-          "enemy": "core:enemy/drift_hewer",
-          "count": 1,
-          "role": "guard"
-        },
-        {
-          "room": "the_winze",
-          "enemy": "core:enemy/brass_taker",
-          "count": 1,
-          "role": "ambush"
-        },
-        {
-          "room": "takers_hearth",
-          "enemy": "core:enemy/brass_taker",
-          "count": 3,
-          "role": "sleeper"
-        },
-        {
-          "room": "takers_hearth",
-          "enemy": "core:enemy/drift_hewer",
-          "count": 1,
-          "role": "guard"
-        },
-        {
-          "room": "warm_stope",
-          "enemy": "core:enemy/gutter_drake",
-          "count": 5,
-          "role": "guard"
-        },
-        {
-          "room": "hushed_level",
-          "enemy": "core:enemy/smuggler_sayer",
-          "count": 1,
-          "role": "guard"
-        },
-        {
-          "room": "the_break",
-          "enemy": "core:enemy/held_miner",
-          "count": 3,
-          "role": "guard"
-        },
-        {
-          "room": "the_break",
-          "enemy": "core:enemy/held_miner",
-          "count": 2,
-          "role": "ambush"
-        }
-      ],
-      "features": [
-        {
-          "kind": "prop",
-          "room": "shaft_foot",
-          "prop": "rope_coil"
-        },
-        {
-          "kind": "prop",
-          "room": "shaft_foot",
-          "prop": "lantern_hand"
-        },
-        {
-          "kind": "prop",
-          "room": "takers_hearth",
-          "prop": "crate"
-        },
-        {
-          "kind": "note",
-          "room": "takers_hearth",
-          "book": "core:book/crown_drift_takers_tally",
-          "name": "the takers' weigh-slate"
-        },
-        {
-          "kind": "note",
-          "room": "secret",
-          "book": "core:book/crown_drift_last_entry",
-          "name": "the drift-captain's last entry",
-          "item": "core:item/crown_drift_last_entry"
         }
       ]
     }

@@ -532,7 +532,7 @@ static func the_hush_hole(d: PoiDressing) -> void:
 # --- phase 2: the large sites ------------------------------------------------------------------------
 
 ## Calamine spoil: grey earth gone green where the rain has been at it, the colour of an old lamp.
-const SPOIL := {"base": "#4a493d", "accent": "#383d30", "grout": "#23261c", "unit": 0.28}
+const SPOIL := {"base": "#3d3d33", "accent": "#2f3429", "grout": "#1d2018", "unit": 0.28}
 ## The engine-house's killas: a warm grey rubble stone, not the city's cool lime-and-slate.
 const KILLAS := {"base": "#8e897e", "accent": "#6d685f", "grout": "#433f39", "unit": 0.44}
 ## The Tally Needle's lime-wash, gone the grey of old teeth where the rain runs.
@@ -797,7 +797,7 @@ static func the_crown_drift(d: PoiDressing) -> void:
 			var a := TAU * float(i) / 12.0
 			lo = minf(lo, k.on_ground(at.x + sin(a) * r, at.y + cos(a) * r).y)
 		await k.step()
-		m.mound(Vector3(at.x, minf(lo, k.on_ground(at.x, at.y).y) - 0.35, at.y), r, float(h[2]), spoil, "Spoil", true, 2.2, 7, 22, true, 0.16)
+		m.mound(Vector3(at.x, minf(lo, k.on_ground(at.x, at.y).y) - 0.35, at.y), r, float(h[2]), spoil, "Spoil", true, 1.8, 7, 22, true, 0.09)
 	# loose stone at the heap's foot, where it rolled
 	var rock := k.rock("boulder")
 	if rock != "":
@@ -1557,6 +1557,11 @@ static func beached_barge(d: PoiDressing) -> void:
 		m.block(antler, Transform3D(board.basis * Basis(Vector3.BACK, a), board.origin + board.basis * Vector3(-0.15 + float(i) * 0.04, 0.05, 0.03)), Vector3(0.025, 0.28, 0.01))
 	m.commit(antler, PoiKit.plain(Color(0.2, 0.17, 0.13), 0.9), "sign_AntlerMark")
 	k.marker("the_claims", Vector3(bow.x, by, bow.y) - Vector3(lie.x, 0.0, lie.y) * 1.2)
+	k.touchable("Claims", board.origin - board.basis.z * 0.1, "Read the claims on her stem", "core:dialogue/beached_barge_claims", "", false)
+	# the bargemaster's locker, still under her standing side with the cargo's papers in it
+	var locker := perp * 2.6 + lie * 3.4
+	locker = _clear_spot(k, locker, lie, 3.0)
+	_container(d, "bargemasters_locker", k.on_ground(locker.x, locker.y), PoiKit.yaw_of(perp), "core:loot/common_chest", "the bargemaster's locker")
 	if hull != null:
 		# acorns' children: a few oak seedlings in the shingle round her, the tree's own
 		var sap := k.tree("oak_sapling")
@@ -1659,6 +1664,7 @@ static func charter_stone(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(bare, PoiKit.painted(5, {"base": "#6f6650", "accent": "#5a523f", "grout": "#3d372a", "unit": 0.25}, 0.9, 0.8), "TroddenRing")
 	k.marker("the_charter_face", k.on_ground(to_lake.x * 3.0, to_lake.y * 3.0))
+	k.touchable("CharterFace", Vector3(0.0, g + 1.6, 0.0) + b * Vector3(0.0, 0.0, t * 0.5 + 0.3), "Read the Charter on the stone", "core:dialogue/charter_stone_lines", "", false)
 
 
 # --- the Strandline Stones ------------------------------------------------------------------------------
@@ -1729,6 +1735,7 @@ static func strandline_stones(d: PoiDressing) -> void:
 	m.commit(plug, PoiKit.plain(Color(0.64, 0.52, 0.28), 0.35, 0.85), "BenchmarkBrass")
 	m.commit(notches, PoiKit.plain(Color(0.2, 0.19, 0.17), 0.9), "sign_BenchmarkNotches")
 	k.marker("the_benchmark", Vector3(bm.x, bmy + 0.25, bm.y) + Vector3(to_lake.x, 0.0, to_lake.y) * 0.8)
+	k.touchable("Benchmark", bxf.origin + Vector3(0.0, 0.3, 0.0) + bxf.basis * Vector3(0.0, 0.0, 0.5), "Read the benchmark's notches", "core:dialogue/strandline_benchmark", "", false)
 
 
 # --- the Pilgrim Stair ----------------------------------------------------------------------------------
@@ -2232,13 +2239,113 @@ static func shingle_shrine(d: PoiDressing) -> void:
 			h.position.y = g + 0.02
 
 
-## The Log Boom's bank: the kind stood a single length of drystone wall on its own and a brazier
-## inside it; the wall goes, the brazier stays on the bank where the rafters warm their hands.
+## The Log Boom: not a bridge of chains but what its name says, a boom of whole logs chained end to
+## end across the Wold Water at the level of the water, the rafters walking it from bank to bank;
+## its ends chained to posts sunk in either bank, the made-up rafts lying lashed behind it upstream
+## waiting their turn to be let go, and on the bank the boom-keeper's brazier and stool and the pole
+## he lets them go with.
 static func log_boom(d: PoiDressing) -> void:
-	await PoiDressing.kind_builders().build(d)
-	for wall in _named(d, "drystone_wall"):
-		d.remove_child(wall)
-		wall.queue_free()
+	var k := d.kit
+	var m := d.masonry
+	# across the water by its narrowest line through the middle
+	var best := INF
+	var across := k.grain()
+	var lo := 0.0
+	var hi := 0.0
+	for i in 18:
+		var u := Vector2(sin(PI * float(i) / 18.0), cos(PI * float(i) / 18.0))
+		var a := 0.0
+		while a > -40.0 and k.is_water(u.x * (a - 1.0), u.y * (a - 1.0)):
+			a -= 1.0
+		var b := 0.0
+		while b < 40.0 and k.is_water(u.x * (b + 1.0), u.y * (b + 1.0)):
+			b += 1.0
+		if not k.is_water(0.0, 0.0):
+			continue
+		if b - a < best:
+			best = b - a
+			across = u
+			lo = a
+			hi = b
+	var along := Vector2(-across.y, across.x)
+	var wl := k.water_y(0.0, 0.0)
+	if is_nan(wl):
+		wl = k.on_ground(0.0, 0.0).y + 0.6
+	var p0 := across * (lo - 2.0)
+	var p1 := across * (hi + 2.0)
+	var span := p0.distance_to(p1)
+	var n := maxi(int(ceil(span / 3.4)), 2)
+	var logs := m.begin()
+	var iron := m.begin()
+	var yaw := PoiKit.yaw_of(across)
+	for i in n:
+		var t0 := float(i) / float(n)
+		var t1 := float(i + 1) / float(n)
+		var a3 := p0.lerp(p1, t0) + along * k.rng.randf_range(-0.12, 0.12)
+		var b3 := p0.lerp(p1, t1) + along * k.rng.randf_range(-0.12, 0.12)
+		var ya := maxf(wl + 0.12, k.on_ground(a3.x, a3.y).y + 0.3)
+		var yb := maxf(wl + 0.12, k.on_ground(b3.x, b3.y).y + 0.3)
+		var ea := Vector3(a3.x, ya, a3.y) + Vector3(across.x, 0.0, across.y) * 0.25
+		var eb := Vector3(b3.x, yb, b3.y) - Vector3(across.x, 0.0, across.y) * 0.25
+		m.limb(logs, ea, eb, 0.3)
+		var mid := (ea + eb) * 0.5
+		k.collider(Vector3(0.62, 0.5, ea.distance_to(eb) + 0.3), Transform3D(Basis(Vector3.UP, yaw), mid - Vector3(0.0, 0.05, 0.0)), "wood")
+		if i > 0:
+			# the chain across the joint, two links and a staple
+			var j := Vector3(a3.x, ya + 0.28, a3.y)
+			m.limb(iron, j - Vector3(across.x, 0.0, across.y) * 0.4, j + Vector3(across.x, 0.0, across.y) * 0.4, 0.035)
+	# the posts at either end, sunk in the bank, chained to the boom
+	var posts := m.begin()
+	for e in [p0 - across * 1.2, p1 + across * 1.2]:
+		var ep: Vector2 = e
+		var top := m.post(posts, ep, 1.6, 0.3)
+		var toward := (Vector2.ZERO - ep).normalized()
+		var end_log := ep + toward * 1.4
+		m.limb(iron, top - Vector3(0.0, 0.3, 0.0), Vector3(end_log.x, maxf(wl + 0.4, k.on_ground(end_log.x, end_log.y).y + 0.55), end_log.y), 0.035)
+	await k.step()
+	m.commit(logs, PoiKit.painted(3, {"base": "#5e4f3c", "accent": "#3f3528"}, 0.85, 0.8), "BoomLogs", true)
+	m.commit(posts, k.surface("timber", 0.8), "BoomPosts", true)
+	m.commit(iron, PoiKit.plain(Color(0.24, 0.22, 0.2), 0.55, 0.7), "BoomChains")
+	if k.far:
+		return
+	# the rafts waiting behind the boom: whichever way the water runs, upstream is the side the logs
+	# pile on; here both sides are the Mere's slack water, so the side away from the road
+	var up := along
+	if not k.roads.is_empty() and k.road_distance(along * 6.0) < k.road_distance(-along * 6.0):
+		up = -along
+	var rafts := m.begin()
+	var lash := m.begin()
+	for r in 2:
+		var rc := across * ((lo + hi) * 0.5 + (float(r) - 0.5) * 4.2) + up * 2.6
+		if not k.is_water(rc.x, rc.y):
+			continue
+		for i in 6:
+			var off := across * ((float(i) - 2.5) * 0.5)
+			var a3 := rc + off - up * 1.8
+			var b3 := rc + off + up * 1.8
+			m.limb(rafts, Vector3(a3.x, wl + 0.08, a3.y), Vector3(b3.x, wl + 0.08, b3.y), 0.22)
+		for s in [-1.0, 1.0]:
+			var lc := rc + up * 1.2 * float(s)
+			m.block(lash, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(up)), Vector3(lc.x, wl + 0.18, lc.y)), Vector3(3.2, 0.06, 0.08))
+	await k.step()
+	m.commit(rafts, PoiKit.painted(3, {"base": "#6a5a44", "accent": "#4a3e2f"}, 0.8, 0.8), "WaitingRafts")
+	m.commit(lash, PoiKit.plain(Color(0.45, 0.39, 0.29), 0.95), "RaftLashings")
+	# the keeper's place on the near bank: brazier, stool, his pole
+	var bank := p0 - across * 3.2 + along * 2.0
+	if not k.roads.is_empty() and k.road_distance(bank) < 3.5:
+		bank = p0 - across * 3.2 - along * 2.0
+	await k.step()
+	k.place(k.prop("brazier"), k.on_ground(bank.x, bank.y), 0.0, 1.0, true)
+	k.light(k.on_ground(bank.x, bank.y, 1.1), Color(1.0, 0.62, 0.3), 2.0, 9.0)
+	var st_at := bank - along * 1.4
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(st_at.x, st_at.y), PoiKit.yaw_of(across), 1.0, true)
+	var pole := m.begin()
+	var pf := bank + along * 1.2
+	m.limb(pole, k.on_ground(pf.x, pf.y, 0.0), k.on_ground(pf.x, pf.y, 0.0) + Vector3(across.x * 0.6, 3.6, across.y * 0.6), 0.04)
+	m.commit(pole, k.surface("timber", 0.7), "BoomPole")
+	k.marker("the_toll_post", k.on_ground(st_at.x - across.x * 0.8, st_at.y - across.y * 0.8), true)
+	k.marker("the_far_approach", k.on_ground(p1.x + across.x * 5.0, p1.y + across.y * 5.0))
 
 
 # --- the Tallyman's Folly -------------------------------------------------------------------------------
@@ -2454,6 +2561,8 @@ static func smoke_coppice(d: PoiDressing) -> void:
 	k.collider(Vector3(0.9, 0.55, 3.6), Transform3D(Basis(Vector3.UP, yaw), Vector3(stack_at.x, sg + 0.27, stack_at.y)), "wood")
 	var brake := _clear_spot(k, fire - along * 4.5 + Vector2(-along.y, along.x) * 3.0, along, 3.0)
 	var bg := k.on_ground(brake.x, brake.y)
+	# Hob Tench at his brake
+	_spot(k, "the_cleaving_brake", _clear_spot(k, brake - along * 1.3, along, 2.0), along)
 	m.limb(stack, bg, bg + Vector3(0.4, 1.1, 0.0), 0.06)
 	m.limb(stack, bg + Vector3(0.6, 0.0, 0.0), bg + Vector3(0.2, 1.1, 0.0), 0.06)
 	m.limb(stack, bg + Vector3(-1.2, 0.05, 0.3), bg + Vector3(1.6, 1.0, 0.0), 0.05)
@@ -2508,3 +2617,30 @@ static func _toward_road(k: PoiKit, reach: float) -> Vector2:
 			best = dd
 			dir = u
 	return dir if k.road_distance(Vector2.ZERO) <= reach else Vector2.ZERO
+
+
+## A chest, crate or locker that opens: the region's prop for the look and a WorldContainer for the
+## loot, its id the place's own so what was taken stays taken (hearthvale.gd's way).
+static func _container(d: PoiDressing, key: String, at: Vector3, yaw: float, table: String, shown: String,
+		prop_kind := "chest") -> void:
+	var k := d.kit
+	if k.far:
+		return
+	var path := k.prop(prop_kind)
+	if path != "":
+		k.place(path, at, yaw, 1.0, false)
+	var box := WorldContainer.new()
+	box.name = "Container_" + key
+	box.container_id = "%s/%s" % [d.poi_id, key]
+	box.loot_table = table
+	box.display_name = shown
+	var cs := CollisionShape3D.new()
+	var form := BoxShape3D.new()
+	form.size = Vector3(1.0, 0.8, 0.7)
+	cs.shape = form
+	cs.position.y = 0.4
+	box.add_child(cs)
+	box.position = at
+	box.rotation.y = yaw
+	d.add_child(box)
+	k.collider(Vector3(1.0, 0.8, 0.7), Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0.0, 0.4, 0.0)), "wood")
