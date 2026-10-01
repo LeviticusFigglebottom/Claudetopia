@@ -83,6 +83,7 @@ func _ready() -> void:
 	SaveSystem.register("quests", self)
 	EventBus.entity_killed.connect(_on_entity_killed)
 	EventBus.item_acquired.connect(_on_item_acquired)
+	EventBus.item_removed.connect(_on_item_removed)
 	EventBus.place_discovered.connect(_on_place_discovered)
 	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.dialogue_node_entered.connect(_on_dialogue_node_entered)
@@ -956,9 +957,84 @@ func _sync_stage(quest_id: String) -> void:
 				var target := str(o.get("target", ""))
 				if Ids.type_of(target) == "boss" and GameState.has_flag("boss_deed/" + target):
 					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
+			"act":
+				# a lock picked before its lesson (the Rogue's strongbox, opened before Sauve had
+				# said why) stays open: nothing is left to pick, so the lesson is the box's state
+				if str(o.get("target", "")) == "pick_lock" and str(o.get("against", "")) == "prop:strongbox" \
+						and _a_strongbox_open(quest_id):
+					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
 			_:
 				pass
+	_resupply()
 	check_reach()
+
+
+## Whether one of the quest's own strongboxes (its `props`, laid by QuestSpots) is already open.
+func _a_strongbox_open(quest_id: String) -> bool:
+	var spots := get_tree().get_first_node_in_group("quest_spots") if is_inside_tree() else null
+	if spots == null:
+		return false
+	var laid: Dictionary = spots.get("props")
+	for p_v in definition(quest_id).get("props", []):
+		if typeof(p_v) != TYPE_DICTIONARY or str((p_v as Dictionary).get("kind", "")) != "strongbox":
+			continue
+		var box: Variant = laid.get(str((p_v as Dictionary).get("name", "")), null)
+		if box is Node and is_instance_valid(box) and "locked" in box and not bool(box.get("locked")):
+			return true
+	return false
+
+
+## A lesson whose doing spends what the player carries (arrows at the butts, picks at the box)
+## says how its teacher hands more (`supply`: {item, count, say?}): run out while it is open, and
+## they do (triage 79: forty arrows in the reeds, or six picks snapped, and nothing left to finish
+## the lesson with).
+func _on_item_removed(_item_id: String, _count: int) -> void:
+	_resupply()
+
+
+func _resupply() -> void:
+	if ctx == null or not ctx.has_inventory():
+		return
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var index := stage_of(quest_id)
+		var objs: Array = stage_def(quest_id, index).get("objectives", [])
+		for i in objs.size():
+			var o: Dictionary = objs[i]
+			var supply: Variant = o.get("supply", null)
+			if not (supply is Dictionary) or _count_for(quest_id, index, i) >= maxi(1, int(o.get("count", 1))):
+				continue
+			var item := str((supply as Dictionary).get("item", ""))
+			if item == "" or ctx.item_count(item) > 0:
+				continue
+			Log.info("Quests", "%s: out of %s for '%s'; handed more" % [quest_id, item, objective_text(o, quest_id)])
+			ctx.give_item(item, maxi(1, int((supply as Dictionary).get("count", 1))))
+			var line: Variant = (supply as Dictionary).get("say", null)
+			_run_effects(quest_id, [{"say": line}] if line is Array else [], "objective_supply")
+
+
+## The active quest that still wants this item in the bag (any objective of it collects, hands
+## over, uses or reads it), or "": what the player cannot drop, sell or eat while it does. A quest
+## item dropped was not saved with the world, sold was gone, eaten was gone, and the quest with it.
+func wanted_by(item_id: String) -> String:
+	if item_id == "":
+		return ""
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		for stage_v in stages_of(quest_id):
+			if typeof(stage_v) != TYPE_DICTIONARY:
+				continue
+			for o_v in (stage_v as Dictionary).get("objectives", []):
+				if typeof(o_v) != TYPE_DICTIONARY:
+					continue
+				var o: Dictionary = o_v
+				var t := str(o.get("type", ""))
+				var wants := str(o.get("item", "")) if t == "deliver" else str(o.get("target", "")) if t in ["collect", "use_item", "read_book"] else ""
+				if wants == item_id:
+					return str(quest_id)
+	return ""
 
 
 # --- event tracking ---------------------------------------------------------------------------------

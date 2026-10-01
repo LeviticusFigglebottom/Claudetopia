@@ -157,7 +157,17 @@
             "target": "pick_lock",
             "count": 1,
             "text": "Pick the collector's strongbox: {key:interact}, then set the pin as the needle crosses",
-            "against": "prop:strongbox"
+            "against": "prop:strongbox",
+            "supply": {
+              "item": "core:item/lockpick",
+              "count": 3,
+              "say": [
+                "core:npc/sauve_mor",
+                "Snapped them all? Here's three of mine. Slower. Feel for it.",
+                0.3,
+                5.0
+              ]
+            }
           },
           {
             "type": "collect",

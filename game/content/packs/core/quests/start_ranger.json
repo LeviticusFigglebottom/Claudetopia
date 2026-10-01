@@ -31,11 +31,11 @@
        "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you.\n\nFirst she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range in turn: the near one twice, then the middle one, then the far one. Only the butt you are on counts; the marker is on it.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
        "marker": {"place_id": "core:place/fernhold", "radius": 70},
        "objectives": [
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_near", "min_range": 10, "count": 2, "text": "Hit the near butt twice, at fifteen paces: draw with {key:attack_light}, hold, let go",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_near", "min_range": 10, "count": 2, "text": "Hit the near butt twice, at fifteen paces: draw with {key:attack_light}, hold, let go", "supply": {"item": "core:item/iron_arrow", "count": 12, "say": ["core:npc/rosen_wyke", "Out? Here. Twelve more, and fetch the ones in the grass after; arrows are dear.", 0.3, 5.0]},
           "on_complete": [{"say": ["core:npc/rosen_wyke", "Breathe out. Loose on the empty. The arrow doesn't care how brave you are.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_mid", "min_range": 18, "count": 1, "after": 0, "in_turn": true, "text": "Now the middle butt, at twenty-five paces",
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_mid", "min_range": 18, "count": 1, "after": 0, "in_turn": true, "text": "Now the middle butt, at twenty-five paces", "supply": {"item": "core:item/iron_arrow", "count": 12, "say": ["core:npc/rosen_wyke", "Out? Here. Twelve more, and fetch the ones in the grass after; arrows are dear.", 0.3, 5.0]},
           "on_complete": [{"say": ["core:npc/rosen_wyke", "It dropped. They all drop. Aim where it's going to be, not where it is.", 0.4]}]},
-         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_far", "min_range": 26, "count": 1, "after": 1, "in_turn": true, "text": "Now the far butt, at thirty-five paces: aim a little over it"}
+         {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_far", "min_range": 26, "count": 1, "after": 1, "in_turn": true, "text": "Now the far butt, at thirty-five paces: aim a little over it", "supply": {"item": "core:item/iron_arrow", "count": 12, "say": ["core:npc/rosen_wyke", "Out? Here. Twelve more, and fetch the ones in the grass after; arrows are dear.", 0.3, 5.0]}}
        ],
        "on_enter": [{"set_flag": "hunter_at_fernhold"}],
        "on_complete": [
