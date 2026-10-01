@@ -14912,3 +14912,72 @@ the whole account.
     polled, never waited on, but a water freed mid-task is a risk worth a look.
   - The tester should send the newest `startup_*.txt`, the session summary and
     `launch_state.json` (docs/FIRST_LAUNCH.md).
+
+## The starts' softlocks, a softlock checker over every quest, markers kept in step, and a second lock-on key (quest-fixes, 2026-10-01)
+
+Triage 77-80, on `wip/quest-fixes`.
+
+- **The Mage's braziers (77).** A brazier lit from nearer than the second objective's 14 m, or
+  before Tamsin had said what the lesson was for, stood lit for good with the objective unmoved;
+  with all three lit nothing was left to light. `QuestLog._on_act_done` now knows whether an act
+  counted; one that counted for nothing while a lesson still wants it is undone through the thing's
+  `undo_act` (a Pell brazier burns 1.6 s of wall clock, then goes out and can be lit again), and the
+  objective's `refused` (or a later stage's `early`) effects say why in Tamsin's voice. The
+  objective and journal now say "fourteen paces or more".
+- **The Rogue's watch (78).** Seen, you were sent back to a shelter to wait until Tella looked away,
+  and a body she kept seeing never came round. Now the `unseen` block names a `fail_stage`: seen,
+  NightWatch sends the quest to `seen`, a `detour` stage (`advance` never walks into one in order;
+  `QuestLog.next_in_order`) whose one objective is to speak to Sauve again, with the marker on him,
+  back where the night began; Tella keeps her post and lantern (`keeps_watch`). Speaking to him
+  (`traps_again`) returns to the_traps, and entering it begins a clean try: the flag down, her meter
+  from nothing, the book handed back if the bag lost it. A stage gone back to starts its objectives
+  from nothing (its old counts closed `seen` the moment it was entered twice), and a quest taken
+  again starts without its last try's counts. A game loaded on the traps with the flag still up
+  (the softlocked saves) begins clean.
+- **Every quest (79).** `tools/quests/softlock_check.py` reads every quest pack for the ways a
+  player can spoil a quest: a watch with no fail stage; a detour nothing sends to or that never
+  returns; a used-up prop with too few props or no word when an act is refused; a lesson that spends
+  arrows or picks with nobody to hand more; a person gone (`gone_when`) while their stage needs
+  them; a choice with no open option; an empty stage nothing moves on; a talk topic no line leads
+  to. `tools/tests/test_quest_softlocks.py` runs it (122 quests, 0 findings) and spoils the pack once
+  per check to show each is caught. What it and the reading found, fixed:
+  - the Ranger's butts and the Rogue's strongbox spend arrows and picks with no way to get more:
+    their objectives say `supply`, and the teacher hands more with a line when the bag runs out;
+  - a thing an active quest wants (collect, deliver, use, read) could be dropped (a dropped item is
+    not saved with the world), sold or eaten: the player's bag now keeps it (`Inventory.held_for`),
+    shops will not buy it, and the inventory says "Kept for <quest>" instead of Drop;
+  - a strongbox picked before its lesson could not be picked again: it now counts when the lesson
+    comes;
+  - the collector (and Tella) were taken out of the world during the new `seen` stage until held.
+  Looked into and not a softlock here: NPCs and mounts cannot be killed (Npc is not an Actor and
+  nothing calls `NpcRegistry.kill`), so no talk, escort or mount objective loses its person; no
+  quest content fails a quest (`fail_quest`, `fails_if` are unused) and abandoning is not offered.
+- **Markers (79).** The tracker and compass already read the tracked quest's live objectives every
+  250 ms. Out of step were: the chart's areas (`active_markers`) showed `after` steps not yet
+  reached and `hidden` ones, and a person's area at their home rather than where the story holds
+  them (now `NpcRegistry.place_of`); and the tracker ticked every row that left it as done, so the
+  Rogue's spoilt try was ticked off: a row that leaves undone (`QuestLog.objective_done_in`) now
+  goes at once, unticked; and the marks over heads (QuestCues, kept a while per person) were not
+  asked again after a fail, a load or a new game: they are now. `test_waymarks_in_sync` walks a
+  fail, a save and load on it, the retry, a failed quest and a two-step quest's steps through the
+  real HUD and Sauve's mark. GDScript warnings: 49 in the game's scripts, at the baseline.
+- **A second lock-on key (80).** Lock-on is on the middle mouse button and Z (free on every action
+  and in every script that reads keys; Q and Tab are the heavy attack and the target cycle). Every
+  action can take a second keyboard-and-mouse binding: the Controls tab has an "Or" column, and
+  `Settings.rebind` is device-aware (slot 0 the first key, 2 the second, 1 the pad; a key is never
+  both of an action's). `{key:...}` names both ("[MMB] or [Z]"), the controls page lists both, and a
+  settings file whose lock-on is still the old default takes Z, unless the player had put Z on
+  something else. `test_start_warrior` locks on to a pell with the Z key as the keyboard sends it,
+  and the yard moves on to the ring.
+- **Measured and looked at:**
+  - targeted tests (see the commits): test_start_mage, test_start_rogue, test_rogue_plays (the
+    night played with the keys on the built world, now seen, back to Sauve, again and down the lane
+    unseen), test_start_warrior, test_start_ranger, test_quest_softlocks, test_waymarks_in_sync,
+    test_waymarks, test_rebind_capture, test_pad_layout, test_ui_fits_at_every_scale and the
+    quest, inventory, merchant and escort files: all pass, 0 script errors;
+  - the Controls tab at 1280x720 (ui_review's new `settings_bindings_combat` shot): Lock on reads
+    MMB, Z, RS in its three columns.
+- **Not done / for the coordinator:**
+  - the full suite, journey, flow and the quest walker were not run (the build-first policy); the
+    walker plays the starts in order and never takes the `seen` detour;
+  - arrows spent are handed back as iron arrows whatever the player shot.

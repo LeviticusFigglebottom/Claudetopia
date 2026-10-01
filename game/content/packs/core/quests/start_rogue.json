@@ -5,7 +5,7 @@
     "layer": "main",
     "giver": "core:npc/sauve_mor",
     "description": "Tomorrow is tithe-day at Moreva, the eel-landing on the Delta where you trap with Sauve Mor. The Tallymen's collector sleeps tonight against his strongbox, and the tithe-book in it says Moreva owes forty baskets of eels it never caught. Sauve means to have that book before the collector wakes, and nobody is to know it was Moreva.",
-    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue; reworked for triage 44 (PROGRESS.md, 'The Rogue's first quest makes sense, and its stealth can be done') and made plainer for triage 51-52: one goal (the collector's tithe-book gone before the count, and nobody the wiser), and each step is a part of it, in the order a thief would do it: (1) the box: crouch, pick it, take the book (core:item/tithe_book, in the strongbox's loot core:loot/tithe_strongbox), and the sleeper's pocket if you like; (2) the traps: carry the book down to Sauve's punt at his traps past the night-watch, who must not see a stranger coming away from the box; (3) the sack, one blow from behind to learn it; (4) the bravo, whose round ends at the empty box; (5) the report: the page, Tally, the courier. The traps: Tella Oul (the Reed Council's night-watch, a lantern on her: the stage's `unseen`, NightWatch) stands at the head of the way down to the South Channel looking down it; the lane on the way's east side is sheltered from her by five `cover` props (QuestCover); the straight way down passes six metres in front of her lantern. Seen, you go back into the lane's shelter (the nearest `back_to`), not to the start. Sauve waits at his traps through that stage (she knows him) and is `with_you_when` the quest is active, so the HUD's eye reads the watch and not him. The strongbox is a QuestSpots prop (a locked WorldContainer the Tallymen own, `prop:strongbox`) opened on the lockpick screen (`pick_lock`); the collector (core:npc/tithe_collector) sleeps beside it through the three night lessons, and lifting from his pocket is the optional `pickpocket` act. The sack is a Pell of kind sack (`prop:sack`), which never sees anybody, so a crouched blow from behind is a sneak attack. The bravo walks the landing's round at first grey (QuestFoes, `round`), in fog. Tally, Sauve's own mare, is handed over after the first lesson (the_strongbox's on_complete, tied on the south-east boards: `tally_tether`), not to be ridden on the boards that night; getting up on her is the report's (`mount`), for the road after the courier. Every change of stage is said out loud by Sauve as it happens, and each journal entry opens on why. test_rogue_plays plays it with the body and the keys.",
+    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue; reworked for triage 44 (PROGRESS.md, 'The Rogue's first quest makes sense, and its stealth can be done') and made plainer for triage 51-52: one goal (the collector's tithe-book gone before the count, and nobody the wiser), and each step is a part of it, in the order a thief would do it: (1) the box: crouch, pick it, take the book (core:item/tithe_book, in the strongbox's loot core:loot/tithe_strongbox), and the sleeper's pocket if you like; (2) the traps: carry the book down to Sauve's punt at his traps past the night-watch, who must not see a stranger coming away from the box; (3) the sack, one blow from behind to learn it; (4) the bravo, whose round ends at the empty box; (5) the report: the page, Tally, the courier. The traps: Tella Oul (the Reed Council's night-watch, a lantern on her: the stage's `unseen`, NightWatch) stands at the head of the way down to the South Channel looking down it; the lane on the way's east side is sheltered from her by five `cover` props (QuestCover); the straight way down passes six metres in front of her lantern. Seen, the try fails (triage 78): the quest goes to the `seen` detour (NightWatch, the `unseen`'s `fail_stage`), whose one objective is to speak to Sauve again, back where the night began (his landing spot, out of her sight); speaking to him (`traps_again`) sends the quest back to the_traps, and the attempt begins clean: the flag down, her meter from nothing, the book still in your bag (Sauve hands it back if it is not). Sauve waits at his traps through that stage (she knows him) and is `with_you_when` the quest is active, so the HUD's eye reads the watch and not him. The strongbox is a QuestSpots prop (a locked WorldContainer the Tallymen own, `prop:strongbox`) opened on the lockpick screen (`pick_lock`); the collector (core:npc/tithe_collector) sleeps beside it through the three night lessons, and lifting from his pocket is the optional `pickpocket` act. The sack is a Pell of kind sack (`prop:sack`), which never sees anybody, so a crouched blow from behind is a sneak attack. The bravo walks the landing's round at first grey (QuestFoes, `round`), in fog. Tally, Sauve's own mare, is handed over after the first lesson (the_strongbox's on_complete, tied on the south-east boards: `tally_tether`), not to be ridden on the boards that night; getting up on her is the report's (`mount`), for the road after the courier. Every change of stage is said out loud by Sauve as it happens, and each journal entry opens on why. test_rogue_plays plays it with the body and the keys.",
     "spots": [
       {
         "name": "sauve_landing",
@@ -157,7 +157,17 @@
             "target": "pick_lock",
             "count": 1,
             "text": "Pick the collector's strongbox: {key:interact}, then set the pin as the needle crosses",
-            "against": "prop:strongbox"
+            "against": "prop:strongbox",
+            "supply": {
+              "item": "core:item/lockpick",
+              "count": 3,
+              "say": [
+                "core:npc/sauve_mor",
+                "Snapped them all? Here's three of mine. Slower. Feel for it.",
+                0.3,
+                5.0
+              ]
+            }
           },
           {
             "type": "collect",
@@ -213,7 +223,7 @@
       },
       {
         "id": "the_traps",
-        "journal": "You have the book. Sauve is waiting at his eel-traps on the South Channel's edge with his punt, which takes it where no Tallyman looks.\n\nBetween you and him is the night-watch.\n\nCarry the book down to Sauve at his traps, south of the landing, without the watch seeing you.\n\nTella Oul keeps the Reed Council's watch at the head of the way down, with a lantern. She knows Sauve. She does not know you, and a stranger coming away from the collector's box on tithe-eve is somebody she has to name at the count; then the Tallymen turn Moreva over looking for the book.\n\nHow: go down the lane on the east side of the way, crouched, keeping the stacked traps, the crates and the old boat between you and her lantern. The corner of your eye says what she has of you: Unseen, Noticed, Seen. Noticed: stop behind something and let her forget you. Seen: go back into the shelter of the stacks, keep still until she is looking at the water again, and come again.",
+        "journal": "You have the book. Sauve is waiting at his eel-traps on the South Channel's edge with his punt, which takes it where no Tallyman looks.\n\nBetween you and him is the night-watch.\n\nCarry the book down to Sauve at his traps, south of the landing, without the watch seeing you.\n\nTella Oul keeps the Reed Council's watch at the head of the way down, with a lantern. She knows Sauve. She does not know you, and a stranger coming away from the collector's box on tithe-eve is somebody she has to name at the count; then the Tallymen turn Moreva over looking for the book.\n\nHow: go down the lane on the east side of the way, crouched, keeping the stacked traps, the crates and the old boat between you and her lantern. The corner of your eye says what she has of you: Unseen, Noticed, Seen. Noticed: stop behind something and let her forget you. Seen, the try is spoilt: go back to Sauve where the night began, and he will start you again.",
         "marker": {
           "place_id": "core:place/moreva",
           "radius": 90
@@ -245,28 +255,10 @@
             ],
             [
               "core:npc/sauve_mor",
-              "Seen. Back behind the stacks, and keep still till she's looking at the water again."
+              "Seen. Leave it. Come back up to me, where we started; we'll go again when she's done looking."
             ]
           ],
-          "back_to": [
-            {
-              "place": "core:place/moreva",
-              "bearing": 175.0,
-              "distance": 46.2
-            },
-            {
-              "place": "core:place/moreva",
-              "bearing": 176.5,
-              "distance": 58.1
-            }
-          ],
-          "back_m": 4,
-          "again": [
-            [
-              "core:npc/sauve_mor",
-              "She's looking at the water. Again: lower, and the stacks between you."
-            ]
-          ]
+          "fail_stage": "seen"
         },
         "objectives": [
           {
@@ -278,6 +270,29 @@
         ],
         "on_enter": [],
         "on_complete": []
+      },
+      {
+        "id": "seen",
+        "detour": true,
+        "keeps_watch": "the_traps",
+        "journal": "Tella saw you on the boards. She has called out, and she is looking hard at where you were; that try is spoilt.\n\nSauve has come back up to where the night began, behind her, to start you again before she makes a name of it.\n\nGo back to Sauve where you started, and speak to him.\n\nHow: she is still looking down the way, so keep out of her lantern going back. When Sauve sends you again, the watch begins again from nothing.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/sauve_mor",
+            "topic": "traps_again",
+            "text": "Seen: go back to Sauve where the night began, and speak to him again"
+          }
+        ],
+        "on_enter": [],
+        "on_complete": [
+          {
+            "quest_stage": [
+              "core:quest/first_rogue",
+              "the_traps"
+            ]
+          }
+        ]
       },
       {
         "id": "the_dagger",

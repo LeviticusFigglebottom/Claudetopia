@@ -140,6 +140,60 @@ func test_the_yard_s_lessons_close_on_the_body_s_own_blows() -> void:
 	assert_true(text.begins_with("Take two of his blows on your shield: hold [") and not text.contains("{"), "the lesson says the key: %s" % text)
 
 
+## Triage 80: the lock-on was on the middle mouse button alone, which some players have not got.
+## It is on a key as well (Z), the yard's lesson says both, and the lesson is done with the key, as
+## the keyboard sends it, by the real body at a pell: no mouse at all.
+func test_the_yard_s_lock_on_is_done_with_a_key_not_the_mouse() -> void:
+	var keys: Array[String] = Settings.bindings_for("lock_on", false)
+	assert_true(keys.has("mouse:3") and keys.has("key:Z"), "the lock-on is on the middle mouse button and on Z: %s" % str(keys))
+	for other in Settings.bindings:
+		if other != "lock_on":
+			assert_false((Settings.bindings[other] as Array).has("key:Z"), "Z is the lock-on's alone, not %s's" % other)
+	var quests: Node = Social.quests
+	assert_true(bool(quests.call("start", FIRST)))
+	quests.call("set_stage", FIRST, "the_yard")
+	quests.call("complete_objective", FIRST, 0)
+	quests.call("complete_objective", FIRST, 1)
+	var text := str((quests.call("objectives_of", FIRST) as Array)[2]["text"])
+	assert_true(text.contains("[MMB] or [Z]"), "the lesson says both: %s" % text)
+	# a floor, the body on it facing north, and a pell four paces ahead
+	var ground := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(60.0, 1.0, 60.0)
+	shape.shape = box
+	ground.add_child(shape)
+	_tree().root.add_child(ground)
+	_nodes.append(ground)
+	ground.global_position = Vector3(9000.0, -0.5, 9000.0)
+	var body := PLAYER.instantiate() as Player
+	_tree().root.add_child(body)
+	_nodes.append(body)
+	body.teleport(Vector3(9000.0, 0.02, 9000.0), 0.0)
+	var pell := Pell.new()
+	pell.name = "yard_pell"
+	_tree().root.add_child(pell)
+	_nodes.append(pell)
+	pell.global_position = Vector3(9000.0, 0.0, 8996.0)
+	for i in 10:
+		await _tree().physics_frame
+	assert_false(body.lock.is_locked(), "not locked on yet")
+	var z := InputEventKey.new()
+	z.physical_keycode = KEY_Z
+	z.keycode = KEY_Z
+	z.pressed = true
+	Input.parse_input_event(z)
+	for i in 4:
+		await _tree().physics_frame
+	var up := z.duplicate() as InputEventKey
+	up.pressed = false
+	Input.parse_input_event(up)
+	for i in 3:
+		await _tree().physics_frame
+	assert_true(body.lock.is_locked() and body.lock.target == pell, "Z locks on to the pell (target %s)" % str(body.lock.target))
+	assert_eq(_at(), "the_ring", "and the yard's lock-on lesson is done with the key: into the ring")
+
+
 func test_the_ring_waits_for_the_word_then_counts_only_the_teacher_s_blows() -> void:
 	var quests: Node = Social.quests
 	quests.call("start", FIRST)

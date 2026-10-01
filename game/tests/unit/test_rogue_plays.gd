@@ -11,7 +11,8 @@ extends TestCase
 ## - the strongbox picked on the lockpick screen by the interact key as the needle crosses, the
 ##   tithe-book taken; the sleeping collector's pocket offered crouched; Tally handed over;
 ## - the straight way down to the traps, crouched: Tella Oul notices, then sees; the read says
-##   Noticed before it says Seen; back in the lane's shelter the watch comes round again;
+##   Noticed before it says Seen; seen, the try fails, the tracker says Sauve, he comes back up to
+##   where the night began, and speaking to him begins a clean try (triage 78);
 ## - the lane down the way's east side, behind the stacks and the boat: never Seen, to Sauve, who
 ##   is talked to (crouched at his back, the key talks, it does not pick his pocket) and takes the book;
 ## - round to the sack's back and one light blow: a sneak attack;
@@ -402,26 +403,26 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 	print("PLAY straight down: noticed %.1f s, seen %.1f s, at %.1f m from her, flag %s" % [walk_noticed_at, walk_seen_at, _flat(player.global_position, tella.global_position), str(GameState.has_flag("seen_on_the_boards"))])
 	assert_true(GameState.has_flag("seen_on_the_boards"), "the straight way down in front of her lantern is seen")
 	assert_true(walk_noticed_at >= 0.0 and walk_seen_at > walk_noticed_at + 1.0, "and the read said Noticed a while before Seen (%.1f, %.1f)" % [walk_noticed_at, walk_seen_at])
-	var back := NightWatch.nearest_back(NightWatch.ensure().spec(), Vector2(player.global_position.x, player.global_position.z))
-	var back_at := _at_xz(back.x, back.y)
-	print("PLAY seen: back %.1f m to the shelter (the start is %.1f m)" % [_flat(player.global_position, back_at), _flat(player.global_position, start)])
-	assert_true(_flat(player.global_position, back_at) < _flat(player.global_position, start), "the shelter is nearer than the start")
-	# back the way a player goes: up to the head of the lane, round the stacks, and down the lane's
-	# east side to the shelter (straight across goes into the stacks)
-	var back_way: Array = [_at_xz(-2786.2, -955.0)]
-	for xz in [Vector2(-2786.4, -950.0), Vector2(-2786.4, -946.0), Vector2(-2786.4, -942.0), Vector2(-2786.6, -938.0)]:
-		if xz.y <= back.y + 0.5:
-			back_way.append(_at_xz(xz.x, xz.y))
-	back_way.append(back_at)
-	await _walk(back_way, 40.0)
-	for k in 12:
-		if not GameState.has_flag("seen_on_the_boards"):
-			break
-		var eye_ray := player.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(tella.eye_position(), Stealth.sight_point(player), 1 | (1 << 10), [tella.get_rid()]))
-		print("PLAY waiting in the shelter at %s: %.1f m from it, her level %.2f, she sees me %s, %.1f m from her at %s, the ray stops on %s" % [player.global_position.snapped(Vector3.ONE * 0.1), _flat(player.global_position, back_at), tella.detection, str(tella.can_see(player)), _flat(player.global_position, tella.global_position), tella.global_position.snapped(Vector3.ONE * 0.1), str(eye_ray.get("collider", "nothing"))])
-		await _ticks(60)
-	var again := not GameState.has_flag("seen_on_the_boards")
-	assert_true(again, "back in the shelter, and she looks at the water again")
+	# seen, the try has failed (triage 78): the objective is Sauve again, back where the night began,
+	# and the marker on him; spoken to, he starts it again, clean
+	assert_true(await _until(func() -> bool: return _stage() == "seen", 3.0), "seen: the try fails (%s)" % _stage())
+	var tracked: Array = Social.quests.call("tracked_objectives")
+	print("PLAY seen: the tracker says %s" % str(tracked.map(func(t: Dictionary) -> String: return str(t.get("text", "")))))
+	assert_true(not tracked.is_empty() and str(tracked[0].get("text", "")).contains("Sauve"), "the tracker says to go back to Sauve")
+	var sauve_back := await _until(func() -> bool: return _flat(sauve.global_position, traps) > 15.0, 30.0)
+	assert_true(sauve_back, "Sauve comes back up from his traps (%.1f m from them)" % _flat(sauve.global_position, traps))
+	var where_he_is: Vector3 = Waymarks.locate(tracked[0].get("anchor", {}), player.global_position, "").get("at", Vector3.INF) if not tracked.is_empty() else Vector3.INF
+	print("PLAY seen: the marker at %s, Sauve at %s" % [str(where_he_is), str(sauve.global_position)])
+	# back the way a player goes: up to the head of the lane, then to him
+	await _walk([_at_xz(-2786.2, -955.0)], 40.0)
+	await _come_up_to(sauve, 40.0)
+	assert_true(await _talk_and_choose(SAUVE, "She saw me"), "Sauve is spoken to again")
+	assert_eq(_stage(), "the_traps", "and the try begins again")
+	await _ticks(30)
+	assert_false(GameState.has_flag("seen_on_the_boards"), "clean: the flag is down")
+	assert_true(tella.detection < DetectionMeter.SUSPICIOUS, "and she starts from nothing (%.2f)" % tella.detection)
+	assert_eq((player.get_node("Inventory") as Inventory).count("core:item/tithe_book"), 1, "the book still in the bag")
+	await _crouched()
 
 	# 3. the lane: behind the stacks and the boat, down the way's east side
 	# down the east side of the stacks, a pace off them (the way a player keeps them between)
@@ -430,9 +431,7 @@ func test_the_rogue_s_night_is_played_through_with_the_keys() -> void:
 			Vector2(-2786.6, -938.0), Vector2(-2787.5, -934.0), Vector2(-2789.0, -930.5)]:
 		way.append(_at_xz(xz.x, xz.y))
 	way.append(_at_xz(traps.x + 1.5, traps.z - 1.2))
-	# from whichever shelter the watch sent you back to: the lane's stops still ahead of you (south)
-	var ahead: Array = way.filter(func(p: Vector3) -> bool: return p.z >= player.global_position.z - 0.5)
-	var got_down := await _walk(ahead, 60.0, seen_flag)
+	var got_down := await _walk(way, 60.0, seen_flag)
 	print("PLAY the lane: got down %s, Tella's most %.2f, read noticed at %.1f, seen at %.1f, flag %s" % [str(got_down), walk_most, walk_noticed_at, walk_seen_at, str(GameState.has_flag("seen_on_the_boards"))])
 	assert_true(got_down, "down the lane to the traps")
 	assert_false(GameState.has_flag("seen_on_the_boards"), "unseen")
