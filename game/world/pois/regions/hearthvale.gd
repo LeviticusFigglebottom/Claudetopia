@@ -1188,7 +1188,7 @@ static func knappers_deep(d: PoiDressing) -> void:
 		m.block(chalk, Transform3D(bb, c), Vector3(4.0, top_y - lo + 0.3, 0.7))
 		m.block(timber, Transform3D(bb, Vector3(sg.x, top_y - 0.45, sg.z) + n * 1.22), Vector3(2.5, 0.9, 0.16))
 		m.block(timber, Transform3D(bb, Vector3(sg.x, top_y + 0.06, sg.z) + n * 1.55), Vector3(3.6, 0.14, 0.36))
-	m.block(black, Transform3D(sb, Vector3(sg.x, top_y - 0.9, sg.z)), Vector3(2.4, 0.05, 2.4))
+	m.block(black, Transform3D(sb, Vector3(sg.x, top_y - 0.62, sg.z)), Vector3(2.4, 0.05, 2.4))
 	k.collider(Vector3(4.0, top_y - lo + 0.3, 4.0), Transform3D(sb, Vector3(sg.x, (lo - 0.3 + top_y) * 0.5, sg.z)), "stone")
 	# the ladder's head standing up out of the hole on the road side, and two steps up to it
 	var lad := Vector3(sg.x, 0.0, sg.z) + Vector3(road.x, 0.0, road.y) * 0.7
@@ -1439,24 +1439,25 @@ static func hum_stone(d: PoiDressing) -> void:
 	var stone := m.begin()
 	var lean := Basis(Vector3(side.x, 0.0, side.y), -0.055)
 	var sy := PoiKit.yaw_of(hush) + 0.2
-	var H := 13.0
+	var H := 15.0
 	var sb := lean * Basis(Vector3.UP, sy)
-	var foot_c := Vector3(foot.x, base_y - 0.8, foot.y)
+	# the stone goes down through its hump into the chalk under it
+	var foot_c := Vector3(foot.x, fg.y - 0.25, foot.y)
 	_frustum(stone, Transform3D(sb, foot_c), 3.0, 2.1, 3.1, 2.2, H * 0.3)
 	_frustum(stone, Transform3D(sb, foot_c + sb * Vector3(0.0, H * 0.3, 0.0)), 3.1, 2.2, 1.8, 1.25, H * 0.7)
 	var crown := foot_c + sb * Vector3(0.0, H, 0.0)
 	_frustum(stone, Transform3D(sb * Basis(Vector3.BACK, 0.32), crown + sb * Vector3(0.0, -0.25, 0.0)), 1.8, 1.25, 1.2, 0.9, 0.9)
 	# a step of the same stone round its foot, half in the turf
-	_frustum(stone, Transform3D(Basis(Vector3.UP, sy), foot_c + Vector3(0.0, 0.2, 0.0)), 4.4, 3.4, 3.8, 2.9, 0.75)
+	_frustum(stone, Transform3D(Basis(Vector3.UP, sy), Vector3(foot.x, base_y - 0.65, foot.y)), 4.4, 3.4, 3.8, 2.9, 0.75)
 	await k.step()
 	m.commit(stone, oroth, "HumStone", true)
 	k.collider(Vector3(2.8, H, 2.0), Transform3D(sb, foot_c + sb * Vector3(0.0, H * 0.5, 0.0)), "stone")
-	k.collider(Vector3(4.4, 0.95, 3.4), Transform3D(Basis(Vector3.UP, sy), foot_c + Vector3(0.0, 0.55, 0.0)), "stone")
+	k.collider(Vector3(4.4, 0.95, 3.4), Transform3D(Basis(Vector3.UP, sy), Vector3(foot.x, base_y - 0.3, foot.y)), "stone")
 	# the bronze: four bands, the second and third cut through and peeled, bright where the chisel went
 	var bands := m.begin()
 	var cut := m.begin()
 	for b in 4:
-		var t := 0.32 + float(b) * 0.17
+		var t := 0.4 + float(b) * 0.15
 		var y := H * t
 		var u := clampf((t - 0.3) / 0.7, 0.0, 1.0)
 		var w := lerpf(3.1, 1.8, u) + 0.08
@@ -1612,7 +1613,7 @@ static func hum_stone(d: PoiDressing) -> void:
 ## under it (so its rim lies on the land however the land goes), its rim a hand under the turf.
 ## Walkable when `collide`. Built at once (not deferred), as `PoiMasonry.mound` is, for its body.
 static func _hump(d: PoiDressing, c: Vector2, axis: Vector2, rx: float, rz: float, height: float, mat: Material,
-		node_name: String, collide := true, power := 1.4, silhouette := true, rough := 0.06) -> MeshInstance3D:
+		node_name: String, collide := true, power := 1.4, silhouette := true, rough := 0.06, phase := NAN) -> MeshInstance3D:
 	var k := d.kit
 	if k.far and not silhouette:
 		return null
@@ -1621,14 +1622,14 @@ static func _hump(d: PoiDressing, c: Vector2, axis: Vector2, rx: float, rz: floa
 	var ac := Vector2(ax.y, -ax.x)
 	var rings := 8
 	var segs := 28
-	var phase := k.rng.randf() * TAU
+	var ph := k.rng.randf() * TAU if is_nan(phase) else phase
 	var pts: Array = []
 	for i in rings + 1:
 		var f := float(i) / float(rings)
 		var row: Array = []
 		for j in segs:
 			var a := TAU * float(j) / float(segs)
-			var swell := 1.0 + rough * sin(a * 3.0 + phase)
+			var swell := 1.0 + rough * sin(a * 3.0 + ph)
 			var p := c + ax * (cos(a) * rx * f) + ac * (sin(a) * rz * f)
 			var y := height * pow(maxf(1.0 - f * f, 0.0), power * 0.5) * swell - 0.12 * f * f
 			row.append(k.on_ground(p.x, p.y, y))
@@ -1676,6 +1677,22 @@ static func _matte(c: Color) -> StandardMaterial3D:
 	var mat := PoiKit.plain(c, 1.0)
 	mat.specular_mode = BaseMaterial3D.SPECULAR_DISABLED
 	return mat
+
+
+## The height over the ground of a `_hump`'s surface at local xz `p` (one laid with `phase` given), as
+## its mesh has it there to a few centimetres: what a tree on a barrow is set down on.
+static func _hump_surface(c: Vector2, axis: Vector2, rx: float, rz: float, height: float, p: Vector2, power: float,
+		rough: float, phase: float) -> float:
+	var ax := axis.normalized()
+	var ac := Vector2(ax.y, -ax.x)
+	var q := p - c
+	var u := q.dot(ax) / rx
+	var v := q.dot(ac) / rz
+	var f := sqrt(u * u + v * v)
+	if f >= 1.0:
+		return 0.0
+	var a := atan2(v, u)
+	return height * pow(maxf(1.0 - f * f, 0.0), power * 0.5) * (1.0 + rough * sin(a * 3.0 + phase)) - 0.12 * f * f
 
 
 ## A turf for barrows and banks: the downs' sward, a shade darker for being heaped.
@@ -1752,7 +1769,7 @@ static func orms_long_barrow(d: PoiDressing) -> void:
 	var rx := 12.5
 	var rz := 4.6
 	var h := 2.4
-	_hump(d, Vector2.ZERO, axis, rx, rz, h, _turf(), "Barrow")
+	_hump(d, Vector2.ZERO, axis, rx, rz, h, _turf(), "Barrow", true, 1.4, true, 0.06, 0.0)
 	await k.step()
 	var stone := m.begin()
 	_kerb(d, stone, Vector2.ZERO, axis, rx + 0.6, rz + 0.6, 26, 0.3, axis * (rx + 0.6), 2.0)
@@ -1805,9 +1822,10 @@ static func orms_long_barrow(d: PoiDressing) -> void:
 	if yew == "":
 		yew = k.tree("yew")
 	if yew != "":
-		var yp := -axis * (rx - 2.5)
+		# grown at the barrow's west end, its roots in the ditch at the mound's foot
+		var yp := -axis * (rx + 1.8) + across * 0.8
 		await k.step()
-		k.place(yew, k.on_ground(yp.x, yp.y, _hump_y(Vector2.ZERO, axis, rx, rz, h, yp) - 0.3), k.rng.randf() * TAU, 0.85, true)
+		k.place(yew, k.on_ground(yp.x, yp.y, -0.05), k.rng.randf() * TAU, 0.85, true)
 	await _builders().LAND._grass(d, "grass_clump", Vector2.ZERO, rx + 4.0, 26)
 
 
@@ -1887,7 +1905,7 @@ static func warden_barrow(d: PoiDressing) -> void:
 	var side := Vector2(face.y, -face.x)
 	var r := 8.5
 	var h := 2.8
-	_hump(d, Vector2.ZERO, face, r, r, h, _turf(), "Barrow", true, 1.2)
+	_hump(d, Vector2.ZERO, face, r, r, h, _turf(), "Barrow", true, 1.2, true, 0.06, 0.0)
 	var bank := m.begin()
 	_ring_bank(d, bank, Vector2.ZERO, r + 3.2, 1.8, 0.45, 32)
 	await k.step()
@@ -1934,9 +1952,10 @@ static func warden_barrow(d: PoiDressing) -> void:
 	m.commit(way, k.surface("earth", 0.4), "WardensPath")
 	var yew := k.tree("yew")
 	if yew != "":
-		var yp := -face * 2.5 + side * 1.5
+		# in the ditch behind the barrow, between the mound and its bank
+		var yp := -face * (r + 1.5) + side * 1.2
 		await k.step()
-		k.place(yew, k.on_ground(yp.x, yp.y, _hump_y(Vector2.ZERO, face, r, r, h, yp, 1.2) - 0.3), k.rng.randf() * TAU, 0.9, true)
+		k.place(yew, k.on_ground(yp.x, yp.y, -0.05), k.rng.randf() * TAU, 0.9, true)
 
 
 # --- the Pinfold ------------------------------------------------------------------------------------
@@ -2278,7 +2297,7 @@ static func the_last_field(d: PoiDressing) -> void:
 		for s in [-1.0, 1.0]:
 			for i in 5:
 				var hp: Vector2 = start + side * (s * 1.6 + (0.0 if s < 0.0 else pitch * float(n - 1) + 3.2)) - down * 6.0 + down * float(i) * 5.0
-				if i >= 3 and k.rng.randf() < 0.5:
+				if (i >= 3 and k.rng.randf() < 0.5) or k.road_distance(hp) < 5.0:
 					continue
 				await k.step()
 				k.place(thorn, k.on_ground(hp.x, hp.y), k.rng.randf() * TAU, k.rng.randf_range(0.7, 0.95), true)
@@ -2751,9 +2770,12 @@ static func the_naming_stone(d: PoiDressing) -> void:
 	k.touchable("SmallHands", g + Vector3(0.0, 0.8, 0.0) + Vector3(grain.x, 0.0, grain.y) * 0.9, "Put your hand where the children put theirs", "core:dialogue/naming_stone_hands", "", false)
 	var thorn := k.tree("hawthorn")
 	var tp := stone_at + side * 3.4 - grain * 0.6
-	if thorn != "":
-		await k.step()
-		k.place(thorn, k.on_ground(tp.x, tp.y), k.rng.randf() * TAU, 1.0, true)
+	if k.road_distance(tp) < 5.0:
+		tp = stone_at - side * 3.4 - grain * 0.6
+	if thorn == "" or k.road_distance(tp) < 5.0:
+		return
+	await k.step()
+	k.place(thorn, k.on_ground(tp.x, tp.y), k.rng.randf() * TAU, 1.0, true)
 	var rib := m.begin()
 	var colours := m.begin()
 	for i in 12:
@@ -2770,6 +2792,26 @@ static func the_naming_stone(d: PoiDressing) -> void:
 static func southgate_stone(d: PoiDressing) -> void:
 	await _builders().shrine(d)
 	var k := d.kit
+	# the road the carts took ends at the stone: the shrine's own standing stone is set back off its
+	# carriageway onto the verge, which way is further from the road
+	var road_dir := k.road_direction(20.0)
+	for c in d.get_children():
+		if not (c is Node3D) or not str(c.name).contains("standing_stone"):
+			continue
+		var n3 := c as Node3D
+		var at := Vector2(n3.position.x, n3.position.z)
+		if road_dir == Vector2.ZERO or k.road_distance(at) >= 3.5:
+			continue
+		var perp := Vector2(road_dir.y, -road_dir.x)
+		var best := at
+		for step in range(1, 13):
+			for sgn in [-1.0, 1.0]:
+				var q: Vector2 = at + perp * float(sgn) * 0.5 * float(step)
+				if k.road_distance(q) >= 3.5 and best == at:
+					best = q
+			if best != at:
+				break
+		n3.position = k.on_ground(best.x, best.y) - Vector3(0.0, PoiKit.buried_m(k.rock("standing_stone")) * n3.scale.y, 0.0)
 	var m := d.masonry
 	var east := Vector2(1.0, 0.0)
 	var across := Vector2(0.0, 1.0)
