@@ -931,5 +931,130 @@
       "marks": 110,
       "renown": 12
     }
+  },
+  {
+    "id": "core:quest/what_the_ledger_owes",
+    "name": "What the Ledger Owes",
+    "layer": "side",
+    "giver": "core:npc/silas_penhallow",
+    "region": "core:region/briarwold",
+    "offer": "A clerk does not leave his ledger.",
+    "summary": "Silas Penhallow, the Charter Company's clerk at the Delf, left his ledger on the counting-room desk the day the Briar's thorn came up the shaft. He wants it back, and he will pay for it himself.",
+    "notes": "The Charter Delf (world life phase 2, Briarwold): giver at the shaft head; the ledger lies in the counting-room inside; the Brake-Dam dens at the bottom in the thorn. The ledger's last page says the Briar runs under the Wold: the decision says who should know.",
+    "stages": [
+      {
+        "id": "the_counting_room",
+        "journal": "The Charter Delf's ledger is on the counting-room desk off the main drift, where Silas Penhallow left it in 1036 when the Briar's thorn came up the shaft. The thornhounds came up with the thorn. Something at the bottom is where they come from.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/charter_delf",
+            "count": 1,
+            "text": "Go down the Charter Delf's ladderway"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/charter_ledger",
+            "count": 1,
+            "text": "Find the ledger in the counting-room"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/charter_delf",
+          "radius": 60
+        }
+      },
+      {
+        "id": "the_ledger",
+        "journal": "Seven years of the Company's lead, every tub weighed, and at the back the surveyor's soundings of the deep gallery: granite to seventy-nine fathoms, and then the Briar's root, running east and west under the Wold as far as the lamp showed. Silas Penhallow is waiting at the shaft head.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_ledger",
+            "with": "core:npc/silas_penhallow",
+            "text": "Bring the ledger to Silas Penhallow",
+            "options": [
+              {
+                "id": "to_the_company",
+                "text": "To the Company in Tollmere.",
+                "effects": [
+                  {
+                    "take_item": "core:item/charter_ledger"
+                  },
+                  {
+                    "set_flag": "ledger_to_company"
+                  },
+                  {
+                    "marks": 150
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      -5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_the_layers",
+                "text": "To the layers at the Layers' Ring.",
+                "effects": [
+                  {
+                    "take_item": "core:item/charter_ledger"
+                  },
+                  {
+                    "set_flag": "ledger_to_layers"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      10
+                    ]
+                  },
+                  {
+                    "renown": 8
+                  }
+                ]
+              },
+              {
+                "id": "burn_it",
+                "text": "Burn it.",
+                "effects": [
+                  {
+                    "take_item": "core:item/charter_ledger"
+                  },
+                  {
+                    "set_flag": "ledger_burned"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      6
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/charter_delf",
+          "radius": 60
+        }
+      },
+      {
+        "id": "written_down",
+        "journal": "Silas Penhallow has stopped posting notices.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 10
+    }
   }
 ]

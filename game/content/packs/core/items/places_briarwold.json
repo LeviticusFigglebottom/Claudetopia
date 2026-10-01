@@ -562,5 +562,33 @@
     ],
     "description": "A child's slate left at the foot of the middle stone.",
     "reads": "core:book/what_the_sentinels_hear"
+  },
+  {
+    "id": "core:item/charter_ledger",
+    "name": "The Charter Delf's Ledger",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "The Charter Company's ledger for the Delf, 1029 to 1036, every tub weighed and written down in Silas Penhallow's small hand, and at the back the surveyor's soundings of the deep gallery: eighty fathoms, granite, granite, granite, and then a word underlined three times. Thorn."
+  },
+  {
+    "id": "core:item/thorn_whelp_collar",
+    "name": "The Brake-Dam's Collar",
+    "category": "misc",
+    "weight": 0.5,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "briarwold",
+      "unique",
+      "trophy"
+    ],
+    "description": "Not a collar: a ring of the Briar's thorn the Brake-Dam's neck grew through, cut free, still green on the inside. The Layers would know what it is. They would not want it in the house."
   }
 ]

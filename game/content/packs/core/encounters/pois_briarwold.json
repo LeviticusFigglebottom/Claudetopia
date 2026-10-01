@@ -696,5 +696,19 @@
         "item": "core:item/the_last_watch"
       }
     ]
+  },
+  {
+    "id": "core:encounter/charter_delf",
+    "place": "core:poi/charter_delf",
+    "notes": "thornhounds come up the shaft after dark and sit round the shaft head",
+    "spawns": [
+      {
+        "enemy": "core:enemy/thornhound",
+        "count": 3,
+        "when": "night",
+        "at": "the_mouth",
+        "spread": 2.5
+      }
+    ]
   }
 ]

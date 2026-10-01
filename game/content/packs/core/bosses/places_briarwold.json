@@ -192,5 +192,66 @@
       "boss",
       "unvowed"
     ]
+  },
+  {
+    "id": "core:boss/brake_dam",
+    "extends": "core:enemy/thornhound",
+    "name": "The Brake-Dam",
+    "archetype": "boss",
+    "arena": "core:poi/charter_delf",
+    "region": "core:region/briarwold",
+    "tint": "#3e3a24",
+    "scale": 2.3,
+    "resists": {
+      "pierce": 0.2,
+      "poison": 0.3,
+      "fire": -0.35
+    },
+    "lore": "Every thornhound comes out of the Briar, the Woodfolk say, and nobody has seen one born. In the Charter Delf somebody has: at the bottom, where the gallery broke into the root, a hound the size of a pony lies in the coils of the thorn with her bark grown into it, and the young come out of the thorn round her already bleeding. She does not leave the root. She does not need to.",
+    "stats": {
+      "hp": 560,
+      "stamina": 220,
+      "poise": 120,
+      "armour": 9,
+      "speed": 5.2
+    },
+    "behaviour": {
+      "engage_range": 2.6,
+      "circle": 0.6,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 45.0,
+      "hyper_armour": 22.0,
+      "aggression": 0.9
+    },
+    "phases": [
+      {
+        "name": "the den",
+        "hp": 1.0,
+        "aggression": 0.85
+      },
+      {
+        "name": "the brake",
+        "hp": 0.5,
+        "aggression": 1.0,
+        "speed": 5.8,
+        "hyper_armour": 28.0,
+        "say": "She tears herself out of the thorn, and the thorn comes with her, and every hound in the gallery turns its head."
+      }
+    ],
+    "marks": [
+      150,
+      280
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/thorn_whelp_collar"
+    ],
+    "tags": [
+      "beast",
+      "hound",
+      "pack",
+      "boss"
+    ]
   }
 ]

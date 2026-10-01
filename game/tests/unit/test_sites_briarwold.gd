@@ -11,7 +11,8 @@ const TestSites := preload("res://tests/unit/test_sites.gd")
 ## Each inside and the boss that waits at its bottom.
 const INSIDE := {"core:interior/skarl_delving": "core:boss/reel_mother",
 		"core:interior/the_windthrow": "core:boss/old_root",
-		"core:interior/tinehold_undercroft": "core:boss/unvowed_marshal"}
+		"core:interior/tinehold_undercroft": "core:boss/unvowed_marshal",
+		"core:interior/charter_delf": "core:boss/brake_dam"}
 var player: Node3D
 
 
@@ -185,6 +186,29 @@ func test_tinehold_stands_with_its_tower_its_keep_and_its_garrison() -> void:
 	assert_true(garrison != null and garrison.living.size() >= 5, "a garrison of %d" % (garrison.living.size() if garrison else 0))
 	var hook := d.find_child("Hook", true, false) as PoiTouch
 	assert_true(hook != null and hook.dialogue_id == "core:dialogue/tinehold_challenge", "the challenge on the gate")
+	d.queue_free()
+	await tree.process_frame
+
+
+## The Charter Delf (phase 2): the headframe over the shaft with its wheel, the cage that is the
+## way down, the winding house, the spoil, the clerk's office and the Company's notices.
+func test_the_charter_delf_stands_with_its_headframe_its_cage_and_its_notices() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/charter_delf")
+	var entry := {"place_id": "core:poi/charter_delf", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 26.0, "radius_level_m": 26.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	await tree.physics_frame
+	assert_true(d.finished, "the Delf is built")
+	for part in ["Headframe", "Cage", "WindingHouse", "Spoil", "DeadOaks", "Office"]:
+		assert_true(d.find_child(part, true, false) != null, "the Delf has its %s" % part)
+	var frame := d.find_child("Headframe", true, false) as MeshInstance3D
+	if frame != null and frame.mesh != null:
+		assert_gt(frame.mesh.get_aabb().end.y, 18.0, "the headframe's wheel stands over the oaks")
+	assert_true(d.find_child("Door_charter_delf", true, false) != null, "the cage is the way down")
+	var hook := d.find_child("Hook", true, false) as PoiTouch
+	assert_true(hook != null and hook.dialogue_id == "core:dialogue/charter_delf_notice", "the Company's notices by the shaft")
 	d.queue_free()
 	await tree.process_frame
 

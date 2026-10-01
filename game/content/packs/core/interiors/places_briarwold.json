@@ -123,7 +123,7 @@
     "unique_object": "a cavern whose roof is the underside of a fallen tree's roots, hanging in curtains to the floor; and at the bottom the taproot itself, as thick as a tower, gone down into a pool and grown a face",
     "site": {
       "kind": "cave",
-      "seed": 1019,
+      "seed": 1044,
       "region": "core:region/briarwold",
       "size": "large",
       "boss": "core:boss/old_root",
@@ -346,6 +346,126 @@
           "size": "huge",
           "set_piece": "boss_arena",
           "note": "the vigil hall, the kneeling-stone at its middle"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/charter_delf",
+    "name": "The Charter Delf",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/charter_delf",
+    "danger": 3,
+    "formed_by": "miners",
+    "resident": "thornhounds and weavers in the galleries, poachers in the drifts, a Warden grown out of the thorn in the rock, and the Brake-Dam in her den in the Briar's root at the bottom",
+    "story": "Square-cut drifts timbered by Rafts carpenters, a pump chamber gone back to water, a smithy where the picks were sharpened, the counting-room where the Company's clerk weighed every tub and wrote it down, and at the bottom the gallery that broke into the thorn. The thorn has come up the galleries since, a little every year, and the thornhounds came with it, as they come with the Briar everywhere.",
+    "unique_object": "a gallery of cut granite whose far end is no longer rock but thorn, a root of the Briar as thick as a cart, grown through the stone and into the drift, and a den of thornhounds in its coils",
+    "site": {
+      "kind": "mine",
+      "seed": 1031,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/brake_dam",
+      "boss_adds": 3,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/thornhound",
+          "core:enemy/weaver"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/warden"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "lantern_hand",
+          "note": "the onsetter's lamp, on its hook by the cage"
+        },
+        {
+          "kind": "item",
+          "room": "counting_room",
+          "item": "core:item/charter_ledger",
+          "name": "the Charter Company's ledger"
+        },
+        {
+          "kind": "note",
+          "room": "the_sump",
+          "book": "core:book/the_pumpmans_slate",
+          "name": "a pumpman's slate"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_eighty_fathom_survey",
+          "name": "a surveyor's sheet in a tin"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "shaft_foot",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the foot of the shaft, the cage stopped at the bottom"
+        },
+        {
+          "id": "main_drift",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "the_smithy",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "forge_hall",
+          "note": "where the picks were sharpened"
+        },
+        {
+          "id": "counting_room",
+          "role": "treasure",
+          "size": "small",
+          "note": "the clerk's counting-room, his ledger on the desk"
+        },
+        {
+          "id": "the_sump",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "the pump chamber, gone back to water"
+        },
+        {
+          "id": "the_lode",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "ore_gallery",
+          "note": "the silver-lead, still showing in the walls"
+        },
+        {
+          "id": "the_fall",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft",
+          "note": "where the old air-shaft came down"
+        },
+        {
+          "id": "deep_drift",
+          "role": "hall",
+          "size": "large",
+          "note": "a Warden grown out of the thorn in the wall"
+        },
+        {
+          "id": "the_thorn",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "where the gallery broke into the Briar's root"
         }
       ]
     }

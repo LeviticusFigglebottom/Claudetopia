@@ -725,6 +725,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/charter_delf",
+        "quests": [
+          "core:quest/what_the_ledger_owes"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/charter_delf"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/charter_stone",
         "quests": [
           "core:quest/the_charter_pins"

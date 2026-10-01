@@ -1539,7 +1539,7 @@
       750
     ],
     "radius_m": 30,
-    "pad_radius_m": 46,
+    "pad_radius_m": 50,
     "hearthstone": false,
     "builder": "windthrow",
     "unique_feature": "the Grandfather's brother lying where the Long Wind threw it, its root plate stood up out of the Greatwood as a wall of earth and stones and roots twenty-five metres across, the trunk lying away down the shelf behind it to the broken crown, and under the plate a black mouth where the taproot tore out of the ground",
@@ -1594,6 +1594,30 @@
         "count": 7,
         "tower_archers": 2
       }
+    }
+  },
+  {
+    "id": "core:poi/charter_delf",
+    "name": "The Charter Delf",
+    "region": "core:region/briarwold",
+    "kind": "delve",
+    "position": [
+      2476,
+      -1460
+    ],
+    "radius_m": 26,
+    "pad_radius_m": 34,
+    "hearthstone": false,
+    "builder": "charter_delf",
+    "unique_feature": "a Tollmere company's lead mine sunk under the oaks of the Northwold: a timber headframe eighteen metres high with its winding wheel standing over the canopy, a spoil heap of grey stone spilling down the slope with the oaks dead in it, the winding house, ore tubs on plank ways, and a clerk's office with the Charter's arms over the door",
+    "visible_from": [],
+    "story": "In 1029 the Lantern Row's Charter Company bought the right to the lead under the Northwold from the Tallymen, who had bought it from nobody, because the Woodfolk say nothing. They sank a shaft by the Builders' quarry and drove galleries after the silver-lead, and the spoil went down the slope and the oaks died in it, and the gill under it ran grey into the Blackgill, and the harts stopped drinking there. The Woodfolk said nothing. In 1036 the deepest gallery broke into rock with thorn growing in it: the Briar's root, two miles inside the Wold and eighty fathoms down. The thorn came up the shaft in a summer. The company left. Its clerk did not.",
+    "encounter": "thornhounds come up the shaft after dark; inside, thornhounds and weavers in the galleries, poachers who use the drifts, a Warden grown out of the Briar's root in the rock, and the Brake-Dam, the pack's mother, denned in the thorn at the bottom",
+    "hook": "Silas Penhallow, the Charter Company's clerk, still keeps the office at the shaft head and still posts the Company's notices, and has posted a new one: a reward for the ledger left in the counting-room below.",
+    "site": {
+      "interior": "core:interior/charter_delf",
+      "hook": "core:dialogue/charter_delf_notice",
+      "hook_prompt": "Read the Company's notices"
     }
   }
 ]

@@ -1820,14 +1820,6 @@
           {
             "text": "Take the heartwood to the Hollow, to the Grandfather's keeper. It's his brother.",
             "next": "q_hollow",
-            "conditions": [
-              {
-                "has_item": [
-                  "core:item/brothers_heartwood",
-                  1
-                ]
-              }
-            ],
             "effects": [
               {
                 "quest_choice": [
@@ -1980,6 +1972,250 @@
       "taken": {
         "speaker": "The challenge on the gate",
         "text": "Up on the Tine Tower the carved antlers stand against the sky. Far to the east, the Woodfolk say, a knight has been kneeling at the Moot Gate for three days.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silas_penhallow",
+    "speaker_name": "Silas Penhallow",
+    "notes": "The clerk at the Charter Delf's shaft head (world life phase 2, Briarwold). Gives core:quest/what_the_ledger_owes and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Silas Penhallow",
+        "text": "*He looks at you over his spectacles, and then down at a page, and writes something.* — One visitor. Penhallow, clerk to the Charter Company. The office is open. It is always open. Nobody comes.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Silas Penhallow",
+        "text": "Lead, with silver in it, a little. Seven years. Four thousand and eleven tubs, every one weighed and written down. The spoil went down the slope. The oaks died. The Woodfolk said nothing. — I wrote that down too. Nobody asked me to.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Silas Penhallow",
+        "text": "The deep gallery broke into thorn. The Briar's own, eighty fathoms down, two miles from the Thornmarch. It came up the shaft in one summer, and the hounds came up with it. The Company left in a week. — Nobody told me to go. The Company pays me quarterly. I post its notices.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Silas Penhallow",
+        "text": "The headframe. Rafts timber. You can see the wheel from the Skarl road over the trees. The cage is at the bottom; the rope still holds. I have not been down since 1036. The hounds come up at night and sit round the shaft head and look at the office. I keep the lamp lit.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Silas Penhallow",
+        "text": "Is there a matter for the Company?",
+        "choices": [
+          {
+            "text": "What did the Delf mine?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why was it left?",
+            "next": "topic_2"
+          },
+          {
+            "text": "How does one get down?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Your notice. The ledger in the counting-room.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_ledger_owes"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_ledger_owes"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've been down. I have the ledger.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_ledger_owes",
+                  "the_ledger"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Silas Penhallow",
+        "text": "One visitor, departing. — Mind the shaft head. The hounds have been.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Silas Penhallow",
+        "text": "Seven years of the Company's lead in it, and at the back the surveyor's soundings of the deep gallery. I left it on the counting-room desk the day the thorn came up. A clerk does not leave his ledger. — The Company will not pay for it; it has forgotten it. I will pay. I have been paid for eight years for nothing. — The counting-room is off the main drift. The thorn is at the bottom. What lives in it is at the bottom. You need not go to the bottom.",
+        "choices": [
+          {
+            "text": "I'll bring up your ledger.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_ledger_owes"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Silas Penhallow",
+        "text": "The cage is at the bottom; the ladderway runs beside it. One visitor, descending. I will write it down.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Silas Penhallow",
+        "text": "*He weighs it in his palm.* — Three pounds and a quarter. — *He opens it at the back, at the soundings, and reads the last word, and shuts it.* — Thorn. Under all of us, as far west as this. The surveyor went home to the Rafts and told nobody. I wrote it down and told nobody. — It is the Company's book. It is my hand. You brought it up. Where does it go?",
+        "choices": [
+          {
+            "text": "To the Company in Tollmere. Their mine, their book, and they should know what's under it.",
+            "next": "q_d_company",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "to_the_company"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "To Kit Laywood at the Layers' Ring. The layers should know where the Briar runs.",
+            "next": "q_d_layers",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "to_the_layers"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Burn it. Nobody should come back here for the lead.",
+            "next": "q_d_burn",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "burn_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_d_company": {
+        "speaker": "Silas Penhallow",
+        "text": "Then I shall carry it down myself, and ask to be told to go home. — They will send men back for the lead. They will read the last page and send more. I have written that down as well.",
+        "next": "hub"
+      },
+      "q_d_layers": {
+        "speaker": "Silas Penhallow",
+        "text": "The layers. Yes. They lay the thorn and do not know where it goes under the ground. Now they will. — I shall walk it over to the Ring myself. I have not walked anywhere in eight years. Two pounds lighter when I come back, I expect.",
+        "next": "hub"
+      },
+      "q_d_burn": {
+        "speaker": "Silas Penhallow",
+        "text": "*He watches it catch in the office stove and does not write anything down.* — There. The Delf has no ledger. A mine with no ledger was never worked. — I think I shall go home.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "ledger_to_company"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "The Company wrote back. They are sending men in the spring, and an engineer, and a surveyor who has not been to the Rafts. I am to stay and weigh the tubs."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "ledger_to_layers"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "Kit Laywood has the soundings. The layers have been out along the line of the root, the whole length of the Northwold, laying thorn over nothing, on bare ground, where they say it is under. I do not understand it. I have written it down."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "ledger_burned"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "I have locked the office. I am going home. One visitor, the last. Will you take the key? — No. Nor would I."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/charter_delf_notice",
+    "speaker_name": "The Company's notices",
+    "notes": "The Charter Delf's hook (two notices on a post by the shaft head): starts core:quest/what_the_ledger_owes at its first stage for whoever has not had it from Silas Penhallow.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Company's notices",
+        "no_talk": true,
+        "text": "Two notices, both in the same small hand. The older: THE CHARTER COMPANY OF THE LANTERN ROW. THE DELF IS CLOSED UNTIL FURTHER NOTICE. ENQUIRIES TO THE CLERK. The newer, pinned over its corner: REWARD for the return of the Company's ledger, left on the counting-room desk off the main drift, 1036. Apply to the clerk. THE COMPANY WILL NOT PAY. THE CLERK WILL. — From the shaft beside the post comes a smell of wet stone and green sap, and very far down, a dog barking, the way a dog barks in its sleep.",
+        "choices": [
+          {
+            "text": "Go down the ladderway for the ledger.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_ledger_owes"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_ledger_owes"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_ledger_owes"
+              }
+            ]
+          },
+          {
+            "text": "Leave the notices.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Company's notices",
+        "text": "In the office window a lamp is lit at noon, and somebody behind it writes something down.",
         "next": "end"
       }
     }

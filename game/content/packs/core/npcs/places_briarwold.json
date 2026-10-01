@@ -940,5 +940,67 @@
         "spot": "the_lip"
       }
     ]
+  },
+  {
+    "id": "core:npc/silas_penhallow",
+    "name": "Silas Penhallow",
+    "home_place": "core:poi/charter_delf",
+    "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/silas_penhallow",
+    "bio": "The Charter Company's clerk at the Delf, who weighed every tub of ore that came up the shaft for seven years and wrote it down, and stayed when the Company left because nobody told him to go. He still keeps the office at the shaft head, still posts the Company's notices, and is still paid, quarterly, by a Company that has forgotten it owns a mine.",
+    "unique_habit": "Weighs everything he is handed in his palm before he looks at it, and says the weight aloud.",
+    "personality": {
+      "traits": [
+        "timid",
+        "proud",
+        "gossip",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "feminine": 0.0,
+      "seed": 7352,
+      "build": "short_stooped",
+      "age": 58,
+      "hair": "thin_and_ink_stained",
+      "notes": "a Tollmere clerk's black coat gone green at the seams, sleeve-guards, spectacles mended with thread, a pen behind each ear"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/charter_delf",
+        "activity": "eat",
+        "spot": "the_office"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/charter_delf",
+        "activity": "work",
+        "spot": "the_office"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/charter_delf",
+        "activity": "eat",
+        "spot": "the_office"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/charter_delf",
+        "activity": "work",
+        "spot": "the_office"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/charter_delf",
+        "activity": "sleep",
+        "spot": "the_office"
+      }
+    ]
   }
 ]

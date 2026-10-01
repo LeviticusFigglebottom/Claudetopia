@@ -88,5 +88,18 @@
       "briarwold",
       "knights"
     ]
+  },
+  {
+    "id": "core:rumour/charter_delf",
+    "name": "The wheel over the oaks",
+    "tone": "cold",
+    "text": "There's a Tollmere mine up by the Builders' quarry, shut eight years, and its clerk still sits in the office at the top of the shaft writing things down. The hounds come up out of it at night and sit round him.",
+    "variants": [
+      "You can see the Charter Delf's wheel from the Skarl road, over the oaks, and the grey of the spoil down the hill under it where nothing grows."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
   }
 ]
