@@ -14981,3 +14981,115 @@ Triage 77-80, on `wip/quest-fixes`.
   - the full suite, journey, flow and the quest walker were not run (the build-first policy); the
     walker plays the starts in order and never takes the `seen` detour;
   - arrows spent are handed back as iron arrows whatever the player shot.
+
+## Knappers' Deep, the Hum Stone, and ruins that say what they are: world life in Hearthvale, phase 2 (2026-10-01)
+
+Triage 73, 74 and 76 for Hearthvale (branch `wip/wl2-hearthvale`). Two large places with an inside
+were added, and nineteen places that were a generic ruined hall or three stones now have builders of
+their own. Everything is in `game/world/pois/regions/hearthvale.gd` and the region's own content files.
+
+**Large places** (kind `delve` with a region builder; insides `interiors/sites_hearthvale.json`):
+- **Knappers' Deep** (1325, 2505, pad 40, level), a flint mine on the lip of Hound Down. Seen from
+  afar: an 11 m timber headframe with its winding wheel, a horse-gin behind it, and three pointed
+  chalk tip-heaps down the down's west face. Round it are the grassed rings of older shafts, the
+  knapper's hut and knapping floor (flakes, nodules, squared flints), and the shift board on the
+  headframe's leg. Inside is `core:interior/knappers_deep`, a chalk-white mine (seed 2202, 10 rooms):
+  the Larkbourne Boys' camp and the near face above the Fall, a collapsed shaft, a chasm over an
+  older working, the night gallery, and the far face. The foes are new `core:enemy/knocker`s (the
+  buried night shift, with picks) and the boss `core:boss/the_gaffer`, the overman, who knocks for
+  his shift at half health. Quest **The Night Shift** from Nell Knapper: turn the Boys' ganger out,
+  go past the Fall, take the overman's tally, then cap the Deep, reopen it, or bring the shift up to
+  the hedge line.
+- **The Hum Stone** (3225, 3640, pad 36, level), a Builders' monolith on the Brow's lip over the
+  Hush. It is 15 m tall, in their dark fused stone, leans toward the grey, and has four bronze bands,
+  two of them hacked away. It stands on a turfed hump with half a kerb. The barrow-diggers' cut leads
+  to a hinge-less door at the hump's foot. There is their camp with cut bronze on a cloth, the
+  Merrowby bellwright's frame of tuning bells, and on the Hush side the grass going grey (the ash
+  mosaic shader in the downs' greys). The Hush's dead stand there at night (three ash-wights, the
+  encounter). Inside is `core:interior/hum_stone_throat`, the Builders' dark vaults (seed 2203,
+  9 rooms): diggers above, the Hush's dead in the niches and the rift, and the boss
+  `core:boss/digger_king`, Dunstan Spade, who rings the throat's bronze plate (a silencing burst that
+  calls ash-wights). Quest **The Stone's Note** from Godwin Merrow: take back the crown band, then
+  hang it back, cast an eighteenth bell for Merrowby, or bury it and let the stone go quiet.
+- Both have a hut or tent and a `home` for their giver, touches (the shift board, the stone, the
+  tuning bells), notes in the insides, rumours (`rumours/places_hearthvale.json`), a unique drop
+  (the Overman's Pick, the Barrow-King's Ring), and road access: each is 60-100 m off a road, with a
+  trodden way laid across the pad.
+
+**Reworked** (the generic ruin or circle replaced by the place's sentence, a touch to tell it):
+- Orm's Long Barrow: a long barrow and kerb, the robbers' cut and the open cist with their ladder,
+  and the capstones stacked like a dropped deck.
+- Tallow Barrow: a long barrow whose forecourt entrance is walled up in new flint from inside, a
+  door-shaped gap in it, warm.
+- The Warden Barrow: a round barrow with ditch and bank, its door toward the Rest, and nine
+  hand-bells on posts.
+- The Pinfold: a round pound with a hurdle gate and pound-bell, the hayward's board, a trough, and
+  strays inside.
+- Wolf Holt: a flint fold with its marsh side thrown down, the den, and bones.
+- Lamb's Bottom: a stone hut with half its roof fallen, the crook, and the den yard.
+- The Old Sheepwash: a dry dammed pool, the sheep-gate, the dry spout, and buckets up the hill.
+- The Last Field: the Southcotes' house, furrows that go grey halfway down, the plough in the middle
+  furrow, and thorns.
+- The Cliff Graves: twelve graves facing the Hush, one turned inland, and a wall.
+- The Chalk Cell: a cell cut in a chalk face, the doorstone with its loaf, and a bench toward the
+  Mere.
+- The Turned Hut: ash drifted to the eaves on the Choir side, the door side swept.
+- The Malting Floor: barley come up in the shape of a man.
+- The Roll Stone: one stone with the four quiet villages cut and struck.
+- The Hare Stone: a sarsen with the hare and the oak leaf, on a boundary wall.
+- The Weighing Stone: a table of sarsens with the carters' beam.
+- Candle Cross: a four-niche candle pillar.
+- The Naming Stone: the children's step, worn hands, and naming ribbons.
+- The Southgate Stone: the old cart ruts to the shut gate.
+- The Hush Steps: the rope seated on the steps.
+
+**Seen** (site_review renders, outside on a flat pad and close, and both insides room by room, under
+xvfb, before and after each change). What the renders showed, and what changed:
+- The spoil heaps read as snow blobs. They are now tip-heaps on a turf skirt.
+- The Hum Stone was a chimney of stacked blocks. It is now one tapering shaft.
+- Its grey ground was a flat plate. It is now the ash mosaic.
+- The sarsens and the Weighing Stone's table were white boxes. They are now grey.
+- The Hare Stone's carvings stood off the side of a forged stone. They are now on a built slab.
+- The ash drifts, ruts and grey furrows caught the sky. They are now matte.
+- The chalk face read as organ pipes. It is now a cut face under the turf.
+- The coordinator's look at the first captures:
+  - The approach shots stood inside the headframe and against the stone. Far eye-height shots were
+    added (`docs/review/world_life/hearthvale/`).
+  - The shaft's lining was clean white block. It is now laid as the forts lay their stone
+    (`site_stone.gdshader`: grime from the ground, moss in the joints).
+  - The headframe is now 13.5 m.
+- Overlapping props at Bell Meadow, Ansel's shrine, Pennywort Fields, Southgate Farm, the Swallet and
+  the Mother Pippin (the seat audit's `overlap`) are parted by a region builder pass (`_part_props`).
+- The Hush Steps' column caps floated over torn tops. This was in the shared colonnade builder, now
+  fixed there (the one shared change).
+- The throat under the Hum Stone first looked like the Swallet's tan cave. It is now the Builders'
+  dark stone, crisper, and torch-lit.
+
+**Measured:**
+- `region_check.py hearthvale --godot --edited <the 16 reworked off the roads, and Bell Meadow, Ansel's
+  shrine, Pennywort Fields, Southgate Farm, the Swallet, the Mother Pippin>`: PASS. Nothing floating,
+  buried, sunk or on a road.
+  - The Deep costs 59 draws and 294 k triangles. The Hum Stone costs 49 draws and 35 k.
+  - The reworked places cost 8 to 61 draws each.
+- The Last Field, the Naming Stone and the Southgate Stone fail only `road_through`. Their roads end
+  at them, and phase 1 found the same. Their pieces are seat-clean.
+- The Roll Stone, Pinfold, Wolf Holt and Weighing Stone take smaller pads, so that their roads clear
+  the level core.
+- Density: weak share 0.10 (it was 0.13), 10 strong POIs (it was 8), 106 POIs.
+- `test_sites_hearthvale` (the Swallet, the Deep and the throat, each built, walked to every room,
+  its boss in its arena, and left): 3 of 3. Every seed's walk was scanned before choosing.
+- `./run.sh test --filter=test_poi_preview,test_pois,objects_seated_hearthvale,test_sites_hearthvale,test_poi_people`:
+  42 tests, 0 failed.
+- `./run.sh quests --only=the_night_shift,the_stones_note`: 2 of 2 quests end every way they can,
+  6 of 6 walks, 0 errors.
+- `tools/quests/softlock_check.py`: 124 quests, 0 findings.
+- The two WORLD_LIFE §6 pytest files: 8 passed.
+
+**Not done:**
+- No third large place. The machine's three heavy slots were shared by seven agents, and each render
+  waited for a slot.
+- The places are seen on a flat pad, and the two large ones and Orm's also on the real ground through
+  their previews (poi_sheet, all views within budget: at most 1093 draws and 1.20 M primitives), not
+  yet in the built world. The coordinator's w4096h build will lay their pads and paths.
+- The barrows and pounds are still small at a distance by nature. The weak ones left (score 3) are
+  single stones and the hut, each with a touch.

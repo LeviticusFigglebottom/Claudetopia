@@ -218,6 +218,7 @@ static func hounds_swallet(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(worn, PoiKit.plain(SOIL.lerp(CHALK, 0.25), 0.98), "WolfRun")
 	await _builders().LAND._grass(d, "cow_parsley", -out * 4.0, 7.0, 18)
+	_part_props(d)
 
 
 # --- the Brow Long Table ----------------------------------------------------------------------------
@@ -516,6 +517,7 @@ static func mother_pippin(d: PoiDressing) -> void:
 	k.marker("the_mother", k.on_ground(-lean.x * 2.4 - across.x * 1.8, -lean.y * 2.4 - across.y * 1.8), true)
 	k.marker("the_windfalls", k.on_ground(lean.x * 4.0 + across.x * 3.5, lean.y * 4.0 + across.y * 3.5))
 	await _builders().LAND._grass(d, "meadow_grass", Vector2.ZERO, 14.0, 26)
+	_part_props(d)
 
 
 # --- the Scourers' Lodge ----------------------------------------------------------------------------
@@ -957,7 +959,7 @@ static func hushwatch(d: PoiDressing) -> void:
 # ===================================================================================================
 
 const FLINT := Color(0.17, 0.18, 0.2)
-const SPOIL := {"base": "#b5ad98", "accent": "#958d79", "grout": "#6a6455", "unit": 0.3}
+const SPOIL := {"base": "#a8a08c", "accent": "#878070", "grout": "#5e594d", "unit": 0.45}
 
 
 ## A bank of turf in a ring about `c` (local xz), `r` to its crest, `width` across and `height` at
@@ -1171,10 +1173,11 @@ static func knappers_deep(d: PoiDressing) -> void:
 	var syaw := PoiKit.yaw_of(up)
 	var sb := Basis(Vector3.UP, syaw)
 	var collar_h := 0.75
-	var chalk := m.begin()
+	var chalk = _builders().SITES.Stones.new(k, k.rng.randi())
 	var timber := m.begin()
 	var black := m.begin()
-	# the collar: four walls of chalk blocks round a square of black, the timber lining inside them
+	# the collar: four walls of the Vale's stone round a square of black, the timber lining inside them,
+	# laid as the forts lay theirs (weathered, the grime rising from the ground, moss in the joints)
 	var lo := INF
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
@@ -1185,7 +1188,8 @@ static func knappers_deep(d: PoiDressing) -> void:
 		var n := sb * (Basis(Vector3.UP, float(i) * PI * 0.5) * Vector3(0.0, 0.0, 1.0))
 		var c := Vector3(sg.x, (lo - 0.3 + top_y) * 0.5, sg.z) + n * 1.65
 		var bb := Basis(Vector3.UP, syaw + float(i) * PI * 0.5)
-		m.block(chalk, Transform3D(bb, c), Vector3(4.0, top_y - lo + 0.3, 0.7))
+		chalk.top = top_y
+		chalk.block(Transform3D(bb, c), Vector3(4.0, top_y - lo + 0.3, 0.7))
 		m.block(timber, Transform3D(bb, Vector3(sg.x, top_y - 0.45, sg.z) + n * 1.22), Vector3(2.5, 0.9, 0.16))
 		m.block(timber, Transform3D(bb, Vector3(sg.x, top_y + 0.06, sg.z) + n * 1.55), Vector3(3.6, 0.14, 0.36))
 	m.block(black, Transform3D(sb, Vector3(sg.x, top_y - 0.62, sg.z)), Vector3(2.4, 0.05, 2.4))
@@ -1198,13 +1202,14 @@ static func knappers_deep(d: PoiDressing) -> void:
 	for r_i in 4:
 		m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(road)), lad + Vector3(0.0, top_y - 0.6 + float(r_i) * 0.4, 0.0)), Vector3(0.6, 0.05, 0.05))
 	var step_from := shaft + road * 2.3
-	m.steps(chalk, step_from + road * 1.4, -road, k.on_ground(step_from.x + road.x * 1.4, step_from.y + road.y * 1.4).y - 0.05, 2, (top_y - k.on_ground(step_from.x, step_from.y).y) / 2.2, 0.55, 1.6)
+	var steps := m.begin()
+	m.steps(steps, step_from + road * 1.4, -road, k.on_ground(step_from.x + road.x * 1.4, step_from.y + road.y * 1.4).y - 0.05, 2, (top_y - k.on_ground(step_from.x, step_from.y).y) / 2.2, 0.55, 1.6)
 	if interior != "":
 		_builders().SITES._door(d, interior, Vector3(lad.x, top_y, lad.z) + Vector3(road.x, 0.0, road.y) * 0.35, PoiKit.yaw_of(-road))
 	k.marker("the_shaft_head", k.on_ground(step_from.x + road.x * 2.2, step_from.y + road.y * 2.2), true)
 	await k.step()
 	# the headframe: four raked legs from the collar's corners to a head two metres square
-	var H := 11.0
+	var H := 13.5
 	var legs: Array[Vector3] = []
 	var heads: Array[Vector3] = []
 	for sx in [-1.0, 1.0]:
@@ -1236,7 +1241,7 @@ static func knappers_deep(d: PoiDressing) -> void:
 	var axle := side
 	for s in [-1.0, 1.0]:
 		m.block(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(up)), head_c + Vector3(axle.x, 0.0, axle.y) * 0.75 * float(s) + Vector3(0.0, 0.15, 0.0)), Vector3(0.24, 0.3, 2.6))
-	var wheel_r := 1.55
+	var wheel_r := 1.8
 	var wc := head_c + Vector3(0.0, 0.3 + wheel_r, 0.0)
 	var wface := Basis(Vector3.UP, PoiKit.yaw_of(axle))
 	for i in 20:
@@ -1254,7 +1259,8 @@ static func knappers_deep(d: PoiDressing) -> void:
 		_timber(d, timber, k.on_ground(foot.x, foot.y, -0.2), heads[2 if s < 0.0 else 3].lerp(head_c, 0.3) + Vector3(0.0, -0.2, 0.0), 0.15)
 	await k.step()
 	m.commit(timber, k.surface("timber", 0.65), "Headframe", true)
-	m.commit(chalk, PoiKit.painted(2, {"base": "#55565a", "accent": "#7d7b76", "grout": "#cfc8b4", "unit": 0.2}, 0.6, 0.7), "ShaftHead", true)
+	_builders().SITES._commit(d, chalk, _builders().SITES.stone_look(k, sg.y), "ShaftHead", true)
+	m.commit(steps, PoiKit.painted(2, {"base": "#55565a", "accent": "#7d7b76", "grout": "#a39d8c", "unit": 0.2}, 0.6, 0.7), "ShaftSteps")
 	m.commit(black, PoiKit.plain(Color(0.015, 0.014, 0.013), 1.0), "TheDark")
 	# the rope: down the shaft from the front of the wheel, and from its back to the gin's drum
 	var rope := m.begin()
@@ -1284,16 +1290,18 @@ static func knappers_deep(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(earth, k.surface("earth", 0.4), "Trodden")
 	# the spoil: a hundred years tipped white down the face, three tongues of it, flints in it
-	var spoil_mat := PoiKit.painted(2, SPOIL, 0.85, 0.9)
-	var heaps := [[down * 22.0 + side * 9.0, 7.0, 5.0], [down * 26.0 - side * 4.0, 8.0, 6.2], [down * 17.0 - side * 16.0, 5.0, 3.2]]
+	var spoil_mat := PoiKit.painted(5, SPOIL, 0.85, 0.9)
+	var heaps := [[down * 22.0 + side * 10.0, 6.5, 3.6], [down * 27.0 - side * 3.0, 7.5, 4.4], [down * 18.0 - side * 15.0, 5.0, 2.6], [down * 30.0 + side * 6.0, 4.5, 2.2]]
 	var flint_spots: Array = []
 	for i in heaps.size():
 		var h: Array = heaps[i]
 		var c: Vector2 = h[0]
 		var r: float = h[1]
-		_hump(d, c, down, r * 1.25, r * 0.8, float(h[2]), spoil_mat, "Spoil%d" % i, true, 2.6, true, 0.08)
-		_hump(d, c - down * 1.0, down, r * 1.5, r * 1.05, 0.35, _turf(), "SpoilSkirt%d" % i, false, 1.0, false, 0.05)
-		await _builders().LAND._grass(d, "grass_clump", c + down * r * 0.6, r * 0.5, 10)
+		# a tip-heap: tipped from the barrow-run, its crest along the way it was tipped, lumpy, the old
+		# tips' flanks grassing over at their feet
+		_hump(d, c, down, r * 1.35, r * 0.85, float(h[2]), spoil_mat, "Spoil%d" % i, true, 1.9, true, 0.2)
+		await _builders().LAND._grass(d, "grass_clump", c + down * r * 0.9, r * 0.6, 14)
+		await _builders().LAND._grass(d, "meadow_grass", c - side * r * 0.7, r * 0.4, 8)
 		for j in 14:
 			var a := k.rng.randf() * TAU
 			flint_spots.append(c + Vector2(sin(a), cos(a)) * r * sqrt(k.rng.randf()) * 0.85)
@@ -1314,7 +1322,7 @@ static func knappers_deep(d: PoiDressing) -> void:
 		placed.append(p)
 		_ring_bank(d, rings, p, k.rng.randf_range(2.2, 3.4), k.rng.randf_range(1.6, 2.4), k.rng.randf_range(0.35, 0.6), 20)
 	await k.step()
-	m.commit(rings, PoiKit.painted(5, {"base": "#6f7a45", "accent": "#596436", "grout": "#3f4826", "unit": 0.35}, 0.6), "OldShafts")
+	m.commit(rings, _turf(), "OldShafts")
 	var hollow_mat := PoiKit.plain(Color(0.24, 0.29, 0.15), 0.95)
 	for p in placed:
 		m.pool(p, 1.7, k.on_ground(p.x, p.y).y + 0.03, hollow_mat, "Hollow", 14)
@@ -1496,7 +1504,7 @@ static func hum_stone(d: PoiDressing) -> void:
 	# the cut: two banks of spoil either side of a way from the camp to the door, plank shoring on
 	# their inner faces, the door of three stones at the hump's foot
 	var door_at := foot + land * 7.4
-	var spoil := PoiKit.painted(2, SPOIL, 0.85, 0.9)
+	var spoil := PoiKit.painted(5, SPOIL, 0.85, 0.9)
 	for s in [-1.0, 1.0]:
 		var b := foot + land * 12.5 + side * 3.7 * float(s)
 		m.mound(k.on_ground(b.x, b.y, -0.5), 3.2, 1.9, spoil, "CutBank%d" % int(s + 1.0), true, 1.3, 6, 18, false, 0.1)
@@ -1697,7 +1705,7 @@ static func _hump_surface(c: Vector2, axis: Vector2, rx: float, rz: float, heigh
 
 ## A turf for barrows and banks: the downs' sward, a shade darker for being heaped.
 static func _turf() -> ShaderMaterial:
-	return PoiKit.painted(5, {"base": "#66723e", "accent": "#525d30", "grout": "#38411f", "unit": 0.35}, 0.6)
+	return PoiKit.painted(5, {"base": "#55612f", "accent": "#444e25", "grout": "#2e361a", "unit": 0.35}, 0.6)
 
 
 ## A sarsen: a rough grey-white slab standing, of `size`, leaning by `lean` (radians about its face),
@@ -1706,11 +1714,12 @@ static func _sarsen(d: PoiDressing, st: SurfaceTool, at: Vector2, yaw: float, si
 	var k := d.kit
 	var g := k.on_ground(at.x, at.y)
 	var b := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, lean)
-	var c := g + b * Vector3(0.0, size.y * 0.5 - sink, 0.0)
-	d.masonry.block(st, Transform3D(b, c), size)
-	# a second, smaller block to break the box's line at its head
-	d.masonry.block(st, Transform3D(b * Basis(Vector3.BACK, k.rng.randf_range(-0.25, 0.25)), c + b * Vector3(k.rng.randf_range(-0.15, 0.15), size.y * 0.42, 0.0)),
-			Vector3(size.x * 0.72, size.y * 0.3, size.z * 0.9))
+	# a slab tapering to a rounded head, a little off true: a stone the downs left, not a block cut
+	var foot := g + b * Vector3(0.0, -sink, 0.0)
+	var twist := b * Basis(Vector3.UP, k.rng.randf_range(-0.12, 0.12))
+	_frustum(st, Transform3D(twist, foot), size.x, size.z, size.x * k.rng.randf_range(0.62, 0.8), size.z * k.rng.randf_range(0.7, 0.9), size.y * 0.9)
+	d.masonry.ellipsoid(st, foot + b * Vector3(k.rng.randf_range(-0.08, 0.08), size.y * 0.9, 0.0),
+			Vector3(size.x * 0.36, size.y * 0.13, size.z * 0.4), twist)
 	k.collider(Vector3(size.x, size.y - sink, size.z), Transform3D(Basis(Vector3.UP, yaw), g + Vector3(0.0, (size.y - sink) * 0.5, 0.0)), "stone")
 
 
@@ -2836,3 +2845,113 @@ static func southgate_stone(d: PoiDressing) -> void:
 		m.limb(wood, wg + Vector3(0.0, 0.1, 0.0), wg + Vector3(0.0, 0.1, 0.0) + Basis(Vector3.UP, 0.4) * Vector3(sin(a) * 0.6, 0.0, cos(a) * 0.6), 0.035)
 	m.commit(wood, k.surface("timber", 0.8), "LostWheel")
 	await _builders().LAND._grass(d, "grass_clump", start + east * 8.0, 6.0, 18)
+
+
+
+# --- the second pass's mending: things that stood in each other ------------------------------------
+
+## The things a builder sets down that can be moved a little without changing what a place is.
+const MOVABLE := ["barrel", "crate", "sack", "chopping_block", "wheelbarrow", "bucket", "jug", "basket",
+		"bell_small", "gravestone", "boulder", "bench", "stool", "hay_bale", "cart"]
+
+
+## The footprint of a placed asset in the dressing's xz, from its meshes: [centre, half x, half z].
+static func _footprint(n: Node3D) -> Array:
+	var box := AABB()
+	var first := true
+	for mi in n.find_children("*", "MeshInstance3D", true, false):
+		var m3 := mi as MeshInstance3D
+		if m3.mesh == null:
+			continue
+		var t := Transform3D.IDENTITY
+		var cur: Node = m3
+		while cur != null and cur != n:
+			if cur is Node3D:
+				t = (cur as Node3D).transform * t
+			cur = cur.get_parent()
+		var b := (n.transform * t) * m3.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	if first:
+		return [Vector2(n.position.x, n.position.z), 0.3, 0.3]
+	var c := box.get_center()
+	return [Vector2(c.x, c.z), box.size.x * 0.5, box.size.z * 0.5]
+
+
+## Whether a placed asset's name says it is one of `MOVABLE`.
+static func _movable(nm: String) -> bool:
+	for kind in MOVABLE:
+		if nm.contains("_" + kind + "_"):
+			return true
+	return false
+
+
+## Parts the props a builder set into one another (the seat audit's `overlap`: a chopping block in a
+## barrel, a barrel in an apple tree's crown, a bell in a standing stone): each movable thing whose
+## foot is inside another placed thing's footprint is walked out of it, away from that thing's
+## middle, to clear ground, and set down there. The other is left where it stands.
+static func _part_props(d: PoiDressing) -> void:
+	var k := d.kit
+	if k.far:
+		return
+	var things: Array[Node3D] = []
+	for c in d.get_children():
+		if c is Node3D and not (c is MeshInstance3D) and str(c.name).contains("_") and c.get_child_count() > 0:
+			things.append(c as Node3D)
+	var feet := {}
+	for n in things:
+		feet[n] = _footprint(n)
+	for n in things:
+		if not _movable(str(n.name)):
+			continue
+		for pass_i in 3:
+			var mine: Array = feet[n]
+			var moved := false
+			for o in things:
+				if o == n:
+					continue
+				var theirs: Array = feet[o]
+				var oc: Vector2 = theirs[0]
+				var ohx: float = theirs[1]
+				var ohz: float = theirs[2]
+				var mc: Vector2 = mine[0]
+				var mr := maxf(float(mine[1]), float(mine[2]))
+				# the share of mine inside theirs: only a real overlap is mended
+				if absf(mc.x - oc.x) > ohx + mr * 0.2 or absf(mc.y - oc.y) > ohz + mr * 0.2:
+					continue
+				var away := mc - oc
+				away = away.normalized() if away.length() > 0.05 else Vector2(1.0, 0.0)
+				var reach := Vector2(absf(away.x) * ohx, absf(away.y) * ohz).length() + mr + 0.25
+				var to := oc + away * reach
+				var shift := to - mc
+				n.position = k.on_ground(n.position.x + shift.x, n.position.z + shift.y) - Vector3(0.0, PoiKit.buried_m(str(n.scene_file_path)) * n.scale.y, 0.0)
+				feet[n] = [to, mine[1], mine[2]]
+				mine = feet[n]
+				moved = true
+			if not moved:
+				break
+
+
+## A builder that is its kind's, with the props parted after.
+static func _kind_then_part(d: PoiDressing, kind_builder: Callable) -> void:
+	await kind_builder.call(d)
+	_part_props(d)
+
+
+## Bell Meadow Stones: the kind's three leaning stones and the bronze, the Toll's bell out of the stone.
+static func bell_meadow_stones(d: PoiDressing) -> void:
+	await _kind_then_part(d, Callable(_builders(), "standing_stones"))
+
+
+## Ansel's Hedge Shrine: the kind's stone chair and hawthorn, its gravestones out of the thorn.
+static func hedge_shrine_of_ansel(d: PoiDressing) -> void:
+	await _kind_then_part(d, Callable(_builders(), "shrine"))
+
+
+## Pennywort Fields and Southgate Farm: the kind's farmstead, its yard's things out of each other.
+static func pennywort_fields(d: PoiDressing) -> void:
+	await _kind_then_part(d, Callable(_builders().LAND, "farmstead"))
+
+
+static func southgate_farm(d: PoiDressing) -> void:
+	await _kind_then_part(d, Callable(_builders().LAND, "farmstead"))
