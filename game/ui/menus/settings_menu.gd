@@ -418,14 +418,14 @@ func _build_controls() -> void:
 
 	var head := UiKit.row(14)
 	var spacer := UiKit.label("", "Small")
-	spacer.custom_minimum_size = Vector2(300, 0)
+	spacer.custom_minimum_size = Vector2(_binding_label_w(), 0)
 	head.add_child(spacer)
-	var kb := UiKit.label("Keyboard and mouse", "Small", HORIZONTAL_ALIGNMENT_CENTER)
-	kb.custom_minimum_size = Vector2(190, 0)
-	head.add_child(kb)
-	var pad := UiKit.label("Gamepad", "Small", HORIZONTAL_ALIGNMENT_CENTER)
-	pad.custom_minimum_size = Vector2(190, 0)
-	head.add_child(pad)
+	# two keyboard-and-mouse columns: a key as well as a mouse button (the lock-on's middle button
+	# is one some players have not got, triage 80), then the pad's
+	for words in ["Keyboard and mouse", "Or", "Gamepad"]:
+		var col_head := UiKit.label(words, "Small", HORIZONTAL_ALIGNMENT_CENTER)
+		col_head.custom_minimum_size = Vector2(_binding_button_w(), 0)
+		head.add_child(col_head)
 	_content.add_child(head)
 
 	var category := ""
@@ -452,16 +452,24 @@ func _binding_row(def: Dictionary) -> HBoxContainer:
 	var row := UiKit.row(14)
 	row.custom_minimum_size = Vector2(0, 36)
 	var label := UiKit.label(str(def.get("label", action)), "Body")
-	label.custom_minimum_size = Vector2(300, 0)
+	label.custom_minimum_size = Vector2(_binding_label_w(), 0)
 	row.add_child(label)
-	for slot in [RebindCapture.KEYBOARD, RebindCapture.PAD]:
+	for slot in [RebindCapture.KEYBOARD, RebindCapture.SECOND, RebindCapture.PAD]:
 		var b := UiKit.button(RebindCapture.label_for(action, slot), "FlatButton")
-		b.custom_minimum_size = Vector2(190, 0)
+		b.custom_minimum_size = Vector2(_binding_button_w(), 0)
 		b.set_meta("action", action)
 		b.set_meta("slot", slot)
 		b.pressed.connect(func() -> void: _begin_capture(b))
 		row.add_child(b)
 	return row
+
+
+func _binding_label_w() -> float:
+	return 230.0 if _narrow() else 280.0
+
+
+func _binding_button_w() -> float:
+	return 120.0 if _narrow() else 150.0
 
 
 func _begin_capture(button: Button) -> void:
