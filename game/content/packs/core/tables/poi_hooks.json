@@ -145,7 +145,9 @@
         "finds": [
           "core:item/note_beached_barge"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/beached_barge"
+        ],
         "hearthstone": false
       },
       {
@@ -4559,6 +4561,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_crown_drift",
+        "quests": [
+          "core:quest/the_last_shift"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_crown_drift"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_false_lantern",
         "quests": [],
         "finds": [
@@ -4594,7 +4607,9 @@
         "quests": [
           "core:quest/the_ruled_line"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/heron_egg_schedule"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4760,6 +4775,17 @@
         ],
         "encounters": [
           "core:encounter/the_sounding"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_struck_barrow",
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_struck_barrow"
         ],
         "hearthstone": false
       },
@@ -5234,7 +5260,9 @@
       },
       {
         "poi": "core:poi/wash_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
         "finds": [
           "core:item/note_wash_stones"
         ],
