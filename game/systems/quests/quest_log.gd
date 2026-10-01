@@ -627,6 +627,10 @@ func active_markers() -> Array[Dictionary]:
 			var o: Dictionary = objs[i]
 			if _count_for(quest_id, index, i) >= maxi(1, int(o.get("count", 1))):
 				continue
+			# what the tracker and the compass keep back, the chart does too: an objective that
+			# keeps its own counsel (`hidden`), and a step not yet reached (`after`)
+			if bool(o.get("hidden", false)) or _veiled(quest_id, index, o, objs):
+				continue
 			var marker := marker_for(o)
 			if marker.is_empty():
 				continue
@@ -662,7 +666,12 @@ func marker_for(o: Dictionary) -> Dictionary:
 		if type == "place" or type == "poi":
 			return {"place_id": id, "radius": float(o.get("radius", MARKER_RADIUS_M))}
 		if type == "npc":
+			# where their day (or the story's hold on them) has them now, else their home
 			var home := str(ContentDB.get_or_empty(id).get("home_place", ""))
+			if NpcRegistry.instance != null and is_instance_valid(NpcRegistry.instance):
+				var now := NpcRegistry.instance.place_of(id)
+				if now != "" and PlaceRef.xz(now) != Vector2.INF:
+					home = now
 			if home != "":
 				return {"place_id": home, "radius": MARKER_RADIUS_M}
 	var region := str(o.get("region", ""))
@@ -833,6 +842,19 @@ func note(quest_id: String, line: String) -> void:
 
 
 ## Is objective `index` of this quest's current stage done?
+## Whether an objective of a given stage (an index from nought) was done: the tracker ticks a step
+## that leaves it only when it was (a step the stage moved past undone, the watch's fail, is not).
+## A quest that has ended counts as done when it was completed and not when it failed.
+func objective_done_in(quest_id: String, stage_i: int, index: int) -> bool:
+	if not quests.has(quest_id):
+		return false
+	if is_completed(quest_id):
+		return true
+	if is_failed(quest_id):
+		return false
+	return _count_for(quest_id, stage_i, index) >= maxi(1, int(_objective(quest_id, stage_i, index).get("count", 1)))
+
+
 func objective_done(quest_id: String, index: int) -> bool:
 	if not is_active(quest_id):
 		return false
