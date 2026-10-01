@@ -555,5 +555,48 @@
         "next": "end"
       }
     }
+  },
+  {
+    "id": "core:dialogue/holmwatch_gate",
+    "speaker_name": "The gate of Holmwatch",
+    "notes": "Holmwatch's hook: the notice post by the gate (world/sites/site_exterior.gd, _hook). Starts core:quest/louder_than_the_toll if Emmet Quarle has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The gate of Holmwatch",
+        "no_talk": true,
+        "text": "A Sayer's speaking-trumpet of brass, longer than your arm, is nailed through its bell to the gate-arch, mouth outward to the road. Under it, chalked in capitals a hand high: LOUDER. Under that, smaller, the Loud's terms, in a lecturer's hand: 'Holmwatch is held for the Saying. Anyone who will speak up may come in and be taught. Anyone who has come to ask us to be quiet: you have been heard, and answered.' Somebody has chalked the Circle's rings beside it and struck them through.",
+        "choices": [
+          {
+            "text": "Go in and find whoever is Saying from the tower.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/louder_than_the_toll"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/louder_than_the_toll"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/louder_than_the_toll"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the trumpet where it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The gate of Holmwatch",
+        "text": "From the lamp-tower over the wall a single voice says one word, and across the water the gulls on Gull Holm go up all at once.",
+        "next": "end"
+      }
+    }
   }
 ]

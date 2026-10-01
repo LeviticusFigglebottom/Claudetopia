@@ -2080,6 +2080,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/holmwatch",
+        "quests": [
+          "core:quest/louder_than_the_toll"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/horn_hole",
         "quests": [],
         "finds": [
@@ -4648,6 +4657,7 @@
       {
         "poi": "core:poi/the_listening_post",
         "quests": [
+          "core:quest/louder_than_the_toll",
           "core:quest/the_singing_slate"
         ],
         "finds": [

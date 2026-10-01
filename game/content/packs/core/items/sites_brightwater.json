@@ -72,5 +72,20 @@
     ],
     "description": "A quire of names copied out of the Struck Barrow's register by the Quiet Hands' resurrection men, each priced for sale in the Undercroft with the dead man's age and trade.",
     "reads": "core:book/struck_barrow_name_list"
+  },
+  {
+    "id": "core:item/carrows_trumpet",
+    "name": "Carrow's Speaking-Trumpet",
+    "category": "misc",
+    "weight": 1.2,
+    "value": 120,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "sayers",
+      "brass",
+      "unique"
+    ],
+    "description": "A Sayer's speaking-trumpet of beaten brass as long as an arm, its bell engraved with the Circle's rings and, scratched over them, LOUDER. Blown into, it says nothing at all: whatever it carried, it carried only in her hands."
   }
 ]

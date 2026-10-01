@@ -167,5 +167,90 @@
       "boss",
       "tallymen"
     ]
+  },
+  {
+    "id": "core:boss/ysolde_carrow",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Magister Ysolde Carrow, the Loud",
+    "archetype": "boss",
+    "arena": "core:poi/holmwatch",
+    "region": "core:region/brightwater",
+    "tint": "#7a4f1e",
+    "scale": 1.1,
+    "resists": {
+      "silence": 0.5,
+      "frost": 0.3,
+      "slash": -0.15,
+      "pierce": -0.1
+    },
+    "lore": "Ysolde Carrow held the Spire's chair of Saying for eleven years and was put out of it for one lecture, in which she said that the world was dwindling because the Circle had spent a century teaching it to be quiet, and then demonstrated. The Spire's windows on the lake side are still new glass. She took Holmwatch because its Saying-hall carries a voice further than any room the Circle owns, and she Says into it every dusk so that the Toll, the Lamp and the Spire itself will hear that somebody is still speaking up.",
+    "appearance": {
+      "seed": 6455,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "boots",
+        "back": "hooded_cloak",
+        "belt": "belt",
+        "hands": "gloves"
+      },
+      "palette": {
+        "primary": "6e4a22",
+        "secondary": "c9b98a",
+        "leather": "2e2a24",
+        "metal": "c8a858"
+      },
+      "skin": "olive",
+      "hair_colour": "grey",
+      "build": 0.75,
+      "feminine": 1.0,
+      "height": 1.8
+    },
+    "stats": {
+      "hp": 420,
+      "stamina": 170,
+      "poise": 80,
+      "armour": 4,
+      "speed": 3.6,
+      "will": 40
+    },
+    "behaviour": {
+      "engage_range": 9.0,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 40.0,
+      "hyper_armour": 12.0,
+      "aggression": 0.75
+    },
+    "phases": [
+      {
+        "name": "lecture",
+        "hp": 1.0,
+        "aggression": 0.7
+      },
+      {
+        "name": "louder",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 4.0,
+        "hyper_armour": 18.0,
+        "say": "She takes up the great trumpet and Says one word into the brass ribs, and the whole hall rings like the inside of a bell; dust comes down from the vault in a sheet."
+      }
+    ],
+    "marks": [
+      220,
+      380
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/carrows_trumpet"
+    ],
+    "tags": [
+      "humanoid",
+      "person",
+      "caster",
+      "boss",
+      "sayers"
+    ]
   }
 ]
