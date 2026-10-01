@@ -102,15 +102,23 @@ func test_the_rogue_s_marker_follows_the_watch_s_fail_and_the_try_again() -> voi
 	var saved: Dictionary = Social.quests.call("to_save")
 	Social.quests.call("reset_for_new_game")
 	assert_eq(_texts(hud).size(), 0, "a new game shows nothing of it")
+	var fresh := QuestCues.npc_state(SAUVE, Social.quests, Social.ctx)
+	assert_true(str(fresh.get("state", "")) not in ["advance", "turn_in", "in_progress"], "a new game: no step of it over Sauve: %s" % str(fresh))
 	Social.quests.call("from_save", saved)
 	assert_eq(_texts(hud), seen, "loaded, the marker is where it was")
+	var loaded := QuestCues.npc_state(SAUVE, Social.quests, Social.ctx)
+	assert_true(str(loaded.get("quest_id", "")) == ROGUE and str(loaded.get("state", "")) == "advance", "and the step over Sauve, at once: %s" % str(loaded))
 	_in_step(ROGUE, "seen, loaded")
 	# tried again: back to the traps' step
 	EventBus.dialogue_node_entered.emit(SAUVE, "traps_again")
 	_in_step(ROGUE, "tried again")
 	assert_eq(_texts(hud), before, "the try again marks the traps again")
-	# a quest that ends shows nothing more, here or on the chart
+	# a quest that ends shows nothing more, here, on the chart, or over Sauve's head
+	assert_false(QuestCues.npc_state(SAUVE, Social.quests, Social.ctx).is_empty(), "Sauve has quest business with you")
 	Social.quests.call("fail", ROGUE, "a test")
+	var after := QuestCues.npc_state(SAUVE, Social.quests, Social.ctx)
+	assert_false(str(after.get("quest_id", "")) == ROGUE and str(after.get("state", "")) in ["advance", "turn_in", "in_progress"],
+			"his mark is not the failed quest's step, at once: %s" % str(after))
 	assert_eq(_texts(hud).size(), 0, "a failed quest has no marker left")
 	for m in Social.quests.call("active_markers"):
 		assert_true(str((m as Dictionary).get("quest_id", "")) != ROGUE, "nor an area on the chart")

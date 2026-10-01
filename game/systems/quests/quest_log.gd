@@ -323,6 +323,8 @@ func fail(quest_id: String, reason: String = "") -> void:
 	var entries: Array = rec["journal"]
 	entries.append("Left undone. %s" % reason if reason != "" else "Left undone.")
 	_let_go(quest_id)
+	# the marks over heads are asked again: a failed quest's person has no business with you now
+	QuestCues.touch()
 	EventBus.quest_completed.emit(quest_id, "failed")
 	Log.info("Quests", "failed %s (%s)" % [quest_id, reason])
 
@@ -1381,6 +1383,7 @@ static func _blank_record(quest_id: String) -> Dictionary:
 func reset_for_new_game() -> void:
 	quests.clear()
 	_set_tracked("")
+	QuestCues.touch()
 	# The generated quests live here; the boards that generated them live there. Clearing one
 	# and not the other left boards holding notices this log had never heard of.
 	if radiant != null and radiant.has_method("reset_for_new_game"):
@@ -1413,3 +1416,5 @@ func from_save(d: Dictionary) -> void:
 	# a save from before the tracker (schema 4) says nothing: the main quest is followed
 	var chosen := str(d.get("tracked", ""))
 	_set_tracked(chosen if is_active(chosen) else default_tracked())
+	# a loaded game's marks over heads are the loaded quests', not the ones played before the load
+	QuestCues.touch()
