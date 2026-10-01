@@ -3,22 +3,28 @@ extends Node
 ## Somebody a lesson is about not being seen by (docs/FIGHTING_STYLE_STARTS.md §3.4): the Reed
 ## Council's night-watch on Moreva's boards, whom the rogue gets past before dawn to the South
 ## Channel's traps. A stage's
-##   "unseen": {npc, flag, said: [[npc_id, line], ...], back_to: <a PlaceRef spec, or a list of them>,
-##              back_m?, again: [[npc_id, line], ...], noticed?: [...], eased?: [...],
-##              lantern?: {range, energy}, weather?: <a weather id>}
+##   "unseen": {npc, flag, said: [[npc_id, line], ...], fail_stage: <stage id>, noticed?: [...],
+##              eased?: [...], lantern?: {range, energy}, weather?: <a weather id>}
 ## watches that person's detection meter (Npc.detection, DetectionMeter), in the HUD eye's own steps:
 ## - Noticed (SUSPICIOUS): `noticed` is said, once, and when the meter has fallen back to nothing
 ##   without her being sure, `eased` is: the build-up, and backing off from it, are heard;
-## - Seen (WITNESS): `flag` goes up and `said` is said out loud. Seen, you go back to the nearest of
-##   `back_to` (the lane's shelter, a short way, not the start); within `back_m` of it, with her
-##   looking elsewhere, the flag comes down, the watcher's meter is let go, and `again` is said.
+## - Seen (WITNESS): the attempt has failed (triage 78). `flag` goes up, `said` is said out loud, and
+##   the quest is sent to `fail_stage`, a `detour` stage whose objective is to speak to the teacher
+##   again (the marker moves to them). That stage says `"keeps_watch": <the watched stage's id>`: the
+##   watcher keeps her post, her lantern and her look while you go back. Speaking to the teacher
+##   sends the quest back to the watched stage, and entering it begins a clean attempt: the flag
+##   comes down and the watcher's meter starts from nothing.
+## Being seen used to send you back to a shelter to wait until she looked away, and a body she kept
+## seeing there never came round again: a softlock. An `unseen` with no `fail_stage` is a content
+## problem (tools/quests/softlock_check.py).
 ## `lantern` hangs a light on the watcher while the stage lasts: a pool she sees you in, which you
-## can see from the dark; `weather` is kept over the region while it lasts. The stage's own lines (the teacher's greeting, the choice that ends it)
-## read the flag. Nothing is saved but the flag.
+## can see from the dark; `weather` is kept over the region while it lasts. The stage's own lines (the
+## teacher's greeting, the choice that ends it) read the flag. Nothing is saved but the flag and the
+## stage, and a game loaded on the watched stage with the flag still up (a save from before the
+## fail) begins its attempt clean.
 
 const GROUP := "night_watch"
 const POLL_S := 0.2
-const BACK_M := 5.0
 ## Below this, a build-up that never became seeing has gone: she has looked away.
 const EASED := 0.12
 
@@ -29,6 +35,10 @@ var _noticed := false
 var _lantern: Node3D = null
 ## Whom this watch told to keep their look on their post.
 var _kept: Node = null
+## The attempt under way ("<quest>:<stage>"): a watched stage entered afresh begins a clean one.
+var _attempt := ""
+## A clean attempt begun before the watcher was stood up: her meter is let go when she is.
+var _calm_pending := false
 
 
 static func ensure() -> NightWatch:
@@ -58,8 +68,9 @@ func _process(delta: float) -> void:
 		refresh()
 
 
-## The watch in force: the first active quest whose current stage has one.
-func spec() -> Dictionary:
+## The watch in force: the first active quest whose current stage has one, or whose current stage
+## keeps another stage's (`keeps_watch`): {quest, stage, spec, passive}, or {}.
+func watch() -> Dictionary:
 	var log_node := get_tree().get_first_node_in_group("quest_log") if is_inside_tree() else null
 	if log_node == null:
 		return {}
@@ -69,76 +80,92 @@ func spec() -> Dictionary:
 		var stage: Dictionary = log_node.call("stage_def", q, int(log_node.call("stage_of", q)))
 		var u: Variant = stage.get("unseen", null)
 		if u is Dictionary:
-			return u
+			return {"quest": str(q), "stage": str(stage.get("id", "")), "spec": u, "passive": false}
+		var kept := str(stage.get("keeps_watch", ""))
+		if kept != "":
+			var at := int(log_node.call("stage_index", q, kept))
+			var watched: Dictionary = log_node.call("stage_def", q, at) if at >= 0 else {}
+			if watched.get("unseen", null) is Dictionary:
+				return {"quest": str(q), "stage": str(stage.get("id", "")), "spec": watched["unseen"], "passive": true}
 	return {}
 
 
-## One look: "seen" when the watcher has just seen you, "again" when you have just gone back,
-## "noticed" / "eased" as her meter crosses Noticed up and falls back to nothing, or "".
+## The `unseen` spec in force (a kept watch's too), or {}.
+func spec() -> Dictionary:
+	var w := watch()
+	return w.get("spec", {}) if not w.is_empty() else {}
+
+
+## One look: "seen" when the watcher has just seen you (the attempt failed), "again" when a fresh
+## attempt has just begun after one, "noticed" / "eased" as her meter crosses Noticed up and falls
+## back to nothing, or "".
 func refresh() -> String:
-	var s := spec()
-	if s.is_empty() or not is_inside_tree():
+	var w := watch()
+	if w.is_empty() or not is_inside_tree():
 		_put_out()
 		_noticed = false
+		_attempt = ""
 		return ""
+	var s: Dictionary = w["spec"]
 	var flag := str(s.get("flag", ""))
-	if flag.is_empty():
-		return ""
 	var who := _watcher(str(s.get("npc", "")))
 	_light(who, s.get("lantern", null))
 	_keep(who)
 	_keep_weather(str(s.get("weather", "")))
-	if not GameState.has_flag(flag):
-		if who == null:
-			return ""
-		var level := float(who.get("detection"))
-		if level >= DetectionMeter.WITNESS:
-			GameState.set_flag(flag, true)
-			_noticed = false
-			_say(s.get("said", []))
-			return "seen"
-		if level >= DetectionMeter.SUSPICIOUS and not _noticed:
-			_noticed = true
-			_say(s.get("noticed", []))
-			return "noticed"
-		if _noticed and level < EASED:
-			_noticed = false
-			_say(s.get("eased", []))
-			return "eased"
+	if bool(w["passive"]):
+		# gone back to the teacher after being seen: she keeps her post and her look, and sees nothing new
+		_attempt = ""
 		return ""
-	var player := get_tree().get_first_node_in_group("player") as Node3D
-	if player == null:
-		return ""
-	var at := nearest_back(s, Vector2(player.global_position.x, player.global_position.z))
-	if at == Vector2.INF or Vector2(player.global_position.x, player.global_position.z).distance_to(at) > float(s.get("back_m", BACK_M)):
-		return ""
-	# back in the shelter, and she has stopped looking at where you were
-	if who != null and float(who.get("detection")) >= DetectionMeter.SUSPICIOUS:
-		return ""
-	GameState.clear_flag(flag)
-	if who != null:
-		# she looks away again: the meter starts from nothing, not from having just seen you
-		who.set("detection", 0.0)
-		var meter: Variant = who.get("meter")
-		if meter is DetectionMeter:
-			(meter as DetectionMeter).reset()
-	_say(s.get("again", []))
-	return "again"
+	var said := ""
+	var key := "%s:%s" % [str(w["quest"]), str(w["stage"])]
+	if key != _attempt:
+		_attempt = key
+		_noticed = false
+		_calm_pending = true
+		if flag != "" and GameState.has_flag(flag):
+			GameState.clear_flag(flag)
+			said = "again"
+	if _calm_pending and who != null:
+		_calm_pending = false
+		_calm(who)
+	if flag.is_empty() or who == null:
+		return said
+	if GameState.has_flag(flag):
+		return said
+	var level := float(who.get("detection"))
+	if level >= DetectionMeter.WITNESS:
+		GameState.set_flag(flag, true)
+		_noticed = false
+		_say(s.get("said", []))
+		_fail(str(w["quest"]), str(s.get("fail_stage", "")))
+		return "seen"
+	if level >= DetectionMeter.SUSPICIOUS and not _noticed:
+		_noticed = true
+		_say(s.get("noticed", []))
+		return "noticed"
+	if _noticed and level < EASED:
+		_noticed = false
+		_say(s.get("eased", []))
+		return "eased"
+	return said
 
 
-## The nearest of a watch's places to go back to (its `back_to`: one PlaceRef spec, or a list), or
-## Vector2.INF.
-static func nearest_back(s: Dictionary, from: Vector2) -> Vector2:
-	var back: Variant = s.get("back_to", null)
-	var list: Array = back if back is Array else [back]
-	var best := Vector2.INF
-	for b in list:
-		if not PlaceRef.is_spec(b):
-			continue
-		var at := PlaceRef.point_xz(b)
-		if at != Vector2.INF and (best == Vector2.INF or from.distance_to(at) < from.distance_to(best)):
-			best = at
-	return best
+## Seen: the attempt is over, and the quest goes to the stage that puts it right (its teacher).
+func _fail(quest_id: String, fail_stage: String) -> void:
+	if fail_stage.is_empty():
+		Log.warn("NightWatch", "%s: an `unseen` with no fail_stage; seen, the stage has nowhere to go (content problem)" % quest_id)
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node != null:
+		log_node.call("set_stage", quest_id, fail_stage)
+
+
+## The watcher starts from nothing: not from having just seen you.
+static func _calm(who: Node) -> void:
+	who.set("detection", 0.0)
+	var meter: Variant = who.get("meter")
+	if meter is DetectionMeter:
+		(meter as DetectionMeter).reset()
 
 
 func _watcher(npc_id: String) -> Node:

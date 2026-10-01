@@ -661,7 +661,14 @@ static func keys_in(text: String) -> String:
 	for m in _key_token.search_all(text):
 		var action := m.get_string(1)
 		var key := str(Settings.prompt_for(action, pad)) if Settings != null and InputMap.has_action(action) else action
+		var said := "[%s]" % key
 		if action == "dodge" and Player.sprint_taps_roll_setting():
-			key = "tap " + str(Settings.prompt_for("sprint", pad))
-		out = out.replace(m.get_string(0), "[%s]" % key)
+			said = "[tap %s]" % str(Settings.prompt_for("sprint", pad))
+		elif Settings != null and InputMap.has_action(action):
+			# an action on two keys says both, so a player without the first still knows the other
+			# (the lock-on: the middle mouse button or Z, triage 80)
+			var both: Array[String] = Settings.prompts_for(action, pad)
+			if both.size() >= 2:
+				said = "[%s] or [%s]" % [both[0], both[1]]
+		out = out.replace(m.get_string(0), said)
 	return out

@@ -203,6 +203,9 @@ func will_buy(item_id: String) -> bool:
 	var tags: Variant = ContentDB.get_or_empty(item_id).get("tags", [])
 	if typeof(tags) == TYPE_ARRAY and (tags as Array).has("keepsake"):
 		return false
+	# nor is a thing a quest of the player's still wants: sold, it was gone, and the quest with it
+	if Social != null and Social.quests != null and str(Social.quests.call("wanted_by", item_id)) != "":
+		return false
 	return ContentQuery.item_matches_categories(item_id, buys)
 
 
