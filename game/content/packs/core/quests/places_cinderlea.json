@@ -17,7 +17,8 @@
             "target": "core:book/four_names_at_the_milestone",
             "text": "Read the four names cut in the Last Milestone",
             "where": "core:poi/last_milestone",
-            "in_place": true
+            "in_place": true,
+            "spot": "the_names"
           }
         ],
         "marker": {
@@ -382,7 +383,8 @@
             "target": "core:item/wet_bell_rope_end",
             "count": 1,
             "text": "Cut the end of the new rope at the bell-arm",
-            "where": "core:poi/hush_bell"
+            "where": "core:poi/hush_bell",
+            "spot": "the_bell_arm"
           }
         ],
         "marker": {
@@ -515,14 +517,16 @@
             "target": "core:item/vaelost_course_chip",
             "count": 1,
             "text": "Find a piece of the name round Vaelost's top course",
-            "where": "core:poi/tower_of_vaelost"
+            "where": "core:poi/tower_of_vaelost",
+            "spot": "the_fallen_course"
           },
           {
             "type": "collect",
             "target": "core:item/hesk_morn_name_tag",
             "count": 1,
             "text": "Find a name at Hesk-Morn, where the footprints end",
-            "where": "core:poi/hesk_morn"
+            "where": "core:poi/hesk_morn",
+            "spot": "the_threshold"
           },
           {
             "type": "collect",

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "core:item/unnamed_hand_bell",
+    "name": "A Hand-Bell With No Name",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 12,
+    "tags": [
+      "bell",
+      "no_sale"
+    ],
+    "description": "A pilgrim's hand-bell of bright tin from the Sunk Plaza's fountain: the one more bell than there were pilgrims. Its clapper is untied and it does not ring, however you shake it. There is no name scratched on it, where every other bell in the basin has one."
+  }
+]
