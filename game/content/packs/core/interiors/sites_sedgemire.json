@@ -12,7 +12,7 @@
     "unique_object": "curtains of knotted rush cords down the hollow's walls, each cord a name, the oldest gone white and the newest still green",
     "site": {
       "kind": "cave",
-      "seed": 6271,
+      "seed": 6302,
       "region": "core:region/sedgemire",
       "size": "large",
       "boss": "core:boss/the_name_wife",
@@ -198,8 +198,7 @@
         {
           "id": "the_rope_shaft",
           "role": "chamber",
-          "size": "large",
-          "set_piece": "collapsed_shaft"
+          "size": "large"
         },
         {
           "id": "lantern_store",
@@ -244,6 +243,133 @@
           "book": "core:book/ama_lissas_knots",
           "name": "a length of knotted rope",
           "item": "core:item/note_ama_lissas_knots"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/saltgate_culverts",
+    "name": "The Saltgate Culverts",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_saltgate",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Saltgate's drowned garrison below stairs, the sallowjaws that came up the sluice with the sea, and Old Mudmouth in the sump under the windlass",
+    "story": "Under the keep the Guild cut its works into the headland: the guardroom and the stores, the tithe-room, the windlass chamber over the sluice-race, and below it all the culverts where the Outfall goes out to the sea, and the sump where the race turns. The sea came in through the race. It is still in, to the knee in the upper rooms and over the head in the sump, and what came up with it has made the sump its own.",
+    "unique_object": "the Guild's windlass, a drum of oak as tall as a man on an iron axle, its chain run down into the black water of the sump and snapped",
+    "site": {
+      "kind": "keep",
+      "seed": 9123,
+      "region": "core:region/sedgemire",
+      "size": "large",
+      "boss": "core:boss/old_mudmouth",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/tithe_strongbox",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/bog_drowned",
+          "core:enemy/sallowjaw"
+        ],
+        "archers": [
+          "core:enemy/wisp"
+        ],
+        "heavy": [
+          "core:enemy/bog_drowned"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#7a7d76",
+          "#4c504c",
+          "#8f938a"
+        ],
+        "lights": [
+          "torch",
+          "brazier"
+        ],
+        "light_colour": "#ffb25c"
+      },
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "guardroom",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "barracks"
+        },
+        {
+          "id": "salt_stores",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "cellar_store"
+        },
+        {
+          "id": "the_culvert_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "sluice_race",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "tithe_room",
+          "role": "treasure",
+          "size": "small"
+        },
+        {
+          "id": "flooded_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "windlass_chamber",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "ledge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle",
+          "note": "the duty-table at the stair's head, the watch-book still open on it"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "paper_stack"
+        },
+        {
+          "kind": "note",
+          "room": "guardroom",
+          "book": "core:book/saltgate_watch_book",
+          "name": "the Saltgate watch-book",
+          "item": "core:item/note_saltgate_watch_book"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/saltgate_sluice_tally",
+          "name": "the sluice-warden's tally",
+          "item": "core:item/note_saltgate_sluice_tally"
         }
       ]
     }

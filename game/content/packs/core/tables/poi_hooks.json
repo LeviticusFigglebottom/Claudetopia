@@ -830,7 +830,9 @@
           "core:quest/what_the_tide_left"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/cockle_beds"
+        ],
         "hearthstone": false
       },
       {
@@ -1097,7 +1099,9 @@
         "finds": [
           "core:item/note_drowned_arch"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/drowned_arch"
+        ],
         "hearthstone": false
       },
       {
@@ -4709,6 +4713,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_saltgate",
+        "quests": [
+          "core:quest/the_saltgate"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_saltgate"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_sawpit",
         "quests": [],
         "finds": [
@@ -4823,7 +4838,8 @@
       {
         "poi": "core:poi/tide_hearth",
         "quests": [
-          "core:quest/against_the_current"
+          "core:quest/against_the_current",
+          "core:quest/the_saltgate"
         ],
         "finds": [],
         "encounters": [],

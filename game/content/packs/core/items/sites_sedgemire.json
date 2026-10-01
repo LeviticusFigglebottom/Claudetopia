@@ -110,5 +110,46 @@
     ],
     "description": "A child's slate wedged between two of the drowned courses, scratched with names and tally-marks.",
     "reads": "core:book/sunken_tower_divers"
+  },
+  {
+    "id": "core:item/saltgate_windlass_key",
+    "name": "The Saltgate Windlass-Key",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "An iron key as long as a forearm, the Guild's tally-mark cast into its bow, for the pawl of the Saltgate's windlass. It was on the sluice-warden's ring, and the ring was on the sluice-warden, and Old Mudmouth swallowed both on the night of the flood; it came out of him green."
+  },
+  {
+    "id": "core:item/note_saltgate_watch_book",
+    "name": "The Saltgate Watch-Book",
+    "category": "book",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The garrison's watch-book, swollen and salt-stained, the last pages run.",
+    "reads": "core:book/saltgate_watch_book"
+  },
+  {
+    "id": "core:item/note_saltgate_sluice_tally",
+    "name": "The Sluice-Warden's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tally-stick and a folded page, hidden behind a loose stone.",
+    "reads": "core:book/saltgate_sluice_tally"
   }
 ]

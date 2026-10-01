@@ -305,5 +305,176 @@
         ]
       }
     }
+  },
+  {
+    "id": "core:dialogue/grey_gull_figurehead",
+    "speaker_name": "The figurehead",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The figurehead",
+        "no_talk": true,
+        "text": "Under the bowsprit, a gull carved in pale wood with its wings swept back along the bows, and where a gull's head would be, a woman's: round-faced, a little heavy at the chin, her hair carved as a hood, her mouth open as if she had been about to call out to somebody on the shore. The salt has taken the paint off everything but the eyes, which are reedfolk indigo. The Moreva people who came to see her went home quiet: it is Senne Oul who keeps the dye-vats, to the life, and Senne Oul has never been further west than Oulea.",
+        "choices": [
+          {
+            "text": "Leave her looking up the carr.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/drowned_trader_rags",
+    "speaker_name": "The rags on the shrouds",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The rags on the shrouds",
+        "no_talk": true,
+        "text": "Strips of indigo cloth tied along the shrouds, the way the reedfolk tie them on a boat that is not coming home. Every one of them has been untied and tied again, and not in any knot of the Delta: a double loop pulled flat, which is the Lakefolk's, from the other side of the downs. The knots are fresh. The mud round the hull has no footprints in it but your own.",
+        "choices": [
+          {
+            "text": "Leave the knots.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/old_crannog_fire",
+    "speaker_name": "The fire laid by the door",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The fire laid by the door",
+        "no_talk": true,
+        "text": "A ring of stones at the crannog's door and the sticks stood in it in a cone, dry, ready, a twist of birch-bark tucked under for the light. Nobody has lit it. It was laid by somebody who knew the next one would come cold and wet, and laid well; and the ash under it is from last night's, swept, and the night's before, and the night's before that.",
+        "choices": [
+          {
+            "text": "Leave the fire for the next one.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cockle_beds_stakes",
+    "speaker_name": "The stakes",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The stakes",
+        "no_talk": true,
+        "text": "Every stake on the beds stands a row nearer the sea than it did: you can see the old holes in the mud behind each one, a row back, still wet. Each family's knot is on its own stakes, indigo for the Sas, rush for the Ouls, red for the Moreva cousins, and not one of them is out of its row; whoever moved them moved them all, together, the same way, in one tide, and did not tread the beds doing it. The reedfolk have stopped quarrelling over it. That is how you know they are frightened.",
+        "choices": [
+          {
+            "text": "Leave the stakes.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/salt_pans_footprints",
+    "speaker_name": "The footprints in the salt",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The footprints in the salt",
+        "no_talk": true,
+        "text": "The pan dried to a crust in one night, which a pan does not do; and across the crust, from the sea side, a line of bare footprints, a woman's or a child's, pressed clean through the salt to the clay. They go straight across, not hurrying, and stop at the landward bank. There are none going back, and none on the bank, and none in the next pan. The rakers have left this pan to dry and will not rake it.",
+        "choices": [
+          {
+            "text": "Step back from the pan.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/indigo_beds_pale",
+    "speaker_name": "The pale trough",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The pale trough",
+        "no_talk": true,
+        "text": "The liquor in the other troughs is so dark you cannot see the cloth in it. In this one, the row nearest the Nave, it has gone the colour of a bruise healing, and the cloth lying in it is the blue of a sky in the Vale, and getting paler while you watch. The dyers say the fog. Loa Oul, who has steeped cloth here fifty years, says the drowned have been drinking it, and points at the trough's lip, where the reed is wet from the outside.",
+        "choices": [
+          {
+            "text": "Leave the trough.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/boardwalk_gate_prints",
+    "speaker_name": "The prints on the planks",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The prints on the planks",
+        "no_talk": true,
+        "text": "Bare feet, a grown man's and smaller ones beside them, printed dark and wet on the planks of the boardwalk, coming in out of the delta toward the gate. They are wet still, at noon, in the sun, and the planks round them are dry. They come as far as the gate and stop under the lintel, where the lanterns hang, side by side, the way people stop to be let in.",
+        "choices": [
+          {
+            "text": "Step round them.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/long_jetty_names",
+    "speaker_name": "The lanterns on the last post",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The lanterns on the last post",
+        "no_talk": true,
+        "text": "Sixteen lanterns hung from the last post's arms, each with a name painted round its paper in whatever hand the maker had: reedfolk names, a Lakefolk one, a dozen of the plain Vale names that Hester Wrenn paints, CARTER and DROVER where nobody knew more. They are lit for the drowned who came up with no name and nobody, and the reedfolk sing them the third voice of the round. One lantern, the newest, is pegged in the Mor weave and has no name on it yet.",
+        "choices": [
+          {
+            "text": "Leave the lanterns burning.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/reed_wreck_deckhouse",
+    "speaker_name": "The deckhouse",
+    "notes": "A PoiTouch in Sedgemire's place builders; tells.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The deckhouse",
+        "no_talk": true,
+        "text": "The master's deckhouse, its door swung open on one hinge. Inside, a bunk with the blanket folded, a bowl on the table with the spoon in it, a sea-chest with its lid up and nothing in it but a smell of cloves. The reeds have come up through the floorboards and stand round the table like people waiting to be served. On the wall over the bunk somebody has scratched a line of tally-marks, the Salt Isles way, in fives, and stopped at three hundred and nine, which the reedfolk say is how many days it is from the sea to here on foot, if you walk the way the water does.",
+        "choices": [
+          {
+            "text": "Leave the deckhouse.",
+            "next": "end"
+          }
+        ]
+      }
+    }
   }
 ]

@@ -281,5 +281,148 @@
       "marks": 160,
       "renown": 12
     }
+  },
+  {
+    "id": "core:quest/the_saltgate",
+    "name": "The Saltgate",
+    "layer": "side",
+    "giver": "core:npc/hal_ruddock",
+    "region": "core:region/sedgemire",
+    "summary": "The Tallymen's sluice-fort at the Outfall's mouth has been held by its own drowned garrison since something came up the culverts at the spring tide and broke the sea-gates from below. Hal Ruddock, the one sluice-hand who was not inside, sits at the Tide Hearth across the water. His brother had the windlass-key.",
+    "notes": "Sedgemire world life, phase 2 (docs/WORLD_LIFE.md). The Saltgate (core:poi/the_saltgate, a fort whose keep leads into core:interior/saltgate_culverts, Old Mudmouth its boss). The choice is made with Hal at the Tide Hearth.",
+    "stages": [
+      {
+        "id": "the_culverts",
+        "journal": "Hal Ruddock was a sluice-hand at the Saltgate, the Guild's fort on the headland at the Outfall's mouth. On the night of the autumn spring tide something knocked in the race under the sluice, in threes, and his brother Rook, the sluice-warden, went down to the windlass with the key; then the gates went, from underneath, and the sea came in through the culverts with the whole watch asleep over them. They are still on the walls. Hal says the reedfolk's Old Mudmouth, the sallowjaw that waited off the river-mouth, is in the sump under the windlass, and his brother's key is in Old Mudmouth.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_saltgate",
+            "text": "Cross the Outfall to the Saltgate"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/old_mudmouth",
+            "count": 1,
+            "where": "core:interior/saltgate_culverts",
+            "text": "Go down through the culverts and kill Old Mudmouth in the sump"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/saltgate_windlass_key",
+            "count": 1,
+            "text": "Take back the sluice-warden's windlass-key"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_saltgate",
+          "radius": 70
+        },
+        "on_complete": [
+          {
+            "set_flag": "saltgate_mudmouth_dead"
+          },
+          {
+            "renown": 8
+          }
+        ]
+      },
+      {
+        "id": "the_gates",
+        "journal": "The windlass-key came out of Old Mudmouth green. The windlass in the keep will take it: the Saltgate's sea-gates can be shut at the flood again, or left to hang. Hal Ruddock is at the Tide Hearth across the Outfall.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_gates",
+            "text": "Settle with Hal Ruddock what is done with the Saltgate's gates",
+            "options": [
+              {
+                "id": "shut_the_gates",
+                "text": "Shut the gates: the Saltgate holds and the Guild drains the Delta behind it.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_shut"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      15
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      -10
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/saltgate_windlass_key",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "leave_them_open",
+                "text": "Leave them open: the sea comes and goes and the eels run the Outfall again.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_left_open"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      15
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      -10
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "take_item": [
+                      "core:item/saltgate_windlass_key",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_the_key",
+                "text": "Keep the key.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_key_kept"
+                  },
+                  {
+                    "morality": -2
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/tide_hearth",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_watch_relieved",
+        "auto": true,
+        "journal": "At the next spring tide the drowned on the Saltgate's walls were gone from their posts, all twelve, and on the Tide Hearth across the water there were twelve knots for the Saltgate watch, the last one lying flat.",
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 170,
+      "renown": 12
+    }
   }
 ]

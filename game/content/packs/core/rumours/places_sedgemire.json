@@ -24,5 +24,18 @@
       "sedgemire",
       "grim"
     ]
+  },
+  {
+    "id": "core:rumour/saltgate_watch",
+    "name": "The watch on the Saltgate",
+    "tone": "cold",
+    "text": "The Guild's fort at the Outfall mouth still has its watch on the walls, if you row past at dusk. Lanterns on the towers and men at the gate. Only the lanterns are green, and the men are standing in a foot of water on the wall-walk, and the gates under them are open to the sea.",
+    "variants": [
+      "The eels came back to the Outfall this year. First time since the Guild hung the Saltgate's gates. Nobody on the south bank is asking why too loudly."
+    ],
+    "tags": [
+      "sedgemire",
+      "grim"
+    ]
   }
 ]

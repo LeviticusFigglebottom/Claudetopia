@@ -40,5 +40,19 @@
     "author": "the children of Oulea",
     "category": "book",
     "body": "# Who touched the face\n\n*A slate, scratched with a nail, wedged between two of the drowned courses where the children leave their clothes.*\n\n---\n\nPIP SA — IIII\n\nWENNA OUL — IIIII II\n\nTOLLO — I (cried)\n\nMEO SA — IIIII IIIII I\n\n*Under them, newer, in a careful hand:* The face's eyes were open today. Meo says they're always open. They are NOT always open.\n\n*And under that, in another:* It was looking at the sea."
+  },
+  {
+    "id": "core:book/saltgate_watch_book",
+    "title": "The Saltgate Watch-Book",
+    "author": "the Saltgate garrison",
+    "category": "book",
+    "body": "# The watch-book\n\n*Ruled in the Guild's columns: the hour, the tide, the gates, the hand. The last page:*\n\n---\n\n**Ninth bell.** Flood making. Gates shut. All well. — *R. Ruddock, warden*\n\n**Tenth bell.** Flood. Gates shut. Knocking in the race, again. Warden says driftwood. — *T. Pell*\n\n**Eleventh bell.** Knocking in the race. It is not driftwood. Driftwood does not knock in threes. — *T. Pell*\n\n**Twelfth bell.** Warden gone down to the windlass with the key. — *T. Pell*\n\n**Twelfth bell.** —\n\n*The rest of the column is water-stain. In the margin, much later, in a hand that shakes:* The gates are open. I could hear them all the way to the Hearth. — H. R."
+  },
+  {
+    "id": "core:book/saltgate_sluice_tally",
+    "title": "The Sluice-Warden's Tally",
+    "author": "Rook Ruddock, sluice-warden",
+    "category": "book",
+    "body": "# Behind the loose stone\n\n*A tally-stick notched in the Guild's way, and wrapped round it a page in a careful Tollmere hand:*\n\n---\n\nAcres won back from the Delta since the gates were hung, by my count and not the Guild's: four hundred and eleven.\n\nEel-runs the reedfolk on the Outfall have lost by the same count: all of them.\n\nI have told the Guild. The Guild says an eel is a reedfolk matter and an acre is a Tollmere one. My brother Hal says the reedfolk will open the gates themselves one night. I say they will not have to. There is something under the sluice that knocks, at the spring tides, in threes, and it is patient, and it has been patient for eleven years.\n\nIf the gates are ever open and I am not, let them be shut by somebody who has stood on the south bank in eel-time and seen the Outfall empty. Or let them hang. I would not know, now, which."
   }
 ]

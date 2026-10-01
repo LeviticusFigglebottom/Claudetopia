@@ -236,5 +236,216 @@
         ]
       }
     }
+  },
+  {
+    "id": "core:dialogue/hal_ruddock",
+    "speaker_name": "Hal Ruddock",
+    "notes": "At the Tide Hearth, across the Outfall from the Saltgate; gives core:quest/the_saltgate and takes its decision.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_shut"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "The gates went to at the flood last night. I heard them from here. The Guild's clerk came down this morning with a bonus for me in a purse, and an order to take up Rook's post. — I've put the purse on the Hearth. I haven't decided about the post."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_left_open"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "The eels went out last night. All of them, at once, the whole Outfall silver. The reedfolk sang on the south bank till morning. — The Guild has written me a letter about it. I'm using it to learn my letters on, the back of it."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_key_kept"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "Still got it? The key. — Somebody's going to come asking for it, one side or the other. I hope you know which."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hal Ruddock",
+        "text": "— Sorry. It won't lie flat. The reef. They show me, and it looks easy, and then it won't lie flat. — Ruddock. Hal. I was a sluice-hand. Over there.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hal Ruddock",
+        "text": "What do you want to know?",
+        "choices": [
+          {
+            "text": "Over there?",
+            "next": "over_there"
+          },
+          {
+            "text": "Who are the knots for?",
+            "next": "the_knots"
+          },
+          {
+            "text": "What happened at the Saltgate?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_saltgate"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_saltgate"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the windlass-key.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_saltgate",
+                  "the_gates"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "over_there": {
+        "speaker": "Hal Ruddock",
+        "text": "The Saltgate. Across the Outfall, on the headland. The Guild's fort. You can see the wall from here, and the men on it. — Don't wave. They wave back.",
+        "next": "hub"
+      },
+      "the_knots": {
+        "speaker": "Hal Ruddock",
+        "text": "The watch. Eleven of them, and my brother. The reedfolk tie a knot here for everyone the water's taken. I asked could a Tollmere man do it and an old woman said the water doesn't ask where you're from, and showed me. — Ten done. I can't get Rook's to lie flat.",
+        "next": "hub"
+      },
+      "q_offer": {
+        "speaker": "Hal Ruddock",
+        "text": "— Spring tide, last autumn. I was on the south bank, never mind why, and I heard it start: knocking in the race under the sluice, in threes. It's been knocking for years at the springs. Rook said driftwood. — At midnight he went down to the windlass with the key to check the gates, and then I heard them go. The gates. From underneath. The sea came in through the culverts with the whole watch asleep over them. — Mudmouth. The reedfolk have a story about a sallowjaw that waited off the Outfall for the Guild to make a mistake. He didn't wait for the mistake. — Rook had the key on him. If somebody went down and got it back, the gates could be shut again, or— or not. Somebody would have to decide. I can't. I can't get across the water.",
+        "choices": [
+          {
+            "text": "I'll go into the Saltgate.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_saltgate"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Hal Ruddock",
+        "text": "The gate faces the Outfall. They'll be on the walls; they're always on the walls. The keep door is open. — The culverts go down under the keep, past the tithe-room, to the windlass over the race. He'll be in the sump under it. Rook will be in him.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Hal Ruddock",
+        "text": "— That's it. That's Rook's. — It's green. — All right. All right. — The windlass takes it at the pawl. Shut the gates at the flood and the Saltgate holds again: the Guild drains the Delta behind it, an acre a year, and the eels never come back to the Outfall. Leave them hanging and the sea comes and goes as it likes, and the eels run, and the fort's the drowned's for good. — Rook wrote it down, didn't he. What he thought. Behind the stone. — You've been down there. You say.",
+        "choices": [
+          {
+            "text": "Shut the gates. The Saltgate holds.",
+            "next": "q_decide_shut",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "shut_the_gates"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave them open. Let the eels run.",
+            "next": "q_decide_open",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "leave_them_open"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'm keeping the key. Neither side gets it.",
+            "next": "q_decide_keep",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "keep_the_key"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_decide_shut": {
+        "speaker": "Hal Ruddock",
+        "text": "— Shut. Yes. — It's what Rook was for. I'll row it across myself, at the flood, if you'll stand on the wall with me so they let me through. — The Guild will pay you. The reedfolk won't speak to you on the Outfall for a year. Both of those are true.",
+        "next": "hub"
+      },
+      "q_decide_open": {
+        "speaker": "Hal Ruddock",
+        "text": "— Open. — He'd have hated it. He'd have done it, though. You saw the page. — I'll throw the key in the race myself. Then nobody can change their mind. Including me.",
+        "next": "hub"
+      },
+      "q_decide_keep": {
+        "speaker": "Hal Ruddock",
+        "text": "— Keep it. — Then the gates hang how they hang, and you can walk in any spring tide and choose. That's a lot to carry about. Rook carried it eleven years. Look where he is.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hal Ruddock",
+        "text": "If you go over: they're Guild men still. Some of them were my friends. Be quick.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/saltgate_notice",
+    "speaker_name": "The notices on the gate",
+    "notes": "The Saltgate's hook (site.hook, a notice post by the gate). Tells; the quest is Hal Ruddock's to give, at the Tide Hearth across the Outfall.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The notices on the gate",
+        "no_talk": true,
+        "text": "Two notices nailed to a post by the gate, swollen with salt. The first is the Guild's, in the Guild's hand: THE SLUICE TO BE SHUT AT THE FLOOD AND OPENED AT THE EBB AND AT NO OTHER TIME, ON PAIN OF THE GUILD'S DISPLEASURE. BY ORDER, THE TALLYMEN OF TOLLMERE. Under it somebody has chalked a reedfolk knot, the one that means leave it. The second notice is newer and in pencil, in a Tollmere hand that shakes: ROOK, IF YOU CAN READ THIS, I AM AT THE HEARTH. HAL.",
+        "choices": [
+          {
+            "text": "Leave the notices.",
+            "next": "end"
+          }
+        ]
+      }
+    }
   }
 ]
