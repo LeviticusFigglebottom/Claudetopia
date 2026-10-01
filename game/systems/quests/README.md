@@ -41,7 +41,7 @@ Objective types and what closes them:
 | `use_item` | item id | `item_used`; a `tool` is used without being used up |
 | `rest_at` | hearthstone/place id | `hearthstone_rested` |
 | `read_book` | book id (+`in_place?`) | `book_opened`: read from the bag, off a shelf, or where it lies; with `in_place`, the book itself is laid, fixed, at the objective's `where` and read there |
-| `act` | an act (+`against?`, `prop?`, `in_turn?`, `detail?`, `min_range?`) | `act_done` by the player: a lesson's own doing (`hit_light`, `hit_heavy`, `riposte`, `stagger`, `block`, `parry`, `dodge`, `lock_on`, `cast`, `arrow_hit`, `backstab`, `sneak_attack`, `descend`) |
+| `act` | an act (+`against?`, `prop?`, `in_turn?`, `detail?`, `min_range?`, `refused?`, `early?`) | `act_done` by the player: a lesson's own doing (`hit_light`, `hit_heavy`, `riposte`, `stagger`, `block`, `parry`, `dodge`, `lock_on`, `cast`, `arrow_hit`, `backstab`, `sneak_attack`, `descend`, `kindle`, ...). An act that uses its thing up (a brazier lit) and counts for nothing while a lesson wants it is undone (the thing's `undo_act`: the brazier goes out) and the objective's `refused` effects run, or its `early` ones when the lesson is a later stage's (triage 77) |
 
 **Where the things lie.** A `collect` or `use_item` objective's item, or the item that reads a
 `read_book` objective's book, is put in the world by `QuestItems` (world/pois/quest_items.gd) unless

@@ -109,6 +109,54 @@ func test_the_braziers_count_lights_by_how_far_they_were_said() -> void:
 	assert_true(GameState.has_flag(SocialContext.MOUNT_FLAG_PREFIX + "core:mount/wicks_carthorse"), "and Kettle is the mage's from the first lesson (triage 52)")
 
 
+func _brazier(prop_name: String, at: Vector3) -> Pell:
+	var b := Pell.new()
+	b.kind = "brazier"
+	b.name = prop_name
+	_tree().root.add_child(b)
+	_nodes.append(b)
+	b.global_position = at
+	return b
+
+
+## Triage 77: the other two braziers lit from close up stood lit for good, and the objective
+## unmoved, with nothing left to light. A brazier lit for nothing goes out again, with Tamsin's word,
+## and can be lit again from where the lesson asks; one lit before she has said what it is for too.
+func test_a_brazier_lit_too_near_goes_out_and_can_be_lit_again() -> void:
+	var quests: Node = Social.quests
+	assert_true(bool(quests.call("start", FIRST)))
+	var me := _node("", Vector3(5000, 0, 5000), true)
+	var near := _brazier("brazier_near", Vector3(5000, 0, 5009))
+	var mid := _brazier("brazier_mid", Vector3(5000, 0, 5016))
+	var far := _brazier("brazier_far", Vector3(5000, 0, 5024))
+	# before Tamsin has spoken: lit early, it goes out
+	near.kindle(me)
+	assert_true(near.lit, "it catches")
+	assert_true(await _until(func() -> bool: return not near.lit, 4.0), "and goes out again: the lesson has not begun")
+	EventBus.dialogue_node_entered.emit(TAMSIN, "the_day")
+	assert_eq(_at(FIRST), "the_braziers")
+	near.kindle(me)
+	assert_true(_done(FIRST, 0), "the near one lit")
+	# walked up to the other two and lit them from close by: neither counts, and both go out
+	me.global_position = mid.global_position + Vector3(2, 0, 0)
+	mid.kindle(me)
+	me.global_position = far.global_position + Vector3(2, 0, 0)
+	far.kindle(me)
+	assert_false(_done(FIRST, 1), "lit from two paces is not from where you stand")
+	assert_true(await _until(func() -> bool: return not mid.lit and not far.lit, 4.0), "both go out again (mid %s, far %s)" % [str(mid.lit), str(far.lit)])
+	assert_true(near.lit, "the one that counted stays lit")
+	var objs: Array = quests.call("objectives_of", FIRST)
+	assert_true(str(objs[1]["text"]).contains("fourteen"), "the objective says how far: %s" % str(objs[1]["text"]))
+	# and from fourteen paces and more, they count
+	me.global_position = mid.global_position + Vector3(15, 0, 0)
+	mid.kindle(me)
+	me.global_position = far.global_position + Vector3(15, 0, 0)
+	far.kindle(me)
+	assert_eq(_at(FIRST), "the_racks", "lit again from afar: the stage is done")
+	await _tree().create_timer(2.0, true, false, true).timeout
+	assert_true(mid.lit and far.lit, "and the braziers that counted stay lit")
+
+
 func test_the_racks_wait_for_jory_and_count_only_what_the_ward_takes() -> void:
 	var quests: Node = Social.quests
 	quests.call("start", FIRST)

@@ -351,9 +351,14 @@ func _refresh_detail() -> void:
 		var read := UiKit.button("Read")
 		read.pressed.connect(func() -> void: _read(int(it["uid"])))
 		actions.add_child(read)
-	var drop := UiKit.button("Drop", "FlatButton")
-	drop.pressed.connect(func() -> void: _drop(int(it["uid"])))
-	actions.add_child(drop)
+	# a thing a quest still wants is kept, and says for what (Inventory.held_for)
+	var held := str(_bag.call("held_for", str(it.get("item_id", "")))) if _bag != null and _bag.has_method("held_for") else ""
+	if held != "":
+		actions.add_child(UiKit.label("Kept for %s" % held, "Tiny"))
+	else:
+		var drop := UiKit.button("Drop", "FlatButton")
+		drop.pressed.connect(func() -> void: _drop(int(it["uid"])))
+		actions.add_child(drop)
 	_detail_box.add_child(actions)
 	UiKit.ink_in(_detail_box, 0.0, 0.24)
 

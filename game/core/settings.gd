@@ -68,7 +68,12 @@ const RETIRED_DEFAULTS := {
 	"map": ["key:M", "joy_button:5"],
 	# the D-pad's right cycles the weapon set now; the belt's fourth slot is on its key alone
 	"quick_4": ["key:4", "joy_button:14"],
+	# a key as well as the middle mouse button, which some players have not got (triage 80)
+	"lock_on": ["mouse:3", "joy_button:8"],
 }
+
+## How many keyboard-and-mouse bindings an action may have (the Controls tab's two columns).
+const KBM_SLOTS := 2
 
 
 func load_settings() -> void:
@@ -78,8 +83,13 @@ func load_settings() -> void:
 	if cf.load(path) == OK:
 		for section in cf.get_sections():
 			if section == "bindings":
+				var moved: Array[String] = []
 				for action in cf.get_section_keys(section):
-					bindings[action] = migrated_binding(action, Array(cf.get_value(section, action)))
+					var saved := Array(cf.get_value(section, action))
+					bindings[action] = migrated_binding(action, saved)
+					if bindings[action] != saved:
+						moved.append(action)
+				_keep_players_keys(moved)
 				continue
 			if not data.has(section):
 				data[section] = {}
@@ -137,6 +147,21 @@ func migrated_binding(action: String, saved: Array) -> Array:
 	if RETIRED_DEFAULTS.get(action, []) == saved:
 		return default_events(action)
 	return saved
+
+
+## A default a migration brought in never takes a key the player has on something else: the
+## lock-on's new Z stays off an action the player had already put on Z.
+func _keep_players_keys(moved: Array[String]) -> void:
+	for action in moved:
+		var kept: Array = []
+		for s in bindings[action]:
+			var taken := false
+			for other in bindings:
+				if other != action and not moved.has(other) and (bindings[other] as Array).has(s):
+					taken = true
+			if not taken:
+				kept.append(s)
+		bindings[action] = kept
 
 
 func save_settings() -> void:
@@ -296,8 +321,10 @@ func apply_bindings() -> void:
 	bindings_changed.emit()
 
 
-## Rebind an action's event in a slot (0 = primary keyboard/mouse, 1 = gamepad). Returns the
-## action that previously used this event (now cleared) or "".
+## Rebind an action's event in a slot: 0 its first keyboard-and-mouse binding, 1 its gamepad
+## binding, 2 its second keyboard-and-mouse binding (RebindCapture's KEYBOARD, PAD, SECOND). The
+## event is taken off any other action (and off this action's other slot). Returns the other action
+## that had it (now cleared), or "".
 func rebind(action: String, event: InputEvent, slot: int = 0) -> String:
 	var s := event_to_string(event)
 	if s.is_empty():
@@ -308,10 +335,22 @@ func rebind(action: String, event: InputEvent, slot: int = 0) -> String:
 			bindings[other].erase(s)
 			conflict = other
 	var list: Array = bindings.get(action, [])
-	while list.size() <= slot:
-		list.append("")
-	list[slot] = s
-	bindings[action] = list.filter(func(x): return x != "")
+	var kbm: Array = list.filter(func(x: String) -> bool: return not x.begins_with("joy") and x != s)
+	var pad: Array = list.filter(func(x: String) -> bool: return x.begins_with("joy") and x != s)
+	if slot == 1:
+		if pad.is_empty():
+			pad.append(s)
+		else:
+			pad[0] = s
+	else:
+		var at := 1 if slot == 2 else 0
+		# a second binding is only ever second: with none first, it is the first
+		at = mini(at, kbm.size())
+		if at < kbm.size():
+			kbm[at] = s
+		else:
+			kbm.append(s)
+	bindings[action] = (kbm.slice(0, KBM_SLOTS) + pad).filter(func(x: String) -> bool: return x != "")
 	apply_bindings()
 	save_settings()
 	return conflict
@@ -360,6 +399,23 @@ static func string_to_event(s: String) -> InputEvent:
 			ev.axis_value = float(parts[2])
 			return ev
 	return null
+
+
+## Every binding of an action on one device, as it is written ("mouse:3", "key:Z"), in order.
+func bindings_for(action: String, gamepad := false) -> Array[String]:
+	var out: Array[String] = []
+	for s: String in bindings.get(action, []):
+		if s.begins_with("joy") == gamepad:
+			out.append(s)
+	return out
+
+
+## Every binding of an action on one device, as a prompt shows it: ["MMB", "Z"].
+func prompts_for(action: String, gamepad := false) -> Array[String]:
+	var out: Array[String] = []
+	for s in bindings_for(action, gamepad):
+		out.append(_pretty(s))
+	return out
 
 
 ## Human-readable label for the first binding of an action, used by prompts ("[E] Take").

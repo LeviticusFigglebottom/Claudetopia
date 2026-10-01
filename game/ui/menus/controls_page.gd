@@ -74,7 +74,7 @@ func _build() -> void:
 		# with the right stick, on the keyboard) would show the other device's button
 		if action == "walk" or not _bound_on(action, pad):
 			continue
-		_content.add_child(_line(str(def.get("label", action)), Settings.prompt_for(action, pad)))
+		_content.add_child(_line(str(def.get("label", action)), " / ".join(Settings.prompts_for(action, pad))))
 	_notes_for(category, pad)
 
 	col.add_child(UiKit.divider())
