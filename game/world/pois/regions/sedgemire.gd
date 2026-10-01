@@ -1017,6 +1017,25 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	var across := Vector2(out.y, -out.x)
 	var m2 := Vector2(at.x, at.z)
 	var g0 := k.on_ground(m2.x, m2.y).y
+	# the gully's floor runs on level behind the mouth before the headwall rises, and would leave the
+	# throat standing out of it: a knoll of the scarp's rock heaped over it, its foot in the gully floor
+	var knoll_c := m2 - out * 14.0
+	var kg := k.on_ground(knoll_c.x, knoll_c.y).y
+	if kg < g0 + 5.0:
+		m.mound(Vector3(knoll_c.x, kg - 0.6, knoll_c.y), 10.0, g0 - kg + 7.5, k.surface("stone", 0.9), "Knoll", true, 1.3, 7, 22, true, 0.14)
+		var boulder := k.rock("boulder")
+		if boulder != "":
+			var bx: Array = []
+			for i in 7:
+				var a := k.rng.randf() * TAU
+				var r := k.rng.randf_range(3.0, 8.0)
+				var q := knoll_c + Vector2(sin(a), cos(a)) * r
+				if (q - m2).dot(out) > -2.5:
+					continue
+				var hy := (g0 - kg + 7.5) * sqrt(maxf(1.0 - pow(r / 10.0, 2.0), 0.0))
+				bx.append(PoiKit.transform_at(Vector3(q.x, kg - 0.6 + hy - 0.4, q.y), k.rng.randf() * TAU, k.rng.randf_range(1.0, 1.8)))
+			await k.step()
+			k.scatter(boulder, bx, true, true, true)
 	# the Name-Tree: in front of the mouth and to one side, leaning out over the cove
 	var tree_at := m2 + out * 10.0 - across * 6.5
 	var wood := m.begin()
@@ -1551,7 +1570,13 @@ static func black_water(d: PoiDressing, c: Vector2, r: float, depth := 2.5, node
 	for i in 6:
 		var a := TAU * float(i) / 6.0
 		y = maxf(y, k.on_ground(c.x + sin(a) * r * 0.6, c.y + cos(a) * r * 0.6).y + 0.05)
-	d.masonry.pool(c, r, y, k.still_water(y - depth, Color(0.9, 0.95, 0.95), 0.9), node_name, segments)
+	# dark: peat water stands black and takes the sky only at a low angle; its ripples small and few
+	# (the shader's own, wide and strong, made a big pool read as a sheet of mottled plastic)
+	var mat := k.still_water(y - depth, Color(0.45, 0.55, 0.55), 0.95)
+	mat.set_shader_parameter("wave_scale", 1.3)
+	mat.set_shader_parameter("wave_strength", 0.08)
+	mat.set_shader_parameter("sheen_color", Color(0.35, 0.42, 0.42))
+	d.masonry.pool(c, r, y, mat, node_name, segments)
 	return y
 
 
@@ -1829,7 +1854,7 @@ static func mor_oul(d: PoiDressing) -> void:
 		var along := Vector2(cos(a), -sin(a)).rotated(k.rng.randf_range(-0.4, 0.4))
 		var tilt := k.rng.randf_range(-0.25, 0.4)
 		houses.append([c, along])
-		roof_ridge(d, thatch, c, along, k.rng.randf_range(3.6, 4.8), y + 0.35 + tilt, 3.6)
+		roof_ridge(d, thatch, c, along, k.rng.randf_range(3.6, 4.8), y + 1.0 + tilt, 3.6)
 		# the stilts' tops at the corners, gone black, standing out round the drowned eaves
 		for s in [-1.0, 1.0]:
 			for t in [-1.0, 1.0]:
@@ -2140,29 +2165,30 @@ static func knuckle_cairn(d: PoiDressing) -> void:
 		var xfs: Array = []
 		for i in 9:
 			var a := TAU * float(i) / 9.0 + k.rng.randf_range(-0.2, 0.2)
-			var q := Vector2(sin(a), cos(a)) * k.rng.randf_range(2.4, 3.6)
-			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.55), k.rng.randf() * TAU, k.rng.randf_range(1.0, 1.5)))
+			var q := Vector2(sin(a), cos(a)) * k.rng.randf_range(3.4, 4.6)
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.45), k.rng.randf() * TAU, k.rng.randf_range(0.6, 0.95)))
 		await k.step()
 		k.scatter(boulder, xfs, true, true, true)
 	var stones := m.begin()
 	var y := g + 0.2
-	var r := 1.7
-	for c in 7:
-		var count := maxi(9 - c, 3)
+	var r := 2.2
+	for c in 8:
+		var count := maxi(10 - c, 3)
 		for i in count:
 			var a := TAU * float(i) / float(count) + float(c) * 0.4
-			m.ellipsoid(stones, Vector3(sin(a) * r * 0.7, y + 0.18, cos(a) * r * 0.7), Vector3(0.42, 0.24, 0.32) * (1.0 - float(c) * 0.06), Basis(Vector3.UP, a + k.rng.randf()))
-		y += 0.34
-		r *= 0.82
+			m.ellipsoid(stones, Vector3(sin(a) * r * 0.7, y + 0.24, cos(a) * r * 0.7), Vector3(0.55, 0.32, 0.42) * (1.0 - float(c) * 0.05), Basis(Vector3.UP, a + k.rng.randf()))
+		m.ellipsoid(stones, Vector3(0.0, y + 0.2, 0.0), Vector3(r * 0.6, 0.3, r * 0.6))
+		y += 0.45
+		r *= 0.84
 	k.collider(Vector3(2.8, y - g, 2.8), Transform3D(Basis.IDENTITY, Vector3(0.0, (g + y) * 0.5, 0.0)), "stone")
 	await k.step()
 	m.commit(stones, k.surface("stone", 0.6), "Cairn", true)
 	# the knuckle: three bones of a giant's finger-joint laid together on the top, the end pointing fen-ward
 	var bone := m.begin()
 	var tb := Basis(Vector3.UP, PoiKit.yaw_of(fen))
-	m.ellipsoid(bone, Vector3(0.0, y + 0.35, 0.0), Vector3(0.55, 0.42, 0.9), tb)
-	m.ellipsoid(bone, Vector3(0.0, y + 0.42, 0.0) + Vector3(fen.x, 0, fen.y) * 0.85, Vector3(0.48, 0.36, 0.55), tb)
-	m.ellipsoid(bone, Vector3(0.0, y + 0.3, 0.0) - Vector3(fen.x, 0, fen.y) * 0.75, Vector3(0.6, 0.45, 0.5), tb)
+	m.ellipsoid(bone, Vector3(0.0, y + 0.5, 0.0), Vector3(0.8, 0.62, 1.35), tb)
+	m.ellipsoid(bone, Vector3(0.0, y + 0.62, 0.0) + Vector3(fen.x, 0, fen.y) * 1.35, Vector3(0.7, 0.52, 0.8), tb)
+	m.ellipsoid(bone, Vector3(0.0, y + 0.45, 0.0) - Vector3(fen.x, 0, fen.y) * 1.15, Vector3(0.9, 0.66, 0.75), tb)
 	await k.step()
 	m.commit(bone, PoiKit.plain(Color(0.82, 0.78, 0.68), 0.7), "Knuckle", true)
 	if k.far:

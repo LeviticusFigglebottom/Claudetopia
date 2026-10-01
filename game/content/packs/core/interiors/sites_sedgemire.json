@@ -160,11 +160,12 @@
           "#7e8882"
         ],
         "lights": [
+          "daylight",
           "brazier",
-          "candles",
-          "torch"
+          "candles"
         ],
-        "light_colour": "#ffc27a"
+        "light_colour": "#ffc27a",
+        "brightness": 1.3
       },
       "rooms": [
         {
