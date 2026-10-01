@@ -1073,6 +1073,13 @@ func _on_item_used(item_id: String, _effects: Array = []) -> void:
 
 ## A lesson's act, done by the player: to what (`against`, and `prop`, the one quest prop by its
 ## name), which (`detail`), and from how far (`min_range`), when the objective says.
+##
+## An act that uses its thing up (a brazier lit stays lit) and counted for nothing while a lesson
+## still wants it is undone (triage 77): a brazier lit from too near, before its stage, or out of
+## turn would otherwise stand lit for good with the objective unmoved, and nothing left to light.
+## The thing is asked to `undo_act` (a Pell brazier goes out again), and the objective's `refused`
+## effects are run (its teacher says what was wrong), or `early` ones when the lesson is a later
+## stage's.
 func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 	if by == null or not is_instance_valid(by) or not by.is_in_group("player"):
 		return
@@ -1083,33 +1090,90 @@ func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 		# a person is named by their npc id (a pocket picked is done to somebody)
 		on_id = str(on.get("npc_id"))
 	var on_def := ContentDB.get_or_empty(on_id)
+	var counted := [false]
+	var refused: Array = []
 	_for_each_objective("act", func(quest_id: String, i: int, o: Dictionary) -> void:
-		if str(o.get("target", "")) != act:
+		if not _act_is_about(o, act, on, on_id, on_def):
 			return
-		var against := str(o.get("against", ""))
-		if against != "" and not _matches(against, on_id, on_def):
+		var why := _act_refusal(quest_id, o, by, on, detail)
+		if why != "":
+			refused.append([quest_id, o, why])
 			return
-		# `prop` names the one quest prop the objective is about (QuestSpots names each by its
-		# `name`): a hit on the next butt down the range does not count for this one
-		var want_prop := str(o.get("prop", ""))
-		if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
-			return
-		# `in_turn`: a lesson taken in order counts only once the steps it follows (`after`) are done,
-		# so an arrow in the far butt while the near one is asked for is nobody's
-		if bool(o.get("in_turn", false)):
-			var si := stage_of(quest_id)
-			if _veiled(quest_id, si, o, stage_def(quest_id, si).get("objectives", [])):
-				return
-		var want_detail := str(o.get("detail", ""))
-		if want_detail != "" and want_detail != detail:
-			return
-		var min_range := float(o.get("min_range", 0.0))
-		if min_range > 0.0:
-			if not (on is Node3D and by is Node3D):
-				return
-			if (on as Node3D).global_position.distance_to((by as Node3D).global_position) < min_range:
-				return
+		counted[0] = true
 		_progress(quest_id, i, 1))
+	if counted[0] or on == null or not is_instance_valid(on) or not on.has_method("undo_act"):
+		return
+	if not refused.is_empty():
+		var row: Array = refused[0]
+		Log.info("Quests", "%s: %s on %s did not count (%s); undone" % [row[0], act, str(on.name), row[2]])
+		on.call("undo_act", act)
+		_run_effects(str(row[0]), (row[1] as Dictionary).get("refused", []), "objective_refused")
+		return
+	var later := _later_lesson(act, on, on_id, on_def)
+	if not later.is_empty():
+		Log.info("Quests", "%s: %s on %s before its lesson; undone" % [later[0], act, str(on.name)])
+		on.call("undo_act", act)
+		_run_effects(str(later[0]), (later[1] as Dictionary).get("early", []), "objective_early")
+
+
+## Whether an `act` objective is about this act on this thing (its act, `against` and `prop`).
+static func _act_is_about(o: Dictionary, act: String, on: Node, on_id: String, on_def: Dictionary) -> bool:
+	if str(o.get("target", "")) != act:
+		return false
+	var against := str(o.get("against", ""))
+	if against != "" and not _matches(against, on_id, on_def):
+		return false
+	# `prop` names the one quest prop the objective is about (QuestSpots names each by its
+	# `name`): a hit on the next butt down the range does not count for this one
+	var want_prop := str(o.get("prop", ""))
+	if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
+		return false
+	return true
+
+
+## Why an act this objective is about does not count for it ("" when it does): out of turn, the
+## wrong saying, or from too near.
+func _act_refusal(quest_id: String, o: Dictionary, by: Node, on: Node, detail: String) -> String:
+	# `in_turn`: a lesson taken in order counts only once the steps it follows (`after`) are done,
+	# so an arrow in the far butt while the near one is asked for is nobody's
+	if bool(o.get("in_turn", false)):
+		var si := stage_of(quest_id)
+		if _veiled(quest_id, si, o, stage_def(quest_id, si).get("objectives", [])):
+			return "out of turn"
+	var want_detail := str(o.get("detail", ""))
+	if want_detail != "" and want_detail != detail:
+		return "not %s" % want_detail
+	var min_range := float(o.get("min_range", 0.0))
+	if min_range > 0.0:
+		if not (on is Node3D and by is Node3D):
+			return "no distance"
+		if (on as Node3D).global_position.distance_to((by as Node3D).global_position) < min_range:
+			return "nearer than %.0f m" % min_range
+	return ""
+
+
+## The first active quest whose later stage teaches this act on this thing, when the thing is one
+## of that quest's own `props` (the braziers below the Lamp, lit before Tamsin has said why):
+## [quest_id, objective], or [].
+func _later_lesson(act: String, on: Node, on_id: String, on_def: Dictionary) -> Array:
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var def := definition(quest_id)
+		var owns := false
+		for p_v in def.get("props", []):
+			if typeof(p_v) == TYPE_DICTIONARY and str((p_v as Dictionary).get("name", "")) == str(on.name):
+				owns = true
+				break
+		if not owns:
+			continue
+		var stages := stages_of(quest_id)
+		for si in range(stage_of(quest_id) + 1, stages.size()):
+			for o_v in (stages[si] as Dictionary).get("objectives", []):
+				if typeof(o_v) == TYPE_DICTIONARY and str((o_v as Dictionary).get("type", "")) == "act" \
+						and _act_is_about(o_v, act, on, on_id, on_def):
+					return [quest_id, o_v]
+	return []
 
 
 func _on_escort_arrived(npc_id: String, place_id: String) -> void:
