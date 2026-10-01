@@ -83,6 +83,7 @@ func _ready() -> void:
 	SaveSystem.register("quests", self)
 	EventBus.entity_killed.connect(_on_entity_killed)
 	EventBus.item_acquired.connect(_on_item_acquired)
+	EventBus.item_removed.connect(_on_item_removed)
 	EventBus.place_discovered.connect(_on_place_discovered)
 	EventBus.dialogue_ended.connect(_on_dialogue_ended)
 	EventBus.dialogue_node_entered.connect(_on_dialogue_node_entered)
@@ -189,6 +190,8 @@ func start(quest_id: String, at: Variant = null) -> bool:
 	if not quests.has(quest_id):
 		quests[quest_id] = _blank_record(quest_id)
 	var rec: Dictionary = quests[quest_id]
+	# taken again after it failed (or a repeatable one): from nothing, not from the last try's counts
+	rec["counts"] = {}
 	rec["state"] = "active"
 	# A started quest is at its first stage when it says it has started. `quest_started` went out
 	# with the stage still at -1, and whatever it woke read that: an npc held on the quest's first
@@ -234,10 +237,21 @@ func advance(quest_id: String) -> void:
 	_run_effects(quest_id, stage.get("on_complete", []), "quest_complete_stage")
 	if not is_active(quest_id) or stage_of(quest_id) != current:
 		return
-	if current + 1 >= stages_of(quest_id).size():
+	var next := next_in_order(stages_of(quest_id), current)
+	if next < 0:
 		complete(quest_id, str(stage.get("outcome", quests[quest_id].get("outcome", ""))))
 	else:
-		_enter_stage(quest_id, current + 1)
+		_enter_stage(quest_id, next)
+
+
+## The stage a quest goes on to when one finishes in order: the next that is not a `detour` (a stage
+## only ever sent to: the Rogue's `seen`, where an attempt the watch saw is put right with Sauve
+## before it is tried again), or -1 after the last.
+static func next_in_order(stages: Array, current: int) -> int:
+	var next := current + 1
+	while next < stages.size() and typeof(stages[next]) == TYPE_DICTIONARY and bool((stages[next] as Dictionary).get("detour", false)):
+		next += 1
+	return next if next < stages.size() else -1
 
 
 func _enter_stage(quest_id: String, index: int) -> void:
@@ -246,6 +260,14 @@ func _enter_stage(quest_id: String, index: int) -> void:
 	if stage.is_empty():
 		Log.warn("Quests", "%s: stage %d does not exist (content problem)" % [quest_id, index])
 		return
+	# A stage gone back to (a `detour` sends you back to the try it put right; a branch loops) starts
+	# its objectives again: the counts of the last time through closed the Rogue's `seen` the moment
+	# it was entered a second time, and the watch's fail went nowhere.
+	if int(rec.get("stage", -1)) != index:
+		var counts: Dictionary = rec["counts"]
+		for key in counts.keys():
+			if str(key).begins_with("%d:" % index):
+				counts.erase(key)
 	rec["stage"] = index
 	rec["stage_id"] = str(stage.get("id", str(index)))
 	var journal := journal_of(stage)
@@ -301,6 +323,8 @@ func fail(quest_id: String, reason: String = "") -> void:
 	var entries: Array = rec["journal"]
 	entries.append("Left undone. %s" % reason if reason != "" else "Left undone.")
 	_let_go(quest_id)
+	# the marks over heads are asked again: a failed quest's person has no business with you now
+	QuestCues.touch()
 	EventBus.quest_completed.emit(quest_id, "failed")
 	Log.info("Quests", "failed %s (%s)" % [quest_id, reason])
 
@@ -605,6 +629,10 @@ func active_markers() -> Array[Dictionary]:
 			var o: Dictionary = objs[i]
 			if _count_for(quest_id, index, i) >= maxi(1, int(o.get("count", 1))):
 				continue
+			# what the tracker and the compass keep back, the chart does too: an objective that
+			# keeps its own counsel (`hidden`), and a step not yet reached (`after`)
+			if bool(o.get("hidden", false)) or _veiled(quest_id, index, o, objs):
+				continue
 			var marker := marker_for(o)
 			if marker.is_empty():
 				continue
@@ -640,7 +668,12 @@ func marker_for(o: Dictionary) -> Dictionary:
 		if type == "place" or type == "poi":
 			return {"place_id": id, "radius": float(o.get("radius", MARKER_RADIUS_M))}
 		if type == "npc":
+			# where their day (or the story's hold on them) has them now, else their home
 			var home := str(ContentDB.get_or_empty(id).get("home_place", ""))
+			if NpcRegistry.instance != null and is_instance_valid(NpcRegistry.instance):
+				var now := NpcRegistry.instance.place_of(id)
+				if now != "" and PlaceRef.xz(now) != Vector2.INF:
+					home = now
 			if home != "":
 				return {"place_id": home, "radius": MARKER_RADIUS_M}
 	var region := str(o.get("region", ""))
@@ -811,6 +844,19 @@ func note(quest_id: String, line: String) -> void:
 
 
 ## Is objective `index` of this quest's current stage done?
+## Whether an objective of a given stage (an index from nought) was done: the tracker ticks a step
+## that leaves it only when it was (a step the stage moved past undone, the watch's fail, is not).
+## A quest that has ended counts as done when it was completed and not when it failed.
+func objective_done_in(quest_id: String, stage_i: int, index: int) -> bool:
+	if not quests.has(quest_id):
+		return false
+	if is_completed(quest_id):
+		return true
+	if is_failed(quest_id):
+		return false
+	return _count_for(quest_id, stage_i, index) >= maxi(1, int(_objective(quest_id, stage_i, index).get("count", 1)))
+
+
 func objective_done(quest_id: String, index: int) -> bool:
 	if not is_active(quest_id):
 		return false
@@ -935,9 +981,84 @@ func _sync_stage(quest_id: String) -> void:
 				var target := str(o.get("target", ""))
 				if Ids.type_of(target) == "boss" and GameState.has_flag("boss_deed/" + target):
 					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
+			"act":
+				# a lock picked before its lesson (the Rogue's strongbox, opened before Sauve had
+				# said why) stays open: nothing is left to pick, so the lesson is the box's state
+				if str(o.get("target", "")) == "pick_lock" and str(o.get("against", "")) == "prop:strongbox" \
+						and _a_strongbox_open(quest_id):
+					_progress(quest_id, i, maxi(1, int(o.get("count", 1))), true)
 			_:
 				pass
+	_resupply()
 	check_reach()
+
+
+## Whether one of the quest's own strongboxes (its `props`, laid by QuestSpots) is already open.
+func _a_strongbox_open(quest_id: String) -> bool:
+	var spots := get_tree().get_first_node_in_group("quest_spots") if is_inside_tree() else null
+	if spots == null:
+		return false
+	var laid: Dictionary = spots.get("props")
+	for p_v in definition(quest_id).get("props", []):
+		if typeof(p_v) != TYPE_DICTIONARY or str((p_v as Dictionary).get("kind", "")) != "strongbox":
+			continue
+		var box: Variant = laid.get(str((p_v as Dictionary).get("name", "")), null)
+		if box is Node and is_instance_valid(box) and "locked" in box and not bool(box.get("locked")):
+			return true
+	return false
+
+
+## A lesson whose doing spends what the player carries (arrows at the butts, picks at the box)
+## says how its teacher hands more (`supply`: {item, count, say?}): run out while it is open, and
+## they do (triage 79: forty arrows in the reeds, or six picks snapped, and nothing left to finish
+## the lesson with).
+func _on_item_removed(_item_id: String, _count: int) -> void:
+	_resupply()
+
+
+func _resupply() -> void:
+	if ctx == null or not ctx.has_inventory():
+		return
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var index := stage_of(quest_id)
+		var objs: Array = stage_def(quest_id, index).get("objectives", [])
+		for i in objs.size():
+			var o: Dictionary = objs[i]
+			var supply: Variant = o.get("supply", null)
+			if not (supply is Dictionary) or _count_for(quest_id, index, i) >= maxi(1, int(o.get("count", 1))):
+				continue
+			var item := str((supply as Dictionary).get("item", ""))
+			if item == "" or ctx.item_count(item) > 0:
+				continue
+			Log.info("Quests", "%s: out of %s for '%s'; handed more" % [quest_id, item, objective_text(o, quest_id)])
+			ctx.give_item(item, maxi(1, int((supply as Dictionary).get("count", 1))))
+			var line: Variant = (supply as Dictionary).get("say", null)
+			_run_effects(quest_id, [{"say": line}] if line is Array else [], "objective_supply")
+
+
+## The active quest that still wants this item in the bag (any objective of it collects, hands
+## over, uses or reads it), or "": what the player cannot drop, sell or eat while it does. A quest
+## item dropped was not saved with the world, sold was gone, eaten was gone, and the quest with it.
+func wanted_by(item_id: String) -> String:
+	if item_id == "":
+		return ""
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		for stage_v in stages_of(quest_id):
+			if typeof(stage_v) != TYPE_DICTIONARY:
+				continue
+			for o_v in (stage_v as Dictionary).get("objectives", []):
+				if typeof(o_v) != TYPE_DICTIONARY:
+					continue
+				var o: Dictionary = o_v
+				var t := str(o.get("type", ""))
+				var wants := str(o.get("item", "")) if t == "deliver" else str(o.get("target", "")) if t in ["collect", "use_item", "read_book"] else ""
+				if wants == item_id:
+					return str(quest_id)
+	return ""
 
 
 # --- event tracking ---------------------------------------------------------------------------------
@@ -1073,6 +1194,13 @@ func _on_item_used(item_id: String, _effects: Array = []) -> void:
 
 ## A lesson's act, done by the player: to what (`against`, and `prop`, the one quest prop by its
 ## name), which (`detail`), and from how far (`min_range`), when the objective says.
+##
+## An act that uses its thing up (a brazier lit stays lit) and counted for nothing while a lesson
+## still wants it is undone (triage 77): a brazier lit from too near, before its stage, or out of
+## turn would otherwise stand lit for good with the objective unmoved, and nothing left to light.
+## The thing is asked to `undo_act` (a Pell brazier goes out again), and the objective's `refused`
+## effects are run (its teacher says what was wrong), or `early` ones when the lesson is a later
+## stage's.
 func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 	if by == null or not is_instance_valid(by) or not by.is_in_group("player"):
 		return
@@ -1083,33 +1211,90 @@ func _on_act_done(act: String, by: Node, on: Node, detail: String) -> void:
 		# a person is named by their npc id (a pocket picked is done to somebody)
 		on_id = str(on.get("npc_id"))
 	var on_def := ContentDB.get_or_empty(on_id)
+	var counted := [false]
+	var refused: Array = []
 	_for_each_objective("act", func(quest_id: String, i: int, o: Dictionary) -> void:
-		if str(o.get("target", "")) != act:
+		if not _act_is_about(o, act, on, on_id, on_def):
 			return
-		var against := str(o.get("against", ""))
-		if against != "" and not _matches(against, on_id, on_def):
+		var why := _act_refusal(quest_id, o, by, on, detail)
+		if why != "":
+			refused.append([quest_id, o, why])
 			return
-		# `prop` names the one quest prop the objective is about (QuestSpots names each by its
-		# `name`): a hit on the next butt down the range does not count for this one
-		var want_prop := str(o.get("prop", ""))
-		if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
-			return
-		# `in_turn`: a lesson taken in order counts only once the steps it follows (`after`) are done,
-		# so an arrow in the far butt while the near one is asked for is nobody's
-		if bool(o.get("in_turn", false)):
-			var si := stage_of(quest_id)
-			if _veiled(quest_id, si, o, stage_def(quest_id, si).get("objectives", [])):
-				return
-		var want_detail := str(o.get("detail", ""))
-		if want_detail != "" and want_detail != detail:
-			return
-		var min_range := float(o.get("min_range", 0.0))
-		if min_range > 0.0:
-			if not (on is Node3D and by is Node3D):
-				return
-			if (on as Node3D).global_position.distance_to((by as Node3D).global_position) < min_range:
-				return
+		counted[0] = true
 		_progress(quest_id, i, 1))
+	if counted[0] or on == null or not is_instance_valid(on) or not on.has_method("undo_act"):
+		return
+	if not refused.is_empty():
+		var row: Array = refused[0]
+		Log.info("Quests", "%s: %s on %s did not count (%s); undone" % [row[0], act, str(on.name), row[2]])
+		on.call("undo_act", act)
+		_run_effects(str(row[0]), (row[1] as Dictionary).get("refused", []), "objective_refused")
+		return
+	var later := _later_lesson(act, on, on_id, on_def)
+	if not later.is_empty():
+		Log.info("Quests", "%s: %s on %s before its lesson; undone" % [later[0], act, str(on.name)])
+		on.call("undo_act", act)
+		_run_effects(str(later[0]), (later[1] as Dictionary).get("early", []), "objective_early")
+
+
+## Whether an `act` objective is about this act on this thing (its act, `against` and `prop`).
+static func _act_is_about(o: Dictionary, act: String, on: Node, on_id: String, on_def: Dictionary) -> bool:
+	if str(o.get("target", "")) != act:
+		return false
+	var against := str(o.get("against", ""))
+	if against != "" and not _matches(against, on_id, on_def):
+		return false
+	# `prop` names the one quest prop the objective is about (QuestSpots names each by its
+	# `name`): a hit on the next butt down the range does not count for this one
+	var want_prop := str(o.get("prop", ""))
+	if want_prop != "" and (on == null or not is_instance_valid(on) or str(on.name) != want_prop):
+		return false
+	return true
+
+
+## Why an act this objective is about does not count for it ("" when it does): out of turn, the
+## wrong saying, or from too near.
+func _act_refusal(quest_id: String, o: Dictionary, by: Node, on: Node, detail: String) -> String:
+	# `in_turn`: a lesson taken in order counts only once the steps it follows (`after`) are done,
+	# so an arrow in the far butt while the near one is asked for is nobody's
+	if bool(o.get("in_turn", false)):
+		var si := stage_of(quest_id)
+		if _veiled(quest_id, si, o, stage_def(quest_id, si).get("objectives", [])):
+			return "out of turn"
+	var want_detail := str(o.get("detail", ""))
+	if want_detail != "" and want_detail != detail:
+		return "not %s" % want_detail
+	var min_range := float(o.get("min_range", 0.0))
+	if min_range > 0.0:
+		if not (on is Node3D and by is Node3D):
+			return "no distance"
+		if (on as Node3D).global_position.distance_to((by as Node3D).global_position) < min_range:
+			return "nearer than %.0f m" % min_range
+	return ""
+
+
+## The first active quest whose later stage teaches this act on this thing, when the thing is one
+## of that quest's own `props` (the braziers below the Lamp, lit before Tamsin has said why):
+## [quest_id, objective], or [].
+func _later_lesson(act: String, on: Node, on_id: String, on_def: Dictionary) -> Array:
+	for quest_id in quests.keys():
+		if not is_active(quest_id):
+			continue
+		var def := definition(quest_id)
+		var owns := false
+		for p_v in def.get("props", []):
+			if typeof(p_v) == TYPE_DICTIONARY and str((p_v as Dictionary).get("name", "")) == str(on.name):
+				owns = true
+				break
+		if not owns:
+			continue
+		var stages := stages_of(quest_id)
+		for si in range(stage_of(quest_id) + 1, stages.size()):
+			for o_v in (stages[si] as Dictionary).get("objectives", []):
+				if typeof(o_v) == TYPE_DICTIONARY and str((o_v as Dictionary).get("type", "")) == "act" \
+						and _act_is_about(o_v, act, on, on_id, on_def):
+					return [quest_id, o_v]
+	return []
 
 
 func _on_escort_arrived(npc_id: String, place_id: String) -> void:
@@ -1198,6 +1383,7 @@ static func _blank_record(quest_id: String) -> Dictionary:
 func reset_for_new_game() -> void:
 	quests.clear()
 	_set_tracked("")
+	QuestCues.touch()
 	# The generated quests live here; the boards that generated them live there. Clearing one
 	# and not the other left boards holding notices this log had never heard of.
 	if radiant != null and radiant.has_method("reset_for_new_game"):
@@ -1230,3 +1416,5 @@ func from_save(d: Dictionary) -> void:
 	# a save from before the tracker (schema 4) says nothing: the main quest is followed
 	var chosen := str(d.get("tracked", ""))
 	_set_tracked(chosen if is_active(chosen) else default_tracked())
+	# a loaded game's marks over heads are the loaded quests', not the ones played before the load
+	QuestCues.touch()

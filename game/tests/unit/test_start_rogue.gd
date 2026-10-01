@@ -220,16 +220,20 @@ func test_crouched_the_hud_says_how_seen_you_are() -> void:
 	assert_eq(hud.eye_state(hud.watched_level(_tree(), at)), "alert", "seen")
 
 
-## The night-watch: noticed, she peers and says so, and forgets; seen, you go back into the lane's
-## shelter (the nearest of its places, not the start) and come again once she is looking at the water;
-## Sauve's line says so, and the choice that ends the stage waits.
-func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
+## The night-watch: noticed, she peers and says so, and forgets; seen, the try fails (triage 78: it
+## used to send you back to a shelter to wait, and a body she kept seeing there never came round):
+## the objective is to speak to Sauve again, pointed at him where the night began, not at the traps;
+## speaking to him begins a clean try: the flag down, her meter from nothing, the book in the bag.
+func test_seen_by_the_watch_the_try_fails_and_sauve_starts_it_again() -> void:
+	var bag := SocialFakes.FakeInventory.new()
+	Social.bind("inventory", bag)
 	Social.quests.call("start", FIRST)
 	var none := NightWatch.new()
 	_tree().root.add_child(none)
 	_nodes.append(none)
 	assert_true(none.spec().is_empty(), "at the box, nobody is watching for you yet")
 	Social.quests.call("set_stage", FIRST, "the_traps")
+	bag.add("core:item/tithe_book", 1)
 	var watch := NightWatch.new()
 	_tree().root.add_child(watch)
 	_nodes.append(watch)
@@ -239,11 +243,8 @@ func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	watch.watcher = tella
 	var s := watch.spec()
 	assert_eq(str(s.get("npc", "")), "core:npc/tella_oul", "the traps stage is watched by Tella Oul")
-	assert_true(s.get("back_to") is Array and (s["back_to"] as Array).size() >= 2, "the lane has more than one shelter to go back to")
-	var start := PlaceRef.point_xz(ContentDB.get_def(OPENING)["start"])
-	var shelter := NightWatch.nearest_back(s, start)
-	assert_true(shelter.distance_to(start) < 12.0, "the nearest shelter is a short way from the start (%.1f m)" % shelter.distance_to(start))
-	var me := _node("", Vector3(shelter.x + 20.0, 0.0, shelter.y + 20.0), true)
+	assert_eq(str(s.get("fail_stage", "")), "seen", "and being seen has somewhere to go")
+	_node("", Vector3(7000, 0, 7000), true)
 	tella.detection = 0.2
 	assert_eq(watch.refresh(), "", "a glance is not being seen")
 	tella.detection = 0.4
@@ -254,16 +255,53 @@ func test_seen_by_the_watch_you_go_back_and_come_again() -> void:
 	tella.detection = 0.7
 	assert_eq(watch.refresh(), "seen")
 	assert_true(GameState.has_flag("seen_on_the_boards"))
-	assert_true(str(Social.dialogue.call("greeting_for", SAUVE)).begins_with("Seen."), "Sauve sends you back")
-	assert_eq(watch.refresh(), "", "and it holds until you are back")
-	me.global_position = Vector3(shelter.x + 2.0, 0.0, shelter.y)
-	assert_eq(watch.refresh(), "", "in the shelter, but she is still looking")
-	tella.detection = 0.2
-	assert_eq(watch.refresh(), "again")
-	assert_false(GameState.has_flag("seen_on_the_boards"), "back in the shelter: again")
-	assert_near(tella.detection, 0.0, 0.001, "and she has looked away")
-	Social.quests.call("set_stage", FIRST, "the_dagger")
+	assert_eq(_at(FIRST), "seen", "seen: the try has failed")
+	var objs: Array = Social.quests.call("objectives_of", FIRST)
+	assert_eq(objs.size(), 1)
+	assert_eq(str(objs[0]["type"]), "talk")
+	assert_eq(str(objs[0]["target"]), SAUVE, "the objective is Sauve again")
+	assert_true(str(objs[0]["text"]).contains("Sauve"), str(objs[0]["text"]))
+	var stage: Dictionary = Social.quests.call("stage_def", FIRST, Social.quests.call("stage_of", FIRST))
+	var anchor := Waymarks.anchor(ContentDB.get_def(FIRST), stage, stage["objectives"][0])
+	assert_eq(str(anchor.get("kind", "")), "npc", "and the marker is on him: %s" % str(anchor))
+	assert_eq(str(anchor.get("npc", "")), SAUVE)
+	assert_true(str(Social.dialogue.call("greeting_for", SAUVE)).begins_with("Here. Quiet."), "Sauve calls you back")
+	assert_false(watch.spec().is_empty(), "she keeps her post and her lantern while you go back")
+	assert_eq(watch.refresh(), "", "and sees nothing new: the try is already over")
+	# the bag lost the book somehow: Sauve hands it back with the new try
+	bag.remove("core:item/tithe_book", 1)
+	Social.dialogue.call("start", "core:dialogue/sauve_mor", SAUVE, "core:place/moreva")
+	Social.dialogue.call("_enter", "traps_again")
+	if bool(Social.dialogue.call("is_running")):
+		Social.dialogue.call("stop")
+	await _tree().process_frame
+	assert_eq(_at(FIRST), "the_traps", "spoken to, the try begins again")
+	assert_eq(bag.count("core:item/tithe_book"), 1, "with the book in the bag again")
+	assert_eq(watch.refresh(), "again", "a clean try")
+	assert_false(GameState.has_flag("seen_on_the_boards"), "the flag is down")
+	assert_near(tella.detection, 0.0, 0.001, "and she starts from nothing")
+	assert_eq(watch.refresh(), "", "once")
+	tella.detection = 0.7
+	assert_eq(watch.refresh(), "seen", "and she can see you again on the new try")
+	assert_eq(_at(FIRST), "seen")
+	EventBus.dialogue_node_entered.emit(SAUVE, "traps_again")
+	watch.refresh()
+	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
+	assert_eq(_at(FIRST), "the_dagger", "an unseen try ends the stage, and the detour is never walked into in order")
 	assert_true(watch.spec().is_empty(), "past the traps, nobody is watching for you")
+	bag.remove("core:item/tithe_book", bag.count("core:item/tithe_book"))
+
+
+## The quest goes on in order past a detour: the traps lead to the dagger, never to `seen`.
+func test_a_detour_stage_is_only_ever_sent_to() -> void:
+	var stages: Array = ContentDB.get_def(FIRST)["stages"]
+	var log_script := preload("res://systems/quests/quest_log.gd")
+	var traps: int = log_script.stage_index_in(stages, "the_traps")
+	assert_eq(str((stages[log_script.next_in_order(stages, traps)] as Dictionary)["id"]), "the_dagger")
+	Social.quests.call("start", FIRST)
+	Social.quests.call("set_stage", FIRST, "the_traps")
+	EventBus.dialogue_node_entered.emit(SAUVE, "traps_lifted")
+	assert_eq(_at(FIRST), "the_dagger")
 
 
 func test_the_lessons_close_on_the_acts() -> void:

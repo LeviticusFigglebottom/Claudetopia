@@ -19,6 +19,8 @@ extends Actor
 const POST_RADIUS := 0.3
 const POST_HEIGHT := 1.9
 const STRAW := Color(0.66, 0.55, 0.3)
+## How long a brazier lit for nothing burns before it goes out again (seconds, wall clock).
+const DOUSE_AFTER_S := 1.6
 const TWINE := Color(0.42, 0.33, 0.22)
 
 ## Whether this pell carries the straw man.
@@ -28,6 +30,8 @@ var kind := "pell"
 ## A brazier that has been kindled.
 var lit := false
 var _flame: Node3D = null
+## How many times it has caught: a douse asked for one lighting leaves the next alone.
+var _lightings := 0
 
 
 func _init() -> void:
@@ -89,6 +93,7 @@ func kindle(by: Node = null) -> void:
 	if lit:
 		return
 	lit = true
+	_lightings += 1
 	_flame = Node3D.new()
 	_flame.name = "Flame"
 	add_child(_flame)
@@ -114,6 +119,33 @@ func kindle(by: Node = null) -> void:
 	fire.position = Vector3(0.0, 1.38, 0.0)
 	_flame.add_child(fire)
 	EventBus.act_done.emit("kindle", by, self, "")
+
+
+## A lighting that did not count for the lesson that wants it (QuestLog: from too near, or before
+## its stage) is undone: the brazier burns a moment, so it is seen to have caught, then goes out
+## and can be lit again (triage 77: a brazier lit from close up stood lit for good, and the lesson
+## with nothing left to light).
+func undo_act(act: String, after_s := DOUSE_AFTER_S) -> void:
+	if act != "kindle" or kind != "brazier" or not lit:
+		return
+	if after_s <= 0.0 or not is_inside_tree():
+		douse()
+		return
+	# the wall clock: a loaded machine's game time crawls, and the flame would stay for a minute
+	get_tree().create_timer(after_s, true, false, true).timeout.connect(_douse_if.bind(_lightings))
+
+
+func _douse_if(lighting: int) -> void:
+	if lit and lighting == _lightings:
+		douse()
+
+
+## The brazier goes out: no flame, no light, and lightable again.
+func douse() -> void:
+	lit = false
+	if _flame != null and is_instance_valid(_flame):
+		_flame.queue_free()
+	_flame = null
 
 
 func _mat(c: Color, metal := 0.0) -> StandardMaterial3D:
