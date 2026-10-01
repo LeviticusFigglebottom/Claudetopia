@@ -426,8 +426,8 @@ static func windthrow(d: PoiDressing) -> void:
 				m.limb(st, q, q + fh * reach * 0.3, rr * 0.55)
 			p = q
 			rr *= 0.78
-	for j in 52:
-		var ang := TAU * (float(j) + k.rng.randf_range(-0.4, 0.4)) / 52.0
+	for j in 40:
+		var ang := TAU * (float(j) + k.rng.randf_range(-0.4, 0.4)) / 40.0
 		var dir := Vector2(cos(ang) * 1.14, sin(ang) * 0.93)
 		if dir.y * pr < foot_y + 2.0:
 			continue
@@ -455,7 +455,7 @@ static func windthrow(d: PoiDressing) -> void:
 		m.limb(roots, top, knee, 0.5)
 		m.limb(roots, knee, foot, 0.42)
 	# the hair-roots hanging off the face in fringes, and the mouth's curtain
-	for j in 90:
+	for j in 50:
 		var px := k.rng.randf_range(-pr, pr)
 		var py := k.rng.randf_range(foot_y + mouth_h * 0.6, pr * 0.85)
 		if Vector2(px / 1.14, py / 0.93).length() > pr * 0.92:

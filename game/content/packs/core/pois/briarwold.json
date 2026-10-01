@@ -1537,8 +1537,8 @@
     "region": "core:region/briarwold",
     "kind": "delve",
     "position": [
-      2955,
-      750
+      2943,
+      728
     ],
     "radius_m": 30,
     "pad_radius_m": 50,
