@@ -7,11 +7,20 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-09-30, by the fifth coordinating session (see §000). Earlier: the fourth (§00). Its work is on
+**Last refreshed:** 2026-10-01, by the sixth coordinating session (see §0000). Earlier: the fifth (§000). Earlier: the fourth (§00). Its work is on
 `claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
 cfac2a7b) and not yet merged into it.
 
 ---
+
+## 0000. The sixth coordinating session (2026-10-01, a cloud container)
+
+**The owner's new list is triage 76-80** (`docs/TRIAGE_2026-09-27.md`, seventh round), on main 0c31e016 (safe mode, the Mac release, the perf pass, w4096g all landed).
+- **Agents at work** (worktrees `.claude/worktrees/<area>`, branches `wip/<area>`):
+  - `quest-fixes`: the Mage's brazier softlock (the second objective's `min_range` 14 left close-lit braziers uncounted), the Rogue's seen-on-the-boards softlock made a fail that sends you back to the quest giver, a softlock and marker/icon audit of every quest, and a keyboard lock-on key beside the middle mouse button (the Warrior's start doable without it);
+  - world life phase 2, second pass plus 2-3 large POIs with a prominent feature and a real interior each: `wl2-hearthvale`, `wl2-briarwold`, `wl2-cinderlea` (with the Sunken Choir's spire collision); then `wl2-brightwater`, `wl2-sedgemire`, `wl2-skerrow` as worktrees free up. Briefs: the scratchpad's `wl2_<region>.md` (same text for every region).
+- **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
+- **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. Disk is the bottleneck: about 5 GB free, with nine stale worktrees from 2026-09-26 (some carry uncommitted, superseded edits) waiting on the owner's word before they are removed.
 
 ## 000. The fifth coordinating session (2026-09-29/30, a cloud container)
 
