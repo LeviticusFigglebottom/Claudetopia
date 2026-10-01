@@ -1572,3 +1572,42 @@ static func charter_delf(d: PoiDressing) -> void:
 	k.marker("the_office", desk_at, true)
 	await SITES._hook(d, site, Vector3(office.x, 0.0, office.y) + Vector3(-side.x, 0.0, -side.y) * 3.4 + Vector3(down.x, 0.0, down.y) * 2.0)
 	await LAND._grass(d, "bracken", -down * 6.0 + side * -8.0, 6.0, 18)
+
+
+## The masons' lodge: the Builders' quarrymen's hall, and before its door the block they were dressing
+## when they left, squared on three faces and rough on the rest, on its rollers, the masons' marks cut
+## in its face, a mallet still on it.
+static func masons_lodge(d: PoiDressing) -> void:
+	await _builders().ruins(d)
+	var k := d.kit
+	var m := d.masonry
+	var f := _hall_frame(k)
+	var grain: Vector2 = f["grain"]
+	var perp: Vector2 = f["perp"]
+	var mid: Vector2 = f["mid"]
+	var at := mid - grain * 9.5 + perp * 1.5
+	var yaw := PoiKit.yaw_of(grain)
+	var basis := Basis(Vector3.UP, yaw + 0.12)
+	var g := k.on_ground(at.x, at.y).y
+	var stone := m.begin()
+	var block_xf := Transform3D(basis, Vector3(at.x, g + 0.35 + 0.8, at.y))
+	m.block(stone, block_xf, Vector3(1.8, 1.6, 3.2))
+	# the rough end, not yet dressed
+	m.ellipsoid(stone, Vector3(at.x, g + 1.1, at.y) + basis * Vector3(0.0, 0.0, -1.7), Vector3(1.0, 0.85, 0.5), basis)
+	await k.step()
+	m.commit(stone, k.surface("stone", 0.3), "DressedBlock", true)
+	k.collider(Vector3(1.8, 1.6, 3.6), block_xf, "stone")
+	var wood := m.begin()
+	for z in [-1.0, 0.3, 1.4]:
+		m.rod(wood, Transform3D(basis * Basis(Vector3.BACK, PI * 0.5), Vector3(at.x, g + 0.17, at.y) + basis * Vector3(0.0, 0.0, float(z))), 0.17, 2.4)
+	await k.step()
+	m.commit(wood, k.surface("timber", 0.5), "Rollers")
+	var marks := m.begin()
+	for i in 5:
+		var p := Vector3(at.x, g + 0.6 + float(i % 2) * 0.55, at.y) + basis * Vector3(0.91, 0.0, -1.0 + float(i) * 0.5)
+		m.block(marks, Transform3D(basis * Basis(Vector3.RIGHT, float(i) * 0.7), p), Vector3(0.02, 0.28, 0.05))
+		m.block(marks, Transform3D(basis * Basis(Vector3.RIGHT, -float(i) * 0.5 + 0.9), p), Vector3(0.02, 0.24, 0.05))
+	await k.step()
+	m.commit(marks, PoiKit.plain(Color(0.12, 0.12, 0.11), 0.9), "MasonsMarks")
+	if not k.far:
+		k.place(k.prop("hammer"), Vector3(at.x, g + 1.95, at.y), yaw + 0.8, 1.0, false)

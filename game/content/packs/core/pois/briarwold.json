@@ -685,7 +685,8 @@
     "story": "The stone for the Long Stride came out of the Old Quarry, and the quarrymen slept here. Their marks on the jamb are the marks on the causeway's stones, which Tollmere would rather not hear, and every Sayer who comes to look copies them.",
     "encounter": "a weaver hangs in the lodge's one standing gable after dark",
     "hook": "New marks have been cut in the jamb, fresh and sharp, and they are the marks on the half-cut block still hanging in the quarry face.",
-    "wayside": true
+    "wayside": true,
+    "builder": "masons_lodge"
   },
   {
     "id": "core:poi/leave_stone",
@@ -1036,8 +1037,8 @@
     "region": "core:region/briarwold",
     "kind": "ruins",
     "position": [
-      2787,
-      923
+      2795,
+      907
     ],
     "hearthstone": false,
     "unique_feature": "the roofless lodge of a woodfolk family who cut timber within bowshot of the Sentinels, its walls scorched black and one gable standing",
@@ -1105,8 +1106,8 @@
     "region": "core:region/briarwold",
     "kind": "cave",
     "position": [
-      1903,
-      -170
+      1927,
+      -146
     ],
     "hearthstone": false,
     "unique_feature": "a root-cave in the Wold Water's bank under an old alder, where the rafters keep their spare poles and ropes out of the rain",
@@ -1114,7 +1115,8 @@
     "story": "The rafters make up their rafts behind the Log Boom and keep their spare gear in the hole under the alder, where it stays dry. Nobody locks it. Leave is not asked in the Wold, and the rafters have never lost a pole.",
     "encounter": "thornhounds den under the alder roots after dark",
     "hook": "The spare poles have been taken out every night and put back wet, and the ropes have been knotted into a raft's lashings for a raft nobody has built.",
-    "wayside": true
+    "wayside": true,
+    "pad_radius_m": 27
   },
   {
     "id": "core:poi/wall_watchers_fire",

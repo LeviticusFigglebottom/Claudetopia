@@ -221,7 +221,7 @@ func test_the_reworked_places_build_what_they_are_about() -> void:
 			"mossgrave": ["MossGraves", "NameStaves", "SeedBed"], "antler_chapel": ["Courses", "HungTines", "Altar"],
 			"pellows_pale": ["Pale", "Gate", "Lodge", "Container_parkers_box"], "bark_camp": ["StrippedOaks", "Racks", "Container_pay_box"],
 			"poachers_lee": ["HideFrames", "Hides", "Gallows", "BowRack"], "burnt_lodge": ["Char"], "webbed_lodge": ["Silk"],
-			"antler_smiths_house": ["HalfHelm"], "wennas_house": ["GraveLid"]}
+			"antler_smiths_house": ["HalfHelm"], "wennas_house": ["GraveLid"], "masons_lodge": ["DressedBlock", "MasonsMarks"]}
 	for slug in want:
 		var id := "core:poi/" + str(slug)
 		var def := ContentDB.get_def(id)
