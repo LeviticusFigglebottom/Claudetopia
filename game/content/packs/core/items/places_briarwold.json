@@ -408,5 +408,159 @@
       "unique"
     ],
     "description": "A hazel whistle whittled by a boy, the bark left on for the grip, wrapped round in weaver silk so thick it took a knife to find it. It still plays. It plays one note, and not well, and a burner under the Skarl tor would know it anywhere."
+  },
+  {
+    "id": "core:item/hal_rookes_axe",
+    "name": "Hal Rooke's Felling Axe",
+    "category": "misc",
+    "weight": 3.5,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A burner's felling axe, the haft worn black where two hands held it for forty years, the head notched with the Rookes' mark. Fine roots have grown through the eye of it and round the haft, as if the axe had been planted."
+  },
+  {
+    "id": "core:item/brothers_heartwood",
+    "name": "The Brother's Heartwood",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A knot of heartwood as long as a forearm, out of the Old Root where it stood up, dark as tea and heavy as iron. It smells of the Hollow's walls. Cille Tamwood, who oils the Grandfather, would know the smell anywhere."
+  },
+  {
+    "id": "core:item/ardos_tines",
+    "name": "Ardo's Tines",
+    "category": "misc",
+    "weight": 4.0,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "The antlers of the white hart that Ardo, the first of the Hart-Knights, would not kill, and wore when it died old: fourteen points, gone the yellow of old ivory, the brow tines worn smooth by four hundred years of hands. Fixed to a band of blackened iron that was made for a smaller head than the last one that wore it."
+  },
+  {
+    "id": "core:item/the_bells_vigil",
+    "name": "The Bells' Vigil",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board of the Mourners' vigil hours, nailed under the oak's lowest root.",
+    "reads": "core:book/the_bells_vigil"
+  },
+  {
+    "id": "core:item/mossgrave_names",
+    "name": "The Moss Names",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tender's list, rolled in birch bark and tucked into the seed-bed.",
+    "reads": "core:book/mossgrave_names"
+  },
+  {
+    "id": "core:item/pellows_game_book",
+    "name": "Pellow's Game-Book",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The parker's game-book, its last pages, swollen with damp.",
+    "reads": "core:book/pellows_game_book"
+  },
+  {
+    "id": "core:item/strippers_tally",
+    "name": "The Strippers' Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strippers' tally, chalked on a slab of bark.",
+    "reads": "core:book/strippers_tally"
+  },
+  {
+    "id": "core:item/the_lees_rule",
+    "name": "The Lee's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A poachers' rule, scratched on a slate by the bow-rack.",
+    "reads": "core:book/the_lees_rule"
+  },
+  {
+    "id": "core:item/the_last_watch",
+    "name": "The Last Watch",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The firewatch's log, its last page, still in the fallen stair.",
+    "reads": "core:book/the_last_watch"
+  },
+  {
+    "id": "core:item/foxfire_pickers_rule",
+    "name": "The Pickers' Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pickers' rule, cut on a shingle hung by the fall.",
+    "reads": "core:book/foxfire_pickers_rule"
+  },
+  {
+    "id": "core:item/what_the_sentinels_hear",
+    "name": "What the Sentinels Hear",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's slate left at the foot of the middle stone.",
+    "reads": "core:book/what_the_sentinels_hear"
   }
 ]

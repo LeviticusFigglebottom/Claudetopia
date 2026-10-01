@@ -1,22 +1,92 @@
 [
-  {"id": "core:rumour/skarl_whistle", "name": "A whistle in the tor", "tone": "cold",
-   "text": "There's a clan man stands on the middle of the Skarl Bridge paying silver to the river, every month for eleven years. And the burner under the Skarl tor says she hears her boy's whistle down the old delving at night, when the draught's up.",
-   "variants": ["Don't go up the Skarl tor after dark. The clan's old adit breathes, and when it breathes something in it whistles, one note, badly."],
-   "tags": ["briarwold", "strange"]},
-  {"id": "core:rumour/horn_pale_price", "name": "Two marks the tine", "tone": "cold",
-   "text": "The Tallymen have built a pale in the Greatwood and buy hart antler there at two marks the tine, and sell it in the Lantern Row as Builders' relics at forty. The Woodfolk know. The Woodfolk have said nothing, which is the custom, and also a mistake.",
-   "variants": ["Corra Bracken's got two hundred notches in a post and started on the tree. Every one a hart gone to that pale."],
-   "tags": ["briarwold", "trade"]},
-  {"id": "core:rumour/greyed_ring", "name": "Grey inside the Wold", "tone": "cold",
-   "text": "The thorn-layers found a grey patch that isn't on the Briar at all. Half a mile in, the withy ring, grey to the last leaf. Kit Laywood won't lay thorn round it. She says it's against the rule, and she's never broken the rule.",
-   "variants": ["There's ash-wights in the withy ring at night. Standing in a ring, facing east. A long way from the ash country, that."],
-   "tags": ["briarwold", "strange"]},
-  {"id": "core:rumour/listening_horns", "name": "Footsteps past the thorn", "tone": "neutral",
-   "text": "That Sayer's up at the Listeners' old camp again with her brass horns, listening for the six who went through the northern gate in '38. Her porter drinks in Ormhold and says the horns have started hearing footsteps. And a dog.",
-   "variants": ["Somebody lays the Northwold Beacon fresh every autumn, and nobody's ever seen who. The Firewatch has been down eleven years."],
-   "tags": ["briarwold", "strange"]},
-  {"id": "core:rumour/tine_barrow", "name": "The knights never killed a hart", "tone": "neutral",
-   "text": "The old knight at the barrow under Moot Tor says the Hart-Knights never killed a hart in their lives, and that every antler hanging in the Antler Chapel came off one that died old. Nobody in the Wold has ever asked them. Now they've been told.",
-   "variants": ["Go to the Tine Barrow by day if you go. After midnight the first knights walk the forecourt, and they don't know you."],
-   "tags": ["briarwold"]}
+  {
+    "id": "core:rumour/skarl_whistle",
+    "name": "A whistle in the tor",
+    "tone": "cold",
+    "text": "There's a clan man stands on the middle of the Skarl Bridge paying silver to the river, every month for eleven years. And the burner under the Skarl tor says she hears her boy's whistle down the old delving at night, when the draught's up.",
+    "variants": [
+      "Don't go up the Skarl tor after dark. The clan's old adit breathes, and when it breathes something in it whistles, one note, badly."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/horn_pale_price",
+    "name": "Two marks the tine",
+    "tone": "cold",
+    "text": "The Tallymen have built a pale in the Greatwood and buy hart antler there at two marks the tine, and sell it in the Lantern Row as Builders' relics at forty. The Woodfolk know. The Woodfolk have said nothing, which is the custom, and also a mistake.",
+    "variants": [
+      "Corra Bracken's got two hundred notches in a post and started on the tree. Every one a hart gone to that pale."
+    ],
+    "tags": [
+      "briarwold",
+      "trade"
+    ]
+  },
+  {
+    "id": "core:rumour/greyed_ring",
+    "name": "Grey inside the Wold",
+    "tone": "cold",
+    "text": "The thorn-layers found a grey patch that isn't on the Briar at all. Half a mile in, the withy ring, grey to the last leaf. Kit Laywood won't lay thorn round it. She says it's against the rule, and she's never broken the rule.",
+    "variants": [
+      "There's ash-wights in the withy ring at night. Standing in a ring, facing east. A long way from the ash country, that."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/listening_horns",
+    "name": "Footsteps past the thorn",
+    "tone": "neutral",
+    "text": "That Sayer's up at the Listeners' old camp again with her brass horns, listening for the six who went through the northern gate in '38. Her porter drinks in Ormhold and says the horns have started hearing footsteps. And a dog.",
+    "variants": [
+      "Somebody lays the Northwold Beacon fresh every autumn, and nobody's ever seen who. The Firewatch has been down eleven years."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/tine_barrow",
+    "name": "The knights never killed a hart",
+    "tone": "neutral",
+    "text": "The old knight at the barrow under Moot Tor says the Hart-Knights never killed a hart in their lives, and that every antler hanging in the Antler Chapel came off one that died old. Nobody in the Wold has ever asked them. Now they've been told.",
+    "variants": [
+      "Go to the Tine Barrow by day if you go. After midnight the first knights walk the forecourt, and they don't know you."
+    ],
+    "tags": [
+      "briarwold"
+    ]
+  },
+  {
+    "id": "core:rumour/the_brother",
+    "name": "The Brother's mark",
+    "tone": "cold",
+    "text": "The verderer marked the Brother for the burners twenty years ago, and the Rookes have never cut it. Hal Rooke went under the plate last autumn and his boy's been sat at the pit with an axe ever since, waiting for somebody to go down first.",
+    "variants": [
+      "You can see the Windthrow's plate from the Hollow's ring street on a clear day, standing up over the trees like a door somebody forgot to shut."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/tinehold",
+    "name": "The Tines over the oaks",
+    "tone": "cold",
+    "text": "You can see Tinehold's antlers from the Wold Water, standing up over the oaks on the scarp. The Hart-Knights built it. The ones in it now aren't Hart-Knights, whatever they wear, and they hang what they kill on poles up the track.",
+    "variants": [
+      "There's a Hart-Knight kneeling at the Moot Gate who used to live at Tinehold. He won't say why he left. He'll tell you how many hours he's knelt."
+    ],
+    "tags": [
+      "briarwold",
+      "knights"
+    ]
+  }
 ]

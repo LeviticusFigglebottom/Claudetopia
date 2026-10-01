@@ -1,7 +1,11 @@
 [
   {
     "id": "core:boss/reel_mother",
-    "resists": {"poison": 0.5, "pierce": 0.2, "fire": -0.4},
+    "resists": {
+      "poison": 0.5,
+      "pierce": 0.2,
+      "fire": -0.4
+    },
     "extends": "core:enemy/weaver",
     "name": "The Reel-Mother",
     "archetype": "boss",
@@ -10,15 +14,183 @@
     "tint": "#6d655c",
     "scale": 2.2,
     "lore": "The Woodfolk say every weaver in the Northwold came out of Blackgill, and every weaver in Blackgill came out of one. When the Skarl left the delving she climbed up into the dark of it and went down to the bottom, where the shaft had drowned, and strung it from wall to wall, and has not come up. Whatever falls into her web she keeps: silk-thieves' lamps, a clansman's axe, a boy's whistle that plays when the draught comes up the shaft. She is very old, and very patient, and she does not like to be hurried.",
-    "stats": {"hp": 520, "stamina": 200, "poise": 140, "armour": 9, "speed": 3.6},
-    "behaviour": {"engage_range": 2.8, "circle": 0.35, "retreat_threshold": 0.0, "patience": 4.0, "leash": 55.0, "ambush_range": 12.0, "hyper_armour": 26.0, "aggression": 0.85, "strafe_speed": 0.9},
+    "stats": {
+      "hp": 520,
+      "stamina": 200,
+      "poise": 140,
+      "armour": 9,
+      "speed": 3.6
+    },
+    "behaviour": {
+      "engage_range": 2.8,
+      "circle": 0.35,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 55.0,
+      "ambush_range": 12.0,
+      "hyper_armour": 26.0,
+      "aggression": 0.85,
+      "strafe_speed": 0.9
+    },
     "phases": [
-      {"name": "the web", "hp": 1.0, "aggression": 0.8},
-      {"name": "the brood", "hp": 0.5, "aggression": 0.95, "speed": 4.1, "hyper_armour": 32.0, "say": "She tears the web from the shaft's walls and it comes down in sheets, and out of every sheet something small starts to run."}
+      {
+        "name": "the web",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "the brood",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 4.1,
+        "hyper_armour": 32.0,
+        "say": "She tears the web from the shaft's walls and it comes down in sheets, and out of every sheet something small starts to run."
+      }
     ],
-    "marks": [180, 320],
+    "marks": [
+      180,
+      320
+    ],
     "loot": "core:loot/rich_chest",
-    "drops": ["core:item/davy_colleys_whistle", "core:item/weaver_silk"],
-    "tags": ["beast", "arachnid", "ambusher", "boss"]
+    "drops": [
+      "core:item/davy_colleys_whistle",
+      "core:item/weaver_silk"
+    ],
+    "tags": [
+      "beast",
+      "arachnid",
+      "ambusher",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/old_root",
+    "extends": "core:enemy/warden",
+    "name": "The Old Root",
+    "archetype": "boss",
+    "arena": "core:poi/the_windthrow",
+    "region": "core:region/briarwold",
+    "tint": "#4a3b2a",
+    "scale": 3.1,
+    "resists": {
+      "poison": 0.6,
+      "pierce": 0.35,
+      "slash": 0.1,
+      "fire": -0.5
+    },
+    "lore": "When the Brother went over its taproot went on drinking. It had gone down eighty fathoms into the granite's water and nothing at the top had told it to stop. Twenty years in the dark have made it what the Wardens are made of, and more: it stands up out of its pool when anything comes down the shaft, and it takes what comes down, burners and their axes and the poachers' dogs, and it holds them in its roots until they are roots. The Woodfolk say a fallen tree feeds the wood. Nobody told them which way round.",
+    "stats": {
+      "hp": 640,
+      "stamina": 220,
+      "poise": 210,
+      "armour": 13,
+      "speed": 2.2
+    },
+    "behaviour": {
+      "engage_range": 4.2,
+      "circle": 0.1,
+      "retreat_threshold": 0.0,
+      "patience": 2.5,
+      "leash": 40.0,
+      "never_leaves_post": false,
+      "hyper_armour": 34.0,
+      "aggression": 0.8,
+      "strafe_speed": 0.3
+    },
+    "phases": [
+      {
+        "name": "the root",
+        "hp": 1.0,
+        "aggression": 0.75
+      },
+      {
+        "name": "the drinking",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 2.8,
+        "hyper_armour": 40.0,
+        "say": "It goes down into the pool to the waist and comes up streaming, and the roots in the roof let go of the dead they were holding."
+      }
+    ],
+    "marks": [
+      160,
+      300
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/brothers_heartwood",
+      "core:item/heartwood_knot"
+    ],
+    "tags": [
+      "guardian",
+      "treant",
+      "plant",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/unvowed_marshal",
+    "extends": "core:enemy/hart_knight",
+    "name": "Aubric Vane, the Unvowed Marshal",
+    "archetype": "boss",
+    "arena": "core:poi/tinehold",
+    "region": "core:region/briarwold",
+    "tint": "#5a4632",
+    "scale": 1.3,
+    "resists": {
+      "pierce": 0.25,
+      "slash": 0.15
+    },
+    "lore": "Marshal of the Hart-Knights until the order went east, and of nothing since but Tinehold and the men who stayed in it. He killed the white hart under the Tine Tower on the night the last knight left and has worn Ardo's antlers ever since, the oldest the order kept, from a hart that died in its bed four hundred years ago; they are too big for him, and he carries his head as if they were not. He has not knelt in twenty years. He says he is waiting for a knight who will come and make him.",
+    "stats": {
+      "hp": 680,
+      "stamina": 240,
+      "poise": 150,
+      "armour": 15,
+      "speed": 3.9
+    },
+    "behaviour": {
+      "engage_range": 3.6,
+      "circle": 0.45,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 50.0,
+      "charge_range": 16.0,
+      "hyper_armour": 28.0,
+      "aggression": 0.85,
+      "parries": true,
+      "parry_chance": 0.4
+    },
+    "phases": [
+      {
+        "name": "the marshal",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "the hart",
+        "hp": 0.5,
+        "aggression": 1.0,
+        "speed": 4.4,
+        "hyper_armour": 34.0,
+        "say": "He drops the spear's butt to the floor and lowers his head under Ardo's antlers, the way the Woodfolk cannot bear to watch, and the vigil hall's braziers lean toward him."
+      }
+    ],
+    "marks": [
+      200,
+      340
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/ardos_tines",
+      "core:item/shed_antler"
+    ],
+    "tags": [
+      "knight",
+      "humanoid",
+      "person",
+      "boss",
+      "unvowed"
+    ]
   }
 ]

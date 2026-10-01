@@ -1,0 +1,43 @@
+[
+  {
+    "id": "core:enemy/unvowed_knight",
+    "extends": "core:enemy/hart_knight",
+    "name": "Unvowed Knight",
+    "tint": "#4b3a2b",
+    "region": "core:region/briarwold",
+    "lore": "A Hart-Knight who would not go east to kneel. The order wears the antlers of harts that died old; the Unvowed wear the antlers of harts they killed, still with blood in the velvet, and say that is the only honest way to wear them. He charges like any knight of the order. He has had more practice at the end of it.",
+    "stats": {
+      "hp": 180,
+      "armour": 10
+    },
+    "marks": [
+      50,
+      120
+    ],
+    "tags": [
+      "knight",
+      "humanoid",
+      "person",
+      "unvowed"
+    ]
+  },
+  {
+    "id": "core:enemy/unvowed_huntsman",
+    "extends": "core:enemy/poacher",
+    "name": "Unvowed Huntsman",
+    "tint": "#4e4430",
+    "region": "core:region/briarwold",
+    "lore": "Tinehold's huntsmen were the order's grooms and kennel-men before the order went east, and stayed for the Marshal's pay and the Marshal's meat. They shoot from the walls with the hold's own longbows and keep the hold's thornhounds on chains, and they will tell you, if you ask while they are drinking, that they have never once seen the Marshal sleep.",
+    "marks": [
+      20,
+      54
+    ],
+    "tags": [
+      "poacher",
+      "outlaw",
+      "humanoid",
+      "person",
+      "unvowed"
+    ]
+  }
+]

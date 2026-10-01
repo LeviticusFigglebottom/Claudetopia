@@ -116,9 +116,12 @@
         "poi": "core:poi/bark_camp",
         "quests": [],
         "finds": [
+          "core:item/strippers_tally",
           "core:item/note_bark_camp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/bark_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -1306,9 +1309,12 @@
         "poi": "core:poi/fallen_firewatch",
         "quests": [],
         "finds": [
+          "core:item/the_last_watch",
           "core:item/note_fallen_firewatch"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/fallen_firewatch"
+        ],
         "hearthstone": false
       },
       {
@@ -1427,7 +1433,10 @@
       {
         "poi": "core:poi/foxfire_falls",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/bracket_fungus",
+          "core:item/foxfire_pickers_rule"
+        ],
         "encounters": [
           "core:encounter/foxfire_falls"
         ],
@@ -2362,7 +2371,9 @@
       {
         "poi": "core:poi/knights_mound",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/the_bells_vigil"
+        ],
         "encounters": [
           "core:encounter/knights_mound"
         ],
@@ -2827,7 +2838,9 @@
       },
       {
         "poi": "core:poi/moot_gate_stone",
-        "quests": [],
+        "quests": [
+          "core:quest/a_gate_is_known"
+        ],
         "finds": [
           "core:item/three_days_kneeling"
         ],
@@ -2870,7 +2883,9 @@
         "quests": [
           "core:quest/the_fennick_stool"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/mossgrave_names"
+        ],
         "encounters": [
           "core:encounter/mossgrave"
         ],
@@ -3322,9 +3337,12 @@
         "poi": "core:poi/pellows_pale",
         "quests": [],
         "finds": [
-          "core:item/note_pellows_pale"
+          "core:item/note_pellows_pale",
+          "core:item/pellows_game_book"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/pellows_pale"
+        ],
         "hearthstone": false
       },
       {
@@ -3445,7 +3463,9 @@
       {
         "poi": "core:poi/poachers_lee",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/the_lees_rule"
+        ],
         "encounters": [
           "core:encounter/poachers_lee"
         ],
@@ -4691,7 +4711,9 @@
       {
         "poi": "core:poi/the_sentinels",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/what_the_sentinels_hear"
+        ],
         "encounters": [
           "core:encounter/the_sentinels"
         ],
@@ -4746,6 +4768,17 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/the_windthrow",
+        "quests": [
+          "core:quest/what_falls"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_windthrow"
+        ],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/thirteenth_colossus",
@@ -4807,6 +4840,15 @@
         "encounters": [
           "core:encounter/tine_barrow"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tinehold",
+        "quests": [
+          "core:quest/a_gate_is_known"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
