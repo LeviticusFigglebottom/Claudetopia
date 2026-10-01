@@ -1368,13 +1368,16 @@ static func dunnow(d: PoiDressing) -> void:
 			sw.block(Transform3D(fb, Vector3(fc.x, top + ph * 0.5, fc.y) + fb * Vector3(x, 0.0, -0.1)), Vector3(w / float(bays) * 0.96, ph, 0.5))
 		if not k.far:
 			k.collider(Vector3(w, 1.0, 0.5), Transform3D(fb, Vector3(fc.x, top + 0.5, fc.y) + fb * Vector3(0.0, 0.0, -0.1)), "stone")
-		# the cheeks: the crag left standing either side of the cut front, rough, to the storey's top
+		# the cheeks: the crag left standing either side of the cut front, rough, to the storey's top (the
+		# lower two storeys; the top one stands back in the face), kept inside the pad
 		for s in [-1.0, 1.0]:
-			for q in 4:
+			for q in (4 if i < 2 else 0):
 				var lz := fd + 0.9 + (depth - 0.9) * (float(q) + 0.5) / 4.0
 				var lsz := Vector3(k.rng.randf_range(2.4, 3.6), top - bottom + k.rng.randf_range(0.4, 1.6), (depth - 0.9) / 4.0 + 1.2)
 				var lp := into * lz + across * (float(s) * (w * 0.5 + lsz.x * 0.35))
 				var lb := fb * Basis(Vector3.UP, k.rng.randf_range(-0.25, 0.25)) * Basis(Vector3.BACK, k.rng.randf_range(-0.12, 0.12))
+				if lp.length() + lsz.length() * 0.5 > reach + 0.6:
+					continue
 				sw.block(Transform3D(lb, Vector3(lp.x, (bottom + top) * 0.5 + 0.2, lp.y)), lsz, Color(0.88, 0.87, 0.84))
 		tops.append(top)
 		fronts.append(fd)
@@ -2190,8 +2193,8 @@ static func frost_moot(d: PoiDressing) -> void:
 		if i % 9 == 4:
 			continue      # the bank broken where the ways in came over it
 		var p := Vector2(sin(a), cos(a)) * (R + k.rng.randf_range(-0.6, 1.4))
-		var hh := k.rng.randf_range(0.6, 1.4)
-		m.ellipsoid(bank, k.on_ground(p.x, p.y, -0.25), Vector3(k.rng.randf_range(2.0, 3.0), hh, k.rng.randf_range(1.4, 2.2)), Basis(Vector3.UP, a + k.rng.randf_range(-0.3, 0.3)))
+		var hh := k.rng.randf_range(0.5, 0.95)
+		m.ellipsoid(bank, k.on_ground(p.x, p.y, -0.3), Vector3(k.rng.randf_range(1.8, 2.6), hh, k.rng.randf_range(3.2, 4.2)), Basis(Vector3.UP, a + PI * 0.5 + k.rng.randf_range(-0.2, 0.2)))
 		if k.rng.randf() < 0.55:
 			m.ellipsoid(drift, k.on_ground(p.x, p.y, hh * 0.55 - 0.25) - Vector3(sin(a), 0.0, cos(a)) * 0.6, Vector3(1.3, 0.3, 0.9), Basis(Vector3.UP, a))
 	await k.step()
@@ -2308,14 +2311,14 @@ static func deadground(d: PoiDressing) -> void:
 	var to_mine := Vector2(OSKELD.x - k.origin.x, OSKELD.y - k.origin.z).normalized()
 	var across := Vector2(to_mine.y, -to_mine.x)
 	var tips := m.begin()
-	_tip(d, tips, -to_mine * 8.0 + across * 6.0, (-to_mine * 0.6 + across * 0.4).normalized(), 18.0, 7.0, 2.2)
-	_tip(d, tips, -to_mine * 2.0 - across * 9.0, (-to_mine * 0.5 - across * 0.5).normalized(), 15.0, 6.0, 1.8)
-	_tip(d, tips, to_mine * 9.0 + across * 3.0, (to_mine * 0.2 + across).normalized(), 12.0, 5.5, 1.5)
+	_tip(d, tips, -to_mine * 7.0 + across * 5.0, (-to_mine * 0.6 + across * 0.4).normalized(), 13.0, 7.0, 2.2)
+	_tip(d, tips, -to_mine * 2.0 - across * 8.0, (-to_mine * 0.5 - across * 0.5).normalized(), 12.0, 6.0, 1.8)
+	_tip(d, tips, to_mine * 8.0 + across * 3.0, (to_mine * 0.2 + across).normalized(), 10.0, 5.5, 1.5)
 	await k.step()
 	_ground_mesh(d, tips, PoiKit.painted(5, DEAD_SPOIL, 0.9, 0.9), "GreySpoil", true)
 	# the sheds: four walls each, no roof, the door gaps toward the line
 	var walls := m.begin()
-	for q in [[across * -10.0 + to_mine * 6.0, 6.0, 4.5], [across * 11.0 - to_mine * 9.0, 5.0, 4.0]]:
+	for q in [[across * -10.0 + to_mine * 6.0, 6.0, 4.5], [across * 10.0 - to_mine * 8.0, 5.0, 4.0]]:
 		var c: Vector2 = q[0]
 		var w := float(q[1]) * 0.5
 		var dp := float(q[2]) * 0.5
@@ -2347,12 +2350,12 @@ static func deadground(d: PoiDressing) -> void:
 	if grass == "":
 		grass = k.flora("grass")
 	var strip := m.begin()
-	_track(d, strip, [to_mine * -19.0, to_mine * 19.0], 0.55)
+	_track(d, strip, [to_mine * -18.0, to_mine * 18.0], 0.55)
 	m.commit(strip, PoiKit.painted(5, {"base": "#55703a", "accent": "#41582c", "grout": "#2b3a1d", "unit": 0.2}, 0.6, 0.8), "GrassLine")
 	if grass != "":
 		var line: Array = []
-		for i in 30:
-			var t := -18.0 + 1.25 * float(i)
+		for i in 28:
+			var t := -17.0 + 1.25 * float(i)
 			var p := to_mine * t + across * k.rng.randf_range(-0.12, 0.12)
 			line.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.0), k.rng.randf() * TAU, k.rng.randf_range(0.7, 0.95)))
 		await k.step()
