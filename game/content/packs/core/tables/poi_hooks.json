@@ -504,7 +504,8 @@
       {
         "poi": "core:poi/broom_wifes_bield",
         "quests": [
-          "core:quest/the_broom_at_the_watch"
+          "core:quest/the_broom_at_the_watch",
+          "core:quest/the_second_light"
         ],
         "finds": [
           "core:item/note_bressas_round"
@@ -674,7 +675,9 @@
       },
       {
         "poi": "core:poi/chain_bridge",
-        "quests": [],
+        "quests": [
+          "core:quest/iron_for_the_chain"
+        ],
         "finds": [
           "core:item/note_chain_pitch_tally"
         ],
@@ -1186,6 +1189,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/dunnow",
+        "quests": [
+          "core:quest/the_long_tally"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/dunnow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/eel_hurdles",
         "quests": [
           "core:quest/tithe_day"
@@ -1502,6 +1516,17 @@
           "core:item/wayside_garrison_shrine"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/ghaleld",
+        "quests": [
+          "core:quest/iron_for_the_chain"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ghaleld"
+        ],
         "hearthstone": false
       },
       {
@@ -3223,6 +3248,17 @@
           "core:item/note_oskel_ford"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/oskel_gloup",
+        "quests": [
+          "core:quest/the_second_light"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/oskel_gloup"
+        ],
         "hearthstone": false
       },
       {

@@ -133,5 +133,8 @@
   {"id": "core:encounter/whelping_hole", "place": "core:poi/whelping_hole",
    "notes": "a crag-wolf pack with young in the hole",
    "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 5, "spread": 4.0}],
-   "lies": [{"item": "core:item/note_whelping_courier"}]}
+   "lies": [{"item": "core:item/note_whelping_courier"}]},
+  {"id": "core:encounter/dunnow", "place": "core:poi/dunnow", "notes": "the Unwritten at their yard fire and one on the landing at the door (Fenna ko-Dreugh is a person: npcs/site_people_skerrow.json); the rest are inside (core:interior/dunnow_halls)", "spawns": [{"enemy": "core:enemy/clanless_raider", "count": 2, "at": "the_yard_fire", "spread": 2.5}, {"enemy": "core:enemy/clanless_outrider", "count": 1, "at": "the_landing"}], "lies": []},
+  {"id": "core:encounter/ghaleld", "place": "core:poi/ghaleld", "notes": "crag-wolves out of the old upper level, round the spoil after dark (Brakka ko-Brindle is a person: npcs/site_people_skerrow.json)", "spawns": [{"enemy": "core:enemy/crag_wolf", "count": 3, "when": "night", "at": "the_spoil", "spread": 5.0}], "lies": []},
+  {"id": "core:encounter/oskel_gloup", "place": "core:poi/oskel_gloup", "notes": "the Lamp's men on the rim after dark, watching for the lamp below; the rest are in the cave (core:interior/the_salt_cave)", "spawns": [{"enemy": "core:enemy/clanless_outrider", "count": 2, "when": "night", "at": "the_rim", "spread": 3.0}], "lies": []}
 ]

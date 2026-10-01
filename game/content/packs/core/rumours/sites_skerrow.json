@@ -1,0 +1,41 @@
+[
+  {
+    "id": "core:rumour/dunnow_windows",
+    "name": "The windows of Dunnow",
+    "tone": "uneasy",
+    "text": "Caravans coming down off the Windgate say Dunnow's windows are lit again, first time in forty winters. Not the keepers. The keepers are all dead but one, and she's sitting at the bottom of the stair in a lean-to, listening to somebody rasp the names off the walls.",
+    "variants": [
+      "Old Fenna the keeper walked back up the Windgate road on two sticks. Says the clanless are grinding the Long Tally down to nothing, a name a day."
+    ],
+    "tags": [
+      "skerrow",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/ghaleld_ringing",
+    "name": "The ringing at Ghaleld",
+    "tone": "eerie",
+    "text": "On a still night at Brindlecrag you can hear it from the bench: iron, ringing against rock, down the old Ghaleld shaft. The chain-smith says it's the chain the last shift put on whatever they found. Says it's been ringing forty years and it's getting louder.",
+    "variants": [
+      "Brakka the chain-smith says the Chain Bridge's Brindle chain is cracking, and nobody at Kharrow believes her, and she says there's only one iron that'll mend it."
+    ],
+    "tags": [
+      "skerrow",
+      "mine"
+    ]
+  },
+  {
+    "id": "core:rumour/oskel_gloup_light",
+    "name": "A light under the cliff",
+    "tone": "uneasy",
+    "text": "On dark nights there's a light under the Oskel cliffs where the old gloup comes out on the sea. No boat goes in there since the Salt men stopped coming. The broom-wife sits up on the cliff and watches it. She says she's seen it before, the once.",
+    "variants": [
+      "The winchman at Oskel Gloup went down his own rope forty years back and never came up. Somebody's spliced the rope this year."
+    ],
+    "tags": [
+      "skerrow",
+      "grim"
+    ]
+  }
+]

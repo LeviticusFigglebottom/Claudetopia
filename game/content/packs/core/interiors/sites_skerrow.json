@@ -284,5 +284,349 @@
         }
       ]
     }
+  },
+  {
+    "id": "core:interior/dunnow_halls",
+    "name": "Dunnow",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/dunnow",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Unwritten, the clanless who are grinding their own names out of the Long Tally, and Kadda the Rasp at its head",
+    "story": "Dunnow's halls climb into the Wall a storey at a time, every wall of every hall cut with the Long Tally from the floor to as high as a cutter could reach on a ladder: the oldest prices at the door, the newest at the top, the year cut at the head of each wall. The keepers' rest, their store, the gallery where the chain of the Chain Years crosses a cleft in the rock, and at the top the hall where the tally ends, with a wall left blank for the debts to come. The Unwritten sleep in the keepers' beds and work by torchlight, a rasp in every hand.",
+    "unique_object": "the blank wall at the head of the hold, which the keepers left for the debts to come, and on which Kadda has begun to cut, very carefully, a tally of the names the Unwritten have ground away",
+    "site": {
+      "kind": "keep",
+      "seed": 6121,
+      "region": "core:region/skerrow",
+      "size": "large",
+      "boss": "core:boss/kadda_the_rasp",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/clanless_raider",
+          "core:enemy/clanless_outrider"
+        ],
+        "archers": [
+          "core:enemy/clanless_outrider"
+        ],
+        "heavy": [
+          "core:enemy/clanless_hewer"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#aaa596",
+          "#6c685f",
+          "#c4beae"
+        ],
+        "lights": [
+          "torch",
+          "brazier"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle",
+          "note": "the keepers' cutting-table, its edge worn into a groove by three hundred years of elbows"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "whetstone"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/dunnow_keepers_last",
+          "name": "the last keeper's day-book",
+          "item": "core:item/dunnow_keepers_last"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "tally_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": 3.0
+        },
+        {
+          "id": "lower_tally",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ledge",
+          "note": "the oldest prices, and archers on the cutters' ledge"
+        },
+        {
+          "id": "keepers_rest",
+          "role": "camp",
+          "size": "medium",
+          "note": "the Unwritten sleep in the keepers' beds"
+        },
+        {
+          "id": "chain_gallery",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "drop": 2.0
+        },
+        {
+          "id": "store",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "cellar_store"
+        },
+        {
+          "id": "barracks",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "barracks",
+          "drop": 2.5
+        },
+        {
+          "id": "long_tally",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/ghaleld_workings",
+    "name": "Ghaleld",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/ghaleld",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "crag-wolves denning in the old upper level, scree-hags in the ladderways, stone-thralls that walked out of the seam, and at the bottom the Chained Brakh, still in the chain the last shift put on it",
+    "story": "The shaft goes down to the upper level, where the first Brindle followed the red vein along the fell with picks; then a ladderway to the deep levels, where the iron got richer and redder, the drawing forge where they made chain underground because the iron would not keep its temper in daylight, and the break where the last shift's picks went through into the giant's marrow. Past the break the seam is bone, not stone, and the timbering stops.",
+    "unique_object": "the last shift's tally of iron, chalked on a timber at the drawing forge: forty-one hundredweight in the week before the break, and in the week after, in the same hand, a figure so much larger that somebody has since scratched it out",
+    "site": {
+      "kind": "mine",
+      "seed": 5311,
+      "region": "core:region/skerrow",
+      "size": "large",
+      "boss": "core:boss/chained_brakh",
+      "boss_adds": 1,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/crag_wolf"
+        ],
+        "archers": [
+          "core:enemy/scree_hag"
+        ],
+        "heavy": [
+          "core:enemy/stone_thrall"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#7c6455",
+          "#4c3c33",
+          "#9b7c66"
+        ],
+        "lights": [
+          "lantern",
+          "torch"
+        ],
+        "tunnel_r": 2.0
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand",
+          "note": "the cage-tender's lamp, left on its hook"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/ghaleld_overmans_book",
+          "name": "the overman's book",
+          "item": "core:item/ghaleld_overmans_book"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "upper_level",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ore_gallery",
+          "note": "the first Brindle workings, where the wolves den"
+        },
+        {
+          "id": "wolf_drift",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "ladderway",
+          "role": "passage",
+          "size": "small",
+          "drop": -4.0
+        },
+        {
+          "id": "the_break",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "drop": -2.5
+        },
+        {
+          "id": "bone_seam",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft"
+        },
+        {
+          "id": "drawing_forge",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "forge_hall",
+          "drop": -2.0
+        },
+        {
+          "id": "the_marrow",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/the_salt_cave",
+    "name": "The Salt Cave",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/oskel_gloup",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Lamp, the clanless wreckers who have used the Salt Isles' cave for forty years, and Haldo ko-Oskel, the old winchman, who hangs the lamp",
+    "story": "Under the gloup the sea comes in at the cliff-foot through a mouth the boats could row into at slack water, and lies in a black pool under the shaft where the lead came down on the rope. Past the pool the cave goes up into dry galleries where the Salt Isles men kept their tally and their stores, and the Lamp keeps theirs: forty years of what the sea brought in, sorted and stacked. At the far end the sea-mouth looks west over the skerries, and on its lip stands the iron basket where the lamp is lit on dark nights, a light any master would take for the Skerry Watch.",
+    "unique_object": "the lamp-basket on the sea-mouth's lip, set so exactly on the line of the Skerry Watch from the north cape that a boat steering for one steers onto the skerries between them",
+    "site": {
+      "kind": "sea_cave",
+      "seed": 7703,
+      "region": "core:region/skerrow",
+      "size": "large",
+      "boss": "core:boss/haldo_the_lampman",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/clanless_outrider",
+          "core:enemy/clanless_raider"
+        ],
+        "archers": [
+          "core:enemy/clanless_outrider"
+        ],
+        "heavy": [
+          "core:enemy/clanless_hewer"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#86908c",
+          "#545d5b",
+          "#a9ab9e"
+        ],
+        "lights": [
+          "daylight",
+          "torch"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil",
+          "note": "the gloup rope's lower end, coiled where the lead came down"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rowboat"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/salt_cave_cargo_book",
+          "name": "the Salt Isles cargo book",
+          "item": "core:item/salt_cave_cargo_book"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_pool",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "where the boats lay and the lead came down"
+        },
+        {
+          "id": "salt_gallery",
+          "role": "chamber",
+          "size": "medium",
+          "drop": 2.0
+        },
+        {
+          "id": "lamp_camp",
+          "role": "camp",
+          "size": "large"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "drop": 1.0
+        },
+        {
+          "id": "wreck_store",
+          "role": "treasure",
+          "size": "medium"
+        },
+        {
+          "id": "spray_hall",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "daylight_shaft"
+        },
+        {
+          "id": "sea_mouth",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
   }
 ]

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "core:npc/fenna_ko_dreugh",
+    "name": "Fenna ko-Dreugh",
+    "home_place": "core:poi/dunnow",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/fenna_ko_dreugh",
+    "bio": "The last keeper of the Long Tally. She went up to Dunnow at nine to learn the cutting, and came down at forty when there was nobody left to keep it with, and has lived at Kharrow since on the Moot's pension and her own bad temper. When word came down that the windows were lit she walked back up the Windgate road on two sticks, and she has been sitting in a lean-to at the foot of the hold for eleven days watching the Unwritten grind the names out, because she cannot climb the stair any more and she will not go home.",
+    "unique_habit": "Counts in fives on her fingers while anyone talks, a notch for each thing said, and closes her fist on the fifth.",
+    "personality": {
+      "traits": [
+        "stubborn",
+        "proud",
+        "sharp",
+        "lonely"
+      ]
+    },
+    "appearance": {
+      "seed": 9311,
+      "build": "stooped_thin",
+      "age": 81.0,
+      "feminine": 1.0,
+      "hair": "white_in_a_dreugh_keeper's_crown_plait",
+      "notes": "a keeper's cutting-chisel on a thong round her neck, a dreugh-blue hood gone grey, two blackthorn sticks"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/dunnow",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/dunnow",
+        "activity": "work",
+        "spot": "the_keepers_seat",
+        "notes": "sitting at her fire, watching the door"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/dunnow",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/brakka_ko_brindle",
+    "name": "Brakka ko-Brindle",
+    "home_place": "core:poi/ghaleld",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/brakka_ko_brindle",
+    "bio": "The last chain-smith in the heights, and the granddaughter of Ghaleld's last overman. She keeps the forge at the shaft head lit every morning against the day the Moot opens the mine again, which it will not, and draws chain for nobody out of scrap. She knows exactly how many links the Chain Bridge has and which of them are wearing.",
+    "unique_habit": "Taps any iron she passes with a fingernail and listens to it, and tells you, unasked, whether it will hold.",
+    "personality": {
+      "traits": [
+        "blunt",
+        "proud",
+        "brave",
+        "stubborn"
+      ]
+    },
+    "appearance": {
+      "seed": 9312,
+      "build": "strong_short",
+      "age": 52.0,
+      "feminine": 1.0,
+      "hair": "black_going_grey_cropped_for_the_forge",
+      "notes": "a leather apron scorched through at the knee, forearms freckled with old burns, a link of chain worn as a bracelet"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/ghaleld",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/ghaleld",
+        "activity": "work",
+        "spot": "the_forge",
+        "notes": "drawing chain out of scrap at the shaft-head forge"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/ghaleld",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]
