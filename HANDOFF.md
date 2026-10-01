@@ -27,6 +27,14 @@ cfac2a7b) and not yet merged into it.
   - Lock-on is on Z as well as the middle mouse button; every action takes an "Or" key in Controls.
   - Not walked by the quest walker; that waits for the full check.
 - `wl2-skerrow` started in the freed worktree; all six regions are now at work.
+- **Landed 2026-10-01 (c7c8d960): Brightwater phase 2.**
+  - The Crown Drift: a calamine mine with a headframe, an engine-house and a chimney.
+  - The Struck Barrow: a crypt under the Tally Needle.
+  - 18 places rebuilt; prop findings down from 16 to 5. The 5 left are in shared builders, for the coordinator after every region lands:
+    - atlas roads ending inside the North Cliff Beacon and Sedge Hearth;
+    - the Rafters' Camp fire on a stool, and the Willow Isle fire under the willow.
+  - The same agent is now building Brightwater's third large place, a castle on the east promontory facing Gull Holm.
+- `~/bin/heavy` now queues first-come first-served; it starved runs for up to an hour before.
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
