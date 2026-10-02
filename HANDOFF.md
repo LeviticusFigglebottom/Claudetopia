@@ -45,6 +45,22 @@ cfac2a7b) and not yet merged into it.
     - mines with hand-written rooms only walk end to end on some seeds. It will find the seed the game uses, fix the shared generator if a player can get a bad one, and add a walk test over every large-site interior.
   - Greatwood views run 1.5-2.1 M primitives against a 1.5 M budget, almost all of it canopy.
 - `~/bin/heavy` no longer lets a run's children hold the slot: an orphaned Xvfb kept slot 3 for two hours.
+- **2026-10-02 (76e6d0fb): every region's phase 2 is in main.**
+  - Large places, one line each:
+    - Brightwater: the Crown Drift, the Struck Barrow, Holmwatch.
+    - The Briarwold: the Windthrow, Tinehold, the Charter Delf, with tracks to the road.
+    - Sedgemire: the Name-Wife's Hollow, the Sounding, the Saltgate.
+    - Cinderlea: the Undertone, the Founders' Delf, Chalkwatch; the Choir collides as drawn.
+    - Skerrow: Dunnow, Ghaleld, Oskel Gloup.
+    - Hearthvale: Knappers' Deep and the Hum Stone; its third is under way.
+  - Each landing was checked by an import and targeted tests, including test_books, test_poi_encounters and test_site_interiors_walk. **Read the log for `no way back from the boss could be laid`, not only RESULT.**
+  - The Briarwold's secret-passage cut (aedc3afe) raised that warning from 2 sites to 10, so it was reverted (a35e62e6) and is being redone. Anthe Ondr and the Gull Holm cellars warned before it and still do.
+  - **Pre-existing:** 3 test_signposts failures on main.
+- **At work:**
+  - `wl2-hearthvale`: the third large place, and a sightline to the Hum Stone.
+  - `wl2-briarwold`: the secret passages redone with every boss's way back laid, and a walk back out added to the test.
+  - `shared-fixes`: roads ending inside places, shared builders' prop overlaps, buried cave throats, dark first chambers, foes untextured under Compatibility, the Hollow's province in the atlas.
+- **Then:** rebuild the world as w4096h, the one full check, a nightly.
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
