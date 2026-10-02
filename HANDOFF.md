@@ -60,6 +60,12 @@ cfac2a7b) and not yet merged into it.
   - `wl2-hearthvale`: the third large place, and a sightline to the Hum Stone.
   - `wl2-briarwold`: the secret passages redone with every boss's way back laid, and a walk back out added to the test.
   - `shared-fixes`: roads ending inside places, shared builders' prop overlaps, buried cave throats, dark first chambers, foes untextured under Compatibility, the Hollow's province in the atlas.
+- **Landed later on 2026-10-02 (5c19cb63): the shared builders' fixes (b974bcb2).**
+  - Roads stop at a place's edge; 55 atlas waypoints moved.
+  - Seat findings fell from 134 to 12; cave mouths are open; the Sedge Hearth bell stands; the Rust Scar's stream lies on the ground; the Hollow is inside Sedgemire.
+  - Foes without a model are painted by `creature_hide.gdshader`. **11 common foes (`"rig": "custom"`) are still boxes;** the `creature-forge` agent is forging them, and the shader still wants the warm set.
+  - The Briarwold's wider way-back search (b6275732) cut the Gull Holm cellars off from their way in, so it was reverted (5c19cb63) and is being redone.
+  - **Every landing runs test_brightwater_places too**: Brightwater's insides are tested there, not in a test_sites_ file.
 - **Then:** rebuild the world as w4096h, the one full check, a nightly.
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
