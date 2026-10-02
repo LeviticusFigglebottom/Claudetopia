@@ -11,6 +11,7 @@
 [ext_resource type="Shader" path="res://assets/shaders/chimney_smoke.gdshader" id="4_rqkyd"]
 [ext_resource type="Shader" path="res://assets/shaders/grade_overlay.gdshader" id="5_g13gw"]
 [ext_resource type="Shader" path="res://assets/shaders/ground_mist.gdshader" id="6_0evr1"]
+[ext_resource type="Shader" path="res://assets/shaders/creature_hide.gdshader" id="6_lljb6"]
 [ext_resource type="Shader" path="res://assets/shaders/eye_iris.gdshader" id="7_7c5sf"]
 [ext_resource type="Shader" path="res://assets/shaders/herd_far.gdshader" id="7_smsev"]
 [ext_resource type="Shader" path="res://assets/shaders/joinery.gdshader" id="8_8khgv"]
@@ -45,11 +46,13 @@
 [ext_resource type="Shader" path="res://assets/shaders/stubble.gdshader" id="34_u8gom"]
 [ext_resource type="Shader" path="res://world/sites/site_stone.gdshader" id="41_42nll"]
 [ext_resource type="Shader" path="res://world/fallback_terrain.gdshader" id="43_klbg2"]
+[ext_resource type="Shader" path="res://assets/shaders/wisp_glow.gdshader" id="44_fyy4v"]
+[ext_resource type="Shader" path="res://assets/shaders/wisp_veil.gdshader" id="45_sieyh"]
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_lljb6"]
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_8oq1d"]
 resource_name = "placeholder_2d"
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8oq1d"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fyy4v"]
 emission_shape = 1
 emission_sphere_radius = 0.3
 direction = Vector3(0, 1, 0)
@@ -61,10 +64,10 @@ damping_min = 0.04
 damping_max = 0.08
 scale_min = 0.8
 scale_max = 1.3
-scale_curve = SubResource("PlaceholderTexture2D_lljb6")
-color_ramp = SubResource("PlaceholderTexture2D_lljb6")
+scale_curve = SubResource("PlaceholderTexture2D_8oq1d")
+color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fyy4v"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sieyh"]
 emission_shape = 3
 emission_box_extents = Vector3(2.4071379, 0.15, 0.6)
 direction = Vector3(0, 1, 0)
@@ -74,9 +77,9 @@ initial_velocity_max = 0.39
 gravity = Vector3(0, 0, 0)
 scale_min = 0.7
 scale_max = 1.3
-color_ramp = SubResource("PlaceholderTexture2D_lljb6")
+color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sieyh"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1gbky"]
 emission_shape = 3
 emission_box_extents = Vector3(2.25, 0.2, 1.25)
 angle_min = -180.0
@@ -90,10 +93,16 @@ damping_min = 0.4
 damping_max = 1.2
 scale_min = 0.6
 scale_max = 1.5
-scale_curve = SubResource("PlaceholderTexture2D_lljb6")
-color_ramp = SubResource("PlaceholderTexture2D_lljb6")
+scale_curve = SubResource("PlaceholderTexture2D_8oq1d")
+color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
 
-[sub_resource type="Shader" id="Shader_1gbky"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_m8nxs"]
+sky_top_color = Color(0.42, 0.55, 0.72, 1)
+sky_horizon_color = Color(0.75, 0.78, 0.8, 1)
+ground_bottom_color = Color(0.3, 0.3, 0.28, 1)
+ground_horizon_color = Color(0.6, 0.62, 0.6, 1)
+
+[sub_resource type="Shader" id="Shader_knirb"]
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx,skip_vertex_transform;
 
@@ -641,9 +650,9 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m8nxs"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sqdxb"]
 render_priority = 0
-shader = SubResource("Shader_1gbky")
+shader = SubResource("Shader_knirb")
 shader_parameter/_camera_pos = Vector3(0, 0, 0)
 shader_parameter/_mesh_size = 48.0
 shader_parameter/_background_mode = 1
@@ -677,7 +686,7 @@ shader_parameter/noise1_angle = 0.0
 shader_parameter/noise1_offset = Vector2(0.5, 0.5)
 shader_parameter/noise2_scale = 0.076
 
-[sub_resource type="Shader" id="Shader_knirb"]
+[sub_resource type="Shader" id="Shader_yqlvi"]
 code = "shader_type spatial;
 #define WATER_NO_MIRROR
 #define WATER_RIVER
@@ -1258,9 +1267,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sqdxb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gphvb"]
 render_priority = 0
-shader = SubResource("Shader_knirb")
+shader = SubResource("Shader_yqlvi")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -1295,7 +1304,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="Shader" id="Shader_yqlvi"]
+[sub_resource type="Shader" id="Shader_xh3nk"]
 code = "
 shader_type spatial;
 render_mode unshaded;
@@ -1328,11 +1337,11 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_gphvb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3wlg4"]
 render_priority = 0
-shader = SubResource("Shader_yqlvi")
+shader = SubResource("Shader_xh3nk")
 
-[sub_resource type="Shader" id="Shader_xh3nk"]
+[sub_resource type="Shader" id="Shader_dgx2d"]
 code = "shader_type canvas_item;
 uniform vec4 tint : source_color = vec4(1.0);
 void fragment() {
@@ -1340,630 +1349,13 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3wlg4"]
-shader = SubResource("Shader_xh3nk")
-shader_parameter/tint = Color(1, 1, 1, 1)
-
-[sub_resource type="Shader" id="Shader_dgx2d"]
-code = "shader_type spatial;
-#define WATER_NO_MIRROR
-render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
-// Stylised water for the Mere, the Grey Sea and the rivers.
-//
-// Everything it needs comes from the world builder's runtime maps, so one mesh can carry the
-// lake, the sea and the marsh pools at their own levels:
-//   level_tex   R32F  water surface height (filled: every texel has the nearest water level)
-//   mask_tex    R8    1 where there is water surface
-//   height_tex  R32F  terrain height, for depth colour and shore foam
-//
-// What makes it read as water is done here rather than left to the engine's reflection, so it
-// works on the Compatibility renderer as it would on Forward+ (ARCHITECTURE.md §10): the world
-// mirrored by a Fresnel term, so the water is dark where you look down into it and gives back
-// the far shore, the hills and the sky toward the grazing angle; a path of glints under the sun,
-// and under the moon at night; moving ripples; and foam that follows the waterline and breaks up.
-// tools_gd/render_probe.gd measured the screen texture on Compatibility: read back and drawn
-// again it comes out within a tenth of the scene with the post-process path on (glow and the
-// grade, as the game has them), so it is the scene's own light and goes into EMISSION as it is;
-// and SCREEN_UV's y runs up the frame in this renderer, which the mirror's sign takes care of.
-//
-// The mirror is the frame's own pixels, looked up where the reflected ray points: the direction
-// is projected to infinity, which puts it above the horizon wherever the camera is above the
-// water, so the lookup can land on a hill, a far shore or the sky but never on the lake itself.
-// That is exact for anything far away and wrong in parallax for something near, which on a lake
-// is the right way round. Where the ray leaves the frame the sky's own zenith and horizon (the
-// atmosphere publishes them every frame) stand in. `mirror` = 0 fades the lookup out; the
-// setting that turns reflections off builds this shader with WATER_NO_MIRROR defined instead
-// (world/water_surface.gd), because a material that so much as names the screen texture makes
-// the renderer copy the frame for it, whatever the uniform says.
-//
-// The normal is written to NORMAL in view space. The first version wrote a world-space normal
-// with its up component in the normal map's green channel; Godot rebuilds a normal map's z from
-// its x and y, so every water surface in the game was lit as if tilted some seventy-five degrees,
-// and took its reflection from the wrong part of the sky.
-
-uniform sampler2D level_tex : filter_linear, repeat_disable, hint_default_black;
-uniform sampler2D mask_tex : filter_linear, repeat_disable, hint_default_black;
-uniform sampler2D height_tex : filter_linear, repeat_disable, hint_default_black;
-// what the shore is made of, by class (WaterSurface._shore_texture): 0 none, 1 sand, 2 shingle,
-// 3 rock, 4 cliff, 5 mud, 6 reeds; `has_shore` false where the world build did not write them
-uniform sampler2D shore_tex : filter_nearest, repeat_disable, hint_default_black;
-uniform bool has_shore = false;
-// where a river ribbon or a fall's pool draws the water instead of the sheet (WaterSurface)
-uniform sampler2D claim_tex : filter_linear, repeat_disable, hint_default_black;
-uniform vec2 world_origin = vec2(-4096.0, -4096.0);
-uniform float world_size = 8192.0;
-
-uniform bool follow_level = true;      // sheet: take y from the level map; rivers: keep mesh y
-uniform bool use_mask = true;          // sheet: discard away from water; rivers: never
-uniform vec4 deep_colour : source_color = vec4(0.06, 0.20, 0.32, 1.0);
-uniform vec4 shallow_colour : source_color = vec4(0.30, 0.56, 0.60, 1.0);
-uniform vec4 region_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
-uniform vec4 foam_colour : source_color = vec4(0.92, 0.95, 0.96, 1.0);
-uniform float depth_fade_m = 5.0;      // metres of water before the colour reads as deep
-uniform float foam_width_m = 1.6;
-// how much foam the region's water raises at its edges: surf on the sea, a trace on a still marsh
-uniform float foam_strength : hint_range(0.0, 1.0) = 0.7;
-uniform float wave_scale = 0.07;
-uniform float wave_speed = 0.5;
-uniform float wave_strength = 0.42;
-uniform float ripple_scale = 0.8;
-uniform float opacity_shallow = 0.66;
-uniform float opacity_deep = 0.97;
-uniform float roughness_water = 0.10;
-uniform float specular_boost = 0.32;
-uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
-uniform float rim_strength = 0.5;      // kept for callers; the reflection below replaces the rim
-// The graphics setting's water quality (world/water_surface.gd): how much of the finest ripple
-// layer and of the foam's wobble is drawn. 1.0, the default, is the water as it was built.
-uniform float detail : hint_range(0.0, 1.0) = 1.0;
-uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
-uniform float glint_strength = 3.0;
-uniform float glint_sharpness = 700.0;
-uniform float mirror : hint_range(0.0, 1.0) = 1.0;
-// how far over the water the mirror looks for the far shore, in steps that grow by 1.4 each
-// (the water quality setting's reflection quality): 16 reach about 4 km, 8 about 250 m
-uniform int mirror_steps = 16;
-// how much of the waves bends what the mirror shows: all of it scrambles a hill into streaks of
-// sky and shore; a third leaves the hill, wavering
-uniform float mirror_ripple : hint_range(0.0, 1.0) = 0.3;
-// the most of the light the water gives back at the grazing angle, before `reflect_strength`
-uniform float fresnel_cap : hint_range(0.0, 1.0) = 0.65;
-#ifndef WATER_NO_MIRROR
-uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
-#endif
-// What the frame has drawn behind the water, for its true depth at the waterline. The height map
-// is eight metres a texel, and the ground the player stands on is Terrain3D's two: a sheet cut
-// where the map says the water ends stood as a slab over a beach lower than it, with a hard edge,
-// and thinned out where the map said shallow rather than where the water met the ground.
-uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
-// how many metres of water the sheet takes to thin to nothing at the waterline
-uniform float shore_soft_m = 0.5;
-// out to here the frame's depth says how deep the water is; past it the height map does, where a
-// depth buffer's precision has run out
-uniform float true_depth_m = 380.0;
-// How clear the water is: the metres of it a ray passes through before it is two-thirds its own
-// colour. Near and looking down, the bed shows through; far off and at a grazing angle, the ray's
-// path through the water is long and the water is its colour.
-uniform float clarity_m = 2.2;
-
-// published by systems/atmosphere every frame, all linear
-global uniform vec3 wm_sun_dir;
-global uniform vec3 wm_sun_color;
-global uniform vec3 wm_moon_dir;
-global uniform vec3 wm_moon_color;
-global uniform vec3 wm_sky_zenith;
-global uniform vec3 wm_sky_horizon;
-global uniform float wm_wind_strength;
-global uniform vec3 wm_wind_dir;
-
-varying vec3 v_world;
-varying vec2 v_uv;
-
-vec2 world_uv(vec2 xz) {
-	return (xz - world_origin) / world_size;
-}
-
-// The ground's height under the water, filtered here from four texels. It is a float texture,
-// and a renderer may sample one of those nearest whatever the hint asks: the shallows' foam was
-// cut to the height map's eight-metre squares, a staircase of white across the Mere beside the
-// Long Stride.
-// The same filtering for any map: the water mask came out in eight-metre steps as well, and the
-// sheet's edge where it fades past the mask was a staircase.
-float filtered(sampler2D tex, vec2 uv) {
-	vec2 n = vec2(textureSize(tex, 0));
-	vec2 f = uv * n - 0.5;
-	ivec2 i = ivec2(floor(f));
-	vec2 t = f - floor(f);
-	ivec2 hi = ivec2(n) - 1;
-	float a = texelFetch(tex, clamp(i, ivec2(0), hi), 0).r;
-	float b = texelFetch(tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
-	float c = texelFetch(tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
-	float d = texelFetch(tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
-	return mix(mix(a, b, t.x), mix(c, d, t.x), t.y);
-}
-
-float ground_at(vec2 uv) {
-	vec2 n = vec2(textureSize(height_tex, 0));
-	vec2 f = uv * n - 0.5;
-	ivec2 i = ivec2(floor(f));
-	vec2 t = f - floor(f);
-	ivec2 hi = ivec2(n) - 1;
-	float h00 = texelFetch(height_tex, clamp(i, ivec2(0), hi), 0).r;
-	float h10 = texelFetch(height_tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
-	float h01 = texelFetch(height_tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
-	float h11 = texelFetch(height_tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
-	return mix(mix(h00, h10, t.x), mix(h01, h11, t.x), t.y);
-}
-
-float hash12(vec2 p) {
-	p = fract(p * vec2(123.34, 456.21));
-	p += dot(p, p + 45.32);
-	return fract(p.x * p.y);
-}
-
-float vnoise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	f = f * f * (3.0 - 2.0 * f);
-	return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
-	           mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
-}
-
-// Two crossing wave trains plus a finer ripple: cheap, stylised, and stable on GLES3. Returns
-// the slope (d/dx, d/dz) of the surface, which is what the normal is made from.
-vec2 wave_slope(vec2 p, float t) {
-	vec2 a = p * wave_scale;
-	vec2 b = p * wave_scale * 1.87 + vec2(13.1, 7.7);
-	vec2 c = p * wave_scale * ripple_scale * 6.3 + vec2(3.3, 9.2);
-	float sx = cos(a.x * 1.3 + t) * 0.55
-		+ cos(b.x * 0.9 - b.y * 0.7 + t * 1.27) * 0.35
-		+ cos(c.x + c.y * 0.6 + t * 2.1) * 0.10 * detail;
-	float sz = -sin(a.y * 1.1 - t * 0.85) * 0.55
-		+ -sin(b.x * 0.6 + b.y * 1.1 + t * 1.05) * 0.35
-		+ -sin(c.y - c.x * 0.4 + t * 1.9) * 0.10 * detail;
-	return vec2(sx, sz);
-}
-
-// A river's ribbon (built with WATER_RIVER defined, world/water_surface.gd) carries its own
-// flow: UV is metres across the channel (0 on the centre line) and metres along it; UV2 the
-// current's speed in m/s and how hard the river bends there (signed, -1..1, + turning toward +x
-// across); COLOR the downstream direction in x and z (as 0..1), the half-width of its water / 20,
-// and how much of the ribbon is drawn (it fades out where the river runs into a lake or the sea).
-varying vec4 v_river;
-varying vec4 v_flow;
-
-// the height of a river's surface texture at `p` (across, along), for the flow-mapped normal:
-// ripples stretched across the current, the way a riffle stands
-float river_height(vec2 p) {
-	return vnoise(p * vec2(0.55, 0.9)) * 0.55
-		+ vnoise(p * vec2(1.3, 2.1) + vec2(7.1, 3.3)) * 0.3
-		+ vnoise(p * vec2(3.2, 4.4) + vec2(2.7, 9.4)) * 0.15 * detail;
-}
-
-vec2 river_slope(vec2 p) {
-	float e = 0.12;
-	float h = river_height(p);
-	return vec2(river_height(p + vec2(e, 0.0)) - h, river_height(p + vec2(0.0, e)) - h) / e;
-}
-
-void vertex() {
-	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	v_uv = UV;
-#ifdef WATER_RIVER
-	// a river sits in the channel the builder carved, at its own surface: no swell lifts it
-	v_river = vec4(UV, UV2);
-	v_flow = COLOR;
-#else
-	if (follow_level) {
-		float lvl = texture(level_tex, world_uv(v_world.xz)).r;
-		v_world.y = lvl;
-		VERTEX.y = lvl - NODE_POSITION_WORLD.y;
-	}
-	// a slow swell so the sheet is never perfectly flat
-	VERTEX.y += sin(v_world.x * 0.02 + TIME * 0.35) * 0.06 + cos(v_world.z * 0.017 - TIME * 0.28) * 0.06;
-#endif
-}
-
-void fragment() {
-	vec2 uv = world_uv(v_world.xz);
-	// The sheet runs on a texel past where the map says the water ends: the map's edge is eight
-	// metres coarse, and where the true ground there is lower than the water the water is over it.
-	// Where the ground rises out of the water it hides the sheet, and the waterline is where they
-	// meet; the thinning below makes that line soft.
-	// Past the world's edge the sea skirt is open sea to the horizon. The maps are clamped out
-	// there, so they repeated the edge's last row outward: north of the Skerrow wall the land's
-	// row discarded the skirt in a band to the horizon, and the sky's grey underside showed in
-	// it beside the sea, a hard straight seam (the w4096c Skerrow shots).
-	bool outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
-	float mask_v = outside ? 1.0 : filtered(mask_tex, uv);
-	if (use_mask && mask_v < 0.02) {
-		discard;
-	}
-	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
-	// level is read at vertices ninety metres apart, and on a river in the hills it stood metres
-	// off the channel
-	if (use_mask && !outside && texture(claim_tex, uv).r > 0.5) {
-		discard;
-	}
-	// and where the sheet would stand clear above its own water: where two waters at different
-	// levels meet within a cell, the cell between them is drawn at a level between the two
-	if (use_mask && !outside && v_world.y - texture(level_tex, uv).r > 0.6) {
-		discard;
-	}
-	// and wherever its water is not level: a lake, a marsh pool and the sea are flat, and water
-	// that falls from one texel to the next is a river, which its ribbon draws. The level map is
-	// filled, so down a river out of a lake it slopes, and the sheet laid on it stood as a tilted
-	// pane over the beach beside the ribbon (the Lark Pool's outflow, playtest 6).
-	if (use_mask && !outside) {
-		ivec2 ln = textureSize(level_tex, 0);
-		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
-		// a slope, not a step: where the marsh's water table meets the sea the map steps from one
-		// flat to the other, and a step here cut a strip out of the sea down to the mud
-		float l0 = texelFetch(level_tex, li, 0).r;
-		float gx = min(abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(1, 0), 0).r));
-		float gz = min(abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(0, 1), 0).r));
-		if (max(gx, gz) > 0.06) {
-			discard;
-		}
-	}
-	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
-	// how hard the wind is on the water here: the cat's paws (open water only); and the slicks,
-	// lanes down the wind where it lies smooth
-	float gust = 0.0;
-	float slick = 0.0;
-	float dist = length(CAMERA_POSITION_WORLD - v_world);
-	float far = clamp(dist / distance_calm_m, 0.0, 1.0);
-#ifdef WATER_RIVER
-	float across = v_river.x;
-	float along = v_river.y;
-	float speed = max(v_river.z, 0.05);
-	float bend = v_river.w;
-	vec3 fdir = normalize(vec3(v_flow.x * 2.0 - 1.0, 0.0, v_flow.y * 2.0 - 1.0));
-	vec3 sdir = vec3(-fdir.z, 0.0, fdir.x);
-	float half_w = max(v_flow.z * 20.0, 0.5);
-	float xt = clamp(abs(across) / half_w, 0.0, 1.5);
-	// The flow map: the texture is carried downstream at the current's speed, drawn twice half a
-	// cycle apart and crossfaded so that neither is ever dragged far enough to smear, however the
-	// speed changes along the river.
-	float cyc = 2.0;
-	float ph0 = fract(TIME / cyc);
-	float ph1 = fract(TIME / cyc + 0.5);
-	float w0 = 1.0 - abs(2.0 * ph0 - 1.0);
-	// the eddy: on the inside of a bend the water turns back on itself, slowly
-	float inner = clamp(-sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
-	float swirl = inner * 1.4 * sin(TIME * 0.35 + along * 0.2);
-	mat2 turn = mat2(vec2(cos(swirl), sin(swirl)), vec2(-sin(swirl), cos(swirl)));
-	vec2 rp = turn * vec2(across, along * 0.8);
-	float drift = speed * (1.0 - inner * 0.8);
-	vec2 q0 = rp - vec2(0.0, drift * ph0 * cyc);
-	vec2 q1 = rp - vec2(0.0, drift * ph1 * cyc) + vec2(3.7, 11.3);
-	vec2 rs = river_slope(q0) * w0 + river_slope(q1) * (1.0 - w0);
-	// faster water is rougher; a sluggish reach lies nearly still and holds a reflection
-	rs *= wave_strength * (0.25 + 0.55 * clamp(speed, 0.0, 2.5)) * (1.0 + inner);
-	vec3 g = sdir * rs.x + fdir * rs.y;
-	vec2 slope = vec2(g.x, g.z);
-#else
-	vec2 slope = wave_slope(v_world.xz, t) * wave_strength;
-	// Wind on open water: gusts cross it in patches (cat's paws), roughening the fine ripples and
-	// breaking up what the water mirrors, so a lake is never one flat sheet of reflected sky; and
-	// a finer ripple runs downwind within them.
-	vec2 wind = normalize(wm_wind_dir.xz + vec2(0.0001));
-	vec2 gp = v_world.xz * 0.011 - wind * TIME * 0.035;
-	gust = smoothstep(0.38, 0.78, vnoise(gp) * 0.7 + vnoise(gp * 2.7 + vec2(5.0, 1.0)) * 0.3);
-	gust *= 0.55 + 0.9 * clamp(wm_wind_strength, 0.0, 1.0);
-	vec2 wp = vec2(dot(v_world.xz, wind), dot(v_world.xz, vec2(-wind.y, wind.x)));
-	float ph = wp.x * 1.9 - TIME * 2.4 + vnoise(wp * vec2(0.3, 0.9)) * 4.0;
-	float fine = cos(ph) * (0.6 + 0.4 * vnoise(wp * vec2(0.8, 2.5) - TIME * 0.4));
-	slope += wind * fine * gust * 0.22 * detail;
-	slope *= 0.6 + 0.9 * gust;
-	// Slicks: long smooth lanes laid down the wind between the gusts, lighter and sharper in what
-	// they give back. From a hill they are what makes a lake read as water moved by the air
-	// rather than a painted floor; they are drawn out far, where the ripples are calmed away.
-	vec2 lane = vec2(wp.y * 0.011, wp.x * 0.0016 - TIME * 0.006);
-	slick = smoothstep(0.56, 0.82, vnoise(lane) * 0.72 + vnoise(lane * 2.3 + vec2(4.0, 9.0)) * 0.28);
-	slick *= 1.0 - gust;
-	slope *= 1.0 - 0.7 * slick;
-#endif
-	// far water should read as one calm sheet, not as a field of shimmering pixels
-	slope *= mix(1.0, 0.18, far);
-	vec3 n_world = normalize(vec3(-slope.x, 1.0, -slope.y));
-	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
-
-#ifdef WATER_RIVER
-	// A river's depth is the channel the builder carved (worldgen/hydro.py carve_rivers): a
-	// parabola under the surface, 1.1 m and a tenth of the width deep on the centre line, nothing
-	// at the waterline. The height map is eight metres a texel and cannot see a five-metre channel.
-	float depth = (1.1 + 0.2 * half_w) * max(1.0 - xt * xt, 0.0);
-#else
-	// How deep the water is here, per fragment. It was read at the vertices and interpolated, and
-	// the sheet's vertices are ninety metres apart: a quad with one corner on an island or a shore
-	// was \"shallow\" for most of its width, so open water ten metres deep was see-through near the
-	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
-	// like a lens effect from every low camera.
-	// past the world's edge the sea bed goes on down from the edge's own depth, a metre in 25, so
-	// the open sea darkens away from the land with no line where the world ends
-	vec2 cuv = clamp(uv, vec2(0.0), vec2(1.0));
-	float beyond = length((uv - cuv) * world_size);
-	float depth = max(v_world.y - ground_at(cuv), 0.0) + beyond * 0.04;
-#endif
-	// The water's true depth over what lies behind it in the frame, straight down from the surface
-	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
-	// the foam and the thinning at the waterline go by; far off, the height map's.
-	float frag_y = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).y;
-	float zb = texture(depth_tex, SCREEN_UV).r;
-#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
-	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb * 2.0 - 1.0);
-#else
-	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb);
-#endif
-	vec4 behind_v = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
-	behind_v.xyz /= behind_v.w;
-	float behind_y = (INV_VIEW_MATRIX * vec4(behind_v.xyz, 1.0)).y;
-	float true_depth = max(frag_y - behind_y, 0.0);
-	// nothing behind but the sky (a lake seen over its far edge): as deep as it can be
-#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
-	bool sky_behind = zb >= 0.99999;
-#else
-	bool sky_behind = zb <= 0.00001;
-#endif
-	true_depth = sky_behind ? 1000.0 : true_depth;
-	float near_t = 1.0 - smoothstep(true_depth_m * 0.6, true_depth_m, dist);
-	// only in the shallows: over open water the height map knows the depth well enough, and a
-	// depth buffer seen at a grazing angle over a far sea does not (it turned the Grey Sea off
-	// the Cinderlea strand into a dark band from sixty metres out)
-	near_t *= 1.0 - smoothstep(2.0, 4.0, depth);
-	// seen from under the surface the frame behind it is above it: nothing to thin by
-	near_t *= FRONT_FACING ? 1.0 : 0.0;
-	// and past the world's edge there is no ground in the frame under the sea, only the sky: the
-	// depth buffer called the skirt a kilometre deep beside the sheet's shallows, and a straight
-	// line ran out to sea along the world's edge (off the Sedgemire and western Skerrow coasts)
-	near_t *= outside ? 0.0 : 1.0;
-#ifndef WATER_RIVER
-	depth = mix(depth, true_depth, near_t);
-#endif
-	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
-	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
-	// a gust darkens the water it roughens: it gives back less of the sky there (below), and the
-	// patches drifting across a lake are what show it is water and not a painted floor
-	body *= 1.0 - 0.18 * gust;
-
-	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
-	// patches rather than lying along the shore like a painted line
-	float wobble = (sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25)
-			* detail;
-#ifndef WATER_RIVER
-	// The sea laps: its foam line runs up the shore and draws back, and lines of surf come in
-	// from deeper water and die on the beach. A lake's edge only breathes.
-	// (the marsh's creeks stand at its water table, 1.25 m: still water, not the sea)
-	float sea = 1.0 - smoothstep(0.5, 1.0, v_world.y);
-	// how the water breaks on this shore: broken surf on rock, a swash line on sand and shingle, a
-	// wash at a cliff's foot, and almost none on mud or in the reeds
-	float breaks = 1.0;
-	float runs_up = 1.0;
-	if (has_shore) {
-		int cls = int(texture(shore_tex, uv).r * 255.0 + 0.5);
-		breaks = cls == 3 ? 1.5 : cls == 4 ? 1.2 : cls == 5 ? 0.12 : cls == 6 ? 0.05 : cls == 2 ? 0.85 : 1.0;
-		runs_up = (cls == 1 || cls == 2) ? 1.3 : cls == 3 ? 0.6 : cls == 5 || cls == 6 ? 0.0 : 0.8;
-	}
-	float surge = sin(TIME * 0.8 + vnoise(v_world.xz * 0.02) * 6.0) * 0.5 + 0.5;
-	wobble += sea * (surge - 0.3) * 1.6 * runs_up;
-#endif
-	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
-	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
-	// Broken into patches by two octaves of noise on a grid turned off the world's axes. One octave
-	// on the world's own grid, cut hard, drew squares; while the lakes were not drawn nobody saw
-	// it, and then the Sedgemire, which is shallower than the foam band everywhere, was one field
-	// of white pixels.
-	vec2 fp = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * v_world.xz;
-	float fnoise = 0.65 * vnoise(fp * 0.9 + vec2(t * 0.4, -t * 0.3)) + 0.35 * vnoise(fp * 2.3 - vec2(t * 0.2, t * 0.5));
-	foam *= 0.3 + 0.7 * smoothstep(0.42, 0.72, fnoise);
-#ifndef WATER_RIVER
-	// the surf lines: a band at a depth that shoals toward the beach over each wave's life
-	float wave_life = fract(TIME * 0.11 + vnoise(v_world.xz * 0.015) * 0.6);
-	float line_d = foam_width_m * 3.2 * (1.0 - wave_life);
-	float surf = exp(-pow((depth - line_d) / (0.18 + 0.25 * foam_width_m), 2.0)) * (1.0 - wave_life) * wave_life * 4.0;
-	surf *= smoothstep(0.35, 0.65, fnoise + 0.15) * sea * runs_up;
-	foam = max(foam, surf * 0.8);
-#endif
-	foam *= foam_strength;
-	// no shore past the world's edge: its last row of land is not a beach out there
-	foam *= outside ? 0.0 : 1.0;
-#ifndef WATER_RIVER
-	foam = clamp(foam * breaks, 0.0, 1.0);
-#endif
-#ifdef WATER_RIVER
-	// Foam where the water runs fast: streaks drawn out along the current and carried down it,
-	// thickest along the banks and on the outside of a bend, and a fleck or two on a slow reach.
-	vec2 f0 = vec2(across * 1.5, (along - drift * ph0 * cyc) * 0.22);
-	vec2 f1 = vec2(across * 1.5 + 4.1, (along - drift * ph1 * cyc) * 0.22 + 9.0);
-	float streak = vnoise(f0) * w0 + vnoise(f1) * (1.0 - w0);
-	float fleck = vnoise(f0 * vec2(2.6, 5.0)) * w0 + vnoise(f1 * vec2(2.6, 5.0)) * (1.0 - w0);
-	float fast = smoothstep(0.7, 2.2, speed);
-	float outer = clamp(sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
-	float bank = smoothstep(0.55, 0.95, xt);
-	float lines = smoothstep(0.6 - 0.2 * fast, 0.85, streak * 0.7 + fleck * 0.3) * (0.15 + 0.85 * fast);
-	float river_foam = lines * (0.35 + 0.65 * max(bank, outer)) + smoothstep(0.78, 0.92, fleck) * 0.15;
-	// white water where it is fastest, whatever the bank
-	river_foam += fast * fast * smoothstep(0.5, 0.8, streak) * 0.5;
-	// a slow reach's flecks fade with distance; a steep one's white water holds, so rapids read
-	// from the hill above as well as from the bank
-	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7 * (1.0 - fast))), 0.0, 1.0);
-	// Strokes down the current: long bands of lighter and darker water carried with it, which
-	// hold at a distance where the ripples are calmed away, so a river seen from the hill above
-	// it is painted water running, not one flat strip of colour.
-	float band = vnoise(f0 * vec2(0.45, 0.3)) * w0 + vnoise(f1 * vec2(0.45, 0.3)) * (1.0 - w0);
-	body *= 0.86 + 0.26 * band;
-#endif
-
-	// the sky, mirrored: dark where you look down into the water, the sky's own colours toward
-	// the grazing angle, capped so a lake seen from a hill is still a lake and not a sheet of sky
-	vec3 V = normalize(CAMERA_POSITION_WORLD - v_world);
-	vec3 R = reflect(-V, n_world);
-	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
-	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
-	// The cap keeps a lake seen from a hill from turning to a pale sheet of sky; from a swimmer's
-	// eye or the bank, a still lake is a mirror, and capped there it gave back a dark ghost of the
-	// far shore over a black body (the swim camera at the Lark Pool, playtest 6).
-	float eye_h = CAMERA_POSITION_WORLD.y - v_world.y;
-	float low_eye = 1.0 - smoothstep(1.0, 8.0, eye_h);
-	fresnel = min(fresnel, mix(fresnel_cap, 0.95, low_eye)) * mix(reflect_strength, 1.0, low_eye * 0.6)
-			* (1.0 - 0.35 * gust * (1.0 - 0.6 * far)) * (1.0 + 0.2 * slick);
-#ifdef WATER_RIVER
-	// the strokes show in what the river gives back as well, or at a grazing angle it is all sky
-	fresnel *= 0.88 + 0.24 * band;
-#endif
-	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
-	// works out where a ray from above would land, and from below it smeared the lake bed across
-	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).
-	bool from_below = !FRONT_FACING;
-	if (from_below) {
-		fresnel = 0.0;
-	}
-	// what the mirror shows is bent by a share of the waves only (`mirror_ripple`)
-	vec3 n_mirror = normalize(vec3(-slope.x * mirror_ripple, 1.0, -slope.y * mirror_ripple));
-	vec3 Rm = reflect(-V, n_mirror);
-	// where the reflected ray leaves the frame, the sky's own gradient stands in for it, with the
-	// painted sky's own curve (its horizon_sharpness): with a gentler one the stand-in was paler
-	// than the sky it met at the top of the frame, and a bright seam ran round every lake there
-	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, 1.0 - pow(1.0 - clamp(Rm.y, 0.0, 1.0), 4.5));
-	// the mirror: where on screen the reflected ray lands. The sign that relates clip space to
-	// SCREEN_UV is taken from the derivatives (outside any branch, where they are defined), so it
-	// holds whichever way up this renderer keeps its frame (on Compatibility its y runs up).
-	vec3 reflected = sky;
-#ifndef WATER_NO_MIRROR
-	vec4 cur = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
-	vec2 cur_ndc = cur.xy / cur.w;
-	float ys = sign(dFdy(SCREEN_UV.y)) * sign(dFdy(cur_ndc.y));
-	ys = ys == 0.0 ? 1.0 : ys;
-	// What a lake mirrors stands on its far shore, so the reflected ray is followed over the water
-	// mask to where the water ends, and what the camera sees above that point is what the water
-	// shows. Projected to infinity instead, the far shore's reflection came out a camera-height's
-	// worth too high -- from a landmark sixty metres over the Mere, three degrees, which put it in
-	// the sky above the hills, and the lake gave back nothing but pale sky. Where no shore is met
-	// (the open sea, a river) the direction alone is used.
-	vec4 target = vec4(Rm, 0.0);
-	vec2 hdir = Rm.xz;
-	float hl = length(hdir);
-	if (use_mask && hl > 0.001) {
-		hdir /= hl;
-		float near_s = 0.0;
-		float far_s = 24.0;
-		bool found = false;
-		for (int k = 0; k < mirror_steps; k++) {
-			if (texture(mask_tex, world_uv(v_world.xz + hdir * far_s)).r < 0.5) {
-				found = true;
-				break;
-			}
-			near_s = far_s;
-			far_s *= 1.4;
-		}
-		if (found) {
-			for (int k = 0; k < 2; k++) {
-				float mid = 0.5 * (near_s + far_s);
-				if (texture(mask_tex, world_uv(v_world.xz + hdir * mid)).r < 0.5) {
-					far_s = mid;
-				} else {
-					near_s = mid;
-				}
-			}
-			target = vec4(v_world + Rm * (0.5 * (near_s + far_s) / hl), 1.0);
-		}
-	}
-	vec4 ref = PROJECTION_MATRIX * (VIEW_MATRIX * target);
-	if (!from_below && mirror > 0.001 && ref.w > 0.0001) {
-		vec2 uv2 = SCREEN_UV + (ref.xy / ref.w - cur_ndc) * 0.5 * vec2(1.0, ys);
-		float margin = min(min(uv2.x, 1.0 - uv2.x), min(uv2.y, 1.0 - uv2.y));
-		float inside = smoothstep(0.0, 0.06, margin);
-		reflected = mix(sky, texture(screen_tex, uv2).rgb, inside * mirror);
-	}
-#endif
-	// a path of glints under the sun, broken into points by a fine sparkle
-	float sparkle = step(0.55, hash12(floor(v_world.xz * 2.5 + vec2(TIME * 1.3, TIME * 0.9))));
-	float sun_g = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness);
-	float sun_wide = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness * 0.08) * 0.08;
-	float moon_g = pow(max(dot(R, normalize(wm_moon_dir)), 0.0), glint_sharpness * 0.6);
-	vec3 glints = wm_sun_color * (sun_g * mix(0.4, 1.6, sparkle) + sun_wide) * glint_strength
-		+ wm_moon_color * moon_g * mix(0.3, 1.4, sparkle) * glint_strength * 0.6;
-
-	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
-	// the light the water scatters back up out of its body: the sky's, a share of it, so the water
-	// is its own colour in the shade as well as in the sun and never a black hole under the mirror
-	// From a swimmer's eye the water in front is lit through from above: its shallows' colour, not
-	// the deep's, which in linear light is all but black (#123239 is 0.03) and made a black lake
-	// under the swim camera.
-	vec3 scatter = mix(body, shallow_colour.rgb * region_tint.rgb, 0.75 * low_eye)
-			* mix(wm_sky_horizon, wm_sky_zenith, 0.5) * (0.55 + 1.8 * low_eye) * (1.0 - fresnel);
-	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6) + scatter) * (1.0 - foam);
-	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
-	// No engine specular: the mirror and the glints above are the water's whole reflection. At 0.12
-	// the renderer laid the sky's own radiance over the mirror as well -- its Fresnel rises to
-	// nearly the same share at a grazing angle -- so every lake came out as bright as the sky above
-	// it, a pale sheet from any hill, on both renderers.
-	SPECULAR = 0.0;
-	METALLIC = 0.0;
-	// the water thins to nothing at the waterline, so the land does not end in a hard edge
-	float edge = smoothstep(0.0, 0.35, depth);
-	// and at the true waterline nothing of it is left: not its colour, not the sky it gives back,
-	// not its foam (which lies a hand's depth out from the line, not on it)
-	float line = mix(1.0, smoothstep(0.0, shore_soft_m, true_depth), near_t);
-	// and past where the map says the water ends it fades out over half a texel, so where the ground
-	// there is still under the water the sheet does not end in the map's eight-metre steps
-	line *= use_mask ? smoothstep(0.02, 0.45, mask_v) : 1.0;
-#ifdef WATER_RIVER
-	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
-	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
-	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
-	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0) * line;
-#else
-	// how much of the bed shows: by the length of the ray's path through the water, so the lake is
-	// clear looking down into it near and its own colour far off and at a slant
-	float path = depth / max(cos_v, 0.08);
-	float body_a = min(1.0 - exp(-path / clarity_m), opacity_deep);
-	ALPHA = clamp(body_a * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
-#endif
-}
-"
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_x3u56"]
-render_priority = 0
 shader = SubResource("Shader_dgx2d")
-shader_parameter/has_shore = false
-shader_parameter/world_origin = Vector2(-4096, -4096)
-shader_parameter/world_size = 8192.0
-shader_parameter/follow_level = true
-shader_parameter/use_mask = true
-shader_parameter/deep_colour = Color(0.06, 0.2, 0.32, 1)
-shader_parameter/shallow_colour = Color(0.3, 0.56, 0.6, 1)
-shader_parameter/region_tint = Color(1, 1, 1, 1)
-shader_parameter/foam_colour = Color(0.92, 0.95, 0.96, 1)
-shader_parameter/depth_fade_m = 5.0
-shader_parameter/foam_width_m = 1.6
-shader_parameter/foam_strength = 0.7
-shader_parameter/wave_scale = 0.07
-shader_parameter/wave_speed = 0.5
-shader_parameter/wave_strength = 0.42
-shader_parameter/ripple_scale = 0.8
-shader_parameter/opacity_shallow = 0.66
-shader_parameter/opacity_deep = 0.97
-shader_parameter/roughness_water = 0.1
-shader_parameter/specular_boost = 0.32
-shader_parameter/distance_calm_m = 260.0
-shader_parameter/rim_strength = 0.5
-shader_parameter/detail = 1.0
-shader_parameter/reflect_strength = 0.9
-shader_parameter/glint_strength = 3.0
-shader_parameter/glint_sharpness = 700.0
-shader_parameter/mirror = 1.0
-shader_parameter/mirror_steps = 16
-shader_parameter/mirror_ripple = 0.3
-shader_parameter/fresnel_cap = 0.65
-shader_parameter/shore_soft_m = 0.5
-shader_parameter/true_depth_m = 380.0
-shader_parameter/clarity_m = 2.2
+shader_parameter/tint = Color(1, 1, 1, 1)
 
 [sub_resource type="Shader" id="Shader_6qdpf"]
 code = "shader_type spatial;
-#define WATER_RIVER
+#define WATER_NO_MIRROR
 render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
 // Stylised water for the Mere, the Grey Sea and the rivers.
 //
@@ -2578,7 +1970,624 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cavkc"]
+[sub_resource type="Shader" id="Shader_cavkc"]
+code = "shader_type spatial;
+#define WATER_RIVER
+render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
+// Stylised water for the Mere, the Grey Sea and the rivers.
+//
+// Everything it needs comes from the world builder's runtime maps, so one mesh can carry the
+// lake, the sea and the marsh pools at their own levels:
+//   level_tex   R32F  water surface height (filled: every texel has the nearest water level)
+//   mask_tex    R8    1 where there is water surface
+//   height_tex  R32F  terrain height, for depth colour and shore foam
+//
+// What makes it read as water is done here rather than left to the engine's reflection, so it
+// works on the Compatibility renderer as it would on Forward+ (ARCHITECTURE.md §10): the world
+// mirrored by a Fresnel term, so the water is dark where you look down into it and gives back
+// the far shore, the hills and the sky toward the grazing angle; a path of glints under the sun,
+// and under the moon at night; moving ripples; and foam that follows the waterline and breaks up.
+// tools_gd/render_probe.gd measured the screen texture on Compatibility: read back and drawn
+// again it comes out within a tenth of the scene with the post-process path on (glow and the
+// grade, as the game has them), so it is the scene's own light and goes into EMISSION as it is;
+// and SCREEN_UV's y runs up the frame in this renderer, which the mirror's sign takes care of.
+//
+// The mirror is the frame's own pixels, looked up where the reflected ray points: the direction
+// is projected to infinity, which puts it above the horizon wherever the camera is above the
+// water, so the lookup can land on a hill, a far shore or the sky but never on the lake itself.
+// That is exact for anything far away and wrong in parallax for something near, which on a lake
+// is the right way round. Where the ray leaves the frame the sky's own zenith and horizon (the
+// atmosphere publishes them every frame) stand in. `mirror` = 0 fades the lookup out; the
+// setting that turns reflections off builds this shader with WATER_NO_MIRROR defined instead
+// (world/water_surface.gd), because a material that so much as names the screen texture makes
+// the renderer copy the frame for it, whatever the uniform says.
+//
+// The normal is written to NORMAL in view space. The first version wrote a world-space normal
+// with its up component in the normal map's green channel; Godot rebuilds a normal map's z from
+// its x and y, so every water surface in the game was lit as if tilted some seventy-five degrees,
+// and took its reflection from the wrong part of the sky.
+
+uniform sampler2D level_tex : filter_linear, repeat_disable, hint_default_black;
+uniform sampler2D mask_tex : filter_linear, repeat_disable, hint_default_black;
+uniform sampler2D height_tex : filter_linear, repeat_disable, hint_default_black;
+// what the shore is made of, by class (WaterSurface._shore_texture): 0 none, 1 sand, 2 shingle,
+// 3 rock, 4 cliff, 5 mud, 6 reeds; `has_shore` false where the world build did not write them
+uniform sampler2D shore_tex : filter_nearest, repeat_disable, hint_default_black;
+uniform bool has_shore = false;
+// where a river ribbon or a fall's pool draws the water instead of the sheet (WaterSurface)
+uniform sampler2D claim_tex : filter_linear, repeat_disable, hint_default_black;
+uniform vec2 world_origin = vec2(-4096.0, -4096.0);
+uniform float world_size = 8192.0;
+
+uniform bool follow_level = true;      // sheet: take y from the level map; rivers: keep mesh y
+uniform bool use_mask = true;          // sheet: discard away from water; rivers: never
+uniform vec4 deep_colour : source_color = vec4(0.06, 0.20, 0.32, 1.0);
+uniform vec4 shallow_colour : source_color = vec4(0.30, 0.56, 0.60, 1.0);
+uniform vec4 region_tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 foam_colour : source_color = vec4(0.92, 0.95, 0.96, 1.0);
+uniform float depth_fade_m = 5.0;      // metres of water before the colour reads as deep
+uniform float foam_width_m = 1.6;
+// how much foam the region's water raises at its edges: surf on the sea, a trace on a still marsh
+uniform float foam_strength : hint_range(0.0, 1.0) = 0.7;
+uniform float wave_scale = 0.07;
+uniform float wave_speed = 0.5;
+uniform float wave_strength = 0.42;
+uniform float ripple_scale = 0.8;
+uniform float opacity_shallow = 0.66;
+uniform float opacity_deep = 0.97;
+uniform float roughness_water = 0.10;
+uniform float specular_boost = 0.32;
+uniform float distance_calm_m = 260.0;   // ripples flatten with distance instead of aliasing
+uniform float rim_strength = 0.5;      // kept for callers; the reflection below replaces the rim
+// The graphics setting's water quality (world/water_surface.gd): how much of the finest ripple
+// layer and of the foam's wobble is drawn. 1.0, the default, is the water as it was built.
+uniform float detail : hint_range(0.0, 1.0) = 1.0;
+uniform float reflect_strength : hint_range(0.0, 1.0) = 0.9;
+uniform float glint_strength = 3.0;
+uniform float glint_sharpness = 700.0;
+uniform float mirror : hint_range(0.0, 1.0) = 1.0;
+// how far over the water the mirror looks for the far shore, in steps that grow by 1.4 each
+// (the water quality setting's reflection quality): 16 reach about 4 km, 8 about 250 m
+uniform int mirror_steps = 16;
+// how much of the waves bends what the mirror shows: all of it scrambles a hill into streaks of
+// sky and shore; a third leaves the hill, wavering
+uniform float mirror_ripple : hint_range(0.0, 1.0) = 0.3;
+// the most of the light the water gives back at the grazing angle, before `reflect_strength`
+uniform float fresnel_cap : hint_range(0.0, 1.0) = 0.65;
+#ifndef WATER_NO_MIRROR
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear, repeat_disable;
+#endif
+// What the frame has drawn behind the water, for its true depth at the waterline. The height map
+// is eight metres a texel, and the ground the player stands on is Terrain3D's two: a sheet cut
+// where the map says the water ends stood as a slab over a beach lower than it, with a hard edge,
+// and thinned out where the map said shallow rather than where the water met the ground.
+uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable;
+// how many metres of water the sheet takes to thin to nothing at the waterline
+uniform float shore_soft_m = 0.5;
+// out to here the frame's depth says how deep the water is; past it the height map does, where a
+// depth buffer's precision has run out
+uniform float true_depth_m = 380.0;
+// How clear the water is: the metres of it a ray passes through before it is two-thirds its own
+// colour. Near and looking down, the bed shows through; far off and at a grazing angle, the ray's
+// path through the water is long and the water is its colour.
+uniform float clarity_m = 2.2;
+
+// published by systems/atmosphere every frame, all linear
+global uniform vec3 wm_sun_dir;
+global uniform vec3 wm_sun_color;
+global uniform vec3 wm_moon_dir;
+global uniform vec3 wm_moon_color;
+global uniform vec3 wm_sky_zenith;
+global uniform vec3 wm_sky_horizon;
+global uniform float wm_wind_strength;
+global uniform vec3 wm_wind_dir;
+
+varying vec3 v_world;
+varying vec2 v_uv;
+
+vec2 world_uv(vec2 xz) {
+	return (xz - world_origin) / world_size;
+}
+
+// The ground's height under the water, filtered here from four texels. It is a float texture,
+// and a renderer may sample one of those nearest whatever the hint asks: the shallows' foam was
+// cut to the height map's eight-metre squares, a staircase of white across the Mere beside the
+// Long Stride.
+// The same filtering for any map: the water mask came out in eight-metre steps as well, and the
+// sheet's edge where it fades past the mask was a staircase.
+float filtered(sampler2D tex, vec2 uv) {
+	vec2 n = vec2(textureSize(tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float a = texelFetch(tex, clamp(i, ivec2(0), hi), 0).r;
+	float b = texelFetch(tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float c = texelFetch(tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float d = texelFetch(tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(a, b, t.x), mix(c, d, t.x), t.y);
+}
+
+float ground_at(vec2 uv) {
+	vec2 n = vec2(textureSize(height_tex, 0));
+	vec2 f = uv * n - 0.5;
+	ivec2 i = ivec2(floor(f));
+	vec2 t = f - floor(f);
+	ivec2 hi = ivec2(n) - 1;
+	float h00 = texelFetch(height_tex, clamp(i, ivec2(0), hi), 0).r;
+	float h10 = texelFetch(height_tex, clamp(i + ivec2(1, 0), ivec2(0), hi), 0).r;
+	float h01 = texelFetch(height_tex, clamp(i + ivec2(0, 1), ivec2(0), hi), 0).r;
+	float h11 = texelFetch(height_tex, clamp(i + ivec2(1, 1), ivec2(0), hi), 0).r;
+	return mix(mix(h00, h10, t.x), mix(h01, h11, t.x), t.y);
+}
+
+float hash12(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
+	           mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+// Two crossing wave trains plus a finer ripple: cheap, stylised, and stable on GLES3. Returns
+// the slope (d/dx, d/dz) of the surface, which is what the normal is made from.
+vec2 wave_slope(vec2 p, float t) {
+	vec2 a = p * wave_scale;
+	vec2 b = p * wave_scale * 1.87 + vec2(13.1, 7.7);
+	vec2 c = p * wave_scale * ripple_scale * 6.3 + vec2(3.3, 9.2);
+	float sx = cos(a.x * 1.3 + t) * 0.55
+		+ cos(b.x * 0.9 - b.y * 0.7 + t * 1.27) * 0.35
+		+ cos(c.x + c.y * 0.6 + t * 2.1) * 0.10 * detail;
+	float sz = -sin(a.y * 1.1 - t * 0.85) * 0.55
+		+ -sin(b.x * 0.6 + b.y * 1.1 + t * 1.05) * 0.35
+		+ -sin(c.y - c.x * 0.4 + t * 1.9) * 0.10 * detail;
+	return vec2(sx, sz);
+}
+
+// A river's ribbon (built with WATER_RIVER defined, world/water_surface.gd) carries its own
+// flow: UV is metres across the channel (0 on the centre line) and metres along it; UV2 the
+// current's speed in m/s and how hard the river bends there (signed, -1..1, + turning toward +x
+// across); COLOR the downstream direction in x and z (as 0..1), the half-width of its water / 20,
+// and how much of the ribbon is drawn (it fades out where the river runs into a lake or the sea).
+varying vec4 v_river;
+varying vec4 v_flow;
+
+// the height of a river's surface texture at `p` (across, along), for the flow-mapped normal:
+// ripples stretched across the current, the way a riffle stands
+float river_height(vec2 p) {
+	return vnoise(p * vec2(0.55, 0.9)) * 0.55
+		+ vnoise(p * vec2(1.3, 2.1) + vec2(7.1, 3.3)) * 0.3
+		+ vnoise(p * vec2(3.2, 4.4) + vec2(2.7, 9.4)) * 0.15 * detail;
+}
+
+vec2 river_slope(vec2 p) {
+	float e = 0.12;
+	float h = river_height(p);
+	return vec2(river_height(p + vec2(e, 0.0)) - h, river_height(p + vec2(0.0, e)) - h) / e;
+}
+
+void vertex() {
+	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_uv = UV;
+#ifdef WATER_RIVER
+	// a river sits in the channel the builder carved, at its own surface: no swell lifts it
+	v_river = vec4(UV, UV2);
+	v_flow = COLOR;
+#else
+	if (follow_level) {
+		float lvl = texture(level_tex, world_uv(v_world.xz)).r;
+		v_world.y = lvl;
+		VERTEX.y = lvl - NODE_POSITION_WORLD.y;
+	}
+	// a slow swell so the sheet is never perfectly flat
+	VERTEX.y += sin(v_world.x * 0.02 + TIME * 0.35) * 0.06 + cos(v_world.z * 0.017 - TIME * 0.28) * 0.06;
+#endif
+}
+
+void fragment() {
+	vec2 uv = world_uv(v_world.xz);
+	// The sheet runs on a texel past where the map says the water ends: the map's edge is eight
+	// metres coarse, and where the true ground there is lower than the water the water is over it.
+	// Where the ground rises out of the water it hides the sheet, and the waterline is where they
+	// meet; the thinning below makes that line soft.
+	// Past the world's edge the sea skirt is open sea to the horizon. The maps are clamped out
+	// there, so they repeated the edge's last row outward: north of the Skerrow wall the land's
+	// row discarded the skirt in a band to the horizon, and the sky's grey underside showed in
+	// it beside the sea, a hard straight seam (the w4096c Skerrow shots).
+	bool outside = any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)));
+	float mask_v = outside ? 1.0 : filtered(mask_tex, uv);
+	if (use_mask && mask_v < 0.02) {
+		discard;
+	}
+	// where a river's ribbon or a fall's pool draws the water, the sheet leaves it to them: its
+	// level is read at vertices ninety metres apart, and on a river in the hills it stood metres
+	// off the channel
+	if (use_mask && !outside && texture(claim_tex, uv).r > 0.5) {
+		discard;
+	}
+	// and where the sheet would stand clear above its own water: where two waters at different
+	// levels meet within a cell, the cell between them is drawn at a level between the two
+	if (use_mask && !outside && v_world.y - texture(level_tex, uv).r > 0.6) {
+		discard;
+	}
+	// and wherever its water is not level: a lake, a marsh pool and the sea are flat, and water
+	// that falls from one texel to the next is a river, which its ribbon draws. The level map is
+	// filled, so down a river out of a lake it slopes, and the sheet laid on it stood as a tilted
+	// pane over the beach beside the ribbon (the Lark Pool's outflow, playtest 6).
+	if (use_mask && !outside) {
+		ivec2 ln = textureSize(level_tex, 0);
+		ivec2 li = clamp(ivec2(uv * vec2(ln)), ivec2(1), ln - 2);
+		// a slope, not a step: where the marsh's water table meets the sea the map steps from one
+		// flat to the other, and a step here cut a strip out of the sea down to the mud
+		float l0 = texelFetch(level_tex, li, 0).r;
+		float gx = min(abs(texelFetch(level_tex, li + ivec2(1, 0), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(1, 0), 0).r));
+		float gz = min(abs(texelFetch(level_tex, li + ivec2(0, 1), 0).r - l0), abs(l0 - texelFetch(level_tex, li - ivec2(0, 1), 0).r));
+		if (max(gx, gz) > 0.06) {
+			discard;
+		}
+	}
+	float t = TIME * wave_speed * (0.7 + wm_wind_strength * 0.8);
+	// how hard the wind is on the water here: the cat's paws (open water only); and the slicks,
+	// lanes down the wind where it lies smooth
+	float gust = 0.0;
+	float slick = 0.0;
+	float dist = length(CAMERA_POSITION_WORLD - v_world);
+	float far = clamp(dist / distance_calm_m, 0.0, 1.0);
+#ifdef WATER_RIVER
+	float across = v_river.x;
+	float along = v_river.y;
+	float speed = max(v_river.z, 0.05);
+	float bend = v_river.w;
+	vec3 fdir = normalize(vec3(v_flow.x * 2.0 - 1.0, 0.0, v_flow.y * 2.0 - 1.0));
+	vec3 sdir = vec3(-fdir.z, 0.0, fdir.x);
+	float half_w = max(v_flow.z * 20.0, 0.5);
+	float xt = clamp(abs(across) / half_w, 0.0, 1.5);
+	// The flow map: the texture is carried downstream at the current's speed, drawn twice half a
+	// cycle apart and crossfaded so that neither is ever dragged far enough to smear, however the
+	// speed changes along the river.
+	float cyc = 2.0;
+	float ph0 = fract(TIME / cyc);
+	float ph1 = fract(TIME / cyc + 0.5);
+	float w0 = 1.0 - abs(2.0 * ph0 - 1.0);
+	// the eddy: on the inside of a bend the water turns back on itself, slowly
+	float inner = clamp(-sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
+	float swirl = inner * 1.4 * sin(TIME * 0.35 + along * 0.2);
+	mat2 turn = mat2(vec2(cos(swirl), sin(swirl)), vec2(-sin(swirl), cos(swirl)));
+	vec2 rp = turn * vec2(across, along * 0.8);
+	float drift = speed * (1.0 - inner * 0.8);
+	vec2 q0 = rp - vec2(0.0, drift * ph0 * cyc);
+	vec2 q1 = rp - vec2(0.0, drift * ph1 * cyc) + vec2(3.7, 11.3);
+	vec2 rs = river_slope(q0) * w0 + river_slope(q1) * (1.0 - w0);
+	// faster water is rougher; a sluggish reach lies nearly still and holds a reflection
+	rs *= wave_strength * (0.25 + 0.55 * clamp(speed, 0.0, 2.5)) * (1.0 + inner);
+	vec3 g = sdir * rs.x + fdir * rs.y;
+	vec2 slope = vec2(g.x, g.z);
+#else
+	vec2 slope = wave_slope(v_world.xz, t) * wave_strength;
+	// Wind on open water: gusts cross it in patches (cat's paws), roughening the fine ripples and
+	// breaking up what the water mirrors, so a lake is never one flat sheet of reflected sky; and
+	// a finer ripple runs downwind within them.
+	vec2 wind = normalize(wm_wind_dir.xz + vec2(0.0001));
+	vec2 gp = v_world.xz * 0.011 - wind * TIME * 0.035;
+	gust = smoothstep(0.38, 0.78, vnoise(gp) * 0.7 + vnoise(gp * 2.7 + vec2(5.0, 1.0)) * 0.3);
+	gust *= 0.55 + 0.9 * clamp(wm_wind_strength, 0.0, 1.0);
+	vec2 wp = vec2(dot(v_world.xz, wind), dot(v_world.xz, vec2(-wind.y, wind.x)));
+	float ph = wp.x * 1.9 - TIME * 2.4 + vnoise(wp * vec2(0.3, 0.9)) * 4.0;
+	float fine = cos(ph) * (0.6 + 0.4 * vnoise(wp * vec2(0.8, 2.5) - TIME * 0.4));
+	slope += wind * fine * gust * 0.22 * detail;
+	slope *= 0.6 + 0.9 * gust;
+	// Slicks: long smooth lanes laid down the wind between the gusts, lighter and sharper in what
+	// they give back. From a hill they are what makes a lake read as water moved by the air
+	// rather than a painted floor; they are drawn out far, where the ripples are calmed away.
+	vec2 lane = vec2(wp.y * 0.011, wp.x * 0.0016 - TIME * 0.006);
+	slick = smoothstep(0.56, 0.82, vnoise(lane) * 0.72 + vnoise(lane * 2.3 + vec2(4.0, 9.0)) * 0.28);
+	slick *= 1.0 - gust;
+	slope *= 1.0 - 0.7 * slick;
+#endif
+	// far water should read as one calm sheet, not as a field of shimmering pixels
+	slope *= mix(1.0, 0.18, far);
+	vec3 n_world = normalize(vec3(-slope.x, 1.0, -slope.y));
+	NORMAL = normalize((VIEW_MATRIX * vec4(n_world, 0.0)).xyz);
+
+#ifdef WATER_RIVER
+	// A river's depth is the channel the builder carved (worldgen/hydro.py carve_rivers): a
+	// parabola under the surface, 1.1 m and a tenth of the width deep on the centre line, nothing
+	// at the waterline. The height map is eight metres a texel and cannot see a five-metre channel.
+	float depth = (1.1 + 0.2 * half_w) * max(1.0 - xt * xt, 0.0);
+#else
+	// How deep the water is here, per fragment. It was read at the vertices and interpolated, and
+	// the sheet's vertices are ninety metres apart: a quad with one corner on an island or a shore
+	// was \"shallow\" for most of its width, so open water ten metres deep was see-through near the
+	// camera and a band of shore foam ran across the middle of the Mere, a white ring that looked
+	// like a lens effect from every low camera.
+	// past the world's edge the sea bed goes on down from the edge's own depth, a metre in 25, so
+	// the open sea darkens away from the land with no line where the world ends
+	vec2 cuv = clamp(uv, vec2(0.0), vec2(1.0));
+	float beyond = length((uv - cuv) * world_size);
+	float depth = max(v_world.y - ground_at(cuv), 0.0) + beyond * 0.04;
+#endif
+	// The water's true depth over what lies behind it in the frame, straight down from the surface
+	// to the point of the ground (or the bed) the eye sees through it. Near, it is what the colour,
+	// the foam and the thinning at the waterline go by; far off, the height map's.
+	float frag_y = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).y;
+	float zb = texture(depth_tex, SCREEN_UV).r;
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb * 2.0 - 1.0);
+#else
+	vec3 ndc = vec3(SCREEN_UV * 2.0 - 1.0, zb);
+#endif
+	vec4 behind_v = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	behind_v.xyz /= behind_v.w;
+	float behind_y = (INV_VIEW_MATRIX * vec4(behind_v.xyz, 1.0)).y;
+	float true_depth = max(frag_y - behind_y, 0.0);
+	// nothing behind but the sky (a lake seen over its far edge): as deep as it can be
+#if CURRENT_RENDERER == RENDERER_COMPATIBILITY
+	bool sky_behind = zb >= 0.99999;
+#else
+	bool sky_behind = zb <= 0.00001;
+#endif
+	true_depth = sky_behind ? 1000.0 : true_depth;
+	float near_t = 1.0 - smoothstep(true_depth_m * 0.6, true_depth_m, dist);
+	// only in the shallows: over open water the height map knows the depth well enough, and a
+	// depth buffer seen at a grazing angle over a far sea does not (it turned the Grey Sea off
+	// the Cinderlea strand into a dark band from sixty metres out)
+	near_t *= 1.0 - smoothstep(2.0, 4.0, depth);
+	// seen from under the surface the frame behind it is above it: nothing to thin by
+	near_t *= FRONT_FACING ? 1.0 : 0.0;
+	// and past the world's edge there is no ground in the frame under the sea, only the sky: the
+	// depth buffer called the skirt a kilometre deep beside the sheet's shallows, and a straight
+	// line ran out to sea along the world's edge (off the Sedgemire and western Skerrow coasts)
+	near_t *= outside ? 0.0 : 1.0;
+#ifndef WATER_RIVER
+	depth = mix(depth, true_depth, near_t);
+#endif
+	float depth_t = clamp(depth / depth_fade_m, 0.0, 1.0);
+	vec3 body = mix(shallow_colour.rgb, deep_colour.rgb, depth_t) * region_tint.rgb;
+	// a gust darkens the water it roughens: it gives back less of the sky there (below), and the
+	// patches drifting across a lake are what show it is water and not a painted floor
+	body *= 1.0 - 0.18 * gust;
+
+	// shore foam: a band that follows the waterline, wobbles with the waves and breaks into
+	// patches rather than lying along the shore like a painted line
+	float wobble = (sin(v_world.x * 0.7 + t * 1.6) * 0.25 + cos(v_world.z * 0.63 - t * 1.3) * 0.25)
+			* detail;
+#ifndef WATER_RIVER
+	// The sea laps: its foam line runs up the shore and draws back, and lines of surf come in
+	// from deeper water and die on the beach. A lake's edge only breathes.
+	// (the marsh's creeks stand at its water table, 1.25 m: still water, not the sea)
+	float sea = 1.0 - smoothstep(0.5, 1.0, v_world.y);
+	// how the water breaks on this shore: broken surf on rock, a swash line on sand and shingle, a
+	// wash at a cliff's foot, and almost none on mud or in the reeds
+	float breaks = 1.0;
+	float runs_up = 1.0;
+	if (has_shore) {
+		int cls = int(texture(shore_tex, uv).r * 255.0 + 0.5);
+		breaks = cls == 3 ? 1.5 : cls == 4 ? 1.2 : cls == 5 ? 0.12 : cls == 6 ? 0.05 : cls == 2 ? 0.85 : 1.0;
+		runs_up = (cls == 1 || cls == 2) ? 1.3 : cls == 3 ? 0.6 : cls == 5 || cls == 6 ? 0.0 : 0.8;
+	}
+	float surge = sin(TIME * 0.8 + vnoise(v_world.xz * 0.02) * 6.0) * 0.5 + 0.5;
+	wobble += sea * (surge - 0.3) * 1.6 * runs_up;
+#endif
+	// (GLSL leaves smoothstep undefined with its edges reversed; Mesa forgives it, a GPU need not)
+	float foam = 1.0 - smoothstep(0.0, foam_width_m * (1.0 + wobble * 0.35), depth);
+	// Broken into patches by two octaves of noise on a grid turned off the world's axes. One octave
+	// on the world's own grid, cut hard, drew squares; while the lakes were not drawn nobody saw
+	// it, and then the Sedgemire, which is shallower than the foam band everywhere, was one field
+	// of white pixels.
+	vec2 fp = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8)) * v_world.xz;
+	float fnoise = 0.65 * vnoise(fp * 0.9 + vec2(t * 0.4, -t * 0.3)) + 0.35 * vnoise(fp * 2.3 - vec2(t * 0.2, t * 0.5));
+	foam *= 0.3 + 0.7 * smoothstep(0.42, 0.72, fnoise);
+#ifndef WATER_RIVER
+	// the surf lines: a band at a depth that shoals toward the beach over each wave's life
+	float wave_life = fract(TIME * 0.11 + vnoise(v_world.xz * 0.015) * 0.6);
+	float line_d = foam_width_m * 3.2 * (1.0 - wave_life);
+	float surf = exp(-pow((depth - line_d) / (0.18 + 0.25 * foam_width_m), 2.0)) * (1.0 - wave_life) * wave_life * 4.0;
+	surf *= smoothstep(0.35, 0.65, fnoise + 0.15) * sea * runs_up;
+	foam = max(foam, surf * 0.8);
+#endif
+	foam *= foam_strength;
+	// no shore past the world's edge: its last row of land is not a beach out there
+	foam *= outside ? 0.0 : 1.0;
+#ifndef WATER_RIVER
+	foam = clamp(foam * breaks, 0.0, 1.0);
+#endif
+#ifdef WATER_RIVER
+	// Foam where the water runs fast: streaks drawn out along the current and carried down it,
+	// thickest along the banks and on the outside of a bend, and a fleck or two on a slow reach.
+	vec2 f0 = vec2(across * 1.5, (along - drift * ph0 * cyc) * 0.22);
+	vec2 f1 = vec2(across * 1.5 + 4.1, (along - drift * ph1 * cyc) * 0.22 + 9.0);
+	float streak = vnoise(f0) * w0 + vnoise(f1) * (1.0 - w0);
+	float fleck = vnoise(f0 * vec2(2.6, 5.0)) * w0 + vnoise(f1 * vec2(2.6, 5.0)) * (1.0 - w0);
+	float fast = smoothstep(0.7, 2.2, speed);
+	float outer = clamp(sign(bend) * across / half_w, 0.0, 1.0) * abs(bend);
+	float bank = smoothstep(0.55, 0.95, xt);
+	float lines = smoothstep(0.6 - 0.2 * fast, 0.85, streak * 0.7 + fleck * 0.3) * (0.15 + 0.85 * fast);
+	float river_foam = lines * (0.35 + 0.65 * max(bank, outer)) + smoothstep(0.78, 0.92, fleck) * 0.15;
+	// white water where it is fastest, whatever the bank
+	river_foam += fast * fast * smoothstep(0.5, 0.8, streak) * 0.5;
+	// a slow reach's flecks fade with distance; a steep one's white water holds, so rapids read
+	// from the hill above as well as from the bank
+	foam = clamp(max(foam * 0.5, river_foam * (1.0 - far * 0.7 * (1.0 - fast))), 0.0, 1.0);
+	// Strokes down the current: long bands of lighter and darker water carried with it, which
+	// hold at a distance where the ripples are calmed away, so a river seen from the hill above
+	// it is painted water running, not one flat strip of colour.
+	float band = vnoise(f0 * vec2(0.45, 0.3)) * w0 + vnoise(f1 * vec2(0.45, 0.3)) * (1.0 - w0);
+	body *= 0.86 + 0.26 * band;
+#endif
+
+	// the sky, mirrored: dark where you look down into the water, the sky's own colours toward
+	// the grazing angle, capped so a lake seen from a hill is still a lake and not a sheet of sky
+	vec3 V = normalize(CAMERA_POSITION_WORLD - v_world);
+	vec3 R = reflect(-V, n_world);
+	float cos_v = clamp(dot(n_world, V), 0.0, 1.0);
+	float fresnel = 0.02 + 0.98 * pow(1.0 - cos_v, 5.0);
+	// The cap keeps a lake seen from a hill from turning to a pale sheet of sky; from a swimmer's
+	// eye or the bank, a still lake is a mirror, and capped there it gave back a dark ghost of the
+	// far shore over a black body (the swim camera at the Lark Pool, playtest 6).
+	float eye_h = CAMERA_POSITION_WORLD.y - v_world.y;
+	float low_eye = 1.0 - smoothstep(1.0, 8.0, eye_h);
+	fresnel = min(fresnel, mix(fresnel_cap, 0.95, low_eye)) * mix(reflect_strength, 1.0, low_eye * 0.6)
+			* (1.0 - 0.35 * gust * (1.0 - 0.6 * far)) * (1.0 + 0.2 * slick);
+#ifdef WATER_RIVER
+	// the strokes show in what the river gives back as well, or at a grazing angle it is all sky
+	fresnel *= 0.88 + 0.24 * band;
+#endif
+	// Seen from under the surface the water is its own colour and gives back nothing: the mirror
+	// works out where a ray from above would land, and from below it smeared the lake bed across
+	// the ceiling (the Mere's look camera stood under its surface until the lakes were drawn).
+	bool from_below = !FRONT_FACING;
+	if (from_below) {
+		fresnel = 0.0;
+	}
+	// what the mirror shows is bent by a share of the waves only (`mirror_ripple`)
+	vec3 n_mirror = normalize(vec3(-slope.x * mirror_ripple, 1.0, -slope.y * mirror_ripple));
+	vec3 Rm = reflect(-V, n_mirror);
+	// where the reflected ray leaves the frame, the sky's own gradient stands in for it, with the
+	// painted sky's own curve (its horizon_sharpness): with a gentler one the stand-in was paler
+	// than the sky it met at the top of the frame, and a bright seam ran round every lake there
+	vec3 sky = mix(wm_sky_horizon, wm_sky_zenith, 1.0 - pow(1.0 - clamp(Rm.y, 0.0, 1.0), 4.5));
+	// the mirror: where on screen the reflected ray lands. The sign that relates clip space to
+	// SCREEN_UV is taken from the derivatives (outside any branch, where they are defined), so it
+	// holds whichever way up this renderer keeps its frame (on Compatibility its y runs up).
+	vec3 reflected = sky;
+#ifndef WATER_NO_MIRROR
+	vec4 cur = PROJECTION_MATRIX * vec4(VERTEX, 1.0);
+	vec2 cur_ndc = cur.xy / cur.w;
+	float ys = sign(dFdy(SCREEN_UV.y)) * sign(dFdy(cur_ndc.y));
+	ys = ys == 0.0 ? 1.0 : ys;
+	// What a lake mirrors stands on its far shore, so the reflected ray is followed over the water
+	// mask to where the water ends, and what the camera sees above that point is what the water
+	// shows. Projected to infinity instead, the far shore's reflection came out a camera-height's
+	// worth too high -- from a landmark sixty metres over the Mere, three degrees, which put it in
+	// the sky above the hills, and the lake gave back nothing but pale sky. Where no shore is met
+	// (the open sea, a river) the direction alone is used.
+	vec4 target = vec4(Rm, 0.0);
+	vec2 hdir = Rm.xz;
+	float hl = length(hdir);
+	if (use_mask && hl > 0.001) {
+		hdir /= hl;
+		float near_s = 0.0;
+		float far_s = 24.0;
+		bool found = false;
+		for (int k = 0; k < mirror_steps; k++) {
+			if (texture(mask_tex, world_uv(v_world.xz + hdir * far_s)).r < 0.5) {
+				found = true;
+				break;
+			}
+			near_s = far_s;
+			far_s *= 1.4;
+		}
+		if (found) {
+			for (int k = 0; k < 2; k++) {
+				float mid = 0.5 * (near_s + far_s);
+				if (texture(mask_tex, world_uv(v_world.xz + hdir * mid)).r < 0.5) {
+					far_s = mid;
+				} else {
+					near_s = mid;
+				}
+			}
+			target = vec4(v_world + Rm * (0.5 * (near_s + far_s) / hl), 1.0);
+		}
+	}
+	vec4 ref = PROJECTION_MATRIX * (VIEW_MATRIX * target);
+	if (!from_below && mirror > 0.001 && ref.w > 0.0001) {
+		vec2 uv2 = SCREEN_UV + (ref.xy / ref.w - cur_ndc) * 0.5 * vec2(1.0, ys);
+		float margin = min(min(uv2.x, 1.0 - uv2.x), min(uv2.y, 1.0 - uv2.y));
+		float inside = smoothstep(0.0, 0.06, margin);
+		reflected = mix(sky, texture(screen_tex, uv2).rgb, inside * mirror);
+	}
+#endif
+	// a path of glints under the sun, broken into points by a fine sparkle
+	float sparkle = step(0.55, hash12(floor(v_world.xz * 2.5 + vec2(TIME * 1.3, TIME * 0.9))));
+	float sun_g = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness);
+	float sun_wide = pow(max(dot(R, normalize(wm_sun_dir)), 0.0), glint_sharpness * 0.08) * 0.08;
+	float moon_g = pow(max(dot(R, normalize(wm_moon_dir)), 0.0), glint_sharpness * 0.6);
+	vec3 glints = wm_sun_color * (sun_g * mix(0.4, 1.6, sparkle) + sun_wide) * glint_strength
+		+ wm_moon_color * moon_g * mix(0.3, 1.4, sparkle) * glint_strength * 0.6;
+
+	ALBEDO = mix(body * (1.0 - fresnel), foam_colour.rgb, foam);
+	// the light the water scatters back up out of its body: the sky's, a share of it, so the water
+	// is its own colour in the shade as well as in the sun and never a black hole under the mirror
+	// From a swimmer's eye the water in front is lit through from above: its shallows' colour, not
+	// the deep's, which in linear light is all but black (#123239 is 0.03) and made a black lake
+	// under the swim camera.
+	vec3 scatter = mix(body, shallow_colour.rgb * region_tint.rgb, 0.75 * low_eye)
+			* mix(wm_sky_horizon, wm_sky_zenith, 0.5) * (0.55 + 1.8 * low_eye) * (1.0 - fresnel);
+	EMISSION = (reflected * fresnel + glints * (1.0 - far * 0.6) + scatter) * (1.0 - foam);
+	ROUGHNESS = clamp(roughness_water + 0.25 + foam * 0.4 + far * 0.1, 0.02, 1.0);
+	// No engine specular: the mirror and the glints above are the water's whole reflection. At 0.12
+	// the renderer laid the sky's own radiance over the mirror as well -- its Fresnel rises to
+	// nearly the same share at a grazing angle -- so every lake came out as bright as the sky above
+	// it, a pale sheet from any hill, on both renderers.
+	SPECULAR = 0.0;
+	METALLIC = 0.0;
+	// the water thins to nothing at the waterline, so the land does not end in a hard edge
+	float edge = smoothstep(0.0, 0.35, depth);
+	// and at the true waterline nothing of it is left: not its colour, not the sky it gives back,
+	// not its foam (which lies a hand's depth out from the line, not on it)
+	float line = mix(1.0, smoothstep(0.0, shore_soft_m, true_depth), near_t);
+	// and past where the map says the water ends it fades out over half a texel, so where the ground
+	// there is still under the water the sheet does not end in the map's eight-metre steps
+	line *= use_mask ? smoothstep(0.02, 0.45, mask_v) : 1.0;
+#ifdef WATER_RIVER
+	// A river's shallows are clear over its bed and its edge a soft wet line, not a cut: the
+	// ribbon runs a little past the waterline under the bank, and thins to nothing there.
+	float wet = 1.0 - smoothstep(0.82, 1.08, xt);
+	ALPHA = clamp((mix(opacity_shallow, opacity_deep, depth_t) * mix(0.25, 1.0, edge) + fresnel * 0.35 + foam * 0.5) * wet * v_flow.w, 0.0, 1.0) * line;
+#else
+	// how much of the bed shows: by the length of the ray's path through the water, so the lake is
+	// clear looking down into it near and its own colour far off and at a slant
+	float path = depth / max(cos_v, 0.08);
+	float body_a = min(1.0 - exp(-path / clarity_m), opacity_deep);
+	ALPHA = clamp(body_a * mix(0.35, 1.0, edge) + fresnel * 0.4 + foam * 0.5, 0.0, 1.0) * line;
+#endif
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4j3vn"]
+render_priority = 0
+shader = SubResource("Shader_cavkc")
+shader_parameter/has_shore = false
+shader_parameter/world_origin = Vector2(-4096, -4096)
+shader_parameter/world_size = 8192.0
+shader_parameter/follow_level = true
+shader_parameter/use_mask = true
+shader_parameter/deep_colour = Color(0.06, 0.2, 0.32, 1)
+shader_parameter/shallow_colour = Color(0.3, 0.56, 0.6, 1)
+shader_parameter/region_tint = Color(1, 1, 1, 1)
+shader_parameter/foam_colour = Color(0.92, 0.95, 0.96, 1)
+shader_parameter/depth_fade_m = 5.0
+shader_parameter/foam_width_m = 1.6
+shader_parameter/foam_strength = 0.7
+shader_parameter/wave_scale = 0.07
+shader_parameter/wave_speed = 0.5
+shader_parameter/wave_strength = 0.42
+shader_parameter/ripple_scale = 0.8
+shader_parameter/opacity_shallow = 0.66
+shader_parameter/opacity_deep = 0.97
+shader_parameter/roughness_water = 0.1
+shader_parameter/specular_boost = 0.32
+shader_parameter/distance_calm_m = 260.0
+shader_parameter/rim_strength = 0.5
+shader_parameter/detail = 1.0
+shader_parameter/reflect_strength = 0.9
+shader_parameter/glint_strength = 3.0
+shader_parameter/glint_sharpness = 700.0
+shader_parameter/mirror = 1.0
+shader_parameter/mirror_steps = 16
+shader_parameter/mirror_ripple = 0.3
+shader_parameter/fresnel_cap = 0.65
+shader_parameter/shore_soft_m = 0.5
+shader_parameter/true_depth_m = 380.0
+shader_parameter/clarity_m = 2.2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_subcw"]
 render_priority = 0
 shader = ExtResource("1_bg8tn")
 shader_parameter/ash = Color(0.4, 0.385, 0.37, 1)
@@ -2590,7 +2599,7 @@ shader_parameter/threshold_near = 0.555
 shader_parameter/patch_m = 9.0
 shader_parameter/ghost_m = 2.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_4j3vn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
 render_priority = 0
 shader = ExtResource("2_fxsgc")
 shader_parameter/cloth_colour = Color(0.17, 0.21, 0.15, 1)
@@ -2602,7 +2611,7 @@ shader_parameter/fray = 0.09
 shader_parameter/sway = 0.12
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_subcw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uihw2"]
 render_priority = 0
 shader = ExtResource("3_frfdy")
 shader_parameter/design0 = 0
@@ -2622,7 +2631,7 @@ shader_parameter/ink1 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink2 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink3 = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
 render_priority = 0
 shader = ExtResource("2_smsev")
 shader_parameter/bed_scale = 0.11
@@ -2643,7 +2652,7 @@ shader_parameter/brightness = 1.25
 shader_parameter/grain_fade_start = 9.0
 shader_parameter/grain_fade_end = 30.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uihw2"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
 render_priority = 0
 shader = ExtResource("4_rqkyd")
 shader_parameter/rise = 7.5
@@ -2651,13 +2660,20 @@ shader_parameter/life = 10.0
 shader_parameter/smoke_color = Color(0.74, 0.73, 0.72, 1)
 shader_parameter/density = 0.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
+render_priority = 0
+shader = ExtResource("6_lljb6")
+shader_parameter/pattern = 0
+shader_parameter/base_color = Color(0.8, 0.8, 0.8, 1)
+shader_parameter/unit = 0.05
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
 render_priority = 0
 shader = ExtResource("2_2un45")
 shader_parameter/core = Color(1, 0.42, 0.1, 1)
 shader_parameter/lip = Color(0.05, 0.035, 0.03, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
 render_priority = 0
 shader = ExtResource("3_i50ei")
 shader_parameter/core = Color(1, 0.46, 0.12, 1)
@@ -2665,7 +2681,7 @@ shader_parameter/crust = Color(0.045, 0.036, 0.032, 1)
 shader_parameter/stain = Color(0.16, 0.1, 0.07, 1)
 shader_parameter/plates = 5.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
 render_priority = 0
 shader = ExtResource("7_7c5sf")
 shader_parameter/iris_tint = Color(1, 1, 1, 1)
@@ -2682,7 +2698,7 @@ shader_parameter/caustic = 0.45
 shader_parameter/wet = 1.2
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
 render_priority = 0
 shader = ExtResource("9_u8gom")
 shader_parameter/brow_style = 0
@@ -2700,7 +2716,7 @@ shader_parameter/tattoo1_box = Vector4(0, 0, 0.01, 0.01)
 shader_parameter/tattoo0_ink = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/tattoo1_ink = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
 render_priority = 0
 shader = ExtResource("4_i50ei")
 shader_parameter/water_color = Color(0.7, 0.8, 0.85, 1)
@@ -2712,7 +2728,7 @@ shader_parameter/streaks = 7.0
 shader_parameter/opacity = 0.8
 shader_parameter/glass = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
 render_priority = 0
 shader = ExtResource("4_ggl34")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2733,7 +2749,7 @@ shader_parameter/backlight = 0.25
 shader_parameter/lod_fade_in = Vector2(0, 0)
 shader_parameter/lod_fade_out = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
 render_priority = 0
 shader = ExtResource("10_frfdy")
 shader_parameter/use_orm = true
@@ -2749,13 +2765,13 @@ shader_parameter/grime_height = 0.55
 shader_parameter/grime_amount = 0.45
 shader_parameter/sheen = 0.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
 shader = ExtResource("5_g13gw")
 shader_parameter/mode = 0
 shader_parameter/amount = 0.2
 shader_parameter/tint = Color(0.08, 0.06, 0.05, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
 render_priority = 0
 shader = ExtResource("6_0evr1")
 shader_parameter/world_rect = Vector4(-4096, -4096, 8, 1024)
@@ -2769,7 +2785,7 @@ shader_parameter/weather = 1.0
 shader_parameter/strength = 1.0
 shader_parameter/drift = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
 render_priority = 0
 shader = ExtResource("13_u8gom")
 shader_parameter/use_orm = true
@@ -2790,7 +2806,7 @@ shader_parameter/wrap = 0.35
 shader_parameter/edge_cut = 0.4
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
 render_priority = 0
 shader = ExtResource("14_42nll")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2815,7 +2831,7 @@ shader_parameter/diffuse_gain = 0.31831
 shader_parameter/sway_amount = 0.008
 shader_parameter/sway_speed = 1.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
 render_priority = 0
 shader = ExtResource("9_8khgv")
 shader_parameter/core_color = Color(1, 0.86, 0.55, 1)
@@ -2823,7 +2839,7 @@ shader_parameter/edge_color = Color(1, 0.42, 0.1, 1)
 shader_parameter/strength = 1.5
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
 render_priority = 0
 shader = ExtResource("7_smsev")
 shader_parameter/leg_top = Vector4(0.8, 0.8, 0.8, 0.8)
@@ -2836,7 +2852,7 @@ shader_parameter/leg_colour = Color(0.18, 0.12, 0.08, 1)
 shader_parameter/tail_colour = Color(0.12, 0.08, 0.06, 1)
 shader_parameter/antler_colour = Color(0.45, 0.37, 0.27, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
 render_priority = 0
 shader = ExtResource("9_ggl34")
 shader_parameter/mist = Color(0.78, 0.79, 0.8, 1)
@@ -2851,11 +2867,11 @@ shader_parameter/end_fade_m = 500.0
 shader_parameter/near_fade_from = 60.0
 shader_parameter/near_fade_to = 260.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
 render_priority = 0
 shader = ExtResource("20_42nll")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
 render_priority = 0
 shader = ExtResource("8_8khgv")
 shader_parameter/pane_dark = Color(0.085, 0.08, 0.075, 1)
@@ -2867,7 +2883,7 @@ shader_parameter/weathered = Color(0.56, 0.54, 0.5, 1)
 shader_parameter/weather_strength = 0.3
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
 render_priority = 0
 shader = ExtResource("13_ifdwk")
 shader_parameter/shaft_color = Color(1, 0.94, 0.78, 1)
@@ -2876,13 +2892,13 @@ shader_parameter/edge_softness = 0.6
 shader_parameter/bottom_fade = 0.7
 shader_parameter/dust_speed = 0.06
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
 render_priority = 0
 shader = ExtResource("9_ifdwk")
 shader_parameter/min_angle = 0.0028
 shader_parameter/haze_per_m = 0.00075
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
 render_priority = 0
 shader = ExtResource("10_00pen")
 shader_parameter/glass_color = Color(0.03, 0.028, 0.034, 1)
@@ -2906,7 +2922,7 @@ shader_parameter/sky_reflect = 1.0
 shader_parameter/world_uv = 0.0
 shader_parameter/world_flow = Vector2(0, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
 render_priority = 0
 shader = ExtResource("11_ayv1d")
 shader_parameter/albedo_tint = Color(1, 1, 1, 1)
@@ -2931,7 +2947,7 @@ shader_parameter/heights_bound = 0.0
 shader_parameter/own_region = 0
 shader_parameter/region_count = 6
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
 shader = ExtResource("12_b51qq")
 shader_parameter/top_color = Color(0.25, 0.45, 0.8, 1)
 shader_parameter/horizon_color = Color(0.8, 0.78, 0.72, 1)
@@ -2968,7 +2984,7 @@ shader_parameter/moon_color = Color(0.85, 0.88, 0.95, 1)
 shader_parameter/moon_disc_deg = 1.9
 shader_parameter/moon_strength = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
 render_priority = 0
 shader = ExtResource("13_n1w2m")
 shader_parameter/pattern = 0
@@ -2989,7 +3005,7 @@ shader_parameter/dado_color = Color(0.52, 0.36, 0.24, 1)
 shader_parameter/terrain_follow = false
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
 render_priority = 0
 shader = ExtResource("14_fxsgc")
 shader_parameter/has_shore = false
@@ -3026,7 +3042,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
 render_priority = 0
 shader = ExtResource("15_rqkyd")
 shader_parameter/deep_colour = Color(0.05, 0.16, 0.18, 1)
@@ -3041,7 +3057,7 @@ shader_parameter/opacity = 0.9
 shader_parameter/rim_fade = 0.3
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
 shader = ExtResource("30_xlg6m")
 shader_parameter/zenith = Color(0.22, 0.25, 0.34, 1)
 shader_parameter/upper = Color(0.47, 0.44, 0.47, 1)
@@ -3053,7 +3069,7 @@ shader_parameter/glow_strength = 0.55
 shader_parameter/vignette = 0.55
 shader_parameter/brush = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
 render_priority = 0
 shader = ExtResource("31_klbg2")
 shader_parameter/tile_metres = 1.6
@@ -3063,11 +3079,11 @@ shader_parameter/pool = 1.8
 shader_parameter/fade_from = 2.8
 shader_parameter/fade_to = 8.5
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
 render_priority = 0
 shader = ExtResource("16_7c5sf")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
 render_priority = 0
 shader = ExtResource("17_frfdy")
 shader_parameter/has_shore = false
@@ -3079,7 +3095,7 @@ shader_parameter/foam_colour = Color(0.93, 0.95, 0.95, 1)
 shader_parameter/strength = 1.0
 shader_parameter/damp = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
 render_priority = 0
 shader = ExtResource("29_8pb5p")
 shader_parameter/use_orm = true
@@ -3107,7 +3123,7 @@ shader_parameter/sss_strength = 0.18
 shader_parameter/albedo_scale = 0.84
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
 render_priority = 0
 shader = ExtResource("20_ggl34")
 shader_parameter/shallow_color = Color(0.22, 0.42, 0.4, 1)
@@ -3121,14 +3137,14 @@ shader_parameter/fresnel_power = 3.0
 shader_parameter/sheen_color = Color(0.75, 0.85, 0.9, 1)
 shader_parameter/floor_y = -1000.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
 render_priority = 0
 shader = ExtResource("34_u8gom")
 shader_parameter/use_flow = false
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/alpha = 0.42
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
 render_priority = 0
 shader = ExtResource("18_u8gom")
 shader_parameter/frame_axis = Vector2(0, 0)
@@ -3145,23 +3161,23 @@ shader_parameter/roughness_value = 0.72
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/lod_fade_in = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
 render_priority = 0
 shader = ExtResource("19_42nll")
 shader_parameter/water_colour = Color(0.06, 0.2, 0.24, 1)
 shader_parameter/depth_m = 0.5
 shader_parameter/visibility_m = 9.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
 render_priority = 0
 shader = ExtResource("20_8pb5p")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
 render_priority = 0
 shader = ExtResource("21_xlg6m")
 shader_parameter/softness = 0.8
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
 render_priority = 0
 shader = ExtResource("22_klbg2")
 shader_parameter/water_colour = Color(0.36, 0.5, 0.5, 1)
@@ -3176,7 +3192,7 @@ shader_parameter/opacity = 0.92
 shader_parameter/veil_opacity = 0.32
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrhgo"]
 render_priority = 0
 shader = ExtResource("23_lljb6")
 shader_parameter/wing_root = Vector2(0.05, 0.1)
@@ -3188,7 +3204,22 @@ shader_parameter/beat_hz = 3.0
 shader_parameter/beat_amp = 0.75
 shader_parameter/wetness = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1gbky"]
+render_priority = 0
+shader = ExtResource("44_fyy4v")
+shader_parameter/glow = Color(1, 0.68, 0.26, 1)
+shader_parameter/energy = 1.0
+shader_parameter/fade = 1.0
+shader_parameter/billboard = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_m8nxs"]
+render_priority = 0
+shader = ExtResource("45_sieyh")
+shader_parameter/tint = Color(0.62, 0.84, 0.8, 1)
+shader_parameter/strength = 0.55
+shader_parameter/fade = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b4p2s"]
 render_priority = 0
 shader = ExtResource("43_klbg2")
 shader_parameter/height_origin = Vector2(-4093, -4093)
@@ -3216,7 +3247,7 @@ shader_parameter/blend_sharpness = 0.34
 shader_parameter/macro_variation1 = Color(0.95, 0.97, 0.91, 1)
 shader_parameter/macro_variation2 = Color(0.92, 0.9, 0.87, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ujfdm"]
 render_priority = 0
 shader = ExtResource("41_42nll")
 shader_parameter/base_color = Color(0.72, 0.68, 0.6, 1)
@@ -3242,192 +3273,192 @@ shader_parameter/lichen_amount = 0.5
 shader_parameter/streak_amount = 0.55
 shader_parameter/ground_y = 0.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vrhgo"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gbcet"]
 albedo_color = Color(0.58, 0.6, 0.42, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_b4p2s"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ct7nk"]
 texture_filter = 5
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ujfdm"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ac5y"]
 albedo_color = Color(0.03, 0.03, 0.035, 1)
 roughness = 0.9
 emission_enabled = true
 emission = Color(0.55, 0.75, 1, 1)
 emission_energy_multiplier = 0.6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gbcet"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qki7j"]
 albedo_color = Color(0.42, 0.42, 0.42, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness = 0.95
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
 uv1_scale = Vector3(0.3846154, 0.3846154, 0.3846154)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ct7nk"]
-resource_name = "hearthvale_chalk_hound_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_lljb6")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ac5y"]
-resource_name = "brightwater_the_lamp_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_lljb6")
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_lljb6")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qki7j"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(0.92, 0.9, 0.87, 1)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_413rm"]
-resource_name = "skerrow_juniper_c_bark"
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+resource_name = "hearthvale_chalk_hound_a_mat"
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness_texture_channel = 1
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_lljb6")
+ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dr1q3"]
-resource_name = "hearthvale_campfire_b_mat"
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+resource_name = "brightwater_the_lamp_a_mat"
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness_texture_channel = 1
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_lljb6")
+emission_texture = SubResource("PlaceholderTexture2D_8oq1d")
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_lljb6")
+ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7am8n"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.92, 0.9, 0.87, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
+resource_name = "skerrow_juniper_c_bark"
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
+resource_name = "hearthvale_campfire_b_mat"
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = SubResource("PlaceholderTexture2D_8oq1d")
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.78, 0.83, 0.92, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
 cull_mode = 2
 albedo_color = Color(0.05, 0.05, 0.06, 1)
 roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
 resource_name = "WM_Eye_hawk_f"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness = 0.18
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
-resource_name = "WM_Eye"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness = 0.18
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
-resource_name = "WM_kirtle"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
-resource_name = "WM_shirt"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ti57r"]
-resource_name = "WM_Skin_hawk_f"
+resource_name = "WM_Eye"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vkjtc"]
-resource_name = "WM_Skin_Body"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_lljb6")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_lljb6")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness = 0.18
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vkjtc"]
+resource_name = "WM_kirtle"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+metadata/_gltf_primary_texture_coord = 0
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1hste"]
+resource_name = "WM_shirt"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ce7v7"]
+resource_name = "WM_Skin_hawk_f"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onrrp"]
+resource_name = "WM_Skin_Body"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ksov"]
 transparency = 1
 shading_mode = 0
 albedo_color = Color(0.55, 0.52, 0.49, 0.5)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ce7v7"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfdwr"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
@@ -3437,17 +3468,17 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onrrp"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdda5"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ksov"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djmg8"]
 transparency = 1
 albedo_color = Color(0.92, 0.94, 0.9, 0.75)
 roughness = 0.35
@@ -3455,24 +3486,24 @@ emission_enabled = true
 emission = Color(0.8, 0.85, 0.82, 1)
 emission_energy_multiplier = 0.25
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfdwr"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6flue"]
 transparency = 1
 albedo_color = Color(0.3, 0.02, 0.02, 0.85)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdda5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hqym3"]
 transparency = 1
 cull_mode = 2
 shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djmg8"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
 transparency = 1
 cull_mode = 2
 shading_mode = 0
@@ -3481,13 +3512,13 @@ vertex_color_is_srgb = true
 billboard_mode = 1
 billboard_keep_scale = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6flue"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
 transparency = 1
 cull_mode = 2
 albedo_color = Color(0.82, 0.88, 0.92, 0.28)
 roughness = 0.12
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hqym3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
 transparency = 1
 cull_mode = 2
 albedo_color = Color(0.72, 0.76, 0.85, 0.42)
@@ -3495,7 +3526,7 @@ emission_enabled = true
 emission = Color(0.6, 0.68, 0.8, 1)
 emission_energy_multiplier = 0.6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c63jk"]
 transparency = 1
 cull_mode = 2
 vertex_color_use_as_albedo = true
@@ -3503,25 +3534,25 @@ roughness = 0.9
 billboard_mode = 2
 billboard_keep_scale = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p3785"]
 transparency = 1
 cull_mode = 2
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness = 0.35
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ypxsi"]
 transparency = 1
 cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 vertex_color_use_as_albedo = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c63jk"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
@@ -3531,24 +3562,24 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p3785"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.78, 0)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ypxsi"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n80v5"]
 transparency = 1
 blend_mode = 1
 no_depth_test = true
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.7, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ujc4"]
 transparency = 1
 blend_mode = 1
 cull_mode = 2
@@ -3557,22 +3588,22 @@ vertex_color_use_as_albedo = true
 billboard_mode = 2
 billboard_keep_scale = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pa7hx"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 albedo_color = Color(0.55, 0.52, 0.48, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_lljb6")
+albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
 roughness = 0.95
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n80v5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5jca"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ujc4"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vfmcv"]
 resource_name = "WM_crown_braid_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3581,7 +3612,7 @@ cull_mode = 2
 albedo_color = Color(0.6651851, 0.5657284, 0.47312066, 1)
 roughness = 0.7
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pa7hx"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekx7u"]
 resource_name = "WM_short_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3593,5 +3624,5 @@ texture_filter = 5
 
 [resource]
 script = ExtResource("24_8oq1d")
-materials = Array[Material]([SubResource("ParticleProcessMaterial_8oq1d"), SubResource("ParticleProcessMaterial_fyy4v"), SubResource("ParticleProcessMaterial_sieyh"), SubResource("ShaderMaterial_m8nxs"), SubResource("ShaderMaterial_sqdxb"), SubResource("ShaderMaterial_gphvb"), SubResource("ShaderMaterial_3wlg4"), SubResource("ShaderMaterial_x3u56"), SubResource("ShaderMaterial_8k45q"), SubResource("ShaderMaterial_cavkc"), SubResource("ShaderMaterial_4j3vn"), SubResource("ShaderMaterial_subcw"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_uihw2"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("StandardMaterial3D_vrhgo"), SubResource("StandardMaterial3D_b4p2s"), SubResource("StandardMaterial3D_ujfdm"), SubResource("StandardMaterial3D_gbcet"), SubResource("StandardMaterial3D_ct7nk"), SubResource("StandardMaterial3D_2ac5y"), SubResource("StandardMaterial3D_qki7j"), SubResource("StandardMaterial3D_413rm"), SubResource("StandardMaterial3D_dr1q3"), SubResource("StandardMaterial3D_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx")])
-seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards")
+materials = Array[Material]([SubResource("ParticleProcessMaterial_fyy4v"), SubResource("ParticleProcessMaterial_sieyh"), SubResource("ParticleProcessMaterial_1gbky"), SubResource("ProceduralSkyMaterial_m8nxs"), SubResource("ShaderMaterial_sqdxb"), SubResource("ShaderMaterial_gphvb"), SubResource("ShaderMaterial_3wlg4"), SubResource("ShaderMaterial_x3u56"), SubResource("ShaderMaterial_8k45q"), SubResource("ShaderMaterial_4j3vn"), SubResource("ShaderMaterial_subcw"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_uihw2"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("ShaderMaterial_vrhgo"), SubResource("ShaderMaterial_1gbky"), SubResource("ShaderMaterial_m8nxs"), SubResource("ShaderMaterial_b4p2s"), SubResource("ShaderMaterial_ujfdm"), SubResource("StandardMaterial3D_gbcet"), SubResource("StandardMaterial3D_ct7nk"), SubResource("StandardMaterial3D_2ac5y"), SubResource("StandardMaterial3D_qki7j"), SubResource("StandardMaterial3D_413rm"), SubResource("StandardMaterial3D_dr1q3"), SubResource("StandardMaterial3D_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx"), SubResource("StandardMaterial3D_v5jca"), SubResource("StandardMaterial3D_vfmcv"), SubResource("StandardMaterial3D_ekx7u")])
+seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "creature_review.tscn @ /root/CreatureReview/@WorldEnvironment@20", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "creature_review.tscn @ /root/CreatureReview/PlaceholderBody/hips/torso/@MeshInstance3D@24", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Core", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards")
