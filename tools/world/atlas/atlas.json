@@ -12755,6 +12755,56 @@
     ]
    ],
    "kind": "track"
+  },
+  {
+   "from": "core:poi/tinehold",
+   "to": "core:place/elderhold",
+   "via": [
+    [
+     2428,
+     -112
+    ],
+    [
+     2455,
+     -142
+    ],
+    [
+     2480,
+     -178
+    ],
+    [
+     2490,
+     -218
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/charter_delf",
+   "to": "core:poi/skarl_bridge",
+   "via": [
+    [
+     2490,
+     -1505
+    ],
+    [
+     2488,
+     -1565
+    ],
+    [
+     2462,
+     -1610
+    ],
+    [
+     2420,
+     -1612
+    ],
+    [
+     2385,
+     -1598
+    ]
+   ],
+   "kind": "track"
   }
  ],
  "start": {

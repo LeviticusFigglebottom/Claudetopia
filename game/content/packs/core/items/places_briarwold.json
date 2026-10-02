@@ -462,7 +462,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A board of the Mourners' vigil hours, nailed under the oak's lowest root.",
+    "description": "A board of oak nailed under the oak's lowest root at the Knight's Mound, the Mourners' vigil hours cut into it with a knife and the cuts rubbed with candle-soot so they can be read by candlelight.",
     "reads": "core:book/the_bells_vigil"
   },
   {
@@ -476,7 +476,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A tender's list, rolled in birch bark and tucked into the seed-bed.",
+    "description": "A tender's list rolled in birch bark and tied with a wisp of hair-moss, tucked under the seed-bed's stone at Mossgrave, written in several hands over many years.",
     "reads": "core:book/mossgrave_names"
   },
   {
@@ -490,7 +490,7 @@
       "note",
       "no_sale"
     ],
-    "description": "The parker's game-book, its last pages, swollen with damp.",
+    "description": "The parker's game-book from Pellow's Pale, a Lantern Row ledger in calf gone soft and swollen with the lodge's damp, its last pages in a hand that gets faster as it goes.",
     "reads": "core:book/pellows_game_book"
   },
   {
@@ -504,7 +504,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A strippers' tally, chalked on a slab of bark.",
+    "description": "A slab of oak bark with the Tamwick strippers' season chalked on its smooth inside, propped against the drying racks at the Bark Camp, the chalk smudged by thumbs.",
     "reads": "core:book/strippers_tally"
   },
   {
@@ -518,7 +518,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A poachers' rule, scratched on a slate by the bow-rack.",
+    "description": "A roof-slate wedged in the poachers' bow-rack at the Lee, scratched over on both faces with a nail: the camp's rules, the price of a tine, and what to do about a knight.",
     "reads": "core:book/the_lees_rule"
   },
   {
@@ -532,7 +532,7 @@
       "note",
       "no_sale"
     ],
-    "description": "The firewatch's log, its last page, still in the fallen stair.",
+    "description": "The firewatch's log-board, nailed to the stair of the fallen tower and lying on its side with it, the last entries written in the dark by somebody holding on.",
     "reads": "core:book/the_last_watch"
   },
   {
@@ -546,7 +546,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A pickers' rule, cut on a shingle hung by the fall.",
+    "description": "An oak shingle hung from a nail at Foxfire Falls' lip, the foxfire-pickers' rule cut into it, the letters filled with dried fungus that still glows faintly after dark.",
     "reads": "core:book/foxfire_pickers_rule"
   },
   {
@@ -560,7 +560,7 @@
       "note",
       "no_sale"
     ],
-    "description": "A child's slate left at the foot of the middle stone.",
+    "description": "A child's writing slate in a frame of ash, left at the foot of the Sentinels' middle stone, scratched with a child's account and one line under it in a grown hand.",
     "reads": "core:book/what_the_sentinels_hear"
   },
   {
@@ -590,5 +590,89 @@
       "trophy"
     ],
     "description": "Not a collar: a ring of the Briar's thorn the Brake-Dam's neck grew through, cut free, still green on the inside. The Layers would know what it is. They would not want it in the house."
+  },
+  {
+    "id": "core:item/hal_rookes_tally",
+    "name": "Hal Rooke's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A hazel tally-stick notched along its length by a charcoal-burner, with a page torn from a carter's book tied round it with twine and written over in charcoal, smudged where the damp got in.",
+    "reads": "core:book/hal_rookes_tally"
+  },
+  {
+    "id": "core:item/the_verderers_mark",
+    "name": "The Verderer's Mark",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Old Hurle's day-book as verderer of the High Wold, wrapped in oilcloth against the wet, its last pages about the Brother and the roots that grew back past the cut.",
+    "reads": "core:book/the_verderers_mark"
+  },
+  {
+    "id": "core:item/the_unnamed_niches",
+    "name": "The Unnamed Niches",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A mason's board from Tinehold's chapel of tines, a list in a square hand of the niches cut back to the stone and, under it, the names they bore before the Marshal's order.",
+    "reads": "core:book/the_unnamed_niches"
+  },
+  {
+    "id": "core:item/the_last_knight_out",
+    "name": "The Last Knight Out",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A letter folded small enough to push under a flagstone, in Wystan Tine's hand, addressed to the Marshal of Tinehold and never sent, the folds worn soft as cloth.",
+    "reads": "core:book/the_last_knight_out"
+  },
+  {
+    "id": "core:item/the_pumpmans_slate",
+    "name": "The Pumpman's Slate",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A pumpman's slate from the Charter Delf's pump chamber, the sump's depth chalked on it shift by shift, the last lines larger and less careful than the first.",
+    "reads": "core:book/the_pumpmans_slate"
+  },
+  {
+    "id": "core:item/the_eighty_fathom_survey",
+    "name": "The Eighty-Fathom Survey",
+    "category": "book",
+    "weight": 0.1,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A surveyor's sheet of the Charter Delf's deep gallery, folded into a tobacco tin to keep it dry, the soundings in ink and one word underlined three times at the bottom.",
+    "reads": "core:book/the_eighty_fathom_survey"
   }
 ]

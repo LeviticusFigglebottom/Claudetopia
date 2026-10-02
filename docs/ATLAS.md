@@ -61,7 +61,7 @@ on this side of a closing range's crest.
 | density | **10.6 locations a walkable km²** |
 | distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
-| roads | 83, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 36 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) |
+| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the two tracks of world life phase 2, about 400 m of new way between them, are not yet in the km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
 
 The brief's rule was no walkable point more than about 400 m from somewhere notable, and nothing
@@ -264,7 +264,11 @@ Oulea, Saeva and the Traders' Post.
 the Oiled Stone to Grandfather Hollow. The **Wold Water road** goes by Foxfire Falls and Hazelwick
 to the Barkbridge and down the north bank to the Rafters' Camp. A lane goes to Fernhold and a
 track on to the Thornmarch. The Skarl road runs from Merrowhithe to the Skarl Bridge, and forest
-tracks link Elderhold, Rookhold, Ormhold and the Moot.
+tracks link Elderhold, Rookhold, Ormhold and the Moot. Two tracks of world life phase 2 leave
+them for the large places: from the Elderhold-Rookhold track up onto the scarp to Tinehold's gate,
+and from the Skarl Bridge-Ormhold track over the ridge to the Charter Delf's shaft head. Each is
+laid to its settlement or bridge, so it runs on the older track's trunk and parts from it at the
+turning, where the build's fingerpost names it.
 
 ### Hearthvale: harvest gold
 
