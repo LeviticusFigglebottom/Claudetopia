@@ -225,12 +225,20 @@ func _read(key: String) -> Variant:
 		"full_terrain":
 			# safe mode: the coarse ground, one threaded read at a time, and the title's country off
 			return [SafeMode.active, WorldStatus.force_fallback, ThreadedLoads.limit(), TitleVista.switched_on()]
+		"ground_textures":
+			# the texture list the next world reads (World._start_reading_terrain)
+			return World.assets_resource()
+		"grass_instancer":
+			# what the next world's terrain is asked to do (World._ready, GrassInstancer)
+			return GrassInstancer.mode()
 	return null
 
 
 ## A value for the knob that differs from `current`, inside its range and its choices.
 static func _other(key: String, current: Variant) -> Variant:
 	var c := Graphics.control(key)
+	if key == "ground_textures":
+		current = Graphics.ground_texture_quality({key: current})   # unchosen is this GPU's choice
 	match str(c["kind"]):
 		"check":
 			return not bool(current)
@@ -248,9 +256,11 @@ func test_defaults_are_high_and_the_display_keys() -> void:
 	expected.merge(Graphics.DISPLAY_DEFAULTS)
 	expected.merge(Graphics.LOOK_DEFAULTS)
 	expected.merge(Graphics.SAFETY_DEFAULTS)
+	expected.merge(Graphics.MACHINE_DEFAULTS)
+	expected.merge(Graphics.PROTOTYPE_DEFAULTS)
 	expected["preset"] = "high"
 	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display, look and safety keys")
-	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys():
+	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys() + Graphics.MACHINE_DEFAULTS.keys() + Graphics.PROTOTYPE_DEFAULTS.keys():
 		assert_false((Graphics.PRESETS["painted"] as Dictionary).has(key), "no preset touches %s" % key)
 	assert_eq(Settings.DEFAULTS["graphics"], Graphics.DEFAULTS, "and Settings.DEFAULTS names it")
 
@@ -484,3 +494,40 @@ func test_settings_are_written_and_a_file_from_before_is_carried_across() -> voi
 	Settings.path = Settings.PATH
 	Settings.bindings = bindings
 	DirAccess.remove_absolute(test_path)
+
+
+## Ground texture quality: a choice is kept as it is; unchosen (-1), a discrete GPU gets High and
+## anything else (this machine's software renderer among them) Standard. The world reads the list
+## the setting names, and Standard's when the High list is not there.
+func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
+	assert_eq(Graphics.ground_texture_quality({"ground_textures": 0}), 0, "Standard chosen")
+	assert_eq(Graphics.ground_texture_quality({"ground_textures": 1}), 1, "High chosen")
+	var discrete := RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU
+	var by_gpu := 1 if discrete and Graphics.roomy_gpu(Graphics.video_memory_gb(), RenderingServer.get_video_adapter_name()) else 0
+	assert_eq(Graphics.ground_texture_quality({}), by_gpu, "unchosen, by the GPU")
+	# a discrete card: by its memory when it can be read, else by its name
+	assert_true(Graphics.roomy_gpu(16.0, "AMD Radeon RX 9070 XT"), "16 GB is room")
+	assert_false(Graphics.roomy_gpu(4.0, "AMD Radeon RX 9070 XT"), "4 GB is not, whatever the name")
+	assert_true(Graphics.roomy_gpu(0.0, "AMD Radeon RX 9070 XT"), "unread, a large card by name")
+	assert_false(Graphics.roomy_gpu(0.0, "NVIDIA GeForce GTX 1650"), "unread, a 4 GB card by name")
+	assert_false(Graphics.roomy_gpu(0.0, "NVIDIA GeForce MX450"), "unread, a laptop's small discrete card")
+	assert_eq(int(Graphics.DEFAULTS["ground_textures"]), -1, "shipped unchosen")
+	assert_true(ResourceLoader.exists(World.ASSETS_RESOURCE_HIGH), "the High list ships")
+	var was: Variant = Settings.get_value("graphics", "ground_textures", -1)
+	Settings.data["graphics"]["ground_textures"] = 1
+	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE_HIGH, "High reads the High list")
+	Settings.data["graphics"]["ground_textures"] = 0
+	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE, "Standard reads the Standard list")
+	Settings.data["graphics"]["ground_textures"] = was
+	assert_eq(int(Graphics.DEFAULTS["grass_instancer"]), 0, "the instancer trial is off unless chosen")
+	GrassInstancer.active = false
+	assert_false(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/flora/x/x.glb"),
+			"off, the streamer keeps every row")
+	GrassInstancer.active = true
+	assert_true(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/flora/hearthvale_grass_clump_a/hearthvale_grass_clump_a.glb"),
+			"on, the region's grass is the instancer's")
+	assert_false(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/trees/hearthvale_oak_a/hearthvale_oak_a.glb"),
+			"and never a tree")
+	assert_false(GrassInstancer.takes("core:region/skerrow", "res://assets/models/flora/skerrow_grass_clump_a/skerrow_grass_clump_a.glb"),
+			"nor another region's grass")
+	GrassInstancer.active = false

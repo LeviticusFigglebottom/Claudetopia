@@ -16,6 +16,13 @@ static var instance: World = null
 const GENERATED := "res://world/generated"
 const TERRAIN_DATA := "res://terrain_data"
 const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
+## The High ground textures (Graphics "Ground texture quality"): the same slots, the most-seen six
+## painted at 2048 (tools/world/gen_terrain_textures.py --high) and the rest scaled up to them as the
+## world loads, since a Terrain3D texture array takes one size; every slot is then compressed to
+## BC3 (`prepare_high_textures`), so High's arrays take the video memory Standard's do.
+const ASSETS_RESOURCE_HIGH := "res://world/terrain_assets_high.tres"
+## `-- --ground-textures=standard|high` overrides the setting for one run (captures, the benchmark).
+const GROUND_TEXTURES_ARG := "--ground-textures="
 ## Terrain3D projects its textures sideways where the ground's normal is under this: 0.86, 31 degrees.
 const PROJECTION_THRESHOLD := 0.86
 const ATMOSPHERE_SCENE := "res://systems/atmosphere/atmosphere.tscn"
@@ -74,6 +81,9 @@ var _regions_task := -1
 ## limit until they are done.
 var _regions_reserved := 0
 var _assets_requested := false
+## The texture list this world reads, chosen once as its terrain begins to be read: a change of the
+## setting meanwhile waits for the next world, as the settings screen says.
+var _assets_path := ""
 var _holding_3d := false
 
 
@@ -124,6 +134,8 @@ func _ready() -> void:
 		_stand_down()
 		return
 	_start_reading_terrain()
+	# the prototype (world/grass_instancer.gd): decided before the first cell streams in
+	GrassInstancer.active = not vista and str(status.get("terrain", "")) == "terrain3d" and GrassInstancer.mode() > 0
 	if stand_up_in_steps:
 		# the places' builders (seven thousand lines) are compiled on a loader thread while the
 		# ground is read, not in the frame the first place is raised (half a second there)
@@ -247,6 +259,7 @@ func tear_down() -> void:
 		provider.bind_terrain(null)
 	if instance == self:
 		share_clipmap(null)
+		GrassInstancer.active = false
 
 
 func _exit_tree() -> void:
@@ -486,8 +499,42 @@ func _setup_terrain3d() -> void:
 		share_clipmap(null)
 		return
 	_trace("terrain: %d regions in; building the texture arrays" % regions)
-	_build_texture_arrays(mat)
+	await _build_texture_arrays(mat)
 	_note("terrain_textures")
+	if GrassInstancer.active:
+		await _setup_grass_instancer()
+
+
+## The prototype's ground cover (world/grass_instancer.gd): the region's rows read on a worker
+## thread, then handed to Terrain3D's instancer.
+func _setup_grass_instancer() -> void:
+	var t0 := Time.get_ticks_msec()
+	var read := {"rows": {}}
+	var task := WorkerThreadPool.add_task(func() -> void: read["rows"] = GrassInstancer.read_rows(), true,
+			"wm_grass_instancer")
+	while is_inside_tree() and not WorkerThreadPool.is_task_completed(task):
+		await _frame()
+	WorkerThreadPool.wait_for_task_completion(task)
+	if not is_inside_tree() or terrain_node == null:
+		return
+	var read_ms := Time.get_ticks_msec() - t0
+	var g: Dictionary = Settings.data.get("graphics", {})
+	GrassInstancer.populate(terrain_node, read["rows"], float(g.get("view_range", 1.0)),
+			float(g.get("scatter_density", 1.0)), GrassInstancer.mode() == 2)
+	GrassInstancer.last["read_ms"] = read_ms
+	GrassInstancer.last["total_ms"] = Time.get_ticks_msec() - t0
+	GrassInstancer.last.merge(GrassInstancer.census(terrain_node))
+	Log.info("World", "grass instancer: %s" % str(GrassInstancer.last))
+	_note("grass_instancer")
+	# `-- --grass-instancer-save=<dir>`: the regions with their instances written there, to weigh them
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--grass-instancer-save="):
+			var dir := arg.trim_prefix("--grass-instancer-save=")
+			DirAccess.make_dir_recursive_absolute(dir)
+			var data: Object = terrain_node.get("data")
+			if data != null:
+				data.call("save_directory", dir)
+				Log.info("World", "grass instancer: regions saved to %s" % dir)
 
 
 ## Begins reading the terrain's texture list and its region files on worker threads, so that by the
@@ -515,8 +562,93 @@ func _start_reading_terrain() -> void:
 		# (the title's, on a click) leaves them to finish and is freed at once (`_exit_tree_terrain_reads`)
 		_regions = RegionReads.new(files)
 		_regions_task = WorkerThreadPool.add_group_task(_regions.read, files.size(), tasks, true, "wm_terrain_regions")
-	if ResourceLoader.exists(ASSETS_RESOURCE):
-		_assets_requested = ThreadedLoads.request(ASSETS_RESOURCE) == OK
+	_assets_path = assets_resource()
+	if ResourceLoader.exists(_assets_path):
+		_assets_requested = ThreadedLoads.request(_assets_path) == OK
+
+
+## The texture list the ground is drawn with: High's or Standard's, by the setting (or the run's
+## `--ground-textures=`), Standard when the High list is not there.
+static func assets_resource() -> String:
+	var g: Dictionary = {"ground_textures": Settings.get_value("graphics", "ground_textures", -1)}
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with(GROUND_TEXTURES_ARG):
+			g["ground_textures"] = 1 if arg.trim_prefix(GROUND_TEXTURES_ARG) == "high" else 0
+	if Graphics.ground_texture_quality(g) == 1 and ResourceLoader.exists(ASSETS_RESOURCE_HIGH):
+		return ASSETS_RESOURCE_HIGH
+	return ASSETS_RESOURCE
+
+
+## Makes the High list ready for Terrain3D's two texture arrays: every slot brought to the size of
+## its largest (the 1024 slots scaled up beside the 2048 ones; one array takes one size) and
+## compressed, mipmaps and all, to BC3/DXT5, the format Terrain3D's texture guide asks for. Its
+## imports are lossless like Standard's, and uncompressed the 2048 arrays were 981 MiB of video
+## memory against Standard's 245; compressed they are 245 too. Each texture is read back on the
+## calling (main) thread and decoded, scaled, mipmapped and compressed on worker threads, on the CPU:
+## Godot's GPU compressor is switched off meanwhile (`compress_with_gpu`), since it is not to be run
+## from worker threads (it crashed Compatibility). With `host`, frames are drawn meanwhile. Returns
+## the textures replaced.
+static func prepare_high_textures(assets: Resource, host: Node = null) -> int:
+	if assets == null:
+		return 0
+	var jobs := HighTextures.new()
+	var count := int(assets.call("get_texture_count"))
+	for i in count:
+		var t: Resource = assets.call("get_texture", i)
+		var tex: Texture2D = t.get("albedo_texture") if t != null else null
+		if tex != null:
+			jobs.size = maxi(jobs.size, tex.get_width())
+	for i in count:
+		var t: Resource = assets.call("get_texture", i)
+		if t == null:
+			continue
+		for prop in ["albedo_texture", "normal_texture"]:
+			var tex: Texture2D = t.get(prop)
+			if tex == null:
+				continue
+			var img := tex.get_image()
+			if img == null or img.get_format() == Image.FORMAT_DXT5:
+				continue
+			jobs.slots.append([t, prop])
+			jobs.images.append(img)
+	if jobs.images.is_empty():
+		return 0
+	const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
+	var gpu_was: Variant = ProjectSettings.get_setting(GPU_COMPRESS, true)
+	ProjectSettings.set_setting(GPU_COMPRESS, false)
+	var task := WorkerThreadPool.add_group_task(jobs.run, jobs.images.size(),
+			maxi(ThreadedLoads.pool_size() - 2, 1), true, "wm_high_textures")
+	while host != null and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
+		await host.get_tree().process_frame
+	WorkerThreadPool.wait_for_group_task_completion(task)
+	ProjectSettings.set_setting(GPU_COMPRESS, gpu_was)
+	for k in jobs.slots.size():
+		var slot: Array = jobs.slots[k]
+		(slot[0] as Resource).set(str(slot[1]), ImageTexture.create_from_image(jobs.images[k]))
+	jobs.images.clear()
+	return jobs.slots.size()
+
+
+## The decoding, scaling and compressing `prepare_high_textures` hands to worker threads, an image a
+## call.
+class HighTextures extends RefCounted:
+	var size := 0
+	var slots: Array = []                 # [Terrain3DTextureAsset, property]
+	var images: Array[Image] = []
+
+	func run(i: int) -> void:
+		var img := images[i]
+		if img.is_compressed():
+			img.decompress()
+		if img.get_format() != Image.FORMAT_RGBA8:
+			img.convert(Image.FORMAT_RGBA8)
+		if img.get_width() < size:
+			# bilinear: a 1024 tile scaled up gains no detail either way, and cubic was the slow part
+			img.clear_mipmaps()
+			img.resize(size, size, Image.INTERPOLATE_BILINEAR)
+		if not img.has_mipmaps():
+			img.generate_mipmaps()
+		img.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_GENERIC)
 
 
 ## The worker threads the region files are read on: half of what the pool has past the two a
@@ -563,16 +695,27 @@ static func region_location(file: String) -> Vector2i:
 ## The texture list, read on a worker thread: waited for a frame at a time when standing up in
 ## steps, and outright otherwise.
 func _terrain_assets() -> Resource:
+	if _assets_path == "":
+		_assets_path = assets_resource()
+	var assets: Resource = null
 	if not _assets_requested:
-		return load(ASSETS_RESOURCE) if ResourceLoader.exists(ASSETS_RESOURCE) else null
-	while stand_up_in_steps and is_inside_tree() \
-			and ThreadedLoads.status(ASSETS_RESOURCE) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		await _frame()
-	# left meanwhile: `_exit_tree` took the read, and nothing is wanted (a load here would be seconds)
-	if not is_inside_tree() or not _assets_requested:
-		return null
-	_assets_requested = false
-	return ThreadedLoads.take(ASSETS_RESOURCE)
+		assets = load(_assets_path) if ResourceLoader.exists(_assets_path) else null
+	else:
+		while stand_up_in_steps and is_inside_tree() \
+				and ThreadedLoads.status(_assets_path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+			await _frame()
+		# left meanwhile: `_exit_tree` took the read, and nothing is wanted (a load here would be seconds)
+		if not is_inside_tree() or not _assets_requested:
+			return null
+		_assets_requested = false
+		assets = ThreadedLoads.take(_assets_path)
+	if _assets_path == ASSETS_RESOURCE_HIGH and assets != null:
+		var t0 := Time.get_ticks_msec()
+		var done: int = await prepare_high_textures(assets, self if stand_up_in_steps else null)
+		if done > 0:
+			Log.info("World", "High ground textures: %d textures at 2048 and compressed in %d ms"
+					% [done, Time.get_ticks_msec() - t0])
+	return assets
 
 
 ## Gives Terrain3D the regions read on the worker threads, and builds its maps once. If none were
@@ -631,7 +774,7 @@ func _exit_tree_terrain_reads() -> void:
 		_regions = null
 	_release_region_threads()
 	if _assets_requested:
-		ThreadedLoads.forget(ASSETS_RESOURCE)
+		ThreadedLoads.forget(_assets_path)
 	_assets_requested = false
 
 
@@ -647,9 +790,12 @@ func _build_texture_arrays(mat: Object) -> void:
 	var assets: Object = terrain_node.get("assets")
 	if assets == null:
 		return
-	if int(assets.call("get_texture_count")) == 0 and ResourceLoader.exists(ASSETS_RESOURCE):
+	var path := _assets_path if _assets_path != "" else ASSETS_RESOURCE
+	if int(assets.call("get_texture_count")) == 0 and ResourceLoader.exists(path):
 		# Terrain3D cleared the list before the arrays were made: put it back and rebuild
-		assets = ResourceLoader.load(ASSETS_RESOURCE, "", ResourceLoader.CACHE_MODE_IGNORE)
+		assets = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
+		if path == ASSETS_RESOURCE_HIGH:
+			await prepare_high_textures(assets)
 		terrain_node.set("assets", assets)
 	# built already when the node took its assets: building them again was 0.4 s of one frame
 	if not (assets.call("get_albedo_array_rid") as RID).is_valid():

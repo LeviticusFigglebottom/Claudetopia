@@ -15,6 +15,14 @@ detail is deliberately restrained; the height channel carries the story instead.
     tools/world/gen_terrain_textures.py            # all slots
     tools/world/gen_terrain_textures.py chalk moss # named slots only
     tools/world/gen_terrain_textures.py --size 512 --out /tmp/tex
+    tools/world/gen_terrain_textures.py --high     # the High set: HIGH_SLOTS at 2048 into terrain_high/
+
+The High set ("Ground texture quality: High", core/graphics.gd) is the most-seen slots painted again
+at 2048 by the same recipes. Everything in a recipe is sized in metres on the ground (the micro
+layer's pixels are scaled), so the tile is the same picture; what 2048 adds is `fine_detail`, a
+last octave of height, normal and colour grain finer than a 1024 tile's texels can carry. Its
+colour is held to the shipped 1024 tile's mean in linear light, so the ground's brightness is the
+same at either setting.
 """
 from __future__ import annotations
 
@@ -35,6 +43,14 @@ from worldgen.noise import NoiseBank, ridged
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DEFAULT_OUT = os.path.join(REPO, "game", "assets", "textures", "terrain")
 SEED = 20260919
+## The High set: the six slots most of the ground a player sees is drawn with, by the w4096i control
+## map (share of the land / of the ground within 40 m of a road): vale grass 19/22%, limestone
+## 10/9%, crag 12/6%, forest floor 7/9%, grey grass 7/9%, and the dirt path, 2/9%, the road under
+## your feet. Every other slot is drawn at 2048 in the High set by scaling its 1024 tile up when the
+## world loads (Terrain3D's texture arrays take one size), which adds nothing to the download.
+HIGH_SLOTS = ["vale_grass", "limestone", "crag", "forest_floor", "grey_grass", "dirt_path"]
+HIGH_SIZE = 2048
+HIGH_OUT = os.path.join(REPO, "game", "assets", "textures", "terrain_high")
 
 
 def hexcol(h: str) -> np.ndarray:
@@ -514,6 +530,58 @@ MATERIALS = {
 }
 
 
+# --- the High set's last octave ---------------------------------------------------------------
+
+## Per recipe: the grain's tilt in the normal map (its RMS, in the normal's x/y), how much of it
+## shows in the colour, and its shape -- blades' fibres along the grass's lean, soil and sand grit,
+## crystal grain and pitting in rock.
+FINE = {
+    "grass": {"tilt": 0.16, "value": 0.05, "aniso": 3.0},
+    "soil": {"tilt": 0.20, "value": 0.06, "aniso": 0.0},
+    "rock": {"tilt": 0.18, "value": 0.05, "aniso": 0.0},
+    "pebbles": {"tilt": 0.16, "value": 0.05, "aniso": 0.0},
+    "cobbles": {"tilt": 0.14, "value": 0.04, "aniso": 0.0},
+    "snow": {"tilt": 0.08, "value": 0.02, "aniso": 0.0},
+    "sand": {"tilt": 0.14, "value": 0.04, "aniso": 0.0},
+}
+
+
+def fine_detail(p: Painter, spec: dict, h: np.ndarray, strength: float) -> tuple:
+    """(height added, colour factor): grain between two and six texels of a tile larger than 1024,
+    the band a 1024 tile cannot draw. Scaled so its slope tilts the normal by FINE's `tilt`, which
+    keeps it a grain at your feet, not a glitter, and lets the mipmaps fold it away with distance."""
+    recipe = spec["recipe"]
+    cfg = FINE.get(recipe, FINE["soil"])
+    texel = p.tile_m / p.size
+    aniso = (float(spec.get("angle", 35.0)), cfg["aniso"]) if cfg["aniso"] > 0 else None
+    g = p.f(901, 1.2, 2.0 * texel, 6.0 * texel, aniso=aniso)
+    if recipe in ("rock", "pebbles", "cobbles"):
+        # pitting: small hollows where the grain is deepest, as weathered stone has
+        g = g - 0.6 * np.clip(-p.f(903, 1.0, 2.0 * texel, 4.0 * texel) - 1.2, 0.0, None)
+    # what the generator's normal_from_height makes of one unit of this field's slope
+    gx = (np.roll(g, -1, axis=1) - np.roll(g, 1, axis=1)) * 0.5
+    gy = (np.roll(g, -1, axis=0) - np.roll(g, 1, axis=0)) * 0.5
+    slope = float(np.sqrt((gx * gx + gy * gy).mean())) * strength * p.size / 256.0
+    amount = cfg["tilt"] / max(slope, 1e-6)
+    # the grain follows the ground: deeper in the hollows and gaps than on a stone's or blade's top
+    lowness = np.clip(1.25 - h, 0.5, 1.25)
+    dh = (amount * g * lowness).astype(np.float32)
+    colour = (1.0 + cfg["value"] * np.tanh(g)).astype(np.float32)
+    return dh, colour
+
+
+def match_linear_mean(rgb8: np.ndarray, target8: np.ndarray) -> np.ndarray:
+    """`rgb8` (h, w, 3 uint8, sRGB) with each channel's mean in linear light moved to `target8`'s."""
+    def lin(c):
+        c = c.astype(np.float64) / 255.0
+        return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    have = lin(rgb8)
+    want = lin(target8).mean(axis=(0, 1))
+    out = np.clip(have * (want / (have.mean(axis=(0, 1)) + 1e-9))[None, None, :], 0.0, 1.0)
+    srgb = np.where(out <= 0.0031308, out * 12.92, 1.055 * out ** (1 / 2.4) - 0.055)
+    return np.clip(srgb * 255.0 + 0.5, 0, 255).astype(np.uint8)
+
+
 # Godot import settings for these PNGs. The alpha channel carries height/roughness *data*,
 # so alpha-border fixing must be off (it would bleed colour where alpha is dark), and every
 # texture must import identically or Terrain3D cannot build one texture array from them.
@@ -560,11 +628,18 @@ def write_import_settings(png_path: str) -> None:
         f.write("\n".join(out).rstrip() + "\n")
 
 
-def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
+def generate(name: str, size: int, out_dir: str, seed: int = SEED, fine: bool | None = None,
+             match_mean_of: str = "") -> tuple:
+    """Paints one slot's pair into `out_dir`. `fine` (default: a tile larger than 1024) adds
+    `fine_detail`; `match_mean_of` is an albedo_height PNG whose colour mean the new one is held to."""
     spec = MATERIALS[name]
     p = Painter(name, size, float(spec.get("tile_m", 2.5)), seed)
     alb, h, rough, nstrength = RECIPES[spec["recipe"]](p, spec)
     h = np.clip(h, 0.0, 1.0)
+    if fine if fine is not None else size > 1024:
+        dh, colour = fine_detail(p, spec, h, nstrength)
+        h = h + dh
+        alb = alb * colour[..., None]
     # gentle contrast on the height so blending has something to bite on
     h = np.clip((h - h.mean()) * 1.25 + 0.5, 0.0, 1.0)
     nrm = normal_from_height(h, nstrength, size)
@@ -588,6 +663,9 @@ def generate(name: str, size: int, out_dir: str, seed: int = SEED) -> tuple:
     import terrain_micro
     if name in terrain_micro.RECIPES:
         ah8, nr8 = terrain_micro.apply(ah8, nr8, terrain_micro.RECIPES[name], seed=sum(map(ord, name)))
+    if match_mean_of and os.path.exists(match_mean_of):
+        ah8 = ah8.copy()
+        ah8[..., :3] = match_linear_mean(ah8[..., :3], np.asarray(Image.open(match_mean_of).convert("RGB")))
     Image.fromarray(ah8, "RGBA").save(a_path, optimize=True)
     Image.fromarray(nr8, "RGBA").save(n_path, optimize=True)
     if os.path.abspath(out_dir).startswith(os.path.join(REPO, "game")):
@@ -602,8 +680,15 @@ def main(argv=None) -> int:
     ap.add_argument("--size", type=int, default=1024)
     ap.add_argument("--out", type=str, default=DEFAULT_OUT)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--high", action="store_true",
+                    help="the High set: HIGH_SLOTS (or the slots named) at %d into %s" % (HIGH_SIZE, HIGH_OUT))
     args = ap.parse_args(argv)
-    names = args.slots or list(MATERIALS.keys())
+    if args.high:
+        if args.size == 1024:
+            args.size = HIGH_SIZE
+        if args.out == DEFAULT_OUT:
+            args.out = HIGH_OUT
+    names = args.slots or (list(HIGH_SLOTS) if args.high else list(MATERIALS.keys()))
     unknown = [n for n in names if n not in MATERIALS]
     if unknown:
         print("unknown slots: %s" % ", ".join(unknown))
@@ -612,7 +697,8 @@ def main(argv=None) -> int:
     t0 = time.time()
     for i, name in enumerate(names):
         t = time.time()
-        a, n = generate(name, args.size, args.out, args.seed)
+        a, n = generate(name, args.size, args.out, args.seed,
+                        match_mean_of=os.path.join(DEFAULT_OUT, "%s_albedo_height.png" % name) if args.high else "")
         print("  [%2d/%2d] %-14s %5.1fs  %s" % (i + 1, len(names), name, time.time() - t,
                                                 os.path.basename(a)), flush=True)
     print("[textures] %d slots in %.1fs -> %s" % (len(names), time.time() - t0, args.out))

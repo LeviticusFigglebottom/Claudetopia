@@ -950,6 +950,8 @@ func _build_piece(cell: Vector2i) -> bool:
 		var rows: Array = (b["instances"] as Dictionary)[assets[step]]
 		if rows.is_empty():
 			return false
+		if GrassInstancer.takes(str(data.get("region", "")), asset_path):
+			return false                         # Terrain3D's instancer draws it (the prototype)
 		var mesh := _mesh_for(asset_path, ring)
 		if mesh == null:
 			return false
