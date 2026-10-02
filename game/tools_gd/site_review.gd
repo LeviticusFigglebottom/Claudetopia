@@ -107,8 +107,34 @@ func _inside(id: String) -> void:
 			stand.y = m.y
 		var h := minf(half.y * 0.55, 2.2) if r["role"] != "boss" else 3.0
 		var pos := stand + Vector3.UP * maxf(h, 1.6)
+		# whether the eye is in the room or in its rock, and what of the room's light reaches it: a
+		# black frame is one or the other (Cinderlea's were the eye in the rock at a drop's mouth)
+		var lit := 0
+		if site.dress != null:
+			for l in site.dress.lights:
+				var o := l as OmniLight3D
+				if o != null and bool(o.get_meta("budget_on", true)) and o.position.distance_to(pos) < o.omni_range:
+					lit += 1
+		var seen: float = probe.call(c + Vector3.UP * 1.0, pos)
+		var hidden := seen >= 0.0 and seen < (pos - (c + Vector3.UP)).length() - 0.05
+		print("site review: room %s eye %s: floor %.2f below, roof %.2f above, %s from the room's middle, %d lights reach it" % [
+				r["id"], pos, probe.call(pos, pos + Vector3.DOWN * 8.0), probe.call(pos, pos + Vector3.UP * 12.0),
+				"hidden by rock %.1f m out" % seen if hidden else "seen", lit])
+		# an eye behind the rock (round the doorway's bend, or in a lump of the wall) sees the rock: it
+		# is brought in toward the room's middle until the middle sees it
+		var look := c + Vector3.UP * 1.0 - (c - stand).normalized() * -2.0
+		for step_in in 12:
+			seen = probe.call(c + Vector3.UP * 1.0, pos)
+			if seen < 0.0 or seen >= (pos - (c + Vector3.UP)).length() - 0.05:
+				break
+			pos = pos.lerp(c + Vector3.UP * maxf(h, 1.6), 0.15)
 		shots.append({"label": "%s_%02d_%s_%s" % [slug, n, r["id"], r["set_piece"] if r["set_piece"] != "" else r["role"]],
-				"pos": pos, "look": c + Vector3.UP * 1.0 - (c - stand).normalized() * -2.0})
+				"pos": pos, "look": look})
+		# and the way it was come in by, from the room's middle: what a player turning round sees
+		if not ms.is_empty():
+			var mid := c + Vector3.UP * maxf(minf(half.y * 0.5, 2.0), 1.6)
+			shots.append({"label": "%s_%02d_%s_way_back" % [slug, n, r["id"]], "pos": mid,
+					"look": (ms[0]["at"] as Vector3) + Vector3.UP * 1.2})
 		n += 1
 	var b := plan.bounds
 	var mid := b.get_center()

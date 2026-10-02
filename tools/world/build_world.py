@@ -624,10 +624,12 @@ def build(args) -> dict:
                 road_sink = w if road_sink is None else road_sink + w
         # and where it may cut but not build up: nothing rises into an authored sightline
         no_fill = LF.line_mask(grid, sightline_segments(pois, pad_targets), LF.LINE_CORRIDOR_M)
-        # and a road to a landmark that stands solid on its place's own position stops at its foot
+        # and a road to a landmark that stands solid on its place's own position stops at its foot,
+        # and none runs through a point of interest's middle (RD.poi_cores)
         roads_list = RD.plan_roads(grid, H, atlas.get("roads", []), things, rough_water, pad_levels,
                                    floor=road_floor, sink=road_sink, no_fill=no_fill, lake=waters,
-                                   solid=solid_at_places(pad_targets, REPO))
+                                   solid=solid_at_places(pad_targets, REPO),
+                                   cores=RD.poi_cores(pad_targets, atlas.get("roads", [])))
         del road_floor, road_sink
         # and through each settlement, so a town is somewhere a road passes rather than three
         # spokes meeting at a point

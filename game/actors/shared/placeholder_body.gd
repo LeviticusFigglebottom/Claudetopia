@@ -37,12 +37,34 @@ func _ready() -> void:
 	scale = Vector3.ONE * body_scale
 
 
-func _mat(color: Color, metallic: float = 0.0) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = color
-	m.roughness = 0.85
-	m.metallic = metallic
-	return m
+## A foe the forge has no rig for is this body, and its parts were one flat colour each: under either
+## renderer the crag-wolves and the stone-thralls stood in the Skerrow sites as untextured grey blocks.
+## Each part is painted in its own space by HIDE_SHADER (fur, stone, a scaled hide or bark, by what
+## the foe is), which the Compatibility renderer draws as Forward+ does. Metal stays plain.
+const HIDE_SHADER := preload("res://assets/shaders/creature_hide.gdshader")
+## body_variant -> the hide's pattern (creature_hide.gdshader): 0 fur, 1 stone, 2 scaled hide, 3 bark
+const HIDE_OF := {"stone": 1, "drake": 2, "sallowjaw": 2, "leech_hound": 2, "weaver": 2, "treant": 3}
+static var _hides: Dictionary = {}
+
+
+func _mat(color: Color, metallic: float = 0.0) -> Material:
+	if metallic > 0.0 or variant == "wisp":
+		var m := StandardMaterial3D.new()
+		m.albedo_color = color
+		m.roughness = 0.85
+		m.metallic = metallic
+		return m
+	var pattern := int(HIDE_OF.get(variant, 0))
+	var key := "%d %s" % [pattern, color.to_html(false)]
+	if _hides.has(key):
+		return _hides[key]
+	var h := ShaderMaterial.new()
+	h.shader = HIDE_SHADER
+	h.set_shader_parameter("pattern", pattern)
+	h.set_shader_parameter("base_color", color)
+	h.set_shader_parameter("unit", 0.12 if pattern == 1 else (0.06 if pattern == 2 else 0.05))
+	_hides[key] = h
+	return h
 
 
 func _pivot(pivot_name: String, parent: Node3D, pos: Vector3) -> Node3D:

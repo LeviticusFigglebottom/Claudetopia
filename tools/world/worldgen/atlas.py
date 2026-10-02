@@ -360,6 +360,9 @@ def check(atlas: dict, pack_dir: str, schema: dict | None = None) -> tuple:
                 errors.append("%s: no place or POI %s in the content packs" % (where, road[end]))
         if road["from"] == road["to"]:
             errors.append("%s: a road from a place to itself" % where)
+        for t in road.get("through", []):
+            if t not in things:
+                errors.append("%s: goes through %s, which is in no content pack" % (where, t))
         key = tuple(sorted((road["from"], road["to"])))
         if key in pairs and road.get("via") == pairs[key].get("via"):
             warnings.append("%s: the same road twice" % where)

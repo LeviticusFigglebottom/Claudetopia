@@ -15785,3 +15785,74 @@ The coordinator asked for a third large place of another kind than a mine or a m
   - `./run.sh quests --only=the_long_wake`: 1 of 1 quests end every way they can, 3 of 3 walks.
   - `softlock_check.py`: 140 quests, 0 findings.
   - The WORLD_LIFE §6 pytest files: 8 passed.
+
+## Shared fixes after world life phase 2: roads, props, caves, the stream, the bell, dark rooms, foes, the Hollow (2026-10-02)
+
+Branch `wip/shared-fixes` (triage 74, prop placement): the faults the six region agents left in the
+shared builders and systems. Measured with `./run.sh poi-probe` over all 540 places before and after
+(seat counts), looked at with site_review (flat pads and the Ghaleld/Salt Cave insides), the motion
+studio (foes, both renderers) and `./run.sh shots` on the installed world (caves, the Rust Scar).
+
+- **Roads keep out of places' middles** (`worldgen/roads.py`: `poi_cores`, `clear_of_cores`,
+  `poi_road_ends`). A road that ends at a place no other road ends at stops 2 m inside its level
+  core (15 places, the North Cliff Beacon and the Southgate Stone among them); a via point drawn in a
+  level core moves 3 m past its edge, to the side the road turns unless the other is gentler, never
+  onto ground over 24 degrees; a leg drawn straight through a core gets a via point beside it. Over
+  the atlas 55 waypoints move or are added; 2 legs stay (the Counting Tower, the Hare Stone: both
+  sides steep). Road furniture, wayside finds, places where several roads meet, and places named in
+  an atlas road's new `through` (Skerrow's list: Ghastfoot's arch, Kharrow Gate, the Rib Cathedral,
+  the Bone Ford, the Watch of the Gate, the Snow Shelter, Kharrow Force, the Rust Scar, Rudd Mill,
+  the Clanless Camp, the Three Sisters) keep the road; the audit and region_check no longer call
+  those road_through. Routed on the installed 1024 heights, the nearest road to the five places of
+  the brief went from 0-3.5 m to 15.5-23.8 m. **Needs the world build** to show.
+- **Props apart** (camp, giant_bones, strange_tree, standing_stones, tower, waterfall, walled camp,
+  PoiKit): a road-side camp's fire moves before the camp is laid round it; dry_spot and a tree's
+  trunk avoid what is already drawn; the skull vigil's fire outside both skull pieces; Willow Isle's
+  camp past the willow's crown; Bell Meadow's bell between stones; the toll-house wing walls joined
+  to it; the Three Sisters' top stair out of the hill; the cart seated by its box. The seat audit
+  measures a tree by its trunk (36 of the 62 overlaps listed were things under a crown), lets a big
+  solid mesh hold what is set in it (the Headless Watch's eyes), and says where both boxes are.
+- **Sedge Hearth's bell**: it showed 0.18 m over the water and nothing over the reeds; now 45% of it,
+  canted. Read from beside the pool as a bell going down.
+- **Caves**: the throat stood into the world's raised face, under the ground from its second ring
+  (34 buried throat pieces; Hushline's 53-115 m under its cliff; the Rafters' Locker's 4-5 m in the
+  air). Where the world raised a face, the throat now stands on the level ground in front of it under
+  the cave's bank and ends at the face's foot; the crag's boulders avoid each other's drawn boxes and
+  Skerrow's `_tidy` leaves a seated piece (PoiKit.SEATED_META) where it is (it dropped the capstones
+  into the mouth). Buried 34 -> 0, cave overlaps 7 -> 0; delves with the cave's mouth lose 1-4 crag
+  boulders each that lay in others (Orrdun's mouth looked at: reads).
+- **The Rust Scar's and the Glass Falls' stream**: laid in six lengths on the ground, not one level
+  sheet at its highest (0.21 m floating -> 0).
+- **Dark first chambers** (Ghaleld's upper level, the Salt Cave's pool): the review camera, not the
+  light. The doorway eye was behind rock (a ray from the room's middle stops 7.5 / 6.4 m out); every
+  room has its fill and 2-6 lights reaching the eye. site_review now reports each eye, brings a hidden
+  one into the room, and adds a view from the middle back to the way in; both rooms read.
+- **Grey foes**: the same under Compatibility and Forward+ (motion studio, both renderers): the
+  twelve `"rig": "custom"` foes have no forged model and are PlaceholderBody boxes in flat colours.
+  `creature_hide.gdshader` (new) paints each part in its own space: fur, stone, scaled hide, bark.
+  The shapes are still boxes: forged rigs are the forge's work. Add the shader to the warm set
+  (`./run.sh shader-warm`).
+- **The Name-Wife's Hollow** is 83 m inside the Delta (the atlas border bent round it; the Greyfleece
+  Shieling stays 54 m inside the ash heath); check_atlas's warning is gone.
+
+**Measured**: seat findings over all places 134 at 47 -> 12 at 11. Left: 5 on_road that the next
+build's roads clear (North Cliff Beacon, Brow Beacon, Sedge Hearth, Singing Yew, Countwatch's old
+entry), the two halves of one skull nose to nose at the Hart Bones and the Jawbone (one skull), and
+5 in regions' own builders (Ghorrow's two cliff faces, the Old Crannog's causeway, the Eel Stews'
+mud, Skerrfall's finger bone).
+
+**Tests**: `./run.sh test --filter=test_pois,test_poi_preview,test_sites,test_site_interiors_walk,
+test_books,test_poi_encounters,test_atlas,test_roads,test_pad_dams,test_sites_<all five>,
+test_brightwater_places,objects_seated_<all six>`: 93 tests, 0 failed, 0 script errors. The warning
+census then says 50 against 49: the two are skerrow.gd's, fixed on the session branch (76e6d0fb),
+which this branch has not merged. pytest test_roads (new PoiCoreTest), test_atlas, test_region_check,
+test_content_split, test_pad_dams: 58 passed.
+
+**Not done / for the coordinator**:
+- The session branch is not merged into this one (the merge was refused here); it touches
+  skerrow.gd, site_plan.gd and test_site_interiors_walk.gd, none of the same lines.
+- The roads need the world build; until then the probe still finds the five on_road pieces.
+- The Rust Scar's stream was measured but not looked at in place (the planned shot saw sky).
+- A face cave's bank reads as broad sloped sheets; a shaped knoll would read better.
+- The custom foes are still placeholder boxes in shape; creature_hide.gdshader wants the warm set.
+- The two skull halves at the Hart Bones and the Jawbone share 71% of a box by design.

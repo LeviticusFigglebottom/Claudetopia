@@ -1661,6 +1661,9 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 		var a := k.rng.randf() * TAU
 		var p := fire + Vector2(sin(a), cos(a)) * k.rng.randf_range(4.0, 8.5)
 		things.append(["hen" if q < 4 else "goose", p, k.rng.randf() * TAU, false, 0.0])
+	# where each solid thing on the ground ended up, so the moves below put none in another (Wall-Keepers'
+	# Ring's barrel, moved off the fire, stood in its basket)
+	var put: Array[Vector2] = []
 	for t in things:
 		var p: Vector2 = t[1]
 		var kind := str(t[0])
@@ -1675,6 +1678,18 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 				p += back * 3.5
 			if kind != "table_trestle" and kind != "bench" and p.distance_to(table_at) < 1.8:
 				p += side * 2.2
+			if bool(t[3]) and kind in ["barrel", "crate", "sack", "basket"]:
+				for attempt in 6:
+					var free := true
+					for q in put:
+						if q.distance_to(p) < 1.1:
+							free = false
+							break
+					if free:
+						break
+					p += back * 1.2
+			if bool(t[3]):
+				put.append(p)
 		var path := k.prop(kind)
 		if path != "":
 			k.place(path, k.on_ground(p.x, p.y, lift), float(t[2]), 1.0, bool(t[3]))

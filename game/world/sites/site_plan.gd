@@ -685,41 +685,76 @@ func _lay_shortcut() -> void:
 		var tries: Array = [[]]
 		for off in [10.0, -10.0, 16.0, -16.0, 24.0, -24.0, 32.0, -32.0]:
 			tries.append([(cb + ct) * 0.5 + across * float(off)])
-		for via in tries:
-			# the mouths as the passage will have them, and the climb spread evenly along its length
-			var first: Vector3 = ct if (via as Array).is_empty() else via[0]
-			var last: Vector3 = cb if (via as Array).is_empty() else via[-1]
-			var da := Vector3(first.x - cb.x, 0.0, first.z - cb.z).normalized()
-			var db := Vector3(last.x - ct.x, 0.0, last.z - ct.z).normalized()
-			var pa := cb + da * (edge_along(boss, da) - MOUTH_IN)
-			var pb := ct + db * (edge_along(target, db) - MOUTH_IN)
-			pa.y = cb.y
-			pb.y = ct.y
-			var chain: Array = [pa]
-			for v in via:
-				chain.append(v)
-			chain.append(pb)
-			var total := _path_len(chain)
-			if absf(pb.y - pa.y) > total * MAX_SLOPE * 0.95:
-				continue
-			var along := 0.0
-			var fixed: Array = []
-			for i in range(1, chain.size() - 1):
-				var p: Vector3 = chain[i]
-				var q: Vector3 = chain[i - 1]
-				along += Vector2(p.x - q.x, p.z - q.z).length()
-				fixed.append(Vector3(p.x, pa.y + (pb.y - pa.y) * along / total, p.z))
-			var ok := true
-			var walk: Array = [pa] + fixed + [pb]
-			for i in range(1, walk.size()):
-				if not _segment_clear(walk[i - 1], walk[i], [boss["id"], target["id"]], 0.8):
-					ok = false
-					break
-			if ok:
-				var l := _join(boss, target, "shortcut", fixed)
-				l["barred_from"] = target["id"]
+		if _try_shortcut(boss, target, tries, 0.8):
+			return
+	# Where none of those could be laid (a long climb to the way in, or the rooms between standing
+	# across every bend of one), the way back may come out in any of the first rooms of the walk,
+	# wind wider, and double back in a zigzag to spread its climb: the boss's room is never left
+	# with no way back but the way down, which a one-way drop on the way may have closed behind
+	# the player. Tried only after the first search, so a layout it already found is unchanged.
+	var more: Array = []
+	for i in mini(4, rooms.size() - 1):
+		if rooms[i]["role"] not in ["boss", "secret", "bypass"]:
+			more.append(rooms[i])
+	for extra in [0.8, 0.4]:
+		for target in more:
+			var cb: Vector3 = boss["centre"]
+			var ct: Vector3 = (target as Dictionary)["centre"]
+			var flat := Vector2(ct.x - cb.x, ct.z - cb.z)
+			var across := Vector3(-flat.y, 0.0, flat.x).normalized() if flat.length() > 0.1 else Vector3.RIGHT
+			var tries: Array = [[]]
+			for off in [10.0, -10.0, 16.0, -16.0, 24.0, -24.0, 32.0, -32.0, 40.0, -40.0, 48.0, -48.0]:
+				var o := across * float(off)
+				tries.append([(cb + ct) * 0.5 + o])
+				# a dogleg, out to one side the length of the way
+				tries.append([cb.lerp(ct, 0.3) + o, cb.lerp(ct, 0.7) + o])
+				# a zigzag, out to one side and back across to the other
+				tries.append([cb.lerp(ct, 0.25) + o, (cb + ct) * 0.5 - o, cb.lerp(ct, 0.75) + o])
+			if _try_shortcut(boss, target, tries, float(extra)):
 				return
 	problems.append("%s: no way back from the boss could be laid" % id)
+
+
+## Lays the barred way back from `boss` to `target` along the first of `tries` (each a list of bend
+## points) that climbs no steeper than a passage and keeps `extra` clear of every room between.
+func _try_shortcut(boss: Dictionary, target: Dictionary, tries: Array, extra: float) -> bool:
+	var cb: Vector3 = boss["centre"]
+	var ct: Vector3 = target["centre"]
+	for via in tries:
+		# the mouths as the passage will have them, and the climb spread evenly along its length
+		var first: Vector3 = ct if (via as Array).is_empty() else via[0]
+		var last: Vector3 = cb if (via as Array).is_empty() else via[-1]
+		var da := Vector3(first.x - cb.x, 0.0, first.z - cb.z).normalized()
+		var db := Vector3(last.x - ct.x, 0.0, last.z - ct.z).normalized()
+		var pa := cb + da * (edge_along(boss, da) - MOUTH_IN)
+		var pb := ct + db * (edge_along(target, db) - MOUTH_IN)
+		pa.y = cb.y
+		pb.y = ct.y
+		var chain: Array = [pa]
+		for v in via:
+			chain.append(v)
+		chain.append(pb)
+		var total := _path_len(chain)
+		if absf(pb.y - pa.y) > total * MAX_SLOPE * 0.95:
+			continue
+		var along := 0.0
+		var fixed: Array = []
+		for i in range(1, chain.size() - 1):
+			var p: Vector3 = chain[i]
+			var q: Vector3 = chain[i - 1]
+			along += Vector2(p.x - q.x, p.z - q.z).length()
+			fixed.append(Vector3(p.x, pa.y + (pb.y - pa.y) * along / total, p.z))
+		var ok := true
+		var walk: Array = [pa] + fixed + [pb]
+		for i in range(1, walk.size()):
+			if not _segment_clear(walk[i - 1], walk[i], [boss["id"], target["id"]], extra):
+				ok = false
+				break
+		if ok:
+			var l := _join(boss, target, "shortcut", fixed)
+			l["barred_from"] = target["id"]
+			return true
+	return false
 
 
 # --- the rock -------------------------------------------------------------------------------------
@@ -750,12 +785,8 @@ func _link_ops(l: Dictionary) -> void:
 		var b: Vector3 = pts[i]
 		# extend each run a little past its ends so the joins between runs and rooms are closed
 		var d := Vector3(b.x - a.x, 0.0, b.z - a.z).normalized()
-		# a secret's passage runs on into its host room past the doorway: its mouth is cut in a wall
-		# no other way passes, where the room's noise left the rock bulging over the mouth on some
-		# seeds, and the room behind the loose stones could not be walked into
-		var into_room := 0.8 + (MOUTH_IN + 1.0 if str(l["kind"]) == "secret" else 0.0)
-		var a2 := a - d * (into_room if i == 1 else 1.2)
-		var b2 := b + d * (into_room if i == pts.size() - 1 else 1.2)
+		var a2 := a - d * (0.8 if i == 1 else 1.2)
+		var b2 := b + d * (0.8 if i == pts.size() - 1 else 1.2)
 		a2.y = a.y
 		b2.y = b.y
 		var height := width * (1.25 if square else 1.3)

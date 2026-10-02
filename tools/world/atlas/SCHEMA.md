@@ -354,6 +354,15 @@ steps cut into a bank, a cliff path. Give a stair its switchbacks as via points,
 steeper than that over the ground it crosses. `id` is optional
 (`core:road/<from>_<to>` by default).
 
+A road keeps out of the middle of a point of interest (docs/WORLD_LIFE.md section 2;
+`worldgen/roads.py`, `clear_of_cores`): one that ends at a place no other road ends at stops two
+metres inside the edge of its level core, a `via` point drawn inside a place's level core is moved
+three metres past its edge to the side the road turns, and a leg drawn straight through one is
+given a via point there. Road furniture (a bridge, a waystone, a well ...) and wayside finds are
+not kept out of, nor a place several roads end at (where they meet), nor one named in a road's
+`through`: `"through": ["core:poi/ghastfoot"]` is a place the road is meant to go through the
+middle of (an arch over it, a gate, a ford, the nave of a ribcage).
+
 Only the roads listed are built, and a settlement with none is only reached across country (the
 check warns). Every town and village gets a street through it along its two most opposed roads,
 and a cross street where a third road comes in across them.
