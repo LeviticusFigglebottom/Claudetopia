@@ -38,6 +38,7 @@ from forge.lib import quadruped as quad  # noqa: E402
 from forge.lib import foe_specs  # noqa: E402
 from forge.lib import foe_paint  # noqa: E402
 from forge.lib import beast_body as bb  # noqa: E402
+from forge.lib import creature_rig as cr  # noqa: E402
 
 OUT_ROOT = os.path.join(cf.ROOT, "game", "assets", "models", "creatures")
 GENERATOR = "creature_forge"
@@ -94,7 +95,51 @@ def jaw_weights(ob, skel, style, bones) -> None:
     bodylib.apply_weight_matrix(ob, bones, W)
 
 
+def skin_free(ob, arm, rig, sp=None) -> str:
+    """Bone heat where it solves -- on a bare proxy of the body when spines and bristles stop it
+    solving on the body itself -- and the distance to the bones where it does not; smoothed and
+    limited."""
+    bones = rig.deform_names
+    method = "heat"
+    if not bodylib.auto_weights(ob, arm):
+        method = "segment"
+        mod = sp.extra.get("module") if sp is not None else None
+        if mod is not None and hasattr(mod, "bare_scene"):
+            import bpy
+            proxy = hf.mesh_object("Proxy", mod.bare_scene(sp), sp.spacing * 1.3, 6000)
+            hf.clean_mesh(proxy)
+            bodylib.auto_weights(proxy, arm)
+            pv, _, _ = bodylib.mesh_arrays(proxy)
+            pW = bodylib.weight_matrix(proxy, bones)
+            if float((pW.sum(axis=1) > 1e-6).mean()) > 0.95:
+                hole = pW.sum(axis=1) < 1e-6
+                if hole.any():
+                    pW[hole] = cr.segment_weights(rig, pv[hole], spread=0.15)
+                for g in list(ob.vertex_groups):
+                    ob.vertex_groups.remove(g)
+                bodylib.transfer_weights(ob, pv, pW, arm, bones=bones, k=4, smooth=1)
+                method = "heat on the bare body, carried over"
+            bpy.data.objects.remove(proxy, do_unlink=True)
+    verts, _, tris = bodylib.mesh_arrays(ob)
+    W = bodylib.weight_matrix(ob, bones)
+    seed = cr.segment_weights(rig, verts, spread=0.15)
+    empty = W.sum(axis=1) < 1e-6
+    if empty.any():
+        W[empty] = seed[empty]
+        method += "+%d by distance" % int(empty.sum())
+    W = bodylib.smooth_weights(W, tris, iters=2)
+    W = bodylib.limit_influences(W, 4)
+    bodylib.apply_weight_matrix(ob, bones, W)
+    if not any(m.type == 'ARMATURE' for m in ob.modifiers):
+        mod = ob.modifiers.new("Armature", 'ARMATURE')
+        mod.object = arm
+    ob.parent = arm
+    return method
+
+
 def skin(ob, arm, sp) -> str:
+    if sp.family not in foe_specs.QUADS:
+        return skin_free(ob, arm, sp.skel, sp)
     method = hf.skin_body(ob, arm, sp.skel)
     if method.startswith("segment") and sp.family == "canid":
         # bone heat does not solve over a hull broken by thorns and plates: solve it on the bare
@@ -124,8 +169,16 @@ def skin(ob, arm, sp) -> str:
 def hurt_volumes(sp, body) -> list:
     """Where a blow lands on it, in the model's own (Godot) space at rest: the trunk as a capsule
     lying along it, the head as a sphere. CreatureModel lays the actor's hurtbox on these."""
-    J = sp.skel.J
     verts, _, _ = bodylib.mesh_arrays(body)
+    mod = sp.extra.get("module")
+    if mod is not None and hasattr(mod, "hurt"):
+        out = []
+        for v in mod.hurt():
+            if v[0] == "sphere":
+                out.append({"kind": "sphere", "c": godot(v[1]), "r": round(float(v[2]), 4)})
+            else:
+                out.append({"kind": "capsule", "a": godot(v[1]), "b": godot(v[2]), "r": round(float(v[3]), 4)})
+        return out
     trunk = sp.extra.get("trunk")
     if sp.family in ("canid", "boar", "reptile") and trunk:
         ys = [t[0] for t in trunk]
@@ -149,6 +202,15 @@ def hurt_volumes(sp, body) -> list:
 # --------------------------------------------------------------------------------------
 
 def bake_foe_clips(arm, sp) -> dict:
+    if sp.family not in foe_specs.QUADS:
+        clips = sp.extra["module"].build_clips()
+        sidecar = {}
+        for name in sorted(clips):
+            baked = clips[name].bake(sp.skel)
+            cf.push_clip(arm, baked)
+            sidecar[name] = baked.sidecar()
+        log("baked %d clips" % len(sidecar))
+        return sidecar
     from forge.lib import foe_clips
     clips = foe_clips.build(sp)
     solver = foe_clips.make_solver(sp.skel)
@@ -168,7 +230,8 @@ def build(name: str, args) -> None:
     sp = foe_specs.spec(name)
     C = cap(name)
     out_dir = cf.ensure_dir(args.out or os.path.join(OUT_ROOT, name))
-    arm = quad.build_armature(sp.skel, name="Armature")
+    quadish = sp.family in foe_specs.QUADS
+    arm = quad.build_armature(sp.skel, name="Armature") if quadish else cr.build_armature(sp.skel, name="Armature")
     log("%s: armature %d bones" % (name, len(arm.data.bones)))
     grid = []
     spacing = sp.spacing * (1.8 if args.quick else 1.0)
@@ -201,11 +264,12 @@ def build(name: str, args) -> None:
     cf.write_meta(os.path.join(out_dir, "%s.meta.json" % name), name,
                   {"style": sp.style.to_dict(), "family": sp.family},
                   tris, collision="capsule", bounds=bounds, seed=getattr(sp.style, "seed", 0),
-                  extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID, "def_scale": sp.def_scale,
+                  extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID if quadish else sp.skel.rig_id,
+                         "def_scale": sp.def_scale,
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
                          "hurt": hurt_volumes(sp, body), "mesh": "%s_Body" % C,
                          "height": round(float(bounds[5]), 4), "tint": sp.extra.get("tint", "#ffffff"),
-                         "rig_manifest": quad.rig_manifest(sp.skel)})
+                         "rig_manifest": quad.rig_manifest(sp.skel) if quadish else cr.manifest(sp.skel)})
     write_sidecars(out_dir, name)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
 

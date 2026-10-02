@@ -61,7 +61,14 @@ def spec(name: str) -> FoeSpec:
         return _canid(name, 0.76, 1.24, 0.7, 1.08,
                       bb.CanidStyle(kind="leech", girth=1.0, legs=0.9, ruff=0.0, fur=0.0, ears=0.55,
                                     muzzle=1.1, muzzle_w=0.92, brush=0.2, sleek=1.0, seed=11), 0.95, "#4d3f52")
+    if name == "weaver":
+        from . import weaver as wv
+        st = wv.WeaverStyle()
+        return FoeSpec(name, "spider", wv.RIG, st, lambda: wv.weaver_scene(wv.RIG, st), def_scale=1.2, tex=1024,
+                       tris=9000, lod1=3000, lod2=900, spacing=0.0045,
+                       extra={"tint": "#59504a", "module": wv})
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound"]
+FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "weaver"]
+QUADS = ("canid", "boar", "reptile")

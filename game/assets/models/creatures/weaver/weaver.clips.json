@@ -1,0 +1,202 @@
+{
+ "Attack_1": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.26
+   },
+   {
+    "name": "strike",
+    "t": 0.31
+   },
+   {
+    "name": "hit_start",
+    "t": 0.36
+   },
+   {
+    "name": "hit_end",
+    "t": 0.5
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.66
+   }
+  ],
+  "length": 0.9,
+  "loop": false
+ },
+ "Attack_2": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.4
+   },
+   {
+    "name": "strike",
+    "t": 0.46
+   },
+   {
+    "name": "hit_start",
+    "t": 0.6
+   },
+   {
+    "name": "land",
+    "t": 0.78
+   },
+   {
+    "name": "hit_end",
+    "t": 0.8
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.98
+   }
+  ],
+  "length": 1.2,
+  "loop": false
+ },
+ "Attack_3": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.36
+   },
+   {
+    "name": "hit_start",
+    "t": 0.45
+   },
+   {
+    "name": "hit_end",
+    "t": 0.55
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.72
+   }
+  ],
+  "length": 1.0,
+  "loop": false
+ },
+ "Death": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 0.9
+   }
+  ],
+  "held": true,
+  "length": 1.8,
+  "loop": false
+ },
+ "Get_Up": {
+  "events": [
+   {
+    "name": "cancel_ok",
+    "t": 0.48
+   }
+  ],
+  "length": 0.8,
+  "loop": false
+ },
+ "Hit": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.3
+   }
+  ],
+  "length": 0.45,
+  "loop": false
+ },
+ "Idle": {
+  "events": [],
+  "length": 4.0,
+  "loop": true
+ },
+ "Idle_Combat": {
+  "events": [],
+  "length": 2.0,
+  "loop": true
+ },
+ "Knockdown": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 0.45
+   }
+  ],
+  "held": true,
+  "length": 1.6,
+  "loop": false
+ },
+ "Run": {
+  "events": [],
+  "length": 0.3,
+  "loop": true,
+  "speed": 4.2
+ },
+ "Stagger": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.7
+   }
+  ],
+  "length": 0.9,
+  "loop": false
+ },
+ "Strafe_L": {
+  "events": [],
+  "length": 0.6,
+  "loop": true,
+  "side": -1.0,
+  "speed": 1.0
+ },
+ "Strafe_R": {
+  "events": [],
+  "length": 0.6,
+  "loop": true,
+  "side": 1.0,
+  "speed": 1.0
+ },
+ "Turn_L90": {
+  "events": [],
+  "length": 0.8,
+  "loop": true,
+  "turn": 90.0
+ },
+ "Turn_R90": {
+  "events": [],
+  "length": 0.8,
+  "loop": true,
+  "turn": -90.0
+ },
+ "Walk": {
+  "events": [],
+  "length": 0.6,
+  "loop": true,
+  "speed": 1.1
+ },
+ "Walk_Back": {
+  "events": [],
+  "length": 0.6,
+  "loop": true,
+  "speed": -0.9
+ }
+}

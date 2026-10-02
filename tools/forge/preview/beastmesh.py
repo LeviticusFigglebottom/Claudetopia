@@ -72,15 +72,18 @@ def main(argv=None) -> int:
         views = [view(*[float(x) for x in vv.split(",")]) for vv in a.views.split(";")]
     rows = []
     poses = [p for p in a.clips.split(",") if p] or [""]
+    free = sp.family not in foe_specs.QUADS
     if a.clips:
         from forge.lib import foe_clips
-        clips = foe_clips.build(sp)
-        W = foe_clips.mesh_weights(sp, v)
+        from forge.lib import creature_rig as cr
+        clips = sp.extra["module"].build_clips() if free else foe_clips.build(sp)
+        W = cr.segment_weights(skel, v) if free else foe_clips.mesh_weights(sp, v)
     for pose in poses:
         vv = v
         if pose:
             name, t = pose.split("@")
-            vv = foe_clips.pose_mesh(sp, clips[name], float(t), v, W)
+            vv = cr.pose_mesh(skel, clips[name].sample(float(t)), v, W) if free else \
+                foe_clips.pose_mesh(sp, clips[name], float(t), v, W)
         tiles = [raster([(vv, tris, col)], R, (a.px, a.px), a.zoom * a.px / (1.25 * extent), centre) for R in views]
         tile = np.concatenate(tiles, axis=1)
         if pose:
