@@ -15,7 +15,7 @@ const GRAPHICS_TAB := 1
 const CONTROLS_TAB := 3
 ## The Graphics tab's knobs in the groups it shows them under.
 const GRAPHICS_GROUPS := [
-	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic"]],
+	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic", "ground_textures"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
 	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections", "wildlife"]],
@@ -287,6 +287,8 @@ func _graphics_row(c: Dictionary) -> void:
 		return
 	var key := str(c["key"])
 	var value: Variant = Settings.get_value("graphics", key, Graphics.DEFAULTS.get(key))
+	if key == "ground_textures":
+		value = Graphics.ground_texture_quality({key: value})    # unchosen shows what this GPU gets
 	# the row as a whole; a choice within it (FSR on Compatibility) is checked item by item below
 	var reason := Graphics.unsupported_reason(key)
 	var note := str(c.get("note", ""))

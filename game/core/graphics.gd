@@ -78,6 +78,9 @@ const LOOK_DEFAULTS := {"color_grade": true, "vignette": true, "film_grain": fal
 ## and only the player turns it on again. It is about whether this machine starts, not about
 ## fidelity, so no preset touches it.
 const SAFETY_DEFAULTS := {"full_terrain": true}
+## What this machine's hardware decides unless the player chooses: the ground's texture set (-1 is
+## "by the GPU", `ground_texture_quality`). No preset touches it: it costs memory, not frame time.
+const MACHINE_DEFAULTS := {"ground_textures": -1}
 
 ## The graphics section as a new settings file has it: High, plus the display, look and safety keys.
 ## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
@@ -94,6 +97,7 @@ const DEFAULTS := {
 	"title_vista": true,
 	"color_grade": true, "vignette": true, "film_grain": false,
 	"full_terrain": true,
+	"ground_textures": -1,
 }
 
 ## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
@@ -101,6 +105,16 @@ const DEFAULTS := {
 ## vertices in each of Terrain3D's clipmap rings, which is what the far hills' shape is drawn from.
 const CAMERA_FAR_M: Array[float] = [3000.0, 4400.0, 6500.0]
 const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
+
+
+## The ground's texture set, 0 Standard (1024) or 1 High (2048, World.ASSETS_RESOURCE_HIGH). Unchosen
+## (-1), it is High on a discrete GPU and Standard on anything else -- an integrated GPU, a software
+## one, and the Compatibility renderer, which does not say what the adapter is.
+static func ground_texture_quality(g: Dictionary) -> int:
+	var v := int(g.get("ground_textures", -1))
+	if v >= 0:
+		return mini(v, 1)
+	return 1 if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else 0
 
 
 static func camera_far(g: Dictionary) -> float:
@@ -144,6 +158,8 @@ const CONTROLS := [
 	{"key": "fxaa", "label": "FXAA", "kind": "check"},
 	{"key": "taa", "label": "Temporal smoothing (TAA)", "kind": "check"},
 	{"key": "anisotropic", "label": "Texture filtering", "kind": "option", "choices": ["Plain", "2×", "4×", "8×", "16×"]},
+	{"key": "ground_textures", "label": "Ground texture quality", "kind": "option", "choices": ["Standard", "High"],
+		"values": [0, 1], "note": "High paints the most-seen ground at twice the detail, for about 0.8 GB more video memory. Applied when a world next loads"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},

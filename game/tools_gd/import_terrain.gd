@@ -6,7 +6,11 @@ extends Node
 ##
 ## Reads  res://world/generated/{world_manifest.json, heights.r32, control.u32, color.rgba8}
 ## Writes res://terrain_data/terrain3d*.res   (gitignored build artifact)
-##        res://world/terrain_assets.tres     (Terrain3DAssets: the 21 slots of CONTRACTS §5)
+##        res://world/terrain_assets.tres     (Terrain3DAssets: the 23 slots of CONTRACTS §5)
+##        res://world/terrain_assets_high.tres (the same slots, assets/textures/terrain_high's 2048
+##                                              tiles where there is one: Ground texture quality High)
+##
+## `-- --assets-only` writes the two texture lists and nothing else (no world needed).
 ##
 ## The control map arrives pre-packed by the Python builder (see worldgen/output.pack_control),
 ## so nothing here touches a pixel: 4096² images are handed to Terrain3D as raw byte arrays.
@@ -15,6 +19,8 @@ const GENERATED := "res://world/generated"
 const DATA_DIR := "res://terrain_data"
 const ASSETS_PATH := "res://world/terrain_assets.tres"
 const TEXTURE_DIR := "res://assets/textures/terrain"
+const ASSETS_HIGH_PATH := "res://world/terrain_assets_high.tres"
+const TEXTURE_HIGH_DIR := "res://assets/textures/terrain_high"
 const REGION_SIZE := 1024
 ## The metres between two height samples when the manifest does not say (the full 4096 build's).
 ## A build says it as `spacing_m`: 2 at 4096, 8 for a 1024 preview. Fixed at 2, a 1024 build went
@@ -69,6 +75,8 @@ func _ready() -> void:
 
 func run() -> int:
 	var t0 := Time.get_ticks_msec()
+	if OS.get_cmdline_user_args().has("--assets-only"):
+		return 0 if _build_assets() != null and _build_assets(true) != null else 1
 	var manifest := _read_manifest()
 	if manifest.is_empty():
 		return 1
@@ -79,7 +87,7 @@ func run() -> int:
 		return 1
 
 	var assets := _build_assets()
-	if assets == null:
+	if assets == null or _build_assets(true) == null:
 		return 1
 
 	var terrain: Node3D = ClassDB.instantiate("Terrain3D")
@@ -238,14 +246,22 @@ func _image_rgba(path: String, grid: int) -> Image:
 	return img
 
 
-func _build_assets() -> Resource:
+## The texture list, Standard's or (`high`) High's: a slot with a 2048 tile in TEXTURE_HIGH_DIR takes
+## it there, and every other slot its 1024 tile, which the world scales up as it loads
+## (World.match_texture_sizes) -- so the High set adds only its own tiles to the download.
+func _build_assets(high := false) -> Resource:
 	var assets: Resource = ClassDB.instantiate("Terrain3DAssets")
 	var missing: Array[String] = []
+	var out_path := ASSETS_HIGH_PATH if high else ASSETS_PATH
 	for i in SLOTS.size():
 		var slot: Dictionary = SLOTS[i]
 		var name: String = slot["name"]
-		var albedo_path := "%s/%s_albedo_height.png" % [TEXTURE_DIR, name]
-		var normal_path := "%s/%s_normal_rough.png" % [TEXTURE_DIR, name]
+		var dir := TEXTURE_DIR
+		if high and ResourceLoader.exists("%s/%s_albedo_height.png" % [TEXTURE_HIGH_DIR, name]) \
+				and ResourceLoader.exists("%s/%s_normal_rough.png" % [TEXTURE_HIGH_DIR, name]):
+			dir = TEXTURE_HIGH_DIR
+		var albedo_path := "%s/%s_albedo_height.png" % [dir, name]
+		var normal_path := "%s/%s_normal_rough.png" % [dir, name]
 		if not ResourceLoader.exists(albedo_path):
 			missing.append(name)
 			continue
@@ -268,13 +284,15 @@ func _build_assets() -> Resource:
 		Log.error("ImportTerrain", "missing terrain textures: %s (run tools/world/gen_terrain_textures.py)"
 			% ", ".join(missing))
 		return null
-	assets.call("update_texture_list")
-	DirAccess.make_dir_recursive_absolute(ASSETS_PATH.get_base_dir())
-	var err := ResourceSaver.save(assets, ASSETS_PATH)
+	# the High list mixes sizes until the world scales its 1024 slots up: Terrain3D would refuse it
+	if not high:
+		assets.call("update_texture_list")
+	DirAccess.make_dir_recursive_absolute(out_path.get_base_dir())
+	var err := ResourceSaver.save(assets, out_path)
 	if err != OK:
-		Log.error("ImportTerrain", "cannot save %s: %s" % [ASSETS_PATH, error_string(err)])
+		Log.error("ImportTerrain", "cannot save %s: %s" % [out_path, error_string(err)])
 		return null
-	Log.info("ImportTerrain", "%d texture slots -> %s" % [SLOTS.size(), ASSETS_PATH])
+	Log.info("ImportTerrain", "%d texture slots -> %s" % [SLOTS.size(), out_path])
 	return assets
 
 

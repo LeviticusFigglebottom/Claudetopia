@@ -225,12 +225,17 @@ func _read(key: String) -> Variant:
 		"full_terrain":
 			# safe mode: the coarse ground, one threaded read at a time, and the title's country off
 			return [SafeMode.active, WorldStatus.force_fallback, ThreadedLoads.limit(), TitleVista.switched_on()]
+		"ground_textures":
+			# the texture list the next world reads (World._start_reading_terrain)
+			return World.assets_resource()
 	return null
 
 
 ## A value for the knob that differs from `current`, inside its range and its choices.
 static func _other(key: String, current: Variant) -> Variant:
 	var c := Graphics.control(key)
+	if key == "ground_textures":
+		current = Graphics.ground_texture_quality({key: current})   # unchosen is this GPU's choice
 	match str(c["kind"]):
 		"check":
 			return not bool(current)
@@ -248,9 +253,10 @@ func test_defaults_are_high_and_the_display_keys() -> void:
 	expected.merge(Graphics.DISPLAY_DEFAULTS)
 	expected.merge(Graphics.LOOK_DEFAULTS)
 	expected.merge(Graphics.SAFETY_DEFAULTS)
+	expected.merge(Graphics.MACHINE_DEFAULTS)
 	expected["preset"] = "high"
 	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display, look and safety keys")
-	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys():
+	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys() + Graphics.MACHINE_DEFAULTS.keys():
 		assert_false((Graphics.PRESETS["painted"] as Dictionary).has(key), "no preset touches %s" % key)
 	assert_eq(Settings.DEFAULTS["graphics"], Graphics.DEFAULTS, "and Settings.DEFAULTS names it")
 
@@ -484,3 +490,21 @@ func test_settings_are_written_and_a_file_from_before_is_carried_across() -> voi
 	Settings.path = Settings.PATH
 	Settings.bindings = bindings
 	DirAccess.remove_absolute(test_path)
+
+
+## Ground texture quality: a choice is kept as it is; unchosen (-1), a discrete GPU gets High and
+## anything else (this machine's software renderer among them) Standard. The world reads the list
+## the setting names, and Standard's when the High list is not there.
+func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
+	assert_eq(Graphics.ground_texture_quality({"ground_textures": 0}), 0, "Standard chosen")
+	assert_eq(Graphics.ground_texture_quality({"ground_textures": 1}), 1, "High chosen")
+	var by_gpu := 1 if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else 0
+	assert_eq(Graphics.ground_texture_quality({}), by_gpu, "unchosen, by the GPU")
+	assert_eq(int(Graphics.DEFAULTS["ground_textures"]), -1, "shipped unchosen")
+	assert_true(ResourceLoader.exists(World.ASSETS_RESOURCE_HIGH), "the High list ships")
+	var was: Variant = Settings.get_value("graphics", "ground_textures", -1)
+	Settings.data["graphics"]["ground_textures"] = 1
+	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE_HIGH, "High reads the High list")
+	Settings.data["graphics"]["ground_textures"] = 0
+	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE, "Standard reads the Standard list")
+	Settings.data["graphics"]["ground_textures"] = was

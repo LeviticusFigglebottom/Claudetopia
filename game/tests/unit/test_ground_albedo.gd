@@ -84,3 +84,27 @@ func test_the_importer_writes_what_the_ground_draws_with() -> void:
 		if table.has(name):
 			assert_near(float(table[name]["value"]), float(slot.get("value", 1.0)), 0.001,
 				"%s: import_terrain.gd's value and terrain_assets.tres's albedo_color" % name)
+
+
+## The High list (world/terrain_assets_high.tres) is the same slots as Standard's, each drawn with
+## the same albedo_color; a slot painted again at 2048 keeps its 1024 tile's brightness (the
+## generator holds it to the shipped tile's mean), and the rest are the 1024 tiles themselves.
+func test_the_high_list_is_the_same_ground() -> void:
+	const HIGH := "res://world/terrain_assets_high.tres"
+	if not ClassDB.class_exists("Terrain3DAssets") or not ResourceLoader.exists(HIGH):
+		return
+	var standard := slots()
+	var high: Resource = ResourceLoader.load(HIGH, "", ResourceLoader.CACHE_MODE_IGNORE_DEEP)
+	var painted := 0
+	assert_eq(int(high.call("get_texture_count")), standard.size(), "as many slots as Standard")
+	for i in int(high.call("get_texture_count")):
+		var tex: Resource = high.call("get_texture", i)
+		var name := str(tex.get("name"))
+		var albedo: Texture2D = tex.get("albedo_texture")
+		assert_near((tex.get("albedo_color") as Color).get_luminance(), float(standard[name]["value"]), 0.001,
+				"%s: the same albedo_color" % name)
+		if albedo.resource_path.contains("terrain_high"):
+			painted += 1
+			assert_near(mean_linear(albedo.resource_path), float(standard[name]["texture"]),
+					0.03 * float(standard[name]["texture"]), "%s: the 2048 tile is as bright as the 1024" % name)
+	assert_eq(painted, 6, "six slots painted at 2048")
