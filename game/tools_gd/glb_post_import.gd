@@ -22,7 +22,8 @@ const LOD_END := 260.0
 ## A tree's own bands when a scene of it is instanced whole (a point of interest's hawthorn or
 ## yew), sized by its height the way world/scatter_lod.gd sizes the scattered ones at a level of
 ## detail bias of one: the mid level from four heights away or 50 m, the impostor from ten or
-## 70 m. Kept in step with ScatterLod.NEAR_MIN/NEAR_PER_METRE/FAR_MIN/FAR_PER_METRE by hand; an
+## 70 m (nearer for a picture finer than 128 px a view). Kept in step with ScatterLod.NEAR_MIN/
+## NEAR_PER_METRE/FAR_MIN/FAR_PER_METRE/PICTURE_CELL/FAR_OVER_NEAR by hand; an
 ## import script is no place to lean on runtime classes.
 const TREE_LOD1_MIN := 50.0
 const TREE_LOD1_PER_M := 4.0
@@ -124,7 +125,10 @@ func _apply_lod_ranges(levels: Dictionary, tree: bool = false) -> void:
 	var lod2 := LOD2_DISTANCE
 	if tree and _height > 0.0:
 		lod1 = maxf(TREE_LOD1_MIN, TREE_LOD1_PER_M * _height)
-		lod2 = maxf(TREE_LOD2_MIN, TREE_LOD2_PER_M * _height)
+		# a picture drawn finer than 128 px a view takes over nearer (ScatterLod.PICTURE_CELL)
+		var cell := float(_impostor.get("cell", 128.0)) if not _impostor.is_empty() else 128.0
+		lod2 = maxf(TREE_LOD2_MIN, TREE_LOD2_PER_M * _height * clampf(128.0 / maxf(cell, 1.0), 0.25, 1.0))
+		lod2 = maxf(lod2, lod1 * 1.25)
 	var bands := {
 		0: [0.0, lod1],
 		1: [lod1, lod2],

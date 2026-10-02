@@ -53,8 +53,8 @@ from mathutils import Vector  # noqa: E402
 
 VIEWS = 8
 GRID = 3            # 3x3 cells; the ninth is left empty
-CELL = 128          # px a view in the colour atlas
-NRM_CELL = 64       # px a view in the normal atlas
+CELL = 128          # px a view in the colour atlas (an entry's params may say "cell": 256)
+NRM_CELL = 64       # px a view in the normal atlas (half the colour's)
 SUPERSAMPLE = 2     # rendered at twice the cell and averaged down
 SAMPLES = 48
 MARGIN_SIDE = 1.04  # frame width over the widest reach from the trunk
@@ -176,7 +176,7 @@ def _point_pass_files(sc, path: Path) -> None:
         slot.path = "%s_%s_" % (path.stem, name)
 
 
-def render_view(sc, frame: dict, azimuth: float, path: Path) -> None:
+def render_view(sc, frame: dict, azimuth: float, path: Path, cell: int = CELL) -> None:
     """One level view from `azimuth` (radians about Godot +Y, 0 = from +Z)."""
     ax, az = frame["axis"]
     mid_y = frame["bottom"] + frame["height"] * 0.5
@@ -192,7 +192,7 @@ def render_view(sc, frame: dict, azimuth: float, path: Path) -> None:
     cam.location = target + d * dist
     cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler()
     sc.camera = cam
-    big = SUPERSAMPLE * CELL
+    big = SUPERSAMPLE * cell
     if frame["width"] >= frame["height"]:
         rx, ry = big, max(8, round(big * frame["height"] / frame["width"]))
     else:
@@ -452,6 +452,12 @@ def main() -> None:
         print("FORGE_FAIL %s/%s (no tree to draw an impostor of)" % (category, args.name))
         sys.exit(2)
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    # A tree whose picture is drawn nearer (world/scatter_lod.gd puts the line where the picture's
+    # texels match the screen's, so twice the cell is half the distance) has a larger cell: the
+    # Greatwood's giant oaks and black ash, whose mid rung out to ten heights was most of the
+    # wood's primitives (PROGRESS, "Far-tree impostors").
+    cell = int(dict(args.params).get("cell", CELL))
+    nrm_cell = cell // 2
     lod0 = load_tree(glb_path, tree)
     frame = frame_of(lod0)
     sc = bpy.context.scene
@@ -461,14 +467,14 @@ def main() -> None:
         for k in range(VIEWS):
             exr = Path(td) / ("view_%d.exr" % k)
             azimuth = 2.0 * math.pi * k / VIEWS
-            render_view(sc, frame, azimuth, exr)
+            render_view(sc, frame, azimuth, exr, cell)
             p = read_passes(exr)
-            cells_c.append(to_cell(p, CELL, azimuth))
-            cells_n.append(to_cell(p, NRM_CELL, azimuth))
+            cells_c.append(to_cell(p, cell, azimuth))
+            cells_n.append(to_cell(p, nrm_cell, azimuth))
     albedo_name = "%s_impostor_albedo.png" % tree
     nrm_name = "%s_impostor_nrm.png" % tree
-    write_palette_png(atlas(cells_c, CELL, "albedo"), d / albedo_name)
-    write_png(atlas(cells_n, NRM_CELL, "normal"), d / nrm_name)
+    write_palette_png(atlas(cells_c, cell, "albedo"), d / albedo_name)
+    write_png(atlas(cells_n, nrm_cell, "normal"), d / nrm_name)
     rewrite_lod2(glb_path, tree, frame, albedo_name)
     # The picture is the far rung; the mid rung is repaired on the same pass, because it is
     # the ladder's weakest step: see lib/lod_repair.py.
@@ -505,7 +511,7 @@ def main() -> None:
         "hash": cli.asset_hash("gen_impostors", cli.FORGE_VERSION, args.name, args.kind or "",
                                params, args.seed, args.palette),
         "source_hash": meta.get("hash", ""),
-        "views": VIEWS, "grid": GRID, "cell": CELL, "normal_cell": NRM_CELL,
+        "views": VIEWS, "grid": GRID, "cell": cell, "normal_cell": nrm_cell,
         "billboard": "upright", "elevation_deg": 0.0,
         "albedo": albedo_name, "normal": nrm_name, **frame,
     }
