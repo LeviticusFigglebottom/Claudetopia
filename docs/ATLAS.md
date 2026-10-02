@@ -61,7 +61,7 @@ on this side of a closing range's crest.
 | density | **10.6 locations a walkable km²** |
 | distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
-| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the two tracks of world life phase 2, about 400 m of new way between them, are not yet in the km) |
+| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the three tracks of world life phase 2, about 550 m of new way between them, are not yet in the km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
 
 The brief's rule was no walkable point more than about 400 m from somewhere notable, and nothing
@@ -294,7 +294,10 @@ turning, where the build's fingerpost names it.
 delta, and the **Eastway** goes by the Pinfold and Ansel's Hedge Shrine to Tamwick. The **Brow
 road** runs from Pilgrim's Ash by the Last Look, Hound Watch and Bramcombe to Candle Cross and
 Rookdown. Lanes cross the downs from Ashwell to the Hare and Hurdle and on to Bramcombe, and from
-Tamwick by Hollin Barrow to Hazelcombe.
+Tamwick by Hollin Barrow to Hazelcombe. A track of world life phase 2 leaves the Brow road just
+west of the Last Look and climbs 150 m north up the spine of Hound Down to Wake Barrow's
+forecourt (via 586,2766 / 592,2831). Laid to Pilgrim's Ash, it runs on the Brow road's trunk and
+parts from it at the turning, where the build's fingerpost names it.
 
 ### Cinderlea: ember ash
 
