@@ -1606,10 +1606,16 @@ static func shrine(d: PoiDressing) -> void:
 		var pg := k.on_ground(pool_at.x, pool_at.y)
 		await k.step()
 		m.pool(pool_at, 4.2, pg.y + 0.12, k.still_water(pg.y - 2.5, Color.WHITE, 0.6), "Pool")
+		# The old bell half out of the pool, canted where it settled: its crown and shoulder over the
+		# water, the rim under it. It stood only its crown's top (0.18 m) out of the water, and since
+		# the pool is a sheet over the ground and not a hole, the rest was in the peat (the seat
+		# audit's sunk bell at the Sedge Hearth, the Drowned Bell and the Lantern Hummock): from the
+		# stone it read as a stone in a puddle. The pool's bed goes down to the bell's lip.
 		var bell := k.prop("bell_medium")
+		var bell_h := PoiKit.height_of(bell) * 2.4
 		await k.step()
-		k.place(bell, Vector3(pool_at.x, pg.y + 0.3 - PoiKit.height_of(bell) * 2.4, pool_at.y), 0.4, 2.4, false,
-				Vector3(0.12, 0.0, -0.08))
+		k.place(bell, Vector3(pool_at.x, pg.y + 0.12 + bell_h * BELL_SHOWS - bell_h, pool_at.y), 0.4, 2.4, false,
+				Vector3(0.22, 0.0, -0.14))
 		var reeds: Array = []
 		for i in 40:
 			var a := k.rng.randf_range(0.0, TAU)
@@ -1797,6 +1803,10 @@ static func shrine(d: PoiDressing) -> void:
 
 ## A shrine's Hearthstone, where its data asks for one. A shrine kept one whatever its data said,
 ## and the Turning Cairn, a shrine of pilgrims' bells that keeps none, got one in its cairn.
+## How much of the sunk bell in a peat-island shrine's pool stands over the water (`shrine`).
+const BELL_SHOWS := 0.45
+
+
 static func _shrine_stone(d: PoiDressing, at: Vector3, yaw: float) -> void:
 	if d.wants_hearthstone:
 		await d.kit.step()
