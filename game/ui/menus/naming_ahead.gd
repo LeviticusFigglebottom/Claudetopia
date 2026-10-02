@@ -11,6 +11,9 @@ extends Node
 ## same edge smoothing, and drawn for WARM_FRAMES frames: the pipelines its first frame would have
 ## compiled are compiled behind the title instead. Then the stage goes; what was read is held here
 ## (`held`) until the Naming has opened, so the Naming's own `load` calls find it in the cache.
+##
+## Never on a software rasterizer (TitleVista.software_renderer: lavapipe, WARP): there each of the
+## body's pipelines is an LLVM compile, and the stage held the title still for 17-23 s here.
 
 const START_S := 1.5
 const WARM_FRAMES := 4
@@ -34,6 +37,10 @@ var ground := true
 var warm := true
 ## A gate the title sets: false while its live country is standing up.
 var may_start: Callable = Callable()
+## A gate for the warm stage: false while a live shot is watched, so its compile hitch falls in a
+## dip to dark between shots (measured: 0.47 s on this machine's OpenGL, in a shot that pans).
+var may_warm: Callable = Callable()
+var _warm_scene: PackedScene = null
 
 
 ## The Naming's scene, read ahead, or null.
@@ -66,14 +73,18 @@ func _process(delta: float) -> void:
 			held[path] = res
 		StartupTrace.step("title: read ahead for the Naming: %s" % path.get_file())
 		if path == MODEL_SCENE and warm and res is PackedScene:
-			_stand_warm_stage(res as PackedScene)
+			_warm_scene = res as PackedScene
+	if _warm_scene != null and _warm == null and _pending.is_empty() \
+			and (not may_warm.is_valid() or bool(may_warm.call())):
+		_stand_warm_stage(_warm_scene)
+		_warm_scene = null
 	if _warm != null:
 		_warm_frames += 1
 		if _warm_frames > WARM_FRAMES:
 			StartupTrace.step("title: the Naming's body was drawn once off the screen; its stage goes")
 			_warm.queue_free()
 			_warm = null
-	if _pending.is_empty() and _warm == null and _started:
+	if _pending.is_empty() and _warm == null and _warm_scene == null and _started:
 		set_process(false)
 
 

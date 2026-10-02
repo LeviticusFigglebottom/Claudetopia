@@ -100,6 +100,11 @@ func _read_ahead() -> void:
 	ahead.ground = vista == null
 	ahead.may_start = func() -> bool:
 		return vista == null or not is_instance_valid(vista) or vista.is_showing() or vista.phase == TitleVista.Phase.GONE
+	# the body's pipelines are compiled under a dip to dark, never in a watched shot, and never on a
+	# software rasterizer, where it is an LLVM compile a pipeline
+	ahead.warm = not TitleVista.software_renderer()
+	ahead.may_warm = func() -> bool:
+		return vista == null or not is_instance_valid(vista) or vista.phase in [TitleVista.Phase.WAIT_NEXT, TitleVista.Phase.GONE]
 	add_child(ahead)
 
 
