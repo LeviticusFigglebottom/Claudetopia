@@ -174,7 +174,7 @@ const WHAT_STANDS := {
 	"core:poi/candle_cross": "nobody: none",
 	"core:poi/last_look": "nobody: none",
 	"core:poi/pennywort_bridge": "nobody: none",
-	"core:poi/wash_stones": "nobody: none",
+	"core:poi/wash_stones": "person: core:npc/dorcas_pell; a note lies there",
 	"core:poi/sedge_hearth": "nobody: none",
 	"core:poi/dry_jetty": "three gutter drakes at night",
 	"core:poi/eggers_camp": "person: core:npc/kester_wick (egg-collectors in spring, and their ropes the rest of the year)",
@@ -182,7 +182,7 @@ const WHAT_STANDS := {
 	"core:poi/brindle_mill": "person: core:npc/ghedda_clanless (a clanless miller)",
 	"core:poi/counting_tower": "person: core:npc/crispin_tolley",
 	"core:poi/standing_arches": "person: core:npc/ottilie_gannet",
-	"core:poi/beached_barge": "nobody: none",
+	"core:poi/beached_barge": "four gutter drakes in the barge's hold after dark",
 	"core:poi/log_boom": "nobody: none",
 	"core:poi/lime_bridge": "nobody: none",
 	"core:poi/saoul": "three wisps at night",
@@ -235,7 +235,7 @@ const WHAT_STANDS := {
 	"core:poi/the_heronry": "nobody: none",
 	"core:poi/fallen_firewatch": "nobody: none",
 	"core:poi/net_field": "person: core:npc/netta_knotley, person: core:npc/cobb_knotley (net-menders)",
-	"core:poi/smoke_coppice": "nobody: coppicers",
+	"core:poi/smoke_coppice": "person: core:npc/hob_tench, the coppicer; a note lies there",
 	"core:poi/grey_hedge": "nobody: none",
 	"core:poi/lambing_fold": "nobody: shepherds at lambing",
 	"core:poi/bell_pit": "two bell-bearers at night",
@@ -253,7 +253,7 @@ const WHAT_STANDS := {
 	"core:poi/chalk_pit": "nobody: chalk-diggers",
 	"core:poi/eel_stews": "two sallowjaws up the drag-marks at night",
 	"core:poi/hanging_falls": "nobody: none",
-	"core:poi/ness_market": "nobody: fishers selling the catch",
+	"core:poi/ness_market": "person: core:npc/bryony_kettle, person: core:npc/silas_pask, fishers selling the catch",
 	"core:poi/turning_cairn": "nobody: none",
 	"core:poi/sweepers_lean_to": "person: core:npc/arn_sweeting",
 	"core:poi/haywards_perch": "nobody: none",
@@ -542,6 +542,10 @@ const WHAT_STANDS := {
 	"core:poi/old_kharrows_rest": "nobody: none",
 	"core:poi/skarl_drove_well": "nobody: none",
 	"core:poi/unroping_post": "nobody: none",
+	# Brightwater's large places (world life phase 2)
+	"core:poi/the_crown_drift": "two brass-takers at the shaft head at night and a drift-hewer at midnight; the takers, the nine and Gideon Spall are inside (core:interior/the_crown_drift), and person: core:npc/abel_rowse",
+	"core:poi/the_struck_barrow": "two resurrection men at the portal at night, two of the struck at the Needle's foot at dusk; the bailiff and the Receiver are inside (core:interior/the_struck_barrow)",
+	"core:poi/holmwatch": "nobody: the Loud's acolytes, bravos and Loud Sayers are the castle's garrison (site.garrison) and Ysolde Carrow is in its undercroft (core:interior/holmwatch_undercroft)",
 }
 
 var host: Node3D

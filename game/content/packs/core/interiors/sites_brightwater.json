@@ -168,7 +168,8 @@
           "kind": "note",
           "room": "takers_hearth",
           "book": "core:book/crown_drift_takers_tally",
-          "name": "the takers' weigh-slate"
+          "name": "the takers' weigh-slate",
+          "item": "core:item/crown_drift_takers_tally"
         },
         {
           "kind": "note",
@@ -351,7 +352,8 @@
           "kind": "note",
           "room": "weighing_room",
           "book": "core:book/struck_barrow_weights",
-          "name": "a debt-weight's tag"
+          "name": "a debt-weight's tag",
+          "item": "core:item/struck_barrow_weights"
         },
         {
           "kind": "prop",
@@ -369,7 +371,8 @@
           "kind": "note",
           "room": "secret",
           "book": "core:book/struck_barrow_receivers_own",
-          "name": "the Receiver's own entry"
+          "name": "the Receiver's own entry",
+          "item": "core:item/struck_barrow_receivers_own"
         }
       ]
     }
@@ -543,7 +546,8 @@
           "kind": "note",
           "room": "court_hall",
           "book": "core:book/holmwatch_loud_creed",
-          "name": "the Loud's creed, nailed to the reeves' bench"
+          "name": "the Loud's creed, nailed to the reeves' bench",
+          "item": "core:item/holmwatch_loud_creed"
         },
         {
           "kind": "prop",
@@ -559,7 +563,8 @@
           "kind": "note",
           "room": "secret",
           "book": "core:book/holmwatch_last_reeve",
-          "name": "the last Reeve's dues-roll"
+          "name": "the last Reeve's dues-roll",
+          "item": "core:item/holmwatch_last_reeve"
         }
       ]
     }
