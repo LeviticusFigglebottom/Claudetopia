@@ -5335,6 +5335,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/wake_barrow",
+        "quests": [
+          "core:quest/the_long_wake"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/wake_barrow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/wall_keepers_ring",
         "quests": [],
         "finds": [
