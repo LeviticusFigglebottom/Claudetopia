@@ -164,6 +164,15 @@ func test_a_gate_hangs_across_the_gap_along_the_hedge() -> void:
 			"a post in no hedge got a gate")
 
 
+func test_no_gate_is_hung_across_a_road() -> void:
+	# a road north to south along x = 0, 4 m wide
+	RoadNetwork.use([{"id": "core:road/a_b", "points": PackedVector2Array([Vector2(0, -200), Vector2(0, 200)]), "width": 4.0}])
+	# a post at the road's shoulder whose gate would swing across the carriageway: none
+	assert_true(Wayside._across_a_road(Vector2(3.0, 0.0), Vector2(-1.0, 0.0)), "a gate across the road")
+	# the same post's gate hung along the hedge away from the road: hung
+	assert_false(Wayside._across_a_road(Vector2(3.0, 0.0), Vector2(1.0, 0.0)), "a gate into the field")
+
+
 func test_a_cell_s_gates_are_one_mesh() -> void:
 	var cell := Node3D.new()
 	_tree().root.add_child(cell)

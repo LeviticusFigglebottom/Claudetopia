@@ -3096,7 +3096,13 @@ static func old_crannog(d: PoiDressing) -> void:
 		var p := a2.lerp(b2, float(i) / float(n - 1))
 		var loose := i == 2 or i == 5 or i == 6
 		var tilt := Basis(Vector3.UP, PoiKit.yaw_of(bank) + k.rng.randf_range(-0.2, 0.2)) * Basis(Vector3.RIGHT, (0.12 if loose else 0.0))
-		var py := maxf(k.on_ground(p.x, p.y).y, y - 0.1) + 0.08
+		var gy := k.on_ground(p.x, p.y).y
+		var py := maxf(gy, y - 0.1) + 0.08
+		if py - gy > 0.2:
+			# set on the pool's bed, not laid on the water: a footing of stones under it to the ground
+			# (the causeway stood 0.8 m over the bed at the water's level: the seat audit's floating)
+			m.block(cw, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(bank)), Vector3(p.x, (py + gy) * 0.5 - 0.1, p.y)),
+					Vector3(0.62, py - gy + 0.1, 0.55))
 		if i % 3 == 1:
 			m.limb(cw, Vector3(p.x, py, p.y) - Vector3(bank.y, 0, -bank.x) * 0.6, Vector3(p.x, py, p.y) + Vector3(bank.y, 0, -bank.x) * 0.6, 0.16)
 		else:
