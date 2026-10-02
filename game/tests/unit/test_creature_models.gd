@@ -7,7 +7,7 @@ extends TestCase
 
 ## The foes forged so far (this grows to every custom-rigged foe and boss).
 const FORGED: Array[String] = ["core:enemy/down_wolf", "core:enemy/crag_wolf", "core:enemy/thornhound",
-	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver"]
+	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver", "core:enemy/stone_thrall"]
 const REACTIONS: Array[String] = ["Hit_Light", "Hit_Light_L", "Stagger", "Stagger_B", "Knockdown", "Get_Up", "Death_A",
 	"Idle", "Idle_Combat", "Walk", "Run"]
 
@@ -110,6 +110,37 @@ func test_a_blow_lands_on_the_head_and_the_quarters() -> void:
 			for end in [cs.transform * Vector3(0.0, half, 0.0), cs.transform * Vector3(0.0, -half, 0.0)]:
 				reach_fwd = maxf(reach_fwd, -(end as Vector3).z)
 				reach_back = minf(reach_back, -(end as Vector3).z)
+		var family := str((m.meta.get("params", {}) as Dictionary).get("family", ""))
+		if family == "biped":
+			# a giant on two legs is struck from its knees to its skull
+			var top := -INF
+			for s in shapes:
+				var cs := s as CollisionShape3D
+				var r := (cs.shape as CapsuleShape3D).height * 0.5 if cs.shape is CapsuleShape3D else (cs.shape as SphereShape3D).radius
+				top = maxf(top, cs.position.y + r)
+			assert_gt(top, e.capsule_height * 0.8, "%s can be struck on its head" % id)
+			continue
 		# the actor's forward is -Z: its head reaches ahead of its middle, its quarters behind
 		assert_gt(reach_fwd, 0.3 * e.body_scale, "%s can be struck on its head" % id)
 		assert_gt(-reach_back, 0.25 * e.body_scale, "%s can be struck on its quarters" % id)
+
+
+func test_a_thralls_limbs_come_off_and_it_crawls() -> void:
+	var e := _foe("core:enemy/stone_thrall")
+	var m := e.anim.model as CreatureModel
+	if m == null:
+		fail("the stone-thrall has no forged body")
+		return
+	var parts := ["StoneThrall_ArmR", "StoneThrall_ArmL", "StoneThrall_LegL"]
+	for p in parts:
+		assert_false(m._part_meshes(p).is_empty(), "the thrall's %s is a mesh of its own" % p)
+	for i in parts.size():
+		e._break_next_limb()
+		await _tree().process_frame
+		for mi in m._part_meshes(parts[i]):
+			assert_false((mi as MeshInstance3D).visible, "%s is gone once broken" % parts[i])
+	assert_true(m._crawl, "with no arms and one leg it crawls")
+	assert_eq(m.resolve("Walk"), "Crawl", "it comes on along the ground")
+	assert_true(m.has_clip("Attack_5"), "and sweeps from there")
+	for c in e.get_tree().current_scene.find_children("FallenLimb", "RigidBody3D", false, false) if e.get_tree().current_scene != null else []:
+		c.queue_free()

@@ -50,6 +50,14 @@ def main(argv=None) -> int:
         grid[:] = [F, origin, spacing]
         v, q = sdf.surface_nets(F, origin, spacing)
         v = sdf.taubin_smooth(v, q, iters=6)
+    elif "parts" in sp.extra:
+        vs, qs, off = [], [], 0
+        for pname, psc in sp.extra["parts"]().items():
+            pv, pq = sdf.mesh_from_scene(psc, spacing)
+            vs.append(pv)
+            qs.append(np.asarray(pq) + off)
+            off += len(pv)
+        v, q = np.concatenate(vs), np.concatenate(qs)
     else:
         v, q = sdf.mesh_from_scene(sc, spacing, grid_out=grid)
     tris = tris_of(v, q)

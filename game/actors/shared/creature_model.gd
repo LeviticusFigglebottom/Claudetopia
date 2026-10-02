@@ -25,8 +25,18 @@ const ROOT := "res://assets/models/creatures/"
 const MODELS := {
 	"wolf": "down_wolf", "crag_wolf": "crag_wolf", "thornhound": "thornhound", "leech_hound": "leech_hound",
 	"boar": "bristleback", "drake": "gutter_drake", "sallowjaw": "sallowjaw", "weaver": "weaver",
-	"stone": "stone_thrall", "kingbone": "stone_thrall", "treant": "warden", "wisp": "wisp",
+	"stone": "stone_thrall", "kingbone": "stone_thrall_king", "treant": "warden", "wisp": "wisp",
 }
+## A variant whose own model is not built wears its kin's.
+const KIN := {"kingbone": "stone_thrall"}
+## What a body with a crawling limb gone plays for what the game asks (a thrall with no arms and
+## one leg comes on along the ground).
+const CRAWLING := {"Idle": "Crawl_Idle", "Idle_Combat": "Crawl_Idle", "Walk": "Crawl", "Trot": "Crawl", "Run": "Crawl",
+	"Walk_Back": "Crawl", "Strafe_L": "Crawl", "Strafe_R": "Crawl", "Turn_L90": "Crawl", "Turn_R90": "Crawl",
+	"Death": "Crawl_Death", "Death_A": "Crawl_Death", "Death_B": "Crawl_Death", "Hit": "Crawl_Idle",
+	"Hit_Light": "Crawl_Idle", "Stagger": "Crawl_Idle", "Knockdown": "Crawl_Idle", "Get_Up": "Crawl_Idle"}
+## How long a limb that came off lies on the ground before it is gone.
+const LIMB_LIES_S := 8.0
 ## Clips the game asks for by another name, or that a beast plays as one of its own.
 const STANDS_FOR := {
 	"Death_A": "Death", "Death_B": "Death", "Hit_Light": "Hit", "Hit_Heavy": "Stagger", "Block_Hit": "Hit",
@@ -77,15 +87,17 @@ var _loco := Vector2.ZERO
 var _last_yaw := 0.0
 var _yaw_rate := 0.0
 var _have_yaw := false
+var _actor: Node = null
+var _limbs_shown := 0
+var _crawl := false
 
 
 ## The model a body variant wears ("" when the forge has made none).
 static func model_for(variant: String) -> String:
-	var n := str(MODELS.get(variant, ""))
-	if n.is_empty():
-		return ""
-	var path := ROOT + n + "/" + n + ".glb"
-	return n if ResourceLoader.exists(path) else ""
+	for n in [str(MODELS.get(variant, "")), str(KIN.get(variant, ""))]:
+		if not n.is_empty() and ResourceLoader.exists(ROOT + n + "/" + n + ".glb"):
+			return n
+	return ""
 
 
 static func create(variant: String, scale_factor: float = 1.0) -> CreatureModel:
@@ -210,6 +222,8 @@ func _own(clip: String) -> bool:
 ## The beast's own clip for a name the game uses, or "". A directional reaction is the beast's own
 ## only when it has one (`directional`: the driver plays the front's then).
 func resolve(clip: String, directional := false) -> String:
+	if _crawl and CRAWLING.has(clip) and _own(str(CRAWLING[clip])):
+		return str(CRAWLING[clip])
 	if _own(clip):
 		return clip
 	if directional:
@@ -318,6 +332,10 @@ func _process(delta: float) -> void:
 	if anim_player == null:
 		return
 	_track_turn(delta)
+	if _actor != null and is_instance_valid(_actor) and _actor.has_method("limbs_broken"):
+		var n := int(_actor.call("limbs_broken"))
+		if n != _limbs_shown:
+			_apply_limbs(n)
 	if not _intent.is_empty():
 		return
 	var speed := _loco.length()
@@ -393,6 +411,7 @@ func fit_hurtbox(hurtbox: Area3D, actor: Node3D) -> void:
 		if c is CollisionShape3D:
 			hurtbox.remove_child(c)
 			c.queue_free()
+	_actor = actor
 	var to_actor := actor.global_transform.affine_inverse() * global_transform
 	var s := scale.x
 	var i := 0
@@ -426,3 +445,73 @@ func fit_hurtbox(hurtbox: Area3D, actor: Node3D) -> void:
 static func _v3(a: Variant) -> Vector3:
 	var arr: Array = a
 	return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+
+
+# --- limbs that come off -------------------------------------------------------------------------
+
+## The def's limbs (meta `limbs`: index, the part's mesh, whether losing it leaves the body
+## crawling): the first `n` are gone. Each newly gone is hidden and thrown down beside the body.
+func _apply_limbs(n: int) -> void:
+	var limbs: Array = meta.get("limbs", [])
+	var crawl := false
+	for l in limbs:
+		var limb: Dictionary = l
+		var gone := int(limb.get("index", 0)) < n
+		var part := model_name.to_pascal_case() + "_" + str(limb.get("part", ""))
+		var meshes := _part_meshes(part)
+		if gone and int(limb.get("index", 0)) >= _limbs_shown and not meshes.is_empty():
+			_throw(meshes[0])
+		for m in meshes:
+			(m as MeshInstance3D).visible = not gone
+		if gone and bool(limb.get("crawl", false)):
+			crawl = true
+	_limbs_shown = n
+	if crawl != _crawl:
+		_crawl = crawl
+		_loop = ""
+
+
+## The part's meshes, its body and its LODs.
+func _part_meshes(part: String) -> Array:
+	var out := []
+	if _root == null:
+		return out
+	for mi in _root.find_children("*", "MeshInstance3D", true, false):
+		var nm := String(mi.name)
+		if nm == part or nm.begins_with(part + "_LOD"):
+			out.append(mi)
+	out.sort_custom(func(a: Node, b: Node) -> bool: return String(a.name).length() < String(b.name).length())
+	return out
+
+
+## The limb as a stone that falls and rolls: its mesh as it was made (the rest pose), a body that
+## tumbles away from the trunk, gone after LIMB_LIES_S.
+func _throw(mi: MeshInstance3D) -> void:
+	var host := get_tree().current_scene if get_tree() != null else null
+	if host == null or mi.mesh == null:
+		return
+	var box := mi.mesh.get_aabb()
+	var rb := RigidBody3D.new()
+	rb.name = "FallenLimb"
+	rb.collision_layer = 0
+	rb.collision_mask = 1
+	rb.mass = 40.0
+	var piece := MeshInstance3D.new()
+	piece.mesh = mi.mesh
+	piece.material_override = mi.get_active_material(0)
+	piece.position = -(box.position + box.size * 0.5)
+	rb.add_child(piece)
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = maxf(box.size.x, box.size.z) * 0.35 * scale.x
+	shape.shape = sphere
+	rb.add_child(shape)
+	host.add_child(rb)
+	var at := global_transform * (box.position + box.size * 0.5)
+	rb.global_transform = Transform3D(global_transform.basis, at)
+	var away := (at - global_position)
+	away.y = 0.0
+	away = away.normalized() if away.length() > 0.01 else global_transform.basis.x
+	rb.apply_central_impulse((away * 3.0 + Vector3.UP * 2.0) * rb.mass)
+	rb.apply_torque_impulse(Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * rb.mass * 2.0)
+	get_tree().create_timer(LIMB_LIES_S).timeout.connect(rb.queue_free)

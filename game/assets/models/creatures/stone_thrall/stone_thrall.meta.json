@@ -1,0 +1,338 @@
+{
+ "bones": 21,
+ "bounds": [
+  -0.9127,
+  -0.8469,
+  -0.0119,
+  0.9477,
+  0.6666,
+  2.9938
+ ],
+ "clips": [
+  "Attack_1",
+  "Attack_2",
+  "Attack_3",
+  "Attack_4",
+  "Attack_5",
+  "Crawl",
+  "Crawl_Death",
+  "Crawl_Idle",
+  "Death",
+  "Get_Up",
+  "Hit",
+  "Idle",
+  "Idle_Combat",
+  "Knockdown",
+  "Run",
+  "Stagger",
+  "Strafe_L",
+  "Strafe_R",
+  "Turn_L90",
+  "Turn_R90",
+  "Walk",
+  "Walk_Back"
+ ],
+ "collision": "capsule",
+ "def_scale": 2.2,
+ "generator": "creature_forge",
+ "height": 2.9938,
+ "hurt": [
+  {
+   "a": [
+    0.0,
+    1.2,
+    -0.02
+   ],
+   "b": [
+    0.0,
+    2.45,
+    0.1
+   ],
+   "kind": "capsule",
+   "r": 0.55
+  },
+  {
+   "c": [
+    0.0,
+    2.75,
+    0.55
+   ],
+   "kind": "sphere",
+   "r": 0.28
+  }
+ ],
+ "limbs": [
+  {
+   "index": 0,
+   "part": "ArmR"
+  },
+  {
+   "index": 1,
+   "part": "ArmL"
+  },
+  {
+   "crawl": true,
+   "index": 2,
+   "part": "LegL"
+  }
+ ],
+ "mesh": "StoneThrall_Body",
+ "params": {
+  "family": "biped",
+  "style": {
+   "king": false,
+   "seed": 31
+  }
+ },
+ "parts": [
+  "StoneThrall_Body",
+  "StoneThrall_ArmL",
+  "StoneThrall_ArmR",
+  "StoneThrall_LegL"
+ ],
+ "rig": "WM_Thrall_v1",
+ "rig_manifest": {
+  "bones": [
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "length": 0.36,
+    "name": "Root",
+    "parent": null
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.1,
+     1.25
+    ],
+    "length": 0.3314,
+    "name": "Hips",
+    "parent": "Root"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.13,
+     1.58
+    ],
+    "length": 0.4455,
+    "name": "Spine",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.06,
+     2.02
+    ],
+    "length": 0.6261,
+    "name": "Chest",
+    "parent": "Spine"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.22,
+     2.58
+    ],
+    "length": 0.2163,
+    "name": "Neck",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.4,
+     2.7
+    ],
+    "length": 0.4079,
+    "name": "Head",
+    "parent": "Neck"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.5,
+     2.6
+    ],
+    "length": 0.3311,
+    "name": "Jaw",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.16,
+     -0.04,
+     2.42
+    ],
+    "length": 0.4804,
+    "name": "Shoulder.L",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.64,
+     -0.04,
+     2.44
+    ],
+    "length": 0.7031,
+    "name": "UpperArm.L",
+    "parent": "Shoulder.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.8,
+     0.04,
+     1.76
+    ],
+    "length": 0.7091,
+    "name": "Forearm.L",
+    "parent": "UpperArm.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.82,
+     -0.16,
+     1.08
+    ],
+    "length": 0.4561,
+    "name": "Hand.L",
+    "parent": "Forearm.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.3,
+     0.12,
+     1.2
+    ],
+    "length": 0.5611,
+    "name": "Thigh.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.36,
+     -0.02,
+     0.66
+    ],
+    "length": 0.5389,
+    "name": "Shin.L",
+    "parent": "Thigh.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.38,
+     0.12,
+     0.14
+    ],
+    "length": 0.4707,
+    "name": "Foot.L",
+    "parent": "Shin.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.16,
+     -0.04,
+     2.42
+    ],
+    "length": 0.4804,
+    "name": "Shoulder.R",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.64,
+     -0.04,
+     2.44
+    ],
+    "length": 0.7031,
+    "name": "UpperArm.R",
+    "parent": "Shoulder.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.8,
+     0.04,
+     1.76
+    ],
+    "length": 0.7091,
+    "name": "Forearm.R",
+    "parent": "UpperArm.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.82,
+     -0.16,
+     1.08
+    ],
+    "length": 0.4561,
+    "name": "Hand.R",
+    "parent": "Forearm.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.3,
+     0.12,
+     1.2
+    ],
+    "length": 0.5611,
+    "name": "Thigh.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.36,
+     -0.02,
+     0.66
+    ],
+    "length": 0.5389,
+    "name": "Shin.R",
+    "parent": "Thigh.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.38,
+     0.12,
+     0.14
+    ],
+    "length": 0.4707,
+    "name": "Foot.R",
+    "parent": "Shin.R"
+   }
+  ],
+  "rig": "WM_Thrall_v1"
+ },
+ "seed": 31,
+ "tint": "#8c8578",
+ "tris": [
+  11994,
+  3996,
+  1196
+ ],
+ "version": 1
+}

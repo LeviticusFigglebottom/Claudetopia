@@ -15,7 +15,7 @@ extends Node3D
 
 const DEFAULT_CLIPS: Array[String] = ["Idle", "Idle_Combat", "Walk", "Trot", "Run", "Strafe_L", "Walk_Back",
 	"Attack_1", "Attack_2", "Attack_3", "Attack_4", "Attack_5", "Cast_Quick", "Hit", "Stagger", "Knockdown",
-	"Get_Up", "Death"]
+	"Get_Up", "Death", "Crawl", "Crawl_Idle", "Crawl_Death"]
 
 var out_dir := "captures/creatures"
 var foes: Array[String] = []
@@ -191,7 +191,7 @@ func _frame(e: Node3D, view: String, size: Vector3) -> void:
 	var at := e.global_position + Vector3(0.0, size.y * 0.45, 0.0)
 	var fwd := -e.global_transform.basis.z
 	var right := e.global_transform.basis.x
-	var d := reach * 1.25 + 0.4
+	var d := reach * (1.25 + 0.25 * clampf(size.y / maxf(size.z, 0.5) - 0.8, 0.0, 1.0)) + 0.4
 	var eye: Vector3
 	match view:
 		"front":

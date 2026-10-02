@@ -235,10 +235,14 @@ def build(name: str, args) -> None:
     log("%s: armature %d bones" % (name, len(arm.data.bones)))
     grid = []
     spacing = sp.spacing * (1.8 if args.quick else 1.0)
-    body = hf.mesh_object("%s_Body" % C, sp.scene(), spacing, sp.tris, grid_out=grid)
-    hf.clean_mesh(body)
-    hf.decimate_to(body, sp.tris)
-    field = sdf.SampledField.from_grid(*grid)
+    parts = sp.extra.get("parts")
+    if parts:
+        body, field = mesh_parts(C, sp, parts(), spacing)
+    else:
+        body = hf.mesh_object("%s_Body" % C, sp.scene(), spacing, sp.tris, grid_out=grid)
+        hf.clean_mesh(body)
+        hf.decimate_to(body, sp.tris)
+        field = sdf.SampledField.from_grid(*grid)
     log("body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
     bodylib.smart_uv(body, angle_deg=60.0, margin=0.008)
     log("weights: %s" % skin(body, arm, sp))
@@ -246,20 +250,32 @@ def build(name: str, args) -> None:
     albedo, orm, height = foe_paint.painter(sp, field)
     a, o, n = hf.bake_maps(body, out_dir, "%s_hide" % name, albedo, orm, height, size=size)
     half_size(o, n)
-    body.data.materials.append(cf.make_material("WM_%s_Hide" % C, a, o, n, roughness=0.8))
+    mat = cf.make_material("WM_%s_Hide" % C, a, o, n, roughness=0.8)
     log("painted (%.0fs)" % (time.time() - t0))
+    if parts:
+        pieces = split_parts(body, C, sp, mat)
+        body = pieces[0]
+    else:
+        body.data.materials.append(mat)
+        pieces = [body]
     lods = []
-    for lname, target in (("%s_Body_LOD1" % C, sp.lod1), ("%s_Body_LOD2" % C, sp.lod2)):
-        lob = hf.duplicate_joined([body if not lods else lods[-1]], lname)
-        hf.decimate_to(lob, target)
-        hf.clean_mesh(lob)
-        lods.append(lob)
-        log("%s: %d tris" % (lname, bodylib.tri_count(lob)))
+    total = sum(bodylib.tri_count(pc) for pc in pieces)
+    for pc in pieces:
+        prev = pc
+        share = bodylib.tri_count(pc) / max(total, 1)
+        for lvl, target in ((1, sp.lod1), (2, sp.lod2)):
+            lob = hf.duplicate_joined([prev], "%s_LOD%d" % (pc.name, lvl))
+            hf.decimate_to(lob, max(int(target * share), 60))
+            hf.clean_mesh(lob)
+            lods.append(lob)
+            prev = lob
+            log("%s: %d tris" % (lob.name, bodylib.tri_count(lob)))
     sidecar = {} if args.no_clips else bake_foe_clips(arm, sp)
-    glb = cf.export_glb(os.path.join(out_dir, "%s.glb" % name), [arm, body] + lods, with_animation=bool(sidecar))
+    glb = cf.export_glb(os.path.join(out_dir, "%s.glb" % name), [arm] + pieces + lods, with_animation=bool(sidecar))
     with open(os.path.join(out_dir, "%s.clips.json" % name), "w") as f:
         json.dump(sidecar, f, indent=1, sort_keys=True)
-    tris = [bodylib.tri_count(body)] + [bodylib.tri_count(lo) for lo in lods]
+    tris = [sum(bodylib.tri_count(pc) for pc in pieces)] + \
+        [sum(bodylib.tri_count(lo) for lo in lods if lo.name.endswith("LOD%d" % k)) for k in (1, 2)]
     bounds = cf.object_bounds(body)
     cf.write_meta(os.path.join(out_dir, "%s.meta.json" % name), name,
                   {"style": sp.style.to_dict(), "family": sp.family},
@@ -269,9 +285,59 @@ def build(name: str, args) -> None:
                          "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
                          "hurt": hurt_volumes(sp, body), "mesh": "%s_Body" % C,
                          "height": round(float(bounds[5]), 4), "tint": sp.extra.get("tint", "#ffffff"),
+                         "limbs": sp.extra.get("limbs", []), "parts": [pc.name for pc in pieces],
                          "rig_manifest": quad.rig_manifest(sp.skel) if quadish else cr.manifest(sp.skel)})
     write_sidecars(out_dir, name)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
+
+
+def mesh_parts(C: str, sp, scenes: dict, spacing: float):
+    """Each part meshed alone, marked by a material slot of its own, and joined into one object to
+    be unwrapped, skinned and painted as one; split_parts parts them again afterwards."""
+    import bpy
+    obs = []
+    total_tris = sp.tris
+    names = list(scenes.keys())
+    union = sdf.Scene()
+    for i, pname in enumerate(names):
+        sc = scenes[pname]
+        budget = int(total_tris * sp.extra.get("part_share", {}).get(pname, 1.0 / len(names)))
+        ob = hf.mesh_object("%s_%s" % (C, pname), sc, spacing, budget)
+        if ob is None:
+            continue
+        hf.clean_mesh(ob)
+        hf.decimate_to(ob, budget)
+        tag = bpy.data.materials.new("part_%s" % pname)
+        ob.data.materials.append(tag)
+        obs.append(ob)
+        union.prims += list(getattr(sc, "base", sc).prims)
+        log("part %s: %d tris" % (pname, bodylib.tri_count(ob)))
+    body = obs[0]
+    bodylib.join_into(body, obs[1:])
+    body.name = body.data.name = "%s_Body" % C
+    field = sdf.SampledField(union, spacing=max(spacing, 0.012), margin=0.1)
+    return body, field
+
+
+def split_parts(body, C: str, sp, mat) -> list:
+    """The joined body cut back into its parts by their slots, each wearing the one painted material."""
+    import bpy
+    bodylib.select_only(body)
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.separate(type='MATERIAL')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    out = []
+    for ob in list(bpy.context.selected_objects):
+        if ob.type != 'MESH' or not ob.data.materials:
+            continue
+        pname = ob.data.materials[0].name.replace("part_", "").split(".")[0]
+        ob.name = ob.data.name = "%s_%s" % (C, pname)
+        ob.data.materials.clear()
+        ob.data.materials.append(mat)
+        out.append(ob)
+    out.sort(key=lambda o: (0 if o.name.endswith("_Body") else 1, o.name))
+    return out
 
 
 def half_size(*paths) -> None:

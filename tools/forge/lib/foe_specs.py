@@ -67,8 +67,16 @@ def spec(name: str) -> FoeSpec:
         return FoeSpec(name, "spider", wv.RIG, st, lambda: wv.weaver_scene(wv.RIG, st), def_scale=1.2, tex=1024,
                        tris=9000, lod1=3000, lod2=900, spacing=0.0045,
                        extra={"tint": "#59504a", "module": wv})
+    if name in ("stone_thrall", "stone_thrall_king"):
+        from . import thrall as th
+        st = th.ThrallStyle(king=name.endswith("king"))
+        return FoeSpec(name, "biped", th.RIG, st, lambda: th.scene_parts(st)["Body"], def_scale=3.2 if st.king else 2.2,
+                       tex=1024, tris=12000, lod1=4000, lod2=1200, spacing=0.011,
+                       extra={"tint": "#7e7768" if st.king else "#8c8578", "module": th,
+                              "parts": lambda: th.scene_parts(st), "limbs": th.LIMBS,
+                              "part_share": {"Body": 0.6, "ArmR": 0.15, "ArmL": 0.15, "LegL": 0.1}})
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "weaver"]
+FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "weaver", "stone_thrall"]
 QUADS = ("canid", "boar", "reptile")
