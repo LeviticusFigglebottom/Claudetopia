@@ -38,7 +38,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": false,
 	},
 	"medium": {
-		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true,
+		"render_scale": 0.77, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
@@ -132,12 +132,23 @@ const COMPATIBILITY_UNUSED := {
 	"ao_quality": "Corner shadow is off on Compatibility.",
 }
 const UPSCALER_CHOICES := ["Bilinear", "FSR 1.0", "FSR 2.2"]
+## The upscalers (FSR 1 and 2) are AMD's, but shaders like any other: they run on Intel, NVIDIA and
+## AMD alike, and only under Forward+. Medium, the preset integrated graphics is given, draws the 3D
+## at 0.77 of the window and upscales it with FSR 1: the spatial one, a fraction of a millisecond on
+## an iGPU where FSR 2's temporal pass costs several, and without FSR 2's smearing of the grass and
+## the particles it has no motion for. Its sharpening (`fsr_sharpness`, 0 the most, 2 the least)
+## is turned up from the engine's 0.2 so the upscaled picture is not soft. The menus and the Naming's
+## words are the canvas's, drawn at the window's own pixels whatever the 3D is drawn at.
+const FSR_SHARPNESS := 0.1
+## Where a preset's FSR falls back to bilinear (Compatibility), its render scale rises to this:
+## FSR's 0.77 stretched bilinearly is soft; 0.85 costs a fifth more pixels and reads as sharp.
+const BILINEAR_RENDER_SCALE := {"medium": 0.85}
 const UPSCALER_REASON := "FSR 1.0 and 2.2 are Forward+ only; Compatibility scales bilinearly."
 
 ## The controls the settings screen builds, in the order it shows them. A row is greyed out, with
 ## the reason beside it, when `unsupported_reason()` has one for the running renderer.
 const CONTROLS := [
-	{"key": "render_scale", "label": "Render scale", "kind": "slider", "min": 0.5, "max": 1.0, "step": 0.05, "suffix": "%",
+	{"key": "render_scale", "label": "Render scale", "kind": "slider", "min": 0.5, "max": 1.0, "step": 0.01, "suffix": "%",
 		"note": "the 3D picture drawn at this share of the window"},
 	{"key": "upscaler", "label": "Upscaling", "kind": "option", "choices": UPSCALER_CHOICES},
 	{"key": "msaa", "label": "Edge smoothing (MSAA)", "kind": "option", "choices": ["Off", "2×", "4×", "8×"]},
@@ -225,6 +236,10 @@ static func preset_values(name: String, for_renderer := "") -> Dictionary:
 	for key in out:
 		if unsupported_reason(key, out[key], r) != "":
 			out[key] = _fallback(key, out[key])
+	# FSR's scale stretched bilinearly is soft: a preset that upscales with FSR draws more of the
+	# picture where there is none
+	if int((PRESETS.get(name, {}) as Dictionary).get("upscaler", 0)) > 0 and int(out["upscaler"]) == 0:
+		out["render_scale"] = maxf(float(out["render_scale"]), float(BILINEAR_RENDER_SCALE.get(name, 0.0)))
 	return out
 
 
@@ -348,6 +363,7 @@ static func apply_viewport(vp: Viewport, g: Dictionary, r := "") -> void:
 		up = 0
 	vp.scaling_3d_mode = [Viewport.SCALING_3D_MODE_BILINEAR, Viewport.SCALING_3D_MODE_FSR,
 			Viewport.SCALING_3D_MODE_FSR2][clampi(up, 0, 2)]
+	vp.fsr_sharpness = FSR_SHARPNESS
 	vp.msaa_3d = clampi(int(g.get("msaa", 1)), 0, 3) as Viewport.MSAA
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA \
 			if bool(g.get("fxaa", false)) and is_supported("fxaa", null, r) \

@@ -159,3 +159,20 @@ func test_a_file_from_before_a_knob_keeps_its_preset() -> void:
 	DirAccess.remove_absolute(test_path)
 
 
+func test_fsr_on_medium_and_bilinear_a_little_larger_on_compatibility() -> void:
+	var fp := Graphics.preset_values("medium", Graphics.RENDERER_FORWARD_PLUS)
+	assert_eq(int(fp["upscaler"]), 1, "Medium upscales with FSR 1 on Forward+")
+	assert_near(float(fp["render_scale"]), 0.77, 0.001, "from 0.77 of the window")
+	var gl := Graphics.preset_values("medium", Graphics.RENDERER_COMPATIBILITY)
+	assert_eq(int(gl["upscaler"]), 0, "bilinear on Compatibility")
+	assert_near(float(gl["render_scale"]), 0.85, 0.001, "at a scale bilinear keeps sharp")
+	assert_eq(Graphics.matching_preset(gl, Graphics.RENDERER_COMPATIBILITY), "medium", "and it is still Medium there")
+	assert_near(float(Graphics.preset_values("high", Graphics.RENDERER_COMPATIBILITY)["render_scale"]), 1.0, 0.001,
+			"a discrete card's High keeps native resolution")
+	var vp := SubViewport.new()
+	Graphics.apply_viewport(vp, fp, Graphics.RENDERER_FORWARD_PLUS)
+	assert_eq(vp.scaling_3d_mode, Viewport.SCALING_3D_MODE_FSR)
+	assert_near(vp.fsr_sharpness, Graphics.FSR_SHARPNESS, 0.001, "sharpened")
+	vp.free()
+
+
