@@ -555,7 +555,12 @@ const DRY_KINDS := ["cart", "signpost", "bench", "sack", "millstone", "chest", "
 		"market_stall", "well", "gravestone", "coffin", "sarcophagus", "peat_stack", "cooking_pot",
 		"milestone", "gate_post", "fence_post_rail", "hen", "pig", "sheep", "goose", "bed", "cupboard",
 		"shelf", "name_table", "banner"]
+## Set on a thing a builder stood on what holds it (a cave's capstone on the throat's roof): a region's
+## tidying pass leaves it where it is rather than setting it down on the ground under it.
+const SEATED_META := "seated"
 const DRY_SEARCH_M := 9.0
+## A tree's trunk, as far as what is set down near it is concerned (`_note_footprint`), per unit of scale.
+const TRUNK_HALF_M := 0.45
 const DRY_UNDER_M := 0.25
 ## Nothing a dressing sets down stands on a road's way: its foot is kept this far from the road's
 ## line and half its own width more, or it is moved to the verge, or left out. The debug agent's road
@@ -599,15 +604,69 @@ func dry_spot(path: String, at: Vector3) -> Vector3:
 	# tower, and the upturned bell went into the hill (the seat audit's sunk bells)
 	if at.y > on_ground(at.x, at.z).y + 1.5:
 		return at
+	# and where it goes, nothing already set down stands: a camp's stool moved off the road beside
+	# its fire went into the fire (the seat audit's overlaps at Rafters' Camp, the Clanless Camp and
+	# the Poachers' Cache), a crate into the crate beside it (the Lead-Carriers' Rest)
+	var half := half_width_of(path)
 	var r := 1.5
 	while r <= DRY_SEARCH_M:
 		for i in 16:
 			var a := TAU * float(i) / 16.0
 			var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
-			if _clear(g, wet, clear):
+			if _clear(g, wet, clear) and _room_at(Vector2(g.x, g.z), half):
 				return g
 		r += 1.5
 	return Vector3(NAN, NAN, NAN)
+
+
+## The footprints of what `place` has set down (local xz, the box it is drawn in seen from above, as
+## the seat audit measures it): where a prop `dry_spot` moves, or a tree's trunk, may not go
+## (`_room_at`). A tree's is its trunk's.
+var _footprints: Array[Rect2] = []
+
+
+func _note_footprint(path: String, at: Vector3, yaw: float, scale: float, tilt: Vector3) -> void:
+	if path.contains("/trees/"):
+		var half := TRUNK_HALF_M * scale
+		_footprints.append(Rect2(at.x - half, at.z - half, half * 2.0, half * 2.0))
+		return
+	var b: Dictionary = meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	var basis := Basis.from_euler(Vector3(tilt.x, yaw, tilt.z)).scaled(Vector3.ONE * scale)
+	var box := Rect2(at.x, at.z, 0.0, 0.0)
+	for cx in [float(lo[0]), float(hi[0])]:
+		for cy in [float(lo[1]), float(hi[1])]:
+			for cz in [float(lo[2]), float(hi[2])]:
+				var w := basis * Vector3(cx, cy, cz)
+				box = box.expand(Vector2(at.x + w.x, at.z + w.z))
+	_footprints.append(box)
+
+
+## Where a tree's trunk `half` wide goes: at local `at`, or where it is nearest clear of what is set
+## down already, up to six metres off (the Swallet's hawthorn grew up through the boulder of the cave's
+## flank it was planted on), or `at` where nothing near is clear.
+func _trunk_room(at: Vector3, half: float) -> Vector3:
+	if _room_at(Vector2(at.x, at.z), half):
+		return at
+	var r := 1.0
+	while r <= 6.0:
+		for i in 12:
+			var a := TAU * float(i) / 12.0
+			var g := on_ground(at.x + sin(a) * r, at.z + cos(a) * r)
+			if _room_at(Vector2(g.x, g.z), half) and not in_water(g):
+				return g
+		r += 1.0
+	return at
+
+
+## Whether a thing `half` wide at local xz `at` stands clear of everything `place` has set down.
+func _room_at(at: Vector2, half: float) -> bool:
+	var mine := Rect2(at.x - half, at.y - half, half * 2.0, half * 2.0)
+	for f in _footprints:
+		if f.intersects(mine):
+			return false
+	return true
 
 
 func _clear(at: Vector3, wet: bool, road_clear: float) -> bool:
@@ -729,6 +788,8 @@ func place(path: String, at: Vector3, yaw := 0.0, scale := 1.0, collide := true,
 	at = dry_spot(path, at)
 	if is_nan(at.x):
 		return null
+	if collide and path.contains("/trees/"):
+		at = _trunk_room(at, TRUNK_HALF_M * scale)
 	var packed := scene(path)
 	if packed == null:
 		return null
@@ -744,6 +805,8 @@ func place(path: String, at: Vector3, yaw := 0.0, scale := 1.0, collide := true,
 	inst.scale = Vector3.ONE * scale
 	inst.name = path.get_file().get_basename()
 	root.add_child(inst)
+	if collide:
+		_note_footprint(path, at, yaw, scale, tilt)
 	if far:
 		_far_range(inst)
 	elif collide:

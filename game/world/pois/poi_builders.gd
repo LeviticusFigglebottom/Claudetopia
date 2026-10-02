@@ -121,9 +121,16 @@ static func camp(d: PoiDressing) -> void:
 	var grain := k.grain()
 	var timber := m.begin()
 
-	# the fire, its ring of stones, its light and its smoke
+	# the fire, its ring of stones, its light and its smoke: where it is clear of the road, and the
+	# camp round it there. Set down by the road, the fire was moved off it on its own and the stools,
+	# its light and its smoke stayed round where it had been (the seat audit's fire in a stool at the
+	# Clanless Camp, Rafters' Camp and the Poachers' Cache)
+	var fire_path := k.prop("campfire")
+	var clear_spot := k.dry_spot(fire_path, k.on_ground(fire.x, fire.y))
+	if not is_nan(clear_spot.x):
+		fire = Vector2(clear_spot.x, clear_spot.z)
 	await k.step()
-	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), k.rng.randf_range(0.0, TAU), 1.15)
+	k.place(fire_path, k.on_ground(fire.x, fire.y), k.rng.randf_range(0.0, TAU), 1.15)
 	# where the people this camp belongs to stand round it (an encounter's `at`)
 	k.marker("the_fire", k.on_ground(fire.x, fire.y))
 	var stones: Array = []
@@ -222,8 +229,10 @@ static func camp(d: PoiDressing) -> void:
 
 	# a cart at the edge, on the road side, and a hitching rail
 	var edge := fire - grain * 11.0 + Vector2(-grain.y, grain.x) * k.rng.randf_range(-3.0, 3.0)
+	var cart := k.prop("cart")
+	var cart_yaw := PoiKit.yaw_of(grain) + k.rng.randf_range(-0.3, 0.3)
 	await k.step()
-	k.place(k.prop("cart"), k.on_ground(edge.x, edge.y), PoiKit.yaw_of(grain) + k.rng.randf_range(-0.3, 0.3))
+	k.place(cart, _seated_on_slope(k, cart, edge, cart_yaw), cart_yaw)
 	var rail := edge + Vector2(-grain.y, grain.x) * 5.5
 	await k.step()
 	var hitch := k.place(k.prop("fence_post_rail"), k.on_ground(rail.x, rail.y), PoiKit.yaw_of(grain) + PI * 0.5)
@@ -308,12 +317,42 @@ static func camp(d: PoiDressing) -> void:
 		var wall := m.begin()
 		var w0 := fire - grain.rotated(0.6) * 6.5
 		var w1 := fire - grain.rotated(-0.6) * 6.5
+		# on whichever side of the fire keeps it out of a road's way (the Clanless Camp's stood in the
+		# carriageway of the track from the Three Sisters: the seat audit's on_road)
+		if not k.roads.is_empty():
+			var best := -INF
+			for turn in [0.0, PI, PI * 0.5, -PI * 0.5]:
+				var wa := fire - grain.rotated(0.6 + turn) * 6.5
+				var wb := fire - grain.rotated(-0.6 + turn) * 6.5
+				var clear := minf(minf(k.road_distance(wa), k.road_distance(wb)), k.road_distance((wa + wb) * 0.5))
+				if clear > best + 0.5:
+					best = clear
+					w0 = wa
+					w1 = wb
+				if clear >= PoiKit.ROAD_CLEAR_M + 1.0:
+					break
 		await k.step()
 		m.wall(wall, w0, w1, 1.3, 0.35)
 		await k.step()
 		m.commit(wall, k.surface("stone"), "Windbreak", true)
 	await k.step()
 	m.commit(timber, k.surface("timber"), "Timber")
+
+
+## Where a long thing (a cart, whose shafts run four metres past its axle) stands at local xz `at`
+## turned `yaw`: on the ground under its origin, or as much higher as keeps the middle of its box no
+## more than a third under the ground there. On a camp's skirt the Wall-Watchers' cart was set by its
+## axle and its shafts went into the rise (the seat audit's sunk cart, 68%).
+static func _seated_on_slope(k: PoiKit, path: String, at: Vector2, yaw: float) -> Vector3:
+	var g := k.on_ground(at.x, at.y)
+	if path == "":
+		return g
+	var b: Dictionary = PoiKit.meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	var mid := Basis(Vector3.UP, yaw) * Vector3((float(lo[0]) + float(hi[0])) * 0.5, 0.0, (float(lo[2]) + float(hi[2])) * 0.5)
+	var gm := k.on_ground(at.x + mid.x, at.y + mid.z).y
+	return Vector3(g.x, maxf(g.y, gm - PoiKit.height_of(path) / 3.0), g.z)
 
 
 ## Where a post `out` metres to one side (`side`) of `from` stands clear of the roads' carriageways
@@ -1567,10 +1606,16 @@ static func shrine(d: PoiDressing) -> void:
 		var pg := k.on_ground(pool_at.x, pool_at.y)
 		await k.step()
 		m.pool(pool_at, 4.2, pg.y + 0.12, k.still_water(pg.y - 2.5, Color.WHITE, 0.6), "Pool")
+		# The old bell half out of the pool, canted where it settled: its crown and shoulder over the
+		# water, the rim under it. It stood only its crown's top (0.18 m) out of the water, and since
+		# the pool is a sheet over the ground and not a hole, the rest was in the peat (the seat
+		# audit's sunk bell at the Sedge Hearth, the Drowned Bell and the Lantern Hummock): from the
+		# stone it read as a stone in a puddle. The pool's bed goes down to the bell's lip.
 		var bell := k.prop("bell_medium")
+		var bell_h := PoiKit.height_of(bell) * 2.4
 		await k.step()
-		k.place(bell, Vector3(pool_at.x, pg.y + 0.3 - PoiKit.height_of(bell) * 2.4, pool_at.y), 0.4, 2.4, false,
-				Vector3(0.12, 0.0, -0.08))
+		k.place(bell, Vector3(pool_at.x, pg.y + 0.12 + bell_h * BELL_SHOWS - bell_h, pool_at.y), 0.4, 2.4, false,
+				Vector3(0.22, 0.0, -0.14))
 		var reeds: Array = []
 		for i in 40:
 			var a := k.rng.randf_range(0.0, TAU)
@@ -1758,6 +1803,10 @@ static func shrine(d: PoiDressing) -> void:
 
 ## A shrine's Hearthstone, where its data asks for one. A shrine kept one whatever its data said,
 ## and the Turning Cairn, a shrine of pilgrims' bells that keeps none, got one in its cairn.
+## How much of the sunk bell in a peat-island shrine's pool stands over the water (`shrine`).
+const BELL_SHOWS := 0.45
+
+
 static func _shrine_stone(d: PoiDressing, at: Vector3, yaw: float) -> void:
 	if d.wants_hearthstone:
 		await d.kit.step()
@@ -2204,15 +2253,24 @@ static func _tower_toll_house(d: PoiDressing, grain: Vector2) -> void:
 	k.light(k.on_ground(door.x + 1.2, door.y, 1.1), Color(1.0, 0.62, 0.3), 2.0, 9.0)
 	await k.step()
 	k.place(k.prop("signpost"), k.on_ground(door.x - 2.2, door.y + 1.0), yaw + PI)
-	await k.step()
-	k.place(k.prop("drystone_wall"), k.on_ground(door.x - 4.0, door.y - 1.0), yaw + PI * 0.5)
-	await k.step()
-	k.place(k.prop("drystone_wall"), k.on_ground(door.x + 4.4, door.y - 1.0), yaw + PI * 0.5)
+	# a wing of drystone out from the tower's front either side of the door, along the way in: they
+	# were set by the map's axes and not the tower's, and one stood off in the snow on its own (the
+	# seat audit's lone drystone at the Watch of the Gate)
+	var across := Vector2(-grain.y, grain.x)
+	var wing_l := grain * (half + 1.3) - across * 2.6
+	var wing_r := grain * (half + 1.3) + across * 2.8
+	for wing in [wing_l, wing_r]:
+		var w: Vector2 = wing
+		await k.step()
+		var wall := k.place(k.prop("drystone_wall"), k.on_ground(w.x, w.y), yaw + PI * 0.5)
+		if wall != null:
+			# joined to the tower it runs out from, not a fence run's length
+			wall.set_meta("stands_alone", true)
 	# The gate-warden's post: out on the road past the drift the door's wall has piled (4.6 m
 	# round a point 5.4 m out, and it stands to the knee over the brazier), where the road comes
 	# up to the snow, on whichever side the walls and the post by the door leave clear.
 	var things := [[Vector2(door.x + 1.2, door.y), 1.4], [Vector2(door.x - 2.2, door.y + 1.0), 1.4],
-			[Vector2(door.x - 4.0, door.y - 1.0), 3.0], [Vector2(door.x + 4.4, door.y - 1.0), 3.0]]
+			[wing_l, 3.0], [wing_r, 3.0]]
 	var post := grain * 11.2
 	for a in [0.0, 0.25, -0.25, 0.5, -0.5]:
 		var c := grain.rotated(float(a)) * 11.2
@@ -3595,14 +3653,32 @@ static func _stream_over(d: PoiDressing, lip: Vector3, facing: Vector2, run: flo
 	var m := d.masonry
 	var lip2 := Vector2(lip.x, lip.z)
 	var head := lip2 - facing * (run + 2.0)
-	var mid := (lip2 + head) * 0.5
-	var y := maxf(lip.y + 0.03, maxf(k.on_ground(mid.x, mid.y).y, k.on_ground(head.x, head.y).y) + 0.04)
+	# On the ground it runs over, a length at a time, from the spring down to the lip: laid as one
+	# level sheet at the highest ground under it, it stood 0.21 m over the step's top at the Rust Scar
+	# and the Glass Falls (the seat audit's floating streams).
+	var yaw := PoiKit.yaw_of(facing)
+	var lengths := 6
+	var ys: Array[float] = []
+	for i in lengths + 1:
+		var q := head.lerp(lip2, float(i) / float(lengths))
+		var y := k.on_ground(q.x, q.y).y + 0.04
+		if i == lengths:
+			y = maxf(y, lip.y + 0.03)
+		ys.append(y)
 	var water := m.begin()
-	m.block(water, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing)), Vector3(mid.x, y, mid.y)), Vector3(1.8, 0.04, lip2.distance_to(head)))
+	var seg := lip2.distance_to(head) / float(lengths)
+	for i in lengths:
+		var a := head.lerp(lip2, float(i) / float(lengths))
+		var b := head.lerp(lip2, float(i + 1) / float(lengths))
+		var mid3 := Vector3((a.x + b.x) * 0.5, (ys[i] + ys[i + 1]) * 0.5, (a.y + b.y) * 0.5)
+		var pitch := -atan2(ys[i + 1] - ys[i], seg)
+		# a little long, so the lengths overlap where the ground bends
+		m.block(water, Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch), mid3),
+				Vector3(1.8, 0.04, sqrt(seg * seg + pow(ys[i + 1] - ys[i], 2.0)) + 0.15))
 	await k.step()
 	m.commit(water, mat, "Stream")
 	await k.step()
-	m.pool(head, 1.5, y + 0.01, mat, "Spring")
+	m.pool(head, 1.5, ys[0] + 0.01, mat, "Spring")
 	var reeds: Array = []
 	for n in 10:
 		var a := k.rng.randf_range(0.0, TAU)
@@ -3851,6 +3927,20 @@ static func _falls_terraced(d: PoiDressing, grain: Vector2, step: Dictionary = {
 		var stair_from := face_at + facing * 1.5 + perp * (_face_half_width(width) + 1.5)
 		var stair := m.begin()
 		var steps := int(ceil(tier_h / 0.36))
+		if stepped:
+			# out in front of the land's own step where its line swings forward beside the face: laid
+			# from the face's middle line, the Three Sisters' top stair was under the hill (the seat
+			# audit's buried stair)
+			for slide in 17:
+				var ok := true
+				for i in steps:
+					var q := stair_from + facing * (0.5 * float(slide)) - facing * (0.42 * (float(i) + 0.5))
+					if k.on_ground(q.x, q.y).y > pool_y + tier_h / float(steps) * float(i + 1) + 0.05:
+						ok = false
+						break
+				if ok:
+					stair_from += facing * (0.5 * float(slide))
+					break
 		m.steps(stair, stair_from, -facing, pool_y, steps, tier_h / float(steps), 0.42, 1.4)
 		await k.step()
 		m.commit(stair, k.surface("stone", 0.7), "Stair%d" % tier, true)
@@ -4612,9 +4702,14 @@ static func _bones_skull(d: PoiDressing) -> void:
 	var s := 3.4
 	await k.step()
 	k.place(skull, k.on_ground(0.0, 0.0, -0.9), yaw, s, true, Vector3(0.14, 0.0, 0.0), true)
+	var jaw := k.rock("bone_skull_fragment", 1)
 	await k.step()
-	k.place(k.rock("bone_skull_fragment", 1), k.on_ground(face.x * 3.2, face.y * 3.2, -1.3), yaw + PI, s * 0.8,
+	k.place(jaw, k.on_ground(face.x * 3.2, face.y * 3.2, -1.3), yaw + PI, s * 0.8,
 			true, Vector3(-0.2, 0.0, 0.05), true)
+	# how far the two pieces reach toward the face and to either side of it, so the vigil's fire is
+	# by the skull and not in it (it stood 7 m out, inside the jaw's 13 m: the seat audit's campfire
+	# in a skull fragment at the Watcher, the Brakh's Eye, the Skarl Skull, the Jawbone, the Hart Bones)
+	var boxes := [_footprint_box(skull, Vector2.ZERO, yaw, s), _footprint_box(jaw, face * 3.2, yaw + PI, s * 0.8)]
 	# the antlers: the forge's finger bones, branching up and out from the crown in two racks
 	var antlers: Array = []
 	var crown := Vector3(-face.x * 1.2, g.y + PoiKit.height_of(skull) * s * 0.78, -face.y * 1.2)
@@ -4635,7 +4730,15 @@ static func _bones_skull(d: PoiDressing) -> void:
 	await k.step()
 	k.scatter(k.rock("bone_finger"), antlers, false, true)
 	# the vigil: a knight's fire, a spear set in the ground, a shield against the jaw
-	var camp_at := face * 7.0 + perp * 2.5
+	var vigil_out := 7.0
+	while vigil_out < d.pad_radius:
+		var clear := true
+		for b in boxes:
+			clear = clear and not (b as Rect2).grow(1.3).has_point(face * vigil_out + perp * 2.5)
+		if clear:
+			break
+		vigil_out += 0.5
+	var camp_at := face * vigil_out + perp * 2.5
 	await k.step()
 	k.place(k.prop("campfire"), k.on_ground(camp_at.x, camp_at.y), 0.0)
 	k.light(k.on_ground(camp_at.x, camp_at.y, 0.9), Color(1.0, 0.66, 0.34), 2.4, 12.0)
@@ -4667,6 +4770,20 @@ static func _bones_skull(d: PoiDressing) -> void:
 		moss.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.02), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.5)))
 	await k.step()
 	k.scatter(k.flora("moss_patch"), moss, false, false, false)
+
+
+## The box (local xz, the map's axes, as the seat audit sees it) of a piece set down at `at`, turned
+## `yaw` and scaled `sc`, from the forge's bounds.
+static func _footprint_box(path: String, at: Vector2, yaw: float, sc: float) -> Rect2:
+	var b: Dictionary = PoiKit.meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	var box := Rect2(at, Vector2.ZERO)
+	for cx in [float(lo[0]), float(hi[0])]:
+		for cz in [float(lo[2]), float(hi[2])]:
+			var w := Basis(Vector3.UP, yaw) * Vector3(cx * sc, 0.0, cz * sc)
+			box = box.expand(at + Vector2(w.x, w.z))
+	return box
 
 
 # --- strange trees ---------------------------------------------------------------------------------------
@@ -4784,7 +4901,8 @@ static func _tree_sallow_king(d: PoiDressing) -> void:
 	await k.step()
 	k.place(k.prop("dock_post"), k.on_ground(post_at.x, post_at.y), 0.0, 1.2)
 	for i in 3:
-		var p := post_at + k.jitter(1.8)
+		# round the post, not in it nor in each other (the seat audit's baskets at the Greyed Ring)
+		var p := post_at + Vector2(sin(TAU * float(i) / 3.0), cos(TAU * float(i) / 3.0)) * 1.1 + k.jitter(0.25)
 		await k.step()
 		k.place(k.prop("basket"), k.on_ground(p.x, p.y), k.rng.randf_range(0.0, TAU))
 	await k.step()
@@ -4826,8 +4944,10 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	# 2.1 for the same reason as the Singing Yew: a leaf card scaled much past twice its built
 	# size reads as a shard rather than foliage. A pollarded willow at 2.1 is ten metres over
 	# an islet you can walk round in twenty paces, which is barn-sized enough.
+	var willow := k.tree("willow_pollard")
+	var willow_yaw := k.rng.randf_range(0.0, TAU)
 	await k.step()
-	k.place(k.tree("willow_pollard"), crown, k.rng.randf_range(0.0, TAU), 2.1, true, Vector3.ZERO, true)
+	k.place(willow, crown, willow_yaw, 2.1, true, Vector3.ZERO, true)
 	# the hermit's boat moored in the roots, on the water: off the isle's own edge when it was
 	# raised out of the lake, at the nearest shore when the map drew it
 	var moor := grain.rotated(0.8) * (isle_r - 2.0)
@@ -4856,12 +4976,17 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 		await k.step()
 		k.place(k.prop("rope_coil"), Vector3(coil.x, coil_y, coil.y), 0.0, 1.0, false)
 	# what a clerk who stopped counting keeps: a stool, a book, a lantern, the crate he sits on,
-	# each on the ground it stands on
-	var camp_at := -grain * 4.0
+	# each on the ground it stands on, out past the willow's crown: under it, his fire was in the
+	# tree (the seat audit's willow over the campfire, the stool and the crate at Willow Isle)
+	var out := 4.0
+	while out < isle_r - 3.0 and _under_crown(willow, willow_yaw, 2.1, -grain * out, 1.6):
+		out += 0.5
+	var camp_at := -grain * out
+	var aside := Vector2(-grain.y, grain.x)
 	var stool := Vector3(camp_at.x, stand.call(camp_at.x, camp_at.y), camp_at.y)
 	await k.step()
 	k.place(k.prop("stool"), stool, yaw)
-	var crate := Vector2(camp_at.x + 1.2, camp_at.y + 0.4)
+	var crate := camp_at + aside * 1.2 - grain * 0.4
 	var crate_y: float = stand.call(crate.x, crate.y)
 	await k.step()
 	k.place(k.prop("crate"), Vector3(crate.x, crate_y, crate.y), yaw + 0.6)
@@ -4869,19 +4994,19 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	k.place(k.prop("book"), Vector3(crate.x, crate_y + 0.66, crate.y), yaw + 0.2, 1.0, false)
 	# the book is his, and it is a thing a place's `lies` can name (the island's is read where it is)
 	k.marker("the_hermits_book", Vector3(crate.x, crate_y + 0.66, crate.y))
-	var lamp := Vector2(camp_at.x - 1.4, camp_at.y - 0.6)
+	var lamp := camp_at - aside * 1.4 - grain * 0.6
 	var lamp_y: float = stand.call(lamp.x, lamp.y)
 	await k.step()
 	k.place(k.prop("lantern_standing"), Vector3(lamp.x, lamp_y, lamp.y), 0.0)
 	k.light(Vector3(lamp.x, lamp_y + 1.9, lamp.y), Color(1.0, 0.82, 0.55), 1.7, 10.0)
-	var fire := Vector2(camp_at.x - 0.2, camp_at.y - 2.2)
+	var fire := camp_at - aside * 0.2 - grain * 2.2
 	var fire_y: float = stand.call(fire.x, fire.y)
 	await k.step()
 	k.place(k.prop("campfire"), Vector3(fire.x, fire_y, fire.y), 0.0)
 	k.light(Vector3(fire.x, fire_y + 0.8, fire.y), Color(1.0, 0.68, 0.35), 2.0, 10.0)
 	# the hermit's own place, by his stool, on the isle's surface: raised, because under a heaped
 	# isle is the lake bed
-	var seat := Vector2(camp_at.x + 0.8, camp_at.y - 1.0)
+	var seat := camp_at + aside * 0.8 - grain * 1.0
 	k.marker("the_hermits_stool", Vector3(seat.x, stand.call(seat.x, seat.y), seat.y), true, true, 3.0)
 	# lilies on the water round the isle, and reeds at its foot: only where there is water
 	var lilies: Array = []
@@ -4915,6 +5040,25 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 		reeds.append(PoiKit.transform_at(Vector3(x, y, z), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.9, 1.4)))
 	await k.step()
 	k.scatter(k.flora("reeds"), reeds, false, false, false)
+
+
+## Whether local xz `at`, and `margin` round it, is under a tree's crown: inside the box of a tree
+## `path` stood at the middle, turned `yaw` and scaled `sc` (what the seat audit measures it by).
+static func _under_crown(path: String, yaw: float, sc: float, at: Vector2, margin: float) -> bool:
+	var b: Dictionary = PoiKit.meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	var box := Rect2()
+	var first := true
+	for cx in [float(lo[0]), float(hi[0])]:
+		for cz in [float(lo[2]), float(hi[2])]:
+			var w := Basis(Vector3.UP, yaw) * Vector3(cx * sc, 0.0, cz * sc)
+			if first:
+				box = Rect2(Vector2(w.x, w.z), Vector2.ZERO)
+				first = false
+			else:
+				box = box.expand(Vector2(w.x, w.z))
+	return box.grow(margin).has_point(at)
 
 
 ## A raised mound's own surface, to stand things on it where it is rather than where a formula
@@ -5658,8 +5802,20 @@ static func standing_stones(d: PoiDressing) -> void:
 					Vector3(k.rng.randf_range(1.2, 2.2), 0.35, k.rng.randf_range(0.8, 1.4)))
 			await k.step()
 			m.commit(shard, bronze, "Bronze%d" % i, true)
+		# the bell in the grass between two of the stones, not at a leaning one's foot (where it lay in
+		# the stone: the seat audit's overlap at Bell Meadow)
+		var bell_at := grain * 2.2
+		var best := -1.0
+		for i in 12:
+			var c := grain.rotated(TAU * float(i) / 12.0) * 2.2
+			var gap := INF
+			for sp in spots:
+				gap = minf(gap, c.distance_to(sp as Vector2))
+			if gap > best + 0.01:
+				best = gap
+				bell_at = c
 		await k.step()
-		k.place(k.prop("bell_small"), k.on_ground(grain.x * 2.2, grain.y * 2.2), k.rng.randf_range(0.0, TAU), 1.6, true,
+		k.place(k.prop("bell_small"), k.on_ground(bell_at.x, bell_at.y), k.rng.randf_range(0.0, TAU), 1.6, true,
 				Vector3(0.0, 0.0, 1.1))
 		# the sheep sleep against them because they are warm
 		var grass: Array = []

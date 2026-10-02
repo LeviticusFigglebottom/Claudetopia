@@ -835,9 +835,132 @@ def stop_short(pts: np.ndarray, centre, radius: float, at_end: bool = True) -> n
     return out if at_end else out[::-1].copy()
 
 
+## A road and a point of interest (docs/WORLD_LIFE.md section 2): no road runs through a place's
+## level core unless the place is road furniture, a wayside find, or a place the road is drawn to go
+## through (the atlas road's `through`: Ghastfoot's arch, Kharrow Gate, a ford). The atlas drew its
+## roads to places by their middles and through them by via points set on them, and on w4096g a
+## track ran into the North Cliff Beacon's drum and the Southgate Stone, a lane through the Naming
+## Stone and the Sedge Hearth's plank (the seat audit's `on_road`, the region audit's `road_through`,
+## 54 places in all). So, as the routes are planned (`clear_of_cores`):
+##   * a road that ends at a place no other road ends at stops POI_END_INSET_M inside the edge of
+##     its level core: it brings you to the place, and the place's middle is its own;
+##   * a via point drawn inside a place's level core goes out to POI_CORE_CLEAR_M past its edge, to
+##     the side the road turns (so the road is no longer; straight on, to its left);
+##   * a leg drawn straight through a level core gets a via point there.
+## A place several roads end at (Rafters' Camp, the Clanless Camp, a fall) is where they meet: they
+## run through it as they always did, and its builder keeps its things off them.
+ROAD_FURNITURE_KINDS = frozenset({"bridge", "waystone", "crossroads", "tally_post", "lantern_post", "milestone",
+                                  "gibbet", "well", "cairn", "grave", "market_field", "beacon"})
+POI_END_INSET_M = 2.0
+POI_CORE_CLEAR_M = 3.0
+## The ground a road is put on beside a place: the side it turns to unless the other is gentler and
+## this is steeper than POI_SIDE_GOOD_SLOPE, and neither past POI_SIDE_MAX_SLOPE (rise over run; 0.45
+## is 24 degrees, a pad's embankment or a crag's foot), where it keeps the place's middle instead.
+POI_SIDE_GOOD_SLOPE = 0.25
+POI_SIDE_MAX_SLOPE = 0.45
+
+
+def poi_cores(places: list, specs: list) -> dict:
+    """{POI id: (x, z, level radius)} for every point of interest a road is kept out of the middle of:
+    not road furniture, not a wayside find, not one the atlas says a road goes `through`."""
+    through = {str(t) for s in specs for t in s.get("through", [])}
+    out = {}
+    for p in places:
+        pid = str(p.get("id", ""))
+        if ":poi/" not in pid or "position" not in p or pid in through or p.get("wayside") \
+                or str(p.get("kind", "")) in ROAD_FURNITURE_KINDS:
+            continue
+        out[pid] = (float(p["position"][0]), float(p["position"][1]), pad_level_radius(p))
+    return out
+
+
+def clear_of_cores(wps: list, spec: dict, cores: dict, slope_at=None) -> list:
+    """The waypoints of one road (its two ends and its via points, [x, z] arrays), with the via
+    points that stand in a place's level core moved out of it and one added where a leg runs
+    straight through one (see POI_CORE_CLEAR_M). The road's own two ends are left where they are.
+    `slope_at(x, z)` (rise over run), where given, chooses the side: the one the road turns to
+    unless the other is gentler, and neither where both are steeper than POI_SIDE_MAX_SLOPE (the
+    road then keeps the place's middle, and the place's builder keeps its things off the road)."""
+    ends = {str(spec.get("from", "")), str(spec.get("to", ""))}
+    near = [(pid, np.array(c[:2], dtype=np.float64), float(c[2])) for pid, c in cores.items() if pid not in ends]
+    if not near:
+        return wps
+
+    def beside(c, core, toward, along):
+        """Where the road goes past a place's core, or None: `toward` is the side it would rather."""
+        out = core + POI_CORE_CLEAR_M
+        sides = [toward, -toward]
+        if slope_at is None:
+            return c + toward * out
+        steep = []
+        for sd in sides:
+            at = c + sd * out
+            steep.append(max(float(slope_at(*(at + along * t))) for t in (-POI_CORE_CLEAR_M * 2.0, 0.0,
+                                                                           POI_CORE_CLEAR_M * 2.0)))
+        k = 0 if steep[0] <= max(steep[1] + 0.1, POI_SIDE_GOOD_SLOPE) else 1
+        return c + sides[k] * out if steep[k] <= POI_SIDE_MAX_SLOPE else None
+
+    out = [np.asarray(w, dtype=np.float64) for w in wps]
+    for k in range(1, len(out) - 1):
+        for _, c, core in near:
+            if float(np.hypot(*(out[k] - c))) >= core:
+                continue
+            p, q = out[k - 1], out[k + 1]
+            chord = q - p
+            ln = float(np.hypot(*chord))
+            if ln < 1e-6:
+                continue
+            u = chord / ln
+            foot = p + u * float(np.dot(c - p, u))
+            # toward the chord: the inside of the turn, which shortens the road
+            off = foot - c
+            side = off / float(np.hypot(*off)) if float(np.hypot(*off)) > 1.0 else np.array([-u[1], u[0]])
+            w = beside(c, core, side, u)
+            if w is not None:
+                out[k] = w
+    k = 0
+    while k < len(out) - 1:
+        p, q = out[k], out[k + 1]
+        v = q - p
+        vv = float(np.dot(v, v))
+        added = False
+        for _, c, core in near:
+            if vv < 1e-6 or min(float(np.hypot(*(p - c))), float(np.hypot(*(q - c)))) < core + POI_CORE_CLEAR_M + 1.0:
+                continue
+            t = float(np.dot(c - p, v)) / vv
+            if not 0.0 < t < 1.0:
+                continue
+            foot = p + v * t
+            gap = float(np.hypot(*(foot - c)))
+            if gap >= core:
+                continue
+            u = v / math.sqrt(vv)
+            side = (foot - c) / gap if gap > 1.0 else np.array([-u[1], u[0]])
+            w = beside(c, core, side, u)
+            if w is None:
+                continue
+            out.insert(k + 1, w)
+            added = True
+            break
+        if not added:
+            k += 1
+    return out
+
+
+def poi_road_ends(specs: list, cores: dict) -> dict:
+    """{POI id: metres}: where a road that ends at a place no other road ends at stops, measured from
+    the place's middle (POI_END_INSET_M inside its level core)."""
+    count: dict = {}
+    for s in specs:
+        for e in (s.get("from"), s.get("to")):
+            count[e] = count.get(e, 0) + 1
+    return {pid: max(c[2] - POI_END_INSET_M, 0.0) for pid, c in cores.items() if count.get(pid, 0) == 1}
+
+
 def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask: np.ndarray, levels: dict,
                n_c: int = 512, floor: np.ndarray | None = None, sink: np.ndarray | None = None,
-               no_fill: np.ndarray | None = None, lake=None, solid: dict | None = None) -> list:
+               no_fill: np.ndarray | None = None, lake=None, solid: dict | None = None,
+               cores: dict | None = None) -> list:
     """The atlas's roads, each laid on the ground from its start through its via points to its end.
 
     `specs` is the atlas's `roads` (tools/world/atlas/SCHEMA.md) and `things` every place and POI
@@ -855,7 +978,9 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
     line from Greyfold to the Cold Fire. `solid` is {place id: metres}: what stands solid on a
     place's own position, and how far it reaches across the ground from there, plus room for a
     body. A road to or from such a place stops at its foot (`stop_short`). The Sunken Choir's head
-    colossus stands on the Choir's position, and the Stair Path ran on into it.
+    colossus stands on the Choir's position, and the Stair Path ran on into it. `cores` is
+    `poi_cores`: the points of interest whose middles a road keeps out of (`clear_of_cores`,
+    `poi_road_ends`); left out, it is worked out from `things`.
     """
     from scipy.spatial import cKDTree
 
@@ -906,6 +1031,17 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
     # A profile every 4 m: at 12 m, a cleft twelve metres across was one sample on one road and
     # none on the next, and two roads sharing a trunk were graded 13 m apart at the same place.
     step_m = 4.0
+    if cores is None:
+        cores = poi_cores([dict(t, id=i) for i, t in things.items()], specs)
+    end_at = poi_road_ends(specs, cores)
+
+    def slope_at(x: float, z: float) -> float:
+        from .grid import sample_bilinear
+        d = max(grid.spacing, 4.0)
+        xs = np.array([x - d, x + d, x, x])
+        zs = np.array([z, z, z - d, z + d])
+        h = sample_bilinear(H, grid, xs, zs)
+        return float(math.hypot(h[1] - h[0], h[3] - h[2]) / (2.0 * d))
     for spec in specs:
         a, b = things.get(spec["from"]), things.get(spec["to"])
         if a is None or b is None:
@@ -914,6 +1050,8 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
         w = float(ROAD_WIDTH_BY_KIND.get(kind, 5.0))
         ends = [np.array(a["position"][:2], dtype=np.float64), np.array(b["position"][:2], dtype=np.float64)]
         wps = [ends[0]] + [np.array(v, dtype=np.float64) for v in spec.get("via", [])] + [ends[1]]
+        if kind != "stair":
+            wps = clear_of_cores(wps, spec, cores, slope_at)
         # the roads already laid are cheaper to follow than new ground (TRUNK_DISCOUNT)
         area_now = area
         if laid_pts:
@@ -972,6 +1110,10 @@ def plan_roads(grid: Grid, H: np.ndarray, specs: list, things: dict, water_mask:
                 pts = stop_short(pts, ends[1] if at_end else ends[0], reach, at_end)
                 if pts.shape[0] != n_before or not np.allclose(pts[-1 if at_end else 0], ends[1 if at_end else 0]):
                     stopped.add(tid)
+            elif kind != "stair" and float(end_at.get(tid, 0.0)) > 0.0:
+                # a place this road alone comes to: it stops on the place's level ground, short of its
+                # middle, and keeps the pad's level there (not added to `stopped`)
+                pts = stop_short(pts, ends[1] if at_end else ends[0], float(end_at[tid]), at_end)
         last = pts.shape[0] - 1
         # Where this road's carriageway overlaps one already laid, it IS that road: its points
         # are moved onto the other's centre line and take its level and the land it recorded.

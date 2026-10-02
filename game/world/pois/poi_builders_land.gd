@@ -342,6 +342,11 @@ static func vista(d: PoiDressing) -> void:
 ## rock's own stone darkening to black at ten metres. In Skerrow the rock is limestone, pale and in
 ## beds; in the Briarwold it is a root-cave, the roots of the tree above arching over the mouth; by
 ## the sea it is a sea-cave, with the tide's pool in its mouth.
+## How far a throat runs in where the world raised a face for the cave: it stands in front of the face,
+## so this much of the pad is its (`cave`).
+const FACE_THROAT_M := 7.0
+
+
 static func cave(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
@@ -368,14 +373,21 @@ static func cave(d: PoiDressing) -> void:
 	var high := 3.0 + k.rng.randf_range(0.0, 1.6)
 	var wide := high * k.rng.randf_range(0.8, 1.05)
 	var deep := 10.0
-	# the mouth stands a little uphill of the middle, its floor on the ground there; where the world
-	# raised a face for it, on that face's line, its floor the pad's, and low enough under the face's
-	# top for the hill to close over its roof
-	var mouth := into * (float(rise["behind"]) if not rise.is_empty() else 3.0)
+	# The mouth stands a little uphill of the middle, its floor on the ground there. Where the world
+	# raised a face for it, the throat stands on the level ground in front of that face and ends at
+	# its foot, under a bank of the ground's own that meets the face: the land is a heightmap and
+	# cannot be holed, and a throat run on into the face was under the ground from its second ring
+	# (the seat audit's buried throats at the Horn Hole, the Wrist Hole, the Kharrow Hole, the Oskel
+	# Drip, the Root Hollow and the Briar Root, and 53-115 m under the Hushline's cliff), its mouth
+	# filled by the face's slope. Its floor is the ground under it, which is the pad's: the Rafters'
+	# Locker's face said a floor 14 m over its pad, and its throat stood 4-5 m in the air.
+	var face_line := float(rise["behind"]) if not rise.is_empty() else 0.0
+	if not rise.is_empty():
+		deep = FACE_THROAT_M
+	var mouth := into * (face_line - deep - 0.8 if not rise.is_empty() else 3.0)
 	var o := k.on_ground(mouth.x, mouth.y)
 	if not rise.is_empty():
-		o.y = float(rise["floor"])
-		high = clampf(high, 2.4, float(rise["top"]) - o.y - 1.4)
+		high = clampf(high, 2.4, maxf(float(rise["top"]) - o.y - 1.4, 2.4))
 		wide = high * k.rng.randf_range(0.85, 1.05)
 	# The throat: floor, walls and roof of the passage, ring by ring back into the hill, each ring's
 	# floor on the ground there (so the hill never rises through it) and each darker than the last,
@@ -392,9 +404,6 @@ static func cave(d: PoiDressing) -> void:
 		var span := z1 - z0 + 0.05
 		var at := mouth + into * mid
 		var g := k.on_ground(at.x, at.y).y
-		if not rise.is_empty():
-			# into the face the world raised: the floor runs in level from the mouth, a little up
-			g = o.y + 0.08 * float(i)
 		if not floors.is_empty():
 			g = maxf(g, floors[-1])
 		floors.append(g)
@@ -411,9 +420,9 @@ static func cave(d: PoiDressing) -> void:
 		# the rock of the region at the mouth, going dark as it goes in: the first ring is the stone's
 		# own, lit by what comes in, so the mouth is a hole in rock and not a black box
 		var dark := lerpf(0.26, 0.02, t1)
+		# (the face cave's first ring was the painted stone's courses, which stood in front of the face
+		# as a squared doorway once the throat came out of the hill)
 		var lining_mat: Material = PoiKit.plain(Color(dark, dark * 0.97, dark * 0.92), 0.95)
-		if i == 0 and not rise.is_empty():
-			lining_mat = k.surface("stone", 0.9)
 		await k.step()
 		m.commit(lining, lining_mat, "Throat%d" % i)
 		k.collider(Vector3(ww + 0.6, 0.4, span), Transform3D(basis, base + basis * Vector3(0.0, -0.2, mid)), "stone")
@@ -431,15 +440,19 @@ static func cave(d: PoiDressing) -> void:
 	# thing stood on the grass. Two leaning slabs read as a tent, and a lintel as a doorway.
 	# every boulder of the mouth as it is put down (_crag_crowded), so none is laid inside another
 	var laid: Array = []
-	await _crag(d, mouth, into, across, o, high, wide, not rise.is_empty(), laid)
-	# The hill over the passage: the face the world raised for it, with the region's rock either side
-	# of the mouth; or where it raised none, a bank of the ground's own over the throat. Boulders were
-	# heaped on the throat's roof instead, and on flat ground the throat stood as a black box with
-	# rubble on top (the w4096c shots of the Kharrow Hole, the Horn Hole and the Briar Root).
+	# (a brow over the bank, unless the face behind is a cliff, which is its own: the Hushline's brow
+	# stood in its cliff's foot, two-thirds under the ground)
+	var cliff := not rise.is_empty() and float(rise["top"]) - o.y > high + 8.0
+	await _crag(d, mouth, into, across, o, high, wide, cliff, laid)
+	# The hill over the passage: a bank of the ground's own over the throat, meeting the face the world
+	# raised for it (with the region's rock either side of the throat's end, on the face's line), or the
+	# slope where it raised none. Boulders were heaped on the throat's roof instead, and on flat ground
+	# the throat stood as a black box with rubble on top (the w4096c shots of the Kharrow Hole, the Horn
+	# Hole and the Briar Root).
 	if not rise.is_empty():
-		await _cave_face(d, rise, mouth, into, across, o, wide)
-	else:
-		await _cave_bank(d, mouth, into, across, o, high, wide, deep)
+		var foot := into * face_line
+		await _cave_face(d, rise, foot, into, across, k.on_ground(foot.x, foot.y), wide + 2.0)
+	await _cave_bank(d, mouth, into, across, o, high, wide, deep)
 	# along the flanks, stepping down into the slope
 	for s in [-1.0, 1.0]:
 		for z in [0.5, 4.0]:
@@ -450,14 +463,25 @@ static func cave(d: PoiDressing) -> void:
 			var at := mouth + across * float(s) * (wide * 0.5 + 5.0 + k.rng.randf_range(0.0, 1.5)) + into * float(z)
 			var sc := k.rng.randf_range(1.2, 2.0)
 			var half := maxf(PoiKit.half_width_of(path), 0.8) * sc * 1.2
-			for attempt in 8:
-				if not _crag_crowded(laid, at, half):
+			var yaw := k.rng.randf_range(0.0, TAU)
+			var tilt := Vector3(k.rng.randf_range(-0.25, 0.25), 0.0, k.rng.randf_range(-0.25, 0.25))
+			var foot := k.on_ground(at.x, at.y, -bh * sc * 0.3)
+			for attempt in 5:
+				foot = k.on_ground(at.x, at.y, -bh * sc * 0.3)
+				if not _crag_crowded(laid, at, half) and _crag_share(laid, _rock_box(path, foot, yaw, sc, tilt)) <= CRAG_SHARE:
 					break
 				at += across * float(s) * half * 0.6
-			laid.append(Rect2(at - Vector2(half, half), Vector2(half, half) * 2.0))
+			var box := _rock_box(path, foot, yaw, sc, tilt)
+			# still in another, or moved out along the foot of a cliff onto its face (the Hushline's
+			# stood 22 m out, two-thirds under the cliff's slope): left out
+			if _crag_crowded(laid, at, half) or _crag_share(laid, box) > CRAG_SHARE \
+					or absf(k.on_ground(at.x, at.y).y - o.y) > bh * sc * 2.0 + 3.0:
+				continue
+			laid.append(box)
 			await k.step()
-			k.place(path, k.on_ground(at.x, at.y, -bh * sc * 0.4), k.rng.randf_range(0.0, TAU), sc, true,
-					Vector3(k.rng.randf_range(-0.25, 0.25), 0.0, k.rng.randf_range(-0.25, 0.25)), true)
+			var rock := k.place(path, foot, yaw, sc, true, tilt, true)
+			if rock != null:
+				rock.set_meta(PoiKit.SEATED_META, true)
 	# Light back off the ground in front of the mouth. With the sun behind the hill the crag's faces
 	# are in its shadow, and in the painted grade a shadow that has nothing to lift it goes black,
 	# so the mouth read as a hole cut in the frame. A bounce is a real light by day and no glow.
@@ -489,7 +513,7 @@ static func cave(d: PoiDressing) -> void:
 			# a small one lying inside a big one is not a stone at its foot: left out
 			if _crag_crowded(laid, p, half):
 				continue
-			laid.append(Rect2(p - Vector2(half, half), Vector2(half, half) * 2.0))
+			laid.append(_rock_box(boulder, k.on_ground(p.x, p.y, -0.2), yaw, sc))
 			small.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.2), yaw, sc))
 		await k.step()
 		k.scatter(boulder, small, true, true)
@@ -721,28 +745,84 @@ static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2
 			# a cheek further round the mouth's side; the brow further back into the hill
 			at += (across * signf(x) if absf(x) >= 1.0 else into) * half * 0.6
 			crowded = _crag_crowded(laid, at, half)
-		var g := k.on_ground(at.x, at.y).y
-		var y := o.y + float(piece[2]) - bh * sc
-		if bool(piece[4]):
-			y = maxf(y, o.y + high - 0.3)
-		else:
-			# never standing on the grass: at least a quarter of it is under the slope
-			y = minf(y, g - bh * sc * 0.25)
-		# and never most of it under: over half of a boulder in the slope reads as a bump, not a
-		# rock (the seat audit's `sunk`, 60%), and one moved up the slope to clear another went further
-		y = maxf(y, g - bh * sc * 0.55)
 		var tilt := Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))
-		laid.append(Rect2(at - Vector2(half, half), Vector2(half, half) * 2.0))
+		var yaw := k.rng.randf_range(0.0, TAU)
+		var y := _crag_y(k, at, o, piece, high, bh * sc)
+		var box := _rock_box(path, Vector3(at.x, y, at.y), yaw, sc, tilt)
+		# Turned and canted, a boulder's drawn box is not the footprint above, and two of them still
+		# shared most of one (the seat audit's overlaps at the Horn Hole, the Wrist Hole, the Briar
+		# Root, Orrdun): a capstone rests a little higher on the roof, any other moves on round the
+		# mouth or back into the hill, and one that still lies in another is left out.
+		for attempt in 6:
+			if _crag_share(laid, box) <= CRAG_SHARE:
+				break
+			if bool(piece[4]):
+				y += 0.3
+			else:
+				at += (across * signf(x) if absf(x) >= 1.0 else into) * half * 0.4
+				y = _crag_y(k, at, o, piece, high, bh * sc)
+			box = _rock_box(path, Vector3(at.x, y, at.y), yaw, sc, tilt)
+		if _crag_share(laid, box) > CRAG_SHARE:
+			continue
+		laid.append(box)
 		await k.step()
-		k.place(path, Vector3(at.x, y, at.y), k.rng.randf_range(0.0, TAU), sc, true, tilt, true)
+		var rock := k.place(path, Vector3(at.x, y, at.y), yaw, sc, true, tilt, true)
+		if rock != null:
+			# every piece of the crag is where the mouth wants it, the capstones on the roof
+			rock.set_meta(PoiKit.SEATED_META, true)
 
 
-## Whether a boulder `half` wide at `at` would share a fifth of the smaller footprint with
-## one already put down (`_crag`).
+## Where a boulder of the mouth's crag (`_crag`) stands: `piece`'s top over the mouth's floor, a
+## capstone on the roof, anything else with a quarter to under half of its `h` in the slope.
+static func _crag_y(k: PoiKit, at: Vector2, o: Vector3, piece: Array, high: float, h: float) -> float:
+	var g := k.on_ground(at.x, at.y).y
+	var y := o.y + float(piece[2]) - h
+	if bool(piece[4]):
+		return maxf(y, o.y + high - 0.3)
+	# never standing on the grass: at least a quarter of it is under the slope
+	y = minf(y, g - h * 0.25)
+	# and never most of it under: over half of a boulder in the slope reads as a bump, not a rock (the
+	# seat audit's `sunk`, 60% at its box's middle, which a canted one's box puts further down)
+	return maxf(y, g - h * 0.45)
+
+
+## How much of a crag's boulder another may share, of the smaller one's drawn box (the seat audit
+## calls 60% an overlap): rocks of a crag lean on each other, and their turned boxes share a good deal
+## where the rocks themselves only touch.
+const CRAG_SHARE := 0.55
+
+
+## A rock's drawn box, set down at `at` turned `yaw`, canted `tilt` and scaled `sc` as PoiKit.place
+## sets it, from the forge's bounds.
+static func _rock_box(path: String, at: Vector3, yaw: float, sc: float, tilt := Vector3.ZERO) -> AABB:
+	var b: Dictionary = PoiKit.meta(path).get("bounds", {})
+	var lo: Array = b.get("min", [-0.5, 0.0, -0.5])
+	var hi: Array = b.get("max", [0.5, 1.0, 0.5])
+	var local := AABB(Vector3(float(lo[0]), float(lo[1]), float(lo[2])),
+			Vector3(float(hi[0]) - float(lo[0]), float(hi[1]) - float(lo[1]), float(hi[2]) - float(lo[2])))
+	var basis := Basis.from_euler(Vector3(tilt.x, yaw, tilt.z)).scaled(Vector3.ONE * sc)
+	return Transform3D(basis, at - Vector3(0.0, PoiKit.buried_m(path) * sc, 0.0)) * local
+
+
+## The most of the smaller drawn box that `box` shares with any of `laid`.
+static func _crag_share(laid: Array, box: AABB) -> float:
+	var most := 0.0
+	for b_v in laid:
+		var b: AABB = b_v
+		if not box.intersects(b):
+			continue
+		var smaller := maxf(minf(box.get_volume(), b.get_volume()), 0.0001)
+		most = maxf(most, box.intersection(b).get_volume() / smaller)
+	return most
+
+
+## Whether a boulder `half` wide at `at` would share a fifth of the smaller footprint with one
+## already put down (`_crag`), the boxes seen from above.
 static func _crag_crowded(laid: Array, at: Vector2, half: float) -> bool:
 	var mine := Rect2(at - Vector2(half, half), Vector2(half, half) * 2.0)
-	for r_v in laid:
-		var r: Rect2 = r_v
+	for b_v in laid:
+		var b: AABB = b_v
+		var r := Rect2(b.position.x, b.position.z, b.size.x, b.size.z)
 		var shared := mine.intersection(r).get_area()
 		if shared > 0.2 * minf(mine.get_area(), r.get_area()):
 			return true

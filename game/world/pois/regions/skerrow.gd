@@ -3297,7 +3297,9 @@ static func _tidy(d: PoiDressing) -> void:
 			w.queue_free()
 	for n in placed:
 		var fam := str(n.name).to_lower()
-		var airy := false
+		# (and a thing its builder seated on what holds it: a cave's capstones on the throat's roof,
+		# which set down on the ground under them went into its cheeks and its mouth)
+		var airy := n.has_meta(PoiKit.SEATED_META)
 		for a in AIRY:
 			airy = airy or fam.contains(a)
 		var box := _box_of(d, n)
