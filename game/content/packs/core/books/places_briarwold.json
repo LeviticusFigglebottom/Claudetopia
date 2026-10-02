@@ -187,5 +187,103 @@
     "author": "Wendel Crale, factor for the Tallymen at the Horn Pale",
     "category": "book",
     "body": "# The Factor's Price Book\n\n*A Tallymen's price book in a brass-cornered case.*\n\n---\n\nOroth antler, sealed: bought at the Pale at 2 the tine; sold at the Lantern Row at 40 the tine. Carriage and seal: 3. Margin to the House: 35 the tine.\n\nMark of the Builders' hand to be burned on the base of each tine before sealing; see the pattern pinned in the boiling-shed.\n\nThe Woodfolk will not act. Their custom forbids burning a poachers' camp while poachers are in it, and says nothing about a buyer. Keep poachers in the yard at all times.\n\nThe Hart-Knights may object. The Hart-Knights have no standing in the Charter."
+  },
+  {
+    "id": "core:book/hal_rookes_tally",
+    "title": "Hal Rooke's Tally",
+    "author": "Hal Rooke, burner",
+    "category": "book",
+    "body": "# Hal Rooke's Tally\n\n*A hazel tally-stick, notched, tied with a page torn out of a carter's book and written on in charcoal.*\n\n---\n\nThe verderer's mark is twenty years old and good. Fallen is fallen.\n\nHeartwood runs the whole length. I went in under the plate with the lantern and it runs DOWN as well. The taproot is as thick as the Hollow's door and it goes into water.\n\nNotched the stick for every cord I reckon she'd make. Ran out of stick.\n\nSomething in the water moved when I put the lantern down. Roots don't move. It's the light.\n\nJory, if this comes up without me: it is fallen. It is ours. Don't you come down for it.\n\n*The last notches are cut deep, then not finished.*"
+  },
+  {
+    "id": "core:book/the_verderers_mark",
+    "title": "The Verderer's Mark",
+    "author": "Old Hurle, verderer of the High Wold",
+    "category": "book",
+    "body": "# The Verderer's Mark\n\n*A verderer's day-book, wrapped in oilcloth and pushed into a crack in the root-wall. The last pages.*\n\n---\n\nSpring, 1020. Walked the Brother end to end, as I walk every fallen tree. Marked it at the butt for the burners, as custom says. A fallen tree is the burners' and the wood's, and the wood takes its share first.\n\nWent under the plate with a lamp. The roots are alive. The pit goes down past where the lamp would show me.\n\nAutumn, 1020. The roots I cut back from the mouth in spring have grown back past the cut.\n\nSpring, 1021. Have not marked it again. The mark stands. I do not like that it stands.\n\nIf custom says what falls feeds the wood, custom has not said what to do when what fell is still eating."
+  },
+  {
+    "id": "core:book/the_unnamed_niches",
+    "title": "The Unnamed Niches",
+    "author": "a mason of Tinehold",
+    "category": "book",
+    "body": "# The Unnamed Niches\n\n*A list in a mason's square hand, on a board left on the chapel's altar.*\n\n---\n\nNiches cut back to the stone, by the Marshal's order, the names taken off: one hundred and twelve.\n\nNiches with antlers still in them: one hundred and twelve.\n\nThe Marshal says a knight who never took a hart wore another beast's death on his head and was a liar in his niche, and the stone should not carry a liar's name. I have cut them back. I have kept the list of what they were, under the altar, because I was paid to cut the stone, not to forget it.\n\nArdo. Bell of the Long Spear. Tamsen. Harrow. *And on, a hundred and twelve names, in the same hand.*"
+  },
+  {
+    "id": "core:book/the_last_knight_out",
+    "title": "The Last Knight Out",
+    "author": "Wystan Tine",
+    "category": "book",
+    "body": "# The Last Knight Out\n\n*A letter, folded small and pushed under a loose flag. It was never sent.*\n\n---\n\nMarshal,\n\nI am the last. The others went east at dusk to the Moot Gate and I have stayed one night to take my antlers, as you said I might, from the hart that died in the Kennel Wood in the winter. I knelt in the vigil hall till dawn. I did not hear anything.\n\nIn the night you went out under the tower with a spear, and I heard the white hart in the yard, and then I did not hear it.\n\nI am going east. I am taking my antlers, which are honest, and leaving you the hold, which is not. When you want to kneel again, come through the Moot Gate. I will be there. I will know you by what comes through it.\n\nW. T."
+  },
+  {
+    "id": "core:book/the_bells_vigil",
+    "title": "The Bells' Vigil",
+    "author": "the Mourners of the Knight's Mound",
+    "category": "book",
+    "body": "# The Bells' Vigil\n\n*Cut into a board nailed under the oak's lowest root, where the rain does not reach it.*\n\n---\n\nHere is Orrin Bell, knight, grandson of Bell of the Long Spear, who would not kill the hart of the Hollow ford.\n\nHe asked to lie where his grandfather's hart died old. It died here, under an oak that was not here yet.\n\nThe candles are kept in from dusk to dawn by whoever is sitting the vigil at the fire on the road below. If the candles go out he comes up to see why. He does not hurt anyone who has a reason. He has not yet been given a reason he accepts.\n\nDo not take the helm. The oak has it now."
+  },
+  {
+    "id": "core:book/mossgrave_names",
+    "title": "The Moss Names",
+    "author": "the tenders of Mossgrave",
+    "category": "book",
+    "body": "# The Moss Names\n\n*A list rolled in birch bark and tucked under the seed-bed's stone, in several hands.*\n\n---\n\nStar-moss for a child. Hair-moss for the old. Feather-moss for those who went quickly. Cushion-moss for those who waited.\n\nWhoever tends a grave says the moss's name and the person's name together, so that the moss knows whose it is. A grave whose names are not said for a year goes back to the wood, and that is right, and we do not grieve it twice.\n\nRow four, the end: a moss with no name. It was here before the first of us. We say 'whoever you are' over it, every morning, and the Warden that stands among the rows turns its head when we do.\n\nDo not take a token off a staff. The Warden counts them."
+  },
+  {
+    "id": "core:book/pellows_game_book",
+    "title": "Pellow's Game-Book",
+    "author": "the parker of Pellow's Pale",
+    "category": "book",
+    "body": "# Pellow's Game-Book\n\n*The parker's book, found swollen with damp on the lodge's sill.*\n\n---\n\nHarts in the pale at Lammas: forty-one. Hinds: sixty. All sound.\n\nHarts in the pale at Michaelmas: twelve. The pale is whole. I have walked it twice. There is no gap.\n\nHarts in the pale at Martinmas: none. The pale is whole.\n\nThe Woodfolk came to the gate today, four of them, and stood there all day, and did not say anything, and went away at dusk. In the morning the gate was locked and the key was in my pocket and the harts were gone.\n\nI am going to Tollmere to tell Master Pellow. I am leaving the box under the hearth-stone with the season's money in it. If I do not come back it is his.\n\n*He did not come back. The money is still there; so is the box.*"
+  },
+  {
+    "id": "core:book/strippers_tally",
+    "title": "The Strippers' Tally",
+    "author": "the Tamwick bark-strippers",
+    "category": "book",
+    "body": "# The Strippers' Tally\n\n*Chalked on the inside of a slab of bark, propped against the racks.*\n\n---\n\nOaks stripped this season, by the tanners' order: seven. Bark, by the sledge: nineteen.\n\nThe Woodfolk say a stripped oak stands dead ten years and feeds the wood after. They say it as if it were a kindness to us.\n\nThe weavers have come into the crowns since the bark came off. They like a dead tree. We have stopped sleeping in the tents and sleep by the fire, all of us, with our feet in it.\n\nPay-box under the sledge. Tamwick's carter takes it at the month's end. If he does not come, it is ours."
+  },
+  {
+    "id": "core:book/the_lees_rule",
+    "title": "The Lee's Rule",
+    "author": "the poachers of the Lee",
+    "category": "book",
+    "body": "# The Lee's Rule\n\n*Scratched on a slate wedged in the bow-rack.*\n\n---\n\nNo fire after dark: the knights see it from the Moot.\n\nHides on the frames by day, in the tents by night: the thornhounds come down off the wall for the smell.\n\nAntlers to the Horn Pale on the fourth day. Two marks the tine. Do not argue the price. The bravo does not argue.\n\nIf a Hart-Knight comes to the Lee, cut the hart down and leave it. They will not follow you if you leave it. They will stand by it all night."
+  },
+  {
+    "id": "core:book/the_last_watch",
+    "title": "The Last Watch",
+    "author": "Hesk Tamwood, firewatcher",
+    "category": "book",
+    "body": "# The Last Watch\n\n*The firewatch's log, nailed in the stair; the stair is lying on its side now and so is the page.*\n\n---\n\nThe ninth night of the wind. No fire in the Wold. The tower moves like a mast. Gave the boy leave to go down; he would not.\n\nThe tenth night. A sound to the south like the whole Wold sitting down. The Hollow's lights all went out at once and came back one by one. I think the Brother has gone over.\n\nWe are going to go over too. The boy is laughing. I have told him to hold on to the bell rope and ring it when we do, so the Hollow knows it was the wind and not a fire.\n\n*The bell's rope is still tied off on the stair's rail. The bell is somewhere in the bracken below.*"
+  },
+  {
+    "id": "core:book/foxfire_pickers_rule",
+    "title": "The Pickers' Rule",
+    "author": "the foxfire-pickers of the Foxgill",
+    "category": "book",
+    "body": "# The Pickers' Rule\n\n*Cut on an oak shingle hung from a nail at the fall's lip.*\n\n---\n\nPick by day. The foxfire is brightest at night and so are the weavers.\n\nTake one cap in three. The ravine grows it back by Lammas if you leave two.\n\nDo not pick the caps on the lip of the fall. Those are the weavers' lamps. They string the ravine by them after dark, and they know who took them."
+  },
+  {
+    "id": "core:book/what_the_sentinels_hear",
+    "title": "What the Sentinels Hear",
+    "author": "a Woodfolk child of the Hollow",
+    "category": "book",
+    "body": "# What the Sentinels Hear\n\n*Scratched on a child's slate, left at the foot of the middle stone.*\n\n---\n\nThe wardens come at dusk and stand in a ring and listen. Gran says they are listening to the stones. I put my ear on the middle stone and it was humming like the Moot does, only very low.\n\nI think the stones are listening to the Briar and the wardens are listening to the stones.\n\nI do not know what the Briar is listening to.\n\n*Under it, in an adult hand:* Do not put your ear on the stones after dusk."
+  },
+  {
+    "id": "core:book/the_pumpmans_slate",
+    "title": "The Pumpman's Slate",
+    "author": "the Delf's pumpman",
+    "category": "book",
+    "body": "# The Pumpman's Slate\n\n*Chalked on a slate hung by the pump chamber's door.*\n\n---\n\nWater in the sump at the morning shift: two foot. Pumped out by noon.\n\nWater in the sump: two foot. The water's coming in green. Clerk says it's the copper. There is no copper in this ground.\n\nThere is a thorn in the sump's wall. I pulled it. It bled.\n\nWater in the sump: four foot. I am not going down tomorrow and I do not care what the clerk writes in his book."
+  },
+  {
+    "id": "core:book/the_eighty_fathom_survey",
+    "title": "The Eighty-Fathom Survey",
+    "author": "the Charter Company's surveyor",
+    "category": "book",
+    "body": "# The Eighty-Fathom Survey\n\n*A surveyor's sheet in a tin, pushed behind a loose stone.*\n\n---\n\nDeep gallery, east heading. Granite at sixty fathoms. Granite at seventy. At seventy-nine the granite is split, and the split is full of root.\n\nThe root runs east-west under the Wold, as far as the lamp shows either way. It is the Briar's. There is no other thorn like it.\n\nThe Briar is supposed to be a wall on the Thornmarch. It is not a wall. It is the top of something, and the something is down here, under all of us, and it goes as far west as this.\n\nI have told the clerk. He has written it in the ledger. I am not telling the Company. I am going home to the Rafts."
   }
 ]

@@ -109,5 +109,365 @@
         }
       ]
     }
+  },
+  {
+    "id": "core:interior/the_windthrow",
+    "name": "Under the Windthrow",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_windthrow",
+    "danger": 3,
+    "formed_by": "roots",
+    "resident": "thornhounds and weavers in the root-galleries, poachers going through to the Wold's far side, the Warden grown in the heart-hall, and the Old Root, which is the Brother's taproot still alive and has learned to stand",
+    "story": "The Brother's roots went down a thousand years into the granite's cracks and the water in them, and when the plate lifted they tore the roof off a country of their own: galleries the roots had opened, chambers where they had drunk a pool dry and gone on, the taproot's own shaft going down into the dark like a well with a tree in it. The roots did not die with the tree. The thinnest still hang from every roof, and the oldest has stood up.",
+    "unique_object": "a cavern whose roof is the underside of a fallen tree's roots, hanging in curtains to the floor; and at the bottom the taproot itself, as thick as a tower, gone down into a pool and grown a face",
+    "site": {
+      "kind": "cave",
+      "seed": 1044,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/old_root",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/thornhound",
+          "core:enemy/weaver"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/warden"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#6e5c46",
+          "#46392b",
+          "#806b52"
+        ],
+        "props": [
+          "roots",
+          "rocks"
+        ],
+        "light_colour": "#ffb46a"
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "the_pit",
+          "prop": "lantern_hand",
+          "note": "a burner's lantern, left at the foot of the climb"
+        },
+        {
+          "kind": "item",
+          "room": "burners_drift",
+          "item": "core:item/hal_rookes_axe",
+          "name": "Hal Rooke's felling axe"
+        },
+        {
+          "kind": "note",
+          "room": "burners_drift",
+          "book": "core:book/hal_rookes_tally",
+          "name": "a burner's tally-stick and a page"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_verderers_mark",
+          "name": "a verderer's book, wrapped in oilcloth"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "the_pit",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the pit under the plate, roots hanging to the floor"
+        },
+        {
+          "id": "root_drift",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "the_hanging_roots",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "fungus_grotto",
+          "note": "foxfire on the roots, curtains of them"
+        },
+        {
+          "id": "burners_drift",
+          "role": "camp",
+          "size": "medium",
+          "note": "where the burners who came down camped, and the poachers camp now"
+        },
+        {
+          "id": "the_well",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "the water the Brother drank, still there"
+        },
+        {
+          "id": "the_split",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "note": "where the granite split under the roots, a root grown across it"
+        },
+        {
+          "id": "the_tear",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "daylight_shaft",
+          "note": "where the plate tore the roof open and the light comes down"
+        },
+        {
+          "id": "the_heart_hall",
+          "role": "hall",
+          "size": "large",
+          "note": "a Warden grown out of the wall"
+        },
+        {
+          "id": "the_taproot",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "the taproot, standing"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/tinehold_undercroft",
+    "name": "Under Tinehold",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/tinehold",
+    "danger": 3,
+    "formed_by": "builders",
+    "resident": "Unvowed huntsmen and knights in the hold's halls and kennels, their thornhounds, and Marshal Aubric Vane in the vigil hall at the bottom",
+    "story": "Tinehold's keep stands on a cellar cut down into the scarp's granite, and the cellar on halls the order cut for itself in its first century: the knights' hall, the kennels, the long stair, the chapel where every knight's antlers were laid in a niche with his name when he died, and at the bottom the vigil hall where a knight knelt the night before he took the antlers. The Unvowed live in it as the order lived in it, more or less. They have taken the names off the niches.",
+    "unique_object": "a chapel of niches cut in the granite, each with a knight's antlers laid in it and the name chiselled off; and at the bottom a vigil hall with a kneeling-stone worn into two hollows, which nobody has knelt on in twenty years",
+    "site": {
+      "kind": "keep",
+      "seed": 4417,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/unvowed_marshal",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/unvowed_huntsman",
+          "core:enemy/thornhound"
+        ],
+        "archers": [
+          "core:enemy/unvowed_huntsman"
+        ],
+        "heavy": [
+          "core:enemy/unvowed_knight"
+        ]
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "the_chapel",
+          "book": "core:book/the_unnamed_niches",
+          "name": "a mason's list, left on the altar"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_last_knight_out",
+          "name": "a letter under a loose flag"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "keep_stair",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the keep's cellar, where the stair comes down"
+        },
+        {
+          "id": "guard_turn",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "the_kennels",
+          "role": "camp",
+          "size": "medium",
+          "set_piece": "barracks",
+          "note": "the huntsmen's beds and the hounds' chains"
+        },
+        {
+          "id": "knights_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "forge_hall",
+          "note": "the order's hall, where the Unvowed shoe their horses and mend their plate"
+        },
+        {
+          "id": "the_stores",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "cellar_store",
+          "note": "the hold's stores: venison salted in barrels"
+        },
+        {
+          "id": "long_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -4.0
+        },
+        {
+          "id": "the_chapel",
+          "role": "shrine",
+          "size": "large",
+          "set_piece": "ossuary",
+          "note": "the chapel of tines, the names chiselled off the niches"
+        },
+        {
+          "id": "the_antechamber",
+          "role": "hall",
+          "size": "large",
+          "note": "an Unvowed knight keeps the vigil hall's door"
+        },
+        {
+          "id": "vigil_hall",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "the vigil hall, the kneeling-stone at its middle"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/charter_delf",
+    "name": "The Charter Delf",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/charter_delf",
+    "danger": 3,
+    "formed_by": "miners",
+    "resident": "thornhounds and weavers in the galleries, poachers in the drifts, a Warden grown out of the thorn in the rock, and the Brake-Dam in her den in the Briar's root at the bottom",
+    "story": "Square-cut drifts timbered by Rafts carpenters, a pump chamber gone back to water, a smithy where the picks were sharpened, the counting-room where the Company's clerk weighed every tub and wrote it down, and at the bottom the gallery that broke into the thorn. The thorn has come up the galleries since, a little every year, and the thornhounds came with it, as they come with the Briar everywhere.",
+    "unique_object": "a gallery of cut granite whose far end is no longer rock but thorn, a root of the Briar as thick as a cart, grown through the stone and into the drift, and a den of thornhounds in its coils",
+    "site": {
+      "kind": "mine",
+      "seed": 1031,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/brake_dam",
+      "boss_adds": 3,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/thornhound",
+          "core:enemy/weaver"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/warden"
+        ]
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "shaft_foot",
+          "prop": "lantern_hand",
+          "note": "the onsetter's lamp, on its hook by the cage"
+        },
+        {
+          "kind": "item",
+          "room": "counting_room",
+          "item": "core:item/charter_ledger",
+          "name": "the Charter Company's ledger"
+        },
+        {
+          "kind": "note",
+          "room": "the_sump",
+          "book": "core:book/the_pumpmans_slate",
+          "name": "a pumpman's slate"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_eighty_fathom_survey",
+          "name": "a surveyor's sheet in a tin"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "shaft_foot",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the foot of the shaft, the cage stopped at the bottom"
+        },
+        {
+          "id": "main_drift",
+          "role": "passage",
+          "size": "small"
+        },
+        {
+          "id": "the_smithy",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "forge_hall",
+          "note": "where the picks were sharpened"
+        },
+        {
+          "id": "counting_room",
+          "role": "treasure",
+          "size": "small",
+          "note": "the clerk's counting-room, his ledger on the desk"
+        },
+        {
+          "id": "the_sump",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "the pump chamber, gone back to water"
+        },
+        {
+          "id": "the_lode",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "ore_gallery",
+          "note": "the silver-lead, still showing in the walls"
+        },
+        {
+          "id": "the_fall",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "collapsed_shaft",
+          "note": "where the old air-shaft came down"
+        },
+        {
+          "id": "deep_drift",
+          "role": "hall",
+          "size": "large",
+          "note": "a Warden grown out of the thorn in the wall"
+        },
+        {
+          "id": "the_thorn",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "where the gallery broke into the Briar's root"
+        }
+      ]
+    }
   }
 ]
