@@ -1034,6 +1034,29 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await PoiDressing.kind_builders().SITES.build(d)
 	var k := d.kit
 	var m := d.masonry
+	# the gully's floor dips under the bank behind the mouth, and the throat's last rings run on
+	# level over the dip: a sill of rubble under each one that would stand off the ground
+	var sill := m.begin()
+	var sills := 0
+	for i in 5:
+		var ring := d.find_child("Throat%d" % i, true, false) as Node3D
+		if ring == null:
+			continue
+		var box := _box_of(ring, ring.transform)
+		var c := box.get_center()
+		var side := minf(box.size.x, box.size.z) * 0.5
+		var low := INF
+		for q in [Vector2(c.x, c.z), Vector2(c.x - side * 0.5, c.z - side * 0.5), Vector2(c.x + side * 0.5, c.z + side * 0.5),
+				Vector2(c.x - side * 0.5, c.z + side * 0.5), Vector2(c.x + side * 0.5, c.z - side * 0.5)]:
+			low = minf(low, k.on_ground(q.x, q.y).y)
+		if box.position.y - low < 0.1:
+			continue
+		var h := box.position.y - low + 0.4
+		m.block(sill, Transform3D(Basis(), Vector3(c.x, box.position.y - h * 0.5, c.z)), Vector3(side, h, side))
+		sills += 1
+	if sills > 0:
+		await k.step()
+		m.commit(sill, PoiKit.plain(Color(0.05, 0.05, 0.05), 0.95), "ThroatSill")
 	var mouth := d.find_child("the_mouth", true, false) as Node3D
 	var at := mouth.position if mouth != null else Vector3.ZERO
 	var out := Vector2(-at.x, -at.z).normalized() if Vector2(at.x, at.z).length() > 0.5 else Vector2(0, -1)
