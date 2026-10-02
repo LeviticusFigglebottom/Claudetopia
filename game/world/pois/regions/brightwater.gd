@@ -972,9 +972,10 @@ static func _gully(k: PoiKit, rise: float, reach: float) -> Array:
 ## The Tallymen's barrow for the struck, cut into the south shore's scarp at the head of a gully, and
 ## at the gully's mouth the Tally Needle: a lime-washed obelisk on a stepped plinth, every face cut
 ## with names in close rows and every name struck through, one of them chalked back over in a
-## laundress's capitals; a brass cap that catches the sun across the Mere. A flight of broad steps
-## goes up the gully floor to the portal: a dressed facade with wing walls holding the cutting back,
-## a heavy lintel with RECEIVED cut in it, and the dark door. The bier-stone where the struck were set
+## laundress's capitals; a brass cap that catches the sun across the Mere. A flight of steps goes up
+## the gully floor to the portal: a dressed facade across the gully's head with wing walls holding the
+## cutting back, a raised threshold between monolith jambs under a heavy lintel with RECEIVED cut in
+## it, and inside the door the steps going down into the dark. The bier-stone where the struck were set
 ## down, numbered markers along the gully, and what the resurrection men leave at the door.
 static func the_struck_barrow(d: PoiDressing) -> void:
 	var k := d.kit
@@ -1001,48 +1002,100 @@ static func the_struck_barrow(d: PoiDressing) -> void:
 	var lime := PoiKit.painted(0, LIMEWASH, 0.8, 0.7)
 	var dressed := m.begin()
 
-	# the facade: a wall of dressed stone across the gully's head with the hill behind it, the door in it
+	# The portal. The land cannot be cut, so the way down is built up: a facade of dressed stone across
+	# the gully's head, standing out from the foot of the rise with the hill behind it; a flight up the
+	# gully floor to its door, a raised threshold under a lintel on two monolith jambs, and inside the
+	# door the steps going down into the dark. Every step is a block run down into the ground under it.
+	# (A flight laid on a straight line from the floor to the door's foot, each step a slab 1.2 m deep,
+	# stood out of the dip in the floor as a stair seen from its side, the cornice over it a beam.)
 	var fw := 10.5
-	var fh := 5.6
-	var ft := 1.5
-	var face_c := door + into * (ft * 0.5)
-	var foot := _ground_low(k, face_c, yaw_out, Vector2(fw, ft)) - 0.2
-	_wall_run(k, m, dressed, face_c - side * fw * 0.5, face_c + side * fw * 0.5, foot, gd + fh, ft, [[fw * 0.5, 1.7, gd - foot, gd - foot + 2.7]])
-	# a plain cornice along its head, and a pediment over the door
-	var corn := Transform3D(Basis(Vector3.UP, yaw_out + PI * 0.5), Vector3(face_c.x, gd + fh + 0.12, face_c.y) + Vector3(out.x, 0.0, out.y) * 0.1)
+	var lead := 2.6                                    # how far the facade's front stands out from the rise
+	var fr := door - into * lead                       # the facade's front, the door's
+	var gf := k.on_ground(fr.x, fr.y).y
+	var ty := maxf(gd, gf) + 1.0                       # the threshold
+	var fh := 4.8                                      # the facade's height over the threshold
+	var ft := lead + 0.8
+	var face_c := fr + into * (ft * 0.5)
+	var foot := _ground_low(k, face_c, yaw_out, Vector2(fw, ft)) - 0.3
+	var low := gd - 0.3                                # the passage's floor, under its last step
+	_wall_run(k, m, dressed, face_c - side * fw * 0.5, face_c + side * fw * 0.5, foot, ty + fh, ft,
+			[[fw * 0.5, 2.2, low - foot, ty + 2.9 - foot]])
+	# a plain cornice along its head, stepped out over the front
+	var corn := Transform3D(Basis(Vector3.UP, yaw_out + PI * 0.5), Vector3(face_c.x, ty + fh + 0.12, face_c.y) + Vector3(out.x, 0.0, out.y) * 0.15)
 	m.block(dressed, corn, Vector3(fw + 0.4, 0.25, ft + 0.3))
 	for s in [-1.0, 1.0]:
-		# the door's jambs, proud of the wall, and the wing walls holding the cutting back
-		var j := door + side * float(s) * 1.15 + out * 0.15
-		var jxf := Transform3D(bo, Vector3(j.x, gd + 1.45, j.y))
-		m.block(dressed, jxf, Vector3(0.55, 2.9, 0.5))
-		k.collider(Vector3(0.55, 2.9, 0.5), jxf, "stone")
+		# the door's jambs, monoliths standing proud of the wall from the ground to the lintel
+		var j := fr + side * float(s) * 1.45 + out * 0.3
+		var jf := minf(k.on_ground(j.x, j.y).y, gf) - 0.3
+		var jxf := Transform3D(bo, Vector3(j.x, (jf + ty + 2.9) * 0.5, j.y))
+		m.block(dressed, jxf, Vector3(0.7, ty + 2.9 - jf, 0.7))
+		k.collider(Vector3(0.7, ty + 2.9 - jf, 0.7), jxf, "stone")
+		# the wing walls holding the cutting back, from the facade's ends out along the gully's sides
 		var w0 := face_c + side * float(s) * (fw * 0.5 - 0.3)
 		var w1 := w0 + (out.rotated(float(s) * 0.55)) * 6.5
-		var wf := minf(k.on_ground(w0.x, w0.y).y, k.on_ground(w1.x, w1.y).y) - 0.2
-		var wh0 := gd + 3.4
+		var wf := minf(k.on_ground(w0.x, w0.y).y, k.on_ground(w1.x, w1.y).y) - 0.3
+		var wh0 := ty + 2.4
 		var wh1 := k.on_ground(w1.x, w1.y).y + 0.9
 		var steps_n := 5
 		for i in steps_n:
 			var t0 := float(i) / float(steps_n)
 			var t1 := float(i + 1) / float(steps_n)
-			_wall_run(k, m, dressed, w0.lerp(w1, t0), w0.lerp(w1, t1), wf, lerpf(wh0, wh1, (t0 + t1) * 0.5), 0.9)
-	var lintel := Transform3D(bo, Vector3(door.x, gd + 3.05, door.y) + Vector3(out.x, 0.0, out.y) * 0.2)
-	m.block(dressed, lintel, Vector3(3.3, 0.7, 0.75))
-	var ped := Transform3D(bo, Vector3(door.x, gd + 3.65, door.y) + Vector3(out.x, 0.0, out.y) * 0.15)
-	m.block(dressed, ped, Vector3(2.4, 0.5, 0.6))
-	m.block(dressed, Transform3D(bo, Vector3(door.x, gd + 4.0, door.y) + Vector3(out.x, 0.0, out.y) * 0.15), Vector3(1.2, 0.3, 0.6))
-	# the steps up the gully floor to the door's sill, broad, from the bier-stone's level
-	var steps_from := door + out * 7.5
+			_wall_run(k, m, dressed, w0.lerp(w1, t0), w0.lerp(w1, t1), wf, maxf(lerpf(wh0, wh1, (t0 + t1) * 0.5), wf + 0.6), 0.9)
+	# the lintel across the jambs, heavy, and a pediment over it
+	var lintel := Transform3D(bo, Vector3(fr.x, ty + 3.3, fr.y) + Vector3(out.x, 0.0, out.y) * 0.3)
+	m.block(dressed, lintel, Vector3(3.9, 0.8, 0.95))
+	k.collider(Vector3(3.9, 0.8, 0.95), lintel, "stone")
+	m.block(dressed, Transform3D(bo, Vector3(fr.x, ty + 3.95, fr.y) + Vector3(out.x, 0.0, out.y) * 0.2), Vector3(2.8, 0.5, 0.7))
+	m.block(dressed, Transform3D(bo, Vector3(fr.x, ty + 4.35, fr.y) + Vector3(out.x, 0.0, out.y) * 0.2), Vector3(1.4, 0.3, 0.7))
+	# inside the door, the steps going down into the hill: the threshold, three steps, the floor
+	var inner := [[0.0, 0.7, ty], [0.7, 0.55, ty - (ty - gd) * 0.25], [1.25, 0.55, ty - (ty - gd) * 0.5],
+			[1.8, 0.55, ty - (ty - gd) * 0.75], [2.35, lead - 2.35 + 0.3, gd]]
+	for st_v in inner:
+		var at0 := float(st_v[0])
+		var depth := float(st_v[1])
+		var top := float(st_v[2])
+		var c := fr + into * (at0 + depth * 0.5)
+		var xf := Transform3D(bo, Vector3(c.x, (top + low) * 0.5, c.y))
+		m.block(dressed, xf, Vector3(2.24, top - low, depth))
+		k.collider(Vector3(2.24, top - low, depth), xf, "stone")
+	# and outside, the flight up the gully floor to the threshold, each step down into the ground
+	var tread := 0.48
+	var n_steps := 2
+	while n_steps < 14:
+		var q := fr + out * (tread * float(n_steps))
+		if ty - k.on_ground(q.x, q.y).y <= 0.24 * float(n_steps):
+			break
+		n_steps += 1
+	var steps_from := fr + out * (tread * float(n_steps))
 	var y_from := k.on_ground(steps_from.x, steps_from.y).y
-	var climb := gd - y_from
-	var n_steps := clampi(int(round(climb / 0.22)), 2, 14)
-	m.steps(dressed, steps_from, into, y_from - 0.02, n_steps, climb / float(n_steps), 7.0 / float(n_steps), 3.6, 1.2)
+	var rise := (ty - y_from) / float(n_steps)
+	for i in n_steps:
+		var c := steps_from + into * (tread * (float(i) + 0.5))
+		var top := y_from + rise * float(i + 1)
+		var under := _ground_low(k, c, yaw_out, Vector2(3.4, tread)) - 0.3
+		var xf := Transform3D(bo, Vector3(c.x, (top + under) * 0.5, c.y))
+		m.block(dressed, xf, Vector3(3.4, top - under, tread * 1.02))
+		k.collider(Vector3(3.4, top - under, tread * 1.02), xf, "stone")
+	# its parapets: a low wall each side of the flight, its top running down with the steps, so from the
+	# side it is a walled stair and not a stair's saw-edge standing in the air
+	for s in [-1.0, 1.0]:
+		var segs := 4
+		for i in segs:
+			var t0 := float(i) / float(segs)
+			var t1 := float(i + 1) / float(segs)
+			var a := steps_from.lerp(fr, t0) + side * float(s) * 1.95
+			var b := steps_from.lerp(fr, t1) + side * float(s) * 1.95
+			var pf := minf(k.on_ground(a.x, a.y).y, k.on_ground(b.x, b.y).y) - 0.3
+			var ptop := lerpf(y_from, ty, (t0 + t1) * 0.5) + 0.75
+			_wall_run(k, m, dressed, a, b, pf, maxf(ptop, pf + 0.6), 0.5)
 	await k.step()
 	m.commit(dressed, PoiKit.painted(2, {"base": "#a8a397", "accent": "#8b867b", "grout": "#57534b", "unit": 0.5}, 0.8, 0.6), "Portal", true)
+	# the barrow itself: turf heaped over the facade's head and back and run into the hill, its flanks
+	# held by the wing walls, so the portal is the front of a mound and not a wall standing in the gully
+	await _barrow_mound(d, fr, into, side, fw, ft, ty + fh + 0.25)
 	# RECEIVED, cut in the lintel: eight letters, each a few strokes dark in the stone
 	var cut := m.begin()
-	var lf := lintel.origin + Vector3(out.x, 0.0, out.y) * 0.38
+	var lf := lintel.origin + Vector3(out.x, 0.0, out.y) * 0.49
 	for i in 8:
 		var x := (float(i) - 3.5) * 0.3
 		var lc := lf + bo * Vector3(x, 0.0, 0.0)
@@ -1051,8 +1104,9 @@ static func the_struck_barrow(d: PoiDressing) -> void:
 		if i % 2 == 0:
 			m.block(cut, Transform3D(bo, lc), Vector3(0.14, 0.035, 0.02))
 		m.block(cut, Transform3D(bo, lc + Vector3(0.0, -0.15, 0.0)), Vector3(0.17, 0.035, 0.02))
-	# the dark in the doorway, a hand's depth back
-	m.block(cut, Transform3D(bo, Vector3(door.x, gd + 1.35, door.y) + Vector3(into.x, 0.0, into.y) * 0.45), Vector3(1.75, 2.75, 0.1))
+	# the dark the steps go down into, at the back of the passage
+	var dark_at := fr + into * (lead + 0.25)
+	m.block(cut, Transform3D(bo, Vector3(dark_at.x, (low + ty + 2.9) * 0.5, dark_at.y)), Vector3(2.24, ty + 2.9 - low, 0.1))
 	await k.step()
 	m.commit(cut, PoiKit.plain(SHAFT_DARK, 1.0), "Received")
 
@@ -1145,7 +1199,7 @@ static func the_struck_barrow(d: PoiDressing) -> void:
 	m.commit(nums, PoiKit.plain(Color(0.2, 0.19, 0.17), 0.9), "sign_MarkerNumbers")
 
 	# what the resurrection men leave at the door: a dark lantern, a sack of paper, a sack
-	var leave := door + out * 1.6 + side * 1.9
+	var leave := fr + out * 1.4 + side * 2.4
 	var lamp := k.prop("lantern_hand")
 	if lamp != "":
 		await k.step()
@@ -1158,12 +1212,81 @@ static func the_struck_barrow(d: PoiDressing) -> void:
 		k.place(paper, k.on_ground(bier.x, bier.y) + Vector3(0.0, 0.7, 0.0), k.rng.randf() * TAU, 1.0, false)
 
 	# the way in, the hook on the Needle, where the night's people stand
-	_sites()._door(d, str(site.get("interior", "")), Vector3(door.x, gd + 0.05, door.y) + Vector3(out.x, 0.0, out.y) * 0.5, atan2(out.x, out.y))
+	_sites()._door(d, str(site.get("interior", "")), Vector3(door.x, gd + 0.05, door.y) + Vector3(out.x, 0.0, out.y) * 0.1, atan2(out.x, out.y))
 	var touch := nd + out * 1.6
 	k.touchable("Hook", k.on_ground(touch.x, touch.y) + Vector3(0.0, 1.2, 0.0), str(site.get("hook_prompt", "Read the names on the Needle")),
 			str(site.get("hook", "")))
 	k.marker("the_portal_step", k.on_ground(steps_from.x + out.x * 1.2, steps_from.y + out.y * 1.2))
 	k.marker("the_needle_foot", k.on_ground(nd.x + out.x * 2.6 - side.x * 1.0, nd.y + out.y * 2.6 - side.y * 1.0))
+
+
+## The turf over a portal: from `fr` (the facade's front, local xz) back along `into`, `fw` wide over
+## the facade and falling away past its ends along the wing walls, its crest at `crest` (local) over
+## the facade (a little behind its front, so the stone shows) and sinking into the hill behind.
+static func _barrow_mound(d: PoiDressing, fr: Vector2, into: Vector2, side: Vector2, fw: float, ft: float, crest: float) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var nu := 12
+	var nv := 22
+	var half := fw * 0.5
+	var wide := half + 4.5
+	var back := 16.0
+	var pts: Array = []
+	for i in nu + 1:
+		# (the first row is the skirt along its front edge, at the ground behind the facade and the walls)
+		var t := float(maxi(i - 1, 0)) / float(nu - 1)
+		var row: Array = []
+		for j in nv + 1:
+			var v := -wide + 2.0 * wide * float(j) / float(nv)
+			var past := maxf(absf(v) - half, 0.0)
+			# the front edge: just behind the facade's face over the facade, and past its ends curving back
+			# round its flanks (the wing walls stand in front of them, holding the gully's sides)
+			var u0 := 0.35 + past * past * 0.35
+			var u := lerpf(u0, back, t) if i > 0 else u0 - 0.05
+			var p := fr + into * u + side * v
+			var gp := k.on_ground(p.x, p.y).y
+			# the crest over the facade, falling to the ground at the wing walls' ends and further out
+			var across := 1.0 - smoothstep(0.0, 4.5, past)
+			var hfront := lerpf(gp - 0.3, crest, across)
+			var y := lerpf(hfront, gp - 0.4, smoothstep(0.3, 1.0, t))
+			if i == 0:
+				y = gp - 0.3
+			if i > 0 and i < nu and j > 0 and j < nv:
+				y += 0.25 * sin(u * 0.9 + v * 0.7) * sin(v * 0.5 - u * 0.3) + k.rng.randf_range(-0.1, 0.1)
+			row.append(Vector3(p.x, maxf(y, gp - 0.4), p.y))
+		pts.append(row)
+	var st := m.begin()
+	var faces := PackedVector3Array()
+	for i in nu:
+		for j in nv:
+			var a: Vector3 = pts[i][j]
+			var b: Vector3 = pts[i][j + 1]
+			var c: Vector3 = pts[i + 1][j + 1]
+			var e: Vector3 = pts[i + 1][j]
+			for q: Vector3 in [a, c, b, a, e, c]:
+				st.add_vertex(q)
+				faces.append(q)
+	await k.step()
+	# turf: the gully floor's own green, out in front where the grass is (its head is bare rock and dirt)
+	m.commit(st, PoiDressing.kind_builders()._ground_look(k, fr - into * 12.0), "BarrowMound", true)
+	if k.far:
+		return
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(faces)
+	k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
+	# rough grass over it, thicker toward its foot, so it reads as a turfed mound and not a sheet
+	var tuft := k.flora("grass_clump")
+	if tuft != "":
+		var xfs: Array = []
+		for n in 70:
+			var i := k.rng.randi_range(1, nu - 2)
+			var j := k.rng.randi_range(1, nv - 1)
+			var q: Vector3 = pts[i][j]
+			if q.y < k.on_ground(q.x, q.z).y - 0.1:
+				continue
+			xfs.append(PoiKit.transform_at(q - Vector3(0.0, 0.05, 0.0), k.rng.randf() * TAU, k.rng.randf_range(0.8, 1.4)))
+		await k.step()
+		k.scatter(tuft, xfs, false, false, false)
 
 
 # --- phase 2: the places made over -------------------------------------------------------------------
