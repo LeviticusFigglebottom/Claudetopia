@@ -26,6 +26,10 @@ var shots_wanted := -1
 var film_cut := false
 ## Frames a second of a shot's time, for the reel (0: stills only).
 var video_fps := 0
+## `--from-shot=N`: film from shot N on, its frames numbered from `--first-frame=K` (a film taken up
+## again where it stopped).
+var from_shot := 0
+var first_frame := 0
 var report := {"shots": []}
 var _menu: Node = null
 var _t0 := 0
@@ -43,6 +47,10 @@ func _ready() -> void:
 			film_cut = true
 		elif a.begins_with("--video="):
 			video_fps = int(a.substr(8))
+		elif a.begins_with("--from-shot="):
+			from_shot = int(a.substr(12))
+		elif a.begins_with("--first-frame="):
+			first_frame = int(a.substr(14))
 		elif a == "--no-sight":
 			TitleVista.sight_streaming = false
 	if out_dir.is_empty():
@@ -147,9 +155,9 @@ func _film(vista: TitleVista, count: int) -> void:
 			(c as CanvasItem).visible = false
 	var reel := {"fps": video_fps, "dark": "#" + (_menu.get("_back") as ColorRect).color.to_html(false),
 			"dip_in_s": TitleVista.DIP_IN_S, "dip_out_s": TitleVista.DIP_OUT_S, "shots": []}
-	var frame := 0
+	var frame := first_frame
 	var t_start := Time.get_ticks_msec()
-	for i in count:
+	for i in range(from_shot, count):
 		var duration := float((vista._shots[i] as Dictionary).get("duration", 10.0))
 		var n := roundi(duration * video_fps)
 		var first := frame
@@ -159,6 +167,8 @@ func _film(vista: TitleVista, count: int) -> void:
 			var t0 := Time.get_ticks_msec()
 			if k == 0:
 				vista.scrub(i, 0.0)
+				if vista.world != null and vista.world.streamer != null:
+					vista.world.streamer.hurry = true
 				var until := Time.get_ticks_msec() + 300000
 				while not vista.cells_in() and Time.get_ticks_msec() < until:
 					await get_tree().process_frame
@@ -167,6 +177,10 @@ func _film(vista: TitleVista, count: int) -> void:
 			else:
 				vista._t = t
 				vista._pose(i, t)
+				# nothing here is watched in real time: the streamer builds as fast as it can, so a
+				# frame is not held waiting for the cells a moving camera comes to
+				if vista.world != null and vista.world.streamer != null:
+					vista.world.streamer.hurry = true
 				# a camera that has moved into cells not yet in waits for them, a few frames at most
 				var waits := 0
 				while not vista.cells_in() and waits < 30:

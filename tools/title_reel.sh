@@ -2,7 +2,7 @@
 # Films the title's shots (core:cinematic/title) from the live vista and encodes the title's filmed
 # country, game/assets/video/title_reel.ogv (TitleReel: what Low and Medium show behind the menu).
 #
-#   tools/title_reel.sh [--fps=12] [--play-fps=24] [--size=1280x720] [--quality=6] [--shots=N] [--keep]
+#   tools/title_reel.sh [--fps=12] [--play-fps=24] [--size=1280x720] [--quality=5] [--shots=N] [--keep]
 #                       [--renderer=gl_compatibility|forward_plus] [--frames=<dir>]
 #
 # Drawn under xvfb. Here (no GPU) only the Compatibility renderer draws Terrain3D, so that is the
@@ -18,7 +18,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GODOT="${GODOT:-godot}"
-fps=12; play_fps=24; size=1280x720; quality=6; shots=""; keep=0; renderer=gl_compatibility; frames=""
+fps=12; play_fps=24; size=1280x720; quality=5; shots=""; keep=0; renderer=gl_compatibility; frames=""
 for a in "$@"; do
   case "$a" in
     --fps=*) fps="${a#--fps=}" ;;
