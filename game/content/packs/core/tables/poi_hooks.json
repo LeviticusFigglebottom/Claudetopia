@@ -292,7 +292,9 @@
           "core:quest/a_stone_before_the_death",
           "core:quest/forty_head_and_a_hearth"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_blood_price_witness"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -480,7 +482,9 @@
         "quests": [
           "core:quest/answer_it"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_brindle_swallow_bells"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -509,7 +513,8 @@
       {
         "poi": "core:poi/broom_wifes_bield",
         "quests": [
-          "core:quest/the_broom_at_the_watch"
+          "core:quest/the_broom_at_the_watch",
+          "core:quest/the_second_light"
         ],
         "finds": [
           "core:item/note_bressas_round"
@@ -679,7 +684,9 @@
       },
       {
         "poi": "core:poi/chain_bridge",
-        "quests": [],
+        "quests": [
+          "core:quest/iron_for_the_chain"
+        ],
         "finds": [
           "core:item/note_chain_pitch_tally"
         ],
@@ -792,6 +799,7 @@
         "poi": "core:poi/clan_stones",
         "quests": [],
         "finds": [
+          "core:item/note_clan_stones_paint",
           "core:item/note_clan_stones"
         ],
         "encounters": [],
@@ -967,7 +975,9 @@
         "quests": [
           "core:quest/a_debt_with_a_nicer_voice"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_dale_watch_log"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -1215,6 +1225,17 @@
         ],
         "encounters": [
           "core:encounter/drylanders_hummock"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/dunnow",
+        "quests": [
+          "core:quest/the_long_tally"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/dunnow"
         ],
         "hearthstone": false
       },
@@ -1559,9 +1580,21 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/ghaleld",
+        "quests": [
+          "core:quest/iron_for_the_chain"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/ghaleld"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/ghastfoot",
         "quests": [],
         "finds": [
+          "core:item/note_ghastfoot_leave",
           "core:item/note_ghastfoot"
         ],
         "encounters": [],
@@ -2410,7 +2443,9 @@
         "quests": [
           "core:quest/what_the_ice_keeps"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_kharrows_cairn_song"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -3331,6 +3366,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/oskel_gloup",
+        "quests": [
+          "core:quest/the_second_light"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/oskel_gloup"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/oskel_rake",
         "quests": [
           "core:quest/askes_tune"
@@ -3806,7 +3852,9 @@
         "quests": [
           "core:quest/the_ninth_door"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_rope_cairn_count"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4295,7 +4343,9 @@
         "quests": [
           "core:quest/the_ninth_door"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/note_skerr_stone_copybook"
+        ],
         "encounters": [],
         "hearthstone": false
       },

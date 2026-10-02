@@ -215,5 +215,61 @@
     "author": "whoever climbed it",
     "category": "book",
     "body": "# At the top of the stair\n\n*Rubbed onto a shirt, because there was nothing else.*\n\n---\n\nThe stair stops at a sheer face where the snow has never melted. The last riser is as high as a man's chest, and cut into it, in letters the size of a hand, not Skerrish and not Oroth:\n\n*A line of marks like footprints going up, and then none.*\n\nAnd under them, in Skerrish, much smaller, much newer, cut by a knife: WE WENT UP. DO NOT FOLLOW. WE WILL SEND WORD."
+  },
+  {
+    "id": "core:book/note_blood_price_witness",
+    "title": "Chalked on the Witness-Slate",
+    "author": "whoever sat on the bench",
+    "category": "book",
+    "body": "# Seen paid\n\n*The slate by the Stones, for the witnesses: who laid it, for whom, and who saw.*\n\n---\n\nRudd to Skarl: nine head and a summer's grass, for the boy at the Bone Ford. Seen: Orsk, Ymma, a tinker.\n\nBrindle to Kharrow: a year's ore, for the cart off the Edge. Seen: Graddo, two drovers.\n\nGhast to nobody: coin, old, laid at night. Seen: nobody. *(and under it, in a different chalk)* I saw. I will not say."
+  },
+  {
+    "id": "core:book/note_skerr_stone_copybook",
+    "title": "A Child's Copy-Slate",
+    "author": "a child, by the hand",
+    "category": "book",
+    "body": "# THE HEIGHTS\n\n*Copied off the stone, in Valish, many times, the letters getting better and the S still backwards.*\n\n---\n\nTHE HEIGHTS THE HEIGHTS THE HEIGHTS\n\nTHE HEIGHTS\n\n*(At the bottom, in the same hand, smaller:)* Da says the Brindle cut the Valish off because the Vale cheated them in the Charter. Mam is from the Vale. I am putting it back so she can read where she lives."
+  },
+  {
+    "id": "core:book/note_dale_watch_log",
+    "title": "The Dale Watch, by the door",
+    "author": "the Ghast watch",
+    "category": "book",
+    "body": "# Up the dale\n\n*Who came up, and which side of the Moot they said they stood on.*\n\n---\n\nA drover, Brindle. The Moot's side.\n\nA tinker. No side. Let up; tinkers are no side.\n\nTwo Kharrow on Moot business. The Moot's side, they said, which is what Kharrow always say.\n\n**Midnight.** The horn. Nobody in the house but me, and I was asleep, and I have the horn's frost on nothing but the mouthpiece. Nobody came up the dale. In the morning there were tracks coming down it."
+  },
+  {
+    "id": "core:book/note_rope_cairn_count",
+    "title": "Ropes on the Cairn",
+    "author": "Tam ko-Brindle, herder",
+    "category": "book",
+    "body": "# Ropes on the Rope Cairn, this spring\n\n---\n\nThe Haddos' two, red. The Eddrick girl, blue, very short, she was quick. My own boy's, undyed, longer than mine was, he was slow and I am glad.\n\nOne more. Black hemp, old as the cairn, tied in a hitch with a turn too many. The length of a child of six. No family on the Edge owns it.\n\nI asked old Ushka ko-Kharrow, who knows every verse. She said that hitch was tied before the Rope-Song had seven verses, and then she would not say anything else, and went home early."
+  },
+  {
+    "id": "core:book/note_clan_stones_paint",
+    "title": "Under the Paint-Pot",
+    "author": "the Dreugh eldest",
+    "category": "book",
+    "body": "# Midsummer\n\n*For whoever paints Dreugh after me.*\n\n---\n\nGrey-blue, two coats, the second thin. Start at the shoulder and work down; the rain does the rest.\n\nPaint round the eighth socket as well. Everybody does. Nobody says why. My mother said her mother said: so it is ready.\n\n*(Added, this year, in a shakier hand:)* It is not empty any more. I painted round it anyway. I did not paint the stone. I did not want to touch it, and when I put my hand near it, it was warm."
+  },
+  {
+    "id": "core:book/note_ghastfoot_leave",
+    "title": "A Leave-Token",
+    "author": "left at Ghastfoot",
+    "category": "book",
+    "body": "# Asked leave\n\n*Scratched on both sides of a clay token, the way travellers up Ghast Dale ask the skull.*\n\n---\n\nHaska ko-Ghast asks leave to go up and cut the Red Moor's stones.\n\n*(other side)* The skull that is up there now is clay. Haska made it. The real one is at the Red Moor, under the twelfth stone, where it can see the dead of the bridge. Ghast does not know. Ghast will find out when Haska is under a stone herself."
+  },
+  {
+    "id": "core:book/note_kharrows_cairn_song",
+    "title": "The Kharrow Memory-Verse",
+    "author": "Ushka ko-Kharrow, memory-keeper",
+    "category": "book",
+    "body": "# Said at the cairns, once a year\n\n---\n\n*Kharrow who went up and did not come down,*\n*here is your name, said, and said, and said;*\n*the mountain keeps your bones, the clan keeps you,*\n*and what is kept is never wholly dead.*\n\n---\n\nForty-one years, and every name in its place. When I am under a slate myself, whoever says them: say them all. Do not leave out the ones you did not like. That is what the mountain does, and we are not the mountain."
+  },
+  {
+    "id": "core:book/note_brindle_swallow_bells",
+    "title": "Bells in the Swallow",
+    "author": "a Brindle miner",
+    "category": "book",
+    "body": "# Dropped, and heard\n\n---\n\nMy da's bell, dropped 1001. Heard at the spring the next morning, faint.\n\nMy own, dropped 1004. Heard at noon.\n\nThe Haddo boy's, 1011. Not heard.\n\nMine again, 1019. Not heard. Something at the spring, though, three days on: a bell, not mine, older, green. It came out of the spring in the Brindle's own water and nobody in Brindlecrag owns it.\n\nThe miners say the beck passes the singing shaft on the way down. I say it passes something that keeps bells."
   }
 ]

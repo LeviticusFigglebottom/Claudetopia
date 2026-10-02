@@ -15467,6 +15467,133 @@ were the review camera inside rock at the drop mouths).
 - shared edits: `world_streamer.gd`, `site_dress.gd`, rows in `test_poi_encounters.gd`.
 - every Cinderlea book has a copy to take (the notes name their item); test_books and
   test_poi_encounters are clean for Cinderlea's rows, other regions' rows still fail on this merge.
+
+## Skerrow, world life phase 2 (2026-10-01): three large places, and the dull ones built as their briefs say
+
+Branch `wip/wl2-skerrow` (triage 73, 74, 76). Everything is data in Skerrow's own files (new:
+`*/sites_skerrow.json`, `dialogues/touches_skerrow.json`, `npcs/site_people_skerrow.json`) and builders in
+`game/world/pois/regions/skerrow.gd`. Shared files touched: `tests/unit/test_poi_encounters.gd`
+(`WHAT_STANDS` rows for the three new places and Kharrow Gate's ward), `tests/unit/test_sites_skerrow.gd`
+(the region's own), `tables/poi_hooks.json` (regenerated).
+
+### Three large places, each with an inside, a boss and a quest
+- **Dunnow, the Remembered Hold** (delve, own builder, at (651, -3616) under the Wall's 120 m face above
+  the Windgate road, pad 31.5, `pad_shape: slope`): the seven clans' hold of the Long Tally. Three storeys of
+  dressed limestone front step back up the cliff, each a terrace with a parapet, framed by rough crag cheeks;
+  windows lit again, a great door under a giant's thigh-bone, the beacon burning on the top terrace (seen from
+  the road); either side of the door the Long Tally in notches of five with pale rasped patches and the
+  stone-dust under them (a touch); chains of the Chain Years down the storeys; the Unwritten's yard camp; the
+  last keeper's lean-to and the Tally Walk of notched stones toward the road. Inside **Dunnow** (keep, 9
+  rooms written out: the tally stair up, the cutters' ledge with archers, the keepers' rest, the chain gallery
+  over a cleft, the store, the barracks, the Long Tally's head) with **Kadda the Rasp** (boss, extends the
+  clanless outrider). Quest **The Long Tally** (Fenna ko-Dreugh, the last keeper): cut the names back, burn the
+  list, or send it to the Moot.
+- **Ghaleld, the chain-mine** (delve, own builder, at (-650, -2668) on the bench above Brindlecrag, pad 36):
+  the headframe two pairs of a giant's ribs lashed at the crown, the wheel hung between them, the cage on the
+  stone collar, the capstan ring, red spoil tipped toward the village, the dressing floor, the forge and the
+  last length of chain lying in the grass (a touch), the shift board under the Moot's order (a touch), the
+  chain-smith's bothy. Inside **Ghaleld** (mine, 8 rooms: the upper level where the wolves den, the
+  ladderway, the break, the bone seam, the drawing forge, the marrow) with **the Chained Brakh** (boss, extends
+  the stone-thrall). Quest **Iron for the Chain** (Brakka ko-Brindle): the Chain Bridge's cracked link, the
+  marrow-iron; forge the link, give it back, or hang it on the board for the Moot.
+- **Oskel Gloup** (delve, own builder, at (-3480, -2870) on the Oskel cliffs, pad 30): a sea cave's fallen
+  roof in the moor, a crater of turf round the black hole with the spray standing out of it, the Oskel's
+  derrick of ship's timber leaning over it with its rope reeved, the winch, the stair-head down, the
+  winchman's shut house, the lead pigs on the sledge-way from the Leadhouse, and the lamp-bracket black with
+  new soot (a touch). Inside **the Salt Cave** (sea cave, 8 rooms: the boats' pool under the shaft, the salt
+  gallery, the Lamp's camp, the rift, the wreck store, the spray hall, the sea-mouth) with **Haldo the
+  Lampman** (boss, extends the clanless raider). Quest **The Second Light** (Bressa, the broom-wife, who kept
+  the Skerry Watch the winter the Salt boat broke): the lamp hung in the sea-mouth that lured the boat; take
+  his tally to the Moot, to Grenna ko-Oskel, or burn it. It follows the country of The Broom at the Watch
+  without needing it.
+Each has a rumour, a note in its secret room, an encounter outside, and is walked in `test_sites_skerrow`
+(Ghaleld's seed 5300 after a scan of seeds; 5307 and 5311 left its secret off the mesh).
+
+### The dull places, built as their briefs say
+Every Skerrow ruin was the ruins kind's one roofless hall and every ring of stones the same three
+stones, so a Bone Clan hold, a lead-miners' rake and a sealed silver working looked alike. Eighteen
+places now have builders of their own, each with a thing to touch that says what it is
+(`dialogues/touches_skerrow.json`):
+- **Ghorrow**: a horseshoe of crag dressed into a court, eight doors round it (seven walled up in rough
+  stone, the eighth open with steps down into the dark), the clan panel over the way in smoothed blank.
+- **the Briar's End**: the briar stopping at the fell, a wall of giant's bones across the gap with two spans
+  pushed out from this side, the keepers' cairn and bell.
+- **the Frost Moot**: eight stone seats in a turf-banked hollow, snow on every seat but one, the broom by it.
+- **the Oskel Rake**: the trench between its grey spoil banks, the winding-stone with its rope groove, the
+  fresh end with lead showing and the picks dropped.
+- **the Deadground**: grey spoil tips, two roofless ore-sheds, a barrow and a cart, goat skulls, and one
+  line of grass running straight across it toward Oskeld.
+- **Old Eld**: the collar sealed by a giant's shoulder-blade pinned with iron and steaming at its edge.
+- **the Leadhouse**: a long roofless lead store to its gables, the Salt Isles tide-mark over the door, lead
+  pigs stacked inside, the clanless fire and the hearthstone, broom-heather round it.
+- **Ghastfoot**: a gateway arch over the road, the clay skull in its keystone, the leave-bench and cairn.
+- **Brindle Swallow**: the beck sliding into a black hole ringed with clints, spray, three cairns, a bell on
+  a cord from a leaning stake.
+- **Kharrow's Cairns** (name-slates, the keeper's seat and singing ring), **the Rope Cairn** (children's
+  ropes and the old hitch), **the Blood-Price Stones** (coin in the grooves, the witnesses' bench), **the
+  Clan Stones** (seven weathered clan colours and the unpainted eighth), **the Drove Chain** (the chain
+  lifted on its stone, the ward's stool and news slate), **the Seven Stones** (seven lichens, the seventh
+  green), **the Dale Watch** (a turf-roofed watch-house with its stair and a giant's horn on a frame),
+  **the Skerr Stone** (broken, the Valish cut back in badly).
+- **Kharrow Gate**: two drystone gate-towers either side of the North Road, the bar swung up on its pivot,
+  the law cut in a slab, and **Orrin ko-Kharrow**, the gate-ward, who asks you to say it back.
+A note now lies at eight small places that had nothing to take (`items/`, `books/places_skerrow.json`).
+
+### Set straight (triage 74)
+`_tidy` runs after the kind's builder at Skerrow's caves (Horn Hole, Kharrow Hole, the Oskel Drip, the
+Wrist Hole), the Chain Bridge, Ghast's Broken Bridge, the Watch of the Gate, the Wolf Stones, the Giants'
+Stair, the Bone Ford and the Rib Cathedral: a placed prop floating is set down on the ground (the Giants'
+Stair's rope coil), a standing prop in a carriageway is moved to the verge (the standing stones at the
+Bone Ford, the Rib Cathedral and the Wolf Stones), a lone length of drystone is taken away (the Chain
+Bridge, Ghast's Broken Bridge, the Watch of the Gate). The Winter Cairns' pebble rests on its heap's box.
+Probe after: every new and reworked place seat-clean except Ghorrow's two crag rocks overlapping and the
+caves' crag boulders (the cave kind's design; see below).
+
+### Measured
+- `region_check.py skerrow --godot`: **PASS** (content, placement, density; Dunnow 51 draws / 61 k tris,
+  Ghaleld 45 / 151 k, Oskel Gloup 14 / 7 k, all seat-clean). With `--edited` over the reworked places,
+  seat-clean but for Ghorrow's two crag rocks overlapping; Kharrow Gate's and Ghastfoot's "road through the
+  level core" are the gate and the arch over the road they are for.
+- `region_audit.py skerrow --probe` (report, map and probe committed): weak non-wayside POIs **9 → 2**
+  (Ghastfoot and the Clan Stones, score 3 each: small, a touch and a find but nobody there), strong
+  **10 → 14**, 140 POIs, land further than 200 m from anything 12%, largest gap 0.05 km2; placement problems
+  98 at 62 POIs → 90 at 61.
+- `./run.sh test --filter=test_sites_skerrow,test_poi_encounters,test_poi_preview,test_pois,test_poi_people,
+  test_quest_givers,test_dialogue_keys,objects_seated_skerrow`: 68 tests, 0 failed, 0 script errors. The six
+  Skerrow sites walk every room on the navigation mesh (Dunnow 9 rooms 21 foes, Ghaleld 10 rooms 17 foes,
+  the Salt Cave 9 rooms 19 foes).
+- `./run.sh quests --only=the_long_tally,iron_for_the_chain,the_second_light`: 3 of 3 quests end every way
+  they can, 9 of 9 walks, 0 world notes, 0 logged errors.
+- Sheets (Compatibility, 1600x900): every view under the limit; Dunnow 593-899 draws / 1.07-1.24 M, Ghaleld
+  691-931 / 0.97-1.41 M (over the 1.1 M aim from the bench's own scatter), Oskel Gloup 530-737 / 0.90-1.06 M.
+
+### Looked at
+Real-ground sheets of Dunnow, Ghaleld and Oskel Gloup (twice, before and after the fixes above), of Ghorrow,
+the Frost Moot, the Briar's End (twice), the Oskel Rake and the Deadground, and the three insides room by room (`site_review`);
+flat-pad renders of all eighteen reworked places. What read wrong and was changed: Dunnow's storeys as boxes
+on the slope (now cut out of crag cheeks), Ghaleld's spoil as pink sausages (now low broad iron-waste brown
+with red rock on it) and its headframe too small (15 m), the Gloup as a well with a ring wall (now a wider
+hole in a turf crater with spray), cairns as stacks of plates, the Frost Moot's ring of snowballs, the
+Briar's End's briar as pale boulders (then grey domes; now a low dark mass under the briar vines, not
+re-shot), the Rake's banks as two tubes, the Deadground's grass line as green
+cubes and its spoil as grey patches on green turf (now the waste spread over all of it, not re-shot), the Clan Stones as crayons, Ghastfoot's floating cap. The flat-pad review's approach cameras look up
+from inside the structures (site_review's camera, a shared tool, not changed): those shots were not used.
+
+### Not done / for the coordinator
+1. The world build must lay the three new pads (Dunnow and Oskel Gloup and Ghaleld keep `pad_shape: slope`).
+   Until then the bench's and the moor's scatter stands in Ghaleld's and the Gloup's yards.
+2. The cave kind's own pieces at Skerrow's caves (buried throats, crag boulders overlapping and sunk), the
+   giant_bones kind's campfire inside a skull fragment (the Brakh's Eye, the Skarl Skull, the Watcher) and
+   the walled camp's barrel in its basket are the shared kinds' design; `_tidy` sets down and moves only
+   placed props, not merged masonry. The Rust Scar's stream (0.21 m) is the waterfall kind's.
+3. Inside the large sites the first big chamber after the mouth (Ghaleld's upper level, the Salt Cave's pool)
+   renders black in `site_review`'s view from its doorway; the creature models (crag-wolf, stone-thrall)
+   read as untextured blocks under Compatibility there (forge / bestiary, as phase 1 found).
+4. Pennant's Weather-House's rain-gauge can, judged floating by the full probe (it was merged with the vane),
+   is a mesh of its own on its post: re-probed seat-clean. The Deadground's waste was drawn in to its pad
+   after its last probe (30 m on 25) by arithmetic, not re-probed.
+5. `test_books` and `test_poi_encounters` pass on this branch (28 tests with the sites and seat tests).
+
 ## Knappers' Deep, the Hum Stone, and ruins that say what they are: world life in Hearthvale, phase 2 (2026-10-01)
 
 Triage 73, 74 and 76 for Hearthvale (branch `wip/wl2-hearthvale`). Two large places with an inside

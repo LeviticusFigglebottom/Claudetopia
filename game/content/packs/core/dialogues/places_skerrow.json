@@ -1585,7 +1585,7 @@
   {
     "id": "core:dialogue/bressa_unroped",
     "speaker_name": "Bressa",
-    "notes": "The clanless broom-wife at the Broom-Wife's Bield (skerrow world life): unroped for the Skerry Watch fire. Her quest line is core:quest/the_broom_at_the_watch (topic node the_watch_winter).",
+    "notes": "The clanless broom-wife at the Broom-Wife's Bield (skerrow world life): unroped for the Skerry Watch fire. Her quest line is core:quest/the_broom_at_the_watch (topic node the_watch_winter); she gives core:quest/the_second_light (phase 2).",
     "start": "greet",
     "nodes": {
       "greet": {
@@ -1628,6 +1628,32 @@
             "next": "topic_2"
           },
           {
+            "text": "You watch the sea at night. What for?",
+            "next": "q_light_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_second_light"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_second_light"
+                }
+              }
+            ]
+          },
+          {
+            "text": "It was Haldo ko-Oskel, the winchman. He kept a tally.",
+            "next": "q_light_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_second_light",
+                  "the_tally"
+                ]
+              }
+            ]
+          },
+          {
             "text": "I'll be on my way.",
             "next": "bye"
           }
@@ -1641,6 +1667,91 @@
       "the_watch_winter": {
         "speaker": "Bressa",
         "text": "*(The broom stops.)* Grenna. — She sits in it. I know. I don't go when she's there. — I kept the watch that winter. The storm was coming and the skerries were running, and in the morning the fire was out and the boat was on the rocks, and the Moot asked me was it lit, and I said I didn't know. I'd fallen asleep in the seat. Forty years I've not known. — I'll not say it was lit. I'll not say it wasn't. — The Salt men wrote everything down, every tide, every cask of lead. They wrote it in the Leadhouse, by the shore. The clanless sleep there now when the wind's in the west. If anybody knows, the Leadhouse does.",
+        "next": "hub"
+      },
+      "q_light_offer": {
+        "speaker": "Bressa",
+        "text": "*(She doesn't stop sweeping.)* For the light. — Under the cliff, down where the old gloup comes out on the sea. Not every night. Dark nights, with no moon, the kind the Salt boats liked. — I saw it the night the boat broke. I'd woken in the watch-seat and the fire was burning and there was another light, low down, south of it, and I thought: that's a boat in trouble. It wasn't a boat. — Forty years nobody heard me, because who hears the unroped. It's back. Go down the gloup, if you've the stomach, and see who hangs it.",
+        "choices": [
+          {
+            "text": "I'll go down Oskel Gloup.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_second_light"
+              }
+            ],
+            "next": "q_light_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_light_accept": {
+        "speaker": "Bressa",
+        "text": "There's a stair. The Oskel cut it for the winchman's boy. Don't trust the rope, it was spliced by somebody who wanted it to hold for one more winter and no longer.",
+        "next": "hub"
+      },
+      "q_light_decide": {
+        "speaker": "Bressa",
+        "text": "*(The broom stops, and stays stopped.)* Haldo. He used to bring me herring when I kept the watch. — Sold the boat before it sailed, and hung the lamp so it would come in where his buyers were. And didn't know Keddo was aboard. — Forty years. Say what's to be done with it. I find I've no broom for this.",
+        "choices": [
+          {
+            "text": "Take it to the Moot.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_second_light",
+                  "to_the_moot"
+                ]
+              }
+            ],
+            "next": "q_light_moot"
+          },
+          {
+            "text": "Take it to Grenna. It was her son.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_second_light",
+                  "to_grenna"
+                ]
+              }
+            ],
+            "next": "q_light_grenna"
+          },
+          {
+            "text": "Burn it.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_second_light",
+                  "burn_it"
+                ]
+              }
+            ],
+            "next": "q_light_burn"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_light_moot": {
+        "speaker": "Bressa",
+        "text": "The Moot. They'll reckon what the Oskel owe the Salt Isles, and what they owe Grenna, and then somebody will clear their throat and say, and the broom-wife. — I'll not go down to hear it. Tell me after.",
+        "next": "hub"
+      },
+      "q_light_grenna": {
+        "speaker": "Bressa",
+        "text": "Grenna. — Yes. She's sat in that watch forty years with her back to the land waiting for it to be somebody's fault. Let it be the right somebody's. — Tell her I'll sweep the watch for her, still, if she'll have it.",
+        "next": "hub"
+      },
+      "q_light_burn": {
+        "speaker": "Bressa",
+        "text": "*(She feeds it to her fire a page at a time.)* He's dead and Keddo's dead and I'm unroped and the Salt men never came back. A book won't mend any of it, and the Moot would only make another price out of it. — There. Forty years. I'll sweep the step.",
         "next": "hub"
       }
     },
@@ -1666,6 +1777,39 @@
           }
         ],
         "text": "Grenna came up. All that way, at her age. She had her own broom. — We don't talk about it. We sweep the watch together. It's cleaner than it's been in forty years."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "lamp_tally_to_moot"
+          },
+          {
+            "quest_done": "core:quest/the_second_light"
+          }
+        ],
+        "text": "The Moot sent a boy up with a length of new rope and a message I wasn't to sweep the watch any more unless I wanted to. — I want to. That was never what it was for."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "lamp_tally_to_grenna"
+          },
+          {
+            "quest_done": "core:quest/the_second_light"
+          }
+        ],
+        "text": "Grenna sent word. Four words: the watch is swept. I don't know what she meant. I've decided she meant it kindly."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "lamp_tally_burned"
+          },
+          {
+            "quest_done": "core:quest/the_second_light"
+          }
+        ],
+        "text": "No light under the cliff. Not one, since. I still sit up on the dark nights, out of habit. It's a good habit. The stars are very fine from the cliff."
       }
     ]
   },

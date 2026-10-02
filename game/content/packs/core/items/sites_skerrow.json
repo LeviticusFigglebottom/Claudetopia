@@ -1,0 +1,89 @@
+[
+  {
+    "id": "core:item/the_rasps_list",
+    "name": "The Rasp's List",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clanless",
+      "ledger",
+      "unique"
+    ],
+    "description": "Every name the Unwritten ground out of the Long Tally, with its clan, its debt and the year it was set, in a tally-cutter's careful hand on stitched birch-bark. Thirty-one names. The last is Kadda ko-Kharrow, nine years' work, with no line through it."
+  },
+  {
+    "id": "core:item/marrow_iron",
+    "name": "Marrow-Iron",
+    "category": "misc",
+    "weight": 4.0,
+    "value": 150,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "iron",
+      "bone",
+      "unique"
+    ],
+    "description": "A bar of iron broken off the deep seam at Ghaleld, red as a scab where it broke and grained inside like bone. It is warm, and it rings for a long time when it is struck."
+  },
+  {
+    "id": "core:item/dunnow_keepers_last",
+    "name": "The Last Keeper's Day-Book",
+    "category": "book",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A keeper's day-book from Dunnow, the last thirty pages of it written by one hand.",
+    "reads": "core:book/dunnow_keepers_last"
+  },
+  {
+    "id": "core:item/ghaleld_overmans_book",
+    "name": "The Overman's Book",
+    "category": "book",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "Ghaleld's overman's book for the winter of 1001, kept in the store behind the drawing forge.",
+    "reads": "core:book/ghaleld_overmans_book"
+  },
+  {
+    "id": "core:item/lampmans_tally",
+    "name": "The Lampman's Tally",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "clanless",
+      "ledger",
+      "unique"
+    ],
+    "description": "A winchman's book of everything that came up Oskel Gloup's rope, kept for forty years in a careful Oskel hand. The first page is the Salt boat's cargo, sold before she sailed. Under it, years later and in the same hand: the pilot was Keddo. I did not know."
+  },
+  {
+    "id": "core:item/salt_cave_cargo_book",
+    "name": "The Salt Isles Cargo Book",
+    "category": "book",
+    "weight": 0.3,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Salt Isles traders' book of tides and cargo, kept in the cave under Oskel Gloup and never carried home.",
+    "reads": "core:book/salt_cave_cargo_book"
+  }
+]

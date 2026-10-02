@@ -1,0 +1,377 @@
+[
+  {
+    "id": "core:dialogue/ghorrow_open_door",
+    "speaker_name": "The open door",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The open door",
+        "no_talk": true,
+        "text": "Seven of the eight doors round the court are walled up, in rough stone that does not match the dressed faces, as if each had been shut in a hurry by somebody who did not want to look at it while they worked. The eighth is open. Steps go down from its sill into a dark that does not end where the light stops. The air coming up out of it is warm, and smells of chalk-dust and old bone.",
+        "choices": [
+          {
+            "text": "Listen at the door.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The open door",
+        "no_talk": true,
+        "text": "Far down, very slow, something is counting. It counts to seven and stops, and waits, the length of a breath, and starts again.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghorrow_blank_panel",
+    "speaker_name": "The panel over the way in",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The panel over the way in",
+        "no_talk": true,
+        "text": "Every hold in the heights has its clan's mark cut over its door: the Kharrow knot, the Skarl horn, the Rudd wheel. The panel over Ghorrow's way in has been dressed for a mark and smoothed blank, so carefully that you can see the chisel was turned on its side for the last pass. Nobody makes a panel that flat by accident.",
+        "choices": [
+          {
+            "text": "Look closer.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The panel over the way in",
+        "no_talk": true,
+        "text": "In the right light there is a ghost of something under the smoothing: a closed hand, the size of a child's, very shallow, that somebody did not quite manage to take all the way out.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/briars_end_pushed",
+    "speaker_name": "The pushed wall",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The pushed wall",
+        "no_talk": true,
+        "text": "Two spans of the bone wall lie on the briar side of it, tumbled outward into the thorns, the hide lashings that held them snapped and frayed. The bones were not pulled from the far side; the scrape-marks in the turf run from this side, the heights' side, outward. Whatever pushed them through was going out, toward the Thornmarch, not coming in."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/frost_moot_swept_seat",
+    "speaker_name": "The swept seat",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The swept seat",
+        "no_talk": true,
+        "text": "Snow lies on seven of the eight seats, untouched, crusted by the night. The eighth is swept to the bare stone, the sweepings in a neat ridge at its foot, and a heather broom lies beside it. There is no footprint in the snow of the hollow but yours.",
+        "choices": [
+          {
+            "text": "Look at the seat.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The swept seat",
+        "no_talk": true,
+        "text": "The clan-mark cut into the back of this seat has been worn away by weather, long ago. Somebody has scratched a new one in its place with a nail, very small: five strokes and a line across them.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/oskel_rake_winding_stone",
+    "speaker_name": "The winding-stone",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The winding-stone",
+        "no_talk": true,
+        "text": "A squat pillar at the head of the rake, the groove round it worn so deep by four hundred years of rope that you can lay your arm in it. The rope's last turn is still round it, rotten to fibre. On its downhill face the Oskel miners cut a tally of fathoms dug each year, and the last year has no tally, only a line, and under the line the word that means: it answers."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/deadground_grass_line",
+    "speaker_name": "The line of grass",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The line of grass",
+        "no_talk": true,
+        "text": "A line of new grass a hand wide runs straight across the grey spoil, as straight as a chalk-line, through the heaps and over the ruts, and does not turn aside for anything. Nothing else has grown on the Deadground in a hundred years. You follow it with your eye up the dale. It runs to Oskeld's mouth, and stops at it."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/old_eld_bone_door",
+    "speaker_name": "The bone door",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bone door",
+        "no_talk": true,
+        "text": "A giant's shoulder-blade, as wide as a cart is long, laid over the shaft and pinned at its corners with iron the Brindle drove in three hundred years ago. It is warm under your hand, as warm as an animal, and the warmth is coming up from underneath. The snow does not lie within a stride of its edge.",
+        "choices": [
+          {
+            "text": "Put your ear to it.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The bone door",
+        "no_talk": true,
+        "text": "Nothing, and then, very faint and very far down, a sound like a bell struck once under water. The bone hums with it against your cheek for a long time after.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/leadhouse_tide_mark",
+    "speaker_name": "The tide-mark",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The tide-mark",
+        "no_talk": true,
+        "text": "Painted over the door in a blue gone grey with lead-dust: a wave over a line, the Salt Isles' tide-mark, that the traders painted on every house that kept goods for them, so that their boats would know where to put in. Under it, scratched into the lintel in Skerrish, a later hand has added the date of the winter the Skerry Watch went dark, and nothing else."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brindle_swallow_bell",
+    "speaker_name": "The bell on the cord",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bell on the cord",
+        "no_talk": true,
+        "text": "A small brass bell on a cord from the leaning stake, hanging over the swallow-hole. The miners' children drop a bell into Brindle Swallow and run to Brindlecrag's spring to hear it come out. Nobody has heard one come out in living memory. This one is new, the cord fresh, tied with a Brindle knot.",
+        "choices": [
+          {
+            "text": "Let the bell down into the hole.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The bell on the cord",
+        "no_talk": true,
+        "text": "The cord runs through your fingers and goes slack a long way down. Below, for a moment, the bell rings, and then another bell answers it, deeper, from somewhere further in than the beck goes.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kharrows_cairn_names",
+    "speaker_name": "The memory-cairns",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The memory-cairns",
+        "no_talk": true,
+        "text": "Flat slates wedged into the cairns' stones all over, hundreds of them, a name scratched on each: every Kharrow the mountain kept, avalanche and fall and frost. The memory-keeper sang them here once a year, all of them, in order, from this seat. The oldest slates are so worn they are only slates.",
+        "choices": [
+          {
+            "text": "Look for the newest.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The memory-cairns",
+        "no_talk": true,
+        "text": "The newest slate is wedged in high on the middle cairn, the scratching still sharp: a name, and under it, where the year should be, nothing. Nobody has died this year that the Kharrow know of.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/rope_cairn_hitch",
+    "speaker_name": "The knotted rope",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The knotted rope",
+        "no_talk": true,
+        "text": "Among the children's ropes, undyed and red and Skarl blue, one hangs that no family on the Edge owns: old hemp, black with age, tied to the pole in a hitch with a turn too many, the way the memory-keepers say the clans tied before the Rope-Song had seven verses. It is the length of a child of about six."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/blood_price_grooves",
+    "speaker_name": "The grooves",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The grooves",
+        "no_talk": true,
+        "text": "Three stones by the road, their tops worn into grooves by six hundred years of coin laid and taken up. A clan owed a death is paid here, in public, so every traveller sees that it was: the coin lies a day in the groove before it is lifted. There is coin in the middle stone's groove now, laid edge to edge, old coin, the stamp worn smooth."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/clan_stones_eighth",
+    "speaker_name": "The eighth stone",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The eighth stone",
+        "no_talk": true,
+        "text": "Seven stones painted every midsummer by their clans' eldest, oxblood and blue and ochre and moss and soot and gold and Dreugh's grey-blue. In the eighth socket, which nobody paints round and which is always painted, stands a stone that was not here last year: rough, unpainted, the packing round its foot fresh, and on its shoulder a closed hand, cut very small."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/drove_chain_lifted",
+    "speaker_name": "The drove chain",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The drove chain",
+        "no_talk": true,
+        "text": "The iron chain that hangs across the Low Road between the two stones is lifted and hooked up on the uphill stone, its links coiled at the stone's foot, as it is for a herd going through. No herd has gone through. The chain-ward's slate says the price was paid in news: and the news, in his chalk, is a name, which has been rubbed out."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/seven_stones_green",
+    "speaker_name": "The green stone",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The green stone",
+        "no_talk": true,
+        "text": "Six of the seven stones are grown over with the lichen the clans say is theirs, rust and sulphur and grey and white and orange and black, so thick you cannot see the stone under it. When a clan dies its stone goes bare within a year. There are seven clans living. The seventh stone is green, and it is the eighth colour."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kharrow_gate_law",
+    "speaker_name": "The law at Kharrow Gate",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The law at Kharrow Gate",
+        "no_talk": true,
+        "text": "Cut in the slab in Skerrish, and under it in Valish, and under that in the Sayers' marks: WHAT IS TAKEN IS PAID FOR IN KIND. A DEATH IS PAID IN BLOOD-PRICE. A HOST IS NEVER ROBBED. SAY IT BACK. The gate-ward reads it to every traveller coming up from the Vale, and every traveller says it back, and then the bar is raised.",
+        "choices": [
+          {
+            "text": "Say it back.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The law at Kharrow Gate",
+        "no_talk": true,
+        "text": "You say it back. The wind takes it up the gorge. You have the feeling, saying it, that you have agreed to something you will be held to.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dale_watch_horn",
+    "speaker_name": "The great horn",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The great horn",
+        "no_talk": true,
+        "text": "A giant's horn the length of a man, curved and bound with iron, hung on its frame by the watch-house door to be blown when anyone comes up Ghast Dale who will not say which side of the Moot they stand on. The mouthpiece is worn smooth by four hundred years of Ghast lips. It was blown at midnight, the dale says, with nobody in the house. There is frost on everything but the mouthpiece."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/skerr_stone_valish",
+    "speaker_name": "The fallen top of the Skerr Stone",
+    "notes": "A thing to touch at a Skerrow place (skerrow.gd, phase 2). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The fallen top of the Skerr Stone",
+        "no_talk": true,
+        "text": "The first stone of the clans' country, broken, its top lying beside its stump. On the stump's road face the Skerrish is cut deep and sharp: THE HEIGHTS. On the fallen top, where the Brindle chiselled the Valish off in the Charter quarrel, the Valish has been cut back in, pale and shallow, in letters like a child copying: THE HEIGHTS, with the S backwards."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/oskel_gloup_bracket",
+    "speaker_name": "The lamp-bracket",
+    "notes": "Oskel Gloup's lamp-bracket, on the seaward lip (skerrow.gd oskel_gloup). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The lamp-bracket",
+        "no_talk": true,
+        "text": "An iron bracket on a post at the gloup's seaward lip, where the winchman hung his lamp to see the rope by at night. The bracket is black with soot, and the soot is new: it comes off on your fingers. From here, through the spray, you can see straight down the gloup to the sea at its foot, and out through the cave's mouth to the skerries, and beyond them the Skerry Watch on its headland.",
+        "choices": [
+          {
+            "text": "Look down the gloup.",
+            "next": "more"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The lamp-bracket",
+        "no_talk": true,
+        "text": "The spray comes up in your face. At the foot of the shaft, a long way down, the sea heaves in a black pool, and on the pool's edge somebody has drawn a boat up out of the wash. A rope's end lies coiled beside it. The derrick's rope above you is spliced, and the splice is this year's.",
+        "next": "end"
+      }
+    }
+  }
+]

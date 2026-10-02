@@ -1,0 +1,355 @@
+[
+  {
+    "id": "core:quest/the_long_tally",
+    "name": "The Long Tally",
+    "layer": "side",
+    "giver": "core:npc/fenna_ko_dreugh",
+    "region": "core:region/skerrow",
+    "summary": "The windows of Dunnow are lit again. The clanless who call themselves the Unwritten have taken the Remembered Hold and are grinding their names out of the Long Tally, and Fenna ko-Dreugh, its last keeper, cannot climb the stair to stop them.",
+    "notes": "Skerrow world life, phase 2 (docs/WORLD_LIFE.md). Dunnow (delve, own builder `dunnow`, interior core:interior/dunnow_halls, keep kind, boss core:boss/kadda_the_rasp). The list Kadda drops names every Unwritten; the decision is whether a debt nobody can read is still owed.",
+    "stages": [
+      {
+        "id": "the_rasping",
+        "journal": "Fenna ko-Dreugh kept the Long Tally at Dunnow for thirty-one years: every blood-price the Moot ever set, cut into the hold's walls in notches of five, so that nothing owed would be forgotten. The Unwritten are grinding their own names out of it with farriers' rasps, and their chief, Kadda the Rasp, works at the top of the hold where the tally ends. Fenna cannot climb the stair. She wants to know whose names are gone, and she wants it stopped.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/kadda_the_rasp",
+            "count": 1,
+            "where": "core:interior/dunnow_halls",
+            "text": "Climb Dunnow to the head of the Long Tally and stop Kadda the Rasp"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/the_rasps_list",
+            "count": 1,
+            "text": "Take Kadda's list of the names she ground away"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/dunnow",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_list",
+        "journal": "Kadda kept a list. Every name the Unwritten ground out of the Long Tally is on it, with the clan, the debt and the year, in the careful hand of a tally-cutter's daughter: thirty-one names, and at the bottom her own, with nine years' work against it and no line through it. Fenna is at her fire at the foot of the hold.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_long_tally",
+            "text": "Tell Fenna ko-Dreugh what is to be done with the list",
+            "options": [
+              {
+                "id": "cut_them_back",
+                "text": "Give Fenna the list, so she can cut every name back into the Tally.",
+                "effects": [
+                  {
+                    "set_flag": "tally_cut_back"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "let_them_go",
+                "text": "Burn the list. A debt nobody can read is owed to nobody.",
+                "effects": [
+                  {
+                    "set_flag": "tally_let_go"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "to_the_moot",
+                "text": "Have it carried to the Moot at Kharrow, and let the clans decide who is still owed.",
+                "effects": [
+                  {
+                    "set_flag": "tally_to_moot"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      4
+                    ]
+                  },
+                  {
+                    "marks": 60
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/dunnow",
+          "radius": 120
+        }
+      },
+      {
+        "id": "remembered",
+        "journal": "Fenna ko-Dreugh closed her fist on the fifth finger and said nothing for a long time, and then asked to be helped up to the door, so she could see the Tally in the morning light.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 170,
+      "renown": 12,
+      "items": [
+        [
+          "core:item/oatcake",
+          3
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/iron_for_the_chain",
+    "name": "Iron for the Chain",
+    "layer": "side",
+    "giver": "core:npc/brakka_ko_brindle",
+    "region": "core:region/skerrow",
+    "summary": "A link of the Chain Bridge is cracking, and Brakka ko-Brindle, the last chain-smith, says no iron will mend it but Ghaleld's, which nobody has dug since the Moot shut the shaft forty years ago.",
+    "notes": "Skerrow world life, phase 2. Ghaleld (delve, own builder `ghaleld`, interior core:interior/ghaleld_workings, mine kind, boss core:boss/chained_brakh). The chains of the heights were drawn from a giant's marrow; the decision is whether the iron is the Brindle's to forge or the giant's to keep.",
+    "stages": [
+      {
+        "id": "the_cracked_link",
+        "journal": "Brakka ko-Brindle keeps the forge lit at Ghaleld's shaft head and draws chain out of scrap for nobody. She says a link of the Chain Bridge's Brindle chain is cracking, she can hear it from the forge on a still morning, and that only Ghaleld iron has ever held a chain bridge. She wants it looked at by someone who will believe her.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/chain_bridge",
+            "text": "Look at the Brindle chain on the Chain Bridge"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/chain_bridge",
+          "radius": 120
+        }
+      },
+      {
+        "id": "down_the_shaft",
+        "journal": "The link is cracked through on the downstream side, and the bridge leans a hand toward it. Brakka needs iron from the deep seam at Ghaleld, below the break where the last shift stopped. Her grandfather was their overman. She says that whatever they chained down there is still in its chain, and that she would rather not know why they never came up to tell anyone.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/chained_brakh",
+            "count": 1,
+            "where": "core:interior/ghaleld_workings",
+            "text": "Go down Ghaleld's shaft to the marrow and deal with what the last shift chained there"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/marrow_iron",
+            "count": 1,
+            "text": "Take a bar of the marrow-iron"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/ghaleld",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_iron",
+        "journal": "The iron of the deep seam is not ore. It is the giant's own marrow, gone to iron in the rock, and the chain the last shift held it with was drawn from the same seam: it was chained in its own bones. Every chain bridge in the heights is made of it. Brakka is at her forge.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "iron_for_the_chain",
+            "text": "Tell Brakka ko-Brindle what is to be done with the marrow-iron",
+            "options": [
+              {
+                "id": "forge_the_link",
+                "text": "Forge the link. The bridge has to hold, whatever it is made of.",
+                "effects": [
+                  {
+                    "set_flag": "chain_link_forged"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      6
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "give_it_back",
+                "text": "Take the iron back down and lay it in the marrow. It was never the Brindle's.",
+                "effects": [
+                  {
+                    "set_flag": "chain_iron_returned"
+                  },
+                  {
+                    "renown": 12
+                  }
+                ]
+              },
+              {
+                "id": "the_shift_board",
+                "text": "Hang it on the board at the collar, under the last shift's names, and let the Moot see what they were digging.",
+                "effects": [
+                  {
+                    "set_flag": "chain_iron_shown"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      3
+                    ]
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/ghaleld",
+          "radius": 120
+        }
+      },
+      {
+        "id": "drawn",
+        "journal": "Brakka ko-Brindle tapped the bar with a fingernail and listened to it for a long time, and said that it would hold. She did not say what.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 180,
+      "renown": 12,
+      "items": [
+        [
+          "core:item/oatcake",
+          3
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_second_light",
+    "name": "The Second Light",
+    "layer": "side",
+    "giver": "core:npc/bressa_unroped",
+    "region": "core:region/skerrow",
+    "summary": "Bressa, who kept the Skerry Watch the winter the Salt boat broke, has seen a light on dark nights below the Oskel cliffs, where the old gloup cave opens on the sea: the same light she saw from the watch the night the boat went onto the skerries.",
+    "notes": "Skerrow world life, phase 2. Oskel Gloup (delve, own builder `oskel_gloup`, interior core:interior/the_salt_cave, sea_cave kind, boss core:boss/haldo_the_lampman). Follows the country of core:quest/the_broom_at_the_watch without needing it: the watch-fire was lit, and the boat steered for a second light. Grenna ko-Oskel's son Keddo was the boat's pilot.",
+    "stages": [
+      {
+        "id": "the_lamp",
+        "journal": "Bressa kept the Skerry Watch the winter the Salt boat broke on the skerries, and the Moot unroped her for it. She has watched the sea from the cliffs every dark night since, and on some of them there is a light low down under the cliff, where Oskel Gloup's cave opens on the sea. She saw it that night too, from the watch-seat, and thought it was a boat. Nobody hears the unroped. She wants somebody to go down the gloup and see who hangs it.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/oskel_gloup",
+            "text": "Go to Oskel Gloup and look at the lamp-bracket on its lip"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/haldo_the_lampman",
+            "count": 1,
+            "where": "core:interior/the_salt_cave",
+            "text": "Go down the gloup to the cave's sea-mouth and stop whoever hangs the lamp"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/lampmans_tally",
+            "count": 1,
+            "text": "Take the Lampman's tally"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/oskel_gloup",
+          "radius": 120
+        }
+      },
+      {
+        "id": "the_tally",
+        "journal": "The Lampman was Haldo ko-Oskel, the gloup's winchman. His tally is a winchman's book of what came up the rope, and the first page is the Salt boat's cargo, sold to the clanless the week before she sailed, for silver, with a lamp to be hung in the sea-mouth on the night. Under it, in the same hand, years later: the pilot was Keddo. I did not know. Bressa is at her bield.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_second_light",
+            "text": "Tell Bressa what is to be done with the Lampman's tally",
+            "options": [
+              {
+                "id": "to_the_moot",
+                "text": "Take it to the Moot, so they reckon what the Oskel owe for the boat, and what they owe Bressa.",
+                "effects": [
+                  {
+                    "set_flag": "lamp_tally_to_moot"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/clan_moot",
+                      8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_grenna",
+                "text": "Take it to Grenna ko-Oskel at the Skerry Watch. It was her son.",
+                "effects": [
+                  {
+                    "set_flag": "lamp_tally_to_grenna"
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "burn_it",
+                "text": "Let Bressa burn it. Forty years is price enough, for everyone.",
+                "effects": [
+                  {
+                    "set_flag": "lamp_tally_burned"
+                  },
+                  {
+                    "renown": 6
+                  },
+                  {
+                    "marks": 60
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/broom_wifes_bield",
+          "radius": 120
+        }
+      },
+      {
+        "id": "dark",
+        "journal": "On the next dark night there was no light under the Oskel cliffs. Bressa sat up on the cliff till morning to be sure, with her broom across her knees.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 180,
+      "renown": 12,
+      "items": [
+        [
+          "core:item/oatcake",
+          3
+        ]
+      ]
+    }
+  }
+]
