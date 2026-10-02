@@ -31,6 +31,13 @@ extends RefCounted
 ## is whole to 50 m, and a tree taller than twelve and a half metres to four times its height.
 const NEAR_MIN := 50.0
 const NEAR_PER_METRE := 4.0
+## ...but no tree past NEAR_MAX at a bias of one, however tall. What LOD1 gives up is twigs and
+## leaf cards, and a leaf is the same size on a giant oak as on a hedgerow one: four heights held
+## the Greatwood's 29-33 m oaks whole out to 116-131 m, 6,300 triangles each with their shadows,
+## and that was most of the wood's frame. `-- --lod-near-max=M` tries another (0: none).
+const NEAR_MAX := 0.0
+static var near_max := _near_max()
+
 const FAR_MIN := 70.0
 const FAR_PER_METRE := 10.0
 ## Lines no bias moves nearer: a picture is never drawn closer than FAR_FLOOR metres, however far
@@ -67,6 +74,15 @@ const IMPOSTOR_SHADER := "res://assets/shaders/tree_impostor.gdshader"
 const CALIBRATION := "res://world/impostor_calibration.json"
 
 
+## NEAR_MAX, or the run's `--lod-near-max=`; none (INF) when 0.
+static func _near_max() -> float:
+	var m := NEAR_MAX
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--lod-near-max="):
+			m = float(arg.trim_prefix("--lod-near-max="))
+	return m if m > 0.0 else INF
+
+
 ## The meshes one asset is drawn with at each level.
 class Ladder extends RefCounted:
 	var asset_path := ""
@@ -90,7 +106,7 @@ class Ladder extends RefCounted:
 	func set_bias(b: float) -> void:
 		bias = clampf(b, 0.1, 4.0)
 		if tree:
-			near = maxf(maxf(NEAR_MIN, NEAR_PER_METRE * size) * bias, NEAR_FLOOR)
+			near = maxf(minf(maxf(NEAR_MIN, NEAR_PER_METRE * size), ScatterLod.near_max) * bias, NEAR_FLOOR)
 			far = maxf(maxf(FAR_MIN, FAR_PER_METRE * size) * bias, FAR_FLOOR)
 		else:
 			near = maxf(SOLID_NEAR_MIN, SOLID_NEAR_PER_METRE * size) * bias
