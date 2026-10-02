@@ -1,0 +1,428 @@
+[
+  {
+    "id": "core:quest/what_the_name_wife_took",
+    "name": "What the Name-Wife Took",
+    "layer": "side",
+    "giver": "core:npc/iffo_nauve",
+    "region": "core:region/sedgemire",
+    "summary": "Iffo Nauve, watchman of the South Stilts, paid the Name-Wife for his daughter's cure with his dead father's name, thinking it could cost a dead man nothing. Now nobody in Nauvissa remembers Oro Nauve, Iffo is losing his face, and the grey has started coming in over the scarp at night.",
+    "notes": "Sedgemire world life, phase 2 (docs/WORLD_LIFE.md). The Name-Wife's Hollow (core:poi/name_wifes_hollow, a cave delve with core:interior/name_wifes_hollow and the Name-Wife as its boss). Crookstilts' price-slate points here. The choice is made with Iffo at the South Stilts.",
+    "stages": [
+      {
+        "id": "the_hollow",
+        "journal": "Iffo Nauve went to the Name-Wife at Crookstilts at the dark of the moon and paid for his daughter's flats-cough with a name: his father's, Oro Nauve, twenty years drowned. The cure took. Now Oro's lantern goes unlit on the Long Night, his knot has come off the Tide Hearth, and Iffo cannot see his face. The Name-Wife keeps the names she takes knotted into cords in her hollow under the South Scarp, west of the Stilts where the scarp curls round a cove. Go in and bring back whatever she tied Oro Nauve into.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/name_wifes_hollow",
+            "text": "Find the Name-Wife's hollow under the South Scarp"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/the_name_wife",
+            "count": 1,
+            "where": "core:interior/name_wifes_hollow",
+            "text": "Face the Name-Wife at the back of her hollow"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/name_wifes_hank",
+            "count": 1,
+            "text": "Take the hank of names she carried"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/name_wifes_hollow",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "set_flag": "name_wife_down"
+          },
+          {
+            "renown": 8
+          }
+        ]
+      },
+      {
+        "id": "the_knot",
+        "journal": "The Name-Wife carried the names she had not hung yet on her belt, in a hank as thick as an arm: a hundred cords and more, every one in a family's weave. Near the outside, still green, is a boatwright's splice. Iffo Nauve is on the South Stilts, watching the grey.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_knot",
+            "text": "Settle with Iffo Nauve what is to be untied",
+            "options": [
+              {
+                "id": "his_father",
+                "text": "Untie his father's cord, only his.",
+                "effects": [
+                  {
+                    "set_flag": "name_wife_father_untied"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      8
+                    ]
+                  },
+                  {
+                    "morality": 4
+                  },
+                  {
+                    "take_item": [
+                      "core:item/name_wifes_hank",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "all_of_them",
+                "text": "Untie every cord at the Tide Hearth and let every name go home, cures or no cures.",
+                "effects": [
+                  {
+                    "set_flag": "name_wife_all_untied"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      15
+                    ]
+                  },
+                  {
+                    "morality": 8
+                  },
+                  {
+                    "renown": 6
+                  },
+                  {
+                    "take_item": [
+                      "core:item/name_wifes_hank",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_it",
+                "text": "Keep the hank.",
+                "effects": [
+                  {
+                    "set_flag": "name_wife_hank_kept"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      -10
+                    ]
+                  },
+                  {
+                    "morality": -6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/south_stilts",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_watch_quiet",
+        "auto": true,
+        "journal": "That night the grey sat on the lip of the South Scarp where it had sat for twenty years, and did not come down, and Iffo Nauve tied no knot on the rail.",
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/the_sounding",
+    "name": "The Sounding",
+    "layer": "side",
+    "giver": "core:npc/tuo_lissa",
+    "region": "core:region/sedgemire",
+    "summary": "From the top of Heron Watch, Tuo Lissa has watched a tower go up on the North Shore and a bell go up into it. His sister Ama went to the Flood-Callers after her husband drowned, and the boats that pole north past the watch now go to the tower. She means to ring the bell from underneath.",
+    "notes": "Sedgemire world life, phase 2 (docs/WORLD_LIFE.md). The Sounding (core:poi/the_sounding, a tower on a drowned platform with core:interior/the_sounding_undercroft and Ama Lissa as its boss). Follows on from The Lanterns Taken Up in the story, but does not need it. The choice is made with Tuo at Heron Watch.",
+    "stages": [
+      {
+        "id": "the_tower",
+        "journal": "Tuo Lissa has knotted a tower into the watch's rope: it has gone up on the North Shore, east of Mor'oul, on an old platform of the Builders' black stone, and this month a bell went up into it. The Flood-Callers' boats pole north past Heron Watch to it every night. His sister Ama is with them. She knotted the watch's rope with him as a girl; her husband went into the water off the Gullhithe flats and his lantern went out before it had burned a verse. Tuo says she means to ring the bell from underneath, where the drowned are. Go to the Sounding, and down.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_sounding",
+            "text": "Go to the Sounding on the North Shore"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/ama_lissa_the_sounder",
+            "count": 1,
+            "where": "core:interior/the_sounding_undercroft",
+            "text": "Stop the Sounder at the well under the platform"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/sounders_bell_rope",
+            "count": 1,
+            "text": "Take the bell-rope from the Sounder's hands"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_sounding",
+          "radius": 70
+        },
+        "on_complete": [
+          {
+            "set_flag": "sounding_silenced"
+          },
+          {
+            "renown": 8
+          }
+        ]
+      },
+      {
+        "id": "the_rope",
+        "journal": "The bell-rope Ama Lissa held at the well is knotted its whole length in the Heron Watch knots. Read as Tuo reads his: a loop, a boat went north; nothing came back; nothing came back. Tuo Lissa is at Heron Watch, at the bottom of the ladder.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_rope",
+            "text": "Give Tuo Lissa his sister's rope, and say what happened",
+            "options": [
+              {
+                "id": "knot_it_in",
+                "text": "Tell him the truth, and let him knot her rope into the watch's.",
+                "effects": [
+                  {
+                    "set_flag": "sounding_rope_knotted"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      10
+                    ]
+                  },
+                  {
+                    "morality": 5
+                  },
+                  {
+                    "take_item": [
+                      "core:item/sounders_bell_rope",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "give_it_the_water",
+                "text": "Tell him she went into the well, and send the rope out after her with a lantern.",
+                "effects": [
+                  {
+                    "set_flag": "sounding_rope_sent_out"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      12
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "deed": [
+                      "dead_buried",
+                      1
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/sounders_bell_rope",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "spare_him",
+                "text": "Tell him she was gone before you got there, and keep the rope.",
+                "effects": [
+                  {
+                    "set_flag": "sounding_rope_kept"
+                  },
+                  {
+                    "morality": -4
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/heron_watch",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_bell_quiet",
+        "auto": true,
+        "journal": "At the spring tide the bell in the Sounding hung still, and the water came up to the platform's lip and no further, the way it always had.",
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/the_saltgate",
+    "name": "The Saltgate",
+    "layer": "side",
+    "giver": "core:npc/hal_ruddock",
+    "region": "core:region/sedgemire",
+    "summary": "The Tallymen's sluice-fort at the Outfall's mouth has been held by its own drowned garrison since something came up the culverts at the spring tide and broke the sea-gates from below. Hal Ruddock, the one sluice-hand who was not inside, sits at the Tide Hearth across the water. His brother had the windlass-key.",
+    "notes": "Sedgemire world life, phase 2 (docs/WORLD_LIFE.md). The Saltgate (core:poi/the_saltgate, a fort whose keep leads into core:interior/saltgate_culverts, Old Mudmouth its boss). The choice is made with Hal at the Tide Hearth.",
+    "stages": [
+      {
+        "id": "the_culverts",
+        "journal": "Hal Ruddock was a sluice-hand at the Saltgate, the Guild's fort on the headland at the Outfall's mouth. On the night of the autumn spring tide something knocked in the race under the sluice, in threes, and his brother Rook, the sluice-warden, went down to the windlass with the key; then the gates went, from underneath, and the sea came in through the culverts with the whole watch asleep over them. They are still on the walls. Hal says the reedfolk's Old Mudmouth, the sallowjaw that waited off the river-mouth, is in the sump under the windlass, and his brother's key is in Old Mudmouth.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_saltgate",
+            "text": "Cross the Outfall to the Saltgate"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/old_mudmouth",
+            "count": 1,
+            "where": "core:interior/saltgate_culverts",
+            "text": "Go down through the culverts and kill Old Mudmouth in the sump"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/saltgate_windlass_key",
+            "count": 1,
+            "text": "Take back the sluice-warden's windlass-key"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_saltgate",
+          "radius": 70
+        },
+        "on_complete": [
+          {
+            "set_flag": "saltgate_mudmouth_dead"
+          },
+          {
+            "renown": 8
+          }
+        ]
+      },
+      {
+        "id": "the_gates",
+        "journal": "The windlass-key came out of Old Mudmouth green. The windlass in the keep will take it: the Saltgate's sea-gates can be shut at the flood again, or left to hang. Hal Ruddock is at the Tide Hearth across the Outfall.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_gates",
+            "text": "Settle with Hal Ruddock what is done with the Saltgate's gates",
+            "options": [
+              {
+                "id": "shut_the_gates",
+                "text": "Shut the gates: the Saltgate holds and the Guild drains the Delta behind it.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_shut"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      15
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      -10
+                    ]
+                  },
+                  {
+                    "take_item": [
+                      "core:item/saltgate_windlass_key",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "leave_them_open",
+                "text": "Leave them open: the sea comes and goes and the eels run the Outfall again.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_left_open"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/reed_council",
+                      15
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      -10
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "take_item": [
+                      "core:item/saltgate_windlass_key",
+                      1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_the_key",
+                "text": "Keep the key.",
+                "effects": [
+                  {
+                    "set_flag": "saltgate_key_kept"
+                  },
+                  {
+                    "morality": -2
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/tide_hearth",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_watch_relieved",
+        "auto": true,
+        "journal": "At the next spring tide the drowned on the Saltgate's walls were gone from their posts, all twelve, and on the Tide Hearth across the water there were twelve knots for the Saltgate watch, the last one lying flat.",
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 170,
+      "renown": 12
+    }
+  }
+]

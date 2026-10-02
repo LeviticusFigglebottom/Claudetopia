@@ -373,5 +373,195 @@
         }
       ]
     }
+  },
+  {
+    "id": "core:interior/holmwatch_undercroft",
+    "name": "The Reeves' Halls under Holmwatch",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/holmwatch",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Loud and their hired blades in the Reeves' halls, drakes at the water-gate, and Magister Ysolde Carrow in the Saying-hall",
+    "story": "Under the keep the Reeves cut their halls into the promontory's rock: the court-hall where they judged, the stair down to the dues-cellars, and at the bottom the water-gate, a vaulted dock where the boats came in under the castle to pay in kind. The Sayers who had it after made the deepest vault a Saying-hall, its walls tuned with brass ribs to carry a voice. The Loud have filled it with speaking-trumpets and Say into it every dusk, and the ribs carry it up through the rock and out of the lamp-tower and over the Mere to the Listening Post's horn.",
+    "unique_object": "the Saying-hall's brass ribs, set into the vault from floor to crown like the inside of a bell, each one tuned, and a ring of speaking-trumpets on stands facing the middle",
+    "site": {
+      "kind": "keep",
+      "seed": 4411,
+      "region": "core:region/brightwater",
+      "size": "large",
+      "boss": "core:boss/ysolde_carrow",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/loud_acolyte"
+        ],
+        "archers": [
+          "core:enemy/loud_sayer"
+        ],
+        "heavy": [
+          "core:enemy/bravo"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#8a8a82",
+          "#56564f",
+          "#9a978c"
+        ]
+      },
+      "rooms": [
+        {
+          "id": "keep_door",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "court_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "barracks"
+        },
+        {
+          "id": "dues_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "dues_cellar",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "cellar_store"
+        },
+        {
+          "id": "acolytes_camp",
+          "role": "camp",
+          "size": "large",
+          "set_piece": "forge_hall"
+        },
+        {
+          "id": "well_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "water_gate",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "trumpet_gallery",
+          "role": "hall",
+          "size": "large"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "encounters": [
+        {
+          "room": "keep_door",
+          "enemy": "core:enemy/loud_acolyte",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "court_hall",
+          "enemy": "core:enemy/loud_acolyte",
+          "count": 3,
+          "role": "sleeper"
+        },
+        {
+          "room": "court_hall",
+          "enemy": "core:enemy/bravo",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "dues_stair",
+          "enemy": "core:enemy/loud_acolyte",
+          "count": 1,
+          "role": "ambush"
+        },
+        {
+          "room": "dues_cellar",
+          "enemy": "core:enemy/gutter_drake",
+          "count": 3,
+          "role": "guard"
+        },
+        {
+          "room": "acolytes_camp",
+          "enemy": "core:enemy/loud_acolyte",
+          "count": 2,
+          "role": "sleeper"
+        },
+        {
+          "room": "acolytes_camp",
+          "enemy": "core:enemy/loud_sayer",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "water_gate",
+          "enemy": "core:enemy/gutter_drake",
+          "count": 5,
+          "role": "guard"
+        },
+        {
+          "room": "trumpet_gallery",
+          "enemy": "core:enemy/loud_sayer",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "trumpet_gallery",
+          "enemy": "core:enemy/bravo",
+          "count": 1,
+          "role": "guard"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "keep_door",
+          "prop": "lantern_hand"
+        },
+        {
+          "kind": "prop",
+          "room": "court_hall",
+          "prop": "table_trestle"
+        },
+        {
+          "kind": "note",
+          "room": "court_hall",
+          "book": "core:book/holmwatch_loud_creed",
+          "name": "the Loud's creed, nailed to the reeves' bench"
+        },
+        {
+          "kind": "prop",
+          "room": "water_gate",
+          "prop": "rowboat"
+        },
+        {
+          "kind": "prop",
+          "room": "water_gate",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/holmwatch_last_reeve",
+          "name": "the last Reeve's dues-roll"
+        }
+      ]
+    }
   }
 ]

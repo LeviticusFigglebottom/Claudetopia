@@ -24,5 +24,18 @@
       "brightwater",
       "grim"
     ]
+  },
+  {
+    "id": "core:rumour/holmwatch_loud",
+    "name": "The voice from Holmwatch",
+    "tone": "strange",
+    "text": "There's somebody in the old Reeves' castle on the east promontory, the one with the lamp-tower that looks at Gull Holm. Every dusk a voice comes over the water from it, one word, and every dog in Merrowhithe barks and every gull on the holm goes up. Sayers, they say, the ones the Spire threw out for shouting. The clerk at the Listening Post hasn't written a pitch down since spring.",
+    "variants": [
+      "Holmwatch has a light in its lamp-tower again. Not a lamp. Somebody standing up there at dusk with a brass trumpet as long as a boy, saying something you feel in your teeth."
+    ],
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
   }
 ]

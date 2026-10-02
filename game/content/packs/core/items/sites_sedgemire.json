@@ -1,0 +1,155 @@
+[
+  {
+    "id": "core:item/name_wifes_hank",
+    "name": "The Name-Wife's Hank",
+    "category": "misc",
+    "weight": 1.0,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "no_sale"
+    ],
+    "description": "A hank of rush cords as thick as an arm, knotted end to end, every cord in a family's weave: the names the Name-Wife carried on her own belt, the ones she had not hung yet. One near the outside is knotted in the Nauve weave and is still green."
+  },
+  {
+    "id": "core:item/note_name_wifes_weaves",
+    "name": "A Dyer's Tally of Weaves",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A strip of birch-bark scratched with the knot of every family in the Delta and a count beside each.",
+    "reads": "core:book/name_wifes_weaves"
+  },
+  {
+    "id": "core:item/note_name_wifes_first_cord",
+    "name": "The First Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A cord gone white as bone, knotted in no weave anybody uses, wound round a slip of slate with a few words scratched on it.",
+    "reads": "core:book/name_wifes_first_cord"
+  },
+  {
+    "id": "core:item/note_name_wifes_price",
+    "name": "The Name-Wife's Price",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate hung from the ladder at Crookstilts, written over and rubbed out and written over again.",
+    "reads": "core:book/name_wifes_price"
+  },
+  {
+    "id": "core:item/sounders_bell_rope",
+    "name": "The Sounder's Bell-Rope",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "reedfolk",
+      "no_sale"
+    ],
+    "description": "A bell-rope cut through at the Sounder's hands: rush plaited with hair, black with the well's water at one end, and knotted its whole length in the bittern's loops of the Lissa weave. Read the way a watch-rope is read it says the same thing for a hundred and twenty nights: a loop, a boat; no twist; nothing came back."
+  },
+  {
+    "id": "core:item/note_sounding_tide_table",
+    "name": "The Callers' Tide-Table",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A board scratched with the moon's quarters and the spring tides, a cut beside each, the last circled.",
+    "reads": "core:book/sounding_tide_table"
+  },
+  {
+    "id": "core:item/note_ama_lissas_knots",
+    "name": "A Length of Knotted Rope",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "An arm's length of watch-rope tied in the Lissa knots, wound round a slip of birch-bark with the knots written out in a careful hand.",
+    "reads": "core:book/ama_lissas_knots"
+  },
+  {
+    "id": "core:item/note_sunken_tower_divers",
+    "name": "The Divers' Slate",
+    "category": "book",
+    "weight": 0.2,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A child's slate wedged between two of the drowned courses, scratched with names and tally-marks.",
+    "reads": "core:book/sunken_tower_divers"
+  },
+  {
+    "id": "core:item/saltgate_windlass_key",
+    "name": "The Saltgate Windlass-Key",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "An iron key as long as a forearm, the Guild's tally-mark cast into its bow, for the pawl of the Saltgate's windlass. It was on the sluice-warden's ring, and the ring was on the sluice-warden, and Old Mudmouth swallowed both on the night of the flood; it came out of him green."
+  },
+  {
+    "id": "core:item/note_saltgate_watch_book",
+    "name": "The Saltgate Watch-Book",
+    "category": "book",
+    "weight": 0.4,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "The Saltgate garrison's watch-book, its boards swollen and white with salt, the ink of the last pages run in the water that came in.",
+    "reads": "core:book/saltgate_watch_book"
+  },
+  {
+    "id": "core:item/note_saltgate_sluice_tally",
+    "name": "The Sluice-Warden's Tally",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A Guild tally-stick notched to the end and a folded page wrapped round it, pushed behind a loose stone in a wall the sluice-warden kept to himself.",
+    "reads": "core:book/saltgate_sluice_tally"
+  }
+]

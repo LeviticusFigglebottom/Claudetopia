@@ -805,9 +805,20 @@
   {
     "id": "core:dialogue/emmet_quarle",
     "speaker_name": "Emmet Quarle",
-    "notes": "The Sayers' Circle clerk at the Listening Post (the POI's story: 'a room with a horn, a chair and a clerk who cannot sing'). The Singing Slate is delivered to him; the hand-over at the end of a conversation completes its first stage.",
+    "notes": "The Sayers' Circle clerk at the Listening Post (the POI's story: 'a room with a horn, a chair and a clerk who cannot sing'). The Singing Slate is delivered to him; the hand-over at the end of a conversation completes its first stage. Gives Louder Than the Toll (quests/sites_brightwater.json) and takes Carrow's trumpet at its end.",
     "start": "greet",
     "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/louder_than_the_toll",
+              "the_horn"
+            ]
+          }
+        ],
+        "text": "*(The rods are all lying in his lap and none of them is ringing.)* -- It stopped. At dusk. It just stopped. What's that you're carrying?"
+      },
       {
         "conditions": [
           {
@@ -863,6 +874,32 @@
             "next": "slate"
           },
           {
+            "text": "Ysolde Carrow is silenced. Here is her trumpet.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/louder_than_the_toll",
+                  "the_horn"
+                ]
+              }
+            ],
+            "next": "holmwatch_done"
+          },
+          {
+            "text": "What's drowning the hum?",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/louder_than_the_toll"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/louder_than_the_toll"
+                }
+              }
+            ],
+            "next": "holmwatch"
+          },
+          {
             "text": "I'll leave you to listen.",
             "next": "bye"
           }
@@ -892,6 +929,40 @@
         "speaker": "Emmet Quarle",
         "text": "*(He strikes a rod and does not look up.)* Quietly, on the stair.",
         "next": "end"
+      },
+      "holmwatch": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He points at the horn without looking at it.)* Every dusk since spring, a voice. From Holmwatch, the Reeves' castle on the promontory, straight across the water into the horn. One word, so loud the rods all stop at once, every one of them, and the ledger has nothing in it for the night but a line. -- It's the Loud. Carrow and her people, that the Spire put out. They've the Saying-hall under the keep, and it's built to carry. -- I can't hear the Toll. Nineteen years I've written it down every night. I would like to write it down tonight.",
+        "choices": [
+          {
+            "text": "I'll go to Holmwatch and stop the Saying.",
+            "effects": [
+              {
+                "start_quest": "core:quest/louder_than_the_toll"
+              }
+            ],
+            "next": "holmwatch_yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "holmwatch_yes": {
+        "speaker": "Emmet Quarle",
+        "text": "Round the shore road to the promontory, past the salvagers. The keep's door is in the yard. The Saying-hall is at the bottom, they always are: the Circle builds them as low as the rock goes, so the voice comes up through all of it. -- Take her trumpet off her. I want to strike the rods against it. I want to know what pitch she was.",
+        "next": "hub"
+      },
+      "holmwatch_done": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He lays the trumpet across his knees and strikes the rods against its bell, one after another, all forty, and none of them stops anything. He looks up at the horn. Faint, faint, and then less faint, the hum comes back into the room, and he strikes the fourteenth rod and it stops.)* -- Fourteen. *(He writes it down. His hand is not steady.)* Here. The Circle pays a listener's fee for a disturbance removed. I have never once had cause to claim it.",
+        "effects": [
+          {
+            "set_flag": "holmwatch_silenced"
+          }
+        ],
+        "next": "hub"
       }
     }
   },
