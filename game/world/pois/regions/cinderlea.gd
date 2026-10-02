@@ -3276,9 +3276,9 @@ static func the_undertone(d: PoiDressing) -> void:
 	# stands either side of the pilasters to the facade's height and over its crown, a face of rock the
 	# doorway is carved into. Each piece by its bounds (a cliff piece is fifteen to thirty metres across
 	# and twelve deep): its inner edge at the pilaster, its front no more than a metre proud of it.
-	# (two narrow pieces a side: the wide ones reached forty metres along the foot, out to where a body
-	# coming along the cliff stands, and stood it inside the rock)
-	var band := [[1, 25.0, 0.0], [1, 18.0, 1.0]]
+	# (one narrow piece a side, to some twenty metres off the doorway's line: wider, they ran forty
+	# metres along the foot, out to where a body coming along the cliff stands, and walled it in)
+	var band := [[1, 25.0, 0.0]]
 	for s in [-1.0, 1.0]:
 		var out_at := open_w * 0.5 + pil
 		for piece: Array in band:
@@ -3295,7 +3295,8 @@ static func the_undertone(d: PoiDressing) -> void:
 			out_at += half * 1.7
 			await k.step()
 			k.place(rp, k.on_ground(at.x, at.y, -1.0), PoiKit.yaw_of(-into) + 0.08 * float(s), sc, true, Vector3.ZERO, true)
-	var over := k.rock("cliff_face", 0)
+	# (the shallow piece: a deep one stood its middle forty metres out, off the pad)
+	var over := k.rock("cliff_face", 1)
 	if over != "":
 		var bd: Dictionary = PoiKit.meta(over).get("bounds", {})
 		var bmax: Array = bd.get("max", [8.0, 16.0, 6.0])
@@ -3419,7 +3420,7 @@ static func the_undertone(d: PoiDressing) -> void:
 	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(camp.x, 0.0, camp.y) - Vector3(across.x, 0.0, across.y) * 1.2 + Vector3(into.x, 0.0, into.y) * 1.8)
 	# (between the fallen doors, and out past the choristers' plinths)
 	await _rubble(d, face - into * 6.0, 4.0, 7, Vector2(0.4, 0.9))
-	await _rubble(d, face - into * 16.0, 7.0, 9, Vector2(0.4, 0.9))
+	await _rubble(d, face - into * 19.0, 6.0, 9, Vector2(0.4, 0.9))
 
 
 # --- the Founders' Delf -------------------------------------------------------------------------------
