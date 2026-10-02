@@ -533,6 +533,10 @@ static func the_hush_hole(d: PoiDressing) -> void:
 
 ## Calamine spoil: grey earth gone green where the rain has been at it, the colour of an old lamp.
 const SPOIL := {"base": "#3d3d33", "accent": "#2f3429", "grout": "#1d2018", "unit": 0.28}
+## Its streaks (PoiMasonry.spoil_heap): slate-grey tipped fresh, the calamine's verdigris and the
+## iron's rust run down it.
+const CALAMINE_TINTS := {"fresh": Color(0.92, 0.95, 1.0), "streak_a": Color(0.78, 1.18, 1.0),
+		"streak_b": Color(1.22, 0.92, 0.7), "grass": Color(0.62, 1.12, 0.52)}
 ## The engine-house's killas: a warm grey rubble stone, not the city's cool lime-and-slate.
 const KILLAS := {"base": "#8e897e", "accent": "#6d685f", "grout": "#433f39", "unit": 0.44}
 ## The Tally Needle's lime-wash, gone the grey of old teeth where the rain runs.
@@ -785,35 +789,24 @@ static func the_crown_drift(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(rope, PoiKit.plain(Color(0.36, 0.31, 0.24), 0.95), "Rope")
 
-	# the spoil: a long heap spilling toward the Mere from the tramway's end, and an older one grassed
+	# the spoil: a long tip spilling toward the Mere from the tramway's end, and an older one grassed
 	# over beside it
 	var spoil := PoiKit.painted(5, SPOIL, 0.85, 0.8)
 	var heaps := [[face * 22.0 + side * 4.0, 12.5, 5.2], [face * 24.0 - side * 14.0, 7.0, 2.6]]
-	for h in heaps:
-		var at: Vector2 = h[0]
-		var r := float(h[1])
-		var lo := INF
-		for i in 12:
-			var a := TAU * float(i) / 12.0
-			lo = minf(lo, k.on_ground(at.x + sin(a) * r, at.y + cos(a) * r).y)
+	var rubble: Array = []
+	for hi in heaps.size():
+		var h: Array = heaps[hi]
 		await k.step()
-		m.mound(Vector3(at.x, minf(lo, k.on_ground(at.x, at.y).y) - 0.35, at.y), r, float(h[2]), spoil, "Spoil", true, 1.8, 7, 22, true, 0.09)
-	# loose stone at the heap's foot, where it rolled
-	var rock := k.rock("boulder")
-	if rock != "":
-		var stones: Array = []
-		var h0: Vector2 = heaps[0][0]
-		for i in 9:
-			var a := k.rng.randf_range(-1.2, 1.2) + PoiKit.yaw_of(face)
-			var p := h0 + Vector2(sin(a), cos(a)) * k.rng.randf_range(12.0, 14.5)
-			var sc := k.rng.randf_range(0.25, 0.5)
-			stones.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.25 * sc), k.rng.randf_range(0.0, TAU), sc))
-		await k.step()
-		k.scatter(rock, stones, true)
-	# the tramway from the collar to the heap's crown: sleepers and two rails, the wagon tipped at its end
+		rubble.append_array(m.spoil_heap(h[0], face, float(h[1]), float(h[2]), spoil, CALAMINE_TINTS, hi == 1))
+	# the rubble on its benches and at its toe, where it rolled: the region's boulders, small, and scree
+	await k.step()
+	m.spoil_stones(rubble)
+	# the tramway from the collar to the heap's toe: sleepers and two rails, the wagon tipped at its end
 	var rail_a := shaft + face * 2.6
 	var heap_c: Vector2 = heaps[0][0]
-	var rail_b := heap_c - (heap_c - rail_a).normalized() * 13.2
+	# (to the heap's toe on the shaft's side: it reaches less far back up the land than down it)
+	var back := (rail_a - heap_c).normalized()
+	var rail_b := heap_c + back * (float(heaps[0][1]) * (1.0 + 0.32 * back.dot(face)) + 1.6)
 	var run := rail_b - rail_a
 	var run_dir := run.normalized()
 	var across := Vector2(-run_dir.y, run_dir.x)
