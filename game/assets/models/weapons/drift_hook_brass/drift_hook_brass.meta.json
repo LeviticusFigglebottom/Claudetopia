@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 2.007,
+  "max": [
+   0.029,
+   1.437,
+   0.031
+  ],
+  "min": [
+   -0.022,
+   -0.57,
+   -0.106
+  ],
+  "radius": 1.006
+ },
+ "built_seconds": 4.77,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "drift_hook_brass.glb",
+ "grip_origin": true,
+ "hash": "f67fe55c0c7dbda7",
+ "kind": "drift_hook",
+ "materials": [
+  "drift_hook_brass_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "brass",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "drift_hook_brass",
+   "tris": 1888
+  },
+  {
+   "name": "drift_hook_brass_LOD1",
+   "tris": 754
+  },
+  {
+   "name": "drift_hook_brass_LOD2",
+   "tris": 282
+  }
+ ],
+ "name": "drift_hook_brass",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9706,
+ "textures": [
+  "drift_hook_brass_albedo.png",
+  "drift_hook_brass_normal.png",
+  "drift_hook_brass_orm.png"
+ ],
+ "tris": [
+  1888,
+  754,
+  282
+ ],
+ "two_handed": true,
+ "version": 3
+}

@@ -3133,6 +3133,151 @@
    }
   },
   {
+   "generator": "gen_weapons",
+   "kind": "pick",
+   "palette": null,
+   "variant": "a",
+   "seed": 9689,
+   "name": "pick_chalk",
+   "category": "weapons",
+   "params": {
+    "finish": "iron",
+    "chalk": 1.0
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "drift_hook",
+   "palette": null,
+   "variant": "a",
+   "seed": 9706,
+   "name": "drift_hook_brass",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "seal_staff",
+   "palette": null,
+   "variant": "a",
+   "seed": 9723,
+   "name": "seal_staff_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "spade",
+   "palette": null,
+   "variant": "a",
+   "seed": 9740,
+   "name": "spade_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "sledge",
+   "palette": null,
+   "variant": "a",
+   "seed": 9757,
+   "name": "sledge_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "lamp_pole",
+   "palette": null,
+   "variant": "a",
+   "seed": 9774,
+   "name": "lamp_pole_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "rasp",
+   "palette": null,
+   "variant": "a",
+   "seed": 9791,
+   "name": "rasp_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "leister",
+   "palette": null,
+   "variant": "a",
+   "seed": 9808,
+   "name": "leister_iron",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "crook",
+   "palette": null,
+   "variant": "a",
+   "seed": 9825,
+   "name": "crook_thorn",
+   "category": "weapons",
+   "params": {
+    "finish": "iron"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "censer",
+   "palette": null,
+   "variant": "a",
+   "seed": 9842,
+   "name": "censer_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "trumpet",
+   "palette": null,
+   "variant": "a",
+   "seed": 9859,
+   "name": "trumpet_brass",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
+   "generator": "gen_weapons",
+   "kind": "tuning_bell",
+   "palette": null,
+   "variant": "a",
+   "seed": 9876,
+   "name": "tuning_bell_bronze",
+   "category": "weapons",
+   "params": {
+    "finish": "bronze"
+   }
+  },
+  {
    "generator": "gen_props",
    "kind": "hen",
    "palette": "core:region/hearthvale",

@@ -1,0 +1,41 @@
+{
+ "bounds": [
+  -0.2055,
+  -0.1727,
+  1.0589,
+  0.2062,
+  0.1461,
+  1.4645
+ ],
+ "collision": "none",
+ "colour_key": "trim",
+ "colour_keys": {
+  "bead_ropes": "trim"
+ },
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "horn",
+ "materials": {
+  "bead_ropes": "horn"
+ },
+ "params": {
+  "bone": null,
+  "material": "horn"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 60165,
+ "slot_hint": "attachment",
+ "textures": [
+  "bead_ropes_albedo.png",
+  "bead_ropes_orm.png"
+ ],
+ "tris": [
+  3200,
+  0,
+  0
+ ],
+ "version": 1
+}

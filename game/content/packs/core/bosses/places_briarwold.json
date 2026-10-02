@@ -136,7 +136,51 @@
     "arena": "core:poi/tinehold",
     "region": "core:region/briarwold",
     "tint": "#5a4632",
-    "scale": 1.3,
+    "scale": 1.38,
+    "height": 2.6,
+    "radius": 0.48,
+    "appearance": {
+      "seed": 7311,
+      "culture": "woodfolk",
+      "skin": "wheat",
+      "hair_colour": "iron_grey",
+      "build": 0.7,
+      "feminine": 0.0,
+      "height": 1.84,
+      "age": 0.7,
+      "scar": "cheek",
+      "parts": {
+        "torso": "gambeson",
+        "attachment": "plate_torso",
+        "belt": "pauldrons",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "back": "cloak",
+        "headgear": "antler_band",
+        "hair": "short",
+        "beard": "short_beard"
+      },
+      "palette": {
+        "primary": "d2c9b2",
+        "secondary": "4a4034",
+        "leather": "3b3026",
+        "metal": "47453f",
+        "trim": "d8c9a0"
+      }
+    },
+    "antlers": {
+      "span": 0.62,
+      "tines": 6,
+      "colour": "#a8946c",
+      "thick": 1.25
+    },
+    "holds": {
+      "model": "weapons/spear_long_iron",
+      "tags": [
+        "two_handed"
+      ]
+    },
     "resists": {
       "pierce": 0.25,
       "slash": 0.15,
@@ -201,7 +245,10 @@
     "arena": "core:poi/charter_delf",
     "region": "core:region/briarwold",
     "tint": "#3e3a24",
-    "scale": 2.3,
+    "scale": 2.8,
+    "height": 2.0,
+    "radius": 1.05,
+    "body_variant": "brake_dam",
     "resists": {
       "pierce": 0.2,
       "poison": 0.3,

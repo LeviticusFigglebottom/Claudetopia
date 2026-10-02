@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 2.043,
+  "max": [
+   0.114,
+   1.413,
+   0.045
+  ],
+  "min": [
+   -0.114,
+   -0.63,
+   -0.066
+  ],
+  "radius": 1.029
+ },
+ "built_seconds": 8.12,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "seal_staff_iron.glb",
+ "grip_origin": true,
+ "hash": "8644604b4f6f8c56",
+ "kind": "seal_staff",
+ "materials": [
+  "seal_staff_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "brass",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "seal_staff_iron",
+   "tris": 1668
+  },
+  {
+   "name": "seal_staff_iron_LOD1",
+   "tris": 666
+  },
+  {
+   "name": "seal_staff_iron_LOD2",
+   "tris": 250
+  }
+ ],
+ "name": "seal_staff_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9723,
+ "textures": [
+  "seal_staff_iron_albedo.png",
+  "seal_staff_iron_normal.png",
+  "seal_staff_iron_orm.png"
+ ],
+ "tris": [
+  1668,
+  666,
+  250
+ ],
+ "two_handed": true,
+ "version": 3
+}

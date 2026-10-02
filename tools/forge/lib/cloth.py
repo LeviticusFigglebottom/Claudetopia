@@ -3523,3 +3523,10 @@ MATERIAL_DEFAULTS: Dict[str, dict] = {
     "horn": {"roughness": 0.55, "metallic": 0.0, "colour": "#c9bda6"},
     "glow": {"roughness": 0.30, "metallic": 0.0, "colour": "#ffe7a8"},
 }
+
+
+# What the bosses wear that nobody else does (regalia.py): hats, crowns, hoods, veils, a tabard, a
+# founder's apron, mantles of cords and ropes of beads.
+from . import regalia as _regalia  # noqa: E402
+
+CLOTHING_BUILDERS.update(_regalia.BUILDERS)

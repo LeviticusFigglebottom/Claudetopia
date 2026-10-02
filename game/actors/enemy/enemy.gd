@@ -277,17 +277,34 @@ func bleeds() -> bool:
 func _dress_hands() -> void:
 	if anim == null or anim.model == null or not anim.model.has_method("attach_to_socket"):
 		return
-	# `holds` names what is seen in the hand when the attacks do not (an item id, or
-	# "class:<weapon class>"); it changes nothing a blow does
-	var holds := str(def.get("holds", ""))
-	if not holds.is_empty():
-		var held := HeldItems.for_class(holds.trim_prefix("class:")) if holds.begins_with("class:") else ContentDB.get_or_empty(holds)
-		if not held.is_empty():
-			HeldItems.dress(anim.model, held)
-			return
+	# `holds` names what is seen in the hand when the attacks do not (an item id,
+	# "class:<weapon class>", or an item written out: {"model": "weapons/spade_iron", "tags":
+	# ["two_handed"]}, a boss's own tool that is nobody's loot); `off_hand` the same for the left arm
+	# (a shield, a torch). Neither changes anything a blow does.
+	var off := held_item(def.get("off_hand", ""))
+	var held := held_item(def.get("holds", ""))
+	if not held.is_empty():
+		var nodes := HeldItems.dress(anim.model, held, off)
+		# a held lamp is lit (EnemyDress.light_up: the lampman's on its pole)
+		if not nodes.is_empty() and (held.has("light") or held.has("flame")):
+			EnemyDress.light_up(nodes[0], held)
+		return
 	var item := held_for(attacks)
-	if not item.is_empty():
-		HeldItems.dress(anim.model, item)
+	if not item.is_empty() or not off.is_empty():
+		HeldItems.dress(anim.model, item, off)
+
+
+## What a def's `holds` or `off_hand` names, as an item def ({} for nothing).
+static func held_item(spec: Variant) -> Dictionary:
+	if typeof(spec) == TYPE_DICTIONARY:
+		var own := (spec as Dictionary).duplicate()
+		if not own.has("id"):
+			own["id"] = "held:%s" % str(own.get("model", "?"))
+		return own
+	var named := str(spec)
+	if named.is_empty():
+		return {}
+	return HeldItems.for_class(named.trim_prefix("class:")) if named.begins_with("class:") else ContentDB.get_or_empty(named)
 
 
 ## What a foe whose def names nothing holds: the weapon of its first attack swung with an attack

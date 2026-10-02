@@ -1,0 +1,83 @@
+{
+ "attaches_to": "Socket.Back",
+ "bounds": {
+  "height": 0.832,
+  "max": [
+   0.17,
+   0.802,
+   0.17
+  ],
+  "min": [
+   -0.17,
+   -0.03,
+   -0.17
+  ],
+  "radius": 0.48
+ },
+ "built_seconds": 17.41,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "trumpet_brass.glb",
+ "grip_origin": true,
+ "hash": "fafe70c55c8c4219",
+ "kind": "trumpet",
+ "materials": [
+  "trumpet_brass_mat"
+ ],
+ "materials_used": [
+  "brass"
+ ],
+ "meshes": [
+  {
+   "name": "trumpet_brass",
+   "tris": 2350
+  },
+  {
+   "name": "trumpet_brass_LOD1",
+   "tris": 938
+  },
+  {
+   "name": "trumpet_brass_LOD2",
+   "tris": 352
+  }
+ ],
+ "name": "trumpet_brass",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9859,
+ "textures": [
+  "trumpet_brass_albedo.png",
+  "trumpet_brass_normal.png",
+  "trumpet_brass_orm.png"
+ ],
+ "tris": [
+  2350,
+  938,
+  352
+ ],
+ "version": 3
+}

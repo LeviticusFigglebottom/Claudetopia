@@ -196,6 +196,13 @@ const FP_TWO_HANDS_M := 0.13
 ## z ahead) at the picture's lower left, the haft leaning TORCH_UP_FP.
 const TORCH_HOLD_3P := Vector3(0.26, -0.16, 0.34)
 const TORCH_UP_3P := Vector3(0.08, 1.0, 0.3)
+## A pole at rest (`rests_poles`: a foe's staff, spear, hook or lamp-pole longer than POLE_FROM_M):
+## the right hand down by the hip and a little ahead, from the chest joint, and the haft standing up
+## beside the body, leaning out and ahead (POLE_UP_3P). Held at the clips' rest it lay across the
+## body and through the cloak, and nine bosses at a distance were the same black diagonal.
+const POLE_HOLD_3P := Vector3(-0.27, -0.3, 0.16)
+const POLE_UP_3P := Vector3(-0.1, 1.0, 0.16)
+const POLE_FROM_M := 1.25
 const TORCH_HOLD_FP := Vector3(-0.27, -0.22, 0.48)
 const TORCH_UP_FP := Vector3(-0.12, 1.0, 0.28)
 const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw", "Interact", "Pick_Up"]
@@ -289,6 +296,9 @@ var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 ## Readable because the part node cannot answer it: every variant's mesh is called `Body`
 ## inside its own glTF, so they all arrive here named `body_Body`.
 var body_variant_worn := ""
+## The body this much broader than its build makes it, across and front to back (a boss that stands
+## over its people in more than height: EnemyDress `breadth`). 1 for everyone else.
+var breadth := 1.0
 ## Turns the arms out from a padded or heavy body and holds them in under a long cloak (see
 ## ArmRoom), set with each appearance.
 var arm_room: ArmRoom = null
@@ -347,6 +357,10 @@ var carry := 0.0
 var _carry_w := 0.0
 ## How far the left arm is in the torch's hold now (0..1).
 var _torch_w := 0.0
+## Whether a long haft in the right hand is stood upright at rest (a foe's: EnemyDress sets it), and
+## how far into that rest the arm is now.
+var rests_poles := false
+var _pole_w := 0.0
 var _carry_t := 0.0
 var _carry_tracks := {}                  ## bone -> its rotation track in CARRY_CLIP
 ## The view's pitch in first person (radians, up +: CameraRig.pitch), for placing the carry, and how
@@ -837,9 +851,20 @@ static func _vertex_count(mi: MeshInstance3D) -> int:
 ## the hair is under it.
 func head_covered() -> bool:
 	for slot in COVERS_HEAD:
-		if appearance.part(slot) in COVERS_HEAD[slot]:
+		if _covers_head(slot):
 			return true
 	return false
+
+
+## Whether what is worn in `slot` covers the crown: a helm or a hood, or a part the forge says does
+## (its meta's `covers_head`: a hat, a crown worn over a coif, a wimple).
+func _covers_head(slot: String) -> bool:
+	var worn := appearance.part(slot)
+	if worn.is_empty():
+		return false
+	if worn in COVERS_HEAD.get(slot, []):
+		return true
+	return bool(_part_meta(slot, worn).get("covers_head", false))
 
 
 ## The jewellery (Adornment): one merged mesh of everything the record wears, built again when what
@@ -899,7 +924,7 @@ func _hair_to_wear() -> String:
 	if chosen.is_empty() or chosen in CharacterAppearance.CLOSE_HAIR:
 		return chosen
 	for slot in COVERS_HEAD:
-		if appearance.part(slot) in COVERS_HEAD[slot]:
+		if _covers_head(slot):
 			return UNDER_A_HOOD
 	return chosen
 
@@ -935,7 +960,12 @@ func _apply_morality_parts() -> void:
 
 func _part_path(slot: String, part_name: String) -> String:
 	var dir: String = SLOT_DIRS.get(slot, "clothing")
-	return "%s%s/%s/%s.glb" % [PARTS_ROOT, dir, part_name, part_name]
+	var path := "%s%s/%s/%s.glb" % [PARTS_ROOT, dir, part_name, part_name]
+	if dir == "attachments" and not ResourceLoader.exists(path):
+		# a garment worn in the spare slot: a boss's plate over its tabard, a founder's apron over
+		# his shirt (EnemyDress), from the clothing it is built as
+		return "%sclothing/%s/%s.glb" % [PARTS_ROOT, part_name, part_name]
+	return path
 
 
 ## The forge's meta for a part (what it is made of, its fits), read once per part.
@@ -985,6 +1015,10 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
 		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
 		copy.set_meta("tint", str(meta.get("tint", "")))
+		# the palette colour it is dressed in, when the forge says (a felt hat is the cloth's, not the
+		# helm's metal its slot would give it)
+		var keys: Dictionary = meta.get("colour_keys", {}) if meta.get("colour_keys") is Dictionary else {}
+		copy.set_meta("colour_key", str(keys.get(str(src.name), meta.get("colour_key", ""))))
 		_hair_lod(copy, meta)
 		added.append(copy)
 	inst.queue_free()
@@ -1056,8 +1090,11 @@ func _apply_colours(slice: WorldPace.Slice = null) -> void:
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
 			var colour_key := key
+			var own_key := str(mi.get_meta("colour_key", ""))
 			if kind == "iron" and pal.has("metal"):
 				colour_key = "metal"
+			elif not own_key.is_empty() and pal.has(own_key):
+				colour_key = own_key
 			elif kind == "leather" and pal.has("leather"):
 				colour_key = "leather"
 			if pal.has(colour_key):
@@ -1750,7 +1787,7 @@ func _arm_hold_now() -> float:
 
 func _apply_proportions() -> void:
 	var s: float = appearance.height / (_child_height if _child_mod != null else 1.78)
-	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0))
+	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0)) * breadth
 	if _rig_root != null:
 		_rig_root.scale = Vector3(s * wide, s, s * wide)
 
@@ -2262,14 +2299,18 @@ func _update_locomotion(delta: float) -> void:
 		_way_w[key] = move_toward(float(_way_w[key]), float(want_w[key]), delta / SECTOR_BLEND_S)
 	var want_turn := hips_turn_for(_locomotion, _way) if _locomotion.length() > MOVING_FROM else 0.0
 	_hips_turn = lerp_angle(_hips_turn, want_turn, 1.0 - exp(-delta / HIPS_TURN_S))
-	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length(), _way)
+	# The gaits are read at the rig's own size: a body drawn half again as tall walks where a person
+	# would trot, and its legs go round at a giant's cadence (a 2.8 m bell-bearer's legs went round at
+	# a person's, and skated).
+	var tall := _rig_root.scale.y if _rig_root != null and _rig_root.scale.y > 0.1 else 1.0
+	var p := locomotion_params(_loco_now / tall, _sneak_w, _locomotion.length() / tall, _way)
 	p["fb/blend_amount"] = _way_w["fb"]
 	p["lr/blend_amount"] = _way_w["lr"]
 	p["dir/blend_amount"] = _way_w["dir"]
 	_update_braking(delta, p)
 	var braking := _held_gait >= 0.0
 	_in_flight = _flies(delta, braking)
-	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length(),
+	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length() / tall,
 			braking, _in_flight)
 	var moving := smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length())
 	if _plants_feet():
@@ -2708,6 +2749,7 @@ func _pose(delta: float) -> void:
 	_aim_the_body(delta)
 	_hold_in_view(delta)
 	_hold_the_torch(delta)
+	_rest_the_pole(delta)
 	_plant_feet(delta)
 	if bow_hands != null:
 		bow_hands.update(self, delta)
@@ -3030,6 +3072,59 @@ func _hold_the_torch(delta: float) -> void:
 	if w < 0.999:
 		for i in bones.size():
 			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+## A long haft at rest stood upright at the right side (POLE_*), out of a swing, a flinch, a
+## stance or the water; the swing takes it from wherever the clip's own arm has it.
+func _rest_the_pole(delta: float) -> void:
+	var want := 1.0 if rests_poles and not first_person and _one_shot.is_empty() and _stance.is_empty() \
+			and not _swimming and _holding.is_empty() and held_length("WeaponR") >= POLE_FROM_M else 0.0
+	_pole_w = move_toward(_pole_w, want, delta / CARRY_BLEND_S)
+	if skeleton == null or _pole_w <= 0.001:
+		return
+	var bones: Array[int] = []
+	for n in ["UpperArm.R", "LowerArm.R", "Hand.R", "Chest"]:
+		var b := skeleton.find_bone(n)
+		if b < 0:
+			return
+		bones.append(b)
+	var was: Array[Quaternion] = []
+	for i in 3:
+		was.append(skeleton.get_bone_pose_rotation(bones[i]))
+	var at := skeleton.get_bone_global_pose(bones[3]).origin + POLE_HOLD_3P
+	_reach(bones[0], bones[1], bones[2], at, Vector3(-0.8, -0.7, -0.3))
+	_turn_held(bones[2], skeleton.find_bone("Socket.WeaponR"), POLE_UP_3P.normalized())
+	var w := smoothstep(0.0, 1.0, _pole_w)
+	if w < 0.999:
+		for i in 3:
+			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+## How long what a socket holds is, end to end along the socket's +Y, in the rig's metres (0 for
+## nothing): read off its meshes once and kept on it.
+func held_length(socket_name: String) -> float:
+	var s := socket(socket_name)
+	if s == null:
+		return 0.0
+	for c in s.get_children():
+		if not c.has_meta(HeldItems.TAG) or c.is_queued_for_deletion() or not (c is Node3D):
+			continue
+		if c.has_meta("held_length"):
+			return float(c.get_meta("held_length"))
+		var lo := INF
+		var hi := -INF
+		for mi in (c as Node3D).find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.mesh == null:
+				continue
+			# in the socket's own frame (the rig's metres, the haft along +Y)
+			var box := s.global_transform.affine_inverse() * m.global_transform * m.mesh.get_aabb()
+			lo = minf(lo, box.position.y)
+			hi = maxf(hi, box.end.y)
+		var length := hi - lo if hi > lo else 0.0
+		c.set_meta("held_length", length)
+		return length
+	return 0.0
 
 
 ## Whether something is held in this socket (a HeldItems model).

@@ -1,0 +1,43 @@
+{
+ "bounds": [
+  -0.1351,
+  -0.1392,
+  1.6738,
+  0.1349,
+  0.1633,
+  1.9486
+ ],
+ "collision": "none",
+ "colour_key": "secondary",
+ "colour_keys": {
+  "clerk_hat": "secondary"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "clerk_hat": "cloth",
+  "clerk_hat_band": "iron"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 73811,
+ "slot_hint": "attachment",
+ "textures": [
+  "clerk_hat_albedo.png",
+  "clerk_hat_orm.png",
+  "clerk_hat_band_albedo.png",
+  "clerk_hat_band_orm.png"
+ ],
+ "tris": [
+  2500,
+  0,
+  0
+ ],
+ "version": 1
+}

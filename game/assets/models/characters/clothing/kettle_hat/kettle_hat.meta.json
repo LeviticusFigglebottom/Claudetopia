@@ -1,0 +1,36 @@
+{
+ "bounds": [
+  -0.205,
+  -0.2085,
+  1.6332,
+  0.2049,
+  0.2337,
+  1.8299
+ ],
+ "collision": "none",
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "iron",
+ "materials": {
+  "kettle_hat": "iron"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "iron"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 1205,
+ "slot_hint": "attachment",
+ "textures": [
+  "kettle_hat_albedo.png",
+  "kettle_hat_orm.png"
+ ],
+ "tris": [
+  2400,
+  0,
+  0
+ ],
+ "version": 1
+}
