@@ -864,7 +864,7 @@ HART_LOD1 = 2600
 HART_LOD2 = 760
 
 
-def _hart_barrel(ob, skel) -> int:
+def keep_barrel(ob, skel) -> int:
     """The belly behind the elbows and before the stifles is the trunk's, down to the under line,
     and the brisket between the forelegs and the groin between the thighs belong to no one leg
     (skin_body's keep stops at the elbow's and the stifle's height): bone heat gave the belly to
@@ -930,7 +930,7 @@ def cmd_hart(args) -> None:
     field = sdf.SampledField.from_grid(*grid)
     log("hart body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
     bodylib.smart_uv(body, angle_deg=60.0, margin=0.008)
-    log("hart weights: %s, %d to the barrel" % (skin_body(body, arm, skel), _hart_barrel(body, skel)))
+    log("hart weights: %s, %d to the barrel" % (skin_body(body, arm, skel), keep_barrel(body, skel)))
     size = 256 if args.quick else DEER_TEX
     a, o, n = bake_maps(body, out_dir, "%s_coat" % HART, *deer_paint(skel, field, style, "hart", seed=29), size=size)
     body.data.materials.append(cf.make_material("WM_Hart_Coat", a, o, n, roughness=0.8))
