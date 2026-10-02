@@ -281,6 +281,18 @@ static func vista(d: PoiDressing) -> void:
 	var edge := view * minf(d.pad_radius * 0.5, 7.0)
 	var only_cairn := PoiKit.brief_says(d.brief, ["cairn"]) and not PoiKit.brief_says(d.brief, ["bench"])
 	var across := Vector2(-view.y, view.x)
+	# the seat beside the road, not on it: its plinth and its wall stood in the carriageway of the
+	# Elderhold road (the seat audit's vista drystone on the road, Briarwold)
+	if not k.roads.is_empty():
+		for t in [0.0, 2.0, -2.0, 4.0, -4.0, 6.0, -6.0, 8.0, -8.0]:
+			var c: Vector2 = view * minf(d.pad_radius * 0.5, 7.0) + across * float(t)
+			var clear := PoiKit.ROAD_CLEAR_M + 1.6
+			var ok := true
+			for q in [c, c - view * 1.35 - across * 1.8, c - view * 1.35 + across * 1.8, c + across * 1.4, c - across * 1.4]:
+				ok = ok and k.road_distance(q) >= clear
+			if ok:
+				edge = c
+				break
 	if not only_cairn:
 		# The seat: a bench on a plinth of flags, with a length of drystone wall at its back to keep
 		# the wind off, in a worn clearing. A bench alone is a plank half a metre high, and in the

@@ -377,6 +377,27 @@ class Caves(unittest.TestCase):
         self.assertLess(abs(((entry["cave"]["facing_deg"] + 180.0) % 360.0) - 180.0), 16.0)   # it looks out along +z
         self.assertGreater(entry["cave"]["face_top_m"] - entry["cave"]["mouth_m"], FA.CAVE_FACE_M)
 
+    def test_on_a_steep_slope_the_yard_in_front_of_the_face_is_level(self):
+        """The Rafters' Locker on a 30-degree hillside (w4096h): its pad kept the land's slope in front
+        of the face, the dressing's throat stood up a ramp, and its middle was 2.9 m off its level."""
+        g = Grid(1024.0, 512)
+        X, Z = g.mesh(np.float64)
+        H0 = (100.0 - 0.6 * (Z - 20.0) + 0.0 * X).astype(np.float32)       # 31 degrees, rising to -z
+        poi = {"id": "core:poi/test_hole", "kind": "cave", "position": [10.0, 20.0], "pad_radius_m": 27.0}
+        steps = FA.caves(g, H0, [poi], None, {poi["id"]: RD.pad_level_radius(poi)})
+        st = steps[poi["id"]]
+        H, _m, levels = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
+        behind = float(st.faces[0][0])
+        # over the throat and the paces in front of it, on the line and to either side of it
+        for ahead in (2.0, 5.0, 8.0, 11.0):
+            for aside in (-5.0, 0.0, 5.0):
+                x = 10.0 + st.fx * (ahead - behind) - st.fz * aside
+                z = 20.0 + st.fz * (ahead - behind) + st.fx * aside
+                y = float(sample_bilinear(H, g, np.array([x]), np.array([z]))[0])
+                self.assertAlmostEqual(y, st.foot, delta=0.35, msg="%.1f m out, %.1f m aside" % (ahead, aside))
+        mid = float(sample_bilinear(H, g, np.array([10.0]), np.array([20.0]))[0])
+        self.assertAlmostEqual(mid, levels[poi["id"]], delta=0.35)
+
     def test_a_pad_the_atlas_fixes_keeps_its_level(self):
         g = Grid(1024.0, 512)
         X, Z = g.mesh(np.float64)

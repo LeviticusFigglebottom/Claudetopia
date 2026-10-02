@@ -5774,6 +5774,18 @@ static func standing_stones(d: PoiDressing) -> void:
 	else:
 		spots = k.ring(count, radius, Vector2.ZERO, 0.12)
 	var leaning := PoiKit.brief_says(b, ["leaning"])
+	# the ring round the way a road comes through it, not in it: at the Standing Moot, where two roads
+	# meet, a stone of the ring stood in the carriageway (the seat audit's on_road)
+	if not k.roads.is_empty():
+		for i in range(spots.size()):
+			var p: Vector2 = spots[i]
+			if k.road_distance(p) >= PoiKit.ROAD_CLEAR_M + 1.0:
+				continue
+			for turn in [0.12, -0.12, 0.24, -0.24, 0.36, -0.36]:
+				var q := p.rotated(float(turn)) if not shoreline else p + grain * (float(turn) * 25.0)
+				if k.road_distance(q) >= PoiKit.ROAD_CLEAR_M + 1.0:
+					spots[i] = q
+					break
 	for i in range(spots.size()):
 		var p: Vector2 = spots[i]
 		var yaw := PoiKit.yaw_of(-p) if not shoreline else PoiKit.yaw_of(grain)
