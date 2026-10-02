@@ -60,6 +60,11 @@ func seed_with(n: int) -> void:
 	_rng.seed = n
 
 
+## How far from its home's height a beast is set down on the ground under it; past this the ground
+## the terrain answers is not where it stands (a deck, a raised yard), and it keeps its home's.
+const GROUND_REACH_M := 2.5
+
+
 ## Puts `count` beasts of `kind` (drawn from `paths`, the forge's variants) on the ground round
 ## `home`, keeping within `radius` of it. Call before the node enters the tree.
 func keep(kind: String, paths: Array[String], home: Vector3, radius: float, count: int) -> void:
@@ -308,6 +313,22 @@ func step(dt: float) -> void:
 		_place(beast)
 
 
+## `at` (local) on the ground under it. The beasts were kept at their home's height wherever they
+## wandered, so on a fold on sloping ground a ewe stood a metre over the turf at one side of it
+## (w4096h: the seat audit's floating sheep at the Two-Knot Fold).
+func _on_ground(at: Vector3) -> Vector3:
+	if not is_inside_tree():
+		return at
+	var t := World.terrain()
+	if t == null:
+		return at
+	var g := to_global(at)
+	var h := t.get_height(g.x, g.z)
+	if is_nan(h) or absf(h - g.y) > GROUND_REACH_M:
+		return at
+	return Vector3(at.x, at.y + h - g.y, at.z)
+
+
 ## Somewhere a short walk away that is still inside the beast's own patch.
 func _next_target(beast: Dictionary, habit: Dictionary) -> Vector3:
 	var at: Vector3 = beast["at"]
@@ -326,7 +347,7 @@ func _place(beast: Dictionary) -> void:
 	if mm == null or int(beast["instance"]) < 0:
 		return
 	var lift := maxf(0.0, -mm.mesh.get_aabb().position.y)
-	var at: Vector3 = beast["at"]
+	var at: Vector3 = _on_ground(beast["at"])
 	var yaw := float(beast["yaw"])
 	# the props stand with their heads to +X, a rigged beast with its head to +Z (CONTRACTS §1)
 	if bool(beast.get("rigged", false)):

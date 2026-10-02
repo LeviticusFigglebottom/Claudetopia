@@ -181,6 +181,11 @@ def land_tilt(place: dict, H: np.ndarray, grid: Grid, r_reach: float, share: flo
 ## PoiPreview) and is told the shape on each pois.json entry.
 SLOPE_KINDS = ("cave", "quarry")
 SLOPE_SMOOTH_M = 5.0
+## A cave's yard (`apply_pads`): level at the mouth's floor from the face out CAVE_YARD_M, and
+## CAVE_YARD_HALF_M either side of its line, fading into the slope over CAVE_YARD_FADE_M.
+CAVE_YARD_M = 12.0
+CAVE_YARD_HALF_M = 8.0
+CAVE_YARD_FADE_M = 4.0
 PAD_SHAPES = ("level", "slope", "trench")
 
 
@@ -313,6 +318,18 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
             if slope is not None:
                 # the land's slope, and the rise only where it stands higher than the slope does
                 target = (level + slope + np.maximum(rise - np.maximum(slope, 0.0), 0.0)).astype(np.float32)
+                if step.form == "cave":
+                    # and a cave's yard level at its foot, from the face out over the throat the
+                    # dressing stands in front of it (poi_builders_land.FACE_THROAT_M) and a few paces
+                    # more: kept on the land's slope, the Rafters' Locker's yard on a 30-degree
+                    # hillside stood the throat up a ramp and its middle 2.9 m off the pad's level
+                    u = (X[:, j0:j1] - px) * step.fx + (Z[i0:i1, :] - pz) * step.fz
+                    v = np.abs(-(X[:, j0:j1] - px) * step.fz + (Z[i0:i1, :] - pz) * step.fx)
+                    behind = float(step.faces[0][0])
+                    yard = (smoothstep(-behind - 1.0, -behind, u)
+                            * (1.0 - smoothstep(-behind + CAVE_YARD_M, -behind + CAVE_YARD_M + CAVE_YARD_FADE_M, u))
+                            * (1.0 - smoothstep(CAVE_YARD_HALF_M, CAVE_YARD_HALF_M + CAVE_YARD_FADE_M, v)))
+                    target = lerp(target, (level + rise).astype(np.float32), yard.astype(np.float32)).astype(np.float32)
             else:
                 target = (level + rise).astype(np.float32)
         elif slope is not None:

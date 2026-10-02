@@ -35,6 +35,8 @@ const RAIL_HEIGHTS := [0.48, 0.9]
 const RAIL_POST_H := 1.2
 const RAIL_TIMBER := Color(0.52, 0.41, 0.29)
 const GATE_LEN := 3.2
+## How near a carriageway's edge a gate's leaf or shutting post may come (`_across_a_road`).
+const GATE_ROAD_CLEAR_M := 0.3
 const GATE_H := 1.2
 ## How far a gate post looks for the hedge it stands in.
 const LINE_REACH_M := 6.0
@@ -289,6 +291,11 @@ static func _gates(cell: Node3D, posts: Array, lines: Array, solids: Array = [])
 		var along := gate_line(at, lines)
 		if along == Vector2.ZERO:
 			continue
+		# no gate across a road: a hedge's gap where a road goes through it is the road's, and a
+		# gate hung across it stood its leaf and its shutting post in the carriageway (w4096h: the
+		# seat audit's wayside timber on the roads to Grandfather Hollow and the Standing Moot)
+		if _across_a_road(at, along):
+			continue
 		var ground := float(row[1]) - cell.position.y
 		var base := Vector3(at.x - cell.position.x, ground, at.y - cell.position.z)
 		var h := hash(Vector2i(int(at.x * 10.0), int(at.y * 10.0)))
@@ -301,6 +308,16 @@ static func _gates(cell: Node3D, posts: Array, lines: Array, solids: Array = [])
 	var mesh := fabric.commit(cell, "joinery", FabricMesh.joinery_material(), "Gates")
 	if mesh != null:
 		FabricMesh.near_only(mesh, GATE_RANGE_M, true)
+
+
+## Whether a gate hung from the post at world xz `at` along `along` would stand in a road: its leaf's
+## middle or its shutting post within GATE_ROAD_CLEAR_M of a carriageway.
+static func _across_a_road(at: Vector2, along: Vector2) -> bool:
+	for t in [0.5, 1.0]:
+		var p := at + along * (GATE_LEN + 0.2) * float(t)
+		if RoadNetwork.edge_distance(p) < GATE_ROAD_CLEAR_M:
+			return true
+	return false
 
 
 ## Which way a gate hung from the post at `at` runs: along the line the post stands at the end of,
