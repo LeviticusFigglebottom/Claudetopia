@@ -228,3 +228,87 @@ def clear_sightlines(buckets: dict, grid: Grid, H: np.ndarray, claims: list, k: 
                 del by_asset[asset]
     out["by_claim"] = per_claim.tolist()
     return out
+
+
+## A glade's way to its road, metres wide, where its def does not say (`glade_approach_m`).
+GLADE_APPROACH_M = 18.0
+
+
+def glades(pois: list, roads: list) -> list:
+    """[(centre_xz, radius_m, road_xz or None, approach_width_m)] for every POI def with `glade_m`: a
+    place in the deep wood whose feature must be seen, the trees taken off a disc of that radius
+    round it (beyond its pad, which clears only its own ground) and off a way from it to the nearest
+    point of the nearest road, so it is seen from the track. `roads` are worldgen.roads.Road."""
+    out = []
+    for p in pois:
+        r = p.get("glade_m")
+        if not r:
+            continue
+        c = np.array([float(p["position"][0]), float(p["position"][1])], dtype=np.float64)
+        best, best_d = None, 1e18
+        for road in roads:
+            pts = np.asarray(road.points, dtype=np.float64)[:, :2] if len(road.points) else None
+            if pts is None or len(pts) < 2:
+                continue
+            a, b = pts[:-1], pts[1:]
+            ab = b - a
+            t = np.clip(((c - a) * ab).sum(1) / np.maximum((ab * ab).sum(1), 1e-9), 0.0, 1.0)
+            q = a + ab * t[:, None]
+            d = np.hypot(*(q - c).T)
+            i = int(np.argmin(d))
+            if d[i] < best_d:
+                best_d, best = float(d[i]), (float(q[i][0]), float(q[i][1]))
+        out.append(((float(c[0]), float(c[1])), float(r), best, float(p.get("glade_approach_m", GLADE_APPROACH_M))))
+    return out
+
+
+def clear_glades(buckets: dict, glade_list: list) -> dict:
+    """Take out of `buckets` (in place) every tree inside a glade (`glades`): on its disc, or on the
+    way from its middle to its road and two metres past the road's middle. Only trees: the ground's
+    low cover, the logs and the rocks stay. Returns {"trees": taken, "by_glade": [taken per glade]}."""
+    out = {"trees": 0, "by_glade": [0] * len(glade_list)}
+    if not glade_list:
+        return out
+    for key in list(buckets):
+        by_asset = buckets[key]
+        for asset in list(by_asset):
+            if "/trees/" not in asset:
+                continue
+            rows = by_asset[asset]
+            if not len(rows):
+                continue
+            if isinstance(rows, Rows):
+                xz = rows.xz()
+            else:
+                xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64).reshape(-1, 2)
+            hit = np.zeros(len(xz), dtype=bool)
+            for gi, (c, radius, road, width) in enumerate(glade_list):
+                c = np.asarray(c, dtype=np.float64)
+                inside = np.hypot(xz[:, 0] - c[0], xz[:, 1] - c[1]) < radius
+                if road is not None:
+                    e = np.asarray(road, dtype=np.float64)
+                    seg = e - c
+                    length = float(np.hypot(*seg))
+                    if length > 1e-6:
+                        u = seg / length
+                        rel = xz - c
+                        along = rel @ u
+                        off = np.abs(rel[:, 0] * u[1] - rel[:, 1] * u[0])
+                        inside |= (along >= 0.0) & (along <= length + 2.0) & (off < width * 0.5)
+                n = int((inside & ~hit).sum())
+                out["by_glade"][gi] += n
+                hit |= inside
+            if not hit.any():
+                continue
+            out["trees"] += int(hit.sum())
+            if isinstance(rows, Rows):
+                rows.keep(~hit)
+                if not len(rows):
+                    del by_asset[asset]
+                continue
+            keep = [r for r, w in zip(rows, hit) if not w]
+            if keep:
+                by_asset[asset] = keep
+            else:
+                del by_asset[asset]
+    return out
