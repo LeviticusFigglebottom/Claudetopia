@@ -240,6 +240,9 @@ def H(skel: QuadSkeleton, along: float, down: float, side: float = 0.0) -> np.nd
     from the poll toward the nose, `down` square to it toward the throat, `side` to the left."""
     poll, hu, dn, hl = head_axes(skel)
     k = hl / 0.29
+    m = getattr(skel, "muzzle", 1.0)
+    if along > 0.12:
+        along = 0.12 + (along - 0.12) * m
     return poll + (hu * along + dn * down + X * side) * k
 
 
@@ -390,15 +393,20 @@ def _thorns(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
              J["Spine2"] + np.array([0.0, 0.0, 0.05]) * s, J["Spine1"] + np.array([0.0, 0.0, 0.05]) * s,
              J["Tail1"] + np.array([0.0, 0.0, 0.035]) * s, J["Tail2"] + np.array([0.0, 0.0, 0.05]) * s]
     pts = np.array(spine)
-    tt = np.linspace(0.0, len(pts) - 1.0, 30)
+    # a clear rhythm: a row of big hooked thorns down the ridge, each with a smaller pair flanking
+    # it a little behind, largest over the withers and the croup
+    n_big = 11
+    tt = np.linspace(0.15, len(pts) - 1.0, n_big)
     line = sdf._catmull_rom(pts, tt)
+    nxt = sdf._catmull_rom(pts, np.minimum(tt + 0.2, len(pts) - 1.0))
     for i, p in enumerate(line):
-        size = (0.05 + 0.03 * math.sin(math.pi * i / len(line))) * s * k * (0.75 + 0.5 * rng.random())
-        for sx in ((0.0,) if i % 3 else (0.0, 1.0, -1.0)):
-            base = p + X * sx * 0.035 * s - Z * 0.01 * s
-            lean = _u(np.array([sx * 0.5, 0.9, 1.0]))
-            tip = base + lean * size
-            sc.union(sdf.round_cone(base, tip, 0.011 * s * k, 0.0012 * s), k=0.008 * s)
+        f = i / (n_big - 1)
+        size = (0.075 + 0.035 * math.sin(math.pi * f) ** 0.6) * s * k * (0.9 + 0.2 * rng.random())
+        back = _u(nxt[i] - p) if np.linalg.norm(nxt[i] - p) > 1e-6 else Y
+        _hook(sc, p - Z * 0.012 * s, Z, back, size, 0.016 * s * k, s)
+        for sx in (1.0, -1.0):
+            q = p + back * 0.035 * s + X * sx * 0.045 * s - Z * 0.02 * s
+            _hook(sc, q, _u(Z + X * sx * 0.8), back, size * 0.55, 0.011 * s * k, s)
     # the jaw's thorns: short and forward-raked under the chin and along the lower jaw
     corner, tip = mouth_line(skel, st)
     poll, hu, dn, hl = head_axes(skel)
@@ -413,8 +421,16 @@ def _thorns(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
                           (J[f"Thigh.{side}"], np.array([sx * 0.08, -0.01, 0.02])),
                           (J[f"Humerus.{side}"], np.array([sx * 0.05, 0.03, -0.04]))):
             base = anchor + d * s
-            tip2 = base + _u(np.array([sx * 0.8, 0.6, 0.5])) * 0.05 * s * k
-            sc.union(sdf.round_cone(base, tip2, 0.01 * s * k, 0.0012 * s), k=0.008 * s)
+            _hook(sc, base, _u(np.array([sx * 0.9, 0.0, 0.5])), Y, 0.075 * s * k, 0.016 * s * k, s)
+
+
+def _hook(sc: sdf.Scene, base, out, back, size: float, r: float, s: float) -> None:
+    """A thorn: thick at its root, rising along `out` and hooking back along `back` to its point."""
+    out = _u(out)
+    back = _u(back - out * float(np.dot(back, out)))
+    pts = [base, base + out * size * 0.45 + back * size * 0.08, base + out * size * 0.8 + back * size * 0.3,
+           base + out * size * 0.95 + back * size * 0.62]
+    sc.union(sdf.tube_path(pts, [r, r * 0.6, r * 0.32, 0.0015 * s]), k=0.01 * s)
 
 
 def _coat(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> sdf.Scene:
@@ -436,10 +452,10 @@ def _coat(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> sdf.Scene:
         out = st.fur * s * (clump - 0.45) * 2.0 * long_hair * short
         if st.bark > 0:
             # plates: the cells of a stretched lattice, raised in their middles, split at their edges
-            F = _cells(P * np.array([1.0, 0.6, 1.0]), 24.0 / s, st.seed)
-            plate = 1.0 - paint.smoothstep(0.25, 0.75, F)
+            F = _cells(P * np.array([1.0, 0.6, 1.0]), 15.0 / s, st.seed)
+            plate = 1.0 - paint.smoothstep(0.45, 0.72, F)
             barky = np.clip(R["back"] + R["flank"] + 0.6 * R["tail"] + 0.5 * R["legs_upper"], 0, 1) * (1.0 - R["face"])
-            out = out * (1.0 - 0.7 * barky) + st.bark * 0.012 * s * (plate - 0.35) * barky
+            out = out * (1.0 - 0.7 * barky) + st.bark * 0.014 * s * (plate - 0.4) * barky
             out = out + 0.002 * s * (n2.at(P, 90.0 / s) - 0.5) * barky
         return out
     return Displaced(sc, disp, amp * 1.6 + 0.004 * s)

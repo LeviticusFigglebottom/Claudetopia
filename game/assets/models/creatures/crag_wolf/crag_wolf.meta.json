@@ -1,12 +1,12 @@
 {
  "bones": 40,
  "bounds": [
-  -0.1892,
-  -1.0447,
+  -0.2376,
+  -1.0204,
   -0.0,
-  0.1968,
-  0.9241,
-  1.2107
+  0.2403,
+  0.9312,
+  1.1947
  ],
  "clips": [
   "Attack_1",
@@ -30,21 +30,21 @@
  "collision": "capsule",
  "def_scale": 1.25,
  "generator": "creature_forge",
- "height": 1.2107,
+ "height": 1.1947,
  "hurt": [
   {
    "a": [
     0.0,
-    0.6873,
-    0.2696
+    0.6775,
+    0.26
    ],
    "b": [
     0.0,
-    0.7799,
-    -0.4534
+    0.7752,
+    -0.4476
    ],
    "kind": "capsule",
-   "r": 0.2538
+   "r": 0.2633
   },
   {
    "c": [
@@ -56,26 +56,30 @@
    "r": 0.1497
   }
  ],
+ "limbs": [],
  "mesh": "CragWolf_Body",
  "params": {
   "family": "canid",
   "style": {
    "bark": 0.0,
-   "brush": 1.25,
-   "depth": 1.06,
-   "ears": 1.0,
-   "fur": 0.013,
-   "girth": 1.12,
+   "brush": 1.45,
+   "depth": 1.1,
+   "ears": 0.8,
+   "fur": 0.016,
+   "girth": 1.2,
    "kind": "crag",
-   "legs": 1.14,
-   "muzzle": 1.0,
-   "muzzle_w": 1.1,
-   "ruff": 1.4,
+   "legs": 1.28,
+   "muzzle": 0.88,
+   "muzzle_w": 1.15,
+   "ruff": 1.9,
    "seed": 5,
    "sleek": 0.0,
    "thorns": 0.0
   }
  },
+ "parts": [
+  "CragWolf_Body"
+ ],
  "rig": "WM_Quadruped_v1",
  "rig_manifest": {
   "bones": [

@@ -36,6 +36,7 @@ def _canid(name: str, k: float, length: float, leg: float, head: float, style: b
     props = QuadProportions(withers=0.80 * k, body_length=0.62 * length, leg_length=leg, neck_length=0.6,
                             head_size=0.55 * head, bulk=0.5, width=0.6, tail_length=0.6)
     skel = QuadSkeleton(props, joints=joints)
+    skel.muzzle = style.muzzle
     trunk = bb.scaled_trunk(bb.WOLF_TRUNK, k=k, length=length, leg=leg, depth=depth, girth=style.girth)
     return FoeSpec(name, "canid", skel, style, lambda: bb.canid_scene(skel, style, trunk), def_scale=def_scale,
                    tex=tex, tris=tris, lod1=tris // 3, lod2=tris // 10, spacing=0.0055 * k,
@@ -45,17 +46,19 @@ def _canid(name: str, k: float, length: float, leg: float, head: float, style: b
 def spec(name: str) -> FoeSpec:
     if name == "down_wolf":
         # lean, grey-gold, patient: the Vale's wolf, 0.80 m at the withers
-        return _canid(name, 1.0, 1.0, 1.0, 1.0, bb.CanidStyle(kind="wolf", ruff=0.6, fur=0.008, seed=3), 1.0, "#8a8073")
+        return _canid(name, 1.0, 1.0, 1.0, 1.0, bb.CanidStyle(kind="wolf", ruff=0.35, fur=0.006, ears=1.1, muzzle=1.06,
+                                                                  legs=0.95, brush=0.85, seed=3), 1.0, "#8a8073")
     if name == "crag_wolf":
         # bigger than a Vale wolf, white the year round, heavy in the shoulder: 0.96 m
         return _canid(name, 1.2, 0.98, 1.0, 1.02,
-                      bb.CanidStyle(kind="crag", girth=1.12, depth=1.06, legs=1.14, ruff=1.4, fur=0.013,
-                                    muzzle_w=1.1, brush=1.25, seed=5), 1.25, "#d6d9dd", depth=1.06)
+                      bb.CanidStyle(kind="crag", girth=1.2, depth=1.1, legs=1.28, ruff=1.9, fur=0.016,
+                                    muzzle=0.88, muzzle_w=1.15, ears=0.8, brush=1.45, seed=5), 1.25, "#d6d9dd",
+                      depth=1.1)
     if name == "thornhound":
         # a hound crossed with the wall: bark-skinned, thorn-jawed, a whip of a tail; 0.71 m
-        return _canid(name, 0.9, 0.98, 0.96, 1.04,
-                      bb.CanidStyle(kind="thorn", girth=0.95, legs=0.95, ruff=0.0, fur=0.002, ears=0.8,
-                                    muzzle=1.05, brush=0.25, thorns=1.35, bark=1.0, seed=7), 1.05, "#4a3b2c")
+        return _canid(name, 0.9, 0.98, 0.86, 1.04,
+                      bb.CanidStyle(kind="thorn", girth=1.0, legs=1.2, ruff=0.0, fur=0.002, ears=0.8,
+                                    muzzle=1.05, brush=0.25, thorns=1.15, bark=1.0, seed=7), 1.05, "#4a3b2c")
     if name == "leech_hound":
         # sleek, low, long in the body: an otter's build on a hound's head; 0.48 m at the withers
         return _canid(name, 0.76, 1.24, 0.7, 1.08,

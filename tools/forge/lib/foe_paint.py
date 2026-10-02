@@ -33,7 +33,7 @@ COATS: Dict[str, Dict[str, np.ndarray]] = {
              "ear": C(0.60, 0.60, 0.62), "ear_in": C(0.90, 0.86, 0.82), "tip": C(0.50, 0.50, 0.52),
              "guard": C(0.42, 0.43, 0.46), "iris": C(0.80, 0.70, 0.36)},
     # the thornhound: bark, cracked to the dark wood, lichen on the back, pale thorns black at the point
-    "thorn": {"body": C(0.33, 0.26, 0.19), "saddle": C(0.24, 0.19, 0.14), "pale": C(0.40, 0.33, 0.24),
+    "thorn": {"body": C(0.40, 0.32, 0.23), "saddle": C(0.33, 0.26, 0.19), "pale": C(0.40, 0.33, 0.24),
               "legs": C(0.30, 0.24, 0.18), "muzzle": C(0.36, 0.28, 0.20), "mask": C(0.20, 0.15, 0.11),
               "ear": C(0.26, 0.20, 0.15), "ear_in": C(0.42, 0.28, 0.22), "tip": C(0.18, 0.13, 0.09),
               "guard": C(0.10, 0.07, 0.05), "iris": C(0.92, 0.62, 0.14),
@@ -95,6 +95,8 @@ def canid_paint(spec, field: sdf.SampledField):
         c = np.broadcast_to(pal["body"], (len(P), 3)).copy() * (0.9 + 0.2 * big)[:, None]
         # the saddle: dark over the back, grizzled (broken by the clumps) where it fades down the flanks
         saddle = np.clip(R["back"] * (0.55 + 0.6 * paint.smoothstep(0.35, 0.75, clump + 0.3 * big)), 0, 1)
+        if barky:
+            saddle = 0.6 * R["back"]
         saddle = np.clip(saddle + 0.6 * R["tail"] * paint.smoothstep(0.0, 0.6, up), 0, 1)
         c = paint.mix(c, pal["saddle"], saddle * (0.5 if sleek else 0.85))
         # pale under: the belly, the throat, the inside of the legs, the cheeks' lower edge
@@ -110,13 +112,14 @@ def canid_paint(spec, field: sdf.SampledField):
         c = paint.mix(c, pal["tip"], np.clip(R["tail_tip"] * 1.2, 0, 1))
         if barky:
             # bark: plates split along their edges to the dark wood, lichen on what faces the sky
-            F = bb._cells(P * np.array([1.0, 0.6, 1.0]), 24.0 / s, st.seed)
-            crack = paint.smoothstep(0.55, 0.8, F) * np.clip(R["back"] + R["flank"] + R["tail"] + 0.6 * R["legs_upper"], 0, 1)
+            F = bb._cells(P * np.array([1.0, 0.6, 1.0]), 15.0 / s, st.seed)
+            crack = paint.smoothstep(0.62, 0.78, F) * np.clip(R["back"] + R["flank"] + R["tail"] + 0.6 * R["legs_upper"], 0, 1)
             ridge = 0.5 + 0.5 * np.sin(P[:, 2] * 220.0 / s + 4.0 * n1.at(P, 30.0 / s))
             c = c * (0.85 + 0.25 * ridge)[:, None]
             c = paint.mix(c, pal["crack"], 0.85 * crack)
-            lich = paint.smoothstep(0.58, 0.72, n3.fbm(P, freq=16.0 / s, octaves=3)) * paint.smoothstep(0.2, 0.8, up)
-            c = paint.mix(c, pal["lichen"], 0.75 * lich * (1.0 - R["face"]))
+            lich = paint.smoothstep(0.62, 0.7, n3.fbm(P, freq=9.0 / s, octaves=2)) * paint.smoothstep(0.3, 0.8, up) \
+                * (1.0 - paint.smoothstep(0.4, 0.7, F))
+            c = paint.mix(c, pal["lichen"], 0.55 * lich * (1.0 - R["face"]))
             th = R["thorn"]
             proud_tip = paint.smoothstep(0.4, 1.0, th)
             c = paint.mix(c, pal["thorn"], th)
@@ -170,7 +173,7 @@ def canid_paint(spec, field: sdf.SampledField):
             ring = 0.5 + 0.5 * np.sin(P[:, 1] * 140.0 / s + 2.0 * n1.at(P, 12.0 / s))
             return 0.25 * ring * (1.0 - R["face"]) + 0.1 * n2.fbm(P, freq=60.0 / s, octaves=2)
         if barky:
-            F = bb._cells(P * np.array([1.0, 0.6, 1.0]), 24.0 / s, st.seed)
+            F = bb._cells(P * np.array([1.0, 0.6, 1.0]), 15.0 / s, st.seed)
             ridge = 0.5 + 0.5 * np.sin(P[:, 2] * 220.0 / s + 4.0 * n1.at(P, 30.0 / s))
             return 0.6 * (1.0 - paint.smoothstep(0.4, 0.8, F)) + 0.3 * ridge
         return (0.3 + 0.5 * np.clip(R["ruff"] + R["back"] + R["tail"], 0, 1)) * (0.6 * clump + 0.4 * strand)

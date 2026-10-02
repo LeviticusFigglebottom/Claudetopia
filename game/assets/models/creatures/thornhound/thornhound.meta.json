@@ -1,12 +1,12 @@
 {
  "bones": 40,
  "bounds": [
-  -0.177,
-  -0.7857,
-  -0.0008,
-  0.1905,
-  0.6803,
-  0.8872
+  -0.2169,
+  -0.7949,
+  -0.0001,
+  0.2158,
+  0.6778,
+  0.8588
  ],
  "clips": [
   "Attack_1",
@@ -30,17 +30,17 @@
  "collision": "capsule",
  "def_scale": 1.05,
  "generator": "creature_forge",
- "height": 0.8872,
+ "height": 0.8588,
  "hurt": [
   {
    "a": [
     0.0,
-    0.5121,
+    0.4761,
     0.2129
    ],
    "b": [
     0.0,
-    0.5756,
+    0.5396,
     -0.3465
    ],
    "kind": "capsule",
@@ -49,13 +49,14 @@
   {
    "c": [
     0.0,
-    0.7213,
+    0.6853,
     0.6262
    ],
    "kind": "sphere",
    "r": 0.1145
   }
  ],
+ "limbs": [],
  "mesh": "Thornhound_Body",
  "params": {
   "family": "canid",
@@ -65,17 +66,20 @@
    "depth": 1.0,
    "ears": 0.8,
    "fur": 0.002,
-   "girth": 0.95,
+   "girth": 1.0,
    "kind": "thorn",
-   "legs": 0.95,
+   "legs": 1.2,
    "muzzle": 1.05,
    "muzzle_w": 1.0,
    "ruff": 0.0,
    "seed": 7,
    "sleek": 0.0,
-   "thorns": 1.35
+   "thorns": 1.15
   }
  },
+ "parts": [
+  "Thornhound_Body"
+ ],
  "rig": "WM_Quadruped_v1",
  "rig_manifest": {
   "bones": [
@@ -95,7 +99,7 @@
     "head": [
      0.0,
      0.2558,
-     0.6291
+     0.5931
     ],
     "length": 0.1593,
     "name": "Hips",
@@ -106,7 +110,7 @@
     "head": [
      0.0,
      0.2558,
-     0.6291
+     0.5931
     ],
     "length": 0.2383,
     "name": "Spine1",
@@ -117,7 +121,7 @@
     "head": [
      0.0,
      0.0176,
-     0.6381
+     0.6021
     ],
     "length": 0.2119,
     "name": "Spine2",
@@ -128,7 +132,7 @@
     "head": [
      0.0,
      -0.194,
-     0.6471
+     0.6111
     ],
     "length": 0.1446,
     "name": "Chest",
@@ -139,7 +143,7 @@
     "head": [
      0.0,
      -0.3352,
-     0.6156
+     0.5796
     ],
     "length": 0.1389,
     "name": "Neck1",
@@ -150,7 +154,7 @@
     "head": [
      0.0,
      -0.441,
-     0.7056
+     0.6696
     ],
     "length": 0.1071,
     "name": "Neck2",
@@ -161,7 +165,7 @@
     "head": [
      0.0,
      -0.516,
-     0.7821
+     0.7461
     ],
     "length": 0.2726,
     "name": "Head",
@@ -172,7 +176,7 @@
     "head": [
      0.0,
      -0.5731,
-     0.6932
+     0.6572
     ],
     "length": 0.1593,
     "name": "Jaw",
@@ -183,7 +187,7 @@
     "head": [
      0.0431,
      -0.53,
-     0.8242
+     0.7882
     ],
     "length": 0.0741,
     "name": "Ear.L",
@@ -194,7 +198,7 @@
     "head": [
      -0.0431,
      -0.53,
-     0.8242
+     0.7882
     ],
     "length": 0.0741,
     "name": "Ear.R",
@@ -205,7 +209,7 @@
     "head": [
      0.0,
      0.4145,
-     0.6156
+     0.5796
     ],
     "length": 0.1287,
     "name": "Tail1",
@@ -216,7 +220,7 @@
     "head": [
      0.0,
      0.5292,
-     0.5571
+     0.5211
     ],
     "length": 0.1269,
     "name": "Tail2",
@@ -227,7 +231,7 @@
     "head": [
      0.0,
      0.6086,
-     0.4581
+     0.4221
     ],
     "length": 0.135,
     "name": "Tail3",
@@ -238,7 +242,7 @@
     "head": [
      0.063,
      -0.1499,
-     0.6381
+     0.6021
     ],
     "length": 0.2248,
     "name": "Scapula.L",
@@ -249,7 +253,7 @@
     "head": [
      0.0855,
      -0.3131,
-     0.4851
+     0.4491
     ],
     "length": 0.1662,
     "name": "Humerus.L",
@@ -260,9 +264,9 @@
     "head": [
      0.0855,
      -0.2161,
-     0.3501
+     0.3141
     ],
-    "length": 0.2515,
+    "length": 0.226,
     "name": "Forearm.L",
     "parent": "Humerus.L"
    },
@@ -271,9 +275,9 @@
     "head": [
      0.0765,
      -0.2337,
-     0.0994
+     0.089
     ],
-    "length": 0.0716,
+    "length": 0.0652,
     "name": "FrontCannon.L",
     "parent": "Forearm.L"
    },
@@ -282,9 +286,9 @@
     "head": [
      0.0765,
      -0.2602,
-     0.0328
+     0.0294
     ],
-    "length": 0.0401,
+    "length": 0.0392,
     "name": "FrontPastern.L",
     "parent": "FrontCannon.L"
    },
@@ -293,9 +297,9 @@
     "head": [
      0.0765,
      -0.2955,
-     0.0138
+     0.0124
     ],
-    "length": 0.0338,
+    "length": 0.0333,
     "name": "FrontHoof.L",
     "parent": "FrontPastern.L"
    },
@@ -304,7 +308,7 @@
     "head": [
      0.072,
      0.3131,
-     0.5571
+     0.5211
     ],
     "length": 0.217,
     "name": "Thigh.L",
@@ -315,9 +319,9 @@
     "head": [
      0.0855,
      0.2073,
-     0.3681
+     0.3321
     ],
-    "length": 0.2485,
+    "length": 0.2353,
     "name": "Gaskin.L",
     "parent": "Thigh.L"
    },
@@ -326,9 +330,9 @@
     "head": [
      0.0765,
      0.366,
-     0.1771
+     0.1587
     ],
-    "length": 0.1509,
+    "length": 0.1366,
     "name": "HindCannon.L",
     "parent": "Gaskin.L"
    },
@@ -337,9 +341,9 @@
     "head": [
      0.0765,
      0.3219,
-     0.0328
+     0.0294
     ],
-    "length": 0.0401,
+    "length": 0.0392,
     "name": "HindPastern.L",
     "parent": "HindCannon.L"
    },
@@ -348,9 +352,9 @@
     "head": [
      0.0765,
      0.2867,
-     0.0138
+     0.0124
     ],
-    "length": 0.0338,
+    "length": 0.0333,
     "name": "HindHoof.L",
     "parent": "HindPastern.L"
    },
@@ -359,7 +363,7 @@
     "head": [
      -0.063,
      -0.1499,
-     0.6381
+     0.6021
     ],
     "length": 0.2248,
     "name": "Scapula.R",
@@ -370,7 +374,7 @@
     "head": [
      -0.0855,
      -0.3131,
-     0.4851
+     0.4491
     ],
     "length": 0.1662,
     "name": "Humerus.R",
@@ -381,9 +385,9 @@
     "head": [
      -0.0855,
      -0.2161,
-     0.3501
+     0.3141
     ],
-    "length": 0.2515,
+    "length": 0.226,
     "name": "Forearm.R",
     "parent": "Humerus.R"
    },
@@ -392,9 +396,9 @@
     "head": [
      -0.0765,
      -0.2337,
-     0.0994
+     0.089
     ],
-    "length": 0.0716,
+    "length": 0.0652,
     "name": "FrontCannon.R",
     "parent": "Forearm.R"
    },
@@ -403,9 +407,9 @@
     "head": [
      -0.0765,
      -0.2602,
-     0.0328
+     0.0294
     ],
-    "length": 0.0401,
+    "length": 0.0392,
     "name": "FrontPastern.R",
     "parent": "FrontCannon.R"
    },
@@ -414,9 +418,9 @@
     "head": [
      -0.0765,
      -0.2955,
-     0.0138
+     0.0124
     ],
-    "length": 0.0338,
+    "length": 0.0333,
     "name": "FrontHoof.R",
     "parent": "FrontPastern.R"
    },
@@ -425,7 +429,7 @@
     "head": [
      -0.072,
      0.3131,
-     0.5571
+     0.5211
     ],
     "length": 0.217,
     "name": "Thigh.R",
@@ -436,9 +440,9 @@
     "head": [
      -0.0855,
      0.2073,
-     0.3681
+     0.3321
     ],
-    "length": 0.2485,
+    "length": 0.2353,
     "name": "Gaskin.R",
     "parent": "Thigh.R"
    },
@@ -447,9 +451,9 @@
     "head": [
      -0.0765,
      0.366,
-     0.1771
+     0.1587
     ],
-    "length": 0.1509,
+    "length": 0.1366,
     "name": "HindCannon.R",
     "parent": "Gaskin.R"
    },
@@ -458,9 +462,9 @@
     "head": [
      -0.0765,
      0.3219,
-     0.0328
+     0.0294
     ],
-    "length": 0.0401,
+    "length": 0.0392,
     "name": "HindPastern.R",
     "parent": "HindCannon.R"
    },
@@ -469,9 +473,9 @@
     "head": [
      -0.0765,
      0.2867,
-     0.0138
+     0.0124
     ],
-    "length": 0.0338,
+    "length": 0.0333,
     "name": "HindHoof.R",
     "parent": "HindPastern.R"
    },
@@ -480,7 +484,7 @@
     "head": [
      0.0,
      -0.0115,
-     0.7125
+     0.6765
     ],
     "length": 0.0576,
     "name": "Socket.Saddle",
@@ -491,7 +495,7 @@
     "head": [
      0.0151,
      -0.7256,
-     0.7222
+     0.6862
     ],
     "length": 0.0288,
     "name": "Socket.Bit",
@@ -502,7 +506,7 @@
     "head": [
      0.0,
      0.2654,
-     0.7011
+     0.6651
     ],
     "length": 0.0576,
     "name": "Socket.Pack",
@@ -513,7 +517,7 @@
     "head": [
      0.0,
      -0.516,
-     0.7958
+     0.7598
     ],
     "length": 0.0576,
     "name": "Socket.Head",
@@ -525,7 +529,7 @@
    "bulk": 0.5,
    "cannon": 1.0,
    "head_size": 0.5720000000000001,
-   "leg_length": 0.96,
+   "leg_length": 0.86,
    "neck_length": 0.6,
    "neck_raise": 0.0,
    "tail_length": 0.6,
@@ -544,9 +548,9 @@
  "seed": 7,
  "tint": "#4a3b2c",
  "tris": [
-  6472,
-  2158,
-  1054
+  6487,
+  2161,
+  1499
  ],
  "version": 1
 }

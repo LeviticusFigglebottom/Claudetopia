@@ -22,6 +22,9 @@ var foes: Array[String] = []
 var clips: Array[String] = []
 var frames := 5
 var views: Array[String] = ["side", "front", "three_quarter", "back"]
+## The view each clip frame is drawn from (--clip-view=): "clip" (the near side, a little ahead),
+## "far" (the other side), "above".
+var clip_view := "clip"
 var with_clips := true
 var lod := 0
 var _cam: Camera3D
@@ -44,6 +47,8 @@ func _ready() -> void:
 			views.clear()
 			for v in a.substr(8).split(",", false):
 				views.append(v)
+		elif a.begins_with("--clip-view="):
+			clip_view = a.substr(12)
 		elif a == "--no-clips":
 			with_clips = false
 		elif a.begins_with("--lod="):
@@ -164,7 +169,7 @@ func _review(id: String) -> void:
 				model.anim_player.play(c)
 				model.anim_player.seek(t, true)
 				model.anim_player.pause()
-				_frame(e, "clip", size)
+				_frame(e, clip_view, size)
 				await _shot("%s_%s_%d" % [slug, c, i], "%s %s t=%.2f" % [slug, c, t], model)
 	e.queue_free()
 	await get_tree().process_frame
@@ -208,6 +213,10 @@ func _frame(e: Node3D, view: String, size: Vector3) -> void:
 			eye = at + right * d * 1.5 + Vector3.UP * size.y * 0.3
 		"clip":
 			eye = at + (right + fwd * 0.25).normalized() * d * 1.05 + Vector3.UP * size.y * 0.35
+		"far":
+			eye = at + (-right + fwd * 0.25).normalized() * d * 1.05 + Vector3.UP * size.y * 0.35
+		"above":
+			eye = at + (right * 0.6 + fwd * 0.3).normalized() * d * 0.7 + Vector3.UP * d * 0.8
 		_:
 			eye = at + right * d + Vector3.UP * size.y * 0.2
 	_cam.look_at_from_position(eye, at, Vector3.UP)

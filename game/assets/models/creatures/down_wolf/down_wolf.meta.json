@@ -1,12 +1,12 @@
 {
  "bones": 40,
  "bounds": [
-  -0.1514,
-  -0.8745,
+  -0.1496,
+  -0.8836,
   -0.0007,
-  0.1522,
-  0.7753,
-  1.0056
+  0.1509,
+  0.7745,
+  1.0153
  ],
  "clips": [
   "Attack_1",
@@ -30,7 +30,7 @@
  "collision": "capsule",
  "def_scale": 1.0,
  "generator": "creature_forge",
- "height": 1.0056,
+ "height": 1.0153,
  "hurt": [
   {
    "a": [
@@ -56,26 +56,30 @@
    "r": 0.1223
   }
  ],
+ "limbs": [],
  "mesh": "DownWolf_Body",
  "params": {
   "family": "canid",
   "style": {
    "bark": 0.0,
-   "brush": 1.0,
+   "brush": 0.85,
    "depth": 1.0,
-   "ears": 1.0,
-   "fur": 0.008,
+   "ears": 1.1,
+   "fur": 0.006,
    "girth": 1.0,
    "kind": "wolf",
-   "legs": 1.0,
-   "muzzle": 1.0,
+   "legs": 0.95,
+   "muzzle": 1.06,
    "muzzle_w": 1.0,
-   "ruff": 0.6,
+   "ruff": 0.35,
    "seed": 3,
    "sleek": 0.0,
    "thorns": 0.0
   }
  },
+ "parts": [
+  "DownWolf_Body"
+ ],
  "rig": "WM_Quadruped_v1",
  "rig_manifest": {
   "bones": [
@@ -544,9 +548,9 @@
  "seed": 3,
  "tint": "#8a8073",
  "tris": [
-  6494,
-  2166,
-  650
+  6495,
+  2165,
+  649
  ],
  "version": 1
 }
