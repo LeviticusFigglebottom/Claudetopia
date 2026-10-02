@@ -1031,40 +1031,96 @@ static func stepping_stones(d: PoiDressing, st: SurfaceTool, a: Vector2, b: Vect
 ## reads from the delta as a grey cloud against the scarp; under it what people brought to pay with
 ## besides names; and her stepping-stones out across the cove to the reeds.
 static func name_wifes_hollow(d: PoiDressing) -> void:
-	await PoiDressing.kind_builders().SITES.build(d)
+	# Her own mouth, not the kind's. The kind's cave faced downhill, which on the cove's flat is any
+	# way, sat a turf bank on the marsh and a throat in it, and the crag laid over that read from the
+	# delta as one pale block on a lawn. Here the hollow faces the way a body comes (its road), a bank
+	# of the marsh's own turf rises to it from the cove so the rock comes up out of the ground, the
+	# limestone cheeks stand out of the bank either side of a cleft open to the sky, black inside,
+	# and the weep falls off the taller cheek down a dark wet streak into its pool.
 	var k := d.kit
 	var m := d.masonry
-	# the gully's floor dips under the bank behind the mouth, and the throat's last rings run on
-	# level over the dip: a sill of rubble under each one that would stand off the ground
-	var sill := m.begin()
-	var sills := 0
-	for i in 5:
-		var ring := d.find_child("Throat%d" % i, true, false) as Node3D
-		if ring == null:
-			continue
-		var box := _box_of(ring, ring.transform)
-		var c := box.get_center()
-		var side := minf(box.size.x, box.size.z) * 0.5
-		var low := INF
-		for q in [Vector2(c.x, c.z), Vector2(c.x - side * 0.5, c.z - side * 0.5), Vector2(c.x + side * 0.5, c.z + side * 0.5),
-				Vector2(c.x - side * 0.5, c.z + side * 0.5), Vector2(c.x + side * 0.5, c.z - side * 0.5)]:
-			low = minf(low, k.on_ground(q.x, q.y).y)
-		if box.position.y - low < 0.1:
-			continue
-		var h := box.position.y - low + 0.4
-		m.block(sill, Transform3D(Basis(), Vector3(c.x, box.position.y - h * 0.5, c.z)), Vector3(side, h, side))
-		sills += 1
-	if sills > 0:
-		await k.step()
-		m.commit(sill, PoiKit.plain(Color(0.05, 0.05, 0.05), 0.95), "ThroatSill")
-	var mouth := d.find_child("the_mouth", true, false) as Node3D
-	var at := mouth.position if mouth != null else Vector3.ZERO
-	var out := Vector2(-at.x, -at.z).normalized() if Vector2(at.x, at.z).length() > 0.5 else Vector2(0, -1)
-	if mouth == null:
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var out := k.road_direction(220.0)
+	if out == Vector2.ZERO:
 		out = k.downhill() if k.downhill() != Vector2.ZERO else Vector2(0, -1)
+	out = out.normalized()
+	var into := -out
 	var across := Vector2(out.y, -out.x)
-	var m2 := Vector2(at.x, at.z)
-	var g0 := k.on_ground(m2.x, m2.y).y
+	var bi := Basis(Vector3.UP, PoiKit.yaw_of(into))
+	# the mouth's line, a little back of the middle; the den's marker three and a half metres in
+	var ml := -out * 3.0
+	var m2 := ml + into * 3.5
+	var g0 := k.on_ground(ml.x, ml.y).y
+	var gap := 1.8                   # the cleft's half-width at its foot
+	var crest := g0 + 5.2            # the bank's crest over the cleft
+	var deep := 7.5                  # how far the cleft goes in before its dark closes
+	var at := Vector3(m2.x, g0, m2.y)
+	# the cleft: its floor and its walls, black going in, open to the sky over them
+	var dark := m.begin()
+	for i in 3:
+		var z0 := deep * float(i) / 3.0
+		var z1 := deep * float(i + 1) / 3.0
+		var c := ml + into * ((z0 + z1) * 0.5)
+		var w := gap * (1.0 - 0.25 * float(i) / 3.0)
+		var fxf := Transform3D(bi, Vector3(c.x, g0 - 0.15, c.y))
+		m.block(dark, fxf, Vector3(w * 2.0 + 0.4, 0.3, z1 - z0 + 0.05))
+		k.collider(Vector3(w * 2.0 + 0.4, 0.3, z1 - z0), fxf, "stone")
+		for sd in [-1.0, 1.0]:
+			var wxf := Transform3D(bi, Vector3(c.x, (g0 + crest) * 0.5, c.y) + bi * Vector3(float(sd) * (w + 0.4), 0.0, 0.0))
+			m.block(dark, wxf, Vector3(0.8, crest - g0 + 0.6, z1 - z0 + 0.05))
+			k.collider(Vector3(0.8, crest - g0 + 0.6, z1 - z0), wxf, "stone")
+	var bk := ml + into * (deep + 0.2)
+	var bxf := Transform3D(bi, Vector3(bk.x, (g0 + crest) * 0.5, bk.y))
+	m.block(dark, bxf, Vector3(gap * 2.0 + 1.2, crest - g0 + 0.6, 0.4))
+	k.collider(Vector3(gap * 2.0, crest - g0, 0.4), bxf, "stone")
+	# a capstone wedged across the cleft's head, so its mouth is a mouth and not a slot
+	var cap := ml + into * 1.2
+	m.block(dark, Transform3D(bi * Basis(Vector3.FORWARD, 0.08), Vector3(cap.x, crest - 0.35, cap.y)), Vector3(gap * 2.0 + 2.2, 1.1, 2.0))
+	await k.step()
+	m.commit(dark, PoiKit.plain(Color(0.03, 0.035, 0.032), 1.0), "Cleft", true)
+	k.marker("the_mouth", at)
+	if not k.far:
+		var sites: GDScript = PoiDressing.kind_builders().SITES
+		sites._door(d, str(site.get("interior", "")), at + Vector3(into.x, 0.0, into.y) * 3.0, atan2(out.x, out.y))
+		await sites._hook(d, site, at + Vector3(out.x, 0.0, out.y) * 10.0 + Vector3(across.x, 0.0, across.y) * 4.0)
+	await _crag_bank(d, ml, into, across, gap, crest, deep)
+	# the cheeks: the scarp's pale limestone (the region has no cliff stone of its own, and the
+	# marsh's lent granite is near black under its moss), coming up out of the bank either side of
+	# the cleft, thirteen and eleven metres, turned in toward the way, and one behind over its head
+	var cheek_tops: Array = []
+	var lime_rock: Array = PoiKit.variants_of(PoiKit.ROCKS, "skerrow", "cliff_face")
+	if lime_rock.is_empty():
+		lime_rock = [k.rock("cliff_face", 0)]
+	# [across (+ the weep's side), back from the mouth's line, height, turn in, which piece]
+	var crag := [[1.0, 0.0, 13.0, -0.3, 0], [-1.0, 0.0, 11.0, 0.3, 1], [0.1, 9.5, 12.0, 0.0, 1]]
+	for ci in crag.size():
+		var cr: Array = crag[ci]
+		var rp: String = lime_rock[int(cr[4]) % lime_rock.size()]
+		if rp == "":
+			break
+		var bd: Dictionary = PoiKit.meta(rp).get("bounds", {})
+		var bmin: Array = bd.get("min", [-9.7, 0.0, -5.9])
+		var bmax: Array = bd.get("max", [9.9, 16.7, 7.1])
+		var tall := float(cr[2])
+		var sc := clampf(tall / maxf(float(bd.get("height", 16.7)), 0.5), 0.2, 2.0)
+		var half := maxf(-float(bmin[0]), float(bmax[0])) * sc
+		var fore := float(bmax[2]) * sc
+		var side_s := float(cr[0])
+		var c := ml + into * (fore * 0.45 + float(cr[1]))
+		if absf(side_s) > 0.9:
+			c += across * (gap + 0.4 + half) * signf(side_s)
+		else:
+			c += across * half * side_s
+		# sunk a metre and a half: the bank closes over its foot
+		var base := k.on_ground(c.x, c.y, -1.5)
+		await k.step()
+		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, Vector3.ZERO, true)
+		if node != null:
+			node.name = "Crag%d" % ci
+		if ci < 2:
+			# its face toward the way, a little in from its outer side
+			cheek_tops.append(Vector3(c.x - across.x * half * 0.35 * side_s + out.x * fore * 0.8, base.y + tall,
+					c.y - across.y * half * 0.35 * side_s + out.y * fore * 0.8))
 	# the Name-Tree: in front of the mouth and to one side, leaning out over the cove
 	var tree_at := m2 + out * 10.0 - across * 6.5
 	var wood := m.begin()
@@ -1079,96 +1135,23 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(cord, PoiKit.plain(RUSH.lerp(Color(0.8, 0.78, 0.7), 0.35), 0.95), "TreeCords", true)
 	m.commit(knots, PoiKit.plain(INDIGO.lerp(Color(0.6, 0.6, 0.62), 0.3), 0.9), "TreeKnots", true)
-	# the mouth's line: the marker stands three and a half metres in, where whatever lives in it waits
-	var ml := m2 + out * 3.5
-	# The cleft. The kind's mouth is a turf bank with a throat five metres high in it, out on the cove's
-	# flat a stone's throw from the scarp, and from the delta it read as a low dark mound with a small
-	# hole: so a crag of the scarp's pale limestone (the region has no cliff stone of its own, and the
-	# marsh's lent granite is near black under its moss) stands round the throat: a cheek either side,
-	# eleven and nine metres, turned in toward the way, and two more behind it over the bank, so from
-	# any side it is a knot of rock with a cleft in its face. Between the cheeks the dark of the cleft
-	# goes up from the throat's head.
-	var cheek_tops: Array = []
-	var throat0 := d.find_child("Throat0", true, false) as Node3D
-	var throat_box := _box_of(throat0, throat0.transform) if throat0 != null else AABB(Vector3(m2.x - 2.8, g0, m2.y - 2.8), Vector3(5.6, 5.4, 5.6))
-	var throat_w := maxf(minf(throat_box.size.x, throat_box.size.z), 3.0)
-	var lime_rock: Array = PoiKit.variants_of(PoiKit.ROCKS, "skerrow", "cliff_face")
-	if lime_rock.is_empty():
-		lime_rock = [k.rock("cliff_face", 0)]
-	# [across (+ the weep's side), back from the mouth's line, height, turn in, which piece]
-	# (one narrow piece behind: a wide one there stood half inside both cheeks)
-	var crag := [[1.0, 0.0, 11.0, -0.3, 0], [-1.0, 0.0, 9.0, 0.3, 1], [0.15, 9.5, 10.0, 0.0, 1]]
-	for ci in crag.size():
-		var cr: Array = crag[ci]
-		var rp: String = lime_rock[int(cr[4]) % lime_rock.size()]
-		if rp == "":
-			break
-		var bd: Dictionary = PoiKit.meta(rp).get("bounds", {})
-		var bmin: Array = bd.get("min", [-9.7, 0.0, -5.9])
-		var bmax: Array = bd.get("max", [9.9, 16.7, 7.1])
-		var tall := float(cr[2])
-		var sc := clampf(tall / maxf(float(bd.get("height", 16.7)), 0.5), 0.2, 2.0)
-		var half := maxf(-float(bmin[0]), float(bmax[0])) * sc
-		var side_s := float(cr[0])
-		var c := ml - out * (float(bmax[2]) * sc * 0.35 + float(cr[1]))
-		if absf(side_s) > 0.9:
-			c += across * (throat_w * 0.5 + half * 0.75) * signf(side_s)
-		else:
-			c += across * half * side_s
-		var base := k.on_ground(c.x, c.y, -0.6)
-		await k.step()
-		# the kind's boulders round the mouth that this rock now stands over go (they were its cheeks):
-		# by where they stand, as the rock's scene may not be drawn yet to give a box
-		var over_r := maxf(half, maxf(-float(bmin[2]), float(bmax[2])) * sc) * 0.95 + 1.5
-		for ch in k.root.find_children("*oulder*", "Node3D", true, false):
-			var bn := ch as Node3D
-			if bn.get_parent() != null and str(bn.get_parent().name).to_lower().contains("boulder"):
-				continue
-			var bp := k.root.to_local(bn.global_position) if bn.is_inside_tree() else bn.position
-			if Vector2(bp.x, bp.z).distance_to(c) < over_r:
-				bn.queue_free()
-		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, Vector3.ZERO, true)
-		if node != null:
-			node.name = "Crag%d" % ci
-		if ci < 2:
-			cheek_tops.append(Vector3(c.x - across.x * half * 0.4 * side_s, base.y + tall, c.y - across.y * half * 0.4 * side_s))
-	# the cleft's dark, narrowing as it goes up, a hand's depth behind the cheeks' inner faces
-	var cleft := m.begin()
-	var cf := ml - out * 0.6
-	var y0 := throat_box.end.y - 0.4
-	var y1 := g0 + 7.4
-	if y1 > y0 + 0.5:
-		var w0 := throat_w * 0.42
-		var w1 := 0.35
-		var a3 := Vector3(across.x, 0.0, across.y)
-		var o3 := Vector3(out.x, 0.0, out.y)
-		var c0 := Vector3(cf.x, y0, cf.y)
-		var c1 := Vector3(cf.x, y1, cf.y) - o3 * 0.6
-		cleft.add_vertex(c0 - a3 * w0)
-		cleft.add_vertex(c1 + a3 * w1)
-		cleft.add_vertex(c0 + a3 * w0)
-		cleft.add_vertex(c0 - a3 * w0)
-		cleft.add_vertex(c1 - a3 * w1)
-		cleft.add_vertex(c1 + a3 * w1)
-		await k.step()
-		var cleft_mi := m.commit(cleft, PoiKit.plain(Color(0.015, 0.018, 0.017), 1.0), "Cleft", true)
-		if cleft_mi != null:
-			cleft_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	# the weep: a thread of water off the top of the right cheek, the taller, into a pool at its foot
-	var fall_at := ml + across * 4.2 + out * 1.6
-	var fall_top := k.on_ground(fall_at.x, fall_at.y).y + 4.0
-	if not cheek_tops.is_empty():
-		var ct: Vector3 = cheek_tops[0]
-		fall_at = Vector2(ct.x, ct.z) + out * 1.2
-		fall_top = ct.y - 0.6
-	else:
-		var cheek := _rock_top(d, ml + across * 4.0, 3.5)
-		if not is_nan(cheek.x):
-			fall_at = Vector2(cheek.x, cheek.z) + out * maxf(cheek.w + 0.25, 0.8)
-			fall_top = cheek.y - 0.35
+	# the mouth's line
+	# the weep: a thread of water off the top of the right cheek, the taller, falling down a dark wet
+	# streak in the pale stone into a pool at its foot, with its own breath of mist
+	var ct: Vector3 = cheek_tops[0] if not cheek_tops.is_empty() else Vector3(ml.x + across.x * 5.0, g0 + 10.0, ml.y + across.y * 5.0)
+	var fall_at := Vector2(ct.x, ct.z)
 	var fg := k.on_ground(fall_at.x, fall_at.y).y
+	var fall_top := ct.y - 1.2
 	var fall_h := maxf(fall_top - fg, 2.5)
-	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 1.7, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
+	var wet := m.begin()
+	var wb := Basis(Vector3.UP, PoiKit.yaw_of(out))
+	for i in 3:
+		var wi := Vector3(fall_at.x, fg + fall_h * 0.5, fall_at.y) - Vector3(out.x, 0.0, out.y) * (0.25 + 0.15 * float(i)) \
+				+ wb * Vector3(float(i - 1) * 0.5, 0.0, 0.0)
+		m.block(wet, Transform3D(wb, wi), Vector3(1.4 - 0.3 * absf(float(i - 1)), fall_h + 0.4 - 1.0 * absf(float(i - 1)), 0.12))
+	await k.step()
+	m.commit(wet, PoiKit.plain(Color(0.07, 0.075, 0.07), 0.12, 0.0), "WetStreak", true)
+	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 2.0, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
 			"Weep", 0.5, true, 3, 8)
 	if k.far:
 		return
@@ -1185,7 +1168,7 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(rims, k.surface("stone", 0.9), "PoolStones")
 	# the beam across the mouth on two bog-oak posts, hung with cords from end to end
-	var beam_c := ml + out * 3.0
+	var beam_c := ml + out * 4.5
 	var timber := m.begin()
 	var tops: Array = []
 	for s in [-1.0, 1.0]:
@@ -1222,16 +1205,16 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	# the hounds' bones by the mouth, gnawed
 	var bones := m.begin()
 	for i in 9:
-		var q := m2 + out * k.rng.randf_range(2.5, 5.0) + across * k.rng.randf_range(-3.5, -1.5)
+		var q := ml + out * k.rng.randf_range(1.0, 3.5) + across * k.rng.randf_range(-1.2, 1.2)
 		var a := k.rng.randf() * TAU
 		var p := k.on_ground(q.x, q.y, 0.04)
 		m.limb(bones, p, p + Vector3(sin(a), 0.02, cos(a)) * k.rng.randf_range(0.25, 0.5), 0.025)
 	await k.step()
 	m.commit(bones, PoiKit.plain(Color(0.78, 0.74, 0.64), 0.8), "Bones")
-	k.marker("the_den", k.on_ground(m2.x + out.x * 4.0 - across.x * 2.5, m2.y + out.y * 4.0 - across.y * 2.5))
+	k.marker("the_den", k.on_ground(ml.x + out.x * 2.5, ml.y + out.y * 2.5))
 	# her stepping-stones out across the cove toward the reeds, and a pole by them with a cold light
 	var steps := m.begin()
-	stepping_stones(d, steps, m2 + out * 3.0 + across * 1.0, m2 + out * 21.0 + across * 3.5)
+	stepping_stones(d, steps, ml + out * 1.5 + across * 0.6, ml + out * 17.5 + across * 3.5)
 	await k.step()
 	m.commit(steps, k.surface("stone", 0.9), "SteppingStones")
 	var poles := m.begin()
@@ -1254,6 +1237,80 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 		await k.step()
 		k.scatter(fern, xfs, false, false, false)
 	await reeds(d, 12.0, 19.5, 60, [[m2 + out * 12.0, 4.0], [tree_at, 3.0], [m2 - out * 14.0, 17.0]])
+
+
+## The bank a hollow's crag comes up out of: the marsh's own turf rising from the cove to `crest`
+## (local) over and either side of the cleft (`gap` its half-width at the mouth's line `ml`, `deep`
+## its depth along `into`), falling away behind into the ground and out to the sides, and coming
+## forward of the mouth's line beside the cleft in an apron the cheeks stand in. No turf over the cleft
+## itself: it is open to the sky. One mesh with grass on it, walkable.
+static func _crag_bank(d: PoiDressing, ml: Vector2, into: Vector2, across: Vector2, gap: float, crest: float, deep: float) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var nu := 14
+	var nv := 24
+	var wide := 15.0
+	var back := 18.0
+	var apron := 7.0
+	var pts: Array = []
+	for i in nu + 1:
+		var t := float(i) / float(nu)
+		var row: Array = []
+		for j in nv + 1:
+			var v := -wide + 2.0 * wide * float(j) / float(nv)
+			var av := absf(v)
+			# its front: out in an apron beside the cleft, at the mouth's line over it
+			var u0 := -apron * smoothstep(gap, gap + 3.0, av)
+			var u := lerpf(u0, back, t)
+			var p := ml + into * u + across * v
+			var gp := k.on_ground(p.x, p.y).y
+			# the crest over the cleft and the cheeks' feet, falling to the sides and behind; the apron
+			# rising from the cove to it
+			var side := 1.0 - smoothstep(gap + 3.0, wide, av)
+			var behind := 1.0 - smoothstep(deep + 1.0, back, u)
+			var front := smoothstep(u0, minf(u0 + apron * 0.85, 0.0) if u0 < -0.1 else u0 + 0.01, u)
+			var y := lerpf(gp - 0.3, crest, side * behind * front)
+			if i > 0 and i < nu and j > 0 and j < nv:
+				y += 0.3 * sin(u * 0.8 + v * 0.6) * sin(v * 0.45 - u * 0.35) + k.rng.randf_range(-0.12, 0.12)
+			row.append(Vector3(p.x, maxf(y, gp - 0.35), p.y))
+		pts.append(row)
+	var st := m.begin()
+	var faces := PackedVector3Array()
+	for i in nu:
+		for j in nv:
+			var a: Vector3 = pts[i][j]
+			var b: Vector3 = pts[i][j + 1]
+			var c: Vector3 = pts[i + 1][j + 1]
+			var e: Vector3 = pts[i + 1][j]
+			# none over the cleft: it is open to the sky
+			var mid := (a + c) * 0.5
+			var rel := Vector2(mid.x - ml.x, mid.z - ml.y)
+			if absf(rel.dot(across)) < gap + 0.5 and rel.dot(into) > -0.2 and rel.dot(into) < deep + 0.3:
+				continue
+			for q: Vector3 in [a, c, b, a, e, c]:
+				st.add_vertex(q)
+				faces.append(q)
+	await k.step()
+	m.commit(st, PoiDressing.kind_builders()._ground_look(k, ml - into * 10.0), "Bank", true)
+	if k.far:
+		return
+	var shape := ConcavePolygonShape3D.new()
+	shape.set_faces(faces)
+	k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
+	# rough grass and sedge over it
+	var tuft := k.flora("grass_clump")
+	if tuft != "":
+		var xfs: Array = []
+		for n in 60:
+			var q: Vector3 = pts[k.rng.randi_range(1, nu - 2)][k.rng.randi_range(1, nv - 1)]
+			var rel := Vector2(q.x - ml.x, q.z - ml.y)
+			if absf(rel.dot(across)) < gap + 1.0 and rel.dot(into) > -0.5:
+				continue
+			if q.y < k.on_ground(q.x, q.z).y - 0.1:
+				continue
+			xfs.append(PoiKit.transform_at(q - Vector3(0.0, 0.05, 0.0), k.rng.randf() * TAU, k.rng.randf_range(0.8, 1.4)))
+		await k.step()
+		k.scatter(tuft, xfs, false, false, false)
 
 
 # --- The South Stilts ---------------------------------------------------------------------------------
