@@ -284,7 +284,6 @@
         "legs": "trousers",
         "feet": "boots",
         "hands": "gloves",
-        "back": "cloak",
         "headgear": "kettle_hat",
         "belt": "belt",
         "hair": "cropped",
@@ -300,12 +299,6 @@
     },
     "holds": {
       "model": "weapons/mace_iron"
-    },
-    "off_hand": {
-      "model": "weapons/shield_wood",
-      "tags": [
-        "shield"
-      ]
     },
     "carry": [
       {

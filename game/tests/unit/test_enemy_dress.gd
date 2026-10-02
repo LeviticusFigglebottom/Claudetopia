@@ -231,7 +231,7 @@ func test_a_carried_thing_rides_its_bone_where_the_def_puts_it() -> void:
 	if book.size() != 1:
 		return
 	# at his left hip (+X is the body's left): the register is on his left, hip-high
-	var local := e.anim.model.global_transform.affine_inverse() * (book[0] as Node3D).global_position
+	var local: Vector3 = (e.anim.model as Node3D).global_transform.affine_inverse() * (book[0] as Node3D).global_position
 	var s := float(ContentDB.get_or_empty("core:boss/the_receiver")["scale"]) * 1.88 / 1.78
 	assert_gt(local.x, 0.15 * s, "on his left side (%.2f)" % local.x)
 	assert_true(local.y > 0.6 * s and local.y < 1.1 * s, "hip-high (%.2f)" % local.y)

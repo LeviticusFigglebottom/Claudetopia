@@ -107,7 +107,12 @@ func test_it_runs_at_its_pace_and_dies_held() -> void:
 		m.set_locomotion(Vector2(0.0, e.speed), false)
 		await _tree().process_frame
 		await _tree().process_frame
-		assert_eq(m.current_clip(), "Run", "%s runs at its chasing speed %.1f" % [id, e.speed])
+		# a pony-sized dam lopes at a trot where her whelps run: the gait is the one her pace reaches
+		# (CreatureModel._gait_for), and a common foe's chasing pace is always its run
+		if e.is_boss and e.speed < m.gait_speed("Run") * 0.72:
+			assert_eq(m.current_clip(), "Trot", "%s lopes at its chasing speed %.1f" % [id, e.speed])
+		else:
+			assert_eq(m.current_clip(), "Run", "%s runs at its chasing speed %.1f" % [id, e.speed])
 		m.set_locomotion(Vector2(0.0, 1.0), false)
 		await _tree().process_frame
 		assert_true(m.current_clip() in ["Walk", "Trot"], "%s goes at a walk or a trot at 1 m/s (%s)" % [id, m.current_clip()])

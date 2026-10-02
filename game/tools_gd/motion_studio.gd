@@ -356,13 +356,15 @@ func _place_camera(view: String) -> void:
 	if view == "portrait" and _foe != null and is_instance_valid(_foe):
 		# the standing foe from three-quarters ahead of it, framed by its own height: a boss three
 		# metres tall does not fit the close views, which are cut for a person
+		# (a beast by its length as well: a pony-sized hound is longer than it is tall)
 		var h := maxf(_foe.capsule_height, 1.0)
+		var big := maxf(h * 1.15, _foe.capsule_radius * 3.4) if _foe.body_kind != "humanoid" else h * 1.15
 		var ahead := -_foe.global_basis.z.normalized()
 		var side := _foe.global_basis.x.normalized()
-		var d := maxf(CLOSE_DISTANCE, h * 1.45)
+		var d := maxf(CLOSE_DISTANCE, big * 1.55)
 		_cam.make_current()
 		_cam.look_at_from_position(at + (ahead + side * 0.42).normalized() * d + Vector3.UP * h * 0.62,
-				at + Vector3.UP * h * 0.52)
+				at + Vector3.UP * h * 0.55)
 		return
 	match view:
 		"player":

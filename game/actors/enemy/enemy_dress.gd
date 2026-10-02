@@ -66,6 +66,9 @@ static func dress(model: Node3D, def: Dictionary, slice: WorldPace.Slice = null)
 		return
 	if "breadth" in model:
 		model.set("breadth", float(def.get("breadth", 1.0)))
+	# a foe stands a staff, a spear or a pole upright beside it at rest, not across its body
+	if "rests_poles" in model:
+		model.set("rests_poles", true)
 	var look := sized_look(def)
 	if not look.is_empty():
 		if slice != null and model is HumanoidModel:

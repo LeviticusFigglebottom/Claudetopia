@@ -170,10 +170,10 @@
       }
     },
     "antlers": {
-      "span": 1.15,
+      "span": 0.78,
       "tines": 7,
-      "colour": "#b8a47c",
-      "thick": 1.9
+      "colour": "#a8946c",
+      "thick": 1.35
     },
     "holds": {
       "model": "weapons/spear_long_iron",

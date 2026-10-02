@@ -196,6 +196,13 @@ const FP_TWO_HANDS_M := 0.13
 ## z ahead) at the picture's lower left, the haft leaning TORCH_UP_FP.
 const TORCH_HOLD_3P := Vector3(0.26, -0.16, 0.34)
 const TORCH_UP_3P := Vector3(0.08, 1.0, 0.3)
+## A pole at rest (`rests_poles`: a foe's staff, spear, hook or lamp-pole longer than POLE_FROM_M):
+## the right hand down by the hip and a little ahead, from the chest joint, and the haft standing up
+## beside the body, leaning out and ahead (POLE_UP_3P). Held at the clips' rest it lay across the
+## body and through the cloak, and nine bosses at a distance were the same black diagonal.
+const POLE_HOLD_3P := Vector3(-0.27, -0.3, 0.16)
+const POLE_UP_3P := Vector3(-0.1, 1.0, 0.16)
+const POLE_FROM_M := 1.25
 const TORCH_HOLD_FP := Vector3(-0.27, -0.22, 0.48)
 const TORCH_UP_FP := Vector3(-0.12, 1.0, 0.28)
 const FP_LIFTS: Array[String] = ["Attack_", "Riposte", "Backstab", "Cast_", "Parry", "Throw", "Interact", "Pick_Up"]
@@ -350,6 +357,10 @@ var carry := 0.0
 var _carry_w := 0.0
 ## How far the left arm is in the torch's hold now (0..1).
 var _torch_w := 0.0
+## Whether a long haft in the right hand is stood upright at rest (a foe's: EnemyDress sets it), and
+## how far into that rest the arm is now.
+var rests_poles := false
+var _pole_w := 0.0
 var _carry_t := 0.0
 var _carry_tracks := {}                  ## bone -> its rotation track in CARRY_CLIP
 ## The view's pitch in first person (radians, up +: CameraRig.pitch), for placing the carry, and how
@@ -2738,6 +2749,7 @@ func _pose(delta: float) -> void:
 	_aim_the_body(delta)
 	_hold_in_view(delta)
 	_hold_the_torch(delta)
+	_rest_the_pole(delta)
 	_plant_feet(delta)
 	if bow_hands != null:
 		bow_hands.update(self, delta)
@@ -3060,6 +3072,59 @@ func _hold_the_torch(delta: float) -> void:
 	if w < 0.999:
 		for i in bones.size():
 			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+## A long haft at rest stood upright at the right side (POLE_*), out of a swing, a flinch, a
+## stance or the water; the swing takes it from wherever the clip's own arm has it.
+func _rest_the_pole(delta: float) -> void:
+	var want := 1.0 if rests_poles and not first_person and _one_shot.is_empty() and _stance.is_empty() \
+			and not _swimming and _holding.is_empty() and held_length("WeaponR") >= POLE_FROM_M else 0.0
+	_pole_w = move_toward(_pole_w, want, delta / CARRY_BLEND_S)
+	if skeleton == null or _pole_w <= 0.001:
+		return
+	var bones: Array[int] = []
+	for n in ["UpperArm.R", "LowerArm.R", "Hand.R", "Chest"]:
+		var b := skeleton.find_bone(n)
+		if b < 0:
+			return
+		bones.append(b)
+	var was: Array[Quaternion] = []
+	for i in 3:
+		was.append(skeleton.get_bone_pose_rotation(bones[i]))
+	var at := skeleton.get_bone_global_pose(bones[3]).origin + POLE_HOLD_3P
+	_reach(bones[0], bones[1], bones[2], at, Vector3(-0.8, -0.7, -0.3))
+	_turn_held(bones[2], skeleton.find_bone("Socket.WeaponR"), POLE_UP_3P.normalized())
+	var w := smoothstep(0.0, 1.0, _pole_w)
+	if w < 0.999:
+		for i in 3:
+			skeleton.set_bone_pose_rotation(bones[i], was[i].slerp(skeleton.get_bone_pose_rotation(bones[i]), w))
+
+
+## How long what a socket holds is, end to end along the socket's +Y, in the rig's metres (0 for
+## nothing): read off its meshes once and kept on it.
+func held_length(socket_name: String) -> float:
+	var s := socket(socket_name)
+	if s == null:
+		return 0.0
+	for c in s.get_children():
+		if not c.has_meta(HeldItems.TAG) or c.is_queued_for_deletion() or not (c is Node3D):
+			continue
+		if c.has_meta("held_length"):
+			return float(c.get_meta("held_length"))
+		var lo := INF
+		var hi := -INF
+		for mi in (c as Node3D).find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.mesh == null:
+				continue
+			# in the socket's own frame (the rig's metres, the haft along +Y)
+			var box := s.global_transform.affine_inverse() * m.global_transform * m.mesh.get_aabb()
+			lo = minf(lo, box.position.y)
+			hi = maxf(hi, box.end.y)
+		var length := hi - lo if hi > lo else 0.0
+		c.set_meta("held_length", length)
+		return length
+	return 0.0
 
 
 ## Whether something is held in this socket (a HeldItems model).
