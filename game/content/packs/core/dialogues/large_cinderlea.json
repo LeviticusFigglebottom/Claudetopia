@@ -1,0 +1,671 @@
+[
+  {
+    "id": "core:dialogue/merrin_aske",
+    "speaker_name": "Merrin Aske",
+    "notes": "The Sayer at the Undertone's door (pois/cinderlea.json the_undertone). Gives The Quarter-Tone (quests/large_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_quarter_tone"
+          },
+          {
+            "flag": "quarter_tone_to_the_circle"
+          }
+        ],
+        "text": "I have written her name at the head of the record. Hethra. The fork and the stone beat against each other every dawn now, slower and slower, like somebody falling asleep."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_quarter_tone"
+          },
+          {
+            "flag": "quarter_tone_to_the_choir"
+          }
+        ],
+        "text": "It stopped going up. — I took the note this morning and it was where it was a hundred and sixty years ago. I sat here a long time after."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_quarter_tone"
+          }
+        ],
+        "text": "You are back. Did it let you by? Is it a thing, or is it a voice?"
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Merrin Aske",
+        "text": "Quiet a moment. — There. Did you hear it go up at the end? No. Nobody does but me and the fork. Come and sit; I have not spoken to a person in nine days.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Merrin Aske",
+        "text": "Ask, and I will tell you more than you want.",
+        "choices": [
+          {
+            "text": "What is this door?",
+            "next": "the_door"
+          },
+          {
+            "text": "What note?",
+            "next": "the_note"
+          },
+          {
+            "text": "What is the brass thing?",
+            "next": "the_fork"
+          },
+          {
+            "text": "Is there something I can do?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "flag": "merrin_told_the_note"
+              },
+              {
+                "quest_not_done": "core:quest/the_quarter_tone"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_quarter_tone"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I found what holds the note.",
+            "next": "q_back",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_quarter_tone",
+                  "the_stone"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good dawn, Merrin.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_door": {
+        "speaker": "Merrin Aske",
+        "text": "The Undertone. The Builders cut it into the plateau under the Choir, the Circle thinks as a sounding-hall: the place the note was first struck, before the colossi took it up. The Order shut it in the Ash Winter and set a knight on it. The night the heads came off the Choir, the doors fell outward. Both. No sound. The knight went in. The note came out.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "merrin_told_the_door"
+          }
+        ]
+      },
+      "the_note": {
+        "speaker": "Merrin Aske",
+        "text": "The one under everything here. Stand on the plateau when the wind drops and it is in your teeth. The Sayers have written it down every dawn for a hundred and sixty years and it has never moved a hair. — This spring it went up. A quarter-tone since the thaw. Something in there is singing it, and it is trying to reach something.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "merrin_told_the_note"
+          }
+        ]
+      },
+      "the_fork": {
+        "speaker": "Merrin Aske",
+        "text": "My long fork. The Circle's standard pitch, cast in Tollmere, aimed down the throat. I strike it at dawn and listen to the two of them beat against each other. The beating has got faster all spring. That is what a quarter-tone sounds like, if you are a Sayer and bored to death.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Merrin Aske",
+        "text": "Yes. Go in. — I have tried. I got as far as the turn in the throat where the light goes blue and my knees would not go further, and I am not ashamed of it. Find whatever is holding the note, and if you can, bring me something of it: a stone it touches, a page, anything I can put a fork to. I want to know what it is trying to reach before it reaches it.",
+        "choices": [
+          {
+            "text": "I will go down and find what is singing it.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_quarter_tone"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not yet.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Merrin Aske",
+        "text": "Thank you. — Go in at the door, go down. The Order's knight went first, a hundred and seventy years ago, and a chorister after him. If you meet either, be kind; they have been down there a long time.",
+        "next": "hub"
+      },
+      "q_back": {
+        "speaker": "Merrin Aske",
+        "text": "*(She takes the stone in both hands and holds it to her ear, and her eyes close.)* — It's her. It's a voice. — Then it was never the Builders' note at all; it was hers, all this time, a hundred and seventy years of one woman holding a breath for a man who went in first. — What do we do with it? The Circle would keep it and measure it for a thousand years. Or it goes up to the Choir, to the Seat, and somebody lays it down where the note was meant to be held, and we stop listening.",
+        "choices": [
+          {
+            "text": "Give it to the Circle. Let it be measured, and remembered.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_quarter_tone",
+                  "to_the_circle"
+                ]
+              }
+            ],
+            "next": "q_to_the_circle"
+          },
+          {
+            "text": "Take it up to the Choir. Let her put it down.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_quarter_tone",
+                  "to_the_choir"
+                ]
+              }
+            ],
+            "next": "q_to_the_choir"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_to_the_circle": {
+        "speaker": "Merrin Aske",
+        "text": "Then I will write it down every dawn myself. — It will be the first thing in the record that has a name.",
+        "next": "hub"
+      },
+      "q_to_the_choir": {
+        "speaker": "Merrin Aske",
+        "text": "*(She nods, and does not open her eyes.)* — Then I will stop listening. — Go up to the ring and lay it at the Seat's door when you pass. I will hear when it stops.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Merrin Aske",
+        "text": "Walk soft at the door. The note can hear you."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/clemency_brazier",
+    "speaker_name": "Clemency Brazier",
+    "notes": "The Vale bell-founder at the Founders' Delf (pois/cinderlea.json founders_delf). Gives The Last Casting (quests/large_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_last_casting"
+          }
+        ],
+        "text": "The hammering's stopped. — I went down to the arch again last night to listen, and it's quiet as a cold mould. I didn't think I'd miss it."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_last_casting"
+          }
+        ],
+        "text": "Is he still down there? Is the metal still warm?"
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Clemency Brazier",
+        "text": "Mind the pit. — No, come and look. Look at it. Twelve metres if it's a hand, poured in one go, and the cope cracked and the metal still bright under it. Nobody in the Vale has cast a bell a quarter this size in three hundred years. I've been sitting here a week just looking.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Clemency Brazier",
+        "text": "Go on, ask. I'll talk about bells till the fire goes out.",
+        "choices": [
+          {
+            "text": "What was this place?",
+            "next": "the_delf"
+          },
+          {
+            "text": "Have you been down the fire-mouth?",
+            "next": "the_hammering"
+          },
+          {
+            "text": "Why come all this way?",
+            "next": "the_vale"
+          },
+          {
+            "text": "Is there something I can do?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "flag": "clemency_told_the_delf"
+              },
+              {
+                "quest_not_done": "core:quest/the_last_casting"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_casting"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the pattern-book.",
+            "next": "q_back",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_last_casting",
+                  "the_book"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good casting, Clemency.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_delf": {
+        "speaker": "Clemency Brazier",
+        "text": "The Builders' foundry. Every one of those house-sized bells on Bell Street came out of a pit like this one, dug through the ash to the clay. The metal ran from the furnace there through runs under the floor and came up into the mould from below — nobody in the Vale casts like that, nobody knows how. This was the last one. They were waiting for the mould to dry when the Ash Winter came.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "clemency_told_the_delf"
+          }
+        ]
+      },
+      "the_hammering": {
+        "speaker": "Clemency Brazier",
+        "text": "No. — I went as far as the arch and listened. There's somebody hammering down there. Slow. Like a founder testing a cast, a tap and a long listen. I have heard my mother do it a thousand times and I could not make my feet go down to it.",
+        "next": "hub"
+      },
+      "the_vale": {
+        "speaker": "Clemency Brazier",
+        "text": "Because the Vale casts its bells from a pattern-book my great-grandmother copied from a copy of a copy of the Builders' own, and every copy is worse. The founders kept theirs down in the galleries. Every bell they ever cast, its profile, its weight, its note. If I had it the Vale could cast a bell that rang again.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Clemency Brazier",
+        "text": "There is. The founders' pattern-book. It'll be down in the galleries, in the pattern-hall if they kept to their own plans, and whoever's hammering will be between you and it. Bring it up. I'll pay what the Vale's founders can, which is not a great deal, and I'll owe you a bell.",
+        "choices": [
+          {
+            "text": "I'll go down the fire-mouth for the pattern-book.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_casting"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not yet.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Clemency Brazier",
+        "text": "Then take a lantern, and listen for the hammer. When it stops, be quick.",
+        "next": "hub"
+      },
+      "q_back": {
+        "speaker": "Clemency Brazier",
+        "text": "*(She opens it on her knees, board by board, and does not speak for a long while.)* — Every one. Bell Street's. The Hush Bell. The Choir's own. — And the last board is this one, the bell in the pit, and in the margin: not yet. — Now. The Order will want this; Hewin Ash at the Bell-Rope Walk has been trying to recast the Ash's broken bells for twenty years from guesses. Or it comes home to the Vale with me, and Merrowby casts bells again that ring the way the Builders' rang.",
+        "choices": [
+          {
+            "text": "The Order should have it. Their bells are broken.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_last_casting",
+                  "to_the_order"
+                ]
+              }
+            ],
+            "next": "q_to_the_order"
+          },
+          {
+            "text": "Take it home. Cast bells that ring again.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_last_casting",
+                  "to_the_vale"
+                ]
+              }
+            ],
+            "next": "q_to_the_vale"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_to_the_order": {
+        "speaker": "Clemency Brazier",
+        "text": "Then I'll take it to Hewin myself, and stand over him while he copies it, and keep the copy. — That's fair. That's founders' fair.",
+        "next": "hub"
+      },
+      "q_to_the_vale": {
+        "speaker": "Clemency Brazier",
+        "text": "*(She closes it and holds it against her apron like a child.)* — Merrowby will have a bell by the spring. I'll cut your name on its lip.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Clemency Brazier",
+        "text": "Keep out of the pit. The cope's not as sound as it looks."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ysolde_penn",
+    "speaker_name": "Ysolde Penn",
+    "notes": "The Warden outside Chalkwatch's gate (pois/cinderlea.json chalkwatch). Gives The Relief of Chalkwatch (quests/large_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_relief_of_chalkwatch"
+          }
+        ],
+        "text": "Nobody on the walls this morning. I kept looking up. — I'll stay a while, I think. Somebody should keep the fire."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_relief_of_chalkwatch"
+          }
+        ],
+        "text": "Did he give it up? Did they let you through?"
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Ysolde Penn",
+        "text": "Don't — sorry. Don't wave at them. — They wave back, and then they keep waving, and you feel it in your arm all night. Come to the fire. I'm Ysolde. Wardens of the Hearth. I'm the relief.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ysolde Penn",
+        "text": "Ask whatever you like. I've been talking to the gate.",
+        "choices": [
+          {
+            "text": "What is this fort?",
+            "next": "the_fort"
+          },
+          {
+            "text": "What is in the strongbox?",
+            "next": "the_pay"
+          },
+          {
+            "text": "Who are they?",
+            "next": "the_garrison"
+          },
+          {
+            "text": "Is there something I can do?",
+            "next": "the_offer",
+            "conditions": [
+              {
+                "flag": "ysolde_told_the_fort"
+              },
+              {
+                "quest_not_done": "core:quest/the_relief_of_chalkwatch"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_relief_of_chalkwatch"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the roll.",
+            "next": "q_back",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_relief_of_chalkwatch",
+                  "the_roll"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good watch, Warden.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_fort": {
+        "speaker": "Ysolde Penn",
+        "text": "Chalkwatch. The Rest built it when the grey line was out at the Wellstones, to hold it, with a beacon to call us if it moved. Thirty years ago the line went past it in a night. The beacon was never lit. The relief came up a week late and found the gate open and the garrison on the walls, waving them in. — They went home.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "ysolde_told_the_fort"
+          }
+        ]
+      },
+      "the_pay": {
+        "speaker": "Ysolde Penn",
+        "text": "Their pay. Thirty years of it. It's in the Rest's ledger every quarter, paid to the garrison of Chalkwatch, and nobody ever carried it up. I found it doing the books. So I carried it up. — I didn't think further than that.",
+        "next": "hub"
+      },
+      "the_garrison": {
+        "speaker": "Ysolde Penn",
+        "text": "Forty Wardens and Captain Haddow. The roll's in the Rest's archive, the copy anyway; the real one would be in the fort, in the captain's hall, under the keep. They're still at their posts. They still change the watch. I've counted.",
+        "next": "hub"
+      },
+      "the_offer": {
+        "speaker": "Ysolde Penn",
+        "text": "Come in with me. — No. Go in for me; I'll hold the gate. The captain will be under the keep with the roll. A watch isn't relieved till the roll's been taken off the captain and read out to somebody who can hear it. Bring me the roll and I'll stand them down properly, the way the Rest should have thirty years ago.",
+        "choices": [
+          {
+            "text": "I'll go in and take the roll off the captain.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_relief_of_chalkwatch"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not yet.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Ysolde Penn",
+        "text": "Thank you. — Through the gate, across the yard, the keep's door. They'll come down off the walls. They were good Wardens. Don't hate them for it.",
+        "next": "hub"
+      },
+      "q_back": {
+        "speaker": "Ysolde Penn",
+        "text": "*(She reads it, all forty names, out loud, slowly, at the gate. When she finishes, the walls are empty.)* — Relieved. — Now where does it go? It belongs to the Rest, in the archive with the copy. Or — the Order reads the names of the ones who went into the grey at Greywatch every dusk. These went into the grey, standing still. They could be read with them.",
+        "choices": [
+          {
+            "text": "Take it home to the Rest. They were Wardens.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_relief_of_chalkwatch",
+                  "to_the_rest"
+                ]
+              }
+            ],
+            "next": "q_to_the_rest"
+          },
+          {
+            "text": "Take it to Greywatch. Let them be read with the others.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_relief_of_chalkwatch",
+                  "to_greywatch"
+                ]
+              }
+            ],
+            "next": "q_to_greywatch"
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_to_the_rest": {
+        "speaker": "Ysolde Penn",
+        "text": "Then I'll put it in the archive myself, and the pay with it, and write in the ledger: relieved. — Thank you.",
+        "next": "hub"
+      },
+      "q_to_greywatch": {
+        "speaker": "Ysolde Penn",
+        "text": "*(She nods.)* — Every dusk. I'll go with it the first night and read the captain's name myself.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ysolde Penn",
+        "text": "Keep to the road. The heath's full of things still at their posts."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/undertone_tuning_board",
+    "speaker_name": "The Sayer's tuning-board",
+    "notes": "The Undertone's hook (world/sites/site_exterior.gd _hook, stood by the_undertone's builder): it can start The Quarter-Tone, which Merrin Aske also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Sayer's tuning-board",
+        "no_talk": true,
+        "text": "A board pinned to a post by the Sayer's tent, ruled in columns: a pitch taken every dawn against the Circle's standard. A hundred and sixty years of the same figure, copied out from the record in a careful hand to show the line. Then this spring the line goes up, every dawn a little, a quarter-tone since the thaw. Under it: Something in there is singing it, and it is trying to reach something. Wanted: one person to go in and tell me what. Ask at the tent. — M. A.",
+        "choices": [
+          {
+            "text": "Go in and find what is singing the note.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_quarter_tone"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_quarter_tone"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_quarter_tone"
+              }
+            ],
+            "next": "end"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/founders_delf_notice",
+    "speaker_name": "The founders' board",
+    "notes": "The Founders' Delf's hook: it can start The Last Casting, which Clemency Brazier also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The founders' board",
+        "no_talk": true,
+        "text": "A board on a post at the pit's edge with two notices on it. The old one, in the Builders' square letters and a Sayer's translation chalked under it: CASTING — THE MOULD TO DRY — POUR AT FIRST LIGHT. The new one, in a Vale hand: Wanted, the Builders' pattern-book, from the galleries below the fire-mouth. Somebody is hammering down there. Ask for Clemency Brazier at the tent; she will pay what she can and owe you a bell.",
+        "choices": [
+          {
+            "text": "Go down the fire-mouth for the pattern-book.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_last_casting"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_casting"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_casting"
+              }
+            ],
+            "next": "end"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/chalkwatch_gate",
+    "speaker_name": "The notices on Chalkwatch's gate",
+    "notes": "Chalkwatch's hook: it can start The Relief of Chalkwatch, which Ysolde Penn also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The notices on Chalkwatch's gate",
+        "no_talk": true,
+        "text": "Two notices nailed to the gate-post. The old one, in Warden green ink faded to grey: CHALKWATCH — WARDENS OF THE HEARTH — THE BEACON IS TO BE LIT IF THE LINE MOVES. The new one, this week's, in a young hand: The garrison is relieved as soon as the roll is taken off the captain and read. I will not go in alone. — Y. Penn, Warden, at the fire.",
+        "choices": [
+          {
+            "text": "Go in and take the roll off the captain.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_relief_of_chalkwatch"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_relief_of_chalkwatch"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_relief_of_chalkwatch"
+              }
+            ],
+            "next": "end"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/founders_delf_bell",
+    "speaker_name": "The break in the mould",
+    "notes": "A PoiTouch at the Founders' Delf's mould (regions/cinderlea.gd founders_delf). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The break in the mould",
+        "no_talk": true,
+        "text": "Through the crack in the cope the bell is bright, not green: bronze the colour of a new coin, never touched by air until the clay split. Its lip is a hand from the pit floor. You lay your palm on it. It is warm, as if the metal had been poured this morning, and from somewhere under your feet, very slow, a hammer taps once and waits, and taps again.",
+        "next": "end"
+      }
+    }
+  }
+]

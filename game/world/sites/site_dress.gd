@@ -805,7 +805,11 @@ func _ore(r: Dictionary) -> void:
 		m.block(st, Transform3D(Basis(Vector3.UP, atan2(out.x, out.z)) * Basis(Vector3.FORWARD, kit.rng.randf_range(-0.8, 0.8)), wall),
 				Vector3(1.4, 0.12, 0.25))
 	m.commit(st, mat("ore"), "Ore_%s" % r["id"])
-	_place("cart", floor_under(plan.take_spot(r, false)), randf_yaw(), 1.0)
+	# a room whose spots the ore took all of has no floor left for the cart: a cart at INF stood
+	# every founders' gallery's cart nowhere, with a renderer error for each
+	var cart_at := plan.take_spot(r, false)
+	if cart_at != Vector3.INF:
+		_place("cart", floor_under(cart_at), randf_yaw(), 1.0)
 	await step()
 
 

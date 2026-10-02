@@ -1,0 +1,80 @@
+[
+  {
+    "id": "core:item/undertone_tuning_stone",
+    "name": "The Undertone's Tuning-Stone",
+    "category": "misc",
+    "weight": 1.5,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A finger of the Builders' black stone broken off the column in the hall of the struck note. It hums against your palm, the note the Choir holds, a quarter-tone high."
+  },
+  {
+    "id": "core:item/founders_pattern_book",
+    "name": "The Founders' Pattern-Book",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "Boards of the Builders' slate bound with bronze rings, each scratched with the profile of a bell the dead city cast, its weight and its note. The last board is blank but for the profile, and a note in the margin in a founder's hand: not yet."
+  },
+  {
+    "id": "core:item/chalkwatch_roll",
+    "name": "The Roll of Chalkwatch",
+    "category": "misc",
+    "weight": 0.6,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "The garrison roll of Chalkwatch, forty names in a Warden clerk's hand, every one ticked present for every night of thirty years, the ticks going on in the same ink long after the clerk's hand would have given out."
+  },
+  {
+    "id": "core:item/undertone_knights_page",
+    "name": "A Page in a Gauntlet",
+    "category": "book",
+    "weight": 0.1,
+    "value": 25,
+    "reads": "core:book/undertone_knights_last",
+    "tags": [
+      "book",
+      "tolling_order",
+      "cinderlea"
+    ],
+    "description": "A page of the Tolling Order's good vellum, folded small enough to go into a gauntlet's cuff and soft at the creases from being unfolded and folded again. The ink has gone brown; the seal at the foot is cracked through."
+  },
+  {
+    "id": "core:item/founders_tally_board",
+    "name": "A Founder's Tally",
+    "category": "book",
+    "weight": 1.2,
+    "value": 15,
+    "reads": "core:book/founders_last_tally",
+    "tags": [
+      "book",
+      "builders",
+      "cinderlea"
+    ],
+    "description": "A board of split oak a forearm long, black with old loam, chalked edge to edge in strokes of five and a few marks that are not strokes. The chalk has held where the damp could not reach it and gone where it could."
+  },
+  {
+    "id": "core:item/chalkwatch_report",
+    "name": "The Captain's Last Report",
+    "category": "book",
+    "weight": 0.2,
+    "value": 40,
+    "reads": "core:book/chalkwatch_last_report",
+    "tags": [
+      "book",
+      "wardens",
+      "cinderlea"
+    ],
+    "description": "Three sheets of Warden dispatch paper sealed with the Hearth's wax and never sent, the seal still whole on one fold and lifted on the other. Ash has got into the creases, and one corner has been held too near a fire."
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "core:rumour/undertone_quarter_tone",
+    "name": "The note's gone up",
+    "tone": "strange",
+    "text": "There's a Sayer sitting at the foot of the plateau's west cliff with a brass fork, by a door the size of a house. She says the note under the Choir has gone up this spring. I can't hear it. I can't hear anything else, now she's said it.",
+    "variants": [
+      "The doors on the Choir's west cliff fell out the night the heads came off, they say, and the dark behind them sings."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/founders_delf_smoke",
+    "name": "Smoke over the Delf",
+    "tone": "strange",
+    "text": "The founders' stacks in the Ashgrid smoke on still nights. Two of them, over a bell the size of a house still in its mould. The scavengers won't dig within a mile of it. There's a hammering down the fire-mouth, they say, slow, like somebody testing a cast.",
+    "variants": [
+      "A Vale woman's camped by the old foundry in the Ashgrid, staring at a bell nobody ever rang."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/chalkwatch_garrison",
+    "name": "They're still waving",
+    "tone": "grim",
+    "text": "Chalkwatch, out on the west heath past the West Walk. The garrison's still on the walls. Thirty years. Walk past and they wave you in, every one of them, and if you wave back they don't stop. There's a girl from the Rest sitting at the gate with their pay.",
+    "variants": [
+      "Don't wave at the walls of Chalkwatch. That's all. Don't."
+    ],
+    "tags": [
+      "cinderlea",
+      "grim"
+    ]
+  }
+]

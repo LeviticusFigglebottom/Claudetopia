@@ -1,0 +1,530 @@
+[
+  {
+    "id": "core:dialogue/bell_street_knock",
+    "speaker_name": "The bell that is not hollow",
+    "notes": "A PoiTouch at Bell Street (game/world/pois/regions/cinderlea.gd bell_street). Lore, and the rumour of the bell that is not hollow.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bell that is not hollow",
+        "no_talk": true,
+        "text": "You rap the green bronze with your knuckles, as the pilgrims do, and then with the pommel of your blade. The bells either side of the street answer the way bells do, long and hollow, a note going down into the ash under your feet. This one does not. It gives back one dull knock, close, like a door in a hill. A Sayer has chalked a line round its shoulder and written a depth beside it, and crossed the depth out, and written a bigger one.",
+        "choices": [
+          {
+            "text": "Knock again, three times.",
+            "next": "again",
+            "once": true
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "again": {
+        "speaker": "The bell that is not hollow",
+        "no_talk": true,
+        "text": "Three knocks. You wait. From somewhere under your feet, slow and patient, three come back.",
+        "effects": [
+          {
+            "set_flag": "bell_street_knocked"
+          }
+        ],
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/sunk_plaza_count",
+    "speaker_name": "The fountain of bells",
+    "notes": "A PoiTouch at the Sunk Plaza (game/world/pois/regions/cinderlea.gd sunk_plaza). The one more bell than there were pilgrims (pois/cinderlea.json sunk_plaza's hook).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The fountain of bells",
+        "no_talk": true,
+        "text": "Hand-bells to the brim of the dry basin, every one left by a pilgrim on the way down to the Stair: tin, brass, bronze, a child's of painted wood. The Order counts them each spring against the roll of the ones who walked. You count the top layer, then give up and count the clappers tied with grey thread, which is how the Order counts: one hundred and twelve tied, and one untied, lying on top, bright, with no name scratched on it at all.",
+        "choices": [
+          {
+            "text": "Take the bell with no name.",
+            "next": "taken",
+            "conditions": [
+              {
+                "not": {
+                  "flag": "sunk_plaza_bell_taken"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Tie its clapper with a thread and leave it.",
+            "next": "tied",
+            "conditions": [
+              {
+                "not": {
+                  "flag": "sunk_plaza_bell_taken"
+                }
+              },
+              {
+                "not": {
+                  "flag": "sunk_plaza_bell_tied"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Leave the count as it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The fountain of bells",
+        "no_talk": true,
+        "text": "It is warm from the sun, and lighter than it looks. When you lift it, it does not ring.",
+        "effects": [
+          {
+            "give_item": [
+              "core:item/unnamed_hand_bell",
+              1
+            ]
+          },
+          {
+            "set_flag": "sunk_plaza_bell_taken"
+          }
+        ],
+        "next": "end"
+      },
+      "tied": {
+        "speaker": "The fountain of bells",
+        "no_talk": true,
+        "text": "You bind the clapper with a thread pulled from your own hem, the way the Order does for the ones who went. The count is right again, if not the roll.",
+        "effects": [
+          {
+            "set_flag": "sunk_plaza_bell_tied"
+          },
+          {
+            "renown": 2
+          }
+        ],
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/anthem_hall_sing",
+    "speaker_name": "The singer's stone",
+    "notes": "A PoiTouch at the Anthem Hall (game/world/pois/regions/cinderlea.gd anthem_hall). Lore; the choristers rehearse here at dusk (encounters/pois_cinderlea.json).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The singer's stone",
+        "no_talk": true,
+        "text": "You step up onto the stone where the Builders' singer stood and the benches climb away from you in their half-round, empty, ash in every seat's hollow. You hum a note, low, to try it. The shell behind you takes it and throws it out over the benches and the benches give it back from every tier at once, and a moment later, much further off, the heath gives it back too. Somewhere out there, in the ash, a voice that is not an echo holds it a breath longer than you did.",
+        "choices": [
+          {
+            "text": "Sing it again, louder.",
+            "next": "louder",
+            "once": true
+          },
+          {
+            "text": "Step down.",
+            "next": "end"
+          }
+        ]
+      },
+      "louder": {
+        "speaker": "The singer's stone",
+        "no_talk": true,
+        "text": "This time nothing holds it after you. The silence afterwards is the kind a room makes when everyone in it has turned to look.",
+        "effects": [
+          {
+            "renown": 1
+          }
+        ],
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cistern_of_isse_listen",
+    "speaker_name": "The cistern stair",
+    "notes": "A PoiTouch at the Cistern of Isse (game/world/pois/regions/cinderlea.gd cistern_of_isse). Lore; the stair is the door into core:interior/cistern_of_isse.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The cistern stair",
+        "no_talk": true,
+        "text": "The stair goes down the inside of the well-house into a dark that the eye stops at after a dozen steps. From below comes a sound you know: water, a great deal of it, lapping against stone in a hall with a roof. The cistern has been dry since the Ash Winter; every Sayer who has written of it says so. The steps are wet to the eighth one down, and the wet goes up the steps, not down them, in the shape of feet.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/weighhouse_pans",
+    "speaker_name": "The great scales",
+    "notes": "A PoiTouch at the Weighhouse (game/world/pois/regions/cinderlea.gd weighhouse). Lore: the rumour that the other pan is down now.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The great scales",
+        "no_talk": true,
+        "text": "Two bronze pans the width of a cart, hung by chains from a beam that the Ash Winter fused to its pillar. One pan rests on the paving with the city's weights stacked beside it; the other hangs in the air, empty. The Tallymen's mark is cut on the pillar, and under it a later hand has scratched an arrow pointing to the high pan and the words *last spring this one*. The chains of the high pan are bright where they run over the beam, as if they had moved this year.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silent_market_stall",
+    "speaker_name": "The stall at the square's edge",
+    "notes": "A PoiTouch at the Silent Market (game/world/pois/regions/cinderlea.gd silent_market). The fresh goods of the place's hook; take one, or leave them.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The stall at the square's edge",
+        "no_talk": true,
+        "text": "Every stall in the square has its goods on it still, gone to ash in the shapes of what they were. Not this one. On a clean cloth: a loaf, today's, still soft; a knife with a horn handle, oiled; and a child's shoe of grey wool, the size for a child of four, the heel worn through on the left. Nobody in the dead city sells anything. Nobody has been seen to set them out.",
+        "choices": [
+          {
+            "text": "Take the loaf.",
+            "next": "bread",
+            "conditions": [
+              {
+                "not": {
+                  "flag": "silent_market_took"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Take the knife.",
+            "next": "knife",
+            "conditions": [
+              {
+                "not": {
+                  "flag": "silent_market_took"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Leave a coin on the cloth and take nothing.",
+            "next": "coin",
+            "conditions": [
+              {
+                "not": {
+                  "flag": "silent_market_took"
+                }
+              },
+              {
+                "not": {
+                  "flag": "silent_market_paid"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Leave them.",
+            "next": "end"
+          }
+        ]
+      },
+      "bread": {
+        "speaker": "The stall at the square's edge",
+        "no_talk": true,
+        "text": "You take the loaf. It is warm in the middle. When you look back from the cross the cloth is folded and the shoe is gone.",
+        "effects": [
+          {
+            "give_item": [
+              "core:item/bread",
+              1
+            ]
+          },
+          {
+            "set_flag": "silent_market_took"
+          }
+        ],
+        "next": "end"
+      },
+      "knife": {
+        "speaker": "The stall at the square's edge",
+        "no_talk": true,
+        "text": "You take the knife. It is a good one, and it has a name cut in the horn, worn away to the last two letters. When you look back from the cross the cloth is folded and the shoe is gone.",
+        "effects": [
+          {
+            "give_item": [
+              "core:item/hunting_knife",
+              1
+            ]
+          },
+          {
+            "set_flag": "silent_market_took"
+          },
+          {
+            "morality": -1
+          }
+        ],
+        "next": "end"
+      },
+      "coin": {
+        "speaker": "The stall at the square's edge",
+        "no_talk": true,
+        "text": "You lay a mark on the cloth beside the shoe. In the morning, the pilgrims say, the goods on that stall are always for the person who paid the day before.",
+        "effects": [
+          {
+            "set_flag": "silent_market_paid"
+          },
+          {
+            "morality": 2
+          }
+        ],
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/north_gate_track",
+    "speaker_name": "The track through the gate",
+    "notes": "A PoiTouch at the North Gate (game/world/pois/regions/cinderlea.gd north_gate). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The track through the gate",
+        "no_talk": true,
+        "text": "The ash in the gateway is trodden into a band a stride wide, packed hard and darker than the ash either side, the way a sheep-track is worn into turf by years of going. It runs straight through the arch from nowhere on the heath to nowhere on the heath, a hundred paces each way and then nothing. There is not one footprint in it, not a hoof, not a dragged hem. The Sayers have sat up for it. They say it passes an hour after midnight, every night, and they have never agreed on what they saw.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hermits_gate_door",
+    "speaker_name": "The door with no hinges",
+    "notes": "A PoiTouch at the Hermit's Gate (game/world/pois/regions/cinderlea.gd hermits_gate). Lore; Garrow Lune's quest (Names for the Door) ends here.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The door with no hinges",
+        "no_talk": true,
+        "text": "One slab of the Builders' stone filling the arch from side to side and floor to vault, smooth as a held breath, with no hinge, no handle, no seam you can get a nail in. A ring is cut in its face at the height of a tall man's heart. Round it, in chalk, rubbed out and written over and rubbed out again, are names: hundreds, in one patient hand, every name of the heath and the Vale and the Hush that Garrow Lune has heard in thirty years. You put your palm flat inside the ring. The stone is warm, as if someone were leaning on it from the other side.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hesk_morn_door",
+    "speaker_name": "Hesk-Morn",
+    "notes": "A PoiTouch at Hesk-Morn (game/world/pois/regions/cinderlea.gd hesk_morn). Lore: the footprints of the place's hook; the name-tag of Names for the Door lies on the threshold.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Hesk-Morn",
+        "no_talk": true,
+        "text": "A door of the Builders' stone standing in its frame on the cliff's edge, a hand's breadth open, and through the gap the Hush: grey sea, grey air, no line between them. The footprints come up the three steps and go through the gap, a pilgrim's, bare, small. On the other side of the sill there is nothing for a foot to come down on, and the ash on the sill is not disturbed.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ashcombe_chimney",
+    "speaker_name": "The chimney",
+    "notes": "A PoiTouch at Ashcombe (game/world/pois/regions/cinderlea.gd ashcombe). Lore: the chimneys that still draw.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The chimney",
+        "no_talk": true,
+        "text": "You lay your hand flat on the chimney stones beside the door, where a hearth would warm them through. They are cold to the bone, cold as stones on the strand in winter. Over your head the smoke goes up out of the stack all the same, grey and steady, leaning with the wind, smelling of nothing at all. The door is barred on the inside.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ashwinter_carts_book",
+    "speaker_name": "The carter's day-book",
+    "notes": "A PoiTouch at the Ash-Winter Carts (game/world/pois/regions/cinderlea.gd ashwinter_carts). Lore: the carter's day-book of the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The carter's day-book",
+        "no_talk": true,
+        "text": "A day-book in a waxed cover hung on a peg in the range's doorway, the ink brown, the pages stuck at the edges. *Eleven loads in from the west field. Six loads in from the long field. Yard full; carts stood in the yard to unload in the morning.* The last entry is in the same hand, steady: *Delivered to Greyfold, all loads, by the carter, as ordered.* It is dated the twelfth day after the Order's own record says Greyfold walked south, and the carts are all still in the yard.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/bell_garden_strike",
+    "speaker_name": "The striking-rod",
+    "notes": "A PoiTouch at the Bell Garden (game/world/pois/regions/cinderlea.gd bell_garden). Lore: the place's hook (the line that the Cantor's Seat answers).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The striking-rod",
+        "no_talk": true,
+        "text": "A rod of bronze with a ball at its end, hung from the post at the head of the rows. You walk the gardener's path and strike as you go, small to great, and the garden plays a scale that goes down and down until the last bell is a sound you feel in your knees. Then you try them the other way, and in no order, and one row at a time. Once, by chance, four bells in a row give a line you have heard before, at the Choir, under everything; and from the south, from the Cantor's Seat, something answers it with one low knock.",
+        "choices": [
+          {
+            "text": "Play the four again.",
+            "next": "again",
+            "once": true
+          },
+          {
+            "text": "Hang the rod back on its post.",
+            "next": "end"
+          }
+        ]
+      },
+      "again": {
+        "speaker": "The striking-rod",
+        "no_talk": true,
+        "text": "You cannot find them again. The bell-bearer who tends the rows, the pilgrims say, can; and does, at night, over and over.",
+        "effects": [
+          {
+            "set_flag": "bell_garden_line_heard"
+          }
+        ],
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/row_of_mouths_ear",
+    "speaker_name": "The singing pillar",
+    "notes": "A PoiTouch at the Row of Mouths (game/world/pois/regions/cinderlea.gd row_of_mouths). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The singing pillar",
+        "no_talk": true,
+        "text": "You lay your ear to the stone under the carved mouth where the Order's chalk tally is freshest. The pillar is humming, very faintly, the same note the colossi hold, and under it, closer, there is breath: in, and a long while later, out, as if the pillar were a throat and something in it were waiting for its turn to sing.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hesk_pool_water",
+    "speaker_name": "Hesk Pool",
+    "notes": "A PoiTouch at Hesk Pool (game/world/pois/regions/cinderlea.gd hesk_pool). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Hesk Pool",
+        "no_talk": true,
+        "text": "You lean over the last dry step and look down into the water. It is still, so still the ash that falls on it lies on top like dust on a table. It gives back nothing: not the grey sky, not the obelisk, not your face leaning over it. A stone dropped in goes in without a sound and without a ring. The Sayers say this water and Eelfathom's are the same water, and that something stands in between.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/builders_harbour_bells",
+    "speaker_name": "The bell-posts",
+    "notes": "A PoiTouch at the Builders' Harbour (game/world/pois/regions/cinderlea.gd builders_harbour). Lore: the bells that rang (the place's hook).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The bell-posts",
+        "no_talk": true,
+        "text": "Mooring posts, and every one a bell: the Builders' bronze set mouth-down on drums of their stone along the quay's edge, gone green to the waterline, an iron ring through each crown for a hawser. Salt has crusted in their lips. The nearest has a new scratch down its shoulder, bright through the green, as if a rope had run hard over it, and there is weed still wet in its ring.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/greywatch_names",
+    "speaker_name": "The names at Greywatch",
+    "notes": "A PoiTouch at Greywatch (game/world/pois/regions/cinderlea.gd greywatch). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The names at Greywatch",
+        "no_talk": true,
+        "text": "The three stones are written over in the Order's chalk from the ground to as high as a tall knight can reach: names, in columns, the ones who walked down the Stair, read aloud here at dusk. The rain takes them and the Order writes them again. At the foot of the middle stone, in chalk that is not the Order's, greyer, finer, there is one more name, written every night for a month by somebody nobody has seen, and on no roll at the Ash.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ninth_waystone_count",
+    "speaker_name": "The Ninth Waystone",
+    "notes": "A PoiTouch at the Ninth Waystone (game/world/pois/regions/cinderlea.gd ninth_waystone). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Ninth Waystone",
+        "no_talk": true,
+        "text": "Tallies, every face of all three stones, rows of five with a stroke through, a row a year: the Order's count of the bells it has rung for the ones who walked, from the first year at the Ash. The oldest are worn to a shine by pilgrims' hands. The newest row is this year's and is not finished. In the bowl on the middle stone, coins of every reign, and one that is not a coin anybody on the heath would know.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/greyline_stones_line",
+    "speaker_name": "The Greyline Stones",
+    "notes": "A PoiTouch at the Greyline Stones (game/world/pois/regions/cinderlea.gd greyline_stones). Lore; The Grey Gone Back (Idrin Fenn) reads it.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Greyline Stones",
+        "no_talk": true,
+        "text": "A line of the Wardens' chalk stones runs away from you across the heath, one a year, each set a stride further back towards the Vale than the one before it. The oldest stand out in the grey and have gone grey themselves; you can tell the year they were set by how far the ash has climbed them. The newest is white, with a rag of Warden green on a pole beside it. Surveyor Fenn's line of figures is scratched on its back, and this year the stride is shorter.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/novices_seats_turned",
+    "speaker_name": "The turned seat",
+    "notes": "A PoiTouch at the Novices' Seats (game/world/pois/regions/cinderlea.gd novices_seats). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The turned seat",
+        "no_talk": true,
+        "text": "Three seats of the Builders' stone cut for novices of the Order to sit their first night in, their backs to the Choir and their faces to the Hush. Two still face the sea. The third, a single block the size of a cart, has been turned round to face the Choir, its seat towards the ring. The scrape of it is in the ash, a half-circle, fresh. The seat is worn hollow by a hundred years of novices; there is a new hollow in it now, the other way round.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/vaelost_course",
+    "speaker_name": "The fallen course",
+    "notes": "A PoiTouch at the Tower of Vaelost (game/world/pois/regions/cinderlea.gd tower_of_vaelost). Lore; Names for the Door's chip of the course lies here.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The fallen course",
+        "no_talk": true,
+        "text": "Blocks of the Tower of Vaelost's top course lie at its foot where the Ash Winter shook them down. On the face of one, upward, there are letters: the Builders' square letters, cut deep, two of them whole and the third broken off with the stone. A name, the Order says, the tower's own or the builder's; the Order will pay to know whose. Above you the course that is still up rings faintly in the wind.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hush_bell_look",
+    "speaker_name": "The Hush Bell",
+    "notes": "A PoiTouch at the Hush Bell (game/world/pois/regions/cinderlea.gd hush_bell). Lore; The Wet Rope's rope end lies at the ring.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Hush Bell",
+        "no_talk": true,
+        "text": "You follow the rope up with your eye: from the ring by the door, up the tower's face, over the top, along the stone arm and out over the cliff to the bell hanging above the Hush, the pilgrims' ship-bell, green, its mouth to the sea. The rope is new and dark with wet. Sea-water drips off its end at your feet, though the sea is eighty metres down and the rope's end has been nowhere near it.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/strand_beacon_bowl",
+    "speaker_name": "The fire-bowl",
+    "notes": "A PoiTouch at the Strand Beacon (game/world/pois/regions/cinderlea.gd strand_beacon). Lore: the place's hook.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The fire-bowl",
+        "no_talk": true,
+        "text": "The Builders' bell upturned in its iron cage on the beacon's top, mouth to the sky, full of last night's ash. Under the crust the ash is still warm. The driftwood at the foot of the beacon is stacked the way the Salt Isles stack it, crossways, bark down, and there is more of it than anybody in the Driftwood Camp has carried up, and none of them will say they lit it.",
+        "next": "end"
+      }
+    }
+  }
+]

@@ -707,6 +707,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/chalkwatch",
+        "quests": [
+          "core:quest/the_relief_of_chalkwatch"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/charcoal_camp",
         "quests": [
           "core:quest/the_fawning_months"
@@ -1443,6 +1452,17 @@
         ],
         "encounters": [
           "core:encounter/wayside_forgiving_stones"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/founders_delf",
+        "quests": [
+          "core:quest/the_last_casting"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/founders_delf"
         ],
         "hearthstone": false
       },
@@ -4839,6 +4859,17 @@
           "core:item/wayside_the_thousand_post"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_undertone",
+        "quests": [
+          "core:quest/the_quarter_tone"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_undertone"
+        ],
         "hearthstone": false
       },
       {

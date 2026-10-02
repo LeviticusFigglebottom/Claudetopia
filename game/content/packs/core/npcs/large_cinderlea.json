@@ -1,0 +1,193 @@
+[
+  {
+    "id": "core:npc/merrin_aske",
+    "name": "Merrin Aske",
+    "home_place": "core:poi/the_undertone",
+    "dialogue": "core:dialogue/merrin_aske",
+    "no_radiant": true,
+    "faction": "core:faction/sayers",
+    "bio": "A Sayer of the Circle sent to the Ash to keep the record of the note, which is the dullest posting the Circle has: a hundred and sixty years of the same figure written down every dawn. She has kept it eleven years. This spring the figure changed, and she has not slept properly since.",
+    "unique_habit": "Hums the note under her breath to check her fork against it, and frowns at herself when she is flat.",
+    "personality": {
+      "traits": [
+        "curious",
+        "exacting",
+        "brave",
+        "dry"
+      ]
+    },
+    "appearance": {
+      "seed": 9142,
+      "build": "slight",
+      "age": 41.0,
+      "feminine": 1.0,
+      "hair": "dark_braided",
+      "notes": "a Sayer's grey-blue over a pilgrim's ash-coat, ink on her fingers, a brass fork on a cord round her neck"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_undertone",
+        "activity": "sleep",
+        "spot": "merrin_camp"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_undertone",
+        "activity": "work",
+        "spot": "merrin_camp",
+        "notes": "taking the note at dawn"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/the_undertone",
+        "activity": "eat",
+        "spot": "merrin_camp"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/the_undertone",
+        "activity": "work",
+        "spot": "merrin_camp"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_undertone",
+        "activity": "idle",
+        "spot": "merrin_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/clemency_brazier",
+    "name": "Clemency Brazier",
+    "home_place": "core:poi/founders_delf",
+    "dialogue": "core:dialogue/clemency_brazier",
+    "no_radiant": true,
+    "bio": "A bell-founder out of Merrowby, the third of her name to cast the Vale's bells, who has read every account of the Builders' foundry and come across the grey to see it with her own eyes. She has been sitting by the casting pit for a week, and has not gone down the fire-mouth, because she has heard the hammering.",
+    "unique_habit": "Taps everything with a knuckle and listens to it, the cart, the tent-pole, your shield.",
+    "personality": {
+      "traits": [
+        "practical",
+        "stubborn",
+        "warm",
+        "proud"
+      ]
+    },
+    "appearance": {
+      "seed": 7721,
+      "build": "broad",
+      "age": 48.0,
+      "feminine": 1.0,
+      "hair": "grey_cropped",
+      "notes": "a founder's leather apron burnt through in spots, forearms scarred from the pour, a Vale wool cap"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/founders_delf",
+        "activity": "sleep",
+        "spot": "clemency_camp"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/founders_delf",
+        "activity": "work",
+        "spot": "clemency_camp",
+        "notes": "sketching the mould"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/founders_delf",
+        "activity": "eat",
+        "spot": "clemency_camp"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/founders_delf",
+        "activity": "work",
+        "spot": "clemency_camp"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/founders_delf",
+        "activity": "idle",
+        "spot": "clemency_camp"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ysolde_penn",
+    "name": "Ysolde Penn",
+    "home_place": "core:poi/chalkwatch",
+    "dialogue": "core:dialogue/ysolde_penn",
+    "no_radiant": true,
+    "faction": "core:faction/wardens",
+    "bio": "A Warden of the Rest, young, who found in the Rest's ledger that Chalkwatch's garrison has been paid in the books for thirty years and nobody has ever carried the pay up. She carried it up. She has been sitting outside the gate for three days watching the garrison wave at her.",
+    "unique_habit": "Waves back, every time, and is ashamed of it, and does it anyway.",
+    "personality": {
+      "traits": [
+        "dutiful",
+        "kind",
+        "nervous",
+        "honest"
+      ]
+    },
+    "appearance": {
+      "seed": 6612,
+      "build": "lean",
+      "age": 24.0,
+      "feminine": 1.0,
+      "hair": "fair_tied_back",
+      "notes": "Warden green, new and too clean, a strongbox of pay chained to her pack"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/chalkwatch",
+        "activity": "sleep",
+        "spot": "ysolde_fire"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/chalkwatch",
+        "activity": "work",
+        "spot": "ysolde_fire",
+        "notes": "watching the walls"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/chalkwatch",
+        "activity": "eat",
+        "spot": "ysolde_fire"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/chalkwatch",
+        "activity": "work",
+        "spot": "ysolde_fire"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/chalkwatch",
+        "activity": "idle",
+        "spot": "ysolde_fire"
+      }
+    ]
+  }
+]
