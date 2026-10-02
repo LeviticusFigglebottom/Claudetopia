@@ -61,7 +61,7 @@ on this side of a closing range's crest.
 | density | **10.6 locations a walkable km²** |
 | distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
-| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the two tracks of world life phase 2, about 400 m of new way between them, are not yet in the km) |
+| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the three tracks of world life phase 2, about 550 m of new way between them, are not yet in the km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
 
 The brief's rule was no walkable point more than about 400 m from somewhere notable, and nothing
@@ -294,7 +294,10 @@ turning, where the build's fingerpost names it.
 delta, and the **Eastway** goes by the Pinfold and Ansel's Hedge Shrine to Tamwick. The **Brow
 road** runs from Pilgrim's Ash by the Last Look, Hound Watch and Bramcombe to Candle Cross and
 Rookdown. Lanes cross the downs from Ashwell to the Hare and Hurdle and on to Bramcombe, and from
-Tamwick by Hollin Barrow to Hazelcombe.
+Tamwick by Hollin Barrow to Hazelcombe. A track of world life phase 2 leaves the Brow road just
+west of the Last Look and climbs 150 m north up the spine of Hound Down to Wake Barrow's
+forecourt (via 586,2766 / 588,2855). Laid to Pilgrim's Ash, it runs on the Brow road's trunk and
+parts from it at the turning, where the build's fingerpost names it.
 
 ### Cinderlea: ember ash
 
@@ -474,6 +477,16 @@ Every new place has a note lying there in the voice of whoever keeps it (§16).
   new vantages: the Barkbridge is seen from the Oiled Stone rather than the Rafters' Camp, and the
   Giants' Stair from the Black Keep rather than Skarlow. The two hidden valleys' lines are refused,
   as they are allowed to be.
+* **Trees keep out of the sightlines** as rock does (`worldgen.trees.clear_sightlines`, after every
+  tree is placed and before they are seated). A tree goes when all of these hold:
+  - its trunk is within 12 m of a line (`SIGHT_TREE_CORRIDOR_M`), between the two pads;
+  - its top reaches within the game's clearance (and half a metre) of the ray;
+  - the ground under it is below the ray, since where the land stands into a line the land is the
+    line's to answer.
+  A line looking down over a wood leaves the wood. On the installed world's trees (runtime
+  heights) it takes 2,915 of 136,526 (2.1%), from 223 of the 266 lines: a median of 8 a line, at
+  most 78 (the Hart Bones to the Moot Gate Stone). The Hum Stone's three lines take 4, 8 and 16.
+  `tools/world/tests/test_tree_sightlines.py` checks it on a synthetic world.
 
 ### The opening's walk, minute by minute
 

@@ -2955,3 +2955,349 @@ static func pennywort_fields(d: PoiDressing) -> void:
 
 static func southgate_farm(d: PoiDressing) -> void:
 	await _kind_then_part(d, Callable(_builders().LAND, "farmstead"))
+
+
+# --- Wake Barrow (the third large place) ------------------------------------------------------------
+
+## A long barrow's body, laid on the ground: its square front `face` (half-width `wf`, `hf` high)
+## at `lf` metres along `axis` from `c`, running back `lb` metres to a rounded tail (half-width `wb`,
+## `hb` high where the rounding starts), its cross-section a full dome. The front face is a wall from
+## the crown's profile down into the ground, so a façade can stand against it. Walkable; a silhouette.
+static func _long_mound(d: PoiDressing, c: Vector2, axis: Vector2, lf: float, lb: float, wf: float, wb: float,
+		hf: float, hb: float, top_mat: Material, face_mat: Material, power := 1.2) -> void:
+	var k := d.kit
+	var ax := axis.normalized()
+	var ac := Vector2(ax.y, -ax.x)
+	var nu := 22
+	var nv := 14
+	var rows: Array = []
+	var cores: Array = []
+	for i in nu + 1:
+		var u := lerpf(-lb, lf, float(i) / float(nu))
+		var hw := _long_mound_w(u, lf, lb, wf, wb)
+		var hh := _long_mound_h(u, lf, lb, wf, wb, hf, hb)
+		var row: Array = []
+		for j in nv + 1:
+			var v := lerpf(-1.0, 1.0, float(j) / float(nv))
+			var p := c + ax * u + ac * v * hw
+			# slumped: a few long swells along it and a softer shoulder on one side than the other
+			var lump := 1.0 + 0.07 * sin(u * 0.31 + 1.3) * cos(v * 2.1) + 0.04 * sin(u * 0.83 + v * 3.0)
+			var y := hh * _long_mound_profile(v, power) * lump - 0.15 * v * v
+			row.append(k.on_ground(p.x, p.y, y))
+		rows.append(row)
+		var cp := c + ax * maxf(u, -lb + wb * 0.9)
+		cores.append(k.on_ground(cp.x, cp.y, hh * 0.3))
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in nu:
+		for j in nv:
+			var a: Vector3 = rows[i][j]
+			var b: Vector3 = rows[i + 1][j]
+			var cc: Vector3 = rows[i + 1][j + 1]
+			var dd: Vector3 = rows[i][j + 1]
+			var core: Vector3 = cores[i]
+			_tri_out(st, a, b, cc, (a + b + cc) / 3.0 - core)
+			_tri_out(st, a, cc, dd, (a + cc + dd) / 3.0 - core)
+	st.generate_normals()
+	var body := MeshInstance3D.new()
+	body.mesh = st.commit()
+	body.material_override = top_mat
+	body.name = "Mound"
+	k.root.add_child(body)
+	# the face: from the front row's profile down into the ground
+	var fs := SurfaceTool.new()
+	fs.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var out3 := Vector3(ax.x, 0.0, ax.y)
+	for j in nv:
+		var p0: Vector3 = rows[nu][j]
+		var p1: Vector3 = rows[nu][j + 1]
+		var g0 := k.on_ground(p0.x, p0.z, -0.3)
+		var g1 := k.on_ground(p1.x, p1.z, -0.3)
+		_tri_out(fs, p0, g0, g1, out3)
+		_tri_out(fs, p0, g1, p1, out3)
+	fs.generate_normals()
+	var face := MeshInstance3D.new()
+	face.mesh = fs.commit()
+	face.material_override = face_mat
+	face.name = "MoundFace"
+	k.root.add_child(face)
+	if k.far:
+		k._far_range(body)
+		k._far_range(face)
+	else:
+		k.collider_shape(body.mesh.create_trimesh_shape(), Transform3D.IDENTITY, "dirt")
+		k.collider_shape(face.mesh.create_trimesh_shape(), Transform3D.IDENTITY, "stone")
+
+
+## One triangle into `st`, wound so its front faces `out` (Godot's front faces wind clockwise seen
+## from outside: (b - a) x (c - a) points in).
+static func _tri_out(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, out: Vector3) -> void:
+	if (b - a).cross(c - a).dot(out) > 0.0:
+		st.add_vertex(a)
+		st.add_vertex(c)
+		st.add_vertex(b)
+	else:
+		st.add_vertex(a)
+		st.add_vertex(b)
+		st.add_vertex(c)
+
+
+## A `_long_mound`'s cross-section at `v` (-1..1 across it): a broad crown falling to a long foot.
+static func _long_mound_profile(v: float, power: float) -> float:
+	var f := maxf(1.0 - v * v, 0.0)
+	return pow(f, power * 0.5) * (0.82 + 0.18 * f)
+
+
+## The height over the ground of a `_long_mound`'s turf at `q` (local to its centre, `axis` its
+## length), as its mesh has it there.
+static func _long_mound_y(q: Vector2, axis: Vector2, lf: float, lb: float, wf: float, wb: float, hf: float, hb: float,
+		power := 2.0) -> float:
+	var ax := axis.normalized()
+	var u := q.dot(ax)
+	if u > lf or u < -lb:
+		return 0.0
+	var hw := _long_mound_w(u, lf, lb, wf, wb)
+	var v := q.dot(Vector2(ax.y, -ax.x)) / hw
+	if absf(v) >= 1.0:
+		return 0.0
+	var lump := 1.0 + 0.07 * sin(u * 0.31 + 1.3) * cos(v * 2.1) + 0.04 * sin(u * 0.83 + v * 3.0)
+	return _long_mound_h(u, lf, lb, wf, wb, hf, hb) * _long_mound_profile(v, power) * lump - 0.15 * v * v
+
+
+## A `_long_mound`'s half-width at `u` along it: tapering from the face to the tail, rounded off there.
+static func _long_mound_w(u: float, lf: float, lb: float, wf: float, wb: float) -> float:
+	var t := clampf((u + lb) / (lf + lb), 0.0, 1.0)
+	var w := lerpf(wb, wf, t)
+	var r_end := wb * 1.4
+	if u < -lb + r_end:
+		var e := (-lb + r_end - u) / r_end
+		w *= sqrt(maxf(1.0 - e * e, 0.0))
+	return maxf(w, 0.05)
+
+
+## A `_long_mound`'s crown height at `u` along it.
+static func _long_mound_h(u: float, lf: float, lb: float, wf: float, wb: float, hf: float, hb: float) -> float:
+	var t := clampf((u + lb) / (lf + lb), 0.0, 1.0)
+	var h := lerpf(hb, hf, t)
+	var r_end := wb * 1.4
+	if u < -lb + r_end:
+		var e := (-lb + r_end - u) / r_end
+		h *= sqrt(maxf(1.0 - e * e, 0.0))
+	return h
+
+
+## A great sarsen as the downs leave them: a thick slab, wider than it is deep, one shoulder higher
+## than the other and its crown sloped off, no two faces true; with a body. Into `st`.
+static func _great_stone(d: PoiDressing, st: SurfaceTool, at: Vector2, yaw: float, size: Vector3, lean := 0.0) -> void:
+	var k := d.kit
+	var g := k.on_ground(at.x, at.y)
+	var b := Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, lean)
+	var foot := g + Vector3(0.0, -0.5, 0.0)
+	var low := size.y * k.rng.randf_range(0.55, 0.68)
+	_frustum(st, Transform3D(b, foot), size.x, size.z, size.x * 0.92, size.z * 0.86, low + 0.5)
+	var shoulder := b * Basis(Vector3.BACK, k.rng.randf_range(-0.22, 0.22)) * Basis(Vector3.UP, k.rng.randf_range(-0.15, 0.15))
+	var off := Vector3(k.rng.randf_range(-0.15, 0.15) * size.x, 0.0, 0.0)
+	_frustum(st, Transform3D(shoulder, foot + b * (off + Vector3(0.0, low + 0.42, 0.0))), size.x * 0.9, size.z * 0.84,
+			size.x * k.rng.randf_range(0.42, 0.6), size.z * 0.55, size.y - low)
+	k.collider(Vector3(size.x, size.y, size.z), Transform3D(Basis(Vector3.UP, yaw), g + Vector3(0.0, size.y * 0.5, 0.0)), "stone")
+
+
+## The box round everything drawn under `n`, in `n`'s own space (its own transform left out).
+static func _local_box(n: Node3D) -> AABB:
+	var out := AABB()
+	var first := true
+	var stack: Array = [[n, Transform3D.IDENTITY]]
+	while not stack.is_empty():
+		var top: Array = stack.pop_back()
+		for ch in (top[0] as Node).get_children():
+			if not (ch is Node3D):
+				continue
+			var xf: Transform3D = (top[1] as Transform3D) * (ch as Node3D).transform
+			if ch is VisualInstance3D:
+				var b := xf * (ch as VisualInstance3D).get_aabb()
+				out = b if first else out.merge(b)
+				first = false
+			stack.append([ch, xf])
+	return out
+
+
+## Wake Barrow: the greatest long barrow on the downs, along the spine of Hound Down, the Wake Oaks
+## grown on its back the Vale's landmark from the Pilgrims' road to the Brow. Its face is walled in
+## knapped flint between a crescent of tall sarsens, the way in a portal of three stones in the middle,
+## and the great blocking stone that the last barrow-wife had rolled across behind her stands walked
+## out of its socket, leaning, a body's width of dark beside it. In the forecourt the Crowles' lamp in
+## its niche, the coffin-rests on the way up where the bearers set the dead down, and the watcher's
+## hut where Tamsin Crowle keeps the lamp.
+static func wake_barrow(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	# the face toward its track, which comes up the spine from the Brow road to the south
+	var front := k.road_direction(60.0)
+	if front == Vector2.ZERO:
+		front = Vector2(0.07, 1.0).normalized()
+	var side := Vector2(front.y, -front.x)
+	var interior := str((ContentDB.get_or_empty(d.poi_id).get("site", {}) as Dictionary).get("interior", ""))
+	var sarsen := PoiKit.painted(0, {"base": "#75726a", "accent": "#5c5a51", "grout": "#3e3c35", "unit": 0.9}, 0.8, 0.9)
+	var flint := PoiKit.painted(2, {"base": "#3d3d3c", "accent": "#5d5b56", "grout": "#9c968a", "unit": 0.2}, 0.6, 0.85)
+	# the body: square-faced toward the road, fifty metres back to its tail, wider and higher at the face
+	var mc := -front * 4.0
+	var lf := 19.0
+	var lb := 31.0
+	var wf := 11.5
+	var wb := 7.5
+	var hf := 4.6
+	var hb := 2.6
+	var sward := PoiKit.painted(5, {"base": "#4b5729", "accent": "#3d4621", "grout": "#2a3117", "unit": 0.4}, 0.6)
+	_long_mound(d, mc, front, lf, lb, wf, wb, hf, hb, sward, flint, 2.0)
+	await k.step()
+	var face_c := mc + front * lf
+	var fy := PoiKit.yaw_of(front)
+	var fb := Basis(Vector3.UP, fy)
+	# the façade: a shallow crescent of sarsens against the face, tallest either side of the way in
+	var stones := m.begin()
+	for t in [-2.6, -1.65, -0.75, 0.75, 1.65, 2.6]:
+		var at := absf(float(t))
+		var p := face_c + side * float(t) * 2.6 + front * (0.7 + at * at * 0.35)
+		var tall := 5.6 - at * 0.95
+		_great_stone(d, stones, p, fy + k.rng.randf_range(-0.12, 0.12), Vector3(1.9 - at * 0.15, tall, 0.9), k.rng.randf_range(-0.05, 0.05))
+	# the portal: two jambs and a lintel set in the face, and the dark behind
+	var dg := k.on_ground(face_c.x, face_c.y)
+	var door_c := dg + Vector3(front.x, 0.0, front.y) * 0.25
+	for s in [-1.0, 1.0]:
+		var jamb := door_c + fb * Vector3(float(s) * 1.25, 1.35, 0.0)
+		m.block(stones, Transform3D(fb * Basis(Vector3.BACK, float(s) * -0.03), jamb), Vector3(0.7, 3.0, 0.9))
+		k.collider(Vector3(0.7, 3.0, 0.9), Transform3D(fb, jamb), "stone")
+	m.block(stones, Transform3D(fb, door_c + Vector3(0.0, 3.05, 0.0)), Vector3(3.5, 0.75, 1.1))
+	k.collider(Vector3(3.5, 0.75, 1.1), Transform3D(fb, door_c + Vector3(0.0, 3.05, 0.0)), "stone")
+	# the blocking stone, walked out of its socket: leaning forward on one corner, off to the left
+	var bs := face_c + front * 2.2 - side * 1.9
+	var bsg := k.on_ground(bs.x, bs.y)
+	var bbas := fb * Basis(Vector3.UP, -0.32) * Basis(Vector3.RIGHT, 0.3)
+	m.block(stones, Transform3D(bbas, bsg + Vector3(0.0, 1.45, 0.0)), Vector3(2.6, 3.2, 0.75))
+	k.collider(Vector3(2.6, 3.2, 0.75), Transform3D(bbas, bsg + Vector3(0.0, 1.45, 0.0)), "stone")
+	# the score it left in the forecourt's chalk, and the socket it came out of
+	var score := m.begin()
+	m.block(score, Transform3D(fb * Basis(Vector3.UP, -0.15), k.on_ground(face_c.x + front.x * 1.0 - side.x * 1.1, face_c.y + front.y * 1.0 - side.y * 1.1, 0.01)), Vector3(2.4, 0.03, 1.6))
+	m.commit(score, _matte(Color(0.78, 0.76, 0.69)), "Score")
+	await k.step()
+	m.commit(stones, sarsen, "Facade", true)
+	var dark := m.begin()
+	m.block(dark, Transform3D(fb, door_c + Vector3(0.0, 1.32, 0.0) - Vector3(front.x, 0.0, front.y) * 0.4), Vector3(1.85, 2.65, 0.1))
+	m.commit(dark, PoiKit.plain(Color(0.015, 0.014, 0.012), 1.0), "TheDark")
+	if interior != "":
+		_builders().SITES._door(d, interior, door_c - Vector3(front.x, 0.0, front.y) * 0.2, fy + PI)
+	k.marker("the_door", k.on_ground(face_c.x + front.x * 4.0, face_c.y + front.y * 4.0), true)
+	# the lamp niche on the right of the way in: a box of four slabs and a capstone, the lamp in it
+	var niche := face_c + side * 4.4 + front * 3.4
+	var ng := k.on_ground(niche.x, niche.y)
+	var nb := Basis(Vector3.UP, fy)
+	var box := m.begin()
+	for s in [-1.0, 1.0]:
+		m.block(box, Transform3D(nb, ng + nb * Vector3(float(s) * 0.42, 0.5, 0.0)), Vector3(0.12, 1.0, 0.7))
+	m.block(box, Transform3D(nb, ng + nb * Vector3(0.0, 0.5, -0.3)), Vector3(0.95, 1.0, 0.12))
+	m.block(box, Transform3D(nb * Basis(Vector3.RIGHT, 0.06), ng + Vector3(0.0, 1.06, 0.0)), Vector3(1.15, 0.14, 0.9))
+	k.collider(Vector3(1.1, 1.1, 0.8), Transform3D(nb, ng + Vector3(0.0, 0.55, 0.0)), "stone")
+	await k.step()
+	m.commit(box, sarsen, "LampNiche", true)
+	var lamp := k.prop("lantern_hand")
+	var lamp_at := ng + Vector3(0.0, 0.08, 0.0) + nb * Vector3(0.0, 0.0, -0.05)
+	if lamp != "":
+		k.place(lamp, lamp_at, fy, 1.0, false)
+	k.light(lamp_at + Vector3(0.0, 0.35, 0.0) + Vector3(front.x, 0.0, front.y) * 0.4, Color(1.0, 0.7, 0.4), 0.9, 6.0)
+	k.touchable("TheLamp", ng + Vector3(front.x, 0.0, front.y) * 0.7 + Vector3(0.0, 0.7, 0.0), "Look at the lamp in its niche", "core:dialogue/wake_barrow_lamp", "", false)
+	k.marker("the_lamp", k.on_ground(niche.x + front.x * 1.6, niche.y + front.y * 1.6), true)
+	# the coffin-rests up the way from the road: flat slabs where the bearers set the dead down
+	var rests := m.begin()
+	var ri := 0
+	for u in [9.0, 15.0, 21.0]:
+		var p := face_c + front * float(u) + side * (0.9 if ri % 2 == 0 else -0.9) * 2.0
+		if k.road_distance(p) < 3.5:
+			continue
+		var g := k.on_ground(p.x, p.y)
+		var rb := Basis(Vector3.UP, fy + k.rng.randf_range(-0.12, 0.12))
+		m.block(rests, Transform3D(rb, g + Vector3(0.0, 0.18, 0.0)), Vector3(0.9, 0.42, 2.1))
+		k.collider(Vector3(0.9, 0.42, 2.1), Transform3D(rb, g + Vector3(0.0, 0.18, 0.0)), "stone")
+		if ri == 0:
+			k.touchable("CoffinRest", g + Vector3(0.0, 0.7, 0.0), "Read the coffin-rest", "core:dialogue/wake_barrow_coffin_rest", "", false)
+		ri += 1
+	await k.step()
+	m.commit(rests, sarsen, "CoffinRests", true)
+	# the Wake Oaks along the barrow's back, the Vale's mark from the road: big, old, set into the turf
+	var oak_at: Array[Vector2] = []
+	for u in [-19.5, -14.0, -8.5, -3.5, 1.5, 6.5, 11.0]:
+		var uu := float(u) + k.rng.randf_range(-1.0, 1.0)
+		var hw := _long_mound_w(uu, lf, lb, wf, wb)
+		var v := k.rng.randf_range(-0.2, 0.2)
+		oak_at.append(mc + front * uu + side * v * hw)
+	for p in oak_at:
+		# the tallest of the downs' oaks, grown on for centuries: twice the height of any oak on the down
+		var oak := k.tree("oak", 2 + k.rng.randi_range(0, 1))
+		if oak == "":
+			oak = k.tree("oak")
+		if oak == "":
+			continue
+		await k.step()
+		var sc := k.rng.randf_range(2.0, 2.25)
+		var node := k.place(oak, k.on_ground(p.x, p.y, _long_mound_y(p - mc, front, lf, lb, wf, wb, hf, hb)), 0.0, sc, true,
+				Vector3.ZERO, true)
+		if node == null:
+			continue
+		# turned so the turf under its crown's middle is level with the turf at its foot, and set down
+		# with its lowest root just on that turf: a tree on a barrow stands on the barrow, none of it
+		# over the flank
+		var tbox := _local_box(node)
+		var best_yaw := 0.0
+		var best := -INF
+		var turf_c := 0.0
+		for i in 12:
+			var yaw := TAU * float(i) / 12.0 + 0.2
+			var o3 := Basis(Vector3.UP, yaw) * (tbox.get_center() * sc)
+			var c2 := p + Vector2(o3.x, o3.z)
+			var under := k.on_ground(c2.x, c2.y, _long_mound_y(c2 - mc, front, lf, lb, wf, wb, hf, hb)).y
+			var fit := -absf(under - (node.position.y - 0.1))
+			if fit > best:
+				best = fit
+				best_yaw = yaw
+				turf_c = under
+		node.rotation.y = best_yaw
+		if best > -0.25:
+			node.position.y = turf_c + 0.03 - tbox.position.y * sc
+		else:
+			node.position.y = node.position.y - 0.15 - tbox.position.y * sc
+	# where the wakeless walk at night: behind the tail, on the down
+	var back := mc - front * (lb + 5.0)
+	k.marker("the_back", k.on_ground(back.x, back.y))
+	# Tamsin Crowle's watch hut beside the forecourt, facing the face, with her wood and her bench
+	var hut_c := face_c + front * 13.0 + side * 13.5
+	var hut_face := (face_c - hut_c).normalized()
+	var fabric := FabricMesh.new()
+	await _builders().LAND._house(d, fabric, _builders().LAND._frame(d, hut_c, hut_face, 4.6, 3.6), 4.6, 3.6, 1)
+	await _builders().LAND._commit_fabric(d, fabric)
+	k.marker("home", k.on_ground(hut_c.x + hut_face.x * 3.0, hut_c.y + hut_face.y * 3.0), true)
+	var bench := k.prop("bench")
+	if bench != "":
+		var bp := hut_c + hut_face * 3.2 - Vector2(hut_face.y, -hut_face.x) * 1.8
+		k.place(bench, k.on_ground(bp.x, bp.y), PoiKit.yaw_of(hut_face), 1.0, true)
+	var logs := k.prop("chopping_block")
+	if logs != "":
+		var lp := hut_c - Vector2(hut_face.y, -hut_face.x) * 3.4
+		k.place(logs, k.on_ground(lp.x, lp.y), PoiKit.yaw_of(hut_face) + PI * 0.5, 1.0, true)
+	var store := hut_c + Vector2(hut_face.y, -hut_face.x) * 3.0 + hut_face * 0.6
+	_container(d, "crowles_chest", k.on_ground(store.x, store.y), PoiKit.yaw_of(hut_face), "core:loot/common_chest", "The Crowles' Chest", "chest")
+	# the wake candles stuck along the façade's feet, and thorn on the barrow's flanks
+	var stub := k.prop("candle_stub")
+	if stub != "":
+		for i in 7:
+			var p := face_c + side * (float(i) - 3.0) * 1.3 + front * k.rng.randf_range(0.9, 1.4)
+			if absf((p - face_c).dot(side)) < 1.6:
+				continue
+			k.place(stub, k.on_ground(p.x, p.y), k.rng.randf() * TAU, 1.0, false)
+	var thorn := k.tree("hawthorn")
+	if thorn != "":
+		for p in [mc - side * (wb + 6.0) - front * 12.0, mc + side * (wf + 5.0) + front * 4.0, mc - side * (wf + 4.5) + front * 9.0]:
+			if (p as Vector2).length() < d.pad_radius * 0.92:
+				await k.step()
+				k.place(thorn, k.on_ground(p.x, p.y, -0.1), k.rng.randf() * TAU, k.rng.randf_range(0.9, 1.15), true)
+	await _builders().LAND._grass(d, "grass_clump", face_c + front * 8.0, 9.0, 22)
+	await _builders().LAND._grass(d, "meadow_grass", mc - side * (wf + 3.0), 6.0, 12)
+	await _builders().LAND._grass(d, "meadow_grass", mc + side * (wf + 3.0) - front * 10.0, 6.0, 12)

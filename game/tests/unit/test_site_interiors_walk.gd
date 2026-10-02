@@ -9,8 +9,10 @@ extends TestCase
 ## walks what ships: every interior def with a `site` block in every pack file, built as the game
 ## builds it, its navigation mesh baked from the rock and its passages' links:
 ##
-## * in, from the way in to every room (the secret with its loose stones pulled away: its passage
-##   has no navigation link while it is sealed, so it is given its own);
+## * in, from the way in to every room, after the way back from the boss is laid and with it still
+##   barred (the secret with its loose stones pulled away: its passage has no navigation link while
+##   it is sealed, so it is given its own), the way in standing on the mesh; test_brightwater_places
+##   reads its insides the same way (test_sites' reading of the mesh);
 ## * back, from the boss's room to the way in, a drop taken only downward (a one-way drop on the
 ##   way to the boss and no way back up is the softlock), with the barred way back from the boss
 ##   lifted from the boss's side as the player lifts it;
@@ -76,17 +78,24 @@ func _check(def: Dictionary) -> Array:
 	var out: Array = []
 	var nm := SiteInterior.navmesh_settings()
 	NavigationServer3D.bake_from_source_geometry_data(nm, site.source_geometry())
+	# in: the passages and the secret's stones pulled away; the way back is still barred (it
+	# opens from the boss's side only), so a room reached only through it is cut off
 	var links := SiteInterior.passage_links(plan)
-	# the secret's stones pulled away, and the bar on the way back lifted from the boss's side
 	for l in plan.links:
-		if str(l["kind"]) in ["secret", "shortcut"]:
+		if str(l["kind"]) == "secret":
 			links.append_array(_chain(plan, l))
+	if not TestSites._joined(nm, plan.entrance, plan.entrance, links):
+		out.append("%s: the way in stands on no walkable ground" % id)
 	var unreached: Array = []
 	for r in plan.rooms:
 		if not TestSites._joined(nm, plan.entrance, r["centre"], links):
 			unreached.append(r["id"])
 	if not unreached.is_empty():
 		out.append("%s: not reached from the way in: %s" % [id, unreached])
+	# back: the bar on the way back lifted from the boss's side
+	for l in plan.links:
+		if str(l["kind"]) == "shortcut":
+			links.append_array(_chain(plan, l))
 	var boss := {}
 	for r in plan.rooms:
 		if r["role"] == "boss":

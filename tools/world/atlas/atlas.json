@@ -12851,6 +12851,21 @@
     ]
    ],
    "kind": "track"
+  },
+  {
+   "from": "core:poi/wake_barrow",
+   "to": "core:place/pilgrims_ash",
+   "via": [
+    [
+     586,
+     2766
+    ],
+    [
+     588,
+     2855
+    ]
+   ],
+   "kind": "track"
   }
  ],
  "start": {
