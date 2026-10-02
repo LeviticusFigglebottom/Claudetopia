@@ -523,8 +523,18 @@ func _setup_grass_instancer() -> void:
 			float(g.get("scatter_density", 1.0)), GrassInstancer.mode() == 2)
 	GrassInstancer.last["read_ms"] = read_ms
 	GrassInstancer.last["total_ms"] = Time.get_ticks_msec() - t0
+	GrassInstancer.last.merge(GrassInstancer.census(terrain_node))
 	Log.info("World", "grass instancer: %s" % str(GrassInstancer.last))
 	_note("grass_instancer")
+	# `-- --grass-instancer-save=<dir>`: the regions with their instances written there, to weigh them
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--grass-instancer-save="):
+			var dir := arg.trim_prefix("--grass-instancer-save=")
+			DirAccess.make_dir_recursive_absolute(dir)
+			var data: Object = terrain_node.get("data")
+			if data != null:
+				data.call("save_directory", dir)
+				Log.info("World", "grass instancer: regions saved to %s" % dir)
 
 
 ## Begins reading the terrain's texture list and its region files on worker threads, so that by the
