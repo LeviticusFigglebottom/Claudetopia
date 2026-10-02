@@ -1040,7 +1040,7 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
-	var out := k.road_direction(220.0)
+	var out := _to_road(k, 400.0)
 	if out == Vector2.ZERO:
 		out = k.downhill() if k.downhill() != Vector2.ZERO else Vector2(0, -1)
 	out = out.normalized()
@@ -1237,6 +1237,28 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 		await k.step()
 		k.scatter(fern, xfs, false, false, false)
 	await reeds(d, 12.0, 19.5, 60, [[m2 + out * 12.0, 4.0], [tree_at, 3.0], [m2 - out * 14.0, 17.0]])
+
+
+## The way from a place to the nearest point of its nearest road within `max_m` (local, unit), where a
+## body comes from; ZERO with none. (PoiKit.road_direction is the road's own heading, not the way to it:
+## a mouth faced along it looked across the approach, not at it.)
+static func _to_road(k: PoiKit, max_m: float) -> Vector2:
+	var here := Vector2(k.origin.x, k.origin.z)
+	var best := INF
+	var to := Vector2.ZERO
+	for s in k.roads_near(max_m):
+		var pa: Vector2 = s[0]
+		var pb: Vector2 = s[1]
+		var seg := pb - pa
+		if seg.length() < 0.5:
+			continue
+		var t := clampf((here - pa).dot(seg) / seg.length_squared(), 0.0, 1.0)
+		var q := pa + seg * t
+		var dd := q.distance_to(here)
+		if dd < best and dd <= max_m and dd > 0.5:
+			best = dd
+			to = (q - here) / dd
+	return to
 
 
 ## The bank a hollow's crag comes up out of: the marsh's own turf rising from the cove to `crest`
