@@ -2326,7 +2326,7 @@ static func deadground(d: PoiDressing) -> void:
 	var across := Vector2(to_mine.y, -to_mine.x)
 	var tips := m.begin()
 	# the grey over everything: the waste spread thin across the ground where nothing has grown
-	_tip(d, tips, -to_mine * 19.0, to_mine, 38.0, 36.0, 0.12)
+	_tip(d, tips, -to_mine * 17.0, to_mine, 34.0, 30.0, 0.12)
 	_tip(d, tips, -to_mine * 7.0 + across * 5.0, (-to_mine * 0.6 + across * 0.4).normalized(), 13.0, 7.0, 2.2)
 	_tip(d, tips, -to_mine * 2.0 - across * 8.0, (-to_mine * 0.5 - across * 0.5).normalized(), 12.0, 6.0, 1.8)
 	_tip(d, tips, to_mine * 8.0 + across * 3.0, (to_mine * 0.2 + across).normalized(), 10.0, 5.5, 1.5)
