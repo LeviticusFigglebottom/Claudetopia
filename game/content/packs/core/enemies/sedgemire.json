@@ -301,8 +301,8 @@
     "faction": "beasts",
     "tint": "#4d3f52",
     "scale": 0.95,
-    "height": 0.9,
-    "radius": 0.4,
+    "height": 0.7,
+    "radius": 0.38,
     "clips": [
       "Idle",
       "Walk",

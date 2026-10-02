@@ -1,0 +1,394 @@
+{
+ "Attack_1": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.2
+   },
+   {
+    "name": "strike",
+    "t": 0.27
+   },
+   {
+    "name": "hit_start",
+    "t": 0.3
+   },
+   {
+    "name": "hit_end",
+    "t": 0.42
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.62
+   }
+  ],
+  "length": 0.8,
+  "loop": false
+ },
+ "Attack_2": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.38
+   },
+   {
+    "name": "strike",
+    "t": 0.44
+   },
+   {
+    "name": "hit_start",
+    "t": 0.52
+   },
+   {
+    "name": "hit_end",
+    "t": 0.64
+   },
+   {
+    "name": "land",
+    "t": 0.72
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.15,
+  "loop": false
+ },
+ "Death": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 1.1
+   }
+  ],
+  "held": true,
+  "length": 2.0,
+  "loop": false
+ },
+ "Get_Up": {
+  "events": [
+   {
+    "name": "cancel_ok",
+    "t": 0.48
+   }
+  ],
+  "length": 0.8,
+  "loop": false
+ },
+ "Hit": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.3
+   }
+  ],
+  "length": 0.45,
+  "loop": false
+ },
+ "Idle": {
+  "events": [],
+  "length": 4.0,
+  "loop": true
+ },
+ "Idle_Combat": {
+  "events": [],
+  "length": 2.0,
+  "loop": true
+ },
+ "Knockdown": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 0.45
+   }
+  ],
+  "held": true,
+  "length": 1.6,
+  "loop": false
+ },
+ "Run": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.03
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.14
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1733
+   }
+  ],
+  "gait": {
+   "duty": 0.21,
+   "footfalls": {
+    "FL": 0.52,
+    "FR": 0.42,
+    "HL": 0.0,
+    "HR": 0.09
+   }
+  },
+  "length": 0.3333,
+  "loop": true,
+  "speed": 6.7918
+ },
+ "Stagger": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.7
+   }
+  ],
+  "length": 0.9,
+  "loop": false
+ },
+ "Strafe_L": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1467
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.3333
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.48
+   }
+  ],
+  "gait": {
+   "duty": 0.6,
+   "footfalls": {
+    "FL": 0.22,
+    "FR": 0.72,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.6667,
+  "loop": true,
+  "side": 1.0,
+  "speed": 1.0954
+ },
+ "Strafe_R": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1467
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.3333
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.48
+   }
+  ],
+  "gait": {
+   "duty": 0.6,
+   "footfalls": {
+    "FL": 0.22,
+    "FR": 0.72,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.6667,
+  "loop": true,
+  "side": -1.0,
+  "speed": 1.0954
+ },
+ "Trot": {
+  "events": [
+   {
+    "name": "hoof_fr",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.2333
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.2333
+   }
+  ],
+  "gait": {
+   "duty": 0.4,
+   "footfalls": {
+    "FL": 0.5,
+    "FR": 0.0,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.4667,
+  "loop": true,
+  "speed": 3.1768
+ },
+ "Turn_L90": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.225
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.45
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.675
+   }
+  ],
+  "gait": {
+   "duty": 0.62,
+   "footfalls": {
+    "FL": 0.25,
+    "FR": 0.75,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.9,
+  "loop": true,
+  "turn": 90.0
+ },
+ "Turn_R90": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.225
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.45
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.675
+   }
+  ],
+  "gait": {
+   "duty": 0.62,
+   "footfalls": {
+    "FL": 0.25,
+    "FR": 0.75,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.9,
+  "loop": true,
+  "turn": -90.0
+ },
+ "Walk": {
+  "events": [
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.1467
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.3333
+   },
+   {
+    "name": "hoof_fr",
+    "t": 0.48
+   }
+  ],
+  "gait": {
+   "duty": 0.6,
+   "footfalls": {
+    "FL": 0.22,
+    "FR": 0.72,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.6667,
+  "loop": true,
+  "speed": 1.3693
+ },
+ "Walk_Back": {
+  "events": [
+   {
+    "name": "hoof_fr",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_hl",
+    "t": 0.0
+   },
+   {
+    "name": "hoof_fl",
+    "t": 0.4
+   },
+   {
+    "name": "hoof_hr",
+    "t": 0.4
+   }
+  ],
+  "gait": {
+   "duty": 0.65,
+   "footfalls": {
+    "FL": 0.5,
+    "FR": 0.0,
+    "HL": 0.0,
+    "HR": 0.5
+   }
+  },
+  "length": 0.8,
+  "loop": true,
+  "speed": -0.9859
+ }
+}

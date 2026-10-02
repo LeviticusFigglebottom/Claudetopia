@@ -307,9 +307,17 @@ class QuadSkeleton:
     """The rest skeleton for proportions `p`, with forward kinematics and the solvers the gait
     generator uses."""
 
-    def __init__(self, props: Optional[QuadProportions] = None):
+    def __init__(self, props: Optional[QuadProportions] = None,
+                 joints: Optional[Dict[str, Tuple[float, float, float]]] = None):
+        """`joints` draws a beast whose build is not a horse's scaled (a wolf's paws, a boar's
+        short legs) joint by joint, in metres: any of the names `joint_positions` returns, the
+        left side's mirrored to the right. Joints it leaves out keep the proportions' place."""
         self.props = props or QuadProportions()
         self.J = joint_positions(self.props)
+        for name, v in (joints or {}).items():
+            self.J[name] = np.array(v, float)
+            if name.endswith(".L"):
+                self.J[name[:-2] + ".R"] = np.array([-v[0], v[1], v[2]], float)
         self.bones: Dict[str, QBone] = {}
         self.order: List[str] = []
         J = self.J

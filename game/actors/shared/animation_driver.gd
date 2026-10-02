@@ -104,6 +104,13 @@ func setup(model_pivot: Node3D, body_kind: String, tint: Color, body_scale: floa
 				model = inst
 			else:
 				inst.free()
+	if model == null and body_kind != "humanoid":
+		# a foe the forge has made a body for wears it (CreatureModel.MODELS); only one it has not
+		# stands in as a PlaceholderBody
+		var beast := CreatureModel.create(body_variant, body_scale)
+		if beast != null:
+			pivot.add_child(beast)
+			model = beast
 	if model != null:
 		# The rig's own clip_event and clip_finished are deliberately not listened to: the
 		# timeline here is the one the game keeps, and the rig is a picture of it.
