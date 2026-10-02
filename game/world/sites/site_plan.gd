@@ -750,12 +750,8 @@ func _link_ops(l: Dictionary) -> void:
 		var b: Vector3 = pts[i]
 		# extend each run a little past its ends so the joins between runs and rooms are closed
 		var d := Vector3(b.x - a.x, 0.0, b.z - a.z).normalized()
-		# a secret's passage runs on into its host room past the doorway: its mouth is cut in a wall
-		# no other way passes, where the room's noise left the rock bulging over the mouth on some
-		# seeds, and the room behind the loose stones could not be walked into
-		var into_room := 0.8 + (MOUTH_IN + 1.0 if str(l["kind"]) == "secret" else 0.0)
-		var a2 := a - d * (into_room if i == 1 else 1.2)
-		var b2 := b + d * (into_room if i == pts.size() - 1 else 1.2)
+		var a2 := a - d * (0.8 if i == 1 else 1.2)
+		var b2 := b + d * (0.8 if i == pts.size() - 1 else 1.2)
 		a2.y = a.y
 		b2.y = b.y
 		var height := width * (1.25 if square else 1.3)
