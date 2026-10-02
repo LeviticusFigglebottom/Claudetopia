@@ -413,7 +413,10 @@ static func pennants_weather_house(d: PoiDressing) -> void:
 	# the rain-gauge: a short post and a funnelled can
 	var gauge_at := yard - side * 1.2 + toward * 2.0
 	var gauge_top := m.post(timber, gauge_at, 1.0, 0.09)
-	m.block(brass, Transform3D(Basis(), gauge_top + Vector3(0.0, 0.14, 0.0)), Vector3(0.18, 0.28, 0.18))
+	# the can in a mesh of its own, so it is judged standing on its own post
+	var can := m.begin()
+	m.block(can, Transform3D(Basis(), gauge_top + Vector3(0.0, 0.14, 0.0)), Vector3(0.18, 0.28, 0.18))
+	m.commit(can, PoiKit.plain(PoiKit.BRONZE, 0.45, 0.8), "GaugeCan")
 	# the glass in its box on a stand
 	var glass_at := yard + toward * 1.4
 	var glass_top := m.post(timber, glass_at, 1.25, 0.1)
@@ -2092,14 +2095,17 @@ static func briars_end(d: PoiDressing) -> void:
 		if absf(p.dot(along)) < 7.0 and p.dot(out) < 11.0:
 			continue     # the gap itself is bare
 		var r := k.rng.randf_range(1.6, 3.0)
-		m.ellipsoid(thorn, k.on_ground(p.x, p.y, -0.2), Vector3(r, k.rng.randf_range(1.2, 2.1), r * 0.85), Basis(Vector3.UP, k.rng.randf() * TAU))
+		m.ellipsoid(thorn, k.on_ground(p.x, p.y, -0.35), Vector3(r, k.rng.randf_range(0.6, 1.0), r * 0.85), Basis(Vector3.UP, k.rng.randf() * TAU))
 	await k.step()
 	m.commit(thorn, PoiKit.painted(5, {"base": "#1f2815", "accent": "#3a2419", "grout": "#10150b", "unit": 0.15}, 0.9, 0.9), "Briar", true)
+	var briar_mi := d.find_child("Briar", false, false) as MeshInstance3D
+	if briar_mi != null:
+		briar_mi.material_override = PoiKit.plain(Color(0.11, 0.14, 0.07), 0.95)
 	var vine := k.flora("briar_vine")
 	if vine != "" and not k.far:
 		var vines: Array = []
-		for i in 26:
-			var p := out * k.rng.randf_range(7.0, 17.0) + along * k.rng.randf_range(-15.0, 15.0)
+		for i in 70:
+			var p := out * k.rng.randf_range(5.5, 18.0) + along * k.rng.randf_range(-16.0, 16.0)
 			if absf(p.dot(along)) < 7.0 and p.dot(out) < 11.0:
 				continue
 			vines.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.0), k.rng.randf() * TAU, k.rng.randf_range(2.0, 3.0)))
@@ -2198,7 +2204,7 @@ static func frost_moot(d: PoiDressing) -> void:
 		if k.rng.randf() < 0.55:
 			m.ellipsoid(drift, k.on_ground(p.x, p.y, hh * 0.55 - 0.25) - Vector3(sin(a), 0.0, cos(a)) * 0.6, Vector3(1.3, 0.3, 0.9), Basis(Vector3.UP, a))
 	await k.step()
-	m.commit(bank, PoiKit.painted(5, {"base": "#5d6043", "accent": "#6f6e60", "grout": "#34361f", "unit": 0.5}, 0.75, 0.8), "TurfBank", true)
+	m.commit(bank, PoiKit.plain(Color(0.25, 0.27, 0.18), 0.95), "TurfBank", true)
 	m.commit(drift, snow, "SnowInTheBank", true)
 	var floor_st := m.begin()
 	var ring: Array = []
@@ -2319,6 +2325,8 @@ static func deadground(d: PoiDressing) -> void:
 	var to_mine := Vector2(OSKELD.x - k.origin.x, OSKELD.y - k.origin.z).normalized()
 	var across := Vector2(to_mine.y, -to_mine.x)
 	var tips := m.begin()
+	# the grey over everything: the waste spread thin across the ground where nothing has grown
+	_tip(d, tips, -to_mine * 19.0, to_mine, 38.0, 36.0, 0.12)
 	_tip(d, tips, -to_mine * 7.0 + across * 5.0, (-to_mine * 0.6 + across * 0.4).normalized(), 13.0, 7.0, 2.2)
 	_tip(d, tips, -to_mine * 2.0 - across * 8.0, (-to_mine * 0.5 - across * 0.5).normalized(), 12.0, 6.0, 1.8)
 	_tip(d, tips, to_mine * 8.0 + across * 3.0, (to_mine * 0.2 + across).normalized(), 10.0, 5.5, 1.5)
