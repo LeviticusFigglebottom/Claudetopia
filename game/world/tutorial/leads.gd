@@ -24,6 +24,17 @@ const WAIT_M := 110.0
 const WALK := 1.7
 const FASTEST := 9.0
 const ARRIVED_M := 2.0
+## The hart's forged body (tools/forge/horse_forge.py `hart`), drawn by HorseModel; the placeholder
+## only if it is missing.
+const HART_MODEL := "res://assets/models/creatures/grey_hart/grey_hart.glb"
+## m/s at which the hart breaks from its walk to a trot, and from a trot to its bound.
+const TROT_FROM := 2.4
+const RUN_FROM := 6.0
+## Waiting, it looks back over its shoulder at one who is further round behind it than this; one
+## nearer its front it turns to face.
+const LOOK_BACK_DEG := 100.0
+## Within this, standing at its way's end, it stands alert rather than at ease.
+const ALERT_M := 40.0
 
 var leads: Dictionary = {}          # lead id -> _Lead
 var _look := PollTimer.new(POLL_S)
@@ -154,6 +165,7 @@ class _Lead extends Node3D:
 	var body: Node3D = null
 	var placeholder: PlaceholderBody = null
 	var humanoid: Node = null
+	var beast: HorseModel = null
 	var _speed := 0.0
 	var _last_player := Vector3.INF
 
@@ -184,6 +196,12 @@ class _Lead extends Node3D:
 				humanoid.call("apply_appearance", look.to_dict())
 			if humanoid.has_method("play_intent"):
 				humanoid.call("play_intent", "Idle")
+		elif kind == "hart" and ResourceLoader.exists(Leads.HART_MODEL):
+			beast = HorseModel.new()
+			beast.name = "Hart"
+			beast.model_path = Leads.HART_MODEL
+			beast.scale = Vector3.ONE * float(spec.get("scale", 1.0))
+			pivot.add_child(beast)
 		else:
 			placeholder = PlaceholderBody.build("quadruped", tint, float(spec.get("scale", 1.0)), "hart")
 			pivot.add_child(placeholder)
@@ -253,11 +271,16 @@ class _Lead extends Node3D:
 			index += 1
 			return
 		var face := flat.normalized() if flat.length() > 0.05 else Vector2.ZERO
+		var look := ""
 		if at_end or _speed < 0.05:
-			# standing: it turns to look back at who follows
+			# standing: it turns to look back at who follows -- or, waiting on its way with them
+			# behind it, keeps its way and looks back at them over its shoulder
 			var back := Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z)
 			if back.length() > 0.5:
-				face = back.normalized()
+				look = _look_back(back) if (beast != null and not at_end) else ""
+				if look.is_empty():
+					face = back.normalized()
+		var yaw0 := rotation.y
 		if face != Vector2.ZERO:
 			rotation.y = lerp_angle(rotation.y, atan2(-face.x, -face.y), 1.0 - exp(-delta * 4.0))
 		if _speed > 0.01 and flat.length() > 0.05:
@@ -267,7 +290,30 @@ class _Lead extends Node3D:
 					else WorldProbe.get_height(next.x, next.z, global_position.y)
 			global_position = next
 		var gait := clampf(_speed / 4.0, 0.0, 1.0)
-		if placeholder != null:
+		if beast != null:
+			var k := maxf(beast.scale.x, 0.01)
+			var turning := angle_difference(yaw0, rotation.y) / delta if delta > 0.0 else 0.0
+			var pace := "Walk" if _speed < Leads.TROT_FROM else ("Trot" if _speed < Leads.RUN_FROM else "Run")
+			# a bigger beast takes fewer strides to the metre
+			beast.set_motion(_speed / k, turning, pace)
+			if not look.is_empty():
+				beast.standing_clip = look
+			elif at_end and gap < Leads.ALERT_M:
+				beast.standing_clip = "Alert"
+			else:
+				beast.standing_clip = ""
+		elif placeholder != null:
 			placeholder.update(delta, "Walk" if _speed > 0.05 else "Idle", 0.0, Vector2(0.0, gait), false)
 		elif humanoid != null and humanoid.has_method("set_locomotion"):
 			humanoid.call("set_locomotion", Vector2(0.0, _speed), false)
+
+	## Which shoulder it looks back over at one standing `back` (flat, from it) of it: "Look_Back"
+	## over its left, "Look_Back_R" over its right; "" when they are not far enough round behind it.
+	func _look_back(back: Vector2) -> String:
+		var fwd := Vector2(-sin(rotation.y), -cos(rotation.y))
+		var off := rad_to_deg(absf(fwd.angle_to(back)))
+		if off < Leads.LOOK_BACK_DEG:
+			return ""
+		# its left is -X in its own frame: (fwd.y, -fwd.x) in the flat plane, by the same turn
+		var left := Vector2(fwd.y, -fwd.x)
+		return "Look_Back" if left.dot(back) > 0.0 else "Look_Back_R"

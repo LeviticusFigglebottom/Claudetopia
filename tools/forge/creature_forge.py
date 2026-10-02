@@ -171,6 +171,9 @@ def skin(ob, arm, sp) -> str:
             hf.skin_to_body(ob, arm, pv, pW)
             method = "heat on the bare body (%s), carried over" % pm
         bpy.data.objects.remove(proxy, do_unlink=True)
+    if sp.extra.get("keep_barrel"):
+        # the belly and the brisket the trunk's, not the legs' (horse_forge.keep_barrel)
+        method += ", %d to the barrel" % hf.keep_barrel(ob, sp.skel)
     jaw_weights(ob, sp, quad.DEFORM_NAMES)
     return method
 

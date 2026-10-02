@@ -8,7 +8,7 @@ extends TestCase
 const MARSH := Vector2i(-20, -4)        # Sedgemire: reed beds and still channels
 const VALE_FIELD := Vector2i(-2, 8)     # Hearthvale: open ground
 const MERE := Vector2i(2, -1)           # Brightwater: the Mere near its shore, level 8
-const ASH := Vector2i(-23, 13)          # Cinderlea
+const ASH := Vector2i(-20, 18)          # Cinderlea, all ash (-23, 13 holds a sliver of the Delta round the Name-Wife's Hollow since the atlas border bent round it)
 const CRAGS := Vector2i(2, -24)         # Skerrow
 
 var _provider: TerrainProvider = null

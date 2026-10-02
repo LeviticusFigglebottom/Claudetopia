@@ -15949,9 +15949,25 @@ both pre-existing content (the unvowed tag and the Unvowed Marshal's weakness, f
 Warning census 49, at the baseline. Forge: `tools/forge/tests/run.py foes quad` (test_foes new) OK.
 
 **Not done / for the coordinator**:
-- The Old Grey Bitch is the leech-hound's body tinted; her grey muzzle and scars are not painted.
 - The bristleback's crest does not rise before the charge (the quadruped rig has no crest bone).
 - Gait IK falls short in the fast gaits by up to 0.1 m (the dogs' Run, the boar's charge), as the cob's.
 - Nothing measured of many forged foes at once (a pack of four wolves, a drake swarm) on a real GPU.
-- The grey hart lead (`world/tutorial/leads.gd`) still walks as a PlaceholderBody; the deer's grey
-  coat could carry it.
+
+**Follow-ups, the same day:**
+- The bestiary's two failures fixed at their cause (06bf4439): the Unvowed knight and huntsman drop
+  the `unvowed` tag nothing reads; the Unvowed Marshal's plate gives to a hammer (blunt -0.25, as
+  the other knight bosses').
+- The grey hart (`horse_forge.py hart`, `game/assets/models/creatures/grey_hart/`): the red deer's
+  body as an old stag, 1.32 m at the shoulder, heavier in the neck and chest (`DeerStyle.heavy`), a
+  fourteen-point rack spread wide, his own iron-grey coat with a frosted face; the deer's gaits and
+  Look_Back / Look_Back_R. `Leads` draws him with HorseModel: Walk, Trot, Run by pace; waiting with
+  you behind him he keeps his way and looks back over the shoulder you are on; at the way's end he
+  turns to you and stands alert. The belly and brisket are the trunk's in his skin
+  (`horse_forge.keep_barrel`), so a trot no longer hangs a fold under his chest (the red deer, not
+  rebuilt here, still has it). `test_start_ranger` checks him.
+- The Old Grey Bitch has her own body (`old_grey_bitch`): the leech-hounds' dam at 0.83 m against
+  their 0.61, heavier and deeper, her hips, shoulder blades and spine knuckles standing up through
+  a let-down back (`CanidStyle.age`), the left ear bitten off (`torn_ear`), a grey muzzle and pale
+  heron scars down both flanks (`scars`), the barrel weights kept to the trunk. Her def wears it
+  (`body_variant`), height 0.95; the leech-hound's body is her fallback (KIN).
+- Still: the other dogs and the red deer could take `keep_barrel` on their next build.

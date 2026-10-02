@@ -895,6 +895,48 @@ def build_deer_clips(solver: Solver) -> Dict[str, QuadClip]:
 DEER_CLIPS = ["Idle", "Graze", "Graze_Step", "Alert", "Walk", "Trot", "Run", "Hit", "Death", "Turn_L90", "Turn_R90"]
 
 
+def look_back_clip(solver: Solver, name: str = "Look_Back", side: float = 1.0, length: float = 4.0) -> QuadClip:
+    """Standing square, the head turned right round over the shoulder (the left for side 1, the
+    right for -1) and held there, looking back at whoever follows: the back bent a little toward
+    it, the head carried high, the ears pricked at what it sees. A loop the game holds while it
+    waits; the breath goes on, an ear turns away once and comes back, the scut flicks."""
+    def sample(t: float) -> QuadPose:
+        qp = QuadPose(feet=_stand(solver))
+        u = t / length
+        b = math.sin(2 * math.pi * u)
+        qp.lift = 0.005 * math.sin(4 * math.pi * u)
+        qp.bend = 14.0 * side
+        qp.yaw = 6.0 * side
+        qp.roll = -1.5 * side
+        qp.neck = -14.0 + 2.0 * b
+        qp.neck_turn = (82.0 + 3.0 * b) * side
+        qp.head_turn = 46.0 * side
+        qp.head = -6.0 + 2.5 * math.sin(2 * math.pi * (u + 0.3))
+        e = bump(((u - 0.4) % 1.0) / 0.2) if ((u - 0.4) % 1.0) < 0.2 else 0.0
+        near, far = -16.0, -16.0 + 34.0 * e
+        qp.ears = (near, far) if side > 0 else (far, near)
+        qp.ear_turn = (-8.0, -8.0 + 30.0 * e) if side > 0 else (-8.0 + 30.0 * e, -8.0)
+        qp.tail = 6.0
+        tail_flick(qp, t, length, 35.0)
+        return qp
+    return QuadClip(name, length, True, sample, [], {})
+
+
+def build_hart_clips(solver: Solver) -> Dict[str, QuadClip]:
+    """The grey hart's: the red deer's walk, trot, bound, stand and turns, and the looking back
+    over either shoulder at who follows it."""
+    clips = build_deer_clips(solver)
+    clips["Look_Back"] = look_back_clip(solver, "Look_Back", 1.0)
+    clips["Look_Back_R"] = look_back_clip(solver, "Look_Back_R", -1.0)
+    return clips
+
+
+# A lead's set (Leads): it walks and trots its way, stands, looks back, turns; Hit and Death stay
+# for whatever shoots it.
+HART_CLIPS = ["Idle", "Alert", "Look_Back", "Look_Back_R", "Walk", "Trot", "Run", "Hit", "Death",
+              "Turn_L90", "Turn_R90"]
+
+
 MOUNT_CLIPS = ["Idle", "Graze", "Walk", "Trot", "Canter", "Gallop", "Walk_Back", "Turn_L90", "Turn_R90",
                "Stop", "Rear", "Mount", "Dismount"]
 
