@@ -65,5 +65,195 @@
     "loot": "core:loot/rich_chest",
     "drops": ["core:item/token_of_no_clan"],
     "tags": ["construct", "brute", "stone", "boss"]
+  },
+  {
+    "id": "core:boss/kadda_the_rasp",
+    "resists": {
+      "frost": 0.3,
+      "slash": 0.1,
+      "fire": -0.2,
+      "blunt": -0.15
+    },
+    "extends": "core:enemy/clanless_outrider",
+    "name": "Kadda the Rasp",
+    "archetype": "boss",
+    "arena": "core:poi/dunnow",
+    "region": "core:region/skerrow",
+    "tint": "#5b5650",
+    "scale": 1.12,
+    "lore": "Kadda was ko-Kharrow, a tally-cutter's daughter, until the Moot priced her brother's death at her own hands at nine years' work and she would not stay to do them. She knows the Long Tally better than any keeper living: where every clan's wall begins, how the fives are cut, which notch is whose. She grinds the names out with a farrier's rasp, carefully, the way her mother cut them in, and she has kept a list of every one she has taken away, because she cannot bear for anything to be forgotten by accident.",
+    "stats": {
+      "hp": 470,
+      "stamina": 180,
+      "poise": 95,
+      "armour": 12,
+      "speed": 3.9
+    },
+    "behaviour": {
+      "engage_range": 3.0,
+      "circle": 0.55,
+      "retreat_threshold": 0.0,
+      "patience": 2.5,
+      "leash": 55.0,
+      "aggression": 0.85,
+      "strafe_speed": 1.0
+    },
+    "phases": [
+      {
+        "name": "the rasp",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "unwritten",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 4.3,
+        "say": "She drags the rasp across the blank wall and shouts the names off her list, and the Unwritten who are left come to hear their own."
+      }
+    ],
+    "marks": [
+      220,
+      360
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/the_rasps_list"
+    ],
+    "tags": [
+      "human",
+      "raider",
+      "outlaw",
+      "duelist",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/chained_brakh",
+    "resists": {
+      "slash": 0.45,
+      "pierce": 0.5,
+      "poison": 0.8,
+      "frost": 0.3,
+      "blunt": -0.3
+    },
+    "extends": "core:enemy/stone_thrall",
+    "name": "The Chained Brakh",
+    "archetype": "boss",
+    "arena": "core:poi/ghaleld",
+    "region": "core:region/skerrow",
+    "tint": "#7d4c3a",
+    "scale": 2.6,
+    "height": 5.0,
+    "lore": "What the Breath left of a giant who lay down in the fell when the world was young: bone gone to iron, three thousand years of it, so that the Brindle dug its marrow for ore and drew it into the chains that hold the heights together. When the last shift's picks went into its heart it got up. They could not kill it, so they chained it where it stood, with their own last length, and went on digging round it. It has stood in that chain for forty years with the rust running down it like blood.",
+    "stats": {
+      "hp": 1050,
+      "stamina": 250,
+      "poise": 250,
+      "armour": 28,
+      "speed": 1.7
+    },
+    "behaviour": {
+      "engage_range": 5.0,
+      "circle": 0.0,
+      "retreat_threshold": 0.0,
+      "patience": 6.0,
+      "leash": 50.0,
+      "hyper_armour": 60.0,
+      "aggression": 0.7,
+      "strafe_speed": 0.2
+    },
+    "phases": [
+      {
+        "name": "in the chain",
+        "hp": 1.0,
+        "aggression": 0.65,
+        "say": "It turns as far as the chain lets it, and the chain sings against the rock."
+      },
+      {
+        "name": "the last link",
+        "hp": 0.45,
+        "aggression": 0.95,
+        "speed": 2.3,
+        "say": "The last link parts. The chain the Brindle drew from its own marrow comes away in its hand, and it swings it."
+      }
+    ],
+    "marks": [
+      260,
+      420
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/marrow_iron"
+    ],
+    "tags": [
+      "construct",
+      "brute",
+      "stone",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/haldo_the_lampman",
+    "resists": {
+      "frost": 0.35,
+      "pierce": 0.1,
+      "fire": -0.2,
+      "blunt": -0.1
+    },
+    "extends": "core:enemy/clanless_raider",
+    "name": "Haldo the Lampman",
+    "archetype": "boss",
+    "arena": "core:poi/oskel_gloup",
+    "region": "core:region/skerrow",
+    "tint": "#4f5551",
+    "scale": 1.2,
+    "lore": "Haldo ko-Oskel worked the gloup winch for twenty years and sold the Salt boat's cargo to the clanless the week before it sailed, for more silver than the Oskel paid him in a lifetime, and hung a lamp in the sea-mouth the night it came round the cape. He did not know Keddo was its pilot. He has not been up the gloup since. He lights the lamp on every dark night, the clanless say, because he cannot bear for anyone to think it was an accident.",
+    "stats": {
+      "hp": 540,
+      "stamina": 180,
+      "poise": 150,
+      "armour": 20,
+      "speed": 2.9
+    },
+    "behaviour": {
+      "engage_range": 3.4,
+      "circle": 0.2,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 55.0,
+      "hyper_armour": 40.0,
+      "aggression": 0.8,
+      "strafe_speed": 0.5
+    },
+    "phases": [
+      {
+        "name": "the winchman",
+        "hp": 1.0,
+        "aggression": 0.75
+      },
+      {
+        "name": "the lamp",
+        "hp": 0.5,
+        "aggression": 0.95,
+        "speed": 3.2,
+        "say": "He takes the lamp off its hook and swings it, and the light goes out over the skerries and back, and the Lamp's men come to it."
+      }
+    ],
+    "marks": [
+      240,
+      400
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/lampmans_tally"
+    ],
+    "tags": [
+      "human",
+      "raider",
+      "outlaw",
+      "brute",
+      "boss"
+    ]
   }
 ]

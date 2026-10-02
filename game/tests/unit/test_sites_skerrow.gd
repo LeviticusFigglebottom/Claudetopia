@@ -1,7 +1,8 @@
 extends TestCase
-## Skerrow's three large sites (docs/WORLD_LIFE_INTERIORS.md), walked the way test_sites.gd walks the
-## showcases: Ghastow Undercroft under Old Ghastow's keep, Orrdun's bone-hall in the Wall, and the
-## caves under the Brakh's Drink. Each is entered through a door, stood in, every room reached on its
+## Skerrow's large sites (docs/WORLD_LIFE_INTERIORS.md), walked the way test_sites.gd walks the
+## showcases: Ghastow Undercroft under Old Ghastow's keep, Orrdun's bone-hall in the Wall, the caves
+## under the Brakh's Drink, and (phase 2) Dunnow's halls in the Wall's foot, Ghaleld's workings and the
+## Salt Cave under Oskel Gloup. Each is entered through a door, stood in, every room reached on its
 ## navigation mesh from the way in, its foes and its boss's arena there, and left through the way out.
 ## Its quest's boss and its outside's door are the pack's own.
 
@@ -12,6 +13,9 @@ const SITES := {
 	"core:interior/ghastow_undercroft": ["core:poi/old_ghastow", "core:boss/gorrm_unroped", "core:quest/a_stone_before_the_death"],
 	"core:interior/orrdun_bone_hall": ["core:poi/orrdun", "core:boss/keener_of_orrdun", "core:quest/the_verse_nobody_sang"],
 	"core:interior/brakhs_drink_under": ["core:poi/brakhs_drink", "core:boss/kneeling_brakh", "core:quest/tokens_of_no_clan"],
+	"core:interior/dunnow_halls": ["core:poi/dunnow", "core:boss/kadda_the_rasp", "core:quest/the_long_tally"],
+	"core:interior/ghaleld_workings": ["core:poi/ghaleld", "core:boss/chained_brakh", "core:quest/iron_for_the_chain"],
+	"core:interior/the_salt_cave": ["core:poi/oskel_gloup", "core:boss/haldo_the_lampman", "core:quest/the_second_light"],
 }
 var player: Node3D
 

@@ -1,0 +1,575 @@
+[
+  {
+    "id": "core:dialogue/fenna_ko_dreugh",
+    "speaker_name": "Fenna ko-Dreugh",
+    "notes": "The last keeper of the Long Tally, in her lean-to at Dunnow's foot (skerrow world life, phase 2). Gives core:quest/the_long_tally.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "tally_cut_back"
+          },
+          {
+            "quest_done": "core:quest/the_long_tally"
+          }
+        ],
+        "text": "Thirty-one names. My hands are too old for it and I am cutting them anyway, a few each morning, in the light. Kadda's I have left till last. I want to cut that one well."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tally_let_go"
+          },
+          {
+            "quest_done": "core:quest/the_long_tally"
+          }
+        ],
+        "text": "Thirty-one patches on the walls with nothing in them. I sit and look at them. I keep thinking I will forget where they are, and I do not, and I do not know if that is the Tally or only me."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tally_to_moot"
+          },
+          {
+            "quest_done": "core:quest/the_long_tally"
+          }
+        ],
+        "text": "The Moot has the list. They will argue about it for three winters and cut half of them back and forgive the other half, and both halves will think it was the wrong half. That is what the Moot is for. I have stopped minding."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Ko-Dreugh, Fenna. Keeper. I would get up, but if I get up I will not get down again, and I want to be sitting here when they come out. Hear that? That is a rasp.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Every blood-price the Moot set for six hundred years, cut in the walls, a notch for each beast or year or coin, in fives. The oldest at the door, so you walk in past what your grandmothers owed. — People think it is a list of debts. It is a list of who is still waiting to be paid. A death nobody has paid for is a hole in somebody. The Tally is where the holes are written down, so nobody can pretend they have healed.",
+        "effects": [
+          {
+            "set_flag": "fenna_ko_dreugh_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Clanless. They call themselves the Unwritten, as if it were a thing you could be. They think if the notch is gone the debt is gone. — It is not that they are wrong, exactly. A debt nobody can read is a strange thing. But the people they owe are still owed, and now there is nowhere it says so.",
+        "effects": [
+          {
+            "set_flag": "fenna_ko_dreugh_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "The Moot went to sticks. A reckoner on the Edge with a knife and a bundle of hazel, very clever, very quick. Sticks burn. Sticks get lost. A reckoner dies and his sticks go in the fire with him. — I lit the windows every night for a year after the last of us died, so the Windgate would see the clans still remembered. Then I came down. I should not have come down.",
+        "effects": [
+          {
+            "set_flag": "fenna_ko_dreugh_told_3"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Ask, then. I am counting.",
+        "choices": [
+          {
+            "text": "What is the Long Tally?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who has taken the hold?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why was Dunnow left?",
+            "next": "topic_3"
+          },
+          {
+            "text": "The names they are grinding out. I could stop it.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_long_tally"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_long_tally"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Kadda is dead. She kept a list of every name she took.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_long_tally",
+                  "the_list"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Thirty-one notches in eleven days. I have counted every one from down here by the sound. — Their chief is a Kharrow girl, a cutter's daughter: she knows the walls better than I do now, and she starts at the top, where the newest are, because she knows that is where her own name is. — Go up. Stop the rasping. And find out whose they were. I cannot bear not knowing whose they were.",
+        "choices": [
+          {
+            "text": "I'll go up into Dunnow.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_long_tally"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Mind the stair past the door. It was cut for keepers, and keepers went up it with their eyes on the walls.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "*(She reads it with her finger, every line, counting.)* — Thirty-one. Clan, debt, year, in a cutter's hand; her mother taught her well. A herdsman of ours from before I was born. A Rudd boy who owed a verse. — And at the bottom her own, with no line through it. She was going to do herself last. — Tell me what to do with it. I have kept the Tally all my life and I find I do not know.",
+        "choices": [
+          {
+            "text": "Cut them all back into the Tally. They are still owed.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_long_tally",
+                  "cut_them_back"
+                ]
+              }
+            ],
+            "next": "q_decide_back"
+          },
+          {
+            "text": "Burn the list. Let them be unwritten.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_long_tally",
+                  "let_them_go"
+                ]
+              }
+            ],
+            "next": "q_decide_go"
+          },
+          {
+            "text": "Send it to the Moot. It is theirs to decide.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_long_tally",
+                  "to_the_moot"
+                ]
+              }
+            ],
+            "next": "q_decide_moot"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_decide_back": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Yes. Not because they owe. Because somebody is owed, and the somebody should be able to come up the stair and put a hand on it. — I will need help up. I will need a great deal of help up. Tomorrow.",
+        "next": "hub"
+      },
+      "q_decide_go": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "*(She holds it to her fire until it catches, and does not let go of it until she has to.)* — There. Thirty-one people nobody can find in the walls. I hope it is what they wanted. I hope somebody remembers them anyway, by accident, the way people do.",
+        "next": "hub"
+      },
+      "q_decide_moot": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "The Moot. Seven clans and a reckoner to argue it. — Yes. That is the law, and I am too old to be the law on my own. Take it down to Kharrow. Tell them a keeper sent it, they will not like that.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Fenna ko-Dreugh",
+        "text": "Go on. I will count you out.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brakka_ko_brindle",
+    "speaker_name": "Brakka ko-Brindle",
+    "notes": "The last chain-smith, at the forge at Ghaleld's shaft head (skerrow world life, phase 2). Gives core:quest/iron_for_the_chain.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "chain_link_forged"
+          },
+          {
+            "quest_done": "core:quest/iron_for_the_chain"
+          }
+        ],
+        "text": "The link's in. I went down to Kharrow and hung it myself, off a rope, in the wind. The bridge stopped leaning. It hums now, on still mornings, the whole length of it. I have decided I like it."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "chain_iron_returned"
+          },
+          {
+            "quest_done": "core:quest/iron_for_the_chain"
+          }
+        ],
+        "text": "The bridge still leans. I go and look at it every week, and I listen to the crack, and I think about my grandfather chaining a thing in its own bones and going on digging. Some debts you pay by not taking any more."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "chain_iron_shown"
+          },
+          {
+            "quest_done": "core:quest/iron_for_the_chain"
+          }
+        ],
+        "text": "The Moot came up to look at the board. Three chiefs, standing in the wind, looking at a bar of iron under forty-year-old chalk. Nobody said anything. Then the Skarl chief said, quietly, we had better count the bridges. They are counting them now."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Ko-Brindle, Brakka. Smith. That's chain, that's my forge, and that hole is shut by order of the Moot, which I mention because people ask.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Every chain bridge in the heights. The Chain Bridge at Kharrow, the four at the Gorge, the old one at Ghast's that broke. All Ghaleld iron, drawn at the forge down the shaft, because it would not keep its temper in daylight. — Bog iron rusts through in ten winters. Ghaleld iron has hung over the Kharrow gorge for four hundred years. Nobody ever asked why.",
+        "effects": [
+          {
+            "set_flag": "brakka_ko_brindle_told_1"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "The ribs? A giant's. My great-great-grandmother's shift stood them up with a capstan and forty men, because no tree in the heights is twelve metres straight. The clans think it's a disrespect. The clans think everything is a disrespect, so.",
+        "effects": [
+          {
+            "set_flag": "brakka_ko_brindle_told_2"
+          }
+        ],
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "My grandfather was the overman the winter they broke through. He came up last, a day after the shift, and he never went near a forge again. He'd sit at the collar and listen. I asked him once what for. He said: for it to stop. — It never stopped. You can hear it on a still night. Iron, singing against rock.",
+        "effects": [
+          {
+            "set_flag": "brakka_ko_brindle_told_3"
+          }
+        ],
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Well? I've a link in the fire.",
+        "choices": [
+          {
+            "text": "What was Ghaleld iron for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Your headframe is made of bones.",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why was the mine shut?",
+            "next": "topic_3"
+          },
+          {
+            "text": "You keep a forge lit for a shut mine. Why?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/iron_for_the_chain"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/iron_for_the_chain"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the iron. It's the giant's marrow, and they chained it in its own bones.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/iron_for_the_chain",
+                  "the_iron"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Because the Chain Bridge is cracking. The Brindle chain, downstream side, ninth link from the Kharrow end. I can hear it from here on a still morning: it rings flat. — Nobody at Kharrow believes me. Go and look at it, and then come back and tell me I'm wrong, and if I'm not wrong, I'll need iron. And there is only one place the iron is.",
+        "choices": [
+          {
+            "text": "I'll look at the Chain Bridge.",
+            "effects": [
+              {
+                "start_quest": "core:quest/iron_for_the_chain"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Ninth link. Downstream. Put your hand on it and wait for a gust. You'll feel it.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "*(She taps the bar and listens to it, and then she sits down on the anvil, which nobody does.)* — Its own marrow. And the chain they held it with. And every length my family ever drew. — It's the best iron in the world and it's not ours and the bridge is still cracking. Say what I do with it. I find I can't.",
+        "choices": [
+          {
+            "text": "Forge the link. The bridge has to hold.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/iron_for_the_chain",
+                  "forge_the_link"
+                ]
+              }
+            ],
+            "next": "q_decide_forge"
+          },
+          {
+            "text": "Give it back. Lay it in the marrow.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/iron_for_the_chain",
+                  "give_it_back"
+                ]
+              }
+            ],
+            "next": "q_decide_back"
+          },
+          {
+            "text": "Hang it on the board for the Moot to see.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/iron_for_the_chain",
+                  "the_shift_board"
+                ]
+              }
+            ],
+            "next": "q_decide_board"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_decide_forge": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "*(She has it in the fire before you finish.)* — It holds people up over a gorge. It held something down for forty years. It can do one more useful thing. — I'll tell the Kharrow folk what they're walking on. Or I won't. I haven't decided.",
+        "next": "hub"
+      },
+      "q_decide_back": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Back in the marrow. — Grandfather would have liked that. He'd have hated it, and liked it. — Then the bridge leans, and in ten winters it falls, and the clans will have to build one out of something that was never alive. Maybe that's the right price.",
+        "next": "hub"
+      },
+      "q_decide_board": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "On the board. Under their names. — Yes. Let the chiefs come up the bench and look at what's holding their bridges together. Let them decide. That's what they're for.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Brakka ko-Brindle",
+        "text": "Mind the cage. It still drops if you lean on it.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dunnow_long_tally",
+    "speaker_name": "The Long Tally",
+    "notes": "Dunnow's front: a PoiTouch at the tally panel (skerrow.gd dunnow). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Long Tally",
+        "no_talk": true,
+        "text": "Notches, cut in fives with a stroke across the fifth, row on row up the dressed face either side of the door: the oldest prices of the Moot, worn soft by six hundred years of weather. At the head of each row a clan-mark and a year. Here and there a patch of the face has been rasped down pale and smooth, a hand across, the notches gone, and under each patch a little heap of fresh stone-dust that the wind has not yet had.",
+        "choices": [
+          {
+            "text": "Look at the rasped patches.",
+            "next": "more"
+          },
+          {
+            "text": "Leave the Tally.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The Long Tally",
+        "no_talk": true,
+        "text": "The rasping is careful: it follows the line of the row exactly and stops at the next name, as if whoever did it knew precisely where one debt ended and another began. In the dust under the newest patch somebody has drawn, with a finger, five strokes and a line across them.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghaleld_shift_board",
+    "speaker_name": "The board at the collar",
+    "notes": "Ghaleld's shift board: a PoiTouch at the shaft collar (skerrow.gd ghaleld). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The board at the collar",
+        "no_talk": true,
+        "text": "A board on a post at the collar, blacked for chalk. Eleven names in a column, the last shift of the winter of 1001, each with a tally of hundredweights against it. Over them, nailed at the corners, the Moot's order on a sheet of hide: GHALELD IS SHUT. NO IRON IS TO BE DRAWN FROM IT. BY THE SEVEN. Somebody has drawn a line through the order in red chalk, recently, and under the last name has written: STILL IN ITS CHAIN.",
+        "choices": [
+          {
+            "text": "Read the last name.",
+            "next": "more"
+          },
+          {
+            "text": "Leave the board.",
+            "next": "end"
+          }
+        ]
+      },
+      "more": {
+        "speaker": "The board at the collar",
+        "no_talk": true,
+        "text": "BRANN KO-BRINDLE, OVERMAN. No tally against it. Instead, small and deep, as if cut with a knife point: came up last.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ghaleld_last_length",
+    "speaker_name": "The last length of chain",
+    "notes": "Ghaleld's last length of chain, lying in the grass (skerrow.gd ghaleld). Starts nothing.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The last length of chain",
+        "no_talk": true,
+        "text": "Links as long as your forearm, drawn round and welded, lying in a long S through the grass from the forge toward the edge of the bench, rusted red. It was meant for the Gorge bridges and never carried down. The grass has grown up through every link. When you put a hand on it the iron is warmer than the air, and a long way off, under your feet, something rings back."
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/orrin_ko_kharrow",
+    "speaker_name": "Orrin ko-Kharrow",
+    "notes": "The gate-ward at Kharrow Gate (skerrow world life, phase 2). No quest; the law, and the traveller who would not say it back.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Ko-Kharrow, Orrin. Ward of the gate. Before you go up: the law. What is taken is paid for in kind. A death is paid in blood-price. A host is never robbed. — Say it back.",
+        "choices": [
+          {
+            "text": "What is taken is paid for in kind. A death is paid in blood-price. A host is never robbed.",
+            "effects": [
+              {
+                "set_flag": "kharrow_gate_law_said"
+              }
+            ],
+            "next": "said"
+          },
+          {
+            "text": "And if I don't?",
+            "next": "refuse"
+          }
+        ]
+      },
+      "said": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "*(He mouths it after you, a word behind.)* Good. You're in the heights now. People here will remember what you do, and say it to each other, and it will be waiting for you at every fire. That is all the law is. Go up.",
+        "next": "hub"
+      },
+      "refuse": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Then you go up anyway; there's no wall. But you go up as somebody who would not say it, and that goes up ahead of you faster than you can walk. — One did, this spring. A woman, from the Vale by her boots. She listened to all of it and walked on. I've been thinking about her since.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Anything else? The road's quiet.",
+        "choices": [
+          {
+            "text": "Tell me about the woman who wouldn't say it.",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why a bar, if there's no wall?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll be on my way.",
+            "next": "bye"
+          }
+        ]
+      },
+      "topic_1": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Grey cloak, Vale boots, a Sayer's ink on her fingers. She heard the law out, very polite, and said: I don't owe anything up there yet. And walked on up the gorge. — The clans want to know what she is. I've told them: she's somebody who reads the small print. That's worse than a thief.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "So you stop. A traveller who has to stop and wait for a bar to go up has time to listen. That's what the bar is for. I've never once closed it on anybody.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Orrin ko-Kharrow",
+        "text": "Mind the gorge path after rain. And mind the law.",
+        "next": "end"
+      }
+    }
+  }
+]
