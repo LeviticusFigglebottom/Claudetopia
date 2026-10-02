@@ -11,7 +11,19 @@ extends RefCounted
 ##   "held":       {"prop": "hearthvale_spear", "scale": [x, y, z], "grip": 0.35}: a forge prop in
 ##                 the right hand, standing along the socket's +Y as CONTRACTS §2 has a blade
 ##                 stand, held `grip` of the way up it
-##   "antlers":    {"span": m, "tines": n, "colour": "#hex"}: grown from the head, on the helm
+##   "antlers":    {"span": m, "tines": n, "colour": "#hex", "thick": k}: grown from the head, on the helm
+##   "carry":      [{"model": "props/x_a" | "weapons/x", "at": socket or bone, "pos": [x, y, z],
+##                 "turn": [x, y, z], "scale": s or [x, y, z], "light": {...}, "flame": {...}}]: what a
+##                 foe carries about it that is not in its hands -- a bell on its back, a register at
+##                 its hip, a lamp on its hat (`carry_one`)
+##   "aura":       {"rim": "#hex", "energy": e, "bands": n, "motes": {...}, "light": {...}}: the light
+##                 an uncanny foe is seen by (`wear_aura`)
+##   "breadth":    the body this much broader than its build makes it, for a foe that stands above
+##                 its people in more than height
+##
+## A foe is drawn at its def's `scale`: the look's height (a person's own, 1.78 m when it says none)
+## times the scale. Without it every humanoid foe stood at a person's height whatever its def said,
+## and a bell-bearer built for 2.6 m of capsule stood 1.78 m inside it.
 ##
 ## The outfits by tag (`OUTFITS`) are the garments the character forge already builds: a hood
 ## and a jerkin for the road's outlaws, plate for a knight, rags for the dead, a robe for a caster.
@@ -52,7 +64,12 @@ const ANTLER_BONE := "#d9ccb0"
 static func dress(model: Node3D, def: Dictionary, slice: WorldPace.Slice = null) -> void:
 	if model == null or not model.has_method("apply_appearance"):
 		return
-	var look := look_for(def)
+	if "breadth" in model:
+		model.set("breadth", float(def.get("breadth", 1.0)))
+	# a foe stands a staff, a spear or a pole upright beside it at rest, not across its body
+	if "rests_poles" in model:
+		model.set("rests_poles", true)
+	var look := sized_look(def)
 	if not look.is_empty():
 		if slice != null and model is HumanoidModel:
 			# stood up while the world is drawn: a few parts a frame, within the frame's budget
@@ -67,6 +84,25 @@ static func dress(model: Node3D, def: Dictionary, slice: WorldPace.Slice = null)
 	var antlers: Variant = def.get("antlers", null)
 	if typeof(antlers) == TYPE_DICTIONARY:
 		grow_antlers(model, antlers)
+	var carry: Variant = def.get("carry", null)
+	if typeof(carry) == TYPE_ARRAY:
+		for spec: Variant in carry:
+			if typeof(spec) == TYPE_DICTIONARY:
+				carry_one(model, spec)
+	var aura: Variant = def.get("aura", null)
+	if typeof(aura) == TYPE_DICTIONARY:
+		wear_aura(model, aura)
+
+
+## The look a foe is drawn in, at its def's size: `look_for`, its height times the def's `scale`.
+static func sized_look(def: Dictionary) -> Dictionary:
+	var look := look_for(def)
+	var s := float(def.get("scale", 1.0))
+	if look.is_empty() or is_equal_approx(s, 1.0):
+		return look
+	look = look.duplicate(true)
+	look["height"] = float(look.get("height", 1.78)) * s
+	return look
 
 
 ## Where a dressed foe is armoured, for how a blow on it lands (Enemy.material_at): {"torso": plate
@@ -154,13 +190,16 @@ static func grow_antlers(model: Node3D, spec: Dictionary) -> MeshInstance3D:
 	var bone := skeleton.find_bone("Socket.Head")
 	if socket == null or bone < 0:
 		return null
-	# the model's frame (face +z, up +y) into the skeleton's, and the head's rest pose in it
-	var to_skeleton := skeleton.global_transform.affine_inverse() * model.global_transform
+	# the model's frame (face +z, up +y) into the skeleton's, in the rig's own metres, so they grow
+	# with the body a big foe is drawn at; and the head's rest pose in it
+	var to_skeleton := rest_frame(model, skeleton)
 	var pose := skeleton.get_bone_global_pose(bone)
 	var head := (to_skeleton.affine_inverse() * pose).origin
 	var fabric := FabricMesh.new()
 	var span := float(spec.get("span", 0.9))
 	var tines := int(spec.get("tines", 4))
+	# how heavy the beams and the tines are against a young hart's ("thick": Ardo's are old and heavy)
+	var thick := float(spec.get("thick", 1.0))
 	var bone_c := Color(str(spec.get("colour", ANTLER_BONE)))
 	var tip_c := bone_c.lightened(0.25)
 	for side_v in [-1.0, 1.0]:
@@ -168,7 +207,7 @@ static func grow_antlers(model: Node3D, spec: Dictionary) -> MeshInstance3D:
 		var base := head + Vector3(side * 0.07, ANTLER_ROOT_M, -0.01)
 		var points := antler_beam(base, side, span)
 		for i in range(points.size() - 1):
-			var r := lerpf(0.028, 0.012, float(i) / float(points.size() - 1))
+			var r := lerpf(0.028, 0.012, float(i) / float(points.size() - 1)) * thick
 			_limb(fabric, points[i], points[i + 1], r, bone_c.darkened(0.05 * float(i)), tip_c)
 		# the tines, off the beam's upper side, shorter toward the tip
 		for t in range(tines):
@@ -176,7 +215,7 @@ static func grow_antlers(model: Node3D, spec: Dictionary) -> MeshInstance3D:
 			var from := _along(points, along)
 			var reach := span * lerpf(0.26, 0.14, along)
 			var up := Vector3(side * 0.18, 1.0, lerpf(0.35, -0.2, along)).normalized()
-			_limb(fabric, from, from + up * reach, 0.014, bone_c, tip_c)
+			_limb(fabric, from, from + up * reach, 0.014 * thick, bone_c, tip_c)
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 0.82
@@ -221,3 +260,276 @@ static func _limb(fabric: FabricMesh, a: Vector3, b: Vector3, r: float, tint: Co
 	var z := side.normalized()
 	var y := z.cross(x)
 	fabric.prism("antler", Transform3D(Basis(x, y, z), (a + b) * 0.5), r, d.length() + r, tint, ends, 6)
+
+
+# --- what a foe carries about it ----------------------------------------------------------------
+
+const MODELS_ROOT := "res://assets/models/"
+const AURA_SHADER := preload("res://assets/shaders/boss_aura.gdshader")
+## Carried things are tagged, so dressing a body again takes away only what this put there.
+const CARRY_TAG := "carried"
+
+
+## Hangs the forge model `spec.model` ("props/cinderlea_bell_medium_a", "weapons/clapper_bronze") on
+## the body, riding the socket or bone `spec.at` ("Back", "HipL", "Lantern", "Head", or a bone:
+## "Chest", "Hips", "Spine", "Hand.L"). It is placed as the body stands at rest, in the body's own
+## frame and metres -- +X its left, +Y up, +Z ahead, from the ground between its feet, on the rig as
+## the forge built it (1.78 m) -- so it grows with the body's scale and goes where the bone goes:
+##   "pos":   where the model's origin is, [x, y, z] m
+##   "turn":  its turn, degrees about X, Y, Z (applied Y, X, Z), from facing ahead as it was built
+##   "scale": a number, or [x, y, z]
+##   "light": {"colour": "#hex", "energy": e, "range": m, "pos": [x, y, z] in the model's own frame}
+##   "flame": {"colour": "#hex", "size": m, "pos": [x, y, z]}: a small bright bead (a wick, a lamp's
+##            glass) drawn unlit
+## Returns the node, or null when the model or the place is not there.
+static func carry_one(model: Node3D, spec: Dictionary) -> Node3D:
+	var skeleton: Skeleton3D = model.get("skeleton")
+	if skeleton == null:
+		return null
+	var path := model_path(str(spec.get("model", "")))
+	var node: Node3D = null
+	if not path.is_empty():
+		var packed := load(path) as PackedScene
+		if packed == null:
+			return null
+		node = packed.instantiate() as Node3D
+	else:
+		# nothing but a light or a flame, hung in its place
+		node = Node3D.new()
+	if node == null:
+		return null
+	var at := str(spec.get("at", "Chest"))
+	var holder := _carry_holder(model, skeleton, at)
+	if holder == null:
+		node.free()
+		return null
+	node.name = "Carried_%s" % str(spec.get("model", "light")).get_file()
+	node.set_meta(CARRY_TAG, true)
+	node.add_to_group(CARRY_TAG)
+	var bone := skeleton.find_bone(holder.bone_name)
+	var rest := skeleton.get_bone_global_rest(bone)
+	node.transform = rest.affine_inverse() * rest_frame(model, skeleton) * carry_transform(spec)
+	holder.add_child(node)
+	light_up(node, spec)
+	return node
+
+
+## Lights what a foe carries or holds, by its spec's `light` (an OmniLight3D: "colour", "energy",
+## "range", "pos" in the node's own frame) and `flame` (a small bright bead drawn unlit: "colour",
+## "size", "pos"): a lamp's glass, a candle's wick.
+static func light_up(node: Node3D, spec: Dictionary) -> void:
+	var light: Variant = spec.get("light", null)
+	if typeof(light) == TYPE_DICTIONARY:
+		var lamp := OmniLight3D.new()
+		lamp.name = "CarriedLight"
+		lamp.light_color = Color(str(light.get("colour", "#ffb35c")))
+		lamp.light_energy = float(light.get("energy", 1.0))
+		lamp.omni_range = float(light.get("range", 5.0))
+		lamp.shadow_enabled = false
+		lamp.position = _vec(light.get("pos", [0.0, 0.0, 0.0]), Vector3.ZERO)
+		node.add_child(lamp)
+	var flame: Variant = spec.get("flame", null)
+	if typeof(flame) == TYPE_DICTIONARY:
+		node.add_child(_flame(flame))
+
+
+## The forge model a carried thing names, as a path ("" when it names none or it is not built).
+static func model_path(model_name: String) -> String:
+	if model_name.is_empty():
+		return ""
+	var path := "%s%s/%s.glb" % [MODELS_ROOT, model_name, model_name.get_file()]
+	return path if ResourceLoader.exists(path) else ""
+
+
+## The body's rest frame in the skeleton's: the body's own axes (+X its left, +Y up, +Z ahead) and
+## the rig's metres, whatever scale the rig is drawn at.
+static func rest_frame(model: Node3D, skeleton: Skeleton3D) -> Transform3D:
+	var to_skeleton := skeleton.global_transform.affine_inverse() * model.global_transform
+	return Transform3D(to_skeleton.basis.orthonormalized(), Vector3.ZERO)
+
+
+## A carry spec's place and turn and scale, in the body's rest frame.
+static func carry_transform(spec: Dictionary) -> Transform3D:
+	var turn := _vec(spec.get("turn", [0.0, 0.0, 0.0]), Vector3.ZERO)
+	var basis := Basis.from_euler(Vector3(deg_to_rad(turn.x), deg_to_rad(turn.y), deg_to_rad(turn.z)))
+	var sc: Variant = spec.get("scale", 1.0)
+	var size := _vec(sc, Vector3.ONE) if typeof(sc) == TYPE_ARRAY else Vector3.ONE * float(sc)
+	return Transform3D(basis.scaled_local(size), _vec(spec.get("pos", [0.0, 1.0, 0.0]), Vector3(0.0, 1.0, 0.0)))
+
+
+## The socket `at` names, or a BoneAttachment3D of its own on the bone it names.
+static func _carry_holder(model: Node3D, skeleton: Skeleton3D, at: String) -> BoneAttachment3D:
+	if model.has_method("socket"):
+		var s: BoneAttachment3D = model.call("socket", at)
+		if s != null:
+			return s
+	var bone := skeleton.find_bone(at)
+	if bone < 0:
+		return null
+	var holder_name := "Carry_%s" % at.replace(".", "_")
+	var holder := skeleton.get_node_or_null(holder_name) as BoneAttachment3D
+	if holder == null:
+		holder = BoneAttachment3D.new()
+		holder.name = holder_name
+		holder.bone_name = at
+		skeleton.add_child(holder)
+	return holder
+
+
+static func _flame(spec: Dictionary) -> MeshInstance3D:
+	var bead := MeshInstance3D.new()
+	bead.name = "CarriedFlame"
+	var sphere := SphereMesh.new()
+	var r := float(spec.get("size", 0.025))
+	sphere.radius = r
+	sphere.height = r * 2.6
+	sphere.radial_segments = 8
+	sphere.rings = 4
+	bead.mesh = sphere
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(str(spec.get("colour", "#ffd08a")))
+	bead.material_override = mat
+	bead.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	bead.position = _vec(spec.get("pos", [0.0, 0.0, 0.0]), Vector3.ZERO)
+	return bead
+
+
+static var _dot: GradientTexture2D = null
+
+
+## A round spot, white in the middle and gone at its edge, shared by every mote.
+static func _soft_dot() -> GradientTexture2D:
+	if _dot == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1.0, 1.0, 1.0, 1.0))
+		g.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+		g.add_point(0.45, Color(1.0, 1.0, 1.0, 0.55))
+		_dot = GradientTexture2D.new()
+		_dot.gradient = g
+		_dot.fill = GradientTexture2D.FILL_RADIAL
+		_dot.fill_from = Vector2(0.5, 0.5)
+		_dot.fill_to = Vector2(1.0, 0.5)
+		_dot.width = 32
+		_dot.height = 32
+	return _dot
+
+
+static func _vec(v: Variant, fallback: Vector3) -> Vector3:
+	if typeof(v) == TYPE_ARRAY and (v as Array).size() >= 3:
+		return Vector3(float(v[0]), float(v[1]), float(v[2]))
+	return fallback
+
+
+# --- the light an uncanny foe is seen by ------------------------------------------------------
+
+## An uncanny foe's light (`aura`): its silhouette lit from the edges in its own colour, breathing
+## (boss_aura.gdshader, laid over every mesh it wears as the overlay, or after the one it has), and
+## if the spec says so, motes about it and a light it casts.
+##   "rim": "#hex", "energy": e, "power": p, "pulse": 0..1, "bands": rings a metre, "rise": m/s, "fill": share
+##   "motes": {"colour": "#hex", "count": n, "size": m, "rise": m/s, "spread": m, "height": m, "mix": true}
+##            ("mix": drawn over, not added on: dark motes, smoke, ash)
+##   "light": {"colour": "#hex", "energy": e, "range": m, "height": m}
+static func wear_aura(model: Node3D, spec: Dictionary) -> void:
+	var mat := aura_material(spec)
+	if mat != null:
+		for mi in model.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.has_meta(CARRY_TAG) or m.name == "CarriedFlame":
+				continue
+			_overlay(m, mat)
+	var motes: Variant = spec.get("motes", null)
+	if typeof(motes) == TYPE_DICTIONARY:
+		model.add_child(aura_motes(motes))
+	var light: Variant = spec.get("light", null)
+	if typeof(light) == TYPE_DICTIONARY:
+		var lamp := OmniLight3D.new()
+		lamp.name = "AuraLight"
+		lamp.light_color = Color(str(light.get("colour", spec.get("rim", "#9fd8c8"))))
+		lamp.light_energy = float(light.get("energy", 0.6))
+		lamp.omni_range = float(light.get("range", 5.0))
+		lamp.shadow_enabled = false
+		lamp.position = Vector3(0.0, float(light.get("height", 1.4)), 0.3)
+		model.add_child(lamp)
+
+
+## The overlay an aura spec draws with, or null when it has no rim.
+static func aura_material(spec: Dictionary) -> ShaderMaterial:
+	if not spec.has("rim"):
+		return null
+	var mat := ShaderMaterial.new()
+	mat.shader = AURA_SHADER
+	var c := Color(str(spec["rim"]))
+	mat.set_shader_parameter("rim", c)
+	mat.set_shader_parameter("energy", float(spec.get("energy", 1.0)))
+	mat.set_shader_parameter("power", float(spec.get("power", 2.4)))
+	mat.set_shader_parameter("pulse", float(spec.get("pulse", 0.35)))
+	mat.set_shader_parameter("bands", float(spec.get("bands", 0.0)))
+	mat.set_shader_parameter("rise", float(spec.get("rise", 0.5)))
+	mat.set_shader_parameter("fill", float(spec.get("fill", 0.0)))
+	return mat
+
+
+## Lays `mat` over a mesh: as its overlay, or after the overlay it already has (a tattoo's).
+static func _overlay(mi: MeshInstance3D, mat: Material) -> void:
+	var over := mi.material_overlay
+	if over == null:
+		mi.material_overlay = mat
+		return
+	while over.next_pass != null and over.next_pass != mat:
+		over = over.next_pass
+	if over != mat and over.next_pass == null:
+		# its own copy: the overlay may be shared with other bodies
+		var mine := mi.material_overlay.duplicate() as Material
+		mi.material_overlay = mine
+		var tail := mine
+		while tail.next_pass != null:
+			tail = tail.next_pass
+		tail.next_pass = mat
+
+
+## Motes drifting up round the body: CPU particles (they draw the same on every renderer), each a
+## small soft square turned to the eye.
+static func aura_motes(spec: Dictionary) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.name = "AuraMotes"
+	p.amount = int(spec.get("count", 24))
+	p.lifetime = float(spec.get("life", 2.6))
+	p.preprocess = p.lifetime
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	var spread := float(spec.get("spread", 0.45))
+	var tall := float(spec.get("height", 1.8))
+	p.emission_box_extents = Vector3(spread, tall * 0.5, spread)
+	p.position = Vector3(0.0, tall * 0.5, 0.0)
+	p.direction = Vector3(0.0, 1.0, 0.0)
+	p.spread = 25.0
+	p.gravity = Vector3(0.0, float(spec.get("rise", 0.25)), 0.0)
+	p.initial_velocity_min = 0.02
+	p.initial_velocity_max = 0.12
+	var size := float(spec.get("size", 0.04))
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.2
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	p.mesh = quad
+	var ramp := Gradient.new()
+	var c := Color(str(spec.get("colour", "#bfe8dc")))
+	ramp.set_color(0, Color(c, 0.0))
+	ramp.set_color(1, Color(c, 0.0))
+	ramp.add_point(0.25, Color(c, 1.0))
+	ramp.add_point(0.7, Color(c, 0.8))
+	p.color_ramp = ramp
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.vertex_color_use_as_albedo = true
+	# a soft round mote, not a square of colour
+	mat.albedo_texture = _soft_dot()
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	if not bool(spec.get("mix", false)):
+		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.no_depth_test = false
+	p.material_override = mat
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	p.local_coords = false
+	return p

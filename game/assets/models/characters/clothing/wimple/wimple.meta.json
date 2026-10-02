@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.1238,
+  -0.1101,
+  1.345,
+  0.1238,
+  0.1818,
+  1.8491
+ ],
+ "collision": "none",
+ "colour_key": "secondary",
+ "colour_keys": {
+  "wimple": "secondary"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "wimple": "cloth"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 54682,
+ "slot_hint": "attachment",
+ "textures": [
+  "wimple_albedo.png",
+  "wimple_orm.png"
+ ],
+ "tris": [
+  2600,
+  0,
+  0
+ ],
+ "version": 1
+}

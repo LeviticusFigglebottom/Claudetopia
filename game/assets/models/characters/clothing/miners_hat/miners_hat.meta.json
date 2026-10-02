@@ -1,0 +1,44 @@
+{
+ "bounds": [
+  -0.1601,
+  -0.1897,
+  1.6538,
+  0.16,
+  0.2137,
+  1.8444
+ ],
+ "collision": "none",
+ "colour_key": "secondary",
+ "colour_keys": {
+  "miners_hat": "secondary",
+  "miners_hat_candle": "trim"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "miners_hat": "leather",
+  "miners_hat_candle": "horn"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 66726,
+ "slot_hint": "attachment",
+ "textures": [
+  "miners_hat_albedo.png",
+  "miners_hat_orm.png",
+  "miners_hat_candle_albedo.png",
+  "miners_hat_candle_orm.png"
+ ],
+ "tris": [
+  2696,
+  0,
+  0
+ ],
+ "version": 1
+}

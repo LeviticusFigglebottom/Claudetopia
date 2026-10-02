@@ -1,0 +1,41 @@
+{
+ "bounds": [
+  -0.2056,
+  -0.1593,
+  0.3028,
+  0.204,
+  0.0869,
+  1.5066
+ ],
+ "collision": "none",
+ "colour_key": "leather",
+ "colour_keys": {
+  "founders_apron": "leather"
+ },
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "founders_apron": "leather"
+ },
+ "params": {
+  "bone": null,
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 95279,
+ "slot_hint": "attachment",
+ "textures": [
+  "founders_apron_albedo.png",
+  "founders_apron_orm.png"
+ ],
+ "tris": [
+  2597,
+  0,
+  0
+ ],
+ "version": 1
+}

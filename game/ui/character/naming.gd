@@ -189,8 +189,8 @@ func _ready() -> void:
 	EventBus.menu_opened.emit(SCREEN_ID)
 	# the world is next, and its ground's textures are seconds to read: they are read on a worker
 	# thread while the character is made, and the world takes them from there (World._terrain_assets)
-	if DisplayServer.get_name() != "headless" and ResourceLoader.exists(World.ASSETS_RESOURCE):
-		ThreadedLoads.request(World.ASSETS_RESOURCE)
+	if DisplayServer.get_name() != "headless" and ResourceLoader.exists(World.assets_resource()):
+		ThreadedLoads.request(World.assets_resource())
 	appearance.set_part("head", "default")
 	appearance.set_part("hair", "short")
 	var callings := ContentDB.all("calling")

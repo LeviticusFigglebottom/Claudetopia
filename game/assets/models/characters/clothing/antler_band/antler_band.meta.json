@@ -1,0 +1,35 @@
+{
+ "bounds": [
+  -0.0988,
+  -0.1176,
+  1.6701,
+  0.0987,
+  0.1181,
+  1.8074
+ ],
+ "collision": "none",
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "iron",
+ "materials": {
+  "antler_band": "iron"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "iron"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 91521,
+ "slot_hint": "attachment",
+ "textures": [
+  "antler_band_albedo.png",
+  "antler_band_orm.png"
+ ],
+ "tris": [
+  1600,
+  0,
+  0
+ ],
+ "version": 1
+}

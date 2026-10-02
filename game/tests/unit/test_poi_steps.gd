@@ -80,6 +80,11 @@ static func _described(d: PoiDressing) -> Array[String]:
 			# freed at the end of the frame (a fall's pool the river's water replaces): raised at once it
 			# is still there when this is read, raised in steps it has gone
 			continue
+		if n is NavigationAgent3D and _alive(n, d):
+			# a foe of the garrison takes its agent once the navigation map has synced (Enemy
+			# _setup_navigation): raised in steps the map has had frames to sync, raised at once not;
+			# that is the body's, not the place's
+			continue
 		var path := str(d.get_path_to(n))
 		var parts: Array[String] = []
 		for bit in path.split("/"):

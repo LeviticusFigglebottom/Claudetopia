@@ -1,0 +1,43 @@
+{
+ "bounds": [
+  -0.1601,
+  -0.1324,
+  1.6848,
+  0.1601,
+  0.2002,
+  1.8311
+ ],
+ "collision": "none",
+ "colour_key": "secondary",
+ "colour_keys": {
+  "magister_cap": "secondary"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "magister_cap": "cloth",
+  "magister_cap_rings": "iron"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 81253,
+ "slot_hint": "attachment",
+ "textures": [
+  "magister_cap_albedo.png",
+  "magister_cap_orm.png",
+  "magister_cap_rings_albedo.png",
+  "magister_cap_rings_orm.png"
+ ],
+ "tris": [
+  2600,
+  0,
+  0
+ ],
+ "version": 1
+}

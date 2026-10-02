@@ -1,0 +1,86 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 2.617,
+  "max": [
+   0.024,
+   1.817,
+   0.148
+  ],
+  "min": [
+   -0.024,
+   -0.8,
+   -0.144
+  ],
+  "radius": 1.317
+ },
+ "built_seconds": 4.29,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "leister_iron.glb",
+ "grip_origin": true,
+ "hash": "06b15c0bb543f25a",
+ "kind": "leister",
+ "materials": [
+  "leister_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "rope"
+ ],
+ "meshes": [
+  {
+   "name": "leister_iron",
+   "tris": 1260
+  },
+  {
+   "name": "leister_iron_LOD1",
+   "tris": 504
+  },
+  {
+   "name": "leister_iron_LOD2",
+   "tris": 188
+  }
+ ],
+ "name": "leister_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9808,
+ "textures": [
+  "leister_iron_albedo.png",
+  "leister_iron_normal.png",
+  "leister_iron_orm.png"
+ ],
+ "tris": [
+  1260,
+  504,
+  188
+ ],
+ "two_handed": true,
+ "version": 3
+}

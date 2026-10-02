@@ -78,6 +78,12 @@ const LOOK_DEFAULTS := {"color_grade": true, "vignette": true, "film_grain": fal
 ## and only the player turns it on again. It is about whether this machine starts, not about
 ## fidelity, so no preset touches it.
 const SAFETY_DEFAULTS := {"full_terrain": true}
+## What this machine's hardware decides unless the player chooses: the ground's texture set (-1 is
+## "by the GPU", `ground_texture_quality`). No preset touches it: it costs memory, not frame time.
+const MACHINE_DEFAULTS := {"ground_textures": -1}
+## A prototype, off: Hearthvale's ground cover drawn by Terrain3D's instancer (world/grass_instancer.gd),
+## 2 with twice the cover. No preset touches it; the benchmark picks it.
+const PROTOTYPE_DEFAULTS := {"grass_instancer": 0}
 
 ## The graphics section as a new settings file has it: High, plus the display, look and safety keys.
 ## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
@@ -94,6 +100,8 @@ const DEFAULTS := {
 	"title_vista": true, "title_live": true,
 	"color_grade": true, "vignette": true, "film_grain": false,
 	"full_terrain": true,
+	"ground_textures": -1,
+	"grass_instancer": 0,
 }
 
 ## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
@@ -101,6 +109,47 @@ const DEFAULTS := {
 ## vertices in each of Terrain3D's clipmap rings, which is what the far hills' shape is drawn from.
 const CAMERA_FAR_M: Array[float] = [3000.0, 4400.0, 6500.0]
 const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
+
+
+## The ground's texture set, 0 Standard (1024) or 1 High (2048, World.ASSETS_RESOURCE_HIGH). Unchosen
+## (-1), it is High on a discrete GPU with HIGH_MIN_VRAM_GB or more and Standard on anything else --
+## an integrated GPU, a software one, a small card, and the Compatibility renderer, which does not
+## say what the adapter is.
+static func ground_texture_quality(g: Dictionary) -> int:
+	var v := int(g.get("ground_textures", -1))
+	if v >= 0:
+		return mini(v, 1)
+	if RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU:
+		return 0
+	return 1 if roomy_gpu(video_memory_gb(), RenderingServer.get_video_adapter_name()) else 0
+
+
+## A discrete card under this is given Standard ground unless the player chooses High. High's arrays
+## take what Standard's do once compressed, but its load holds both for a moment and a small card is
+## the one a game runs out on first.
+const HIGH_MIN_VRAM_GB := 6.0
+## Discrete GPUs sold with under 6 GB (or in such versions), by name, for when the card's memory
+## cannot be read (Godot reads it on Forward+ only).
+const SMALL_GPUS := ["GT 7", "GT 10", "GTX 9", "GTX 10", "GTX 16", " MX", "RX 4", "RX 5", "RX 64", "RX 65",
+		"RX 74", "RX 75", "R7 ", "R9 ", "Arc A3", "Quadro K", "Quadro P", "Quadro T"]
+
+
+## The video memory of the card the game draws with, in GB, or 0 when it cannot be read.
+static func video_memory_gb() -> float:
+	var rd := RenderingServer.get_rendering_device()
+	if rd == null:
+		return 0.0
+	return float(rd.get_device_total_memory()) / 1073741824.0
+
+
+## Whether a discrete card has room for High by default: its memory when known, else its name.
+static func roomy_gpu(memory_gb: float, adapter_name: String) -> bool:
+	if memory_gb > 0.0:
+		return memory_gb >= HIGH_MIN_VRAM_GB
+	for small in SMALL_GPUS:
+		if adapter_name.contains(small):
+			return false
+	return true
 
 
 static func camera_far(g: Dictionary) -> float:
@@ -159,6 +208,8 @@ const CONTROLS := [
 		"note": "far off, the grass is tiled larger so a far hillside does not show its pattern repeating"},
 	{"key": "occlusion", "label": "Hide what hills hide", "kind": "check",
 		"note": "occlusion culling: what stands behind a hill is not drawn, for some of the CPU's time; off in every preset"},
+	{"key": "ground_textures", "label": "Ground texture quality", "kind": "option", "choices": ["Standard", "High"],
+		"values": [0, 1], "note": "High paints the most-seen ground at twice the detail. Both take about 250 MB of video memory (High compressed); High adds a few seconds to a load. Applied when a world next loads"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},
@@ -171,6 +222,8 @@ const CONTROLS := [
 	{"key": "shadow_filter", "label": "Shadow softness", "kind": "option", "choices": ["Hard", "Very low", "Low", "Medium", "High", "Ultra"]},
 	{"key": "scatter_density", "label": "Ground cover", "kind": "slider", "min": 0.25, "max": 1.0, "step": 0.05, "suffix": "%",
 		"note": "grass, flowers and bushes; never the trees"},
+	{"key": "grass_instancer", "label": "Ground cover by the terrain (trial)", "kind": "option",
+		"choices": ["Off", "On", "On, twice the cover"], "note": "Hearthvale's grass drawn by Terrain3D's instancer, being measured. Applied when a world next loads"},
 	{"key": "view_range", "label": "Scatter view distance", "kind": "slider", "min": 0.6, "max": 1.5, "step": 0.05, "suffix": "%"},
 	{"key": "lod_bias", "label": "Detail distance (LOD)", "kind": "slider", "min": 0.5, "max": 2.0, "step": 0.05, "suffix": "%",
 		"note": "how far away things keep their full shape"},

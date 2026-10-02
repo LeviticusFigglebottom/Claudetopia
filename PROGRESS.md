@@ -15972,6 +15972,250 @@ Warning census 49, at the baseline. Forge: `tools/forge/tests/run.py foes quad` 
   (`body_variant`), height 0.95; the leech-hound's body is her fallback (KIN).
 - Still: the other dogs and the red deer could take `keep_barrel` on their next build.
 
+## The bosses of the large places, each a shape of its own (bosses, 2026-10-02)
+
+The eighteen bosses of the large places were rendered side by side. The treant, the chained
+giant and the marsh crocodile read; the fourteen people did not. Each stood at a person's height
+in stock clothes, and seven of them were three outfits between them. The Brake-Dam, "a hound the
+size of a pony", read as a dog.
+
+**Why they were all a person's height.** A humanoid foe's def `scale` sized its attack origin and
+nothing else. The rig is sized by the look's `height` alone (HumanoidModel._apply_proportions),
+and EnemyDress gave every foe 1.78 m (1.72 for a woman). The bell-bearer, built for 2.6 m of
+capsule, stood 1.78 m inside it; so did the 1.55-scale Hethra. Now:
+
+* `EnemyDress.sized_look`: a foe is drawn at its look's height (a person's own, 1.78 m when it
+  says none) times its def's scale. This is every humanoid foe, not only the bosses. The hedge
+  wight at 1.15 is 2.05 m in its 2.0 m capsule, the bell-bearer 2.76 m in its 2.6 m one, as their
+  capsules always said.
+* The gaits are read at the rig's own size (HumanoidModel._update_locomotion): a body drawn half
+  again as tall walks where a person would trot, and its legs go round at a giant's cadence.
+  At 1.78 m nothing changes.
+* `breadth`: a boss broader than its build (the Bellwright 1.14, the Digger-King 1.12, Hethra
+  0.86, worn to the shape of a throat).
+
+**What a boss is dressed and armed with: general, in EnemyDress and the forge.**
+* `holds` takes an item written out (`{"model": "weapons/spade_iron", "tags": ["two_handed"]}`):
+  a boss's own tool that is nobody's loot. It changes nothing a blow does. `off_hand` holds a
+  shield or a torch the same way. A held lamp is lit by its `light` and `flame`.
+* `carry`: forge models hung on any socket or bone. They are placed in the body's own rest
+  frame and the rig's metres, so they grow with the body and go where the bone goes: a bell on a
+  back, a register at a hip, a candle's light on a hat. They take a `light` and a `flame`.
+* `aura`: the uncanny lit by their own light. `boss_aura.gdshader` is laid over every mesh the
+  body wears as the overlay (or after a tattoo's): a breathing rim and, for Hethra, rings
+  climbing the body. There are CPU motes (added, or mixed for dark ones) and an omni light.
+  Nothing reads the screen or the depth, so it draws the same under Forward+ and Compatibility.
+* Antlers grow in the rig's metres too, so they scale with the body (`thick` for heavy ones).
+* A foe stands a long haft upright at its side at rest (HumanoidModel `rests_poles`, anything
+  held over 1.25 m). Held at the clips' rest, it lay across the body and through the cloak, and
+  nine bosses with their own poles were the same black diagonal at a distance. A swing takes the
+  arm from the clip as before.
+* A garment says which palette colour it takes (`paint_as`, written as the part meta's
+  `colour_key` / per-mesh `colour_keys`). A felt hat is the cloth's colour, not the metal its
+  slot would give it. It also says whether it covers the crown (`covers_head`: the hair under it
+  is worn close). A palette may name more colours than the four (`trim`).
+
+**The new forged things.**
+* `tools/forge/lib/regalia.py` (cloth.py's builders): the kettle hat, the overman's felt hat
+  with its candle, the shift-captain's cap with its brass lamp, the receiver's tall hat, the
+  magister's bonnet with the Circle's rings, the digger-king's crude crown with its garnets, the
+  iron band Ardo's antlers are pinned to, the Name-Wife's veil of knotted name-cords, the
+  barrow-wife's wimple and veil, the lampman's sou'wester, the Reedfolk's reed hat, the
+  chorister's peaked cowl, the Warden tabard with its roundel, the founder's apron, a mantle of
+  name-cords and the barrow-wife's ropes of chalk beads.
+* `gen_weapons.py`: the overman's pick (now also the Overman's Pick item's model), the
+  shift-captain's brass drift hook, the receiver's seal staff, the digger's spade, the founder's
+  sledge, the lampman's lamp on its pole, a farrier's rasp, an eel leister, the barrow-wife's
+  crook with her dead lamp, a censer, and the carried speaking-trumpet and tuning-bell on its
+  yoke.
+* `creature_forge brake_dam`: the Brake-Dam's own body (foe_specs, beast_body `coils`). She is
+  built 1.4 m at the withers for scale 2.4 and drawn at 2.8 (1.6 m, a big pony), heavy in the barrel, her bark thick, and the briar she lies in grown
+  round her barrel, her neck and her haunches, with two loose ends trailing off her.
+
+**Checked** (Compatibility over the motion studio, the coordinator's plan and a portrait and a
+wind-up for each boss; Forward+ stills on lavapipe for six): 226 targeted tests are green. They
+cover the enemy, dress, creature, bestiary, combat-design, combat-brain, boss-fight, humanoid,
+player-body, foot, skirt, held-item and attack-motion suites, and include new tests: the size by
+scale, the bosses above their people, no shared outfits, each one's tool, the uncanny lit, a
+carried thing on its bone, and the Brake-Dam's size. Also green: test_site_interiors_walk; the
+fights arena's boss runs (6 won, 0 flagged); and the GDScript warnings, at the baseline (49).
+The warm set took the aura's overlay, the motes and the carried lights
+(`--material-census` over the portraits).
+
+- The grey hart lead (`world/tutorial/leads.gd`) still walks as a PlaceholderBody; the deer's grey
+  coat could carry it.
+
+## Polish: the owner's seven weak places from the final photos (polish, 2026-10-02)
+
+Seven places the owner's final `poi_sheet --built --time 16.5` photos found short, each fixed at its
+cause. Looked at with poi_sheet before and after (three runs); measured with a headless dump of each
+place's pieces and its ground.
+
+- **The Founders' Delf's green tree** was world scatter, not the pad or the site: a Briarwold giant
+  oak (with Briarwold bracken and grass round it) 39 m from the bell, on a speck of Briarwold land
+  3.9 km from the Briarwold. `regions.dithered_owner` added every province's noise everywhere, so
+  some far province won a few texels in every few hundred metres; on the real atlas 24,523 texels
+  of 1,048,576 (2.3%) belonged to a region more than 150 m from its land. A province now competes
+  only where its own weight is at least 0.01 (inside its border's blend), its noise fading in to
+  0.05: 55 such texels, none at the Delf. The same specks put Briarwold and Skerrow trees at the One
+  Poppy and a Hearthvale birch at Bell Street; Greyline Stones' oaks are on the real Hearthvale
+  border and stay. `test_dithered_owner.py` (14,053 far texels before, 0 after);
+  `pytest test_build.py` (a 1024 world) passes. **Needs a world build.**
+- **The Struck Barrow**: the "stair on its side" was the flight laid on a straight line as 1.2 m
+  slabs, standing out of the gully's dip, with the facade free in the gully and its cornice a
+  beam. Now: facade across the gully head, a seated flight between parapets up to a raised
+  threshold between monolith jambs under the RECEIVED lintel, four steps down inside the door to
+  the dark, and a turf mound over the facade's head and back. The tan haze in view 2 is not the
+  place's: that camera stands on the scarp top on Hearthvale's side of the border, and Hearthvale's
+  height haze (0.018/m, top 18 m under the eye) fills the gully below it.
+- **The Undertone**: the facade stood 15 m out on the plain before the plateau's slope (its front
+  at the cliff foot less 7 m), so the side views saw its 11 m-deep pilasters as a brick slab, and its
+  1.1 m courses read as a brick house. Now its front is at the cliff foot, the Choir's cliff rock is
+  set by its bounds either side and over the crown, the facade is carved whole and fluted, and the
+  choristers stand free on plinths 7 m out. The cameras were not inside a chorister; the side views
+  stand at the cliff foot, so the cliff rock is in them (narrowed to one piece a side after the wide
+  ones walled the cameras in).
+- **Spoil** (the Crown Drift, and as asked Knappers' Deep and Ghaleld): `PoiMasonry.spoil_heap`, one
+  tip for all three, terraced, rilled, lumpy, streaked in each region's colours, with loose stone
+  over it (`spoil_stones`).
+- **The Name-Wife's Hollow**: a crag of pale limestone (Skerrow's; the marsh's lent granite is near
+  black) round the throat, cheeks of 11 m and 9 m and a narrow piece behind (the final sheet shows two pieces behind;
+  the second stood inside both cheeks and was taken out after it), the kind's boulders it stands
+  over taken out, the cleft's dark, the weep 9 m off the taller cheek (in the build; not plain in the
+  sheet's four views).
+- **The Windthrow, Tinehold, the Charter Delf**: a def's `glade_m` has the build take the trees off
+  a disc round the place and a way to its nearest road (`trees.clear_glades`, `test_glades.py`):
+  85, 68 and 60 m. **Needs a world build** to show. poi_sheet's new `--weather clear` pins the
+  weather (it rolled each region's own, rain in the Greatwood).
+
+**Budgets** (poi_sheet views): the Hollow's were over before (2.02/1.55/1.49/1.55 M primitives) and
+are 2.09/1.64/1.54/1.59 M with its crag; Ghaleld view 2 was 1.55 M and is 1.58 M.
+
+**Sheets** (clear weather, 16:30): `$SCRATCH/polish_final/the_struck_barrow_the_undertone_the_crown_drift_knappers_deep_ghaleld_name_wifes_built.jpg`
+and `$SCRATCH/polish_final2/the_undertone_built.jpg`. The Struck Barrow's parapet still steps in four
+lengths from the side.
+
+**Tests**: `./run.sh test --filter=test_pois,test_poi_preview,test_sites,test_sites_cinderlea,
+test_brightwater_places,test_site_interiors_walk,objects_seated,test_world_data`; warning census 49,
+at the baseline. Python: test_build (1024 world, with the glades), test_dithered_owner, test_glades,
+test_content_split, test_region_check; `region_check.py briarwold` PASS.
+
+**For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
+and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
+(their glades only exist after a build; shoot them with `--weather clear --time 16.5`).
+## Ground texture quality (Standard/High) lands; far-tree pictures nearer and ground cover through Terrain3D's instancer are measured and not adopted (terrain-fidelity, 2026-10-02)
+
+### Ground texture quality: Standard and High
+- **Which six.** Counted from the w4096i control map (base and overlay weighted by blend), as a
+  share of the land and of the ground within 40 m of a road: vale grass 19/22%, limestone 10/9%,
+  crag 12/6%, forest floor 7/9%, grey grass 7/9%, dirt path 2/9% (the road under your feet). The
+  brief's granite is 1.4/1.0% and the ash soil 4.5/4.8% (eighth), so crag and grey grass took their places.
+  Mud (7/5%) was the close seventh.
+- **Painted again, not scaled.** `tools/world/gen_terrain_textures.py --high` paints them at 2048 into
+  `game/assets/textures/terrain_high/` with the same recipes. Everything in a recipe is in metres on the
+  ground; `terrain_micro.py`'s pixel sizes are now scaled by the tile's size (identical at 1024: the
+  committed limestone, crag and ash soil regenerate byte for byte). What 2048 adds is `fine_detail`: a
+  last octave between two and six of its texels (a band a 1024 tile cannot hold), sized by the normal
+  tilt it gives (0.14-0.20), shaped per recipe (fibres along the grass's lean, grit, crystal grain and
+  pitting in stone), deeper in the hollows. The colour is held to the shipped 1024 tile's mean in
+  linear light per channel. Vale grass, forest floor, grey grass and dirt path were painted before the
+  generator's seed was stable, so their 2048 tiles are new instances of the same recipe, not the same
+  pattern; the brightness is the same.
+- **Shipped as a second Terrain3DAssets** (`game/world/terrain_assets_high.tres`, written by
+  `tools_gd/import_terrain.gd`, also `-- --assets-only`), the same lossless import as the Standard set.
+  Terrain3D 1.0.2 builds one texture array from every slot and refuses mixed sizes ("doesn't match
+  size of first texture"), so the other 17 slots are scaled up to 2048 (bilinear) as the world loads
+  (`World.prepare_high_textures`) rather than shipped at 2048.
+- **Cost, and why the first cut cost so much.** Standard is not compressed on the card: all 46 of its
+  imports are lossless (`compress/mode=0`, chosen so they import headless), so its two arrays are
+  23 x 2 layers of 1024^2 RGBA8 with mipmaps, 245 MiB. Terrain3D makes every layer one size, so the
+  first High was 46 layers of 2048^2 RGBA8: 981 MiB (+736). Now every High layer is compressed to
+  BC3/DXT5 as the world loads (`World.prepare_high_textures`: read back, the 1024 slots scaled up,
+  compressed on worker threads; 13 ms a layer to compress here), and BC3 is a byte a texel: 46 x
+  2048^2 x 4/3 = 245 MiB, the same as Standard. BC7 would be finer but took 2.8 s a layer to
+  compress, and the project imports with `import_s3tc_bptc=false`, so it cannot be imported ready.
+  Download: the 12 PNGs are 105 MB in the repository and 117 MB imported (lossless .ctex, what an
+  export carries); with BC3 in VRAM an import as VRAM-compressed would be about 67 MB, but needs
+  `import_s3tc_bptc` on, a project-wide change left alone. Load: preparing the 46 layers took
+  6.6-7.2 s in the world on this overloaded 4-core machine (5.1 s in isolation); a desktop should be
+  a second or two. Standard is untouched (still lossless, 247 MiB measured); compressing it too
+  would take the laptops' ground from 247 to about 62 MiB, a follow-up.
+- **The setting.** Graphics, "The picture": *Ground texture quality*, Standard or High; its note says
+  both take about 250 MB of video memory and that High adds a few seconds to a load, applied when a
+  world next loads. Unchosen (-1) it is High only on a discrete GPU with 6 GB or more
+  (`RenderingDevice.get_device_total_memory()`, which Forward+ has; when it cannot be read, a list
+  of small cards by name: GTX 9xx/10xx/16xx, MX, RX 4xx/5xx/64xx/65xx and the like), Standard on
+  anything else. Compatibility does not report the adapter's type, so it gets Standard: the laptops
+  draw what they drew. `-- --ground-textures=standard|high` for one run.
+- **Looked at** (Compatibility, 1600x900): five close views, one per High slot but the dirt path, at
+  Standard; limestone at High (BC3) beside it. At the camera's feet High is a crisp grain where
+  Standard is a smear; no BC3 blocking shows. Forward+ could not be looked at: Terrain3D crashes
+  Forward+ on lavapipe here with the Standard list as well (HANDOFF section 8), so the Vulkan look
+  at High needs the owner's GPU. A High capture with five views was taken by the OOM killer
+  (another agent's run and mine at 3-4 GB each) and was not repeated, by the coordinator's call.
+- **Where it shows.** At 2.6 m a tile, a 1024 texel is 2.5 mm; a 1440p screen at 75 degrees draws
+  about 3 mm a pixel at 3 m. So High is visible within a few metres of the camera (the first-person
+  view, the ground at a third-person body's feet, 4K), and the same as Standard beyond: past that the
+  GPU reads the 2048 tile's second mip, which is the 1024's detail.
+
+### Far-tree impostors in the Greatwood (measured, not landed)
+Every tree already has a forged impostor (gen_impostors.py: eight views, 128 px a view), drawn
+past ten heights (ScatterLod), with a dissolve. A giant oak (29 m) therefore keeps its 1,300-
+triangle LOD1 out to 287 m. Modelled from the cells, drawing the Greatwood's giant oaks and black
+ash at 256 px a view and from half the distance (the picture's texels still match a 1440p screen)
+cut the main pass's tree triangles 411k -> 187k at the Windthrow and 518k -> 278k at Tinehold.
+Built and measured, it did not hold:
+- **Primitives and draws**, the Windthrow from its road (the view PROGRESS had at 2.12 M; Compatibility,
+  same build and settings, `--picture-cell=128` for before): 1,295 -> 1,129 draw calls (-13%),
+  1.75 -> 1.71 M primitives (-2.6%), still over the 1.5 M budget. Tinehold was modelled, not shot
+  (the coordinator trimmed the captures).
+- **The look** (`lod_review.tscn --sweep`, giant oak and black ash): the dissolve hides the switch, no
+  pop, and the 256 px picture's outline follows the full tree more closely than LOD1's cards do; but
+  at 80-150 m the picture reads softer and flatter-lit than the mesh, and re-calibrated at the new
+  lines its ink was 1-15% off LOD1 (giant oak b 15%, black ash b 10%), against 3% at the old ones.
+- **Not landed** (reverted, 189aa8c2): not a clear primitive win, and a visible change. What the
+  Greatwood's frame is made of is the full meshes out to four heights (116-131 m for the giant oaks,
+  6,300 triangles each, with their shadows), not the mid rung. The next lever is the full mesh's line
+  for the giant trees, or a lighter LOD0 crown; both want a look at the oak at 60-120 m first.
+
+### Ground cover through Terrain3D's instancer (a prototype, off; recommendation: don't adopt)
+`world/grass_instancer.gd`, behind `graphics.grass_instancer` (Graphics, The country: "Ground
+cover by the terrain (trial)", Off / On / On, twice the cover; off by default; `-- --grass-instancer=0|1|2`
+for the benchmark). On, Hearthvale's herbs (1.59 M rows in 195 cells, 48 meshes) are read from the
+built cells -- the builder's pads, sightline clearings, roads and seat audits hold as they do for the
+streamer -- and handed to Terrain3D 1.0.2's instancer at the streamer's herb range; the streamer
+leaves those rows alone. Measured once, at the same and default cover (Compatibility, one run each
+way, the coordinator's trim):
+- **The Hearthvale verge** (now Merrowby's street): streamer 1,766 draws, 1.69 M primitives; instancer
+  1,823 draws, 1.62 M (+3%, -4%). The main thread's CPU a frame (the renderer off, PerfMeasure) 19.6
+  -> 17.3 ms there, but 5.3 -> 6.8 ms at a Skerrow view with no Hearthvale grass in it: the instancer's
+  36,357 MultiMesh nodes (7,282 nodes before) cost every frame everywhere.
+- **Memory**: static 594 -> 1,193 MB at the first shot (+0.6 GB); the world's static memory when ready
+  373 -> 918 MB; GPU buffers +96 MB.
+- **Load**: the world 29.0 -> 78.2 s (+49 s here): 12.6 s reading the cells, 31.9 s in add_transforms,
+  2.3 s in update_mmis.
+- **Region files**: the six regions holding the instances 54.9 -> 112.7 MB (+58 MB) when saved.
+- **Compatibility**: it draws; the same tufts stand by the same posts in both.
+- **Not measured**: twice the cover (setting 2) and the render thread's own time (the capture runner
+  times frames with the renderer off, and llvmpipe's render thread is not a GPU driver's). Both want
+  the owner's benchmark, which can pick the setting.
+- **Recommendation: don't adopt** at Terrain3D 1.0.2. It holds every instance of a region at once,
+  in 32 m cells with a MultiMesh a mesh and cell, so it costs memory, load time and nodes for grass a
+  player is nowhere near, for a 4% primitive saving at the place it is drawn. The streamer's
+  per-cell MultiMeshes, built as the rings stream, are the better shape for ground cover this dense.
+
+### Tests and checks
+`./run.sh test --filter=` test_graphics_settings, test_settings_graphics_screen, test_ground_albedo,
+test_scatter_lod, test_world_streamer, test_world_status, test_objects_seated, test_world_data: all
+pass. GDScript warnings 49, at the baseline. `tools/forge/tests/test_output.py`: 12 passed. No world
+build is needed: the High list and its textures are new files, and the regions are untouched.
+
+### For the coordinator / the owner
+- On the RX 9070 XT (Forward+): look at High at the camera's feet, and read the log's "High ground
+  textures: 46 textures ... in N ms" for the load cost on a real CPU.
+- The grass instancer's numbers on a real GPU, at settings 0, 1 and 2, from the benchmark.
+- Compressing Standard to BC3 too would cut every machine's ground textures from 247 to about
+  62 MiB of video memory; it changes the laptops' picture slightly, so it is the owner's call.
 ## Weak graphics: a preset for the adapter, the filmed title, the menus' pace, FSR, the benchmark (lowend, 2026-10-02)
 
 The owner's work laptops (an HP G11 with a Ryzen 5 PRO, so a Radeon 660M or 740M iGPU) lagged on

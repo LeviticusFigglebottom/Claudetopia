@@ -3152,6 +3152,10 @@ const NOTE_BLUE := Color(0.56, 0.72, 0.9)
 const CLAY := {"base": "#5a4a3e", "accent": "#463a30", "grout": "#2a221c", "unit": 0.6}
 const BRICK := {"base": "#5d3f33", "accent": "#4a3128", "grout": "#2a1c17", "unit": 0.32}
 const SLAG := {"base": "#1d1b1d", "accent": "#2c292c", "grout": "#0d0c0d", "unit": 0.3}
+## The Undertone's facade: the Builders' dark stone in courses 4.2 m high, and its choristers carved
+## whole from it.
+const CARVED := {"base": "#3a3734", "accent": "#4a4540", "grout": "#1b1918", "unit": 4.2}
+const CHORISTER_STONE := {"base": "#45413c", "accent": "#35322e", "grout": "#1e1c1a", "unit": 0.8}
 
 
 ## A surface of revolution over part of the round only: `a0` to `a1` (radians), both faces drawn
@@ -3205,10 +3209,12 @@ static func the_undertone(d: PoiDressing) -> void:
 	into = into.normalized()
 	var across := Vector2(into.y, -into.x)
 	var b := Basis(Vector3.UP, PoiKit.yaw_of(-into))         # its front faces out of the cliff
-	# the cliff's foot; the facade stands out from it, its doorway a short way in front of the rock and
-	# its back run on into the slope (the land cannot be cut: the dark of the door is at the foot)
-	var foot := clampf(_cliff_foot(k, into), 14.0, 22.0)
-	var face := into * (foot - 7.0)                           # the facade's front
+	# the cliff's foot. The facade's front stands a little short of it and its pilasters run back into
+	# the rise, the cliff's own rock heaped against their outer sides (below), so the doorway is cut
+	# into the plateau's face. (Its front at the foot less seven metres stood it out on the plain, a
+	# block twenty-two metres high with eleven-metre sides, and from the side that was all it was.)
+	var foot := clampf(_cliff_foot(k, into), 14.0, 26.0)
+	var face := into * (foot - 2.0)                           # the facade's front
 	var g := k.on_ground(face.x, face.y).y
 	var stone := m.begin()
 	# big enough to read as a door in the plateau from the far side of the Ashgrid: the cliff is fifty
@@ -3216,8 +3222,9 @@ static func the_undertone(d: PoiDressing) -> void:
 	var open_w := 8.0
 	var open_h := 15.0
 	var pil := 4.2
-	var deep := 11.0                                           # from its front back into the rock
+	var deep := 8.0                                            # from its front back into the rock
 	var back := face + into * deep * 0.5
+	var out3 := -Vector3(into.x, 0.0, into.y)
 	# the pilasters, the lintel over the opening, the stepped crown
 	for s in [-1.0, 1.0]:
 		var p := back + across * (open_w * 0.5 + pil * 0.5) * float(s)
@@ -3225,11 +3232,26 @@ static func the_undertone(d: PoiDressing) -> void:
 		_box(stone, xf, Vector3(pil, 22.0, deep))
 		k.collider(Vector3(pil, 22.0, deep), xf, "stone")
 		# its plinth and capital, stepped out
-		_box(stone, Transform3D(b, Vector3(p.x, g + 0.4, p.y) - Vector3(into.x, 0.0, into.y) * 0.35), Vector3(pil + 0.7, 1.6, deep + 0.6))
-		_box(stone, Transform3D(b, Vector3(p.x, g + open_h + 0.3, p.y) - Vector3(into.x, 0.0, into.y) * 0.3), Vector3(pil + 0.6, 0.8, deep + 0.5))
+		_box(stone, Transform3D(b, Vector3(p.x, g + 0.4, p.y) + out3 * 0.35), Vector3(pil + 0.7, 1.6, deep + 0.6))
+		_box(stone, Transform3D(b, Vector3(p.x, g + open_h + 0.3, p.y) + out3 * 0.3), Vector3(pil + 0.6, 0.8, deep + 0.5))
+		# the architrave: a band cut proud round the opening, up each side
+		var jamb := face + across * (open_w * 0.5 + 0.45) * float(s)
+		_box(stone, Transform3D(b, Vector3(jamb.x, g + open_h * 0.5, jamb.y) + out3 * 0.25), Vector3(0.9, open_h, 0.5))
+	# three flutes down each pilaster's face, from its plinth to its capital: the eye reads the height
+	# off them, where a flat face gave it nothing to measure by
+	var flutes := m.begin()
+	for s in [-1.0, 1.0]:
+		for f in 3:
+			# (clear of the architrave band round the opening)
+			var fx := face + across * (open_w * 0.5 + 1.4 + float(f) * pil * 0.24) * float(s)
+			_box(flutes, Transform3D(b, Vector3(fx.x, g + 1.2 + (open_h - 1.4) * 0.5, fx.y) + out3 * 0.02), Vector3(0.38, open_h - 1.4, 0.1))
+	await k.step()
+	m.commit(flutes, PoiKit.plain(Color(0.06, 0.055, 0.05), 0.95), "Flutes", true)
 	var lintel := Transform3D(b, Vector3(back.x, g + open_h + 1.4, back.y))
 	_box(stone, lintel, Vector3(open_w + pil * 2.0 + 0.6, 2.8, deep))
 	k.collider(Vector3(open_w + pil * 2.0, 2.8, deep), lintel, "stone")
+	# (and across the head, under the lintel's face)
+	_box(stone, Transform3D(b, Vector3(face.x, g + open_h + 0.45, face.y) + out3 * 0.25), Vector3(open_w + 1.8, 0.9, 0.5))
 	for i in 4:
 		var w := open_w + pil * 2.0 - 2.6 * float(i + 1)
 		_box(stone, Transform3D(b, Vector3(back.x, g + open_h + 3.4 + 1.5 * float(i), back.y)), Vector3(w, 1.5, deep - 0.6 * float(i)))
@@ -3239,22 +3261,76 @@ static func the_undertone(d: PoiDressing) -> void:
 	k.collider(Vector3(open_w + 0.4, 0.4, 7.0), Transform3D(b, Vector3(floor_at.x, g - 0.15, floor_at.y)), "stone")
 	var throat := 6.5
 	await k.step()
-	m.commit(stone, k.surface("oroth", 0.55), "Undertone", true)
+	# the Builders' stone carved whole, one face of it: in courses (of a metre, of two, of four) the
+	# facade read as a brick house a few metres high, the courses the scale the eye took from it
+	var carved := PoiKit.painted(0, CARVED, 0.5, 0.55)
+	m.commit(stone, carved, "Undertone", true)
 	var dark := m.begin()
 	var end_at := face + into * throat
 	_box(dark, Transform3D(b, Vector3(end_at.x, g + open_h * 0.5, end_at.y)), Vector3(open_w + 0.4, open_h + 0.4, 0.3))
 	k.collider(Vector3(open_w + 0.4, open_h + 0.4, 0.3), Transform3D(b, Vector3(end_at.x, g + open_h * 0.5, end_at.y)), "stone")
 	await k.step()
 	m.commit(dark, PoiKit.plain(HOLE, 1.0), "TheDark", true)
-	# the choristers carved against the pilasters
-	var figures := m.begin()
+	# The face the Builders cut the door into. The plateau's west side is a slope here, not a cliff, and
+	# a facade stood at its foot read as a small house at the bottom of a hill: so the cliff's own rock
+	# stands either side of the pilasters to the facade's height and over its crown, a face of rock the
+	# doorway is carved into. Each piece by its bounds (a cliff piece is fifteen to thirty metres across
+	# and twelve deep): its inner edge at the pilaster, its front no more than a metre proud of it.
+	# (one narrow piece a side, to some twenty metres off the doorway's line: wider, they ran forty
+	# metres along the foot, out to where a body coming along the cliff stands, and walled it in)
+	var band := [[1, 25.0, 0.0]]
 	for s in [-1.0, 1.0]:
-		var p := face - into * 1.2 + across * (open_w * 0.5 + pil * 0.5) * float(s)
-		_box(figures, Transform3D(b, Vector3(p.x, g + 0.6, p.y)), Vector3(3.4, 1.2, 2.8))
-		_chorister(d, figures, Vector3(p.x, g + 1.2, p.y), PoiKit.yaw_of(-into), 11.5, false)
-		k.collider(Vector3(3.0, 12.5, 2.6), Transform3D(b, Vector3(p.x, g + 6.4, p.y)), "stone")
+		var out_at := open_w * 0.5 + pil
+		for piece: Array in band:
+			var rp := k.rock("cliff_face", int(piece[0]))
+			if rp == "":
+				continue
+			var bd: Dictionary = PoiKit.meta(rp).get("bounds", {})
+			var bmin: Array = bd.get("min", [-8.0, 0.0, -6.0])
+			var bmax: Array = bd.get("max", [8.0, 16.0, 6.0])
+			var sc := clampf(float(piece[1]) / maxf(float(bd.get("height", 16.0)), 0.5), 0.3, 3.0)
+			var half := maxf(-float(bmin[0]), float(bmax[0])) * sc
+			var fore := float(bmax[2]) * sc
+			var at := face + into * (fore - 1.0 + 2.0 * float(piece[2])) + across * (out_at + half * 0.85) * float(s)
+			out_at += half * 1.7
+			await k.step()
+			k.place(rp, k.on_ground(at.x, at.y, -1.0), PoiKit.yaw_of(-into) + 0.08 * float(s), sc, true, Vector3.ZERO, true)
+	# (the shallow piece: a deep one stood its middle forty metres out, off the pad)
+	var over := k.rock("cliff_face", 1)
+	if over != "":
+		var bd: Dictionary = PoiKit.meta(over).get("bounds", {})
+		var bmax: Array = bd.get("max", [8.0, 16.0, 6.0])
+		var sc := clampf(26.0 / maxf(float(bd.get("height", 16.0)), 0.5), 0.3, 3.0)
+		var at := face + into * (deep - 3.0 + float(bmax[2]) * sc)
+		var base := k.on_ground(at.x, at.y, -1.0)
+		# its top some metres over the crown's, whatever the rise behind
+		sc = clampf((g + open_h + 10.0 + 6.0 - base.y) / maxf(float(bd.get("height", 16.0)), 0.5), 0.3, 3.0)
+		await k.step()
+		k.place(over, base, PoiKit.yaw_of(-into), sc, true, Vector3.ZERO, true)
+	# the choristers: two of the Choir's own, headless, eleven and a half metres of carved stone each on
+	# a stepped plinth out in the forecourt before the pilasters, the doorway's guards
+	var figures := m.begin()
+	var plinths := m.begin()
+	var fig_yaw := PoiKit.yaw_of(-into)
+	for s in [-1.0, 1.0]:
+		var p := face - into * 7.0 + across * (open_w * 0.5 + 4.0) * float(s)
+		var pg := k.on_ground(p.x, p.y).y
+		var lo := pg
+		for c: Vector2 in [Vector2(-3.2, -3.2), Vector2(3.2, -3.2), Vector2(-3.2, 3.2), Vector2(3.2, 3.2)]:
+			var q := p + across * c.x + into * c.y
+			lo = minf(lo, k.on_ground(q.x, q.y).y)
+		var top := pg + 1.7
+		var t1 := Transform3D(b, Vector3(p.x, (lo - 0.3 + pg + 0.8) * 0.5, p.y))
+		_box(plinths, t1, Vector3(6.4, pg + 0.8 - (lo - 0.3), 6.4))
+		var t2 := Transform3D(b, Vector3(p.x, pg + 1.25, p.y))
+		_box(plinths, t2, Vector3(5.7, 0.9, 5.7))
+		k.collider(Vector3(6.4, top - lo + 0.3, 6.4), Transform3D(b, Vector3(p.x, (top + lo - 0.3) * 0.5, p.y)), "stone")
+		_chorister(d, figures, Vector3(p.x, top, p.y), fig_yaw, 11.5, false)
+		k.collider(Vector3(4.6, 11.0, 4.6), Transform3D(b, Vector3(p.x, top + 5.5, p.y)), "stone")
 	await k.step()
-	m.commit(figures, k.surface("oroth", 0.8), "Choristers", true)
+	m.commit(plinths, carved, "ChoristerPlinths", true)
+	# carved whole, not coursed: a statue of blocks read as a brick chimney
+	m.commit(figures, PoiKit.painted(0, CHORISTER_STONE, 0.35, 0.75), "Choristers", true)
 	# black glass run down the rock from the crack over the crown
 	var glass := m.begin()
 	for i in 14:
@@ -3308,15 +3384,15 @@ static func the_undertone(d: PoiDressing) -> void:
 			Color(0.62, 0.7, 0.8, 0.22), 2.6, 7.0)
 	# the Order's braziers either side of the forecourt, burning the cold blue the Seat burns
 	for s in [-1.0, 1.0]:
-		var p := face - into * 8.5 + across * 5.4 * float(s)
+		var p := face - into * 13.0 + across * 4.6 * float(s)
 		await k.step()
 		k.place(k.prop("brazier"), k.on_ground(p.x, p.y), 0.0)
 		k.light(k.on_ground(p.x, p.y, 1.4), NOTE_BLUE, 1.6, 9.0)
 	k.marker("the_forecourt", k.on_ground(face.x - into.x * 6.0, face.y - into.y * 6.0))
 	# the Sayer's camp, off to the side out of the doors' way
-	var camp := face - into * 12.0 + across * 10.0
+	var camp := face - into * 17.0 + across * 11.0
 	if not _off_road(k, camp, 2.0):
-		camp = face - into * 12.0 - across * 10.0
+		camp = face - into * 17.0 - across * 11.0
 	await k.step()
 	k.place(k.prop("tent"), k.on_ground(camp.x, camp.y), PoiKit.yaw_of(-across))
 	var fire := camp - across * 3.0 - into * 1.5
@@ -3342,7 +3418,9 @@ static func the_undertone(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(fork, PoiKit.plain(PoiKit.BRONZE, 0.35, 0.8), "TuningFork")
 	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(camp.x, 0.0, camp.y) - Vector3(across.x, 0.0, across.y) * 1.2 + Vector3(into.x, 0.0, into.y) * 1.8)
-	await _rubble(d, face - into * 6.0, 9.0, 14, Vector2(0.4, 0.9))
+	# (between the fallen doors, and out past the choristers' plinths)
+	await _rubble(d, face - into * 6.0, 4.0, 7, Vector2(0.4, 0.9))
+	await _rubble(d, face - into * 19.0, 6.0, 9, Vector2(0.4, 0.9))
 
 
 # --- the Founders' Delf -------------------------------------------------------------------------------

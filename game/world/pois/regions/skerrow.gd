@@ -1687,6 +1687,9 @@ static func _tip(d: PoiDressing, st: SurfaceTool, head: Vector2, along: Vector2,
 ## The ore the chains were made of, and what was tipped: red going to purple-black.
 const ORE := {"base": "#7a3f2b", "accent": "#5a2c20", "grout": "#2e1a14", "unit": 0.45}
 const SPOIL := {"base": "#5c4234", "accent": "#463126", "grout": "#271b15", "unit": 0.5}
+## Its tips' streaks (PoiMasonry.spoil_heap): red waste, the iron's dark and an ochre run down it.
+const IRON_TINTS := {"fresh": Color(1.08, 0.96, 0.9), "streak_a": Color(0.62, 0.55, 0.55),
+		"streak_b": Color(1.25, 1.0, 0.62), "grass": Color(0.62, 1.05, 0.5)}
 
 ## Ghaleld, the chain-mine above Brindlecrag, where the iron for every chain bridge in the heights was
 ## dug and forged. Over the shaft the headframe is two pairs of a giant's ribs, stood up foot to foot
@@ -1826,25 +1829,26 @@ static func ghaleld(d: PoiDressing) -> void:
 	_track(d, earth, [stair_at + down * 3.0, stair_at + down * 9.0 - side * 3.0, way_end], 2.6)
 	await k.step()
 	m.commit(earth, k.surface("earth", 0.45), "Trodden")
-	# the spoil: three tongues of red waste tipped down the fell toward Brindlecrag
-	var tips := m.begin()
-	_tip(d, tips, down * 7.0 + side * 5.5, (down + side * 0.15).normalized(), 21.0, 10.0, 2.0)
-	_tip(d, tips, down * 8.0 - side * 4.0, (down - side * 0.1).normalized(), 24.0, 11.0, 2.4)
-	_tip(d, tips, down * 4.0 - side * 13.0, (down - side * 0.35).normalized(), 15.0, 8.0, 1.5)
-	await k.step()
-	_ground_mesh(d, tips, PoiKit.painted(5, SPOIL, 0.85, 0.9), "Spoil", true)
-	# lumps of red waste rock on the tips, tumbled to their toes
-	var scree := k.rock("scree")
-	if scree != "" and not k.far:
-		var lumps: Array = []
-		for i in 30:
-			var u := k.rng.randf_range(0.2, 1.0)
-			var p := down * (6.0 + 20.0 * u) + side * k.rng.randf_range(-12.0, 9.0)
-			lumps.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.05), k.rng.randf() * TAU, k.rng.randf_range(0.18, 0.4)))
+	# the spoil: three tongues of red waste tipped down the fell toward Brindlecrag, each a tip with a
+	# level top where the barrows ran out, terraced and rilled down its face, the iron's dark and the
+	# ochre run down it
+	var spoil_mat := PoiKit.painted(5, SPOIL, 0.85, 0.9)
+	var lumps_at: Array = []
+	for t in [[down * 7.0 + side * 5.5, (down + side * 0.15).normalized(), 21.0, 10.0, 3.0],
+			[down * 8.0 - side * 4.0, (down - side * 0.1).normalized(), 24.0, 11.0, 3.4],
+			[down * 4.0 - side * 13.0, (down - side * 0.35).normalized(), 15.0, 8.0, 2.2]]:
+		var head: Vector2 = t[0]
+		var along: Vector2 = t[1]
+		var length := float(t[2])
+		var width := float(t[3])
 		await k.step()
-		var mm := k.scatter(scree, lumps, false)
-		if mm != null:
-			mm.material_override = PoiKit.painted(5, ORE, 0.8, 0.8)
+		lumps_at.append_array(m.spoil_heap(head + along * length * 0.42, along, width * 0.5, float(t[4]), spoil_mat,
+				IRON_TINTS, false, "Spoil", length / width))
+	# lumps of red waste rock on the tips' benches, tumbled to their toes
+	await k.step()
+	for mm_v in m.spoil_stones(lumps_at):
+		if mm_v != null:
+			(mm_v as MultiMeshInstance3D).material_override = PoiKit.painted(5, ORE, 0.8, 0.8)
 	# the dressing floor: flags laid level, the bucking stones, the ore heaped by grade, baskets, a barrow
 	var fl := shaft - side * 8.0 + down * 1.0
 	var fg := k.on_ground(fl.x, fl.y)

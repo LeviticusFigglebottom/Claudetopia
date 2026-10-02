@@ -48,6 +48,11 @@ Other agents at work: 0-B (road encounters, caravans, ambushes), 0-C (large inte
   `"trench"` with a `"trench"` block sinks a trench into it (the Kilnway's: `bearing_deg` the way it
   runs out, `length_m` to the top of its `ramp_m`, `width_m` of floor, `depth_m`, and `behind_m`,
   `head_width_m`, `head_from_m` for a wider head behind the middle). The preview lays the same.
+- **`glade_m`** (new): a place in deep wood whose feature must be seen asks for a glade: the build
+  takes the trees (only trees) off a disc of that radius round it, past its pad, and off a way
+  `glade_approach_m` wide (18 by default) to the nearest point of the nearest road, so it is seen
+  from the track (`worldgen/trees.py` `clear_glades`). Make it reach past 1.5 of the pad radius,
+  where `poi_sheet.py` stands its cameras. Needs a world build; a preview does not lay it.
 - **`builder`** (new): the name of a static function in `game/world/pois/regions/<region>.gd` that
   builds this place instead of its kind's builder (section 3).
 - Keep a new place 200 m and more from the next where the audit shows empty land; never put its
@@ -92,7 +97,8 @@ eye height, the first from the nearest road's side, and one from above):
 ```
 GODOT=$HOME/godot/Godot_v4.7.2-stable_linux.x86_64 ~/bin/heavy python3 tools/world/poi_sheet.py drovers_hall
     -> captures/poi_sheet/drovers_hall.jpg (each tile labelled with its draw calls and primitives)
-       --time 20.5 for dusk; several ids at once; --built for the built world's own, for a before/after;
+       --time 20.5 for dusk; --weather clear to pin the weather (else each region rolls its own);
+       several ids at once; --built for the built world's own, for a before/after;
        --plan-only writes captures/poi_sheet/<name>/plan.json for ./run.sh shots
 ```
 

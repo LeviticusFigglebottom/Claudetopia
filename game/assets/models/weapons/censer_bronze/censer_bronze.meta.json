@@ -1,0 +1,84 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.73,
+  "max": [
+   0.095,
+   0.64,
+   0.095
+  ],
+  "min": [
+   -0.095,
+   -0.09,
+   -0.095
+  ],
+  "radius": 0.389
+ },
+ "built_seconds": 26.47,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "censer_bronze.glb",
+ "grip_origin": true,
+ "hash": "cf25d05aaf1e376f",
+ "kind": "censer",
+ "materials": [
+  "censer_bronze_mat"
+ ],
+ "materials_used": [
+  "bell_bronze_patina",
+  "iron"
+ ],
+ "meshes": [
+  {
+   "name": "censer_bronze",
+   "tris": 3252
+  },
+  {
+   "name": "censer_bronze_LOD1",
+   "tris": 1298
+  },
+  {
+   "name": "censer_bronze_LOD2",
+   "tris": 486
+  }
+ ],
+ "name": "censer_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9842,
+ "textures": [
+  "censer_bronze_albedo.png",
+  "censer_bronze_normal.png",
+  "censer_bronze_orm.png"
+ ],
+ "tris": [
+  3252,
+  1298,
+  486
+ ],
+ "version": 3
+}

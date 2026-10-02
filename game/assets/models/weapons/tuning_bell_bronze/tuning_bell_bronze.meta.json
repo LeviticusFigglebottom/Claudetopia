@@ -1,0 +1,85 @@
+{
+ "attaches_to": "Socket.Back",
+ "bounds": {
+  "height": 0.901,
+  "max": [
+   0.412,
+   0.901,
+   0.282
+  ],
+  "min": [
+   -0.412,
+   0.0,
+   -0.282
+  ],
+  "radius": 0.673
+ },
+ "built_seconds": 25.27,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "tuning_bell_bronze.glb",
+ "grip_origin": true,
+ "hash": "29e7e9b49d2e1193",
+ "kind": "tuning_bell",
+ "materials": [
+  "tuning_bell_bronze_mat"
+ ],
+ "materials_used": [
+  "bell_bronze_patina",
+  "iron",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "tuning_bell_bronze",
+   "tris": 4064
+  },
+  {
+   "name": "tuning_bell_bronze_LOD1",
+   "tris": 1624
+  },
+  {
+   "name": "tuning_bell_bronze_LOD2",
+   "tris": 608
+  }
+ ],
+ "name": "tuning_bell_bronze",
+ "params": {
+  "finish": "bronze"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9876,
+ "textures": [
+  "tuning_bell_bronze_albedo.png",
+  "tuning_bell_bronze_normal.png",
+  "tuning_bell_bronze_orm.png"
+ ],
+ "tris": [
+  4064,
+  1624,
+  608
+ ],
+ "version": 3
+}

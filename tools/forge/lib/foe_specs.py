@@ -64,6 +64,17 @@ def spec(name: str) -> FoeSpec:
         return _lod1(_canid(name, 0.9, 0.98, 0.86, 1.04,
                       bb.CanidStyle(kind="thorn", girth=1.0, legs=1.2, ruff=0.0, fur=0.002, ears=0.8,
                                     muzzle=1.05, brush=0.25, thorns=1.15, bark=1.0, seed=7), 1.05, "#4a3b2c"), 3200)
+    if name == "brake_dam":
+        # the Brake-Dam: the thornhounds' dam, who whelps them in the Charter Delf's root -- a hound the
+        # size of a pony (1.4 m at the withers in the game), heavy in the barrel and deep under it, her
+        # bark grown thick and the briar she lies in grown into her, round her barrel and her neck and
+        # her haunches; old, scarred, her frame showing through the bark
+        sp = _canid(name, 1.72, 1.06, 0.94, 1.08,
+                    bb.CanidStyle(kind="thorn", girth=1.36, depth=1.18, legs=1.5, ruff=0.0, fur=0.002, ears=0.75,
+                                  muzzle=1.0, muzzle_w=1.2, brush=0.3, thorns=1.5, bark=1.35, age=0.6, scars=0.8,
+                                  coils=1.0, seed=29), 2.4, "#3e3a24", depth=1.18, tris=9000)
+        sp.extra["keep_barrel"] = True
+        return sp
     if name == "leech_hound":
         # sleek, low, long in the body: an otter's build on a hound's head; 0.48 m at the withers
         return _canid(name, 0.76, 1.24, 0.7, 1.08,
@@ -147,7 +158,7 @@ def spec(name: str) -> FoeSpec:
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "old_grey_bitch", "bristleback", "gutter_drake",
+FOES = ["down_wolf", "crag_wolf", "thornhound", "brake_dam", "leech_hound", "old_grey_bitch", "bristleback", "gutter_drake",
         "sallowjaw", "weaver", "stone_thrall", "stone_thrall_king", "warden", "wisp"]
 QUADS = ("canid", "boar", "reptile")
 
