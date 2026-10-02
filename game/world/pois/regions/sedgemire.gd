@@ -1081,19 +1081,84 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	m.commit(knots, PoiKit.plain(INDIGO.lerp(Color(0.6, 0.6, 0.62), 0.3), 0.9), "TreeKnots", true)
 	# the mouth's line: the marker stands three and a half metres in, where whatever lives in it waits
 	var ml := m2 + out * 3.5
-	# the weep: a thread of water off the top of the tallest rock of the mouth's right cheek, into a
-	# pool at its foot (the crag's rocks, so it comes off stone and not out of the air)
-	var cheek := _rock_top(d, ml + across * 4.0, 3.5)
+	# The cleft. The kind's mouth is a turf bank with a throat five metres high in it, out on the cove's
+	# flat a stone's throw from the scarp, and from the delta it read as a low dark mound with a small
+	# hole: so a crag of the scarp's pale limestone (the region has no cliff stone of its own, and the
+	# marsh's lent granite is near black under its moss) stands round the throat: a cheek either side,
+	# eleven and nine metres, turned in toward the way, and two more behind it over the bank, so from
+	# any side it is a knot of rock with a cleft in its face. Between the cheeks the dark of the cleft
+	# goes up from the throat's head.
+	var cheek_tops: Array = []
+	var throat0 := d.find_child("Throat0", true, false) as Node3D
+	var throat_box := _box_of(throat0, throat0.transform) if throat0 != null else AABB(Vector3(m2.x - 2.8, g0, m2.y - 2.8), Vector3(5.6, 5.4, 5.6))
+	var throat_w := maxf(minf(throat_box.size.x, throat_box.size.z), 3.0)
+	var lime_rock: Array = PoiKit.variants_of(PoiKit.ROCKS, "skerrow", "cliff_face")
+	if lime_rock.is_empty():
+		lime_rock = [k.rock("cliff_face", 0)]
+	# [across (+ the weep's side), back from the mouth's line, height, turn in]
+	var crag := [[1.0, 0.0, 11.0, -0.3], [-1.0, 0.0, 9.0, 0.3], [0.6, 7.5, 10.0, 0.0], [-0.8, 6.5, 8.5, 0.15]]
+	for ci in crag.size():
+		var cr: Array = crag[ci]
+		var rp: String = lime_rock[ci % lime_rock.size()]
+		if rp == "":
+			break
+		var bd: Dictionary = PoiKit.meta(rp).get("bounds", {})
+		var bmin: Array = bd.get("min", [-9.7, 0.0, -5.9])
+		var bmax: Array = bd.get("max", [9.9, 16.7, 7.1])
+		var tall := float(cr[2])
+		var sc := clampf(tall / maxf(float(bd.get("height", 16.7)), 0.5), 0.2, 2.0)
+		var half := maxf(-float(bmin[0]), float(bmax[0])) * sc
+		var side_s := float(cr[0])
+		var c := ml - out * (float(bmax[2]) * sc * 0.35 + float(cr[1]))
+		if absf(side_s) > 0.9:
+			c += across * (throat_w * 0.5 + half * 0.75) * signf(side_s)
+		else:
+			c += across * half * side_s
+		var base := k.on_ground(c.x, c.y, -0.6)
+		await k.step()
+		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, Vector3.ZERO, true)
+		if node != null:
+			node.name = "Crag%d" % ci
+		if ci < 2:
+			cheek_tops.append(Vector3(c.x - across.x * half * 0.4 * side_s, base.y + tall, c.y - across.y * half * 0.4 * side_s))
+	# the cleft's dark, narrowing as it goes up, a hand's depth behind the cheeks' inner faces
+	var cleft := m.begin()
+	var cf := ml - out * 0.6
+	var y0 := throat_box.end.y - 0.4
+	var y1 := g0 + 7.4
+	if y1 > y0 + 0.5:
+		var w0 := throat_w * 0.42
+		var w1 := 0.35
+		var a3 := Vector3(across.x, 0.0, across.y)
+		var o3 := Vector3(out.x, 0.0, out.y)
+		var c0 := Vector3(cf.x, y0, cf.y)
+		var c1 := Vector3(cf.x, y1, cf.y) - o3 * 0.6
+		cleft.add_vertex(c0 - a3 * w0)
+		cleft.add_vertex(c1 + a3 * w1)
+		cleft.add_vertex(c0 + a3 * w0)
+		cleft.add_vertex(c0 - a3 * w0)
+		cleft.add_vertex(c1 - a3 * w1)
+		cleft.add_vertex(c1 + a3 * w1)
+		await k.step()
+		var cleft_mi := m.commit(cleft, PoiKit.plain(Color(0.015, 0.018, 0.017), 1.0), "Cleft", true)
+		if cleft_mi != null:
+			cleft_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# the weep: a thread of water off the top of the right cheek, the taller, into a pool at its foot
 	var fall_at := ml + across * 4.2 + out * 1.6
 	var fall_top := k.on_ground(fall_at.x, fall_at.y).y + 4.0
-	if not is_nan(cheek.x):
-		var c2 := Vector2(cheek.x, cheek.z)
-		fall_at = c2 + out * maxf(cheek.w + 0.25, 0.8)
-		fall_top = cheek.y - 0.35
+	if not cheek_tops.is_empty():
+		var ct: Vector3 = cheek_tops[0]
+		fall_at = Vector2(ct.x, ct.z) + out * 1.2
+		fall_top = ct.y - 0.6
+	else:
+		var cheek := _rock_top(d, ml + across * 4.0, 3.5)
+		if not is_nan(cheek.x):
+			fall_at = Vector2(cheek.x, cheek.z) + out * maxf(cheek.w + 0.25, 0.8)
+			fall_top = cheek.y - 0.35
 	var fg := k.on_ground(fall_at.x, fall_at.y).y
 	var fall_h := maxf(fall_top - fg, 2.5)
-	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 0.9, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
-			"Weep", 0.5, true, 3, 6)
+	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 1.7, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
+			"Weep", 0.5, true, 3, 8)
 	if k.far:
 		return
 	var pool_c := fall_at + out * 1.4
