@@ -1,0 +1,549 @@
+{
+ "bones": 40,
+ "bounds": [
+  -0.4235,
+  -1.2031,
+  -0.0038,
+  0.4249,
+  1.7546,
+  0.5264
+ ],
+ "clips": [
+  "Attack_1",
+  "Attack_2",
+  "Death",
+  "Get_Up",
+  "Hit",
+  "Idle",
+  "Idle_Combat",
+  "Knockdown",
+  "Rise",
+  "Run",
+  "Stagger",
+  "Strafe_L",
+  "Strafe_R",
+  "Trot",
+  "Turn_L90",
+  "Turn_R90",
+  "Walk",
+  "Walk_Back"
+ ],
+ "collision": "capsule",
+ "def_scale": 1.25,
+ "generator": "creature_forge",
+ "height": 0.5264,
+ "hurt": [
+  {
+   "a": [
+    0.0,
+    0.3304,
+    0.3843
+   ],
+   "b": [
+    0.0,
+    0.3284,
+    -0.4745
+   ],
+   "kind": "capsule",
+   "r": 0.1757
+  },
+  {
+   "c": [
+    0.0,
+    0.2536,
+    0.8586
+   ],
+   "kind": "sphere",
+   "r": 0.2415
+  }
+ ],
+ "limbs": [],
+ "mesh": "Sallowjaw_Body",
+ "params": {
+  "family": "reptile",
+  "style": {
+   "bands": 0.0,
+   "horns": 0.0,
+   "kind": "croc",
+   "scutes": 1.0,
+   "seed": 51,
+   "teeth": 1.0
+  }
+ },
+ "parts": [
+  "Sallowjaw_Body"
+ ],
+ "rig": "WM_Quadruped_v1",
+ "rig_manifest": {
+  "bones": [
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "length": 0.12,
+    "name": "Root",
+    "parent": null
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.38,
+     0.38
+    ],
+    "length": 0.204,
+    "name": "Hips",
+    "parent": "Root"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.38,
+     0.38
+    ],
+    "length": 0.3805,
+    "name": "Spine1",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.0,
+     0.4
+    ],
+    "length": 0.3007,
+    "name": "Spine2",
+    "parent": "Spine1"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.3,
+     0.38
+    ],
+    "length": 0.1414,
+    "name": "Chest",
+    "parent": "Spine2"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.44,
+     0.36
+    ],
+    "length": 0.1,
+    "name": "Neck1",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.54,
+     0.36
+    ],
+    "length": 0.0806,
+    "name": "Neck2",
+    "parent": "Neck1"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.62,
+     0.37
+    ],
+    "length": 0.5749,
+    "name": "Head",
+    "parent": "Neck2"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.58,
+     0.28
+    ],
+    "length": 0.559,
+    "name": "Jaw",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.07,
+     -0.66,
+     0.43
+    ],
+    "length": 0.0634,
+    "name": "Ear.L",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.07,
+     -0.66,
+     0.43
+    ],
+    "length": 0.0634,
+    "name": "Ear.R",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.58,
+     0.34
+    ],
+    "length": 0.4123,
+    "name": "Tail1",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.98,
+     0.24
+    ],
+    "length": 0.4148,
+    "name": "Tail2",
+    "parent": "Tail1"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     1.38,
+     0.13
+    ],
+    "length": 0.3688,
+    "name": "Tail3",
+    "parent": "Tail2"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.12,
+     -0.24,
+     0.36
+    ],
+    "length": 0.133,
+    "name": "Scapula.L",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.19,
+     -0.32,
+     0.28
+    ],
+    "length": 0.1603,
+    "name": "Humerus.L",
+    "parent": "Scapula.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.31,
+     -0.25,
+     0.2
+    ],
+    "length": 0.1582,
+    "name": "Forearm.L",
+    "parent": "Humerus.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.33,
+     -0.31,
+     0.055
+    ],
+    "length": 0.0534,
+    "name": "FrontCannon.L",
+    "parent": "Forearm.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.335,
+     -0.35,
+     0.02
+    ],
+    "length": 0.0512,
+    "name": "FrontPastern.L",
+    "parent": "FrontCannon.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.34,
+     -0.4,
+     0.01
+    ],
+    "length": 0.052,
+    "name": "FrontHoof.L",
+    "parent": "FrontPastern.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.17,
+     0.36,
+     0.3
+    ],
+    "length": 0.21,
+    "name": "Thigh.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.33,
+     0.25,
+     0.22
+    ],
+    "length": 0.2033,
+    "name": "Gaskin.L",
+    "parent": "Thigh.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.35,
+     0.38,
+     0.065
+    ],
+    "length": 0.0919,
+    "name": "HindCannon.L",
+    "parent": "Gaskin.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.355,
+     0.3,
+     0.02
+    ],
+    "length": 0.061,
+    "name": "HindPastern.L",
+    "parent": "HindCannon.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.36,
+     0.24,
+     0.01
+    ],
+    "length": 0.0714,
+    "name": "HindHoof.L",
+    "parent": "HindPastern.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.12,
+     -0.24,
+     0.36
+    ],
+    "length": 0.133,
+    "name": "Scapula.R",
+    "parent": "Chest"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.19,
+     -0.32,
+     0.28
+    ],
+    "length": 0.1603,
+    "name": "Humerus.R",
+    "parent": "Scapula.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.31,
+     -0.25,
+     0.2
+    ],
+    "length": 0.1582,
+    "name": "Forearm.R",
+    "parent": "Humerus.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.33,
+     -0.31,
+     0.055
+    ],
+    "length": 0.0534,
+    "name": "FrontCannon.R",
+    "parent": "Forearm.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.335,
+     -0.35,
+     0.02
+    ],
+    "length": 0.0512,
+    "name": "FrontPastern.R",
+    "parent": "FrontCannon.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.34,
+     -0.4,
+     0.01
+    ],
+    "length": 0.052,
+    "name": "FrontHoof.R",
+    "parent": "FrontPastern.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.17,
+     0.36,
+     0.3
+    ],
+    "length": 0.21,
+    "name": "Thigh.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.33,
+     0.25,
+     0.22
+    ],
+    "length": 0.2033,
+    "name": "Gaskin.R",
+    "parent": "Thigh.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.35,
+     0.38,
+     0.065
+    ],
+    "length": 0.0919,
+    "name": "HindCannon.R",
+    "parent": "Gaskin.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.355,
+     0.3,
+     0.02
+    ],
+    "length": 0.061,
+    "name": "HindPastern.R",
+    "parent": "HindCannon.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.36,
+     0.24,
+     0.01
+    ],
+    "length": 0.0714,
+    "name": "HindHoof.R",
+    "parent": "HindPastern.R"
+   },
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     -0.03,
+     0.4517
+    ],
+    "length": 0.04,
+    "name": "Socket.Saddle",
+    "parent": "Spine2"
+   },
+   {
+    "deform": false,
+    "head": [
+     0.022,
+     -1.068,
+     0.266
+    ],
+    "length": 0.02,
+    "name": "Socket.Bit",
+    "parent": "Head"
+   },
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     0.3867,
+     0.43
+    ],
+    "length": 0.04,
+    "name": "Socket.Pack",
+    "parent": "Spine1"
+   },
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     -0.62,
+     0.39
+    ],
+    "length": 0.04,
+    "name": "Socket.Head",
+    "parent": "Head"
+   }
+  ],
+  "proportions": {
+   "body_length": 0.9,
+   "bulk": 1.2,
+   "cannon": 1.0,
+   "head_size": 1.2,
+   "leg_length": 0.3,
+   "neck_length": 0.4,
+   "neck_raise": 0.0,
+   "tail_length": 2.0,
+   "width": 1.4,
+   "withers": 0.5
+  },
+  "rig": "WM_Quadruped_v1",
+  "sockets": [
+   "Socket.Saddle",
+   "Socket.Bit",
+   "Socket.Pack",
+   "Socket.Head"
+  ],
+  "withers": 0.5
+ },
+ "seed": 51,
+ "tint": "#5c5f3a",
+ "tris": [
+  7997,
+  2699,
+  787
+ ],
+ "version": 1
+}

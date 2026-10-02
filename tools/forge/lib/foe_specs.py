@@ -84,6 +84,32 @@ def spec(name: str) -> FoeSpec:
                        extra={"tint": "#5a4436", "module": bo, "trunk": bo.TRUNK,
                               "kind": {"tail_carriage": 25.0, "ears_back": 20.0, "lie_height": 0.24, "sternal": 0.36,
                                        "speeds": {"Walk": 0.95, "Trot": 2.0, "Run": 4.2}}})
+    if name in ("sallowjaw", "gutter_drake"):
+        from . import reptile as rp
+        if name == "sallowjaw":
+            joints, trunk, k = rp.CROC, rp.CROC_TRUNK, 1.0
+            st = rp.ReptileStyle(kind="croc", seed=51)
+            props = QuadProportions(withers=0.50, body_length=0.9, leg_length=0.3, neck_length=0.4, head_size=1.2,
+                                    bulk=1.2, width=1.4, tail_length=2.0)
+            return FoeSpec(name, "reptile", QuadSkeleton(props, joints=joints), st,
+                           None, def_scale=1.25, tex=1024, tris=8000, lod1=2700, lod2=800, spacing=0.008,
+                           extra={"tint": "#5c5f3a", "module": rp, "trunk": trunk, "splay": 1.2,
+                                  "kind": {"tail_carriage": 0.0, "ears_back": 0.0, "lie_height": 0.3, "sternal": 0.16,
+                                           "lie_roll": 180.0, "turn": 45.0,
+                                           "speeds": {"Walk": 0.6, "Trot": 1.1, "Run": 2.6}}})
+        k = 0.42
+        joints = rp.scaled(rp.CROC, k, leg=1.7, head=0.5, tail=0.75, head_up=0.07)
+        trunk = rp.scaled_trunk(rp.CROC_TRUNK, k, leg=1.6)
+        st = rp.ReptileStyle(kind="drake", scutes=0.5, bands=1.0, horns=1.0, teeth=0.8, seed=61)
+        props = QuadProportions(withers=0.50 * k, body_length=0.9, leg_length=0.5, neck_length=0.4, head_size=0.8,
+                                bulk=1.0, width=1.2, tail_length=1.6)
+        return FoeSpec(name, "reptile", QuadSkeleton(props, joints=joints), st, None, def_scale=0.55, tex=512,
+                       tris=5000, lod1=1700, lod2=500, spacing=0.0035,
+                       extra={"tint": "#3f4a3c", "module": rp, "trunk": trunk, "splay": 0.9,
+                              "kind": {"tail_carriage": 0.0, "ears_back": 0.0, "lie_height": 0.3, "sternal": 0.2,
+                                       "lie_roll": 180.0, "turn": 45.0,
+                                       "speeds": {"Walk": 0.55, "Trot": 1.1, "Run": 3.4},
+                                       "cycles": {"Walk": 16, "Trot": 10, "Run": 7}}})
     if name in ("stone_thrall", "stone_thrall_king"):
         from . import thrall as th
         st = th.ThrallStyle(king=name.endswith("king"))
@@ -95,5 +121,20 @@ def spec(name: str) -> FoeSpec:
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "weaver", "stone_thrall"]
+FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "gutter_drake", "sallowjaw", "weaver",
+        "stone_thrall"]
 QUADS = ("canid", "boar", "reptile")
+
+
+def _reptile_scene(sp: FoeSpec):
+    return sp.extra["module"].reptile_scene(sp.skel, sp.style, sp.extra["trunk"])
+
+
+_spec = spec
+
+
+def spec(name: str) -> FoeSpec:  # noqa: F811
+    sp = _spec(name)
+    if sp.scene is None:
+        sp.scene = lambda sp=sp: _reptile_scene(sp)
+    return sp

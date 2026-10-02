@@ -141,6 +141,16 @@
   "length": 1.6,
   "loop": false
  },
+ "Rise": {
+  "events": [
+   {
+    "name": "cancel_ok",
+    "t": 0.4
+   }
+  ],
+  "length": 0.5,
+  "loop": false
+ },
  "Run": {
   "events": [],
   "length": 0.3,

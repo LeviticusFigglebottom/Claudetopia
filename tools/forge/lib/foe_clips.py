@@ -42,11 +42,28 @@ def _lerp(a, b, t):
 
 
 class FoeSolver(_FoldSolver):
-    """The quadruped's solver, and legs given by direction (free_foot) as well as by angle."""
+    """The quadruped's solver, and legs given by direction (free_foot) as well as by angle. `splay`
+    bends the elbows and the knees out from the body as well as back and forward: a reptile's
+    sprawl (0 for an upright leg)."""
+
+    splay = 0.0
 
     def _leg(self, pose: dict, foot: str, fp: FootPose) -> None:
         if not getattr(fp, "free", False):
-            return super()._leg(pose, foot, fp)
+            if not self.splay:
+                return super()._leg(pose, foot, fp)
+            if isinstance(fp.cannon, tuple):
+                sk = self.skel
+                bones = foot_bones(foot)
+                C = fp.toe - sk.bones[bones[-1]].length * sag(fp.hoof)
+                F = C - sk.bones[bones[-2]].length * sag(fp.pastern)
+                W = sk.fk(pose)
+                line = sag_angle(F - W[bones[0]][:3, 3])
+                share = 1.0 if foot[0] == "F" else self.HIND_CANNON_SHARE
+                fp = FootPose(toe=fp.toe, hoof=fp.hoof, pastern=fp.pastern,
+                              cannon=self._rest_cannon[foot] + share * (line - self._rest_line[foot]) + fp.cannon[1],
+                              planted=fp.planted)
+            return self._splayed_leg(pose, foot, fp)
         sk = self.skel
         bones = foot_bones(foot)
         hoof, past, can = bones[-1], bones[-2], bones[-3]
@@ -69,6 +86,45 @@ class FoeSolver(_FoldSolver):
         W = sk.fk(pose)
         c_at = sk.tail_world(W, past)
         pose[hoof] = (sk.aim(W, hoof, toe - c_at), None)
+
+
+def _splayed_leg(self, pose: dict, foot: str, fp: FootPose) -> None:
+    """Solver._leg with the elbow and the knee bent out to the side by `splay`."""
+    sk = self.skel
+    bones = foot_bones(foot)
+    fore = foot[0] == "F"
+    hoof, past, can = bones[-1], bones[-2], bones[-3]
+    lo, up = bones[-4], bones[-5]
+    toe = np.asarray(fp.toe, float)
+    x = toe[0]
+    C = toe - sk.bones[hoof].length * sag(fp.hoof)
+    F = C - sk.bones[past].length * sag(fp.pastern)
+    W = sk.fk(pose)
+    top = bones[0]
+    line = sag_angle(F - W[top][:3, 3])
+    if fore:
+        d = (line - self._rest_line[foot]) * self.SCAPULA_SHARE
+        pose[top] = (sk.local_turn(top, pitch_up(d)), None)
+        W = sk.fk(pose)
+    share = 1.0 if fore else self.HIND_CANNON_SHARE
+    cannon = fp.cannon if fp.cannon is not None else self._rest_cannon[foot] + share * (line - self._rest_line[foot])
+    K = F - sk.bones[can].length * sag(cannon)
+    K[0] = x + (sk.bones[can].head[0] - sk.bones[can].tail[0])
+    sx = 1.0 if foot[1] == "L" else -1.0
+    pole = np.array([sx * self.splay, 1.0 if fore else -1.0, 0.0])
+    Ru, Rl, err = sk.two_bone(W, up, lo, K, pole)
+    self.reach_error = max(self.reach_error, err)
+    pose[up] = (Ru, None)
+    pose[lo] = (Rl, None)
+    W = sk.fk(pose)
+    pose[can] = (sk.aim(W, can, F - sk.tail_world(W, lo)), None)
+    W = sk.fk(pose)
+    pose[past] = (sk.aim(W, past, C - sk.tail_world(W, can)), None)
+    W = sk.fk(pose)
+    pose[hoof] = (sk.aim(W, hoof, toe - sk.tail_world(W, past)), None)
+
+
+FoeSolver._splayed_leg = _splayed_leg
 
 
 def free_foot(toe, hoof, pastern, cannon, pole, planted: bool = False) -> FootPose:
@@ -156,7 +212,10 @@ class Kind:
         self.lie_height = kw.get("lie_height", 0.15)           # the trunk's middle lying on its side, m at k=1
         self.sternal = kw.get("sternal", 0.24)                 # the back's height lying on the brisket
         self.ears_back = kw.get("ears_back", 35.0)
+        self.lie_roll = kw.get("lie_roll", 84.0)              # on its side (84), or on its back (180)
         self.speeds = kw.get("speeds", {})
+        self.cycles = kw.get("cycles", {})                     # frames a gait's cycle takes, by name
+        self.turn = kw.get("turn", 90.0)                       # degrees a turn-on-the-spot cycle turns
 
 
 def canid_gaits(K: Kind) -> List[GaitSpec]:
@@ -425,6 +484,158 @@ def charge_clip(solver, K: Kind, name: str = "Attack_2", length: float = 1.2) ->
                      (0.15, "scrape"), (0.39, "scrape")], {})
 
 
+def reptile_gaits(K: Kind) -> List[GaitSpec]:
+    """A reptile's walk is a slow diagonal trot with the body swung from side to side; its run the
+    same, quicker, the belly carried higher. Short legs make short strides: the cadence carries it."""
+    k = K.k
+    sp = {"Walk": 0.8, "Trot": 1.4, "Run": 3.2}
+    sp.update(K.speeds)
+    cy = {"Walk": 20, "Trot": 14, "Run": 8, "Walk_Back": 22, "Turn": 26}
+    cy.update(K.cycles)
+    tn = K.turn
+    return [
+        GaitSpec("Walk", speed=sp["Walk"] * k ** 0.5, cycle=cy["Walk"] / FPS, duty=0.7,
+                 footfalls={"HL": 0.0, "FR": 0.05, "HR": 0.5, "FL": 0.55},
+                 lift=0.05 * k, fold=0.4, bob=0.006 * k, bobs=2, nod=2.0, carriage=0.0, ears=0.0),
+        GaitSpec("Trot", speed=sp["Trot"] * k ** 0.5, cycle=cy["Trot"] / FPS, duty=0.55,
+                 footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
+                 lift=0.07 * k, fold=0.6, bob=0.012 * k, bobs=2, nod=2.0, carriage=-2.0, ears=0.0),
+        GaitSpec("Run", speed=sp["Run"] * k ** 0.5, cycle=cy["Run"] / FPS, duty=0.45,
+                 footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
+                 lift=0.09 * k, fold=0.8, bob=0.02 * k, bobs=2, nod=3.0, carriage=-4.0, ears=0.0),
+        GaitSpec("Walk_Back", speed=-0.5 * k ** 0.5, cycle=cy["Walk_Back"] / FPS, duty=0.7,
+                 footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
+                 lift=0.04 * k, fold=0.4, bob=0.005 * k, bobs=2, nod=2.0, ears=0.0),
+        GaitSpec("Turn_L90", speed=0.0, cycle=cy["Turn"] / FPS, duty=0.65,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75}, lift=0.04 * k, fold=0.4, bob=0.004 * k,
+                 nod=2.0, turn=tn),
+        GaitSpec("Turn_R90", speed=0.0, cycle=cy["Turn"] / FPS, duty=0.65,
+                 footfalls={"HL": 0.0, "FL": 0.25, "HR": 0.5, "FR": 0.75}, lift=0.04 * k, fold=0.4, bob=0.004 * k,
+                 nod=2.0, turn=-tn),
+    ]
+
+
+def undulating(clip: QuadClip, sway: float) -> QuadClip:
+    """The body swung from side to side with the stride, the head held to its line and the tail
+    whipping the other way: how a lizard walks."""
+    cyc = clip.length
+
+    def sample(t: float) -> QuadPose:
+        qp = clip.sample(t)
+        ph = (t / cyc) % 1.0
+        w = math.sin(2 * math.pi * ph)
+        qp.bend += sway * w
+        qp.yaw += -0.3 * sway * w
+        qp.neck_turn += -0.6 * sway * w
+        qp.tail_swing += -1.6 * sway * math.sin(2 * math.pi * (ph - 0.12))
+        return qp
+    return QuadClip(clip.name, clip.length, clip.loop, sample, clip.events, clip.extra)
+
+
+def death_roll_clip(solver, K: Kind, name: str = "Attack_2", length: float = 2.0) -> QuadClip:
+    """The death roll: the jaws snap shut on you and the whole body spins over along its length,
+    once, legs tucked, the tail flailing; then it rights itself. The blow is the bite (`hit_start`)."""
+    k = K.k
+    cocked, hs, he, ok = 0.40, 0.52, 0.76, 1.5
+
+    def sample(t: float) -> QuadPose:
+        u = t / length
+        lunge = smooth(t / cocked) * (1.0 - smooth((t - hs) / 0.3))
+        spin = smooth((t - hs) / (1.25 - hs))
+        qp = QuadPose(feet=stand(solver))
+        qp.ahead = 0.15 * k * lunge
+        qp.lift = -0.03 * k * lunge
+        qp.jaw = 30.0 * smooth((t - 0.1) / (cocked - 0.1)) * (1.0 - smooth((t - hs + 0.03) / 0.05))
+        qp.neck = -8.0 * lunge
+        if spin > 0.0:
+            # rolled about its own length, the trunk's middle on the ground's line
+            rot = 360.0 * spin
+            mid_z = 0.5 * (solver.skel.J["Chest"][2] + solver.skel.J["Forearm.L"][2])
+            qp.pivot = np.array([0.0, solver.skel.bones["Hips"].head[1], mid_z])
+            qp.roll = -rot
+            qp.lift += 0.06 * k * math.sin(math.pi * spin)
+            Rt, xf = trunk_xf(solver, qp)
+            for f in FEET:
+                r = solver.rest[f]
+                tucked = r.toe + np.array([-0.5 * r.toe[0], 0.0, 0.12 * k])
+                w = math.sin(math.pi * spin)
+                toe_b = r.toe * (1.0 - w) + tucked * w
+                qp.feet[f] = free_foot(xf(toe_b), Rt @ sag(r.hoof), Rt @ sag(r.pastern), Rt @ sag(solver._rest_cannon[f]),
+                                       Rt @ default_pole(f))
+            qp.tail_swing = 40.0 * math.sin(2 * math.pi * spin * 2)
+        return qp
+    return QuadClip(name, length, False, sample,
+                    [(cocked, "cocked"), (hs, "hit_start"), (he, "hit_end"), (ok, "cancel_ok")], {})
+
+
+def scrabble_clip(solver, K: Kind, name: str = "Attack_2", length: float = 0.95) -> QuadClip:
+    """The drake's scrabble: up on its hind legs and on to you, the forefeet raking down at
+    `hit_start`, the jaws open."""
+    k = K.k
+    sk = solver.skel
+    hip = sk.bones["Thigh.L"].head.copy()
+    hip[0] = 0.0
+    cocked, hs, he, ok = 0.34, 0.48, 0.6, 0.76
+
+    def sample(t: float) -> QuadPose:
+        up = smooth(t / cocked) * (1.0 - smooth((t - hs) / (length - hs)))
+        rake = smooth((t - cocked) / (hs - cocked)) * (1.0 - smooth((t - he) / 0.2))
+        feet = stand(solver)
+        qp = QuadPose(feet=feet)
+        qp.pivot = hip
+        qp.pitch = 35.0 * up - 15.0 * rake
+        qp.ahead = 0.12 * k * rake
+        qp.jaw = 25.0 * up
+        qp.neck = -10.0 * up
+        qp.tail = -10.0 * up
+        Rt, xf = trunk_xf(solver, qp)
+        if up > 0.02:
+            for f in ("FL", "FR"):
+                r = solver.rest[f]
+                claw = r.toe + np.array([0.0, -0.08 * k - 0.1 * k * rake, 0.12 * k * (1.0 - rake)])
+                st_ = as_free(solver, f, feet[f])
+                fr = free_foot(xf(claw), Rt @ np.array([0.0, -0.4, -1.0]), Rt @ np.array([0.0, -0.6, -1.0]),
+                               Rt @ np.array([0.0, -0.3, -1.0]), Rt @ default_pole(f))
+                w = smooth(up * 1.6)
+                feet[f] = free_foot(_lerp(st_.toe, fr.toe, w), _lerp(st_.hoof, fr.hoof, w), _lerp(st_.pastern, fr.pastern, w),
+                                    _lerp(st_.cannon, fr.cannon, w), default_pole(f))
+        return qp
+    return QuadClip(name, length, False, sample, [(cocked, "cocked"), (hs, "hit_start"), (he, "hit_end"), (ok, "cancel_ok")], {})
+
+
+def rise_clip(solver, K: Kind, lurk: QuadClip, length: float = 0.5) -> QuadClip:
+    """From the belly up on to its legs in one heave, the jaws opening: an ambusher roused."""
+    def sample(t: float) -> QuadPose:
+        w = smooth(t / length)
+        qp = blend_pose(lurk.sample(0.0), standing_pose(solver, K), w, solver)
+        qp.jaw = 25.0 * bump(t / length, 0.6)
+        qp.ahead += 0.08 * K.k * bump(t / length)
+        return qp
+    return QuadClip("Rise", length, False, sample, [(0.8 * length, "cancel_ok")], {})
+
+
+def lurk_clip(solver, K: Kind, length: float = 4.0) -> QuadClip:
+    """Flat on its belly, still as a log: the sallowjaw's wait (and every reptile's rest)."""
+    sk = solver.skel
+
+    def sample(t: float) -> QuadPose:
+        u = t / length
+        qp = QuadPose()
+        qp.lift = -(sk.J["Forearm.L"][2] - 0.02 * K.k) * 0.75
+        Rt, xf = trunk_xf(solver, qp)
+        feet = {}
+        for f in FEET:
+            r = solver.rest[f]
+            out = np.array([np.sign(r.toe[0]) * 0.06 * K.k, 0.0, 0.0])
+            feet[f] = free_foot(r.toe + out, sag(r.hoof + 20.0), sag(r.pastern + 30.0), sag(solver._rest_cannon[f] + 50.0),
+                                np.array([np.sign(r.toe[0]) * 1.2, 1.0 if f[0] == "F" else -1.0, 0.3]))
+        qp.feet = feet
+        qp.tail_swing = 3.0 * math.sin(2 * math.pi * u)
+        qp.jaw = 2.0
+        return qp
+    return QuadClip("Idle", length, True, sample, [], {})
+
+
 # --------------------------------------------------------------------------------------
 # Struck, thrown, killed
 # --------------------------------------------------------------------------------------
@@ -486,7 +697,7 @@ def lying_pose(solver, K: Kind, kick: float = 0.0, head_down: float = 1.0, limp:
     hips = sk.bones["Hips"].head
     mid_z = 0.5 * (sk.J["Chest"][2] + sk.J["Forearm.L"][2])
     qp.pivot = np.array([0.0, hips[1], mid_z])
-    qp.roll = -side * 84.0
+    qp.roll = -side * K.lie_roll
     qp.lift = -(mid_z - K.lie_height * k)
     qp.side = -side * 0.02 * k
     Rt, xf = trunk_xf(solver, qp)
@@ -629,12 +840,14 @@ def kind_for(spec) -> Kind:
 
 def build(spec) -> Dict[str, QuadClip]:
     """Every clip of this foe, by name."""
-    solver = make_solver(spec.skel)
+    solver = solver_for(spec)
     K = kind_for(spec)
     clips: Dict[str, QuadClip] = {}
-    gaits = canid_gaits(K)
+    gaits = reptile_gaits(K) if spec.family == "reptile" else canid_gaits(K)
     for g in gaits:
         clips[g.name] = gait_clip(solver, g)
+        if spec.family == "reptile" and not g.turn:
+            clips[g.name] = undulating(clips[g.name], 14.0 if g.name != "Run" else 9.0)
     walk = [g for g in gaits if g.name == "Walk"][0]
     side_walk = GaitSpec("Strafe", speed=walk.speed * 0.8, cycle=walk.cycle, duty=walk.duty, footfalls=walk.footfalls,
                          lift=walk.lift, fold=walk.fold, bob=walk.bob, nod=2.0, carriage=10.0, tail=walk.tail, ears=15.0)
@@ -645,6 +858,13 @@ def build(spec) -> Dict[str, QuadClip]:
     if spec.family == "boar":
         clips["Attack_1"] = gore_clip(solver, K)
         clips["Attack_2"] = charge_clip(solver, K)
+    elif spec.family == "reptile":
+        clips["Attack_1"] = bite_clip(solver, K, reach=0.18, shake=6.0)
+        clips["Attack_2"] = death_roll_clip(solver, K) if spec.style.kind == "croc" else scrabble_clip(solver, K)
+        if spec.style.kind == "croc":
+            # it waits flat as a log; Idle_Combat is its high stance; Rise is the log coming alive
+            clips["Idle"] = lurk_clip(solver, K)
+            clips["Rise"] = rise_clip(solver, K, clips["Idle"])
     else:
         clips["Attack_1"] = bite_clip(solver, K)
         clips["Attack_2"] = lunge_clip(solver, K)
@@ -659,7 +879,9 @@ def build(spec) -> Dict[str, QuadClip]:
 
 
 def solver_for(spec) -> FoeSolver:
-    return make_solver(spec.skel)
+    s = make_solver(spec.skel)
+    s.splay = float(spec.extra.get("splay", 0.0))
+    return s
 
 
 # --------------------------------------------------------------------------------------
@@ -672,7 +894,7 @@ def mesh_weights(spec, verts: np.ndarray) -> np.ndarray:
 
 
 def pose_matrices(spec, clip: QuadClip, t: float, solver=None) -> Dict[str, np.ndarray]:
-    solver = solver or make_solver(spec.skel)
+    solver = solver or solver_for(spec)
     R, th = solver.solve(clip.sample(t))
     pose = {n: (r, th if n == "Hips" else None) for n, r in R.items()}
     return spec.skel.fk(pose)

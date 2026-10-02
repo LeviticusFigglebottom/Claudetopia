@@ -530,7 +530,7 @@ def stagger_clip() -> RigClip:
 
 
 def _flipped(amount: float) -> Body:
-    return Body(lift=-0.07 * amount + 0.25 * _bump(amount), roll=180.0 * amount, abdomen=-10.0 * amount)
+    return Body(lift=-0.07 * amount + 0.42 * _bump(amount), roll=180.0 * amount, abdomen=-10.0 * amount)
 
 
 def knockdown_clip() -> RigClip:
@@ -584,6 +584,19 @@ def death_clip() -> RigClip:
     return RigClip("Death", L, False, sample, [(0.02, "death_start"), (0.5 * L, "body_land")], {"held": True})
 
 
+def rise_clip() -> RigClip:
+    """Roused from its wait: drawn up out of a crouch, the forelegs flung up and out."""
+    L = 0.5
+    rest = rest_tips()
+
+    def sample(t: float) -> Poser:
+        u = t / L
+        crouch = 1.0 - _smooth(u / 0.7)
+        b = Body(lift=-0.15 * crouch, pitch=10.0 * _bump(u), palps=40.0 * _bump(u), fangs=30.0 * _bump(u))
+        return pose(RIG, b, front_raised(rest, 0.6 * _bump(u, 0.6)))
+    return RigClip("Rise", L, False, sample, [(0.8 * L, "cancel_ok")])
+
+
 RIG = make_rig()
 
 
@@ -599,7 +612,7 @@ def build_clips() -> Dict[str, RigClip]:
         "Turn_R90": gait("Turn_R90", 0.0, 24 / FPS, 0.6, 0.10, turn=-90.0),
         "Attack_1": fang_clip(), "Attack_2": drop_clip(), "Attack_3": spit_clip(),
         "Hit": hit_clip(), "Stagger": stagger_clip(), "Knockdown": knockdown_clip(), "Get_Up": get_up_clip(),
-        "Death": death_clip(),
+        "Death": death_clip(), "Rise": rise_clip(),
     }
     # a strafe's speed is its sideways pace
     c["Strafe_L"].extra["speed"] = 1.0

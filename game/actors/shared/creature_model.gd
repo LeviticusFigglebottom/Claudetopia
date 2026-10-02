@@ -280,6 +280,9 @@ func play_intent(clip: String, blend: float = BLEND_ONE_SHOT) -> bool:
 		if not GAITS.has(c):
 			_stand = c
 		return true
+	# roused from an ambush (Get_Up with nothing having put it down): a beast that waits has its own
+	if c == "Get_Up" and _intent_clip != "Knockdown" and _own("Rise"):
+		c = "Rise"
 	_intent = clip
 	_intent_clip = c
 	_held = false

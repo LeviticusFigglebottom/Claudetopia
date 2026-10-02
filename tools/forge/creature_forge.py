@@ -226,7 +226,7 @@ def bake_foe_clips(arm, sp) -> dict:
         return sidecar
     from forge.lib import foe_clips
     clips = foe_clips.build(sp)
-    solver = foe_clips.make_solver(sp.skel)
+    solver = foe_clips.solver_for(sp)
     sidecar = {}
     t0 = time.time()
     for name in sorted(clips):
