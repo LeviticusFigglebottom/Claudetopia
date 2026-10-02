@@ -15274,3 +15274,113 @@ first soot was a black panel and is now its own courses scorched.
 - Looked at from the shore road and the holm side (the lamp-tower carries over the curtain), at eye
   height from the gate, and room by room inside (robed acolytes at the keep door, drakes in the dues
   cellar, the water-gate's pool, the pillared Saying-hall).
+
+
+## What the water kept, second look: Sedgemire's places reworked and three large sites (world life phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for Sedgemire. Every place in the region was walked again against three
+questions (a reason to come, more than one layer, nothing else like it); the generic ones were given
+a builder of their own in `world/pois/regions/sedgemire.gd`, with something to stop at and look at,
+and three large sites were added, each with a feature you see from far off, an inside, a boss, a quest
+and its people. Everything is Sedgemire's own files, plus two small shared changes (below).
+
+### Three large sites
+- **The Name-Wife's Hollow** (delve, -2918,1500, at the head of a gully in the South Scarp): the marsh-hag
+  the bible promised. The mouth a cleft in the scarp's own rock (the cave kind's crag and bank, no squared
+  face: a faked raised face read as stacked blocks with a brick knoll, and was taken out), a thread of
+  water weeping off the cheek's tallest rock into a pool, a bog-oak beam before the mouth hung with
+  knotted name-cords (the hook), and before it a dead sallow 12 m tall hung so thick with cords that it reads as a grey
+  cloud against the scarp. Inside `core:interior/name_wifes_hollow` (cave, large: the weep, a cord
+  gallery in a fungus grotto, the hounds' den, a daylight shaft, the forgotten at an underground lake),
+  boss **the Name-Wife** (`core:boss/the_name_wife`: cold light, the name said (silence), knotting hands;
+  at half, calls the forgotten up out of the water). Quest *What the Name-Wife Took* (Iffo Nauve, the
+  new watchman at the South Stilts, paid for his daughter's cure with his dead father's name): three
+  endings. Crookstilts, her trading-stilts in the carr, now carries her price-slate and points here.
+- **The Sounding** (tower, -1930,-1340, the North Shore): the Flood-Callers' bell-tower, a black
+  bog-oak frame 15 m to its deck and 24 m to its hood on a drowned Builders' platform of fused black
+  stone in a mere, inside the stumps of its ring-wall; a stair of four flights climbs round its outside
+  to the deck (Callers stand on it), their bell under the hood, cut burial lanterns strung round the
+  eaves, their camp and lantern-heaps at the steps. The door is in a recess at the platform's back:
+  `core:interior/the_sounding_undercroft` (ruined hall, large: the lantern hall, the Callers' sleeping
+  hall, the drowned floor, the rope shaft, the choir on a ledge), boss **Ama Lissa, the Sounder**
+  (Tuo Lissa's sister; at half she hauls the bell-rope and the well's water comes over with the drowned
+  in it). Quest *The Sounding* from Tuo Lissa at Heron Watch (his dialogue gains the lines): three endings.
+- **The Saltgate** (fort, -3482,440, the headland at the Outfall's mouth): the Tallymen's sluice-fort,
+  its gates broken from below at the spring tide and its garrison drowned at their posts and still on
+  the walls (the fort's site garrison: bog-drowned on the walls and gate, wisps on the towers). Its yard
+  is the new `"yard": "abandoned"` (no fire, no table, no hens), standing water and wrack in it; out
+  past the gate on the channel's bank the great sluice, two weathered ashlar piers with a walkway and
+  windlass-house and the sea-gates hanging open between. The keep leads to `core:interior/saltgate_culverts`
+  (keep, large: guardroom, salt stores, the culvert stair, the sluice race on a chasm bridge, the flooded
+  hall, the windlass chamber), boss **Old Mudmouth** (`core:boss/old_mudmouth`, a sallowjaw 2.3 times
+  the size, whose young come up the race at half). Quest *The Saltgate* from Hal Ruddock, the sluice-hand
+  who got out, now at the Tide Hearth across the water: shut the gates (the Guild), leave them open (the
+  eels), or keep the key.
+
+### Places reworked (33, each a builder of its own in `world/pois/regions/sedgemire.gd`)
+Before, the region's towers were one stilt-tower three times over (Heron Watch, Crookstilts, the South
+Stilts: the same 15 pieces), its ruins one hall (Mor'oul, Saoul, the Eel Stews, the Old Crannog, the
+Drowned Road: 21 pieces each), its wrecks one hull, its camps one camp. Now:
+- **The drowned and the sunk:** *the Sunken Tower* drowned to its third course in black water, the face of
+  the Thirteenth colossus cut in its fourth (a touch), the children's diving plank and slate; *Mor'oul*, roof
+  ridges and stilt-tops breaking black water with the village's own lanterns still lit under it; *Saoul*,
+  twelve stilts in a pool each with its lantern lit, and a thirteenth under the water; *the Drowned Road*,
+  fused slabs running down under the sea to a milestone in the shallows; *the Drowned Arch*, one arch at
+  Mormere's edge you can walk through the wrong way; *the Old Crannog*, a wattle round-house on a stone
+  islet with its fire laid and a causeway with three loose stones (Aue Sa's spots kept).
+- **The stilts:** *Heron Watch* (the bittern's bell-cote, Tuo's knotted rope to the stair's foot), *the
+  South Stilts* (braced, a 20-step stair, the knot-rail, the beacon, the grey-tagged withies up the scarp),
+  *Crookstilts* (every stilt leaning its own way, the names under the deck, the saying-stone, her price),
+  *the Fog Bell* (a bell-frame and the ringer's empty hut, the rope you can pull).
+- **The working places:** *the Eel Stews* (six walled stews, the high one empty and wet outside, drag-marks),
+  *the Cockle Beds* (every stake moved a row seaward, the old holes behind), *the Salt Pans* (pans wet and
+  crusted, footprints from the sea), *the Greyreed Decoy* (three netted pipes, the torn one), *the Indigo
+  Beds* (the pale trough), *the Withy Beds* (stools in rows, the pack's trodden lair), *the Eel Hurdles*
+  (the raft and three vees of hurdles), *the Peat Hags* (the stepped cutting, the turf stacks, the
+  finds-board; Deo and Lia Oul's spots kept), *the Traders' Post* (bare tent-frames, the one tent, the
+  chart on its pole, kept off the street through it).
+- **Ships:** *the Reed Wreck* upright in the reeds with mast, yard and deckhouse; *the Grey Gull* hard over,
+  her gull figurehead with Senne Oul's face; *the Drowned Trader* sunk to her rails, water on her deck.
+- **Ways and stones:** *the Lantern Causeway*, *the Boardwalk Gate*, *the Long Jetty* (one boardwalk helper:
+  the ropes are the poles' own, which was the audit's six floating ropes a place); *the Knuckle Cairn*,
+  *the Round Stones*, *the Tideflat Stones* (the quay's facing stones, the survey-cairn; still nothing to fight, its crabs on the strand), *Oskel Ford*'s abandoned ore-cart; *the Tide Hearth* (Hal
+  Ruddock's shelter and knot-line facing the Saltgate).
+- **Small ruins by the ways:** *the Drowned Byre*, *the Settled House*, *the Broken Stilts*.
+- 19 touches (something to read or do: say a name at Crookstilts, ring the Fog Bell, sing the second voice
+  flat at the Round Stones, walk through the Drowned Arch the wrong way ...), `dialogues/touches_sedgemire.json`.
+
+### Measured
+- `tools/world/region_check.py sedgemire --godot --edited <the 31 reworked>`: PASS (content, placement,
+  density). Every new and reworked place seat clean on its pad; the three large sites score 11 to 12.
+- Audit (`docs/review/world_life/audit_sedgemire.md`, measured on the installed world of 2026-09-30):
+  60 POIs (57 before), weak 2 and 9 wayside (8 before), strong 11 (8), land further than 200 m from
+  anything 6% (7%), largest empty stretch 0.00 km2 (0.07: the North Shore gap is where the Sounding
+  stands), placement problems 18 at 15 POIs (23 at 17).
+- `run.sh quests --only=` the three new quests and the ten Sedgemire quests whose places changed: 13 of 13,
+  37 of 37 walks. `test_sites_sedgemire` walks the four Sedgemire interiors (the Unsung Vault and the
+  three new) from door to boss to way out. The GDScript census is at its baseline (49).
+- Looked at: every reworked place from its approach (sheets of 4 to 18 at a time), the three large
+  sites near and from 160 m, the interiors in the site review. The Name-Wife's Hollow was redone after
+  the coordinator's look at it (a faked raised face read as squared blocks, a knoll in brick texture
+  with a rock floating on it): now the cave kind's own crag and bank in a gully head.
+
+### Shared files touched (minimally)
+- `game/world/sites/site_exterior.gd`: `site.yard = "abandoned"` (no fire, table set or hens in a fort's
+  yard); documented in docs/WORLD_LIFE_INTERIORS.md.
+- `game/content/packs/core/tables/poi_hooks.json` regenerated; `game/tests/unit/test_poi_encounters.gd`: Sedgemire's rows of its
+  table only (the new places, and what now stands at the reworked ones).
+
+### Not done / for the coordinator
+- Sedgemire's backcountry has no roads or paths; the three large sites are reached across the marsh
+  (the Saltgate from the Tide Hearth, the Sounding along the North Shore, the Hollow up its gully from
+  the cove). A footpath to each is the road pass's.
+- Audit findings that depend on the world build (the installed world predates these pads): the Old
+  Crannog's door 1.3 m over the ground there (clean on its pad), the steep skirts at the Grey Gull, the
+  Old Crannog and the South Stilts, and the roads through the Traders' Post, the Eel Hurdles, the Drowned
+  Bell Shrine and the Stair of Isse (the last two not mine). The atlas puts the Name-Wife's Hollow in
+  province ash_heath (Cinderlea's); the region map and region_check say Sedgemire.
+- Not reworked: the Sallow King's willows overlapping (18), the two cinderlea bells sunk at the Drowned
+  Bell Shrine and the Lantern Hummock, the Lead-Carriers' Rest crates; the Indigo Beds' trough still
+  reads as a long pipe from far off; Mor'oul's water is paler than the other black water.
+- `test_poi_encounters` and `test_books` fail on main for Brightwater's new places and people (the Crown
+  Drift, the Struck Barrow, the beached barge, Ness Market's traders); untouched here.
