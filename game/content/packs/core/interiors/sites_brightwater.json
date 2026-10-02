@@ -387,7 +387,7 @@
     "unique_object": "the Saying-hall's brass ribs, set into the vault from floor to crown like the inside of a bell, each one tuned, and a ring of speaking-trumpets on stands facing the middle",
     "site": {
       "kind": "keep",
-      "seed": 4410,
+      "seed": 4411,
       "region": "core:region/brightwater",
       "size": "large",
       "boss": "core:boss/ysolde_carrow",

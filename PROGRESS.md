@@ -15110,3 +15110,28 @@ The two large sites' own cost (probe): the Crown Drift 51 draws, 73 k triangles,
 - `~/bin/heavy` is not first come first served (it polls every 5 s), so a queued run can wait behind
   later ones for an hour; two of this session's runs were stopped by their callers' time limits while
   still queued.
+
+### Holmwatch, the third large site (2026-10-01, later)
+- **Holmwatch** (`castle_ruin`, own builder `holmwatch`, 1292, -772, pad 38): the Lake-Reeves' castle on
+  the east shore's promontory, facing Gull Holm. The site builder's ruined castle (five drum towers,
+  a curtain torn down in places, gatehouse to the east toward the road, keep, yard, a garrison of the
+  Loud's acolytes, hired bravos and Loud Sayers on the towers), and over it the region's own
+  **Reeves' lamp-tower**: an 18.5 m round tower just outside the curtain on the side nearest the holm, a
+  corbelled head with an iron cage and a brass fire-bowl in it, a trumpet left at its door.
+- Inside, **the Reeves' Halls** (`keep`, large): the keep door, the court-hall (barracks), the dues
+  stair and cellar, the acolytes' camp (forge hall), the well stair, the **water-gate** (a vaulted
+  dock on an underground lake, drakes in it), the trumpet gallery, and the Saying-hall where
+  **Magister Ysolde Carrow, the Loud** says into the brass ribs. Notes: the Loud's creed, the last
+  Reeve's dues-roll in the secret room.
+- New foes Loud Acolyte and Loud Sayer; boss Ysolde Carrow (drops her speaking-trumpet).
+- Quest **Louder Than the Toll** from Emmet Quarle at the Listening Post (phase 1's clerk under the
+  horn): every dusk since spring a voice from Holmwatch drowns the Toll's hum in his horn. Also started
+  by the trumpet nailed to the gate. A rumour.
+- Checks: `region_check.py brightwater --godot` PASS (Holmwatch score 10, reach 37 m, 139 draws, 139 k
+  tris, seat clean; 73 POIs, 9 scoring 8+); targeted tests (objects_seated_brightwater, test_poi_preview,
+  test_pois, test_brightwater_places) 34 of 34; quest walker `louder_than_the_toll` PASS (every way);
+  softlock_check 125 quests, 0 findings. The undercroft's seed is 4411: of 4410 to 4416 it was the only
+  one where every room is reached and a way back from the boss is laid (10 rooms, 12 links).
+- Looked at from the shore road and the holm side (the lamp-tower carries over the curtain), at eye
+  height from the gate, and room by room inside (robed acolytes at the keep door, drakes in the dues
+  cellar, the water-gate's pool, the pillared Saying-hall).
