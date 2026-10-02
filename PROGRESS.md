@@ -15887,3 +15887,71 @@ test_content_split, test_pad_dams: 58 passed.
 - A face cave's bank reads as broad sloped sheets; a shaped knoll would read better.
 - The custom foes are still placeholder boxes in shape; creature_hide.gdshader wants the warm set.
 - The two skull halves at the Hart Bones and the Jawbone share 71% of a box by design.
+
+## The common foes are forged, rigged and animated; no custom-rigged foe stands as a box (creature-forge, 2026-10-02)
+
+Twelve bodies replace the PlaceholderBody boxes the custom-rigged foes stood as: the down wolf,
+the crag-wolf, the thornhound, the leech-hound (and the Old Grey Bitch on its body, by her
+tint), the bristleback, the gutter drake, the sallowjaw, the weaver, the stone-thrall, the
+Stone-Thrall King, the warden and the wisp. `test_creature_models` walks the whole pack: every
+enemy and boss with `"rig": "custom"` resolves to a forged body.
+
+**The forge** (`tools/forge/creature_forge.py`, `lib/foe_specs.py`; README row):
+- Four-legged foes are WM_Quadruped_v1 drawn joint by joint (`QuadSkeleton(props, joints=)`, a
+  backward-compatible override): a dog on its toes, a boar, sprawled reptiles (`FoeSolver.splay`).
+  Bodies are SDF (`lib/beast_body.py` dogs, `lib/boar.py`, `lib/reptile.py`), with a coat's clumps,
+  bark plates, thorns, crest bristles, scutes or pipe-rings pushed into the silhouette (`Displaced`).
+- The rest are on `lib/creature_rig.py` (FK, smallest-turn aim, two-bone IK): the weaver's eight legs
+  (alternating tetrapod), `lib/biped.py` giants (thrall, King, warden), the wisp's shroud.
+- Skins: bone heat; on a bare proxy carried over where spines stop it solving; the jaw its own below
+  the mouth's cut. The thralls are parts (Body, ArmR, ArmL, LegL; the King's Body, ArmL, ArmR, Jaw).
+- Paint: texel by texel from the 3D point (`lib/foe_paint.py` and each module's painter), albedo +
+  ORM + normal (ORM and normal at half size), plain StandardMaterial3D: the same under both renderers.
+- LODs: LOD1 a third, LOD2 a tenth; where spines stop the decimator LOD2 is the bare hull painted
+  on a 256 px map of its own. 24 MB for the twelve (0.9-3.3 MB each); 5-14 k triangles at LOD0.
+- Clips (15-22 each): Idle, Idle_Combat, Walk, Trot/Run, Walk_Back, Strafe_L/R, Turn_L90/R90, the
+  def's attacks with cocked/hit_start/hit_end/cancel_ok (bite and spring; gore and charge with its
+  scrape; bite and death roll; scrabble; fang, drop and web; hammerfall, backhand, sweep, headbutt;
+  root sweep and reckoning; cold light and guttering; the King's roar, scree throw and the echo's
+  channel), Hit, Stagger, Knockdown/Get_Up, Death (held). Ambushers rise from their wait (Rise);
+  the thrall crawls with its leg gone (Crawl, Crawl_Idle, Crawl_Death, Attack_5).
+
+**The game** (`game/actors/shared/creature_model.gd`): CreatureModel is the AnimationDriver's model
+for any non-humanoid foe whose body_variant has a forged body (MODELS), sized by def scale over the
+meta's `def_scale`. It plays one-shots on the driver's timeline (holding at `cocked` for long
+telegraphs), picks gaits by ground speed at the rate that keeps the feet planted, steps round when
+turning in place, maps the game's names (Death_A, Hit_Light_L, Stagger_B, Block_Idle ...) to the
+beast's own, keeps each mesh in its distance band, and lays the hurtbox on the body (`fit_hurtbox`:
+a capsule along a beast's trunk and a sphere at its head; a giant's column; the wisp's light).
+Thralls hide each broken limb and throw it down as a tumbling stone; the wisp is drawn by
+`wisp_veil.gdshader` and `wisp_glow.gdshader` with an amber light that flares to cast and goes out
+when it dies, and casts from its light. Defs: leech-hound, thornhound, weaver and wisp heights fit
+their bodies. `creature_hide.gdshader` stays only as the PlaceholderBody's (the Ranger's grey hart
+lead); the warm set has it and the wisp's two shaders (90 to 94; the Windows minimum, 150 baked
+scene shaders, only gains).
+
+**Looked at**: `game/tools_gd/creature_review.tscn` (side, front, three-quarter, back, beside the
+box, clip frames from either side or above, LOD levels) under Compatibility and Forward+, every
+foe; `tools/forge/preview/beastmesh.py` for shapes and poses without Blender. Fixed from looking:
+the wolves' dolphin heads, thin legs and the thighs standing off the trunk; the coordinator's notes
+(down wolf and crag-wolf now differ in build: lean and short-coated against a shaggy maned hulk; the
+thornhound lower on thick legs with eleven hooked thorns in a clear row); a boar's forelegs drawn
+flat by its jaw's weights; a boar LOD1 collapsed to a prism by its crest; LOD2 UV smears; the
+weaver's abdomen and back legs through each other; the warden and the reptiles lying under the
+ground; drake feet floating off their legs. `docs/review/creature-forge/foes_forward_plus.jpg`.
+
+**Tests**: `./run.sh fights --only=pack,charger,ambusher,sentinel,swarm --calling=hearthkeeper`: all
+five won, every check PASS. `./run.sh test --filter=` test_creature_models (new), test_content_bestiary,
+test_combat_* (abilities, actor, boss_fights, brain, components, damage, design, spells),
+test_enemy_attack_motion, test_enemy_dress, test_enemy_summons, test_attack_windows, test_clips_play_again,
+test_boss_arena_placement, test_livestock_rigged, test_deer, test_shader_warm, test_styles: 282, 2 failed,
+both pre-existing content (the unvowed tag and the Unvowed Marshal's weakness, from the session branch).
+Warning census 49, at the baseline. Forge: `tools/forge/tests/run.py foes quad` (test_foes new) OK.
+
+**Not done / for the coordinator**:
+- The Old Grey Bitch is the leech-hound's body tinted; her grey muzzle and scars are not painted.
+- The bristleback's crest does not rise before the charge (the quadruped rig has no crest bone).
+- Gait IK falls short in the fast gaits by up to 0.1 m (the dogs' Run, the boar's charge), as the cob's.
+- Nothing measured of many forged foes at once (a pack of four wolves, a drake swarm) on a real GPU.
+- The grey hart lead (`world/tutorial/leads.gd`) still walks as a PlaceholderBody; the deer's grey
+  coat could carry it.
