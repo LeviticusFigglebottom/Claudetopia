@@ -1,21 +1,20 @@
 {
  "briarwold": {
-  "buried": 3.0,
-  "fence_gap": 65.0,
+  "buried": 2.0,
+  "fence_gap": 158.0,
   "on_road": 2.0,
-  "overlap": 5.0
- },
- "brightwater": {
-  "fence_gap": 460.0,
-  "floating": 2.0,
-  "on_road": 3.0,
   "overlap": 1.0
  },
+ "brightwater": {
+  "fence_gap": 564,
+  "floating": 1,
+  "on_road": 1
+ },
  "cinderlea": {
-  "fence_gap": 38,
-  "floating": 3,
-  "light_unhung": 1,
-  "on_road": 7
+  "fence_gap": 38.0,
+  "floating": 3.0,
+  "light_unhung": 1.0,
+  "on_road": 7.0
  },
  "hearthvale": {
   "fence_gap": 21.0,
