@@ -116,9 +116,12 @@
         "poi": "core:poi/bark_camp",
         "quests": [],
         "finds": [
+          "core:item/strippers_tally",
           "core:item/note_bark_camp"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/bark_camp"
+        ],
         "hearthstone": false
       },
       {
@@ -145,7 +148,9 @@
         "finds": [
           "core:item/note_beached_barge"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/beached_barge"
+        ],
         "hearthstone": false
       },
       {
@@ -709,6 +714,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/chalkwatch",
+        "quests": [
+          "core:quest/the_relief_of_chalkwatch"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/charcoal_camp",
         "quests": [
           "core:quest/the_fawning_months"
@@ -726,6 +740,17 @@
           "core:item/wayside_charter_debt_post"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/charter_delf",
+        "quests": [
+          "core:quest/what_the_ledger_owes"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/charter_delf"
+        ],
         "hearthstone": false
       },
       {
@@ -838,7 +863,9 @@
           "core:quest/what_the_tide_left"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/cockle_beds"
+        ],
         "hearthstone": false
       },
       {
@@ -935,7 +962,9 @@
       {
         "poi": "core:poi/crookstilts",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_name_wifes_price"
+        ],
         "encounters": [
           "core:encounter/crookstilts"
         ],
@@ -1105,7 +1134,9 @@
         "finds": [
           "core:item/note_drowned_arch"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/drowned_arch"
+        ],
         "hearthstone": false
       },
       {
@@ -1139,7 +1170,9 @@
         "finds": [
           "core:item/note_drowned_road"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/drowned_road"
+        ],
         "hearthstone": false
       },
       {
@@ -1234,7 +1267,9 @@
         "finds": [
           "core:item/note_eel_stews_sluice_note"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/eel_stews"
+        ],
         "hearthstone": false
       },
       {
@@ -1327,9 +1362,12 @@
         "poi": "core:poi/fallen_firewatch",
         "quests": [],
         "finds": [
+          "core:item/the_last_watch",
           "core:item/note_fallen_firewatch"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/fallen_firewatch"
+        ],
         "hearthstone": false
       },
       {
@@ -1413,7 +1451,9 @@
           "core:quest/knots_round_nothing"
         ],
         "finds": [],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/fog_bell"
+        ],
         "hearthstone": false
       },
       {
@@ -1437,6 +1477,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/founders_delf",
+        "quests": [
+          "core:quest/the_last_casting"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/founders_delf"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fourth_brother",
         "quests": [],
         "finds": [
@@ -1448,7 +1499,10 @@
       {
         "poi": "core:poi/foxfire_falls",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/bracket_fungus",
+          "core:item/foxfire_pickers_rule"
+        ],
         "encounters": [
           "core:encounter/foxfire_falls"
         ],
@@ -2038,7 +2092,8 @@
       {
         "poi": "core:poi/heron_watch",
         "quests": [
-          "core:quest/lanterns_taken_up"
+          "core:quest/lanterns_taken_up",
+          "core:quest/the_sounding"
         ],
         "finds": [
           "core:item/note_heron_watch"
@@ -2108,6 +2163,15 @@
         "encounters": [
           "core:encounter/hollin_tor"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/holmwatch",
+        "quests": [
+          "core:quest/louder_than_the_toll"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -2397,7 +2461,9 @@
       {
         "poi": "core:poi/knights_mound",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/the_bells_vigil"
+        ],
         "encounters": [
           "core:encounter/knights_mound"
         ],
@@ -2420,7 +2486,9 @@
         "finds": [
           "core:item/note_knuckle_cairn"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/knuckle_cairn"
+        ],
         "hearthstone": false
       },
       {
@@ -2862,7 +2930,9 @@
       },
       {
         "poi": "core:poi/moot_gate_stone",
-        "quests": [],
+        "quests": [
+          "core:quest/a_gate_is_known"
+        ],
         "finds": [
           "core:item/three_days_kneeling"
         ],
@@ -2905,7 +2975,9 @@
         "quests": [
           "core:quest/the_fennick_stool"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/mossgrave_names"
+        ],
         "encounters": [
           "core:encounter/mossgrave"
         ],
@@ -2931,6 +3003,17 @@
         ],
         "encounters": [
           "core:encounter/wayside_mourners_fire"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/name_wifes_hollow",
+        "quests": [
+          "core:quest/what_the_name_wife_took"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/name_wifes_hollow"
         ],
         "hearthstone": false
       },
@@ -3257,7 +3340,9 @@
         "finds": [
           "core:item/note_oskel_ford"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/oskel_ford"
+        ],
         "hearthstone": false
       },
       {
@@ -3368,9 +3453,12 @@
         "poi": "core:poi/pellows_pale",
         "quests": [],
         "finds": [
-          "core:item/note_pellows_pale"
+          "core:item/note_pellows_pale",
+          "core:item/pellows_game_book"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/pellows_pale"
+        ],
         "hearthstone": false
       },
       {
@@ -3491,7 +3579,9 @@
       {
         "poi": "core:poi/poachers_lee",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/the_lees_rule"
+        ],
         "encounters": [
           "core:encounter/poachers_lee"
         ],
@@ -3754,7 +3844,9 @@
         "finds": [
           "core:item/note_round_stones"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/round_stones"
+        ],
         "hearthstone": false
       },
       {
@@ -4324,6 +4416,7 @@
       {
         "poi": "core:poi/south_stilts",
         "quests": [
+          "core:quest/what_the_name_wife_took",
           "core:quest/which_account"
         ],
         "finds": [
@@ -4472,7 +4565,9 @@
       {
         "poi": "core:poi/sunken_tower",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/note_sunken_tower_divers"
+        ],
         "encounters": [
           "core:encounter/sunken_tower"
         ],
@@ -4576,6 +4671,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_crown_drift",
+        "quests": [
+          "core:quest/the_last_shift"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_crown_drift"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_false_lantern",
         "quests": [],
         "finds": [
@@ -4611,7 +4717,9 @@
         "quests": [
           "core:quest/the_ruled_line"
         ],
-        "finds": [],
+        "finds": [
+          "core:item/heron_egg_schedule"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -4683,6 +4791,7 @@
       {
         "poi": "core:poi/the_listening_post",
         "quests": [
+          "core:quest/louder_than_the_toll",
           "core:quest/the_singing_slate"
         ],
         "finds": [
@@ -4730,6 +4839,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_saltgate",
+        "quests": [
+          "core:quest/the_saltgate"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_saltgate"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_sawpit",
         "quests": [],
         "finds": [
@@ -4741,7 +4861,9 @@
       {
         "poi": "core:poi/the_sentinels",
         "quests": [],
-        "finds": [],
+        "finds": [
+          "core:item/what_the_sentinels_hear"
+        ],
         "encounters": [
           "core:encounter/the_sentinels"
         ],
@@ -4757,12 +4879,47 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_sounding",
+        "quests": [
+          "core:quest/the_sounding"
+        ],
+        "finds": [
+          "core:item/note_sounding_tide_table"
+        ],
+        "encounters": [
+          "core:encounter/the_sounding"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_struck_barrow",
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_struck_barrow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_thousand_post",
         "quests": [],
         "finds": [
           "core:item/wayside_the_thousand_post"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_undertone",
+        "quests": [
+          "core:quest/the_quarter_tone"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_undertone"
+        ],
         "hearthstone": false
       },
       {
@@ -4798,6 +4955,17 @@
         "hearthstone": true
       },
       {
+        "poi": "core:poi/the_windthrow",
+        "quests": [
+          "core:quest/what_falls"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_windthrow"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/thirteenth_colossus",
         "quests": [],
         "finds": [
@@ -4831,7 +4999,8 @@
       {
         "poi": "core:poi/tide_hearth",
         "quests": [
-          "core:quest/against_the_current"
+          "core:quest/against_the_current",
+          "core:quest/the_saltgate"
         ],
         "finds": [],
         "encounters": [],
@@ -4857,6 +5026,15 @@
         "encounters": [
           "core:encounter/tine_barrow"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/tinehold",
+        "quests": [
+          "core:quest/a_gate_is_known"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -5224,7 +5402,9 @@
       },
       {
         "poi": "core:poi/wash_stones",
-        "quests": [],
+        "quests": [
+          "core:quest/entered_in_error"
+        ],
         "finds": [
           "core:item/note_wash_stones"
         ],

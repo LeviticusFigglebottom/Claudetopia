@@ -1,0 +1,332 @@
+[
+  {
+    "id": "core:quest/the_quarter_tone",
+    "name": "The Quarter-Tone",
+    "layer": "side",
+    "giver": "core:npc/merrin_aske",
+    "region": "core:region/cinderlea",
+    "summary": "The note under the Choir has gone up a quarter-tone this spring. Sayer Merrin Aske, who keeps its record at the Undertone's door, wants to know what is singing it.",
+    "notes": "A Cinderlea large site (docs/WORLD_LIFE_INTERIORS.md): the_undertone (delve, own builder) leads to core:interior/the_undertone, boss core:boss/hethra_undertone, who drops the tuning-stone. The tuning-board at the door starts it too.",
+    "stages": [
+      {
+        "id": "into_the_dark",
+        "journal": "Merrin Aske keeps the record of the note at the Undertone, the doorway in the Choir plateau's western cliff whose doors fell outward the night the Choir lost its heads. The note has gone up a quarter-tone this spring. Go in, find what is holding it, and bring her something of it she can put a fork to.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/hethra_undertone",
+            "count": 1,
+            "where": "core:interior/the_undertone",
+            "text": "Find what holds the note in the Undertone"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/undertone_tuning_stone",
+            "count": 1,
+            "text": "Take the tuning-stone from the hall of the struck note"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_undertone",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_stone",
+        "journal": "It was a chorister, Hethra, who went in after the Order's knight the night the doors fell and took up the note when she found nobody holding it. The stone from the hall hums her note against your hand. Merrin Aske will want to hear it.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_stone",
+            "text": "Bring the tuning-stone to Merrin Aske and decide where it goes",
+            "with": "core:npc/merrin_aske",
+            "options": [
+              {
+                "id": "to_the_circle",
+                "text": "Give it to the Circle, to be measured and remembered.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/undertone_tuning_stone",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "quarter_tone_to_the_circle"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/sayers",
+                      15
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_the_choir",
+                "text": "Take it up to the Choir and let her put it down.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/undertone_tuning_stone",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "quarter_tone_to_the_choir"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      10
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_undertone",
+          "radius": 80
+        }
+      },
+      {
+        "id": "done",
+        "journal": "The note under the Choir is where it was, or it is written down with a name at its head. Merrin Aske takes it every dawn all the same.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 170,
+      "renown": 12,
+      "rep": [
+        [
+          "core:faction/sayers",
+          5
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_last_casting",
+    "name": "The Last Casting",
+    "layer": "side",
+    "giver": "core:npc/clemency_brazier",
+    "region": "core:region/cinderlea",
+    "summary": "At the Founders' Delf the dead city's last great bell is still in its mould, and something is still hammering in the galleries under it. Clemency Brazier, a bell-founder out of the Vale, wants the founders' pattern-book from below.",
+    "notes": "A Cinderlea large site: founders_delf (delve, own builder) leads to core:interior/founders_delf, boss core:boss/the_last_bellwright, who drops the pattern-book. The founders' board starts it too.",
+    "stages": [
+      {
+        "id": "the_galleries",
+        "journal": "Clemency Brazier has sat a week by the Founders' Delf, the Builders' bell-foundry in the Ashgrid, looking at the last bell they poured, still in its cracked mould. She wants the founders' pattern-book from the galleries under the casting floor, down the fire-mouth, where somebody is hammering.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/the_last_bellwright",
+            "count": 1,
+            "where": "core:interior/founders_delf",
+            "text": "Find who is hammering under the Founders' Delf"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/founders_pattern_book",
+            "count": 1,
+            "text": "Take the founders' pattern-book"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/founders_delf",
+          "radius": 90
+        }
+      },
+      {
+        "id": "the_book",
+        "journal": "The Last Bellwright kept the metal warm for a hundred and seventy years, waiting for the mould to be ready. He had the pattern-book with him: every bell the dead city cast, and the last board blank but for the bell in the pit, and in the margin, not yet. Clemency Brazier is waiting at the pit.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_book",
+            "text": "Bring the pattern-book to Clemency Brazier and decide where it goes",
+            "with": "core:npc/clemency_brazier",
+            "options": [
+              {
+                "id": "to_the_order",
+                "text": "The Order should have it, to recast their broken bells.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/founders_pattern_book",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "last_casting_to_the_order"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      15
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_the_vale",
+                "text": "Take it home to the Vale's founders.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/founders_pattern_book",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "last_casting_to_the_vale"
+                  },
+                  {
+                    "renown": 8
+                  },
+                  {
+                    "marks": 80
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/founders_delf",
+          "radius": 90
+        }
+      },
+      {
+        "id": "done",
+        "journal": "The pattern-book has gone where it was decided it should go. The hammering under the Delf has stopped.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/the_relief_of_chalkwatch",
+    "name": "The Relief of Chalkwatch",
+    "layer": "side",
+    "giver": "core:npc/ysolde_penn",
+    "region": "core:region/cinderlea",
+    "summary": "Chalkwatch, the Wardens' fort on the west heath, was taken by the grey thirty years ago with its garrison on the walls. Warden Ysolde Penn has come up with their pay, and needs the roll taken off the captain before the watch can be relieved.",
+    "notes": "A Cinderlea large site: chalkwatch (fort, SITES.build plus its beacon-mast and the Warden's fire) whose keep leads to core:interior/chalkwatch_keep, boss core:boss/captain_haddow, who drops the roll. The gate's notices start it too.",
+    "stages": [
+      {
+        "id": "the_keep",
+        "journal": "Warden Ysolde Penn keeps a fire outside Chalkwatch's gate with thirty years of the garrison's pay in a strongbox. A watch is not relieved until the roll is taken off the captain and read. Captain Haddow keeps it in his hall under the keep, past the garrison, who are still at their posts.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/captain_haddow",
+            "count": 1,
+            "where": "core:interior/chalkwatch_keep",
+            "text": "Take the roll off Captain Haddow under Chalkwatch's keep"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/chalkwatch_roll",
+            "count": 1,
+            "text": "Take the roll of Chalkwatch"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/chalkwatch",
+          "radius": 100
+        }
+      },
+      {
+        "id": "the_roll",
+        "journal": "Forty names, every one ticked present every night for thirty years. Ysolde Penn is waiting at the gate to read it out.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_roll",
+            "text": "Bring the roll to Ysolde Penn and decide where it is kept",
+            "with": "core:npc/ysolde_penn",
+            "options": [
+              {
+                "id": "to_the_rest",
+                "text": "Home to the Rest, in the Wardens' archive.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/chalkwatch_roll",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "chalkwatch_roll_to_the_rest"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/wardens",
+                      15
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_greywatch",
+                "text": "To Greywatch, to be read at dusk with the ones who walked.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/chalkwatch_roll",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "chalkwatch_roll_to_greywatch"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      10
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/chalkwatch",
+          "radius": 100
+        }
+      },
+      {
+        "id": "done",
+        "journal": "Chalkwatch's garrison is relieved. Nobody stands on its walls in the morning.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 180,
+      "renown": 14,
+      "rep": [
+        [
+          "core:faction/wardens",
+          5
+        ]
+      ]
+    }
+  }
+]

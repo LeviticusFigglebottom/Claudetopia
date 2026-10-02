@@ -1,0 +1,138 @@
+[
+  {
+    "id": "core:npc/iffo_nauve",
+    "name": "Iffo Nauve",
+    "home_place": "core:poi/south_stilts",
+    "faction": "core:faction/reed_council",
+    "dialogue": "core:dialogue/iffo_nauve",
+    "bio": "The watchman of the South Stilts, paid in eels by Nauvissa to watch the grey come up over the scarp; for twenty years it did not move. This spring his daughter had the flats-cough and he went to the Name-Wife at the dark of the moon, and paid with his dead father's name, because a dead man's name could cost nobody anything. Since then the grey has started coming in at night, and he cannot remember his father's face.",
+    "unique_habit": "Ties a knot in a cord on the watch-rail every time he sees the grey move, and counts the knots every morning with his eyes shut, as if he is afraid they will have untied themselves.",
+    "personality": {
+      "traits": [
+        "kind",
+        "quiet",
+        "brave",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 6281,
+      "build": "tall_lean",
+      "age": 47.0,
+      "feminine": 0.0,
+      "hair": "black_going_grey_tied_back",
+      "notes": "a watchman's indigo cloak over one shoulder, a knot-cord round his wrist in the Nauve splice, red-rimmed eyes from watching"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_watch",
+        "notes": "watching the grey at night"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/south_stilts",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/south_stilts",
+        "activity": "eat",
+        "spot": "the_foot"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_foot",
+        "notes": "mending the ladder's lashings"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/south_stilts",
+        "activity": "work",
+        "spot": "the_watch",
+        "notes": "the watch, from dusk"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hal_ruddock",
+    "name": "Hal Ruddock",
+    "home_place": "core:poi/tide_hearth",
+    "faction": "core:faction/tallymen",
+    "dialogue": "core:dialogue/hal_ruddock",
+    "bio": "A Tallymen's Guild sluice-hand at the Saltgate, and the sluice-warden's younger brother, who was on the south bank with a reedfolk girl on the night the sea came in, and so is the only one of the garrison not still on the walls. He has sat at the Tide Hearth since, learning the reedfolk knots one at a time from the people who come to tie them, so that he can tie one for each of his watch.",
+    "unique_habit": "Ties and unties the same knot over and over while he talks, a reedfolk reef that he cannot get to lie flat, and apologises to it.",
+    "personality": {
+      "traits": [
+        "kind",
+        "timid",
+        "humble",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 6311,
+      "build": "average",
+      "age": 29.0,
+      "feminine": 0.0,
+      "hair": "fair_salt_stiff_cropped",
+      "notes": "a Guild sluice-hand's oxblood coat gone brown with salt, the Guild's brass tally-badge turned inside out, raw knuckles"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/tide_hearth",
+        "activity": "sleep",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/tide_hearth",
+        "activity": "work",
+        "spot": "the_knots",
+        "notes": "tying a knot for each of the watch"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/tide_hearth",
+        "activity": "eat",
+        "spot": "the_knots"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/tide_hearth",
+        "activity": "idle",
+        "spot": "the_bank",
+        "notes": "looking across the Outfall at the walls"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/tide_hearth",
+        "activity": "work",
+        "spot": "the_knots"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/tide_hearth",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]

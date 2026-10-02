@@ -1,0 +1,451 @@
+[
+  {
+    "id": "core:dialogue/iffo_nauve",
+    "speaker_name": "Iffo Nauve",
+    "notes": "The South Stilts' watchman (pois/sedgemire.json); gives core:quest/what_the_name_wife_took and takes its decision.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "name_wife_father_untied"
+          },
+          {
+            "quest_done": "core:quest/what_the_name_wife_took"
+          }
+        ],
+        "text": "Oro Nauve. Boatwright. He had a beard like a burnt hedge and he sang flat on purpose to make my mother laugh. — I say it every morning now, with the knots. Just to be sure it's still there."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "name_wife_all_untied"
+          },
+          {
+            "quest_done": "core:quest/what_the_name_wife_took"
+          }
+        ],
+        "text": "Half of Nauvissa came down to the Tide Hearth that night to tie knots for people they'd forgotten they'd forgotten. My father's was one of them. — Wenne's coughing again. It's the flats-cough. We'll manage it the old way. Don't look like that; I'd choose the same."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "name_wife_hank_kept"
+          },
+          {
+            "quest_done": "core:quest/what_the_name_wife_took"
+          }
+        ],
+        "text": "You've still got it. All of them. — I don't know what you want with a hank of other people's fathers. I don't think you do either."
+      },
+      {
+        "conditions": [
+          {
+            "is_night": true
+          }
+        ],
+        "text": "Quiet. Look south, over the scarp. See it? There. It's in past the last withy. It'll be back by morning. It always is, now."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Iffo Nauve",
+        "text": "Mind the third rung, it's the one I haven't mended. — Nauve. Iffo. I keep the watch here for Nauvissa. Twenty years of watching the grey sit on the scarp like fog that forgot how to move. It's moving now.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Iffo Nauve",
+        "text": "What is it?",
+        "choices": [
+          {
+            "text": "What do you watch for?",
+            "next": "the_grey"
+          },
+          {
+            "text": "The knots on the rail?",
+            "next": "knots"
+          },
+          {
+            "text": "You look like a man who's lost something.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_name_wife_took"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_name_wife_took"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the Name-Wife's hank.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_name_wife_took",
+                  "the_knot"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to the watch.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_grey": {
+        "speaker": "Iffo Nauve",
+        "text": "Up there, past the scarp's lip. The grey. The colour goes out of things and the sound goes after it. Nauvissa built this in the Ash Winter to see it coming and it never came. — This spring it comes in at night. Over the lip, down the scarp a little way, like a tide. By morning it's gone back. Nobody believes me. I've stopped asking them to.",
+        "next": "hub"
+      },
+      "knots": {
+        "speaker": "Iffo Nauve",
+        "text": "One for every night it moves. Thirty-one. — It started the night after I went to Crookstilts. I'm not a fool. I know what that sounds like.",
+        "next": "hub"
+      },
+      "q_offer": {
+        "speaker": "Iffo Nauve",
+        "text": "— My girl had the flats-cough. Wenne. Six. The kind that doesn't stop. So I went up to Crookstilts at the dark of the moon and stood at the foot of the ladder and said a name. My father's. Oro Nauve. He's twenty years in the water; I thought, what can it cost a dead man. — Wenne was well by morning. — And now nobody in Nauvissa lights his lantern on the Long Night. His knot's come off the Tide Hearth. His boat's the Lissa boat, everybody says, always was. And I sat up here last week and tried to see his face, and I couldn't. — She keeps them in her hollow, under the scarp, west of here, where it curls round. I've been to the cove. I couldn't make my feet go further. Bring it back. Please. Whatever she's tied it into.",
+        "choices": [
+          {
+            "text": "I'll go into the Name-Wife's hollow.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_name_wife_took"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Iffo Nauve",
+        "text": "West along the scarp's foot, where it bends in. You'll see her tree before the cave; the cords on it look like smoke. — Her hounds lie up in the cove by day. Don't let them get behind you. They take a mouthful and wait.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Iffo Nauve",
+        "text": "— That's all of them? That's— there must be a hundred. — There. The green one. The splice. That's ours. — If I undo it, he comes back, doesn't he. Not him. His name. People will remember they forgot. — But they're all here, aren't they. Everybody's. And every cord's a cure somebody bought. You undo them, maybe the cures come undone with them. Maybe not. She never said. — You carried it out. You say.",
+        "choices": [
+          {
+            "text": "Untie your father's cord. Only his.",
+            "next": "q_decide_his_father",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_name_wife_took",
+                  "his_father"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Untie all of them at the Tide Hearth, and let every name go home.",
+            "next": "q_decide_all_of_them",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_name_wife_took",
+                  "all_of_them"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'm keeping the hank.",
+            "next": "q_decide_keep_it",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_name_wife_took",
+                  "keep_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_decide_his_father": {
+        "speaker": "Iffo Nauve",
+        "text": "— It's stiff. She pulled it tight. — There. — Oh. Oh, he had a beard like a burnt hedge. I'd forgotten. I'd forgotten I'd forgotten. — The rest I'll take to the Council. It's not mine to say for other people's fathers. Thank you. I'll light his lantern tonight.",
+        "next": "hub"
+      },
+      "q_decide_all_of_them": {
+        "speaker": "Iffo Nauve",
+        "text": "All of them. — Yes. It'll take all night and every hand in Nauvissa. — And if Wenne's cough comes back, then it comes back, and we nurse it the old way, and she's ill with a grandfather she can remember. That's the right way round. I think that's the right way round.",
+        "next": "hub"
+      },
+      "q_decide_keep_it": {
+        "speaker": "Iffo Nauve",
+        "text": "— Keep it. — You'd do what she did, then. Carry other people's people about on your belt. — Get off my ladder.",
+        "next": "end"
+      },
+      "bye": {
+        "speaker": "Iffo Nauve",
+        "text": "If you're going west along the foot, go by day. The grey doesn't come down past the scarp's middle. Yet.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/name_wifes_beam",
+    "speaker_name": "The cords on the beam",
+    "notes": "The Name-Wife's Hollow's hook: a PoiTouch on the beam across the mouth (world/pois/regions/sedgemire.gd). Tells; the quest is Iffo Nauve's to give.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The cords on the beam",
+        "no_talk": true,
+        "text": "Forty-odd cords of rush hang from the bog-oak beam across the mouth, each knotted from end to end in a family's weave: the Ouls' tucked reef, the Mor double hitch, the bittern's loops of the Lissas, the boatwright's splice of the Nauves, and here and there the plain overhand of somebody from the Vale. The oldest are white and stiff. The newest are still green, and one of them, a Nauve splice, is so new the rush has not yet dried. When the wind comes down the scarp they knock together with a sound like somebody counting under their breath.",
+        "choices": [
+          {
+            "text": "Leave them hanging.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/the_sounding_marks",
+    "speaker_name": "The tide-marks",
+    "notes": "The Sounding's hook: a PoiTouch on the tower's first leg (world/pois/regions/sedgemire.gd). Tells; the quest is Tuo Lissa's to give.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The tide-marks",
+        "no_talk": true,
+        "text": "Cuts in the black bog-oak of the tower's first leg, one for each spring tide since the Flood-Callers came to the North Shore, each with a wave scratched beside it in indigo. The first is a hand over the platform's lip. Each is higher than the last. You have to tip your head back to find the top one: it is cut into the leg level with the bell. Somebody has written under it, in charcoal, in the careful Sedgish of a woman who learned her letters late: FROM UNDERNEATH.",
+        "choices": [
+          {
+            "text": "Leave the marks.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hal_ruddock",
+    "speaker_name": "Hal Ruddock",
+    "notes": "At the Tide Hearth, across the Outfall from the Saltgate; gives core:quest/the_saltgate and takes its decision.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_shut"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "The gates went to at the flood last night. I heard them from here. The Guild's clerk came down this morning with a bonus for me in a purse, and an order to take up Rook's post. — I've put the purse on the Hearth. I haven't decided about the post."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_left_open"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "The eels went out last night. All of them, at once, the whole Outfall silver. The reedfolk sang on the south bank till morning. — The Guild has written me a letter about it. I'm using it to learn my letters on, the back of it."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "saltgate_key_kept"
+          },
+          {
+            "quest_done": "core:quest/the_saltgate"
+          }
+        ],
+        "text": "Still got it? The key. — Somebody's going to come asking for it, one side or the other. I hope you know which."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hal Ruddock",
+        "text": "— Sorry. It won't lie flat. The reef. They show me, and it looks easy, and then it won't lie flat. — Ruddock. Hal. I was a sluice-hand. Over there.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hal Ruddock",
+        "text": "What do you want to know?",
+        "choices": [
+          {
+            "text": "Over there?",
+            "next": "over_there"
+          },
+          {
+            "text": "Who are the knots for?",
+            "next": "the_knots"
+          },
+          {
+            "text": "What happened at the Saltgate?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_saltgate"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_saltgate"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the windlass-key.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_saltgate",
+                  "the_gates"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "over_there": {
+        "speaker": "Hal Ruddock",
+        "text": "The Saltgate. Across the Outfall, on the headland. The Guild's fort. You can see the wall from here, and the men on it. — Don't wave. They wave back.",
+        "next": "hub"
+      },
+      "the_knots": {
+        "speaker": "Hal Ruddock",
+        "text": "The watch. Eleven of them, and my brother. The reedfolk tie a knot here for everyone the water's taken. I asked could a Tollmere man do it and an old woman said the water doesn't ask where you're from, and showed me. — Ten done. I can't get Rook's to lie flat.",
+        "next": "hub"
+      },
+      "q_offer": {
+        "speaker": "Hal Ruddock",
+        "text": "— Spring tide, last autumn. I was on the south bank, never mind why, and I heard it start: knocking in the race under the sluice, in threes. It's been knocking for years at the springs. Rook said driftwood. — At midnight he went down to the windlass with the key to check the gates, and then I heard them go. The gates. From underneath. The sea came in through the culverts with the whole watch asleep over them. — Mudmouth. The reedfolk have a story about a sallowjaw that waited off the Outfall for the Guild to make a mistake. He didn't wait for the mistake. — Rook had the key on him. If somebody went down and got it back, the gates could be shut again, or— or not. Somebody would have to decide. I can't. I can't get across the water.",
+        "choices": [
+          {
+            "text": "I'll go into the Saltgate.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_saltgate"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Hal Ruddock",
+        "text": "The gate faces the Outfall. They'll be on the walls; they're always on the walls. The keep door is open. — The culverts go down under the keep, past the tithe-room, to the windlass over the race. He'll be in the sump under it. Rook will be in him.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Hal Ruddock",
+        "text": "— That's it. That's Rook's. — It's green. — All right. All right. — The windlass takes it at the pawl. Shut the gates at the flood and the Saltgate holds again: the Guild drains the Delta behind it, an acre a year, and the eels never come back to the Outfall. Leave them hanging and the sea comes and goes as it likes, and the eels run, and the fort's the drowned's for good. — Rook wrote it down, didn't he. What he thought. Behind the stone. — You've been down there. You say.",
+        "choices": [
+          {
+            "text": "Shut the gates. The Saltgate holds.",
+            "next": "q_decide_shut",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "shut_the_gates"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave them open. Let the eels run.",
+            "next": "q_decide_open",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "leave_them_open"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'm keeping the key. Neither side gets it.",
+            "next": "q_decide_keep",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_saltgate",
+                  "keep_the_key"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_decide_shut": {
+        "speaker": "Hal Ruddock",
+        "text": "— Shut. Yes. — It's what Rook was for. I'll row it across myself, at the flood, if you'll stand on the wall with me so they let me through. — The Guild will pay you. The reedfolk won't speak to you on the Outfall for a year. Both of those are true.",
+        "next": "hub"
+      },
+      "q_decide_open": {
+        "speaker": "Hal Ruddock",
+        "text": "— Open. — He'd have hated it. He'd have done it, though. You saw the page. — I'll throw the key in the race myself. Then nobody can change their mind. Including me.",
+        "next": "hub"
+      },
+      "q_decide_keep": {
+        "speaker": "Hal Ruddock",
+        "text": "— Keep it. — Then the gates hang how they hang, and you can walk in any spring tide and choose. That's a lot to carry about. Rook carried it eleven years. Look where he is.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hal Ruddock",
+        "text": "If you go over: they're Guild men still. Some of them were my friends. Be quick.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/saltgate_notice",
+    "speaker_name": "The notices on the gate",
+    "notes": "The Saltgate's hook (site.hook, a notice post by the gate). Tells; the quest is Hal Ruddock's to give, at the Tide Hearth across the Outfall.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The notices on the gate",
+        "no_talk": true,
+        "text": "Two notices nailed to a post by the gate, swollen with salt. The first is the Guild's, in the Guild's hand: THE SLUICE TO BE SHUT AT THE FLOOD AND OPENED AT THE EBB AND AT NO OTHER TIME, ON PAIN OF THE GUILD'S DISPLEASURE. BY ORDER, THE TALLYMEN OF TOLLMERE. Under it somebody has chalked a reedfolk knot, the one that means leave it. The second notice is newer and in pencil, in a Tollmere hand that shakes: ROOK, IF YOU CAN READ THIS, I AM AT THE HEARTH. HAL.",
+        "choices": [
+          {
+            "text": "Leave the notices.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  }
+]

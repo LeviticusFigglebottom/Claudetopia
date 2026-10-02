@@ -1,0 +1,602 @@
+[
+  {
+    "id": "core:dialogue/bryony_kettle",
+    "speaker_name": "Bryony Kettle",
+    "notes": "A Gullhithe fishwife at the Ness Market (pois/brightwater.json). Sells fish (stock_fishmonger).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap. A pike the length of your arm lands on the board.)* Pike. This morning's. Look at its eye. You can't buy an eye like that in the city, because in the city it's been tolled twice and it's looking at you reproachfully.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Bryony Kettle",
+        "text": "Well? I've a queue. I haven't, but I might.",
+        "choices": [
+          {
+            "text": "Show me what you've caught.",
+            "next": "trade"
+          },
+          {
+            "text": "Why sell out here and not in the city?",
+            "next": "why"
+          },
+          {
+            "text": "Who's the clerk at the white stones?",
+            "next": "silas"
+          },
+          {
+            "text": "Good fishing.",
+            "next": "bye"
+          }
+        ]
+      },
+      "trade": {
+        "speaker": "Bryony Kettle",
+        "text": "Pike, perch, eel live in the barrel or smoked on the rack, and a lake-trout if you're early, which you're not. Everything on these boards came off the water this morning and has never been inside the Tallymen's line. That's the price, and that's why it's the price.",
+        "next": "hub"
+      },
+      "why": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap. A perch.)* The Charter says the city's toll is taken at the city's gate. The Ness is land. The Ness is not the city. Therefore a fish sold on the Ness is a fish nobody tolls. The Tallymen have spent forty years trying to move the gate out to the Ness's root, and forty years the Guild's not voted it, because half the Guild buys its fish from me.",
+        "next": "hub"
+      },
+      "silas": {
+        "speaker": "Bryony Kettle",
+        "text": "Silas Pask. They sent him out to take the toll at the root before anybody voted it, and nobody's voted it, so he doesn't take it. He just writes it down. Every fish that's passed him in forty years, entered, owed, never asked for. *(She lowers her voice, which for her is a shout.)* I take him the first eel every morning. He enters that too.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Bryony Kettle",
+        "text": "*(Slap.)* Mind the gulls; they're Gullhithe gulls and they know whose fish it is.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silas_pask",
+    "speaker_name": "Silas Pask",
+    "notes": "A Tallymen's under-clerk at the Ness Market's would-be toll-line (pois/brightwater.json).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Silas Pask",
+        "text": "*(He licks his pencil.)* Name, and what you're carrying across the line. -- Oh, you needn't pay. Nobody pays. It's owed. I enter what's owed.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Silas Pask",
+        "text": "*(The pencil waits.)*",
+        "choices": [
+          {
+            "text": "What toll is this?",
+            "next": "toll"
+          },
+          {
+            "text": "How much is owed, all told?",
+            "next": "owed"
+          },
+          {
+            "text": "Put me down for nothing.",
+            "next": "nothing"
+          },
+          {
+            "text": "Good day, clerk.",
+            "next": "bye"
+          }
+        ]
+      },
+      "toll": {
+        "speaker": "Silas Pask",
+        "text": "The Ness toll. Moved at the Guild in the spring of 1003 that the city's toll-line be carried out from the Stride's head to the Ness's root, seconded, and referred. I was sent to take it pending the vote. The vote is pending. So I take it pending, which is to say I enter it, and when the motion carries every line in these books falls due on the same morning. *(He looks at the market.)* Bryony thinks it never will. I think it's very important to be ready.",
+        "next": "hub"
+      },
+      "owed": {
+        "speaker": "Silas Pask",
+        "text": "Forty years, nine months. Two hundred and eleven thousand fish, give or take an eel she slips me, which I enter as a gift and value at nothing, as the Charter says a gift must be valued. In marks -- *(he turns back a great many pages)* -- more than the Ness is worth. More than Gullhithe. I've stopped adding it up; it frightens the gulls.",
+        "next": "hub"
+      },
+      "nothing": {
+        "speaker": "Silas Pask",
+        "text": "*(He writes, carefully.)* A traveller. Carrying: nothing, declared. Owed: nothing, pending. -- There. You're in the books now. That's more than most people can say about the Ness.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Silas Pask",
+        "text": "Pending, then. Everything is.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/abel_rowse",
+    "speaker_name": "Abel Rowse",
+    "notes": "The last drift-captain of the Crown Drift (pois/brightwater.json), at the count-house by the engine-house. Gives The Last Shift (quests/sites_brightwater.json); takes the tokens at its end.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_last_shift",
+              "the_board"
+            ]
+          }
+        ],
+        "text": "...seven, eight. -- You've been down. You've a weight in your hand like brass. I know that weight."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_last_shift"
+          }
+        ],
+        "text": "Nine on the board. I paint round them now. -- Don't stand on the shaft-cover, it's rotten; everything here's rotten but the board."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Abel Rowse",
+        "text": "...four, five, -- one. You made me lose my place. -- Rowse. Drift-captain, the Crown Drift, Tallymen's charter, closed at a loss. That's all of it on one line. Mind the shaft.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Abel Rowse",
+        "text": "*(His thumb goes round the token at his neck.)* Well?",
+        "choices": [
+          {
+            "text": "What was mined here?",
+            "next": "the_drift"
+          },
+          {
+            "text": "Who's working the drift at night?",
+            "next": "takers"
+          },
+          {
+            "text": "What happened to the last shift?",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_last_shift"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_shift"
+                }
+              }
+            ],
+            "next": "the_shift"
+          },
+          {
+            "text": "The last shift's tokens. I took them off the deep board.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_last_shift",
+                  "the_board"
+                ]
+              }
+            ],
+            "next": "tokens"
+          },
+          {
+            "text": "I'll let you count.",
+            "next": "bye"
+          }
+        ]
+      },
+      "the_drift": {
+        "speaker": "Abel Rowse",
+        "text": "Calamine. Grey earth, green when it's wet. Roast it with copper and it comes out brass. Every lamp on the Mere's from here, and the crown on the Spire, which the Sayers will tell you their Builders put up there, and they did, all but the crown. We put the crown up. A hundred and fifty years of brass up that shaft, and the Tallymen paid by the hundredweight and never once came down to see where it came from.",
+        "effects": [
+          {
+            "discover": "core:poi/the_crown_drift"
+          }
+        ],
+        "next": "hub"
+      },
+      "takers": {
+        "speaker": "Abel Rowse",
+        "text": "Brass-takers. Gullhithe's hungry and Tollmere's owing, with a chisel each and a sayer from the Spire's leavings to keep it quiet. They strip the old brass off the pump-rods and melt it down below and carry it out at dawn past me as if I'm the engine-house. I don't stop them. It's the Tallymen's brass and the Tallymen wrote it off. -- They don't go past the break, mind. Nobody does.",
+        "next": "hub"
+      },
+      "the_shift": {
+        "speaker": "Abel Rowse",
+        "text": "Ninth of Harvest, 1012. The deep level broke into the Builders' gallery: square, black, the ore in it stacked and dressed like it was waiting for a cart. Gideon Spall took eight down to bring it up. I stayed at the board, because the drift-captain stays at the board. Three baskets came up the rope. The third was full and nobody was on it. -- Their tokens are still on the deep board, nine of them. A token comes up, the man's up; that's the rule. I've been thirty-one years waiting for the rule.",
+        "choices": [
+          {
+            "text": "I'll go down and bring their tokens up.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_shift"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Abel Rowse",
+        "text": "The cage is gone; it's the ladders, and the takers have stripped half the irons off them. Down the shaft, along the plat, down the winze past where they melt, down again to the break. The board's on the Builders' wall past it. -- If Gideon's there, he'll be at the board. He was always at the board. Tell him it's Abel sent you, and the shift's called up. He may not listen. He never did when there was ore still to come.",
+        "next": "hub"
+      },
+      "tokens": {
+        "speaker": "Abel Rowse",
+        "text": "*(He takes the loop of tokens and goes to the shift-board at the shaft head, and hangs them one at a time on the nine empty hooks, saying each name aloud as he does: Spall, Pender, Pender, Hocking, Trago, Vosper, Udy, Udy, Rule. The last one, the boy's, he holds a while.)* -- That's the shift up. -- Here. The drift-captain's purse; it's been in the count-house thirty-one years waiting for a shift's wages, and there's nobody to pay but you.",
+        "effects": [
+          {
+            "set_flag": "crown_drift_shift_up"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Abel Rowse",
+        "text": "...one, two. -- Mind the shaft.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/crown_drift_shift_board",
+    "speaker_name": "The shift-board at the shaft head",
+    "notes": "The Crown Drift's hook: a PoiTouch on the board by the shaft (world/pois/regions/brightwater.gd). Starts core:quest/the_last_shift if Abel Rowse has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The shift-board at the shaft head",
+        "no_talk": true,
+        "text": "A board of the Tallymen's pattern, painted fresh: THE CROWN DRIFT, and under it rows of iron hooks, each with a number. A miner hangs his brass token on his hook when he goes down and takes it off when he comes up; that is the rule, painted at the foot. Every hook is bare but nine, and those nine are bare too, but somebody has painted a ring round each of them, very carefully, many times. Chalked under the ninth ring: 9th of Harvest 1012. G. SPALL & 8. NOT UP.",
+        "choices": [
+          {
+            "text": "Go down after the last shift's tokens.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_last_shift"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_last_shift"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_last_shift"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the board.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The shift-board at the shaft head",
+        "text": "Down the shaft, very far down, something knocks twice on rock, the way a miner knocks to say the rope can come up.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/beached_barge_claims",
+    "speaker_name": "The claims on her stem",
+    "notes": "The Beached Barge's claims (world/pois/regions/brightwater.gd beached_barge).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The claims on her stem",
+        "no_talk": true,
+        "text": "Two boards nailed to the barge's stem, one over the other. The under one is Woodfolk oak with an antler cut into it and a line of their marks under the antler: NOT PAID FOR. The over one is a Tallymen's printed notice, nailed through the antler's tines, its lower half rotted away: '...THE CARGO ABOARD THIS VESSEL IS NOT DELIVERED AND REMAINS AT THE RISK OF THE CONSIGNOR UNTIL...' Somebody has scratched a third line across both, with a knife, in a hand that is neither's: ASK THE OAK.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/charter_stone_lines",
+    "speaker_name": "The Charter Stone",
+    "notes": "The Charter Stone's face (world/pois/regions/brightwater.gd charter_stone); The Charter Pins' pin-drawer works here by night.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Charter Stone",
+        "no_talk": true,
+        "text": "The Charter of 712 is cut on the lake face in the close upright letters the Tallymen still use for a contract, and on the fell face the clans have cut one link of a chain, deep, the size of a hand. Across the break the stone was mended with brass staples leaded into it: there were eight, the sockets say. Two are left on the lake face, green with weather, and the lead round the empty sockets is bright, new-scratched, as if by a knife worked in the dark.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/strandline_benchmark",
+    "speaker_name": "The Sayers' benchmark",
+    "notes": "The Strandline Stones' benchmark (world/pois/regions/brightwater.gd strandline_stones).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Sayers' benchmark",
+        "no_talk": true,
+        "text": "A squat dressed stone with a brass plug leaded into its top, polished where a levelling-staff has stood on it a thousand times. Down its lake face a notch is cut for every ten years the Mere has fallen since the Toll came down: ten of them, the last two deeper and fresher than the rest. Under the notches, small, the Sayers' cipher for 'draining', and under that, smaller, scratched by somebody else: 'resting'.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hob_tench",
+    "speaker_name": "Hob Tench",
+    "notes": "The coppice-reeve at the Smoke Coppice (pois/brightwater.json). Sells what the coppice makes (stock_charcoal_burner).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hob Tench",
+        "text": "*(He does not look up from the pole he is cleaving.)* Mind the stools. They're older than the Charter and they don't like being trod on, and nor do I.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hob Tench",
+        "text": "*(Crack. The pole splits clean to the brake.)* Well?",
+        "choices": [
+          {
+            "text": "What do you sell?",
+            "next": "trade"
+          },
+          {
+            "text": "Older than the Charter?",
+            "next": "stools"
+          },
+          {
+            "text": "Why oak, and why from here?",
+            "next": "smoke"
+          },
+          {
+            "text": "I'll leave you to it.",
+            "next": "bye"
+          }
+        ]
+      },
+      "trade": {
+        "speaker": "Hob Tench",
+        "text": "Poles, split and round. Charcoal off the Burner's clamp down the hill. Hurdles if you wait. And I'll take what's no use to you if it's wood or iron or something I can burn.",
+        "next": "hub"
+      },
+      "stools": {
+        "speaker": "Hob Tench",
+        "text": "Cut an oak to the ground and it doesn't die, it sulks, and then it sends up twenty poles where it had one trunk. Cut those in fifteen years and it does it again. These stools were cut before the guilds wrote the Charter and they've been cut every fifteen years since. Six hundred years old and never once looked it. -- The Tallymen sent a man to count them for a tax. He counted the poles. We let him.",
+        "next": "hub"
+      },
+      "smoke": {
+        "speaker": "Hob Tench",
+        "text": "Merrowhithe smokes its pike over oak from this coppice and no other, and pays in fish, which is the only honest wage on the Mere. Ash smoke makes a pike taste of sweat. Willow makes it taste of the Mere, which nobody pays for twice. Oak from these stools makes it taste of pike, which is the point.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hob Tench",
+        "text": "*(Crack.)* Stools.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dorcas_pell",
+    "speaker_name": "Dorcas Pell",
+    "notes": "A Tollmere laundress at the Wash-Stones (pois/brightwater.json), whose father was struck off the Roll in error. Gives Entered in Error (quests/sites_brightwater.json); takes the Barrow Register at its end.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/entered_in_error",
+              "the_register"
+            ]
+          }
+        ],
+        "text": "That's a Tallymen's ledger under your arm. I'd know the binding in the dark. -- Is it the barrow's?"
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/entered_in_error"
+          }
+        ],
+        "text": "I went out to the Needle last night and didn't take the chalk. He's in the book now. In ink. -- Mind the soap, the stones are slick."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She does not stop beating the sheet on the stone.)* If you're from the guild, it's Thursday's, and it's clean. If you're not, stand off the stones; you're in my splash.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Dorcas Pell",
+        "text": "*(Thwack. Thwack.)* Go on, then.",
+        "choices": [
+          {
+            "text": "What are these stones?",
+            "next": "stones"
+          },
+          {
+            "text": "What's the Needle across the meadow?",
+            "next": "needle"
+          },
+          {
+            "text": "You've chalk behind your ear.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/entered_in_error"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/entered_in_error"
+                }
+              }
+            ],
+            "next": "chalk"
+          },
+          {
+            "text": "The Barrow Register. I took it from the Receiver.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/entered_in_error",
+                  "the_register"
+                ]
+              }
+            ],
+            "next": "register"
+          },
+          {
+            "text": "I'll let you work.",
+            "next": "bye"
+          }
+        ]
+      },
+      "stones": {
+        "speaker": "Dorcas Pell",
+        "text": "The Wash-Stones. Three of them, worn to dishes by hands older than the city's. The water's soft here; it comes off the hill through the chalk and it lifts the grey out of linen like nothing in Tollmere does. The guilds send their white over the Stride twice a week and we beat it here. The Builders washed here too, the old women say. I'd like to have seen their sheets.",
+        "next": "hub"
+      },
+      "needle": {
+        "speaker": "Dorcas Pell",
+        "text": "The Tally Needle. The Struck Barrow's marker, at the foot of the scarp yonder, the white stalk with the brass top. Everybody the Charter struck off is cut on it, one name a line, and every name struck through. Four thousand of them. The barrow's in the hill behind it, numbered shelves, no names. The Tallymen shut it when the Receiver died.",
+        "effects": [
+          {
+            "discover": "core:poi/the_struck_barrow"
+          }
+        ],
+        "next": "hub"
+      },
+      "chalk": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She puts the beater down.)* Amos Pell. Carter. My father. Struck in 1031 for sixty-one marks owing on a cart he paid off in 1030, and I've the Tallymen's own receipt in my bodice to prove it. The Roll office says the matter's with the Receiver, and the Receiver's dead and the barrow's shut. So twice a week I walk out to the Needle and chalk him back over his line, and twice a week it rains. -- They say the Receiver's register is still down there, at the bottom. If his number had his name beside it, in ink, in the book, they'd have to un-strike him. That's how ledgers work. I'm a laundress. I don't go into barrows.",
+        "choices": [
+          {
+            "text": "I'll go into the barrow and bring you the register.",
+            "effects": [
+              {
+                "start_quest": "core:quest/entered_in_error"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Dorcas Pell",
+        "text": "His number's three thousand nine hundred and four. I found it scratched on the Needle's foot under his name, where the masons kept their count. -- There's men going in and out at night with dark lanterns; I've seen them from the stones. Undercroft men. They're not going in for the view. And the struck walk at dusk; don't let one take hold of you. They take hold like a creditor.",
+        "next": "hub"
+      },
+      "register": {
+        "speaker": "Dorcas Pell",
+        "text": "*(She wipes her hands on her apron three times before she takes it, and finds the page without being told the number, as if she had always known where it would be. She takes the chalk from behind her ear, looks at it, puts it back, and holds out her hand.)* Pen. -- *(You have none. She takes a laundry-mark pencil from her pocket instead, the indelible kind, and writes AMOS PELL, CARTER beside 3904 in square capitals, and under it: PAID 1030, RECEIPT HELD.)* There. It's in the book. -- Here; it's the receipt-money. I kept it twelve years to show them, and I don't need to show anybody anything now.",
+        "effects": [
+          {
+            "set_flag": "amos_pell_entered"
+          }
+        ],
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Dorcas Pell",
+        "text": "*(Thwack.)* Mind the splash.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tally_needle_names",
+    "speaker_name": "The Tally Needle",
+    "notes": "The Struck Barrow's hook: a PoiTouch at the Needle's foot (world/pois/regions/brightwater.gd). Starts core:quest/entered_in_error if Dorcas Pell has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Tally Needle",
+        "no_talk": true,
+        "text": "Names, cut small and close in the lime-washed stone, from the foot up past where you can read them: HOBB TREGEAR. SILAS MABE. WENNA PASCOE. Each struck through with one straight chisel line, the same depth every time. Over one of them, at about a woman's reach, the line has been chalked over in careful capitals, and the chalk renewed so often it has built up like paint: AMOS PELL. A number is scratched under it in the masons' way: 3904. On the portal in the gully behind, a word is cut over the door: RECEIVED.",
+        "choices": [
+          {
+            "text": "Go down into the barrow for the register with 3904 in it.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/entered_in_error"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/entered_in_error"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/entered_in_error"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the names.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Tally Needle",
+        "text": "The brass cap ticks as it cools. Behind you, in the gully, the portal's door stands an inch open that was shut.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/holmwatch_gate",
+    "speaker_name": "The gate of Holmwatch",
+    "notes": "Holmwatch's hook: the notice post by the gate (world/sites/site_exterior.gd, _hook). Starts core:quest/louder_than_the_toll if Emmet Quarle has not.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The gate of Holmwatch",
+        "no_talk": true,
+        "text": "A Sayer's speaking-trumpet of brass, longer than your arm, is nailed through its bell to the gate-arch, mouth outward to the road. Under it, chalked in capitals a hand high: LOUDER. Under that, smaller, the Loud's terms, in a lecturer's hand: 'Holmwatch is held for the Saying. Anyone who will speak up may come in and be taught. Anyone who has come to ask us to be quiet: you have been heard, and answered.' Somebody has chalked the Circle's rings beside it and struck them through.",
+        "choices": [
+          {
+            "text": "Go in and find whoever is Saying from the tower.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/louder_than_the_toll"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/louder_than_the_toll"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/louder_than_the_toll"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the trumpet where it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The gate of Holmwatch",
+        "text": "From the lamp-tower over the wall a single voice says one word, and across the water the gulls on Gull Holm go up all at once.",
+        "next": "end"
+      }
+    }
+  }
+]

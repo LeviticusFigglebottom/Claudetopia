@@ -1,0 +1,199 @@
+[
+  {
+    "id": "core:boss/hethra_undertone",
+    "resists": {
+      "frost": 0.3,
+      "poison": 0.5,
+      "silence": -0.6,
+      "fire": -0.2
+    },
+    "extends": "core:enemy/chorister",
+    "name": "Hethra, Who Holds the Undertone",
+    "archetype": "boss",
+    "arena": "core:poi/the_undertone",
+    "region": "core:region/cinderlea",
+    "tint": "#4c5266",
+    "scale": 1.55,
+    "lore": "A chorister of the Ash who went down after the Order's knight the night the doors fell, to bring him back up, and found the note with nobody holding it, and took it up. She has held it a hundred and seventy years. It has worn her to the shape of a throat. She is not cruel; she cannot stop to be anything else. This year she has begun, very slowly, to sing it higher, as if she were trying to reach somebody.",
+    "stats": {
+      "hp": 560,
+      "stamina": 170,
+      "poise": 90,
+      "armour": 8,
+      "speed": 2.8,
+      "will": 40
+    },
+    "behaviour": {
+      "engage_range": 9.0,
+      "circle": 0.5,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 60.0,
+      "hyper_armour": 26.0,
+      "aggression": 0.7,
+      "strafe_speed": 0.8
+    },
+    "phases": [
+      {
+        "name": "the held note",
+        "hp": 1.0,
+        "aggression": 0.65
+      },
+      {
+        "name": "the quarter-tone",
+        "hp": 0.5,
+        "aggression": 0.9,
+        "speed": 3.2,
+        "hyper_armour": 34.0,
+        "say": "She takes the note up the quarter-tone. The black glass in the walls rings with it, and the water does not move at all."
+      }
+    ],
+    "marks": [
+      240,
+      380
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/undertone_tuning_stone"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "caster",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/the_last_bellwright",
+    "resists": {
+      "fire": 0.6,
+      "frost": -0.3,
+      "blunt": 0.15,
+      "silence": -0.2
+    },
+    "extends": "core:enemy/bell_bearer",
+    "name": "Ommer Gaunt, the Last Bellwright",
+    "archetype": "boss",
+    "arena": "core:poi/founders_delf",
+    "region": "core:region/cinderlea",
+    "tint": "#5c4532",
+    "scale": 1.6,
+    "lore": "The master of the Builders' foundry, who would not let the last bell be spoiled by a cold mould. He took the founders down into the galleries to keep the metal warm until it could be poured, and the Ash Winter outlasted them all, and he is still keeping it warm. He carries the founders' great tuning-bell on his back on a yoke of chain and strikes it with his hammer to hear whether the metal is ready. It is never ready.",
+    "stats": {
+      "hp": 620,
+      "stamina": 190,
+      "poise": 180,
+      "armour": 17,
+      "speed": 2.1
+    },
+    "behaviour": {
+      "engage_range": 3.4,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 3.5,
+      "leash": 60.0,
+      "hyper_armour": 36.0,
+      "aggression": 0.85,
+      "strafe_speed": 0.3
+    },
+    "phases": [
+      {
+        "name": "the founder's patience",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "it is ready",
+        "hp": 0.45,
+        "aggression": 0.95,
+        "speed": 2.4,
+        "hyper_armour": 42.0,
+        "say": "He strikes the tuning-bell and hears, at last, the note he wanted. The channels in the floor run bright."
+      }
+    ],
+    "marks": [
+      240,
+      380
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/founders_pattern_book"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "brute",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/captain_haddow",
+    "resists": {
+      "slash": 0.3,
+      "pierce": 0.3,
+      "blunt": -0.25,
+      "silence": 0.2
+    },
+    "extends": "core:enemy/tolling_knight",
+    "name": "Captain Rook Haddow of the Wardens",
+    "archetype": "boss",
+    "arena": "core:poi/chalkwatch",
+    "region": "core:region/cinderlea",
+    "tint": "#5d6655",
+    "scale": 1.25,
+    "lore": "Chalkwatch's last captain, who held the grey line the night it moved and was still holding it in the morning, from the other side. He reads the roll every evening and every name answers. When the relief came up from the Rest he stood his men on the walls to wave them in, as is proper, and could not understand why they turned back.",
+    "stats": {
+      "hp": 600,
+      "stamina": 200,
+      "poise": 140,
+      "armour": 19,
+      "speed": 3.3
+    },
+    "behaviour": {
+      "engage_range": 2.8,
+      "circle": 0.45,
+      "retreat_threshold": 0.0,
+      "patience": 4.5,
+      "leash": 60.0,
+      "hyper_armour": 30.0,
+      "aggression": 0.75,
+      "strafe_speed": 0.9,
+      "parries": true,
+      "parry_chance": 0.55,
+      "parry_delay": 0.25,
+      "guard_stability": 0.8
+    },
+    "phases": [
+      {
+        "name": "the watch",
+        "hp": 1.0,
+        "aggression": 0.7
+      },
+      {
+        "name": "the relief is late",
+        "hp": 0.5,
+        "aggression": 0.9,
+        "speed": 3.7,
+        "hyper_armour": 38.0,
+        "say": "He calls the roll. Every name in the undercroft answers, and the dead on the floor begin to stand."
+      }
+    ],
+    "marks": [
+      240,
+      380
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/chalkwatch_roll"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "knight",
+      "boss"
+    ]
+  }
+]
