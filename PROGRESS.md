@@ -15747,9 +15747,11 @@ The coordinator asked for a third large place of another kind than a mine or a m
   rumours.
 - Track: an atlas track (`core:poi/wake_barrow` to Pilgrim's Ash) leaves the Brow road west of the
   Last Look and climbs about 150 m north to the forecourt. Routed with `worldgen.roads.plan_roads`
-  on the runtime heights with its parent: 706 m, most of it the shared trunk. Its own part has a
-  p95 grade of 0.04 and a max of 0.07; the steepest grade, 0.41, is on the parent's trunk.
-  `test_atlas`, `test_pad_dams` and `test_roads`: 48 passed, 4 skipped. It holds its `visible_from`
+  on the runtime heights with its parent, after merging main's road changes: 700 m, most of it the
+  shared trunk. Its own part has a p95 grade of 0.05; the only step over 0.12 is its last 0.6 m at
+  the pad. The steepest grade, 0.39, is on the parent's trunk. The turning (588, 2855) is on the
+  lane as the merged planner now lays it, 24 m south of the built lane.
+  `test_atlas`, `test_pad_dams` and `test_roads`: 50 passed, 4 skipped. It holds its `visible_from`
   line from the Last Look by the game's sight model on the current heights.
 - **The Hum Stone's view:** no sightline was added. It already has three authored lines (Rookdown,
   Rook Mill and the Last Field). The builder honours a line by notching the land
@@ -15775,10 +15777,10 @@ The coordinator asked for a third large place of another kind than a mine or a m
     triangles, nothing floating, buried, sunk or on a road.
     - The oaks are seated by their crown's middle on the barrow's own turf, because the seat audit
       tests support there.
-    - The seat audit counts 11 overlaps, all of them the seven oak crowns sharing their boxes, as a
-      clump does. The check does not fail on overlaps.
+    - Before merging main, the seat audit counted 11 overlaps, all of them the seven oak crowns
+      sharing their boxes, as a clump does. With main's seat audit it reads seat clean.
   - `./run.sh test --filter=test_books,test_poi_encounters,test_sites_hearthvale,test_site_interiors_walk,test_pois,test_poi_preview,objects_seated_hearthvale`:
-    61 tests, 0 failed.
+    61 tests, 0 failed, before and after merging main.
     - `test_sites_hearthvale` now walks the crypt too.
     - `test_site_interiors_walk` reached all 10 of the crypt's rooms on its seed.
     - test_poi_encounters has a `WHAT_STANDS` row for Wake Barrow (a shared file: one row).

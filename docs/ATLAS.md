@@ -296,7 +296,7 @@ road** runs from Pilgrim's Ash by the Last Look, Hound Watch and Bramcombe to Ca
 Rookdown. Lanes cross the downs from Ashwell to the Hare and Hurdle and on to Bramcombe, and from
 Tamwick by Hollin Barrow to Hazelcombe. A track of world life phase 2 leaves the Brow road just
 west of the Last Look and climbs 150 m north up the spine of Hound Down to Wake Barrow's
-forecourt (via 586,2766 / 592,2831). Laid to Pilgrim's Ash, it runs on the Brow road's trunk and
+forecourt (via 586,2766 / 588,2855). Laid to Pilgrim's Ash, it runs on the Brow road's trunk and
 parts from it at the turning, where the build's fingerpost names it.
 
 ### Cinderlea: ember ash
