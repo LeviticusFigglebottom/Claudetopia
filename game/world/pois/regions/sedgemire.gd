@@ -1095,11 +1095,12 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	var lime_rock: Array = PoiKit.variants_of(PoiKit.ROCKS, "skerrow", "cliff_face")
 	if lime_rock.is_empty():
 		lime_rock = [k.rock("cliff_face", 0)]
-	# [across (+ the weep's side), back from the mouth's line, height, turn in]
-	var crag := [[1.0, 0.0, 11.0, -0.3], [-1.0, 0.0, 9.0, 0.3], [0.6, 7.5, 10.0, 0.0], [-0.8, 6.5, 8.5, 0.15]]
+	# [across (+ the weep's side), back from the mouth's line, height, turn in, which piece]
+	# (one narrow piece behind: a wide one there stood half inside both cheeks)
+	var crag := [[1.0, 0.0, 11.0, -0.3, 0], [-1.0, 0.0, 9.0, 0.3, 1], [0.15, 9.5, 10.0, 0.0, 1]]
 	for ci in crag.size():
 		var cr: Array = crag[ci]
-		var rp: String = lime_rock[ci % lime_rock.size()]
+		var rp: String = lime_rock[int(cr[4]) % lime_rock.size()]
 		if rp == "":
 			break
 		var bd: Dictionary = PoiKit.meta(rp).get("bounds", {})
@@ -1116,6 +1117,16 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 			c += across * half * side_s
 		var base := k.on_ground(c.x, c.y, -0.6)
 		await k.step()
+		# the kind's boulders round the mouth that this rock now stands over go (they were its cheeks):
+		# by where they stand, as the rock's scene may not be drawn yet to give a box
+		var over_r := maxf(half, maxf(-float(bmin[2]), float(bmax[2])) * sc) * 0.95 + 1.5
+		for ch in k.root.find_children("*oulder*", "Node3D", true, false):
+			var bn := ch as Node3D
+			if bn.get_parent() != null and str(bn.get_parent().name).to_lower().contains("boulder"):
+				continue
+			var bp := k.root.to_local(bn.global_position) if bn.is_inside_tree() else bn.position
+			if Vector2(bp.x, bp.z).distance_to(c) < over_r:
+				bn.queue_free()
 		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, Vector3.ZERO, true)
 		if node != null:
 			node.name = "Crag%d" % ci
