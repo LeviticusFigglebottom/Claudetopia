@@ -8,7 +8,7 @@ extends TestCase
 ## The foes forged so far (this grows to every custom-rigged foe and boss).
 const FORGED: Array[String] = ["core:enemy/down_wolf", "core:enemy/crag_wolf", "core:enemy/thornhound",
 	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver", "core:enemy/stone_thrall", "core:enemy/bristleback",
-	"core:enemy/sallowjaw", "core:enemy/gutter_drake"]
+	"core:enemy/sallowjaw", "core:enemy/gutter_drake", "core:enemy/warden"]
 const REACTIONS: Array[String] = ["Hit_Light", "Hit_Light_L", "Stagger", "Stagger_B", "Knockdown", "Get_Up", "Death_A",
 	"Idle", "Idle_Combat", "Walk", "Run"]
 

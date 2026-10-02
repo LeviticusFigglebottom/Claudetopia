@@ -110,6 +110,12 @@ def spec(name: str) -> FoeSpec:
                                        "lie_roll": 180.0, "turn": 45.0,
                                        "speeds": {"Walk": 0.55, "Trot": 1.1, "Run": 3.4},
                                        "cycles": {"Walk": 16, "Trot": 10, "Run": 7}}})
+    if name == "warden":
+        from . import warden as wd
+        st = wd.WardenStyle()
+        return FoeSpec(name, "biped", wd.RIG, st, lambda: wd.scene(st), def_scale=2.4, tex=1024,
+                       tris=11000, lod1=3600, lod2=1100, spacing=0.016,
+                       extra={"tint": "#3c4a30", "module": wd})
     if name in ("stone_thrall", "stone_thrall_king"):
         from . import thrall as th
         st = th.ThrallStyle(king=name.endswith("king"))
@@ -122,7 +128,7 @@ def spec(name: str) -> FoeSpec:
 
 
 FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "gutter_drake", "sallowjaw", "weaver",
-        "stone_thrall"]
+        "stone_thrall", "warden"]
 QUADS = ("canid", "boar", "reptile")
 
 

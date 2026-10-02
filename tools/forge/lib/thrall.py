@@ -408,7 +408,8 @@ def swing_clip(name: str, side: str, low: bool = False) -> RigClip:
         end = np.array([sx * 0.55, -0.95, z_low])
         mid = np.array([-sx * 0.15, -1.15, z_low + 0.1])
         if through < 0.5:
-            pos = start * wind + mid * (2.0 * through) + np.zeros(3) * (1.0 - wind - 2.0 * through)
+            a_ = 2.0 * through
+            pos = start * wind * (1.0 - a_) + mid * a_
         else:
             k = (through - 0.5) * 2.0
             pos = mid * (1.0 - k) + end * k
