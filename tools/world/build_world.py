@@ -970,6 +970,13 @@ def build(args) -> dict:
         print("[world] out of the sightlines: %d trees from %d of %d lines (most: %s)" % (
             cleared["trees"], len(most), len(line_names),
             ", ".join("%s %d" % (nm, n) for n, nm in most[:6]) or "none"), flush=True)
+        # and the glades: a place in the deep wood whose def asks (`glade_m`) has the trees taken off a
+        # disc round it and a way to its road, so its feature is seen from the track (worldgen.trees)
+        glade_list = TR.glades(pois, roads_list)
+        opened = TR.clear_glades(buckets, glade_list)
+        print("[world] glades: %d trees from %d places (%s)" % (opened["trees"], len(glade_list), ", ".join(
+            "%s %d" % (str(p["id"]).split("/")[-1], c) for p, c in zip([q for q in pois if q.get("glade_m")], opened["by_glade"]))
+            or "none"), flush=True)
         # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
         seated = TR.seat(buckets, grid, H)
         print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (

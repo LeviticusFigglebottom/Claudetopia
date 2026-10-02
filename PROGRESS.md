@@ -16041,3 +16041,65 @@ carried thing on its bone, and the Brake-Dam's size. Also green: test_site_inter
 fights arena's boss runs (6 won, 0 flagged); and the GDScript warnings, at the baseline (49).
 The warm set took the aura's overlay, the motes and the carried lights
 (`--material-census` over the portraits).
+
+- The grey hart lead (`world/tutorial/leads.gd`) still walks as a PlaceholderBody; the deer's grey
+  coat could carry it.
+
+## Polish: the owner's seven weak places from the final photos (polish, 2026-10-02)
+
+Seven places the owner's final `poi_sheet --built --time 16.5` photos found short, each fixed at its
+cause. Looked at with poi_sheet before and after (three runs); measured with a headless dump of each
+place's pieces and its ground.
+
+- **The Founders' Delf's green tree** was world scatter, not the pad or the site: a Briarwold giant
+  oak (with Briarwold bracken and grass round it) 39 m from the bell, on a speck of Briarwold land
+  3.9 km from the Briarwold. `regions.dithered_owner` added every province's noise everywhere, so
+  some far province won a few texels in every few hundred metres; on the real atlas 24,523 texels
+  of 1,048,576 (2.3%) belonged to a region more than 150 m from its land. A province now competes
+  only where its own weight is at least 0.01 (inside its border's blend), its noise fading in to
+  0.05: 55 such texels, none at the Delf. The same specks put Briarwold and Skerrow trees at the One
+  Poppy and a Hearthvale birch at Bell Street; Greyline Stones' oaks are on the real Hearthvale
+  border and stay. `test_dithered_owner.py` (14,053 far texels before, 0 after);
+  `pytest test_build.py` (a 1024 world) passes. **Needs a world build.**
+- **The Struck Barrow**: the "stair on its side" was the flight laid on a straight line as 1.2 m
+  slabs, standing out of the gully's dip, with the facade free in the gully and its cornice a
+  beam. Now: facade across the gully head, a seated flight between parapets up to a raised
+  threshold between monolith jambs under the RECEIVED lintel, four steps down inside the door to
+  the dark, and a turf mound over the facade's head and back. The tan haze in view 2 is not the
+  place's: that camera stands on the scarp top on Hearthvale's side of the border, and Hearthvale's
+  height haze (0.018/m, top 18 m under the eye) fills the gully below it.
+- **The Undertone**: the facade stood 15 m out on the plain before the plateau's slope (its front
+  at the cliff foot less 7 m), so the side views saw its 11 m-deep pilasters as a brick slab, and its
+  1.1 m courses read as a brick house. Now its front is at the cliff foot, the Choir's cliff rock is
+  set by its bounds either side and over the crown, the facade is carved whole and fluted, and the
+  choristers stand free on plinths 7 m out. The cameras were not inside a chorister; the side views
+  stand at the cliff foot, so the cliff rock is in them (narrowed to one piece a side after the wide
+  ones walled the cameras in).
+- **Spoil** (the Crown Drift, and as asked Knappers' Deep and Ghaleld): `PoiMasonry.spoil_heap`, one
+  tip for all three, terraced, rilled, lumpy, streaked in each region's colours, with loose stone
+  over it (`spoil_stones`).
+- **The Name-Wife's Hollow**: a crag of pale limestone (Skerrow's; the marsh's lent granite is near
+  black) round the throat, cheeks of 11 m and 9 m and a narrow piece behind (the final sheet shows two pieces behind;
+  the second stood inside both cheeks and was taken out after it), the kind's boulders it stands
+  over taken out, the cleft's dark, the weep 9 m off the taller cheek (in the build; not plain in the
+  sheet's four views).
+- **The Windthrow, Tinehold, the Charter Delf**: a def's `glade_m` has the build take the trees off
+  a disc round the place and a way to its nearest road (`trees.clear_glades`, `test_glades.py`):
+  85, 68 and 60 m. **Needs a world build** to show. poi_sheet's new `--weather clear` pins the
+  weather (it rolled each region's own, rain in the Greatwood).
+
+**Budgets** (poi_sheet views): the Hollow's were over before (2.02/1.55/1.49/1.55 M primitives) and
+are 2.09/1.64/1.54/1.59 M with its crag; Ghaleld view 2 was 1.55 M and is 1.58 M.
+
+**Sheets** (clear weather, 16:30): `$SCRATCH/polish_final/the_struck_barrow_the_undertone_the_crown_drift_knappers_deep_ghaleld_name_wifes_built.jpg`
+and `$SCRATCH/polish_final2/the_undertone_built.jpg`. The Struck Barrow's parapet still steps in four
+lengths from the side.
+
+**Tests**: `./run.sh test --filter=test_pois,test_poi_preview,test_sites,test_sites_cinderlea,
+test_brightwater_places,test_site_interiors_walk,objects_seated,test_world_data`; warning census 49,
+at the baseline. Python: test_build (1024 world, with the glades), test_dithered_owner, test_glades,
+test_content_split, test_region_check; `region_check.py briarwold` PASS.
+
+**For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
+and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
+(their glades only exist after a build; shoot them with `--weather clear --time 16.5`).

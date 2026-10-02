@@ -536,6 +536,171 @@ func mound(centre: Vector3, r: float, height: float, mat: Material, node_name: S
 	return inst
 
 
+## A tip's profile, its height as a share of the tip's over the ground, `f` of the way out from the
+## crown to the toe: the level top the barrows or the wagons tipped from, a steep face, a bench where
+## an older tip stops, a face, a lower bench, the toe.
+const TIP_PROFILE := [Vector2(0.0, 1.0), Vector2(0.28, 0.97), Vector2(0.4, 0.62), Vector2(0.55, 0.57),
+		Vector2(0.67, 0.27), Vector2(0.8, 0.22), Vector2(0.93, 0.04), Vector2(1.0, 0.0)]
+## Spoil's colours as multipliers of its painted material (vertex colours): the fresh-tipped top,
+## two streaks run down its faces, and the green an old tip takes from its foot. A region passes its
+## own: the Crown Drift's calamine streaks verdigris and rust, a chalk tip flint-grey and ochre.
+const SPOIL_TINTS := {"fresh": Color(0.92, 0.95, 1.0), "streak_a": Color(0.78, 1.18, 1.0),
+		"streak_b": Color(1.22, 0.92, 0.7), "grass": Color(0.62, 1.12, 0.52)}
+
+
+static func tip_share(f: float) -> float:
+	for i in TIP_PROFILE.size() - 1:
+		var a: Vector2 = TIP_PROFILE[i]
+		var b: Vector2 = TIP_PROFILE[i + 1]
+		if f <= b.x:
+			return lerpf(a.y, b.y, (f - a.x) / maxf(b.x - a.x, 0.0001))
+	return 0.0
+
+
+## A heap of mine or quarry waste at local `at`, `r` out to its toe across the way it spills (and
+## `stretch` times that along it, for a tongue tipped down a slope), its top `h` over the ground at
+## its middle and level (it was tipped from there), spilling further `spill`-ward: on its top the
+## little cones each load made, then a steep face, a bench where an older tip stopped short of the
+## last, a face, a lower bench, the toe; rain-rills down its faces; streaked in `tints` (SPOIL_TINTS's
+## keys), the faces darker than the benches; an old one (`old`) softer and greening from its foot.
+## One draw, built in the far ring too, and a trimesh collider. Returns local points on it and round
+## its toe for its loose stone (spoil_stones), which is most of what makes it read as rubble.
+## (PoiMasonry.mound's dome, and the regions' own humps, read as tarpaulins over a heap: smooth
+## cones the owner photographed at the Crown Drift, Knappers' Deep and Ghaleld alike; a first heap
+## flat-shaded in big facets read as a crumpled boulder.)
+func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, tints: Dictionary = SPOIL_TINTS,
+		old := false, node_name := "Spoil", stretch := 1.0) -> Array:
+	var k := kit
+	var rings := 22
+	var segs := 56
+	var sp := spill.normalized() if spill != Vector2.ZERO else Vector2(0.0, 1.0)
+	var a_spill := atan2(sp.x, sp.y)
+	var top := k.on_ground(at.x, at.y).y + h
+	var ph := k.rng.randf_range(0.0, TAU)
+	var ph2 := k.rng.randf_range(0.0, TAU)
+	var rills := 11 + k.rng.randi() % 6
+	var lump := 0.03 if old else 0.065
+	# the loads tipped on its top, each a little cone where a barrow or a wagon was emptied
+	var loads: Array = []
+	for n in (4 if old else 9):
+		var la := k.rng.randf_range(0.0, TAU)
+		loads.append(Vector4(sin(la), cos(la), k.rng.randf_range(0.0, 0.22), k.rng.randf_range(0.14, 0.24)))
+	var fresh: Color = tints.get("fresh", SPOIL_TINTS["fresh"])
+	var streak_a: Color = tints.get("streak_a", SPOIL_TINTS["streak_a"])
+	var streak_b: Color = tints.get("streak_b", SPOIL_TINTS["streak_b"])
+	var grass: Color = tints.get("grass", SPOIL_TINTS["grass"])
+	var pts: Array = []
+	var cols: Array = []
+	for i in rings + 1:
+		var f := float(i) / float(rings)
+		var row: Array = []
+		var crow: Array = []
+		for j in segs:
+			var a := TAU * float(j) / float(segs)
+			var da := a - a_spill
+			# an ellipse `stretch` long along the spill, reaching further down it, its outline ragged
+			var ell := 1.0 / sqrt(pow(cos(da) / stretch, 2.0) + pow(sin(da), 2.0))
+			var reach := r * ell * (1.0 + 0.32 * cos(da)) * (1.0 + 0.07 * sin(3.0 * a + ph) + 0.04 * sin(7.0 * a - ph2))
+			var fw := f
+			if i > 0 and i < rings:
+				fw = clampf(f + k.rng.randf_range(-0.012, 0.012), 0.0, 1.0)
+			var p := at + Vector2(sin(a), cos(a)) * reach * fw
+			var gp := k.on_ground(p.x, p.y).y
+			# the benches wander round the heap
+			var fb := clampf(f + 0.03 * sin(2.0 * a + ph2) + 0.02 * sin(5.0 * a + ph), 0.0, 1.0)
+			var share := tip_share(fb)
+			var steep := clampf((tip_share(maxf(fb - 0.03, 0.0)) - tip_share(minf(fb + 0.03, 1.0))) / 0.09, 0.0, 1.0)
+			var y := gp + maxf(top - gp, h * 0.4) * share
+			if i == rings:
+				y = gp - 0.35
+			elif i > 0:
+				# the loads on the top
+				for l: Vector4 in loads:
+					var lc := Vector2(l.x, l.y) * l.z
+					var dd := (Vector2(sin(a), cos(a)) * f - lc).length() / l.w
+					if dd < 1.6:
+						y += h * 0.07 * exp(-dd * dd * 1.6) * (1.0 - steep)
+				# lumps everywhere, rougher on the faces; rills down the faces
+				y += h * lump * (0.6 + steep) * (0.5 * sin(a * 14.0 + f * 23.0 + ph) * sin(f * 31.0 - a * 9.0 + ph2)
+						+ k.rng.randf_range(-0.6, 0.6))
+				var rill := pow(maxf(cos(a * float(rills) + ph + 3.0 * f), 0.0), 10.0)
+				y -= h * (0.04 if old else 0.09) * steep * rill
+			row.append(Vector3(p.x, y, p.y))
+			# the faces fresh and darker, the benches and the top weathered paler; the streaks run
+			# down the faces; an old tip greens from its foot
+			var tint := fresh * lerpf(1.04, 0.86, steep)
+			var streak := sin(a * 13.0 + ph) * sin(a * 5.0 - ph2) + 0.15 * sin(f * 9.0 + a * 2.0)
+			if streak > 0.3:
+				tint = tint.lerp(streak_a, clampf((streak - 0.3) * 2.2, 0.0, 1.0) * (0.35 + 0.65 * steep))
+			elif streak < -0.5:
+				tint = tint.lerp(streak_b, clampf((-streak - 0.5) * 2.2, 0.0, 1.0) * (0.35 + 0.65 * steep))
+			if old:
+				tint = tint.lerp(grass, clampf(1.2 - share * 1.5, 0.0, 0.92))
+			else:
+				tint = tint.lerp(grass, clampf((f - 0.9) * 6.0, 0.0, 0.5))
+			tint = tint * k.rng.randf_range(0.9, 1.05)
+			tint.a = 1.0
+			crow.append(tint)
+		pts.append(row)
+		cols.append(crow)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var faces := PackedVector3Array()
+	for i in rings:
+		for j in segs:
+			var j1 := (j + 1) % segs
+			var quad: Array = [[i, j], [i + 1, j1], [i + 1, j]]
+			if i > 0:
+				quad.append_array([[i, j], [i, j1], [i + 1, j1]])
+			for ij: Array in quad:
+				var v: Vector3 = pts[ij[0]][ij[1]]
+				st.set_color(cols[ij[0]][ij[1]])
+				st.add_vertex(v)
+				faces.append(v)
+	commit(st, mat, node_name, true)
+	if not k.far:
+		var shape := ConcavePolygonShape3D.new()
+		shape.set_faces(faces)
+		k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
+	# loose stone: over its faces and benches, and round the toe where it rolled further down the land
+	var out: Array = []
+	for n in (18 if old else 64):
+		var i := k.rng.randi_range(int(rings * 0.3), rings - 1)
+		if n % 4 == 0:
+			i = rings - k.rng.randi_range(0, 1)
+		var p: Vector3 = pts[i][k.rng.randi() % segs]
+		if i >= rings - 1:
+			# past the toe, more of it on the downhill side
+			var o := Vector2(p.x - at.x, p.z - at.y).normalized()
+			var q := Vector2(p.x, p.z) + o * k.rng.randf_range(0.3, 2.5 + 2.5 * maxf(o.dot(sp), 0.0))
+			p = k.on_ground(q.x, q.y)
+		out.append(p)
+	return out
+
+
+## Loose stone at `points` (local, as spoil_heap returns them): every third one of the region's
+## boulders at a small scale, the rest its scree. The two scatters, either of them null where the
+## region has no such rock or in the far ring.
+func spoil_stones(points: Array, big_scale := Vector2(0.32, 0.75)) -> Array:
+	var k := kit
+	if k.far or points.is_empty():
+		return [null, null]
+	var rock := k.rock("boulder")
+	var scree := k.rock("scree")
+	var big: Array = []
+	var small: Array = []
+	for i in points.size():
+		var p: Vector3 = points[i]
+		if rock != "" and (i % 3 == 0 or scree == ""):
+			var sc := k.rng.randf_range(big_scale.x, big_scale.y)
+			big.append(PoiKit.transform_at(p - Vector3(0.0, 0.3 * sc, 0.0), k.rng.randf_range(0.0, TAU), sc))
+		elif scree != "":
+			small.append(PoiKit.transform_at(p - Vector3(0.0, 0.08, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.0)))
+	var a: MultiMeshInstance3D = k.scatter(rock, big, true) if not big.is_empty() else null
+	var b: MultiMeshInstance3D = k.scatter(scree, small, false) if not small.is_empty() else null
+	return [a, b]
+
+
 ## A round sheet of standing water at local height `y`.
 func pool(centre: Vector2, r: float, y: float, mat: Material, node_name := "Pool", segments := 24) -> MeshInstance3D:
 	if kit.far:

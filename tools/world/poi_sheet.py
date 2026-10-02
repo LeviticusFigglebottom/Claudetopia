@@ -61,7 +61,7 @@ def _approach(x: float, z: float, roads: list) -> float:
     return best[1]
 
 
-def plan_for(ids: list, time_h: float, built: bool) -> dict:
+def plan_for(ids: list, time_h: float, built: bool, weather: str = "") -> dict:
     defs = {d["id"]: d for d in CONTENT.poi_registry(PACK)}
     pois = {e["place_id"]: e for e in json.load(open(os.path.join(GEN, "pois.json"), encoding="utf-8"))}
     roads = json.load(open(os.path.join(GEN, "roads.json"), encoding="utf-8"))
@@ -86,6 +86,12 @@ def plan_for(ids: list, time_h: float, built: bool) -> dict:
                       "at": {"place": d["id"], "bearing": (b0 + 60.0) % 360.0, "distance": 0.9 * r + 14.0,
                              "height": 1.5 * r + 22.0},
                       "look": look, "fov": 60.0, "time": time_h})
+    if weather:
+        # (the capture runner pins it per shot: without it each region rolls its own, and the
+        # Greatwood's rain under its canopy left every view of its places near black)
+        wid = weather if ":" in weather else "core:weather/%s" % weather
+        for s in shots:
+            s["weather"] = wid
     plan = {"_doc": "Written by tools/world/poi_sheet.py: each POI from four sides, on a pad laid at runtime.",
             "shots": shots}
     if not built:
@@ -99,10 +105,12 @@ def main(argv=None) -> int:
     ap.add_argument("--time", type=float, default=11.0, help="the hour to shoot at")
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--built", action="store_true", help="the built world's entry, not a preview")
+    ap.add_argument("--weather", default="", help="pin the weather for every view (clear, still, overcast, rain ...);"
+                    " by default each region's own odds")
     ap.add_argument("--plan-only", action="store_true")
     ap.add_argument("--keep", action="store_true", help="keep the PNGs")
     args = ap.parse_args(argv)
-    plan = plan_for(args.ids, args.time, args.built)
+    plan = plan_for(args.ids, args.time, args.built, args.weather)
     name = "_".join(i.split("/")[-1] for i in args.ids)[:80] + ("_built" if args.built else "")
     work = os.path.join(args.out, name)
     os.makedirs(work, exist_ok=True)
