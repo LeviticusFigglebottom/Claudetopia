@@ -93,7 +93,11 @@ func _region(region: String) -> void:
 	if not FileAccess.file_exists("res://world/generated/pois.json"):
 		print("    (no built world: run ./run.sh world; skipped)")
 		return
-	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://world/generated/pois.json"))
+	# SEAT_PLACES_FROM=<a pois.json>: the places another build's list picks, so two builds are
+	# measured at the same places (a build that adds places to a region picks others from its own)
+	var from := OS.get_environment("SEAT_PLACES_FROM")
+	var list := from if from != "" and FileAccess.file_exists(from) else "res://world/generated/pois.json"
+	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(list))
 	var places := places_in(region, raw if raw is Array else [], PLACES_PER_REGION)
 	assert_true(places.size() > 0, "the built world lists places in %s" % region)
 	if places.is_empty():
