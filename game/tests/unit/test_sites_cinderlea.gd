@@ -6,6 +6,7 @@ extends TestCase
 ## people keep and the things to touch that their content names.
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
+const TestSites := preload("res://tests/unit/test_sites.gd")
 const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse",
 		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep"]
 var player: Node3D
@@ -160,58 +161,17 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		await tree.process_frame
 
 
-# --- helpers (as test_sites.gd's) ---------------------------------------------------------------------
+# --- helpers (the walk is test_sites.gd's own: the polygon a point stands on, and the passages' links) ---
 
 func _walk(site: SiteInterior) -> Dictionary:
 	var nm := SiteInterior.navmesh_settings()
 	NavigationServer3D.bake_from_source_geometry_data(nm, site.source_geometry())
+	var links := SiteInterior.passage_links(site.plan)
 	var reached: Array = []
 	var unreached: Array = []
 	for r in site.plan.rooms:
-		if _joined(nm, site.plan.entrance, r["centre"]):
+		if TestSites._joined(nm, site.plan.entrance, r["centre"], links):
 			reached.append(r["id"])
 		else:
 			unreached.append(r["id"])
 	return {"reached": reached.size(), "unreached": unreached}
-
-
-static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
-	var verts := nm.get_vertices()
-	var n := nm.get_polygon_count()
-	if n == 0:
-		return false
-	var by_vert := {}
-	var key := func(v: Vector3) -> Vector3i: return Vector3i((v * 10.0).round())
-	for i in n:
-		for vi in nm.get_polygon(i):
-			by_vert.get_or_add(key.call(verts[vi]), []).append(i)
-	var nearest := func(p: Vector3) -> int:
-		var best := -1
-		var best_d := INF
-		for i in n:
-			var c := Vector3.ZERO
-			var poly := nm.get_polygon(i)
-			for vi in poly:
-				c += verts[vi]
-			c /= float(poly.size())
-			var dd := Vector2(c.x - p.x, c.z - p.z).length() + absf(c.y - p.y) * 2.0
-			if dd < best_d:
-				best_d = dd
-				best = i
-		return best if best_d < 4.0 else -1
-	var start: int = nearest.call(a)
-	var goal: int = nearest.call(b)
-	if start < 0 or goal < 0:
-		return false
-	var seen := {start: true}
-	var todo := [start]
-	while not todo.is_empty():
-		var i: int = todo.pop_back()
-		if i == goal:
-			return true
-		for vi in nm.get_polygon(i):
-			for j in by_vert[key.call(verts[vi])]:
-				if not seen.has(j):
-					seen[j] = true
-					todo.append(j)
-	return false

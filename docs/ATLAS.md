@@ -477,6 +477,16 @@ Every new place has a note lying there in the voice of whoever keeps it (§16).
   new vantages: the Barkbridge is seen from the Oiled Stone rather than the Rafters' Camp, and the
   Giants' Stair from the Black Keep rather than Skarlow. The two hidden valleys' lines are refused,
   as they are allowed to be.
+* **Trees keep out of the sightlines** as rock does (`worldgen.trees.clear_sightlines`, after every
+  tree is placed and before they are seated). A tree goes when all of these hold:
+  - its trunk is within 12 m of a line (`SIGHT_TREE_CORRIDOR_M`), between the two pads;
+  - its top reaches within the game's clearance (and half a metre) of the ray;
+  - the ground under it is below the ray, since where the land stands into a line the land is the
+    line's to answer.
+  A line looking down over a wood leaves the wood. On the installed world's trees (runtime
+  heights) it takes 2,915 of 136,526 (2.1%), from 223 of the 266 lines: a median of 8 a line, at
+  most 78 (the Hart Bones to the Moot Gate Stone). The Hum Stone's three lines take 4, 8 and 16.
+  `tools/world/tests/test_tree_sightlines.py` checks it on a synthetic world.
 
 ### The opening's walk, minute by minute
 

@@ -15788,6 +15788,35 @@ The coordinator asked for a third large place of another kind than a mine or a m
   - `softlock_check.py`: 140 quests, 0 findings.
   - The WORLD_LIFE §6 pytest files: 8 passed.
 
+### Trees out of the sightlines, and Cinderlea's walk (2026-10-02)
+
+The coordinator asked for both before the rebuild.
+- **Trees out of the sightlines.** The world build now takes out every tree that stands into an
+  authored sightline (`worldgen.trees.clear_sightlines`, in `build_world.py` before the trees are
+  seated). The build already cuts the land under a line and keeps rock out of its corridor; the
+  trees were what hid the Hum Stone from Rook Mill. A tree goes when all of these hold:
+  - its trunk is within 12 m of the line, between the two pads;
+  - its top (the contact table's height times its scale) reaches within the game's clearance, and
+    half a metre, of the ray;
+  - the ground under it is under the ray.
+  A line looking down over a wood leaves the wood; where the land itself blocks the line, the tree
+  stays. The build prints the count and the lines that lost the most.
+  - Measured on the installed world's trees with the runtime heights: 2,915 of 136,526 trees taken
+    (2.1%), from 223 of 266 lines, a median of 8 a line and at most 78 (the Hart Bones to the Moot
+    Gate Stone). The Hum Stone's lines take 4 (Rookdown), 8 (Rook Mill) and 16 (the Last Field).
+  - `tools/world/tests/test_tree_sightlines.py` (new, 7 tests) builds a synthetic world. It checks:
+    - no trunk is left in a corridor standing into its line;
+    - nothing outside the corridor, on a pad, past the target or behind the vantage is taken;
+    - a stone is never taken;
+    - a tree down a dip is left, as is one on a ridge that already blocks the line, and a wood
+      under a line seen from a scarp;
+    - the counts add up;
+    - the build clears before it seats.
+  - It is not yet seen in a built world: the coordinator's rebuild lays it.
+- **Cinderlea's walk.** `test_sites_cinderlea.gd` kept the old copy of test_sites' `_joined` (the
+  polygon whose middle is within 4 m). It now calls `TestSites._joined` with the passages' links,
+  as test_site_interiors_walk does.
+
 ## Shared fixes after world life phase 2: roads, props, caves, the stream, the bell, dark rooms, foes, the Hollow (2026-10-02)
 
 Branch `wip/shared-fixes` (triage 74, prop placement): the faults the six region agents left in the
