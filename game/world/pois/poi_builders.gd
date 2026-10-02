@@ -3653,14 +3653,32 @@ static func _stream_over(d: PoiDressing, lip: Vector3, facing: Vector2, run: flo
 	var m := d.masonry
 	var lip2 := Vector2(lip.x, lip.z)
 	var head := lip2 - facing * (run + 2.0)
-	var mid := (lip2 + head) * 0.5
-	var y := maxf(lip.y + 0.03, maxf(k.on_ground(mid.x, mid.y).y, k.on_ground(head.x, head.y).y) + 0.04)
+	# On the ground it runs over, a length at a time, from the spring down to the lip: laid as one
+	# level sheet at the highest ground under it, it stood 0.21 m over the step's top at the Rust Scar
+	# and the Glass Falls (the seat audit's floating streams).
+	var yaw := PoiKit.yaw_of(facing)
+	var lengths := 6
+	var ys: Array[float] = []
+	for i in lengths + 1:
+		var q := head.lerp(lip2, float(i) / float(lengths))
+		var y := k.on_ground(q.x, q.y).y + 0.04
+		if i == lengths:
+			y = maxf(y, lip.y + 0.03)
+		ys.append(y)
 	var water := m.begin()
-	m.block(water, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(facing)), Vector3(mid.x, y, mid.y)), Vector3(1.8, 0.04, lip2.distance_to(head)))
+	var seg := lip2.distance_to(head) / float(lengths)
+	for i in lengths:
+		var a := head.lerp(lip2, float(i) / float(lengths))
+		var b := head.lerp(lip2, float(i + 1) / float(lengths))
+		var mid3 := Vector3((a.x + b.x) * 0.5, (ys[i] + ys[i + 1]) * 0.5, (a.y + b.y) * 0.5)
+		var pitch := -atan2(ys[i + 1] - ys[i], seg)
+		# a little long, so the lengths overlap where the ground bends
+		m.block(water, Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, pitch), mid3),
+				Vector3(1.8, 0.04, sqrt(seg * seg + pow(ys[i + 1] - ys[i], 2.0)) + 0.15))
 	await k.step()
 	m.commit(water, mat, "Stream")
 	await k.step()
-	m.pool(head, 1.5, y + 0.01, mat, "Spring")
+	m.pool(head, 1.5, ys[0] + 0.01, mat, "Spring")
 	var reeds: Array = []
 	for n in 10:
 		var a := k.rng.randf_range(0.0, TAU)
