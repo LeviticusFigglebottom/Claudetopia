@@ -139,7 +139,8 @@
     "scale": 1.3,
     "resists": {
       "pierce": 0.25,
-      "slash": 0.15
+      "slash": 0.15,
+      "blunt": -0.25
     },
     "lore": "Marshal of the Hart-Knights until the order went east, and of nothing since but Tinehold and the men who stayed in it. He killed the white hart under the Tine Tower on the night the last knight left and has worn Ardo's antlers ever since, the oldest the order kept, from a hart that died in its bed four hundred years ago; they are too big for him, and he carries his head as if they were not. He has not knelt in twenty years. He says he is waiting for a knight who will come and make him.",
     "stats": {
@@ -189,8 +190,7 @@
       "knight",
       "humanoid",
       "person",
-      "boss",
-      "unvowed"
+      "boss"
     ]
   },
   {
