@@ -15708,10 +15708,80 @@ xvfb, before and after each change). What the renders showed, and what changed:
 - The two WORLD_LIFE §6 pytest files: 8 passed.
 
 **Not done:**
-- No third large place. The machine's three heavy slots were shared by seven agents, and each render
-  waited for a slot.
+- A third large place was not in this pass. The machine's three heavy slots were shared by seven
+  agents, and each render waited for a slot. It came after: Wake Barrow, below.
 - The places are seen on a flat pad, and the two large ones and Orm's also on the real ground through
   their previews (poi_sheet, all views within budget: at most 1093 draws and 1.20 M primitives), not
   yet in the built world. The coordinator's w4096h build will lay their pads and paths.
 - The barrows and pounds are still small at a distance by nature. The weak ones left (score 3) are
   single stones and the hut, each with a touch.
+
+### The third large place: Wake Barrow (2026-10-02)
+
+The coordinator asked for a third large place of another kind than a mine or a monolith.
+- **Wake Barrow** (580, 2680, pad 42, level) is a long barrow on the spine of Hound Down, its
+  forecourt toward the Brow road.
+  - Seen from afar: seven oaks of 24-27 m on its back, the Wake Oaks, one planted for each
+    barrow-wife. The mound is 50 m long, 4.6 m high at its square face and slumps to a rounded tail.
+  - The face is walled in knapped flint between a crescent of six sarsens, the tallest 5.6 m either
+    side of a three-stone portal.
+  - The blocking stone has walked out of its socket and leans beside the way in, over the score it
+    left in the chalk.
+  - In the forecourt: the Crowles' lamp in its niche, three coffin-rests up the way from the road
+    (touches), and Tamsin Crowle's watch hut with her chest.
+  - After dark two wakeless stand at the tail (`core:encounter/wake_barrow`).
+- Inside is `core:interior/wake_barrow_crypt` (crypt, seed 2204, 9 written rooms, about 14.5 m of
+  descent, plus the drop, the secret and the barred way back): the passage, the side cists, a stair,
+  the wake hall with the dead on its benches, the washing pool (an underground lake), the root (a
+  collapsed shaft where an oak's root broke the roof and down wolves come in), the ossuary, the
+  barrow-wife's hall, and the boss arena.
+  - The foes are the new `core:enemy/wakeless` (the Ash Winter's unwaked dead, light and chilling),
+    hedge-wights and down wolves.
+  - The boss is `core:boss/barrow_wife`, Ebba Crowle, with a crook. At half health she blows on the
+    dead lamp: a frost burst that raises the wakeless.
+  - The loot is the Barrow-Wife's Beads (an amulet, resist frost) and a rich chest.
+  - The secret room holds Ebba's wake-tally, the names she sat with. Two more notes are in the
+    passage and the ossuary.
+- Quest **The Long Wake** from Tamsin Crowle: bring up Ebba's lamp, then relight it below and let
+  the stone go back, take her to the Wardens' Roll, or keep her wake in the forecourt. There are two
+  rumours.
+- Track: an atlas track (`core:poi/wake_barrow` to Pilgrim's Ash) leaves the Brow road west of the
+  Last Look and climbs about 150 m north to the forecourt. Routed with `worldgen.roads.plan_roads`
+  on the runtime heights with its parent: 706 m, most of it the shared trunk. Its own part has a
+  p95 grade of 0.04 and a max of 0.07; the steepest grade, 0.41, is on the parent's trunk.
+  `test_atlas`, `test_pad_dams` and `test_roads`: 48 passed, 4 skipped. It holds its `visible_from`
+  line from the Last Look by the game's sight model on the current heights.
+- **The Hum Stone's view:** no sightline was added. It already has three authored lines (Rookdown,
+  Rook Mill and the Last Field). The builder honours a line by notching the land
+  (`geography.honour_sightlines`) and keeping rock out of its corridor (`crags`). The tree scatter
+  (`cells.scatter`) does not read the lines, so a sightline cannot clear the hawthorn and oak
+  between the stone and its roads. Clearing them would be a world-builder change: a tree keep-out
+  along the sightline corridors.
+- **Seen and measured:**
+  - site_review renders outside (flat pad) and every room inside, and the shots plan at eye height
+    from the Brow road (150-160 m), from 250 m east and north-west, and in the forecourt
+    (`docs/review/world_life/hearthvale/phase2_wake_barrow.jpg`).
+  - What the renders changed:
+    - The mound was a smooth half-pipe. It is now slumped and lumpy, with a broad crown and long feet.
+    - The sarsens were white pills. They are now thick grey slabs with sloped crowns.
+    - The crypt first read as the tan cave. It is now cool chalk-grey, lit by candles and daylight.
+    - The builder first faced the barrow side-on to the road. It now faces the track.
+    - The oaks were the scatter's size and lost among the down's oaks. They are now 24-27 m, twice
+      any oak round them.
+  - From the road at 150 m the oak clump stands over the forecourt on the skyline. The old build's
+    scatter oaks near the road still frame and partly hide it. From 250 m east, Hound Down's own
+    flank hides it.
+  - `region_check.py hearthvale --godot --edited core:poi/wake_barrow`: PASS, 88 draws and 87 k
+    triangles, nothing floating, buried, sunk or on a road.
+    - The oaks are seated by their crown's middle on the barrow's own turf, because the seat audit
+      tests support there.
+    - The seat audit counts 11 overlaps, all of them the seven oak crowns sharing their boxes, as a
+      clump does. The check does not fail on overlaps.
+  - `./run.sh test --filter=test_books,test_poi_encounters,test_sites_hearthvale,test_site_interiors_walk,test_pois,test_poi_preview,objects_seated_hearthvale`:
+    61 tests, 0 failed.
+    - `test_sites_hearthvale` now walks the crypt too.
+    - `test_site_interiors_walk` reached all 10 of the crypt's rooms on its seed.
+    - test_poi_encounters has a `WHAT_STANDS` row for Wake Barrow (a shared file: one row).
+  - `./run.sh quests --only=the_long_wake`: 1 of 1 quests end every way they can, 3 of 3 walks.
+  - `softlock_check.py`: 140 quests, 0 findings.
+  - The WORLD_LIFE §6 pytest files: 8 passed.

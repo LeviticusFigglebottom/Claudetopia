@@ -3230,14 +3230,14 @@ static func wake_barrow(d: PoiDressing) -> void:
 		var v := k.rng.randf_range(-0.2, 0.2)
 		oak_at.append(mc + front * uu + side * v * hw)
 	for p in oak_at:
-		# the tallest of the downs' oaks, grown on for centuries: twice the height of any oak round them
+		# the tallest of the downs' oaks, grown on for centuries: twice the height of any oak on the down
 		var oak := k.tree("oak", 2 + k.rng.randi_range(0, 1))
 		if oak == "":
 			oak = k.tree("oak")
 		if oak == "":
 			continue
 		await k.step()
-		var sc := k.rng.randf_range(1.7, 1.95)
+		var sc := k.rng.randf_range(2.0, 2.25)
 		var node := k.place(oak, k.on_ground(p.x, p.y, _long_mound_y(p - mc, front, lf, lb, wf, wb, hf, hb)), 0.0, sc, true,
 				Vector3.ZERO, true)
 		if node == null:
