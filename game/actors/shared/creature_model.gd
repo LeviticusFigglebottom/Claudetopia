@@ -13,9 +13,9 @@ extends Node3D
 ##   on the spot it steps round (Turn_L90/R90), as HorseModel does.
 ## * The body, its LOD1 and its LOD2 are drawn each in its own band of distance.
 ##
-## Which model a foe wears is its def's `body_variant` (MODELS); the def's `scale` over the scale
-## the forge built it for (its meta's `def_scale`) sizes it, so a matriarch at 1.3 is the
-## leech-hound's own body grown.
+## Which model a foe wears is its def's `body_variant` (MODELS, or its KIN's if the forge has not
+## made its own); the def's `scale` over the scale the forge built it for (its meta's `def_scale`)
+## sizes it.
 
 signal clip_event(event_name: String)
 signal clip_finished(clip: String)
@@ -24,11 +24,12 @@ const ROOT := "res://assets/models/creatures/"
 ## body_variant -> the forged model's folder and name under ROOT.
 const MODELS := {
 	"wolf": "down_wolf", "crag_wolf": "crag_wolf", "thornhound": "thornhound", "leech_hound": "leech_hound",
+	"old_grey_bitch": "old_grey_bitch",
 	"boar": "bristleback", "drake": "gutter_drake", "sallowjaw": "sallowjaw", "weaver": "weaver",
 	"stone": "stone_thrall", "kingbone": "stone_thrall_king", "treant": "warden", "wisp": "wisp",
 }
 ## A variant whose own model is not built wears its kin's.
-const KIN := {"kingbone": "stone_thrall"}
+const KIN := {"kingbone": "stone_thrall", "old_grey_bitch": "leech_hound"}
 ## What a body with a crawling limb gone plays for what the game asks (a thrall with no arms and
 ## one leg comes on along the ground).
 const CRAWLING := {"Idle": "Crawl_Idle", "Idle_Combat": "Crawl_Idle", "Walk": "Crawl", "Trot": "Crawl", "Run": "Crawl",
@@ -197,8 +198,8 @@ func _set_up_lods() -> void:
 		m.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 
 
-## A def whose tint is not the one the forge painted (the meta's `tint`) -- the Old Grey Bitch is
-## the leech-hound's body greyed -- has the albedo multiplied toward it.
+## A def whose tint is not the one the forge painted (the meta's `tint`) -- a body worn by its kin
+## (KIN) -- has the albedo multiplied toward it.
 func _tint() -> void:
 	if not meta.has("tint"):
 		return

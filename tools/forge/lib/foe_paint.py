@@ -46,6 +46,8 @@ COATS: Dict[str, Dict[str, np.ndarray]] = {
               "guard": C(0.12, 0.09, 0.12), "iris": C(0.86, 0.80, 0.42), "ring": C(0.12, 0.09, 0.13),
               "spot": C(0.62, 0.48, 0.30)},
 }
+# what age and old wounds lay over any coat: the grey of an old muzzle, the pale of healed scars
+OLD = {"grey": C(0.64, 0.62, 0.60), "scar": C(0.72, 0.60, 0.60)}
 FIXED = {"nose": C(0.06, 0.05, 0.05), "lips": C(0.07, 0.05, 0.05), "mouth": C(0.42, 0.14, 0.13),
          "teeth": C(0.88, 0.84, 0.72), "pupil": C(0.02, 0.015, 0.01), "nail": C(0.12, 0.10, 0.09),
          "pad": C(0.10, 0.09, 0.09), "mud": C(0.30, 0.25, 0.19)}
@@ -134,6 +136,14 @@ def canid_paint(spec, field: sdf.SampledField):
             # the guard hairs' black tips, grizzling the saddle and the ruff
             tips = paint.smoothstep(0.62, 0.85, strand) * np.clip(R["back"] + 0.6 * R["ruff"], 0, 1)
             c = paint.mix(c, pal["guard"], 0.45 * tips)
+        if st.age > 0:
+            # gone grey: the muzzle and the brow frosted, the face grizzled, grey hairs through the coat
+            a = st.age
+            frost = np.clip(R["muzzle"] + 0.3 * R["face"] * (1.0 - R["eye_ring"]) + 0.3 * R["throat"], 0, 1)
+            c = paint.mix(c, OLD["grey"], 0.7 * a * frost * (0.6 + 0.4 * strand))
+            c = paint.mix(c, OLD["grey"], 0.35 * a * paint.smoothstep(0.55, 0.85, strand) * (1.0 - R["paw"]))
+        if st.scars > 0:
+            c = paint.mix(c, OLD["scar"], 0.85 * bb.scars(skel, st, P))
         # what every dog has: the pads and nails dark, the nose and lips black, the mouth red, the teeth
         c = paint.mix(c, FIXED["pad"], R["paw"] * paint.smoothstep(0.1, -0.6, up))
         c = paint.mix(c, FIXED["nail"], R["nail"])
@@ -163,15 +173,18 @@ def canid_paint(spec, field: sdf.SampledField):
             rough = 0.42 + 0.12 * n1.fbm(P, freq=20.0 / s, octaves=2)
         if barky:
             rough = 0.88 - 0.25 * R["thorn"]
+        if st.scars > 0:
+            rough = rough + 0.2 * bb.scars(skel, st, P)
         rough = rough - 0.45 * R["nose"] - 0.75 * R["eye"] - 0.3 * R["teeth"] - 0.35 * R["mouth"]
         return np.stack([0.5 + 0.5 * occ, np.clip(rough, 0.06, 0.97), np.zeros(len(P))], axis=1)
 
     def height(P, nrm):
         clump, strand = grain(P, nrm)
         R = bb.regions(skel, P, st, fine=False)
+        scar = bb.scars(skel, st, P) if st.scars > 0 else 0.0
         if sleek:
             ring = 0.5 + 0.5 * np.sin(P[:, 1] * 140.0 / s + 2.0 * n1.at(P, 12.0 / s))
-            return 0.25 * ring * (1.0 - R["face"]) + 0.1 * n2.fbm(P, freq=60.0 / s, octaves=2)
+            return 0.25 * ring * (1.0 - R["face"]) + 0.1 * n2.fbm(P, freq=60.0 / s, octaves=2) + 0.6 * scar
         if barky:
             F = bb._cells(P * np.array([1.0, 0.6, 1.0]), 15.0 / s, st.seed)
             ridge = 0.5 + 0.5 * np.sin(P[:, 2] * 220.0 / s + 4.0 * n1.at(P, 30.0 / s))

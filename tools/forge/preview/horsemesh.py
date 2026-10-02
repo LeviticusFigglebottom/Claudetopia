@@ -116,6 +116,7 @@ def main(argv=None) -> int:
     ap.add_argument("--deer", action="store_true")
     ap.add_argument("--sheep", action="store_true")
     ap.add_argument("--stag", action="store_true", help="with --deer: the ruff and the antlers")
+    ap.add_argument("--hart", action="store_true", help="the grey hart: the old stag, his rack and his coat")
     ap.add_argument("--px", type=int, default=560)
     ap.add_argument("--zoom", type=float, default=1.0)
     ap.add_argument("--paint", action="store_true", help="colour the body with the coat's albedo")
@@ -129,7 +130,15 @@ def main(argv=None) -> int:
         scene = sb.sheep_scene(sk)
         a.no_tack = True
     else:
-        if a.deer:
+        if a.hart:
+            a.deer = True
+            from forge.lib import deer_body as db
+            from forge import horse_forge as hf0
+            sk = QuadSkeleton(db.HART)
+            hst = hf0.hart_style()
+            scene = db.deer_scene(sk, hst)
+            scene.prims[-1:-1] = db.antler_scene(sk, hst.points).prims
+        elif a.deer:
             from forge.lib import deer_body as db
             sk = QuadSkeleton(db.RED)
             scene = db.deer_scene(sk, db.DeerStyle(ruff=1.0 if a.stag else 0.0))
@@ -142,7 +151,11 @@ def main(argv=None) -> int:
     v, q = sdf.mesh_from_scene(scene, a.spacing, grid_out=grid)
     print("body %d verts, %d quads, %.1fs" % (len(v), len(q), time.time() - t0))
     meshes = [(v, tris_of(v, q), COLOURS["body"])]
-    if a.paint and not a.deer:
+    if a.paint and a.hart:
+        from forge import horse_forge as hf
+        albedo, _, _ = hf.deer_paint(sk, sdf.SampledField.from_grid(*grid), hst, "hart")
+        meshes = [(v, tris_of(v, q), albedo(v, sdf.vertex_normals(v, q)) * 1.15)]
+    elif a.paint and not a.deer:
         from forge import horse_forge as hf
         field0 = sdf.SampledField.from_grid(*grid)
         if a.sheep:

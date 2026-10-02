@@ -7,6 +7,7 @@ extends Node3D
 ##       --audio-driver Dummy --resolution 960x600 res://tools_gd/creature_review.tscn -- \
 ##       --foes=core:enemy/down_wolf,core:enemy/crag_wolf --out=<dir> [--clips=Attack_1,Death] [--frames=5] \
 ##       [--views=side,front,three_quarter,back,close] [--no-clips] [--lod=1]
+## A lead's body (Leads) is reviewed by `lead:<model>`, e.g. --foes=lead:grey_hart.
 ##
 ## Writes <out>/<foe>_<view>.png, <out>/<foe>_box_side.png (the placeholder), and
 ## <out>/<foe>_<clip>_<n>.png for each clip at `frames` points from its start to its end, and one
@@ -118,6 +119,9 @@ func _slug(id: String) -> String:
 
 
 func _review(id: String) -> void:
+	if id.begins_with("lead:"):
+		await _review_lead(id.substr(5))
+		return
 	var e := Enemy.new()
 	e.configure(id)
 	add_child(e)
@@ -160,6 +164,55 @@ func _review(id: String) -> void:
 		for c in clips:
 			var own := model.resolve(c)
 			if own.is_empty() or own != c:
+				continue
+			var length := model.clip_length(c)
+			for i in frames:
+				var t := length * float(i) / float(maxi(frames - 1, 1))
+				if bool((model.clip_data.get(c, {}) as Dictionary).get("loop", false)):
+					t = length * float(i) / float(frames)
+				model.anim_player.play(c)
+				model.anim_player.seek(t, true)
+				model.anim_player.pause()
+				_frame(e, clip_view, size)
+				await _shot("%s_%s_%d" % [slug, c, i], "%s %s t=%.2f" % [slug, c, t], model)
+	e.queue_free()
+	await get_tree().process_frame
+
+
+## A lead's body as Leads stands it (a HorseModel turned to face along -Z): "lead:grey_hart".
+func _review_lead(slug: String) -> void:
+	var e := Node3D.new()
+	e.name = "Lead_" + slug
+	add_child(e)
+	var pivot := Node3D.new()
+	pivot.rotation.y = PI
+	e.add_child(pivot)
+	var model := HorseModel.new()
+	model.model_path = "res://assets/models/creatures/%s/%s.glb" % [slug, slug]
+	pivot.add_child(model)
+	await get_tree().process_frame
+	if model.anim_player == null:
+		_lines.append("%s: NO MODEL" % slug)
+		e.queue_free()
+		return
+	if lod > 0:
+		for mi in model.find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			var n := String(m.name).to_lower()
+			m.visibility_range_begin = 0.0
+			m.visibility_range_end = 0.0
+			m.visible = n.ends_with("lod%d" % lod) or (n.contains("antler") and lod < 2)
+	model.set_process(false)
+	var size := _extent(model)
+	model.anim_player.play("Idle")
+	model.anim_player.seek(0.0, true)
+	model.anim_player.pause()
+	for v in views:
+		_frame(e, v, size)
+		await _shot("%s_%s" % [slug, v], "%s view %s" % [slug, v], model)
+	if with_clips:
+		for c in clips:
+			if not model.has_clip(c):
 				continue
 			var length := model.clip_length(c)
 			for i in frames:
@@ -222,7 +275,7 @@ func _frame(e: Node3D, view: String, size: Vector3) -> void:
 	_cam.look_at_from_position(eye, at, Vector3.UP)
 
 
-func _shot(name: String, label: String, model: CreatureModel) -> void:
+func _shot(name: String, label: String, model: Node3D) -> void:
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
@@ -231,11 +284,12 @@ func _shot(name: String, label: String, model: CreatureModel) -> void:
 
 
 ## The lowest point of the drawn body (its skeleton's bones; a foot through the floor reads < 0).
-func _lowest(model: CreatureModel) -> float:
-	if model.skeleton == null:
+func _lowest(model: Node3D) -> float:
+	var sk := model.get("skeleton") as Skeleton3D
+	if sk == null:
 		return 0.0
 	var low := INF
-	for i in model.skeleton.get_bone_count():
-		var p := model.skeleton.global_transform * model.skeleton.get_bone_global_pose(i).origin
+	for i in sk.get_bone_count():
+		var p := sk.global_transform * sk.get_bone_global_pose(i).origin
 		low = minf(low, p.y)
 	return low
