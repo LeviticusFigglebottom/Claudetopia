@@ -15538,8 +15538,11 @@ xvfb, before and after each change). What the renders showed, and what changed:
 - The ash drifts, ruts and grey furrows caught the sky. They are now matte.
 - The chalk face read as organ pipes. It is now a cut face under the turf.
 - The coordinator's look at the first captures:
-  - The approach shots stood inside the headframe and against the stone. Far eye-height shots were
-    added (`docs/review/world_life/hearthvale/`).
+  - The approach shots stood inside the headframe and against the stone. Eye-height shots were added
+    (`docs/review/world_life/hearthvale/phase2_eye_height.jpg`). From the Ashwell road, 157 m off,
+    the headframe and the tip-heaps stand on the skyline over the road. The Hum Stone shows between
+    the old build's trees at 125 m. From its two roads at 150 m those trees hide it: the Brow there is
+    wooded with the last build's scatter, which the next build clears only from the pad.
   - The shaft's lining was clean white block. It is now laid as the forts lay their stone
     (`site_stone.gdshader`: grime from the ground, moss in the joints).
   - The headframe is now 13.5 m.
@@ -15565,9 +15568,16 @@ xvfb, before and after each change). What the renders showed, and what changed:
   its boss in its arena, and left): 3 of 3. Every seed's walk was scanned before choosing.
 - `./run.sh test --filter=test_poi_preview,test_pois,objects_seated_hearthvale,test_sites_hearthvale,test_poi_people`:
   42 tests, 0 failed.
+- After merging main: `--filter=test_books,test_poi_encounters,test_sites_hearthvale,test_pois,test_poi_preview`
+  ran 57 tests, 0 failed.
+  - The two large places have their `WHAT_STANDS` rows in test_poi_encounters (a shared test file:
+    two rows added).
+  - Two notes now have real descriptions.
+  - `region_check --godot` still passes. Two overlaps remain at Bell Meadow and the Swallet, and the
+    check does not fail on overlaps.
 - `./run.sh quests --only=the_night_shift,the_stones_note`: 2 of 2 quests end every way they can,
   6 of 6 walks, 0 errors.
-- `tools/quests/softlock_check.py`: 124 quests, 0 findings.
+- `tools/quests/softlock_check.py`: 136 quests after the merge, 0 findings.
 - The two WORLD_LIFE §6 pytest files: 8 passed.
 
 **Not done:**
