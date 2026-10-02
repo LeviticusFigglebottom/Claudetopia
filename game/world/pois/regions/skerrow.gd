@@ -2087,14 +2087,14 @@ static func briars_end(d: PoiDressing) -> void:
 	var out := across                      # the side the wall faces, toward the briar
 	# the briar: low dark thorny mounds coming up to the gap on the out side and thinning to nothing
 	var thorn := m.begin()
-	for i in 22:
-		var p := out * k.rng.randf_range(6.0, 18.0) + along * k.rng.randf_range(-16.0, 16.0)
+	for i in 46:
+		var p := out * k.rng.randf_range(5.0, 19.0) + along * k.rng.randf_range(-17.0, 17.0)
 		if absf(p.dot(along)) < 7.0 and p.dot(out) < 11.0:
 			continue     # the gap itself is bare
-		var r := k.rng.randf_range(1.4, 2.8)
-		m.ellipsoid(thorn, k.on_ground(p.x, p.y, -0.1), Vector3(r, k.rng.randf_range(0.6, 1.1), r * 0.85), Basis(Vector3.UP, k.rng.randf() * TAU))
+		var r := k.rng.randf_range(1.6, 3.0)
+		m.ellipsoid(thorn, k.on_ground(p.x, p.y, -0.2), Vector3(r, k.rng.randf_range(1.2, 2.1), r * 0.85), Basis(Vector3.UP, k.rng.randf() * TAU))
 	await k.step()
-	m.commit(thorn, PoiKit.painted(5, {"base": "#3e4a2a", "accent": "#5a3b2c", "grout": "#232b17", "unit": 0.18}, 0.85, 0.9), "Briar", true)
+	m.commit(thorn, PoiKit.painted(5, {"base": "#1f2815", "accent": "#3a2419", "grout": "#10150b", "unit": 0.15}, 0.9, 0.9), "Briar", true)
 	var vine := k.flora("briar_vine")
 	if vine != "" and not k.far:
 		var vines: Array = []
@@ -2102,7 +2102,7 @@ static func briars_end(d: PoiDressing) -> void:
 			var p := out * k.rng.randf_range(7.0, 17.0) + along * k.rng.randf_range(-15.0, 15.0)
 			if absf(p.dot(along)) < 7.0 and p.dot(out) < 11.0:
 				continue
-			vines.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.0), k.rng.randf() * TAU, k.rng.randf_range(1.2, 1.8)))
+			vines.append(PoiKit.transform_at(k.on_ground(p.x, p.y, 0.0), k.rng.randf() * TAU, k.rng.randf_range(2.0, 3.0)))
 		await k.step()
 		k.scatter(vine, vines, false)
 	# the boulders at the wall's ends, and the wall of bones between them
@@ -2261,17 +2261,25 @@ static func oskel_rake(d: PoiDressing) -> void:
 	var L := 21.0
 	var spoil := m.begin()
 	for s in [-1.0, 1.0]:
-		_tip(d, spoil, -along * L + across * 2.6 * float(s), along, L * 2.0, 3.0, 1.4)
+		_tip(d, spoil, -along * L + across * 3.3 * float(s), along, L * 2.0, 4.4, 1.2)
 	var cut := m.begin()
 	for i in 14:
 		var t := -L + float(i) * (L * 2.0 / 13.0)
 		var p := along * t
-		m.block(cut, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along)), k.on_ground(p.x, p.y, 0.02)), Vector3(1.6, 0.04, L * 2.0 / 13.0 + 0.1))
+		m.block(cut, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along)), k.on_ground(p.x, p.y, 0.02)), Vector3(2.3, 0.04, L * 2.0 / 13.0 + 0.1))
 	await k.step()
 	_ground_mesh(d, spoil, PoiKit.painted(5, DEAD_SPOIL, 0.85, 0.9), "RakeBanks", true)
 	m.commit(cut, PoiKit.plain(Color(0.12, 0.11, 0.1), 0.95), "TheCut", true)
 	if k.far:
 		return
+	var scree := k.rock("scree")
+	if scree != "":
+		var lumps: Array = []
+		for i in 26:
+			var p := along * k.rng.randf_range(-L, L) + across * (k.rng.randf_range(2.2, 5.0) * (1.0 if i % 2 == 0 else -1.0))
+			lumps.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.05), k.rng.randf() * TAU, k.rng.randf_range(0.15, 0.32)))
+		await k.step()
+		k.scatter(scree, lumps, false)
 	# the winding-stone at the head: a squat pillar, its groove, and the rope's last turn
 	var head := -along * (L + 2.5)
 	var st := m.begin()
