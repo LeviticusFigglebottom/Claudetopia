@@ -194,6 +194,19 @@ def sightline_claims(pois: list, pad_targets: list) -> list:
     return out
 
 
+def sightline_names(pois: list, pad_targets: list) -> list:
+    """"<vantage> -> <target>" for each of sightline_claims' lines, in the same order."""
+    by_id = {str(p["id"]): p for p in pad_targets}
+    out = []
+    for p in pois:
+        if str(p.get("id", "")) not in by_id:
+            continue
+        for vantage in p.get("visible_from", []):
+            if str(vantage) in by_id:
+                out.append("%s -> %s" % (str(vantage).split("/")[-1], str(p["id"]).split("/")[-1]))
+    return out
+
+
 def pad_fingerprint(pad_targets: list, fixed_levels: dict | None = None) -> str:
     """A checksum of where every pad is, how big, at what level if the atlas says, and what for."""
     fixed = fixed_levels or {}
@@ -949,6 +962,14 @@ def build(args) -> dict:
         print("[world] out of the water: %d props and trees (%s)" % (
             sum(wet.values()), ", ".join("%s %d" % (a.split("/")[-2], c) for a, c in
                                          sorted(wet.items(), key=lambda kv: -kv[1])[:8]) or "none"), flush=True)
+        # and no tree stands into an authored sightline between its two pads, as no rock does
+        # (worldgen.trees.clear_sightlines): the trees were what hid the Hum Stone from its mill
+        cleared = TR.clear_sightlines(buckets, grid, H, sightline_claims(pois, pad_targets), SIGHT.constants())
+        line_names = sightline_names(pois, pad_targets)
+        most = sorted(((n, nm) for n, nm in zip(cleared["by_claim"], line_names) if n), reverse=True)
+        print("[world] out of the sightlines: %d trees from %d of %d lines (most: %s)" % (
+            cleared["trees"], len(most), len(line_names),
+            ", ".join("%s %d" % (nm, n) for n, nm in most[:6]) or "none"), flush=True)
         # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
         seated = TR.seat(buckets, grid, H)
         print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (

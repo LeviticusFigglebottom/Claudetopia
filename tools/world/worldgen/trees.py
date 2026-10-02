@@ -110,3 +110,121 @@ def floating(H: np.ndarray, grid: Grid, rows: list, pts: np.ndarray) -> np.ndarr
     wz = arr[:, 2][:, None] + sc * (-pts[None, :, 0] * s + pts[None, :, 2] * c)
     ground = sample_bilinear(H, grid, wx.ravel(), wz.ravel()).reshape(wx.shape)
     return np.max(arr[:, 1][:, None] + sc * pts[None, :, 1] - ground, axis=1)
+
+
+# --- the authored sightlines ----------------------------------------------------------------------
+
+## How far either side of an authored sightline's line a tree is judged: its trunk this near the
+## line puts its crown (a downs oak's is 8-12 m across) into the view. Narrower than the rock's
+## corridor (crags.SIGHTLINE_CORRIDOR_M, 30 m), which keeps whole outcrops out of a ray's way; a
+## tree is a single crown, and a 24 m lane through a wood is already a ride, not a clearing.
+SIGHT_TREE_CORRIDOR_M = 12.0
+## and how far under the game's clearance (tools/sightlines.py CLEARANCE_M) under the ray its top
+## must stay to be left standing
+SIGHT_TREE_SPARE_M = 0.5
+## the height of a tree the contact table does not know, at scale one
+TREE_HEIGHT_DEFAULT_M = 10.0
+
+
+class _Lines:
+    """The authored sightlines, prepared once: each from its vantage's eye (EYE_M over the ground)
+    to its landmark's top (LANDMARK_M of its kind over the ground), judged from the vantage's pad
+    edge to the target's, which is where the trees between them stand (the pads themselves are
+    clear already)."""
+
+    def __init__(self, H: np.ndarray, grid: Grid, claims: list, k: dict):
+        rows = []
+        for (ax, az), (bx, bz), kind, ra, rb in claims:
+            dx, dz = bx - ax, bz - az
+            ln = math.hypot(dx, dz)
+            if ln < 1.0 or ln > k["MAX_SIGHT_M"]:
+                rows.append(None)
+                continue
+            eye = float(sample_bilinear(H, grid, np.array([ax]), np.array([az]))[0]) + k["EYE_M"]
+            top = float(sample_bilinear(H, grid, np.array([bx]), np.array([bz]))[0]) \
+                + k["LANDMARK_M"].get(kind, k["LANDMARK_DEFAULT_M"])
+            rows.append((ax, az, dx, dz, ln, eye, top, float(ra) / ln, 1.0 - float(rb) / ln))
+        self.rows = rows
+        self.clear = float(k["CLEARANCE_M"])
+
+    def blocking(self, x: np.ndarray, z: np.ndarray, ground: np.ndarray, top: np.ndarray, corridor_m: float):
+        """(bool [n] of the trees that stand into some line, int [n_claims] of how many each line
+        took): a tree blocks a line when its trunk is within `corridor_m` of it between the two
+        pads, its top reaches within the clearance (and SIGHT_TREE_SPARE_M) of the ray over it,
+        and the ground there is under the ray (where the land itself stands into the line the line
+        is the land's to answer, and the tree is left)."""
+        hit = np.zeros(x.shape, dtype=bool)
+        per = np.zeros(len(self.rows), dtype=np.int64)
+        for i, row in enumerate(self.rows):
+            if row is None:
+                continue
+            ax, az, dx, dz, ln, eye, tt, t0, t1 = row
+            # a cheap box test first: most lines are nowhere near most trees
+            lo_x, hi_x = min(ax, ax + dx) - corridor_m, max(ax, ax + dx) + corridor_m
+            lo_z, hi_z = min(az, az + dz) - corridor_m, max(az, az + dz) + corridor_m
+            box = (x >= lo_x) & (x <= hi_x) & (z >= lo_z) & (z <= hi_z)
+            if not box.any():
+                continue
+            idx = np.nonzero(box)[0]
+            t = ((x[idx] - ax) * dx + (z[idx] - az) * dz) / (ln * ln)
+            d = np.hypot(x[idx] - (ax + t * dx), z[idx] - (az + t * dz))
+            line = eye + (tt - eye) * t - self.clear - SIGHT_TREE_SPARE_M
+            into = (d < corridor_m) & (t > t0) & (t < t1) & (top[idx] > line) & (ground[idx] <= line)
+            if into.any():
+                fresh = into & ~hit[idx]
+                per[i] += int(fresh.sum())
+                hit[idx[into]] = True
+        return hit, per
+
+
+def clear_sightlines(buckets: dict, grid: Grid, H: np.ndarray, claims: list, k: dict, table: dict | None = None,
+                     corridor_m: float = SIGHT_TREE_CORRIDOR_M) -> dict:
+    """Take out of `buckets` (in place) every tree that would stand into an authored sightline:
+    the build already cuts the land under a line (geography.honour_sightlines) and keeps rock out
+    of its corridor (crags.ceiling_under_lines), and the trees were the last thing between the Hum
+    Stone and the mill that is said to see it. `claims` are build_world.sightline_claims, `k` the
+    game's sight constants (tools/sightlines.py `constants`). A tree's height is the contact table's
+    (tree_contacts.json) times its scale. Returns {"trees": taken, "by_claim": [taken per claim, in
+    `claims` order], "by_asset": {asset: taken}}."""
+    table = load_table() if table is None else table
+    lines = _Lines(H, grid, claims, k)
+    out = {"trees": 0, "by_claim": [0] * len(claims), "by_asset": {}}
+    if not claims:
+        return out
+    per_claim = np.zeros(len(claims), dtype=np.int64)
+    for key in list(buckets):
+        by_asset = buckets[key]
+        for asset in list(by_asset):
+            if "/trees/" not in asset:
+                continue
+            rows = by_asset[asset]
+            if not len(rows):
+                continue
+            name = os.path.splitext(os.path.basename(asset))[0]
+            height = table[name][1] if name in table else TREE_HEIGHT_DEFAULT_M
+            if isinstance(rows, Rows):
+                xz = rows.xz()
+                scale = rows.column(4, "scale")
+            else:
+                xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64).reshape(-1, 2)
+                scale = np.array([float(r[4]) for r in rows], dtype=np.float64)
+            ground = sample_bilinear(H, grid, xz[:, 0], xz[:, 1]).astype(np.float64)
+            hit, per = lines.blocking(xz[:, 0], xz[:, 1], ground, ground + height * scale, corridor_m)
+            if not hit.any():
+                continue
+            per_claim += per
+            n = int(hit.sum())
+            out["trees"] += n
+            out["by_asset"][asset] = out["by_asset"].get(asset, 0) + n
+            if isinstance(rows, Rows):
+                rows.keep(~hit)
+                if not len(rows):
+                    del by_asset[asset]
+                continue
+            keep = [r for r, w in zip(rows, hit) if not w]
+            if keep:
+                by_asset[asset] = keep
+            else:
+                del by_asset[asset]
+    out["by_claim"] = per_claim.tolist()
+    return out
