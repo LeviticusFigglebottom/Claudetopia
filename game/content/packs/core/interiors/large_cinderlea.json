@@ -49,6 +49,7 @@
           "kind": "note",
           "room": "secret",
           "book": "core:book/undertone_knights_last",
+          "item": "core:item/undertone_knights_page",
           "name": "a knight's last page, folded in a gauntlet"
         },
         {
@@ -171,6 +172,7 @@
           "kind": "note",
           "room": "loam_store",
           "book": "core:book/founders_last_tally",
+          "item": "core:item/founders_tally_board",
           "name": "a founder's tally chalked on a board"
         },
         {
@@ -289,6 +291,7 @@
           "kind": "note",
           "room": "secret",
           "book": "core:book/chalkwatch_last_report",
+          "item": "core:item/chalkwatch_report",
           "name": "the captain's last report, never sent"
         },
         {

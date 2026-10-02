@@ -10,5 +10,19 @@
       "no_sale"
     ],
     "description": "A pilgrim's hand-bell of bright tin from the Sunk Plaza's fountain: the one more bell than there were pilgrims. Its clapper is untied and it does not ring, however you shake it. There is no name scratched on it, where every other bell in the basin has one."
+  },
+  {
+    "id": "core:item/isse_offering_slate",
+    "name": "A Slate Under the Jar",
+    "category": "book",
+    "weight": 1.0,
+    "value": 5,
+    "reads": "core:book/isse_cistern_offering",
+    "tags": [
+      "book",
+      "pilgrims",
+      "cinderlea"
+    ],
+    "description": "A roof-slate from the cistern's fallen vault, its face chalked over in a pilgrim's hand and, lower and smaller, in another. It was left weighted under an offering jar, and the jar's ring is still on it."
   }
 ]

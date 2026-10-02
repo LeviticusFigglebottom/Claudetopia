@@ -48,6 +48,7 @@
           "kind": "note",
           "room": "offering_stone",
           "book": "core:book/isse_cistern_offering",
+          "item": "core:item/isse_offering_slate",
           "name": "a slate under the jar"
         },
         {

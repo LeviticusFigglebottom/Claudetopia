@@ -15465,3 +15465,5 @@ were the review camera inside rock at the drop mouths).
   past_pad 11 (the long places), road_through 24 (the atlas's roads);
 - weakest left: turning_cairn, the_one_poppy, bell_wood_stone;
 - shared edits: `world_streamer.gd`, `site_dress.gd`, rows in `test_poi_encounters.gd`.
+- every Cinderlea book has a copy to take (the notes name their item); test_books and
+  test_poi_encounters are clean for Cinderlea's rows, other regions' rows still fail on this merge.
