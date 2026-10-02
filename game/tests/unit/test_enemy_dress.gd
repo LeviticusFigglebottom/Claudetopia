@@ -141,7 +141,8 @@ func test_the_bosses_stand_above_their_people_and_are_struck_where_they_stand() 
 		# its capsule (what a blow and a body strike) is the body it is drawn as
 		var capsule := float(def.get("height", 1.8))
 		assert_true(absf(capsule - tall) < tall * 0.18, "%s: capsule %.2f m for a body %.2f m tall" % [id, capsule, tall])
-		assert_gt(float(def.get("radius", 0.35)), 0.34 * float(def.get("scale", 1.0)) * 0.85,
+		# a person's body is about 0.27 m round from its middle to its arm, at the size it is drawn
+		assert_gt(float(def.get("radius", 0.35)), 0.27 * float(def.get("scale", 1.0)) * float(def.get("breadth", 1.0)),
 				"%s is as broad to a blow as it is drawn" % id)
 
 
