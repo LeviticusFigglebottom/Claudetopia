@@ -1,0 +1,379 @@
+[
+  {
+    "id": "core:interior/name_wifes_hollow",
+    "name": "The Name-Wife's Hollow",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/name_wifes_hollow",
+    "danger": 3,
+    "formed_by": "water",
+    "resident": "the Name-Wife, the marsh-hag who takes names for cures, her leech-hounds, the wisps that are her lamps, and the forgotten: the drowned whose names she took before they were ever sung",
+    "story": "The water that weeps off the South Scarp went into the rock first, and hollowed it, and came out at the foot; the Name-Wife came in by the water's door. Every name she has taken hangs in here on a cord of rush, knotted in the weave of the family it came from, in curtains down the walls and over the black water at the bottom, where she sits and knots and listens to them not being said.",
+    "unique_object": "the pale fungus on every wall and ledge that the reedfolk call the Wife's candles, lit in the dark like a crowd of faces turned toward whoever comes in, and the hank of names on her belt",
+    "site": {
+      "kind": "cave",
+      "seed": 6302,
+      "region": "core:region/sedgemire",
+      "size": "large",
+      "boss": "core:boss/the_name_wife",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/leech_hound",
+          "core:enemy/bog_drowned"
+        ],
+        "archers": [
+          "core:enemy/wisp"
+        ],
+        "heavy": [
+          "core:enemy/bog_drowned"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#6f7468",
+          "#454a42",
+          "#8d9283"
+        ],
+        "lights": [
+          "fungus",
+          "torch"
+        ],
+        "light_colour": "#9fe0cf"
+      },
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_weep",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "cord_gallery",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "fungus_grotto"
+        },
+        {
+          "id": "the_den",
+          "role": "chamber",
+          "size": "medium"
+        },
+        {
+          "id": "daylight",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "daylight_shaft"
+        },
+        {
+          "id": "low_water",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.0
+        },
+        {
+          "id": "the_forgotten",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "basket",
+          "note": "an eel-basket somebody brought to pay with, as well as a name"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "note",
+          "room": "cord_gallery",
+          "book": "core:book/name_wifes_weaves",
+          "name": "a dyer's tally of weaves",
+          "item": "core:item/note_name_wifes_weaves"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/name_wifes_first_cord",
+          "name": "the first cord",
+          "item": "core:item/note_name_wifes_first_cord"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/the_sounding_undercroft",
+    "name": "The Sounding's Undercroft",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_sounding",
+    "danger": 3,
+    "formed_by": "builder",
+    "door_at": "core:poi/the_sounding",
+    "resident": "the Flood-Callers' choir, the drowned they have called up and keep, and Ama Lissa, the Sounder, at the well with the bell-rope in her hands",
+    "story": "Under the platform the Builders cut halls down into the peat and lined them with their black stone, and the marsh came in through the floor and stood in the lowest of them as a black pool that has no bottom anybody has found. The Callers call it the well. They have run the bell-rope down to it from the tower, through a shaft in the vault, and the Sounder sits at the edge with the rope across her knees and her feet in the water, waiting for the tide.",
+    "unique_object": "the bell-rope coming down through a shaft in the vault into the black water of the well, plaited of rush and hair and knotted its whole length in the bittern's loops of the Lissa weave",
+    "site": {
+      "kind": "ruined_hall",
+      "seed": 7319,
+      "region": "core:region/sedgemire",
+      "size": "large",
+      "boss": "core:boss/ama_lissa_the_sounder",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/smuggler_stash",
+      "foes": {
+        "rank": [
+          "core:enemy/ebb_hand",
+          "core:enemy/bog_drowned"
+        ],
+        "archers": [
+          "core:enemy/flood_caller"
+        ],
+        "heavy": [
+          "core:enemy/bog_drowned"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#66706b",
+          "#414946",
+          "#7e8882"
+        ],
+        "lights": [
+          "daylight",
+          "brazier",
+          "candles"
+        ],
+        "light_colour": "#ffc27a",
+        "brightness": 1.3
+      },
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "lantern_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ossuary",
+          "note": "the cut lanterns racked in the Builders' niches, unlit, nine to a niche"
+        },
+        {
+          "id": "callers_sleep",
+          "role": "camp",
+          "size": "medium"
+        },
+        {
+          "id": "drowned_floor",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "the_rope_shaft",
+          "role": "chamber",
+          "size": "large"
+        },
+        {
+          "id": "lantern_store",
+          "role": "treasure",
+          "size": "small"
+        },
+        {
+          "id": "the_choir",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "ledge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "lantern_hand",
+          "note": "a Caller's dark lantern, its shutter closed"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "note",
+          "room": "callers_sleep",
+          "book": "core:book/sounding_tide_table",
+          "name": "the Callers' tide-table",
+          "item": "core:item/note_sounding_tide_table"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/ama_lissas_knots",
+          "name": "a length of knotted rope",
+          "item": "core:item/note_ama_lissas_knots"
+        }
+      ]
+    }
+  },
+  {
+    "id": "core:interior/saltgate_culverts",
+    "name": "The Saltgate Culverts",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_saltgate",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "the Saltgate's drowned garrison below stairs, the sallowjaws that came up the sluice with the sea, and Old Mudmouth in the sump under the windlass",
+    "story": "Under the keep the Guild cut its works into the headland: the guardroom and the stores, the tithe-room, the windlass chamber over the sluice-race, and below it all the culverts where the Outfall goes out to the sea, and the sump where the race turns. The sea came in through the race. It is still in, to the knee in the upper rooms and over the head in the sump, and what came up with it has made the sump its own.",
+    "unique_object": "the Guild's windlass, a drum of oak as tall as a man on an iron axle, its chain run down into the black water of the sump and snapped",
+    "site": {
+      "kind": "keep",
+      "seed": 9123,
+      "region": "core:region/sedgemire",
+      "size": "large",
+      "boss": "core:boss/old_mudmouth",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/tithe_strongbox",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/bog_drowned",
+          "core:enemy/sallowjaw"
+        ],
+        "archers": [
+          "core:enemy/wisp"
+        ],
+        "heavy": [
+          "core:enemy/bog_drowned"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#7a7d76",
+          "#4c504c",
+          "#8f938a"
+        ],
+        "lights": [
+          "torch",
+          "brazier"
+        ],
+        "light_colour": "#ffb25c"
+      },
+      "rooms": [
+        {
+          "id": "mouth",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "guardroom",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "barracks"
+        },
+        {
+          "id": "salt_stores",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "cellar_store"
+        },
+        {
+          "id": "the_culvert_stair",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "sluice_race",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "tithe_room",
+          "role": "treasure",
+          "size": "small"
+        },
+        {
+          "id": "flooded_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "windlass_chamber",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "ledge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ],
+      "features": [
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "table_trestle",
+          "note": "the duty-table at the stair's head, the watch-book still open on it"
+        },
+        {
+          "kind": "prop",
+          "room": "mouth",
+          "prop": "paper_stack"
+        },
+        {
+          "kind": "note",
+          "room": "guardroom",
+          "book": "core:book/saltgate_watch_book",
+          "name": "the Saltgate watch-book",
+          "item": "core:item/note_saltgate_watch_book"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/saltgate_sluice_tally",
+          "name": "the sluice-warden's tally",
+          "item": "core:item/note_saltgate_sluice_tally"
+        }
+      ]
+    }
+  }
+]

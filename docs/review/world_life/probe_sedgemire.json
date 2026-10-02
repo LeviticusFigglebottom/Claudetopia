@@ -1,6 +1,6 @@
 {
  "region": "core:region/sedgemire",
- "built_at": "2026-09-28T18:00:36Z",
+ "built_at": "2026-09-30T09:38:35Z",
  "terrain": "terrain3d",
  "pois": [
   {
@@ -14,98 +14,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 34.6,
-    "z": 16.1,
-    "height": 4.2,
-    "reach": 19.2,
-    "top": 4.2
+    "x": 36.8,
+    "z": 23.4,
+    "height": 5.8,
+    "reach": 24.9,
+    "top": 5.4
    },
-   "pieces": 10,
-   "draws": 10,
-   "primitives": 6672,
+   "pieces": 15,
+   "draws": 15,
+   "primitives": 20434,
    "interactables": {},
-   "lights": 7,
+   "lights": 5,
    "bodies": 1,
    "hearthstones": 0,
-   "seat": {
-    "floating": 6
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "rope",
-     "asset": "Rope",
-     "x": -2366.1,
-     "y": 6.56,
-     "z": -45.6,
-     "amount": 3.82,
-     "detail": "3.82 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@5580",
-     "asset": "@MeshInstance3D@5580",
-     "x": -2371.6,
-     "y": 6.56,
-     "z": -43.3,
-     "amount": 3.88,
-     "detail": "3.88 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@5582",
-     "asset": "@MeshInstance3D@5582",
-     "x": -2377.2,
-     "y": 6.56,
-     "z": -41.1,
-     "amount": 3.95,
-     "detail": "3.95 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@5584",
-     "asset": "@MeshInstance3D@5584",
-     "x": -2382.8,
-     "y": 6.56,
-     "z": -38.9,
-     "amount": 3.94,
-     "detail": "3.94 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@5586",
-     "asset": "@MeshInstance3D@5586",
-     "x": -2388.4,
-     "y": 6.56,
-     "z": -36.7,
-     "amount": 3.88,
-     "detail": "3.88 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@5588",
-     "asset": "@MeshInstance3D@5588",
-     "x": -2393.9,
-     "y": 6.56,
-     "z": -34.4,
-     "amount": 3.76,
-     "detail": "3.76 m over the ground",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 4551,
+   "raise_ms": 1993,
    "finished": true
   },
   {
@@ -152,7 +77,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 118,
+   "raise_ms": 42,
    "finished": true
   },
   {
@@ -329,7 +254,7 @@
     }
    ],
    "embankment_m": 1.5,
-   "raise_ms": 66,
+   "raise_ms": 30,
    "finished": true
   },
   {
@@ -343,38 +268,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 22.9,
-    "z": 21.6,
-    "height": 5.4,
-    "reach": 17.5,
-    "top": 4.7
+    "x": 22.1,
+    "z": 9.5,
+    "height": 15.8,
+    "reach": 13.0,
+    "top": 14.9
    },
-   "pieces": 33,
-   "draws": 33,
-   "primitives": 39093,
-   "interactables": {},
-   "lights": 1,
-   "bodies": 9,
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 15742,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "lamp_unhung": 1
-   },
-   "findings": [
-    {
-     "check": "lamp_unhung",
-     "src": "poi:wreck",
-     "family": "lantern_hanging",
-     "asset": "sedgemire_lantern_hanging_a.glb",
-     "x": -2989.3,
-     "y": 9.19,
-     "z": 697.4,
-     "amount": 0.0,
-     "detail": "nothing to hang from within 0.3 m (3.2 m over the ground)",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 1.2,
-   "raise_ms": 128,
+   "raise_ms": 41,
    "finished": true
   },
   {
@@ -401,25 +313,10 @@
    "lights": 0,
    "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:ruins",
-     "family": "rope_coil",
-     "asset": "sedgemire_rope_coil_b.glb",
-     "x": -3117.8,
-     "y": 3.73,
-     "z": -1166.0,
-     "amount": 0.2,
-     "detail": "0.20 m over the ground",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 5.7,
-   "raise_ms": 177,
+   "raise_ms": 59,
    "finished": true
   },
   {
@@ -449,7 +346,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 95,
+   "raise_ms": 41,
    "finished": true
   },
   {
@@ -463,23 +360,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 18.8,
-    "z": 6.6,
-    "height": 3.9,
-    "reach": 12.0,
-    "top": 3.4
+    "x": 17.4,
+    "z": 15.1,
+    "height": 3.1,
+    "reach": 10.2,
+    "top": 2.6
    },
-   "pieces": 19,
-   "draws": 19,
-   "primitives": 204522,
-   "interactables": {},
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 8936,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 110,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -493,23 +392,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 10.5,
-    "z": 8.1,
-    "height": 10.1,
-    "reach": 9.0,
-    "top": 10.1
+    "x": 14.0,
+    "z": 11.6,
+    "height": 11.2,
+    "reach": 11.6,
+    "top": 10.8
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 19780,
+   "pieces": 22,
+   "draws": 22,
+   "primitives": 22063,
    "interactables": {},
    "lights": 1,
-   "bodies": 2,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 44,
+   "raise_ms": 47,
    "finished": true
   },
   {
@@ -523,23 +422,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.1,
-    "z": 6.4,
-    "height": 12.5,
-    "reach": 6.3,
-    "top": 12.4
+    "x": 19.8,
+    "z": 5.7,
+    "height": 11.2,
+    "reach": 11.7,
+    "top": 10.8
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 71269,
-   "interactables": {},
-   "lights": 1,
-   "bodies": 4,
+   "pieces": 21,
+   "draws": 21,
+   "primitives": 45883,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 2,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 186,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -553,98 +454,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 3.4,
-    "z": 36.2,
-    "height": 4.7,
-    "reach": 18.2,
-    "top": 4.4
+    "x": 3.0,
+    "z": 33.7,
+    "height": 5.0,
+    "reach": 23.6,
+    "top": 4.9
    },
-   "pieces": 11,
-   "draws": 11,
-   "primitives": 6736,
-   "interactables": {},
-   "lights": 7,
-   "bodies": 1,
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 12036,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {
-    "floating": 6
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "rope",
-     "asset": "Rope",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 835.0,
-     "amount": 4.3,
-     "detail": "4.30 m over the ground (over 0.3 m of water)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6024",
-     "asset": "@MeshInstance3D@6024",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 841.0,
-     "amount": 4.29,
-     "detail": "4.29 m over the ground (over 0.2 m of water)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6026",
-     "asset": "@MeshInstance3D@6026",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 847.0,
-     "amount": 4.19,
-     "detail": "4.19 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6028",
-     "asset": "@MeshInstance3D@6028",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 853.0,
-     "amount": 4.07,
-     "detail": "4.07 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6030",
-     "asset": "@MeshInstance3D@6030",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 859.0,
-     "amount": 3.85,
-     "detail": "3.85 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6032",
-     "asset": "@MeshInstance3D@6032",
-     "x": -2760.0,
-     "y": 6.45,
-     "z": 865.0,
-     "amount": 3.77,
-     "detail": "3.77 m over the ground",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 3.3,
-   "raise_ms": 28,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -659,22 +487,22 @@
    "radius_flat_m": 22.0,
    "footprint": {
     "x": 23.5,
-    "z": 20.1,
-    "height": 2.8,
-    "reach": 13.8,
-    "top": 2.7
+    "z": 20.4,
+    "height": 5.4,
+    "reach": 19.0,
+    "top": 4.9
    },
-   "pieces": 74,
-   "draws": 74,
-   "primitives": 67306,
+   "pieces": 17,
+   "draws": 17,
+   "primitives": 9617,
    "interactables": {},
    "lights": 2,
-   "bodies": 24,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.5,
-   "raise_ms": 143,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -688,23 +516,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 22.1,
-    "z": 55.4,
-    "height": 5.1,
-    "reach": 59.6,
-    "top": 2.9
+    "x": 14.1,
+    "z": 14.8,
+    "height": 8.8,
+    "reach": 12.2,
+    "top": 8.2
    },
-   "pieces": 5,
-   "draws": 5,
-   "primitives": 1740,
-   "interactables": {},
+   "pieces": 10,
+   "draws": 10,
+   "primitives": 30144,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 2,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.4,
-   "raise_ms": 58,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -718,23 +548,40 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 7.4,
-    "z": 7.5,
-    "height": 11.2,
-    "reach": 5.8,
-    "top": 11.1
+    "x": 22.5,
+    "z": 22.6,
+    "height": 10.5,
+    "reach": 16.1,
+    "top": 9.1
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 50322,
-   "interactables": {},
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 26650,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 4,
+   "bodies": 3,
    "hearthstones": 0,
-   "seat": {},
-   "findings": [],
+   "seat": {
+    "floating": 1
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:tower",
+     "family": "rowboat",
+     "asset": "sedgemire_rowboat_a.glb",
+     "x": -3543.6,
+     "y": 2.04,
+     "z": -972.9,
+     "amount": 0.18,
+     "detail": "0.18 m over the ground",
+     "region": "sedgemire"
+    }
+   ],
    "embankment_m": 1.3,
-   "raise_ms": 69,
+   "raise_ms": 36,
    "finished": true
   },
   {
@@ -748,38 +595,23 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 21.1,
-    "z": 19.4,
-    "height": 2.9,
-    "reach": 14.4,
-    "top": 2.7
+    "x": 16.5,
+    "z": 24.6,
+    "height": 3.0,
+    "reach": 13.3,
+    "top": 2.6
    },
-   "pieces": 68,
-   "draws": 68,
-   "primitives": 64370,
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 17466,
    "interactables": {},
-   "lights": 2,
-   "bodies": 22,
+   "lights": 0,
+   "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "overlap": 1
-   },
-   "findings": [
-    {
-     "check": "overlap",
-     "src": "poi:camp",
-     "family": "campfire",
-     "asset": "hearthvale_campfire_b.glb",
-     "x": -3759.0,
-     "y": 1.81,
-     "z": 883.3,
-     "amount": 0.99,
-     "detail": "99% of it shares its box with stool (poi:camp)",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 24,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -799,17 +631,17 @@
     "reach": 9.1,
     "top": 3.9
    },
-   "pieces": 28,
-   "draws": 28,
-   "primitives": 62823,
+   "pieces": 31,
+   "draws": 31,
+   "primitives": 64431,
    "interactables": {},
    "lights": 1,
-   "bodies": 9,
+   "bodies": 10,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 58,
+   "raise_ms": 24,
    "finished": true
   },
   {
@@ -823,23 +655,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 11.1,
-    "z": 6.1,
-    "height": 10.1,
-    "reach": 8.4,
-    "top": 10.1
+    "x": 13.6,
+    "z": 18.6,
+    "height": 7.4,
+    "reach": 13.4,
+    "top": 6.7
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 19780,
-   "interactables": {},
-   "lights": 1,
+   "pieces": 34,
+   "draws": 34,
+   "primitives": 51509,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 2,
    "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 23,
+   "raise_ms": 64,
    "finished": true
   },
   {
@@ -853,25 +687,25 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 19.1,
-    "z": 21.5,
-    "height": 3.4,
-    "reach": 15.6,
-    "top": 3.3
+    "x": 16.4,
+    "z": 22.3,
+    "height": 5.5,
+    "reach": 19.5,
+    "top": 5.0
    },
-   "pieces": 65,
-   "draws": 65,
-   "primitives": 57746,
+   "pieces": 29,
+   "draws": 29,
+   "primitives": 11233,
    "interactables": {
-    "JobBoard": 1
+    "PoiTouch": 1
    },
    "lights": 2,
-   "bodies": 21,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 44,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -885,23 +719,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 8.5,
-    "z": 9.7,
-    "height": 3.2,
-    "reach": 6.0,
-    "top": 3.1
+    "x": 32.0,
+    "z": 31.9,
+    "height": 3.9,
+    "reach": 22.7,
+    "top": 3.5
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 50924,
-   "interactables": {},
-   "lights": 0,
-   "bodies": 4,
+   "pieces": 18,
+   "draws": 18,
+   "primitives": 20417,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 17,
+   "raise_ms": 28,
    "finished": true
   },
   {
@@ -915,23 +751,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 12.8,
-    "z": 15.3,
-    "height": 4.7,
-    "reach": 10.0,
-    "top": 4.6
+    "x": 36.4,
+    "z": 35.6,
+    "height": 3.1,
+    "reach": 25.6,
+    "top": 2.3
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 127511,
-   "interactables": {},
-   "lights": 0,
-   "bodies": 5,
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 22044,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.2,
-   "raise_ms": 72,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -945,23 +783,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 13.7,
-    "z": 21.0,
-    "height": 4.3,
-    "reach": 12.6,
-    "top": 3.7
+    "x": 16.1,
+    "z": 26.7,
+    "height": 5.2,
+    "reach": 18.6,
+    "top": 4.6
    },
-   "pieces": 2,
-   "draws": 2,
-   "primitives": 996,
-   "interactables": {},
+   "pieces": 13,
+   "draws": 13,
+   "primitives": 13003,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 1,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 4.7,
-   "raise_ms": 21,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -975,23 +815,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 12.5,
-    "z": 15.3,
-    "height": 4.7,
-    "reach": 9.9,
-    "top": 4.5
+    "x": 25.6,
+    "z": 26.1,
+    "height": 4.2,
+    "reach": 18.4,
+    "top": 3.9
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 127619,
-   "interactables": {},
-   "lights": 0,
-   "bodies": 5,
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 15554,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 4,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 34,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -1005,23 +847,23 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 16.0,
-    "z": 21.5,
-    "height": 2.7,
-    "reach": 14.5,
-    "top": 2.7
+    "x": 21.5,
+    "z": 36.9,
+    "height": 5.5,
+    "reach": 23.9,
+    "top": 5.0
    },
-   "pieces": 59,
-   "draws": 59,
-   "primitives": 54634,
+   "pieces": 17,
+   "draws": 17,
+   "primitives": 87693,
    "interactables": {},
-   "lights": 2,
-   "bodies": 19,
+   "lights": 1,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 11,
+   "raise_ms": 204,
    "finished": true
   },
   {
@@ -1035,23 +877,25 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 18.3,
-    "z": 19.0,
-    "height": 2.9,
-    "reach": 14.5,
-    "top": 2.8
+    "x": 19.7,
+    "z": 22.4,
+    "height": 6.3,
+    "reach": 16.9,
+    "top": 5.9
    },
-   "pieces": 59,
-   "draws": 59,
-   "primitives": 56178,
-   "interactables": {},
+   "pieces": 23,
+   "draws": 23,
+   "primitives": 7772,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 2,
-   "bodies": 19,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 8,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -1065,15 +909,15 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 4.4,
-    "z": 5.3,
-    "height": 3.4,
-    "reach": 3.4,
-    "top": 2.8
+    "x": 13.0,
+    "z": 14.1,
+    "height": 4.8,
+    "reach": 14.0,
+    "top": 4.1
    },
-   "pieces": 31,
-   "draws": 31,
-   "primitives": 16011,
+   "pieces": 40,
+   "draws": 40,
+   "primitives": 18209,
    "interactables": {
     "Hearthstone": 1
    },
@@ -1083,7 +927,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 9,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -1097,23 +941,52 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 7.5,
-    "z": 13.6,
-    "height": 4.7,
-    "reach": 7.8,
-    "top": 4.2
+    "x": 27.5,
+    "z": 27.6,
+    "height": 6.9,
+    "reach": 19.3,
+    "top": 6.3
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 138051,
-   "interactables": {},
+   "pieces": 11,
+   "draws": 12,
+   "primitives": 47850,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {},
-   "findings": [],
+   "seat": {
+    "floating": 2
+   },
+   "findings": [
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "door",
+     "asset": "Door",
+     "x": -2800.0,
+     "y": 26.96,
+     "z": -1897.1,
+     "amount": 1.3,
+     "detail": "1.30 m over the ground",
+     "region": "sedgemire"
+    },
+    {
+     "check": "floating",
+     "src": "poi:ruins",
+     "family": "causeway",
+     "asset": "Causeway",
+     "x": -2800.0,
+     "y": 26.18,
+     "z": -1889.8,
+     "amount": 0.8,
+     "detail": "0.80 m over the ground",
+     "region": "sedgemire"
+    }
+   ],
    "embankment_m": 21.7,
-   "raise_ms": 20,
+   "raise_ms": 60,
    "finished": true
   },
   {
@@ -1127,23 +1000,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.5,
-    "z": 9.5,
-    "height": 3.2,
-    "reach": 6.1,
-    "top": 3.0
+    "x": 9.1,
+    "z": 9.0,
+    "height": 5.2,
+    "reach": 6.4,
+    "top": 4.9
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 50044,
-   "interactables": {},
+   "pieces": 8,
+   "draws": 8,
+   "primitives": 62310,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 4,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 11.5,
-   "raise_ms": 7,
+   "raise_ms": 94,
    "finished": true
   },
   {
@@ -1157,23 +1032,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 7.5,
-    "z": 13.6,
-    "height": 5.0,
-    "reach": 7.8,
-    "top": 3.8
+    "x": 20.2,
+    "z": 49.3,
+    "height": 6.0,
+    "reach": 28.7,
+    "top": 1.2
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 126199,
-   "interactables": {},
+   "pieces": 7,
+   "draws": 8,
+   "primitives": 27313,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 7.4,
-   "raise_ms": 13,
+   "raise_ms": 12,
    "finished": true
   },
   {
@@ -1187,38 +1064,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 23.1,
-    "z": 19.6,
-    "height": 5.4,
-    "reach": 17.7,
-    "top": 4.7
+    "x": 12.7,
+    "z": 23.4,
+    "height": 4.5,
+    "reach": 13.9,
+    "top": 3.4
    },
-   "pieces": 33,
-   "draws": 33,
-   "primitives": 39093,
-   "interactables": {},
-   "lights": 1,
-   "bodies": 9,
+   "pieces": 19,
+   "draws": 19,
+   "primitives": 21792,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 7,
    "hearthstones": 0,
-   "seat": {
-    "lamp_unhung": 1
-   },
-   "findings": [
-    {
-     "check": "lamp_unhung",
-     "src": "poi:wreck",
-     "family": "lantern_hanging",
-     "asset": "sedgemire_lantern_hanging_b.glb",
-     "x": -3660.8,
-     "y": 57.56,
-     "z": -2201.9,
-     "amount": 0.0,
-     "detail": "nothing to hang from within 0.3 m (3.8 m over the ground)",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 51.0,
-   "raise_ms": 15,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1227,103 +1091,30 @@
    "preview": false,
    "pos": [
     -1850.0,
-    2.93,
+    2.92,
     1230.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 15.0,
-    "z": 34.9,
-    "height": 4.2,
-    "reach": 19.2,
-    "top": 4.1
+    "x": 12.1,
+    "z": 26.0,
+    "height": 5.6,
+    "reach": 20.9,
+    "top": 5.5
    },
-   "pieces": 10,
-   "draws": 10,
-   "primitives": 6672,
-   "interactables": {},
-   "lights": 7,
-   "bodies": 1,
+   "pieces": 9,
+   "draws": 9,
+   "primitives": 8892,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {
-    "floating": 6
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "rope",
-     "asset": "Rope",
-     "x": -1855.1,
-     "y": 6.75,
-     "z": 1244.1,
-     "amount": 3.82,
-     "detail": "3.82 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6563",
-     "asset": "@MeshInstance3D@6563",
-     "x": -1853.1,
-     "y": 6.75,
-     "z": 1238.5,
-     "amount": 3.8,
-     "detail": "3.80 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6565",
-     "asset": "@MeshInstance3D@6565",
-     "x": -1851.0,
-     "y": 6.75,
-     "z": 1232.8,
-     "amount": 3.8,
-     "detail": "3.80 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6567",
-     "asset": "@MeshInstance3D@6567",
-     "x": -1849.0,
-     "y": 6.75,
-     "z": 1227.2,
-     "amount": 3.82,
-     "detail": "3.82 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6569",
-     "asset": "@MeshInstance3D@6569",
-     "x": -1846.9,
-     "y": 6.75,
-     "z": 1221.5,
-     "amount": 3.84,
-     "detail": "3.84 m over the ground",
-     "region": "sedgemire"
-    },
-    {
-     "check": "floating",
-     "src": "poi:bridge",
-     "family": "@meshinstance3d@6571",
-     "asset": "@MeshInstance3D@6571",
-     "x": -1844.9,
-     "y": 6.75,
-     "z": 1215.9,
-     "amount": 3.81,
-     "detail": "3.81 m over the ground",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 2.0,
-   "raise_ms": 10,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -1353,7 +1144,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 9,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1367,23 +1158,23 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 20.9,
-    "z": 15.1,
-    "height": 2.8,
-    "reach": 12.8,
-    "top": 2.7
+    "x": 26.6,
+    "z": 27.7,
+    "height": 3.8,
+    "reach": 25.5,
+    "top": 3.3
    },
-   "pieces": 74,
-   "draws": 74,
-   "primitives": 67266,
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 66900,
    "interactables": {},
-   "lights": 2,
-   "bodies": 24,
+   "lights": 0,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.1,
-   "raise_ms": 8,
+   "raise_ms": 35,
    "finished": true
   },
   {
@@ -1397,23 +1188,25 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 21.7,
-    "z": 18.0,
-    "height": 2.9,
-    "reach": 14.4,
-    "top": 2.7
+    "x": 25.1,
+    "z": 26.2,
+    "height": 1.6,
+    "reach": 19.7,
+    "top": 1.4
    },
-   "pieces": 68,
-   "draws": 68,
-   "primitives": 64290,
-   "interactables": {},
-   "lights": 2,
-   "bodies": 22,
+   "pieces": 14,
+   "draws": 14,
+   "primitives": 70250,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 6,
+   "raise_ms": 69,
    "finished": true
   },
   {
@@ -1427,23 +1220,23 @@
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 22.0,
-    "z": 18.1,
-    "height": 2.9,
-    "reach": 13.6,
-    "top": 2.7
+    "x": 24.0,
+    "z": 23.8,
+    "height": 3.7,
+    "reach": 16.4,
+    "top": 3.2
    },
-   "pieces": 68,
-   "draws": 68,
-   "primitives": 63340,
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 41450,
    "interactables": {},
-   "lights": 2,
-   "bodies": 18,
+   "lights": 0,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.8,
-   "raise_ms": 16,
+   "raise_ms": 89,
    "finished": true
   },
   {
@@ -1457,23 +1250,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 5.9,
-    "z": 11.2,
-    "height": 10.3,
-    "reach": 8.3,
-    "top": 10.1
+    "x": 13.8,
+    "z": 22.1,
+    "height": 9.5,
+    "reach": 18.7,
+    "top": 8.9
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 19792,
-   "interactables": {},
-   "lights": 1,
-   "bodies": 2,
+   "pieces": 29,
+   "draws": 29,
+   "primitives": 29905,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 2,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 31.4,
-   "raise_ms": 11,
+   "raise_ms": 60,
    "finished": true
   },
   {
@@ -1487,23 +1282,40 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 12.2,
-    "z": 15.2,
-    "height": 4.9,
-    "reach": 9.8,
-    "top": 4.7
+    "x": 24.5,
+    "z": 23.6,
+    "height": 3.7,
+    "reach": 21.5,
+    "top": 3.3
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 127571,
-   "interactables": {},
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 40358,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {},
-   "findings": [],
+   "seat": {
+    "buried": 1
+   },
+   "findings": [
+    {
+     "check": "buried",
+     "src": "poi:ruins",
+     "family": "drymud",
+     "asset": "DryMud",
+     "x": -1993.4,
+     "y": 6.03,
+     "z": -650.0,
+     "amount": 0.0,
+     "detail": "all of it under the ground (top 0.04 m below the lowest ground under it)",
+     "region": "sedgemire"
+    }
+   ],
    "embankment_m": 1.9,
-   "raise_ms": 13,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1533,7 +1345,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.1,
-   "raise_ms": 8,
+   "raise_ms": 29,
    "finished": true
   },
   {
@@ -1542,7 +1354,7 @@
    "preview": false,
    "pos": [
     -2950.0,
-    11.83,
+    11.84,
     -2081.0
    ],
    "radius_flat_m": 14.0,
@@ -1570,7 +1382,7 @@
      "family": "crate",
      "asset": "briarwold_crate_b.glb",
      "x": -2946.6,
-     "y": 12.04,
+     "y": 12.05,
      "z": -2077.5,
      "amount": 0.66,
      "detail": "66% of it shares its box with crate (poi:camp)",
@@ -1578,7 +1390,7 @@
     }
    ],
    "embankment_m": 8.4,
-   "raise_ms": 7,
+   "raise_ms": 20,
    "finished": true
   },
   {
@@ -1592,23 +1404,23 @@
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 14.5,
-    "z": 14.5,
-    "height": 4.8,
-    "reach": 10.3,
-    "top": 4.6
+    "x": 10.3,
+    "z": 10.3,
+    "height": 5.1,
+    "reach": 7.3,
+    "top": 5.0
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 138087,
+   "pieces": 4,
+   "draws": 4,
+   "primitives": 4068,
    "interactables": {},
    "lights": 0,
-   "bodies": 5,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 10,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1653,7 +1465,7 @@
     }
    ],
    "embankment_m": 1.1,
-   "raise_ms": 9,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1667,23 +1479,23 @@
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 14.5,
-    "z": 14.5,
-    "height": 4.7,
-    "reach": 10.3,
-    "top": 4.5
+    "x": 7.9,
+    "z": 8.1,
+    "height": 3.8,
+    "reach": 6.6,
+    "top": 3.3
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 138123,
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 756,
    "interactables": {},
    "lights": 0,
-   "bodies": 5,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.2,
-   "raise_ms": 10,
+   "raise_ms": 15,
    "finished": true
   },
   {
@@ -1697,15 +1509,15 @@
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 10.0,
-    "z": 10.0,
-    "height": 3.9,
-    "reach": 6.4,
-    "top": 3.6
+    "x": 10.7,
+    "z": 10.3,
+    "height": 5.7,
+    "reach": 6.9,
+    "top": 4.4
    },
    "pieces": 12,
    "draws": 12,
-   "primitives": 50924,
+   "primitives": 52196,
    "interactables": {},
    "lights": 0,
    "bodies": 4,
@@ -1713,7 +1525,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.4,
-   "raise_ms": 7,
+   "raise_ms": 26,
    "finished": true
   },
   {
@@ -1727,23 +1539,23 @@
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 7.5,
-    "z": 13.5,
-    "height": 4.7,
-    "reach": 7.8,
-    "top": 4.6
+    "x": 14.6,
+    "z": 15.1,
+    "height": 3.1,
+    "reach": 10.6,
+    "top": 3.0
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 126175,
+   "pieces": 4,
+   "draws": 4,
+   "primitives": 10634,
    "interactables": {},
    "lights": 0,
-   "bodies": 5,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 11,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1773,7 +1585,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 33,
+   "raise_ms": 27,
    "finished": true
   },
   {
@@ -1803,7 +1615,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 40,
+   "raise_ms": 36,
    "finished": true
   },
   {
@@ -1833,7 +1645,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.5,
-   "raise_ms": 15,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1847,73 +1659,47 @@
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 25.9,
-    "z": 19.7,
-    "height": 5.4,
-    "reach": 17.9,
-    "top": 4.7
+    "x": 17.7,
+    "z": 6.5,
+    "height": 10.6,
+    "reach": 9.7,
+    "top": 8.1
    },
-   "pieces": 33,
-   "draws": 33,
-   "primitives": 39093,
-   "interactables": {},
+   "pieces": 11,
+   "draws": 11,
+   "primitives": 5315,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 1,
-   "bodies": 9,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {
-    "lamp_unhung": 1,
-    "overlap": 1
-   },
-   "findings": [
-    {
-     "check": "lamp_unhung",
-     "src": "poi:wreck",
-     "family": "lantern_hanging",
-     "asset": "sedgemire_lantern_hanging_a.glb",
-     "x": -3334.0,
-     "y": 6.8,
-     "z": 576.0,
-     "amount": 0.0,
-     "detail": "nothing to hang from within 0.3 m (3.4 m over the ground)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:wreck",
-     "family": "barrel",
-     "asset": "briarwold_barrel_a.glb",
-     "x": -3333.4,
-     "y": 3.28,
-     "z": 573.7,
-     "amount": 0.8,
-     "detail": "80% of it shares its box with crate (poi:wreck)",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 0.5,
-   "raise_ms": 22,
+   "raise_ms": 20,
    "finished": true
   },
   {
    "id": "core:poi/unsung_vault",
    "kind": "delve",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2908.0,
-    4.61,
+    4.66,
     -1572.0
    ],
    "radius_flat_m": 30.0,
    "footprint": {
-    "x": 30.5,
-    "z": 29.8,
+    "x": 40.4,
+    "z": 50.6,
     "height": 11.2,
-    "reach": 31.3,
+    "reach": 32.8,
     "top": 7.7
    },
-   "pieces": 81,
-   "draws": 81,
-   "primitives": 92118,
+   "pieces": 82,
+   "draws": 82,
+   "primitives": 87338,
    "interactables": {
     "Door": 1,
     "PoiTouch": 1
@@ -1921,241 +1707,94 @@
    "lights": 1,
    "bodies": 18,
    "hearthstones": 0,
-   "seat": {
-    "overlap": 12
-   },
-   "findings": [
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2901.2,
-     "y": 2.58,
-     "z": -1568.8,
-     "amount": 0.82,
-     "detail": "82% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2901.2,
-     "y": 2.58,
-     "z": -1568.8,
-     "amount": 1.0,
-     "detail": "100% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2901.2,
-     "y": 2.58,
-     "z": -1568.8,
-     "amount": 0.68,
-     "detail": "68% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2901.2,
-     "y": 2.58,
-     "z": -1568.8,
-     "amount": 0.98,
-     "detail": "98% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2899.3,
-     "y": 2.82,
-     "z": -1570.6,
-     "amount": 0.81,
-     "detail": "81% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2899.3,
-     "y": 2.82,
-     "z": -1570.6,
-     "amount": 0.62,
-     "detail": "62% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2909.0,
-     "y": 1.15,
-     "z": -1579.5,
-     "amount": 1.0,
-     "detail": "100% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2909.0,
-     "y": 1.15,
-     "z": -1579.5,
-     "amount": 0.99,
-     "detail": "99% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2909.0,
-     "y": 1.15,
-     "z": -1579.5,
-     "amount": 0.86,
-     "detail": "86% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2909.0,
-     "y": 1.15,
-     "z": -1579.5,
-     "amount": 1.0,
-     "detail": "100% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_a.glb",
-     "x": -2906.8,
-     "y": 2.75,
-     "z": -1580.9,
-     "amount": 0.75,
-     "detail": "75% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "sedgemire_boulder_b.glb",
-     "x": -2909.7,
-     "y": 3.67,
-     "z": -1577.1,
-     "amount": 0.68,
-     "detail": "68% of it shares its box with boulder (poi:delve)",
-     "region": "sedgemire"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 2.2,
-   "raise_ms": 681,
+   "raise_ms": 170,
    "finished": true
   },
   {
    "id": "core:poi/greylag_fold",
    "kind": "fold",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2516.0,
-    2.02,
+    3.99,
     -1820.0
    ],
    "radius_flat_m": 24.0,
    "footprint": {
-    "x": 19.7,
-    "z": 20.6,
+    "x": 24.3,
+    "z": 15.3,
     "height": 6.6,
-    "reach": 20.3,
+    "reach": 20.5,
     "top": 6.2
    },
    "pieces": 53,
    "draws": 53,
-   "primitives": 67269,
+   "primitives": 67221,
    "interactables": {},
    "lights": 2,
    "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 4.6,
-   "raise_ms": 33,
+   "embankment_m": 2.0,
+   "raise_ms": 22,
    "finished": true
   },
   {
    "id": "core:poi/oulnauve_stakes",
    "kind": "stockade",
-   "preview": true,
+   "preview": false,
    "pos": [
     -1924.0,
-    4.33,
+    4.18,
     -1652.0
    ],
    "radius_flat_m": 28.0,
    "footprint": {
     "x": 33.8,
     "z": 34.8,
-    "height": 10.0,
+    "height": 12.0,
     "reach": 22.5,
-    "top": 9.2
+    "top": 10.4
    },
-   "pieces": 118,
-   "draws": 118,
-   "primitives": 187965,
+   "pieces": 187,
+   "draws": 187,
+   "primitives": 111102,
    "interactables": {
     "PoiTouch": 1
    },
    "lights": 1,
-   "bodies": 9,
+   "bodies": 18,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 10.7,
-   "raise_ms": 1387,
+   "embankment_m": 11.1,
+   "raise_ms": 408,
    "finished": true
   },
   {
    "id": "core:poi/eel_tally",
    "kind": "tally_post",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2220.0,
-    3.26,
+    3.3,
     -740.0
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 17.2,
-    "z": 21.3,
+    "x": 21.3,
+    "z": 17.2,
     "height": 7.1,
     "reach": 17.7,
     "top": 6.7
    },
    "pieces": 37,
    "draws": 37,
-   "primitives": 59437,
+   "primitives": 59449,
    "interactables": {
     "JobBoard": 1
    },
@@ -2165,16 +1804,16 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 58,
+   "raise_ms": 25,
    "finished": true
   },
   {
    "id": "core:poi/hesters_stilts",
    "kind": "farmstead",
-   "preview": true,
+   "preview": false,
    "pos": [
     -1956.0,
-    3.19,
+    3.2,
     940.0
    ],
    "radius_flat_m": 28.0,
@@ -2183,7 +1822,7 @@
     "z": 29.4,
     "height": 8.6,
     "reach": 20.8,
-    "top": 8.2
+    "top": 8.3
    },
    "pieces": 39,
    "draws": 39,
@@ -2194,30 +1833,30 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 2.2,
-   "raise_ms": 44,
+   "embankment_m": 2.3,
+   "raise_ms": 30,
    "finished": true
   },
   {
    "id": "core:poi/isses_chair",
    "kind": "shrine",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2132.0,
-    4.19,
+    4.17,
     108.0
    ],
    "radius_flat_m": 24.0,
    "footprint": {
-    "x": 12.7,
-    "z": 20.6,
-    "height": 4.2,
-    "reach": 16.8,
-    "top": 3.9
+    "x": 11.9,
+    "z": 20.9,
+    "height": 4.5,
+    "reach": 16.7,
+    "top": 4.0
    },
    "pieces": 14,
    "draws": 14,
-   "primitives": 15319,
+   "primitives": 15271,
    "interactables": {},
    "lights": 1,
    "bodies": 1,
@@ -2225,53 +1864,53 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.2,
-   "raise_ms": 40,
+   "raise_ms": 30,
    "finished": true
   },
   {
    "id": "core:poi/leech_wifes_stilts",
    "kind": "hut",
-   "preview": true,
+   "preview": false,
    "pos": [
     -1660.0,
-    9.11,
+    9.0,
     340.0
    ],
    "radius_flat_m": 24.0,
    "footprint": {
-    "x": 14.3,
-    "z": 27.3,
-    "height": 6.8,
-    "reach": 19.0,
-    "top": 6.4
+    "x": 28.6,
+    "z": 9.2,
+    "height": 7.3,
+    "reach": 18.8,
+    "top": 6.5
    },
    "pieces": 41,
    "draws": 41,
-   "primitives": 37145,
+   "primitives": 37181,
    "interactables": {},
    "lights": 1,
    "bodies": 8,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 2.9,
-   "raise_ms": 21,
+   "embankment_m": 4.0,
+   "raise_ms": 22,
    "finished": true
   },
   {
    "id": "core:poi/draining_mill",
    "kind": "mill",
-   "preview": true,
+   "preview": false,
    "pos": [
     -3388.0,
-    2.84,
+    2.83,
     -116.0
    ],
    "radius_flat_m": 26.0,
    "footprint": {
     "x": 12.4,
     "z": 13.9,
-    "height": 17.2,
+    "height": 17.3,
     "reach": 13.0,
     "top": 17.2
    },
@@ -2285,16 +1924,16 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 150,
+   "raise_ms": 39,
    "finished": true
   },
   {
    "id": "core:poi/drylanders_hummock",
    "kind": "grave",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2956.0,
-    3.42,
+    3.5,
     20.0
    ],
    "radius_flat_m": 22.0,
@@ -2314,17 +1953,17 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 2.1,
-   "raise_ms": 23,
+   "embankment_m": 2.2,
+   "raise_ms": 7,
    "finished": true
   },
   {
    "id": "core:poi/bog_iron_bloomery",
    "kind": "camp",
-   "preview": true,
+   "preview": false,
    "pos": [
     -3228.0,
-    3.95,
+    3.94,
     924.0
    ],
    "radius_flat_m": 24.0,
@@ -2344,24 +1983,24 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 0.3,
-   "raise_ms": 123,
+   "embankment_m": 0.6,
+   "raise_ms": 34,
    "finished": true
   },
   {
    "id": "core:poi/grey_line",
    "kind": "strange",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2556.0,
-    5.88,
+    5.86,
     1052.0
    ],
    "radius_flat_m": 24.0,
    "footprint": {
     "x": 24.6,
     "z": 20.1,
-    "height": 2.5,
+    "height": 2.7,
     "reach": 15.4,
     "top": 2.5
    },
@@ -2374,8 +2013,107 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 1.0,
-   "raise_ms": 254,
+   "embankment_m": 1.2,
+   "raise_ms": 79,
+   "finished": true
+  },
+  {
+   "id": "core:poi/name_wifes_hollow",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -2918.0,
+    12.1,
+    1500.0
+   ],
+   "radius_flat_m": 28.0,
+   "footprint": {
+    "x": 55.7,
+    "z": 36.4,
+    "height": 13.6,
+    "reach": 30.3,
+    "top": 11.1
+   },
+   "pieces": 87,
+   "draws": 87,
+   "primitives": 162790,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 18,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 38.2,
+   "raise_ms": 168,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_sounding",
+   "kind": "tower",
+   "preview": true,
+   "pos": [
+    -1930.0,
+    3.77,
+    -1340.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 35.2,
+    "z": 32.5,
+    "height": 26.0,
+    "reach": 22.0,
+    "top": 25.0
+   },
+   "pieces": 58,
+   "draws": 58,
+   "primitives": 60894,
+   "interactables": {
+    "PoiTouch": 1,
+    "Door": 1
+   },
+   "lights": 2,
+   "bodies": 5,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 9.2,
+   "raise_ms": 73,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_saltgate",
+   "kind": "fort",
+   "preview": true,
+   "pos": [
+    -3482.0,
+    2.58,
+    440.0
+   ],
+   "radius_flat_m": 37.0,
+   "footprint": {
+    "x": 31.9,
+    "z": 51.7,
+    "height": 14.3,
+    "reach": 37.1,
+    "top": 12.8
+   },
+   "pieces": 109,
+   "draws": 109,
+   "primitives": 90394,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 16,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.1,
+   "raise_ms": 217,
    "finished": true
   }
  ]

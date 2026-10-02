@@ -1605,10 +1605,12 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 		await k.step()
 	m.commit(roofs, k.surface("planks", 0.7), "LeanTos")
 	m.commit(posts, k.surface("timber", 0.7), "LeanToPosts")
-	# the fire in the yard and what stands round it
+	# the fire in the yard and what stands round it; a yard whose site says it is "abandoned" (a fort
+	# its garrison died in) has no fire lit, no table laid and no hens: only the stores, the well, the cart
+	var lived := str(site.get("yard", "")) != "abandoned"
 	var fire := gate_dir * (radius * 0.12)
 	var fg := k.on_ground(fire.x, fire.y)
-	var fp := k.prop("campfire")
+	var fp := k.prop("campfire") if lived else ""
 	if fp != "":
 		k.place(fp, fg, 0.0, 1.0, false)
 		k.light(fg + Vector3.UP * 0.8, Color(1.0, 0.6, 0.28), 2.4, 12.0)
@@ -1617,7 +1619,7 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 	# what stands about the yard: [prop, where, yaw, collide, how high over the ground]
 	var things: Array = []
 	# the table by the fire, where they eat and dice, benches either side, a mug and a bowl on it
-	var table := k.prop("table_trestle")
+	var table := k.prop("table_trestle") if lived else ""
 	var table_at := fire + side * 4.2 + back * 1.0
 	var table_yaw := atan2(side.x, side.y)
 	if table != "":
@@ -1629,7 +1631,8 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 		things.append(["mug", table_at + side * 0.25, k.rng.randf() * TAU, false, th])
 		things.append(["bowl", table_at - side * 0.35, 0.0, false, th])
 		things.append(["jug", table_at + side * 0.6 + gate_dir * 0.1, 0.0, false, th])
-	things.append(["cooking_pot", fire + side * 1.1, 0.0, false, 0.0])
+	if lived:
+		things.append(["cooking_pot", fire + side * 1.1, 0.0, false, 0.0])
 	# a well against one side, hay and a cart on the other, a block and a barrow by the keep
 	var well_at := side * (radius * 0.36) + gate_dir * (radius * 0.18)
 	things.append(["well", well_at, k.rng.randf() * TAU, true, 0.0])
@@ -1654,7 +1657,7 @@ static func _yard(d: PoiDressing, site: Dictionary, gate_dir: Vector2, radius: f
 				break
 		things.append([kind, p, k.rng.randf() * TAU, kind != "banner", 0.0])
 	# hens scratching about the yard, a goose
-	for q in 5:
+	for q in (5 if lived else 0):
 		var a := k.rng.randf() * TAU
 		var p := fire + Vector2(sin(a), cos(a)) * k.rng.randf_range(4.0, 8.5)
 		things.append(["hen" if q < 4 else "goose", p, k.rng.randf() * TAU, false, 0.0])
