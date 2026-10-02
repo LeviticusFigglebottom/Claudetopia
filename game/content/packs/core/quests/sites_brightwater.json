@@ -132,5 +132,72 @@
       "renown": 10,
       "morality": 3
     }
+  },
+  {
+    "id": "core:quest/louder_than_the_toll",
+    "name": "Louder Than the Toll",
+    "layer": "side",
+    "giver": "core:npc/emmet_quarle",
+    "region": "core:region/brightwater",
+    "summary": "Every dusk since spring a voice has come over the water from Holmwatch, the Lake-Reeves' old castle on the east promontory, so loud that Emmet Quarle's horn at the Listening Post takes it instead of the Toll's hum. The Loud, Sayers put out of the Spire for Saying too loud, have taken the castle and its Saying-hall, and their Magister, Ysolde Carrow, Says into it from the lamp-tower.",
+    "notes": "Brightwater's third world-life site, phase 2 (docs/WORLD_LIFE_INTERIORS.md): Holmwatch (pois/brightwater.json, a castle_ruin with the region's own lamp-tower) and its undercroft (interiors/sites_brightwater.json). Started by Emmet Quarle at the Listening Post or by the trumpet on the gate (core:dialogue/holmwatch_gate). Carrow drops her trumpet; Emmet takes it.",
+    "stages": [
+      {
+        "id": "the_castle",
+        "journal": "Holmwatch stands on the east shore's promontory facing Gull Holm: the Lake-Reeves' castle before the Charter, the Circle's listening-seat after. The Loud hold it now, and every dusk their Magister Says into the Saying-hall under the keep, and the brass ribs in its vault carry her voice up the lamp-tower and over the Mere into the Listening Post's horn.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/holmwatch",
+            "count": 1,
+            "text": "Go to Holmwatch on the east shore's promontory"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/ysolde_carrow",
+            "count": 1,
+            "where": "core:interior/holmwatch_undercroft",
+            "text": "Silence Ysolde Carrow in the Saying-hall under the keep"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/carrows_trumpet",
+            "count": 1,
+            "text": "Take her speaking-trumpet"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/holmwatch",
+          "radius": 70
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_horn",
+        "journal": "The trumpet is only brass in anyone else's hands. Emmet Quarle will want to know whether the Toll comes back to his horn tonight, and to hold the thing that drowned it.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/emmet_quarle",
+            "item": "core:item/carrows_trumpet",
+            "count": 1,
+            "text": "Bring the trumpet to Emmet Quarle at the Listening Post"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_listening_post",
+          "radius": 80
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 10,
+      "morality": 1
+    }
   }
 ]
