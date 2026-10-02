@@ -222,6 +222,9 @@ func _read(key: String) -> Variant:
 		"title_vista":
 			# read where the title reads it; a title already showing the country stops on it too
 			return TitleVista.switched_on()
+		"title_live":
+			# live or filmed: a title showing the live country gives it up for the film when it goes off
+			return TitleVista.live_switched_on()
 		"full_terrain":
 			# safe mode: the coarse ground, one threaded read at a time, and the title's country off
 			return [SafeMode.active, WorldStatus.force_fallback, ThreadedLoads.limit(), TitleVista.switched_on()]

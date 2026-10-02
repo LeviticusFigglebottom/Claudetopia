@@ -104,6 +104,7 @@ func load_settings() -> void:
 			for key in cf.get_section_keys(section):
 				data[section][key] = cf.get_value(section, key)
 		_migrate_video_keys(cf)
+		_fill_new_preset_keys(cf)
 
 
 ## Every setting in `values` (Settings.data's shape) that is not its shipped default, as
@@ -150,6 +151,22 @@ func _migrate_video_keys(cf: ConfigFile) -> void:
 		data["graphics"]["preset"] = Graphics.matching_preset(data["graphics"])
 	if moved:
 		graphics_saved = true
+
+
+## A file written under a named preset before a knob existed takes that preset's value for it, not
+## High's default, so a Medium player stays on Medium when Medium gains a knob. "title_live" split
+## the title's country into live and filmed: a file from before it takes its preset's whole choice
+## (Low's chart became Low's film).
+func _fill_new_preset_keys(cf: ConfigFile) -> void:
+	var preset := str(cf.get_value("graphics", "preset", ""))
+	if not Graphics.PRESETS.has(preset):
+		return
+	var values := Graphics.preset_values(preset)
+	for key: String in values:
+		if not cf.has_section_key("graphics", key):
+			data["graphics"][key] = values[key]
+	if not cf.has_section_key("graphics", "title_live"):
+		data["graphics"]["title_vista"] = values["title_vista"]
 
 
 ## A saved binding still exactly as one of RETIRED_DEFAULTS shipped takes the default it has now.

@@ -43,6 +43,9 @@ var _backdrop: TextureRect
 var _back: ColorRect
 ## The country behind the menu, when there is one (`TitleVista.wanted()`).
 var vista: TitleVista = null
+## The filmed country in its place (TitleReel): the live one switched off (Low, Medium), or given
+## up for this visit.
+var reel: TitleReel = null
 var _buttons: Array[Control] = []
 var _drift := 0.0
 ## `WorldStatus.current()` when the screen was built: whether there is a world to enter at all.
@@ -68,6 +71,7 @@ func _ready() -> void:
 	_start_vista()
 	await get_tree().process_frame
 	StartupTrace.step("title: the menu's first frame (%s)" % ("the country is asked for" if vista != null
+			else "the filmed country" if reel != null
 			else "the chart only: safe mode" if SafeMode.active else "the chart only"))
 
 
@@ -75,12 +79,32 @@ func _ready() -> void:
 ## shot's country has come. The menu never waits for it.
 func _start_vista() -> void:
 	if not TitleVista.wanted():
+		_start_reel()
 		return
 	vista = TitleVista.new()
 	vista.name = "TitleVista"
 	vista.dip = _back
 	vista.chart = _backdrop
+	vista.given_up.connect(func(_why: String) -> void: _start_reel())
 	add_child(vista)
+
+
+## The filmed country, over the chart and under the sheet, when the title is to show the country
+## and the film is in the build; otherwise the chart stays.
+func _start_reel() -> void:
+	if reel != null or not reel_wanted():
+		return
+	reel = TitleReel.new()
+	reel.chart = _backdrop
+	add_child(reel)
+	move_child(reel, _backdrop.get_index() + 1)
+
+
+## Whether the title shows the filmed country: the setting on, not starting safely, a display to
+## draw on, and the film there.
+static func reel_wanted() -> bool:
+	return TitleVista.switched_on() and DisplayServer.get_name() != "headless" and TitleReel.available() \
+			and bool(WorldStatus.current().get("playable", false))
 
 
 ## The menu is being used, whatever is dark behind it: the country behind it (TitleVista) is built a
