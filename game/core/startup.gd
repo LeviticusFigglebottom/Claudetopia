@@ -111,6 +111,10 @@ func _machine() -> void:
 		types[t] if t >= 0 and t < types.size() else str(t), " ".join(driver) if not driver.is_empty() else "?",
 		RenderingServer.get_current_rendering_method(), RenderingServer.get_current_rendering_driver_name(),
 		RenderingServer.get_video_adapter_api_version()])
+	# the preset a first launch was given for this adapter (HardwareTier), or the player's own
+	var d := HardwareTier.decision
+	StartupTrace.step(("graphics: first launch, %s" % HardwareTier.describe(d["adapter"], d)) if bool(d.get("first_launch", false))
+			else "graphics: preset %s, the player's (settings.cfg)" % str(Settings.get_value("graphics", "preset", "")))
 	StartupTrace.step("worker pool %d threads; threaded reads at once %d; window %s; args %s" % [ThreadedLoads.pool_size(),
 		ThreadedLoads.limit(), str(DisplayServer.window_get_size()), " ".join(OS.get_cmdline_user_args())])
 

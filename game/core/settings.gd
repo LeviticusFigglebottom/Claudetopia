@@ -43,11 +43,17 @@ var bindings: Dictionary = {}   # action -> Array[String] of event strings
 var persist := true
 ## The file itself; a test that checks what is written points this somewhere of its own.
 var path := PATH
+## Whether the file read had a graphics section of its own (or `video` keys carried into one): the
+## player's, kept as it is. Without one, a player's first launch takes the preset its graphics
+## adapter is recommended (HardwareTier, `recommend_graphics`).
+var graphics_saved := false
 var _save_queued := false
 
 
 func _ready() -> void:
 	load_settings()
+	if not graphics_saved and HardwareTier.players_launch():
+		recommend_graphics(HardwareTier.adapter(), true)
 	apply_all()
 	# Lights and environments are adopted as they enter the tree, wherever they come from -- the
 	# world's atmosphere, an interior, a review stage -- so a setting reaches them without any of
@@ -79,8 +85,10 @@ const KBM_SLOTS := 2
 func load_settings() -> void:
 	data = DEFAULTS.duplicate(true)
 	_load_binding_defs()
+	graphics_saved = false
 	var cf := ConfigFile.new()
 	if cf.load(path) == OK:
+		graphics_saved = cf.has_section("graphics")
 		for section in cf.get_sections():
 			if section == "bindings":
 				var moved: Array[String] = []
@@ -140,6 +148,8 @@ func _migrate_video_keys(cf: ConfigFile) -> void:
 		moved = true
 	if moved and not cf.has_section_key("graphics", "preset"):
 		data["graphics"]["preset"] = Graphics.matching_preset(data["graphics"])
+	if moved:
+		graphics_saved = true
 
 
 ## A saved binding still exactly as one of RETIRED_DEFAULTS shipped takes the default it has now.
@@ -204,6 +214,22 @@ func apply_graphics_preset(preset: String) -> void:
 	_set_preset_name(preset)
 	_apply_section("graphics")
 	_queue_save()
+
+
+## The preset `adapter` is recommended (HardwareTier.recommend), applied and saved; `first_launch`
+## when it is the default a player's first launch is given. Returns the verdict. The verdict and
+## the adapter are kept for the startup trace (HardwareTier.decision), and the adapter's name in
+## the section's `detected`, which no preset or control reads.
+func recommend_graphics(adapter: Dictionary, first_launch := false) -> Dictionary:
+	var verdict := HardwareTier.recommend(adapter)
+	apply_graphics_preset(str(verdict["preset"]))
+	data["graphics"]["detected"] = "%s: %s" % [str(adapter.get("name", "")), str(verdict["preset"])]
+	HardwareTier.decision = verdict.merged({"adapter": adapter, "first_launch": first_launch})
+	Log.info("Settings", "graphics %s: %s" % ["first launch" if first_launch else "recommended",
+			HardwareTier.describe(adapter, verdict)])
+	graphics_saved = true
+	_queue_save()
+	return verdict
 
 
 func _set_preset_name(preset: String) -> void:
