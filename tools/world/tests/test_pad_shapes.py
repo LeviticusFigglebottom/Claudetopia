@@ -101,8 +101,9 @@ class PadShapeTest(unittest.TestCase):
         self.assertLess(float(sample_bilinear(Hl, g, np.array([16.0]), np.array([0.0]))[0]) - 100.0, 3.0)
 
     def test_a_cave_in_a_bank_keeps_the_bank(self):
-        """A cave's rise over a sloped pad: the slope in front of the mouth, the face at the mouth,
-        and the land's own slope going on up behind it, never a knoll standing off it."""
+        """A cave's rise over a sloped pad: a level yard in front of the face for the throat the
+        dressing stands there (roads.CAVE_YARD_M), the slope past it, the face at the mouth, and the
+        land's own slope going on up behind it, never a knoll standing off it."""
         g = Grid(512.0, 256)
         H0 = slope_land(g, 0.35)          # rising to the south (+z)
         poi = {"id": "core:poi/cave", "kind": "cave", "position": [0.0, 0.0]}
@@ -111,7 +112,9 @@ class PadShapeTest(unittest.TestCase):
         self.assertLess(st.fz, -0.9)                       # faces down the slope, north
         H, _m, levels = RD.apply_pads(g, H0.copy(), [poi], steps=steps)
         front = float(sample_bilinear(H, g, np.array([0.0]), np.array([-8.0]))[0])
-        self.assertAlmostEqual(front, 100.0 - 8.0 * 0.35, delta=0.6)
+        self.assertAlmostEqual(front, st.foot, delta=0.3)
+        beyond = float(sample_bilinear(H, g, np.array([0.0]), np.array([-20.0]))[0])
+        self.assertAlmostEqual(beyond, 100.0 - 20.0 * 0.35, delta=0.6)
         # behind the mouth: at least the face over the foot, and the slope carrying on up from there
         z = np.array([6.0, 12.0, 17.0])
         behind = sample_bilinear(H, g, np.zeros(3), z)
