@@ -202,7 +202,8 @@ def check_placement(region: str, world, content: dict, marks: list, probe: dict,
                           "cut and fill it hard; find gentler ground" % (t["id"], sd, AUD.SITE_STEEP_DEG))
         rd = min((((t["x"] - x) ** 2 + (t["z"] - z) ** 2) ** 0.5 for rr in world.roads for x, z in rr["points"]),
                  default=1e9)
-        if rd < 0.7 * t["r"] - 3.0 and t["kind"] not in AUD.ROAD_KINDS and not t["def"].get("wayside"):
+        if rd < 0.7 * t["r"] - 3.0 and t["kind"] not in AUD.ROAD_KINDS and not t["def"].get("wayside") \
+                and t["id"] not in AUD.roads_meant_through(ATLAS.load()):
             part.fail("%s: a road passes %.0f m from its middle, inside its level core" % (t["id"], rd))
         p = probe.get(t["id"])
         if p is None:

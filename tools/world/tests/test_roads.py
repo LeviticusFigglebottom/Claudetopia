@@ -511,6 +511,66 @@ class LandmarkFootTest(unittest.TestCase):
         self.assertLess(foot, 45.0)
 
 
+class PoiCoreTest(unittest.TestCase):
+    """No road runs through a point of interest's level core (docs/WORLD_LIFE.md section 2): on w4096g
+    a track ran into the North Cliff Beacon's drum and the Southgate Stone, and a lane through the
+    Naming Stone, the Last Field and the Sedge Hearth, each by a via point or an end drawn on the
+    place's middle. A road the place alone ends stops on its level ground, a via point in a core is
+    moved out of it, a leg through one is bent round it; a place a road is drawn `through`, and road
+    furniture, are left on the road."""
+
+    THINGS = {
+        "core:place/a": {"id": "core:place/a", "kind": "village", "position": [-300.0, 0.0]},
+        "core:place/b": {"id": "core:place/b", "kind": "village", "position": [300.0, 0.0]},
+        "core:poi/on_the_via": {"id": "core:poi/on_the_via", "kind": "shrine", "position": [0.0, 0.0]},
+        "core:poi/on_the_leg": {"id": "core:poi/on_the_leg", "kind": "ruins", "position": [-150.0, 0.0]},
+        "core:poi/the_end": {"id": "core:poi/the_end", "kind": "tower", "position": [0.0, 300.0]},
+        "core:poi/the_arch": {"id": "core:poi/the_arch", "kind": "ruins", "position": [150.0, -150.0]},
+        "core:poi/the_well": {"id": "core:poi/the_well", "kind": "well", "position": [0.0, -150.0]},
+    }
+    SPECS = [
+        {"from": "core:place/a", "to": "core:place/b", "via": [[0.0, 0.0]], "kind": "lane"},
+        {"from": "core:place/a", "to": "core:poi/the_end", "via": [[0.0, 200.0]], "kind": "track"},
+        {"from": "core:place/b", "to": "core:place/a", "via": [[150.0, -150.0], [0.0, -150.0]], "kind": "lane",
+         "through": ["core:poi/the_arch"]},
+    ]
+
+    def _laid(self):
+        grid = Grid(1024.0, 256)
+        H = np.zeros((256, 256), dtype=np.float32)
+        water = np.zeros((256, 256), dtype=np.uint8)
+        levels = {k: 0.0 for k in self.THINGS}
+        roads = RD.plan_roads(grid, H, self.SPECS, self.THINGS, water, levels, n_c=64)
+        return {(r.id.split("/")[-1]): r for r in roads}
+
+    @staticmethod
+    def _near(road, at) -> float:
+        return float(np.hypot(road.points[:, 0] - at[0], road.points[:, 1] - at[1]).min())
+
+    def test_the_cores_and_the_road_ends(self):
+        cores = RD.poi_cores(list(self.THINGS.values()), self.SPECS)
+        self.assertEqual(set(cores), {"core:poi/on_the_via", "core:poi/on_the_leg", "core:poi/the_end"})
+        self.assertAlmostEqual(cores["core:poi/the_end"][2], RD.PAD_LEVEL * RD.PAD_DEFAULT)
+        self.assertEqual(set(RD.poi_road_ends(self.SPECS, cores)), {"core:poi/the_end"})
+
+    def test_roads_keep_out_of_the_middles_of_places(self):
+        roads = self._laid()
+        core = RD.PAD_LEVEL * RD.PAD_DEFAULT
+        through = roads["a_b"]
+        # the via point drawn on the shrine, and the leg drawn through the ruin, go round them
+        for pid in ("core:poi/on_the_via", "core:poi/on_the_leg"):
+            self.assertGreater(self._near(through, self.THINGS[pid]["position"]), core - 0.5, pid)
+        # and it still goes past them, not off across the country
+        self.assertLess(self._near(through, self.THINGS["core:poi/on_the_via"]["position"]), core + 12.0)
+        # the arch a road is drawn through, it goes through
+        self.assertLess(self._near(roads["b_a"], self.THINGS["core:poi/the_arch"]["position"]), 2.0)
+        # the track to the tower stops on its level ground, short of its middle
+        end = roads["a_the_end"].points[-1]
+        self.assertAlmostEqual(float(np.hypot(end[0], end[1] - 300.0)), core - RD.POI_END_INSET_M, places=3)
+        # a well is road furniture: the lane runs by its middle
+        self.assertLess(self._near(roads["b_a"], self.THINGS["core:poi/the_well"]["position"]), 2.0)
+
+
 class WaysidePadTest(unittest.TestCase):
     """A wayside find (`"wayside": true` in the pack's POI) gets a small pad, not PAD_DEFAULT's:
     the build carries the key from the pack into the pad, and the pad's size follows it."""

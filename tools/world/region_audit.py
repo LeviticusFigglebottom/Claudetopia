@@ -67,9 +67,21 @@ ROADSIDE_R = 4.0
 ## A site suggested for a new place: ground no steeper than this (degrees), this far apart (m).
 SITE_SLOPE_DEG = 14.0
 SITE_APART_M = 280.0
-## Road furniture: a road through the middle of one of these is what it is for.
-ROAD_KINDS = {"bridge", "waystone", "crossroads", "tally_post", "lantern_post", "milestone", "gibbet",
-              "well", "cairn", "grave", "market_field", "beacon"}
+## Road furniture: a road through the middle of one of these is what it is for (the road planner's own
+## list, roads.ROAD_FURNITURE_KINDS).
+ROAD_KINDS = set(RD.ROAD_FURNITURE_KINDS)
+
+
+def roads_meant_through(atlas: dict) -> set:
+    """The POIs a road is meant to run through the middle of, as the road planner reads the atlas
+    (roads.poi_cores, roads.poi_road_ends): a road's `through`, and a place several roads end at,
+    where they meet."""
+    count: dict = {}
+    out = {str(t) for s in atlas.get("roads", []) for t in s.get("through", [])}
+    for s in atlas.get("roads", []):
+        for e in (s.get("from"), s.get("to")):
+            count[e] = count.get(e, 0) + 1
+    return out | {e for e, n in count.items() if n > 1 and ":poi/" in str(e)}
 WET_KINDS = {"bridge", "wreck", "strange", "waterfall", "edge"}
 ## A pad's skirt steeper than this (degrees, mean along a line out from the level core to its reach)
 ## reads as a cut or an embankment.
@@ -382,8 +394,9 @@ def poi_rows(world: World, region: str, content: dict, probe: dict) -> list:
 
 # --- (c) placement --------------------------------------------------------------------------------
 
-def placement(world: World, region: str, rows: list, marks: list, road_d_at) -> list:
-    """[{id, what, detail}] for the region's POIs."""
+def placement(world: World, region: str, rows: list, marks: list, road_d_at, through: set | None = None) -> list:
+    """[{id, what, detail}] for the region's POIs. `through`: the POIs a road is meant to run through
+    (`roads_meant_through`)."""
     out = []
     mine = {r["id"]: r for r in rows}
     pads = [t for t in marks if t["cls"] != "roadside"]
@@ -425,7 +438,7 @@ def placement(world: World, region: str, rows: list, marks: list, road_d_at) -> 
             out.append({"id": t["id"], "what": "in_water", "n": 1, "detail": "its middle is in water"})
         rd = road_d_at(t["x"], t["z"])
         core = 0.7 * t["r"]
-        if rd < core - 3.0 and r["kind"] not in ROAD_KINDS and not r["wayside"]:
+        if rd < core - 3.0 and r["kind"] not in ROAD_KINDS and not r["wayside"] and t["id"] not in (through or ()):
             out.append({"id": t["id"], "what": "road_through", "n": 1,
                         "detail": "a road passes %.0f m from its middle, inside its %.0f m level core" % (rd, core)})
     return out
@@ -458,7 +471,7 @@ def audit(region: str, world: World, content: dict, atlas: dict, probe: dict, ga
             best = min(best, float(np.hypot(px - x, pz - z).min()))
         return best
 
-    problems = placement(world, region, rows, marks, road_d_at)
+    problems = placement(world, region, rows, marks, road_d_at, roads_meant_through(atlas))
     mine = [t for t in marks if t["cls"] == "poi" and t["region"] == region]
     stats["pois"] = len(rows)
     stats["pois_per_km2"] = round(len(rows) / max(stats["land_km2"], 0.01), 2)

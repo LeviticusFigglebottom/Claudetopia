@@ -12222,7 +12222,12 @@
      -3820
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/watch_of_the_gate",
+    "core:poi/kharrow_force",
+    "core:poi/snow_shelter"
+   ]
   },
   {
    "from": "core:poi/snow_shelter",
@@ -12237,7 +12242,10 @@
      -3760
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/snow_shelter"
+   ]
   },
   {
    "from": "core:poi/kharrow_gate",
@@ -12256,7 +12264,10 @@
      -2170
     ]
    ],
-   "kind": "road"
+   "kind": "road",
+   "through": [
+    "core:poi/three_sisters_falls"
+   ]
   },
   {
    "from": "core:poi/three_sisters_falls",
@@ -12293,7 +12304,10 @@
      -2500
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/clanless_camp"
+   ]
   },
   {
    "from": "core:poi/clanless_camp",
@@ -12350,7 +12364,10 @@
      -2650
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/ghastfoot"
+   ]
   },
   {
    "from": "core:place/oskelcrag",
@@ -12388,7 +12405,10 @@
      -2040
     ]
    ],
-   "kind": "lane"
+   "kind": "lane",
+   "through": [
+    "core:poi/kharrow_gate"
+   ]
   },
   {
    "from": "core:poi/rudd_mouth_bridge",
@@ -12414,7 +12434,10 @@
      -2330
     ]
    ],
-   "kind": "lane"
+   "kind": "lane",
+   "through": [
+    "core:poi/rudd_mill"
+   ]
   },
   {
    "from": "core:place/ruddow",
@@ -12429,7 +12452,10 @@
      -3050
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/rust_scar"
+   ]
   },
   {
    "from": "core:place/merrowhithe",
@@ -12452,7 +12478,11 @@
      -2600
     ]
    ],
-   "kind": "track"
+   "kind": "track",
+   "through": [
+    "core:poi/rib_cathedral",
+    "core:poi/bone_ford"
+   ]
   },
   {
    "from": "core:poi/skarl_bridge",
