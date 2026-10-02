@@ -41,6 +41,13 @@ JOINTS = {
 PARTS = ["Body", "ArmR", "ArmL", "LegL"]
 # the def's limbs, in the order they come off, and the mesh each is
 LIMBS = [{"index": 0, "part": "ArmR"}, {"index": 1, "part": "ArmL"}, {"index": 2, "part": "LegL", "crawl": True}]
+# the King's: its arms (left first) and its jaw, broken by damage (core:boss/stone_thrall_king)
+KING_PARTS = ["Body", "ArmL", "ArmR", "Jaw"]
+KING_LIMBS = [{"index": 0, "part": "ArmL"}, {"index": 1, "part": "ArmR"}, {"index": 2, "part": "Jaw"}]
+
+
+def parts_of(st) -> list:
+    return KING_PARTS if st.king else PARTS
 
 
 @dataclass
@@ -85,13 +92,21 @@ def _long_bone(a, b, r0, r1, knob=1.6) -> List[sdf.Prim]:
 def bone_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
     """The skeleton alone, part by part (for the painter to know bone from rock, and the meshes)."""
     rng = np.random.default_rng(st.seed)
-    out = {p: sdf.Scene() for p in PARTS}
+    out = {p: sdf.Scene() for p in parts_of(st)}
     B = out["Body"]
+    JW = out["Jaw"] if st.king else B
     # the skull: a giant's, the brow heavy over deep sockets, a broad flat face
     h0, h1 = _P("Head"), _P("HeadTip")
     hd = _u(h1 - h0)
     sk = h0 + hd * 0.17 + Z * 0.06
     B.union(sdf.ellipsoid(sk, np.array([0.2, 0.24, 0.2])))
+    if st.king:
+        # the King: a crown of kingbone, long bony spines rising from the skull
+        for i in range(7):
+            a = (i - 3) / 3.0
+            base = h0 + hd * 0.12 + Z * 0.15 + X * a * 0.14
+            tip = base + _u(np.array([a * 0.5, 0.25, 1.0])) * (0.42 - 0.12 * abs(a))
+            B.union(sdf.round_cone(base, tip, 0.045, 0.01), k=0.03)
     # the neck: vertebrae from the top of the back up under the skull
     neck = [_P("Chest") + np.array([0.0, 0.2, 0.42]), _P("Neck") + np.array([0.0, 0.08, 0.02]), h0 + np.array([0.0, 0.06, -0.02])]
     for q in sdf._catmull_rom(np.array(neck), np.linspace(0, 2, 6)):
@@ -105,14 +120,14 @@ def bone_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
     # the jaw and the teeth
     j0, j1 = _P("Jaw"), _P("JawTip")
     for sx in (1.0, -1.0):
-        B.union(sdf.capsule(j0 + X * sx * 0.12, j1 + X * sx * 0.07 + Z * 0.01, 0.035), k=0.03)
-    B.union(sdf.capsule(j1 + X * 0.07, j1 - X * 0.07, 0.04), k=0.03)
+        JW.union(sdf.capsule(j0 + X * sx * 0.12, j1 + X * sx * 0.07 + Z * 0.01, 0.035), k=0.03)
+    JW.union(sdf.capsule(j1 + X * 0.07, j1 - X * 0.07, 0.04), k=0.03)
     for i in range(7):
         f = (i - 3) / 3.0
         base = h0 + hd * 0.33 - Z * 0.11 + X * f * 0.09 + hd * (0.06 * (1 - abs(f)))
         B.union(sdf.round_cone(base, base - Z * 0.05, 0.016, 0.01), k=0.006)
         lb = j1 + Z * 0.04 + X * f * 0.07 - hd * 0.02 * abs(f)
-        B.union(sdf.round_cone(lb, lb + Z * 0.04, 0.014, 0.009), k=0.006)
+        JW.union(sdf.round_cone(lb, lb + Z * 0.04, 0.014, 0.009), k=0.006)
     # the spine standing out of the back, neck to tail
     spine = [_P("Neck") + np.array([0.0, 0.1, 0.0]), _P("Chest") + np.array([0.0, 0.22, 0.12]),
              _P("Spine") + np.array([0.0, 0.25, 0.0]), _P("Hips") + np.array([0.0, 0.22, -0.02])]
@@ -154,7 +169,7 @@ def bone_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
     # the legs: the right whole in the body, the left thigh in the body and its shin and foot apart
     for side in ("L", "R"):
         B.union(_long_bone(_P("Thigh." + side), _P("Shin." + side), 0.09, 0.075))
-        lower = B if side == "R" else out["LegL"]
+        lower = B if (side == "R" or st.king) else out["LegL"]
         lower.union(_long_bone(_P("Shin." + side) - Z * 0.02, _P("Foot." + side), 0.075, 0.06))
         f0, f1 = _P("Foot." + side), _P("Toe." + side)
         for i in range(4):
@@ -165,7 +180,7 @@ def bone_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
 
 def rock_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
     rng = np.random.default_rng(st.seed + 1)
-    out = {p: sdf.Scene() for p in PARTS}
+    out = {p: sdf.Scene() for p in parts_of(st)}
     B = out["Body"]
     ch = _P("Chest")
     # the cairn in the ribs: a heap of stones filling the chest and the belly
@@ -193,7 +208,7 @@ def rock_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
         B.union(_rock(th + np.array([sx * 0.08, 0.06, 0.08]), np.array([0.16, 0.18, 0.12]), rng, k=0.05))
     # the shins and the feet: slabs bound to the bone, a flat stone under each foot
     for side, sx in (("L", 1.0), ("R", -1.0)):
-        lower = B if side == "R" else out["LegL"]
+        lower = B if (side == "R" or st.king) else out["LegL"]
         sn, ft, to = _P("Shin." + side), _P("Foot." + side), _P("Toe." + side)
         lower.union(_rock(0.5 * sn + 0.5 * ft + np.array([0.0, -0.06, 0.02]), np.array([0.13, 0.11, 0.2]), rng, k=0.04))
         lower.union(_rock(0.5 * (ft + to) + np.array([0.0, 0.04, -0.03]), np.array([0.17, 0.26, 0.07]), rng, k=0.03, sharp=0.4))
@@ -204,13 +219,6 @@ def rock_scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
         A.union(_rock(0.5 * ua + 0.5 * fa, np.array([0.15, 0.15, 0.22]), rng, k=0.04))
         A.union(_rock(0.45 * fa + 0.55 * hd, np.array([0.12, 0.13, 0.18]), rng, k=0.04))
         A.union(_rock(0.4 * hd + 0.6 * ht + np.array([0.0, -0.04, 0.0]), np.array([0.2, 0.22, 0.22]), rng, k=0.04, sharp=0.4))
-    if st.king:
-        # the King: a crown of kingbone, long bony spines rising from the skull and the shoulders
-        for i in range(7):
-            a = (i - 3) / 3.0
-            base = h0 + _u(h1 - h0) * 0.12 + Z * 0.15 + X * a * 0.14
-            tip = base + _u(np.array([a * 0.5, 0.25, 1.0])) * (0.42 - 0.12 * abs(a))
-            B.union(sdf.round_cone(base, tip, 0.045, 0.01), k=0.03)
     return out
 
 
@@ -218,9 +226,9 @@ def scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
     bones = bone_scene_parts(st)
     rocks = rock_scene_parts(st)
     n1 = paint.Noise(st.seed + 5, 64)
-    rock_fields = {p: rocks[p] for p in PARTS}
+    rock_fields = {p: rocks[p] for p in parts_of(st)}
     out = {}
-    for p in PARTS:
+    for p in parts_of(st):
         sc = sdf.Scene()
         sc.prims = list(bones[p].prims) + [q for q in rocks[p].prims]
         sc.intersect(sdf.plane(np.zeros(3), np.array([0.0, 0.0, -1.0])))
@@ -240,7 +248,7 @@ def scene_parts(st: ThrallStyle) -> Dict[str, sdf.Scene]:
 
 def regions(P: np.ndarray, st: ThrallStyle, bone_fields: Dict[str, sdf.Scene]) -> Dict[str, np.ndarray]:
     d_bone = np.full(len(P), 9.0)
-    for p in PARTS:
+    for p in bone_fields:
         if bone_fields[p].prims:
             d_bone = np.minimum(d_bone, bone_fields[p].near(0.05).eval(P))
     R = {"bone": 1.0 - bb.sm(0.004, 0.03, d_bone)}
@@ -631,3 +639,97 @@ def build_clips() -> Dict[str, RigClip]:
         "Hit": hit_clip(), "Stagger": stagger_clip(), "Knockdown": knockdown_clip(), "Get_Up": get_up_clip(),
         "Death": death_clip(),
     }
+
+
+
+# --------------------------------------------------------------------------------------
+# the King's own blows (core:boss/stone_thrall_king)
+# --------------------------------------------------------------------------------------
+
+def roar_clip() -> RigClip:
+    """Attack_3, the bone roar: reared back with its arms flung wide and the jaw dropped, the
+    roar going out of it at `hit_start` as it lunges its skull forward."""
+    L = 2.0
+    cocked, hs, he, ok = 0.9, 1.2, 1.5, 1.7
+
+    def sample(t: float) -> Poser:
+        back = S(t / cocked) * (1.0 - S((t - cocked) / (hs - cocked)))
+        out = S((t - cocked) / (hs - cocked)) * (1.0 - S((t - he) / (L - he)))
+        shake = math.sin(t * 40.0) * out
+        bp = stand(lean=-14.0 * back + 16.0 * out, bend=-10.0 * back + 12.0 * out, neck=-30.0 * back + 25.0 * out,
+                   head=-10.0 * back + 6.0 * out + 3.0 * shake, jaw=20.0 * back + 40.0 * out, lift=-0.1 * out)
+        for s_, sx in (("L", 1.0), ("R", -1.0)):
+            bp.hands[s_] = np.array([sx * 0.7, 0.3, 0.9]) * (back + out * 0.8)
+            bp.elbow[s_] = np.array([sx * 1.0, 0.4, 0.3])
+        return bi.pose(RIG, bp)
+    return RigClip("Attack_3", L, False, sample, [(cocked, "cocked"), (hs, "hit_start"), (he, "hit_end"), (ok, "cancel_ok")])
+
+
+def throw_clip() -> RigClip:
+    """Attack_5, the scree throw: a stoop and a scoop of the ground with the right fist, the arm
+    drawn back over the shoulder, and the stones flung (`hit_start`, the release)."""
+    L = 1.9
+    cocked, hs, he, ok = 1.05, 1.25, 1.35, 1.6
+
+    def sample(t: float) -> Poser:
+        stoop = B(t / 0.7, 0.6) if t < 0.7 else 0.0
+        draw = S((t - 0.55) / (cocked - 0.55)) * (1.0 - S((t - cocked) / (hs - cocked)))
+        fling = S((t - cocked) / (hs - cocked)) * (1.0 - S((t - he) / (L - he)))
+        bp = stand(lean=6.0 + 30.0 * stoop - 8.0 * draw + 18.0 * fling, bend=6.0 + 20.0 * stoop + 10.0 * fling,
+                   lift=-0.4 * stoop, twist=-25.0 * draw + 30.0 * fling, jaw=15.0 * fling)
+        scoop = np.array([0.1, -0.6, -0.95])
+        cock = np.array([-0.2, 0.55, 1.3])
+        throw = np.array([0.35, -1.2, 0.6])
+        bp.hands["R"] = scoop * stoop + cock * draw + throw * fling
+        bp.elbow["R"] = np.array([-1.0, 0.8, 0.3])
+        bp.fist["R"] = 25.0 * stoop
+        bp.feet = {"L": _P("Foot.L") + np.array([0.0, -0.3 * (draw + fling), 0.0]), "R": _P("Foot.R")}
+        return bi.pose(RIG, bp)
+    return RigClip("Attack_5", L, False, sample, [(cocked, "cocked"), (hs, "release"), (hs, "hit_start"), (he, "hit_end"),
+                                                   (ok, "cancel_ok")])
+
+
+def echo_clip() -> RigClip:
+    """Attack_6, the shaft's echo: it turns, sets its left hand flat on the shaft's wall and bows
+    its skull to it, and the note goes out of it through the stone (`channel_start`); the game
+    holds the note as long as it lasts."""
+    L = 3.6
+    cs, ce, ok = 1.2, 3.0, 3.3
+
+    def sample(t: float) -> Poser:
+        reach = S(t / cs) * (1.0 - S((t - ce) / (L - ce)))
+        hum = math.sin(t * 30.0) * S((t - cs) / 0.3) * (1.0 - S((t - ce) / 0.3))
+        bp = stand(yaw=20.0 * reach, twist=25.0 * reach, side_bend=8.0 * reach, lean=6.0 + 12.0 * reach,
+                   neck=20.0 * reach + 2.0 * hum, head=10.0 * reach, jaw=12.0 * reach + 4.0 * hum)
+        bp.hands["L"] = np.array([0.7, -0.5, 0.9]) * reach
+        bp.elbow["L"] = np.array([1.0, 0.6, 0.0])
+        bp.hands["R"] = np.array([-0.1, -0.2, 0.3]) * reach
+        return bi.pose(RIG, bp)
+    return RigClip("Attack_6", L, False, sample, [(0.8, "cocked"), (cs, "channel_start"), (ce, "channel_end"), (ok, "cancel_ok")])
+
+
+def build_king_clips() -> Dict[str, RigClip]:
+    c = build_clips()
+    for n in ("Crawl", "Crawl_Idle", "Crawl_Death"):
+        c.pop(n, None)
+    c["Attack_2"] = swing_clip("Attack_2", "L")
+    c["Attack_3"] = roar_clip()
+    c["Attack_4"] = swing_clip("Attack_4", "R")
+    c["Attack_5"] = throw_clip()
+    c["Attack_6"] = echo_clip()
+    return c
+
+
+class _KingModule:
+    """lib/thrall as the King's spec reads it: the same body, his parts and his clips."""
+    def __getattr__(self, name):
+        if name not in globals():
+            raise AttributeError(name)
+        return globals()[name]
+
+    @staticmethod
+    def build_clips():
+        return build_king_clips()
+
+
+KING = _KingModule()

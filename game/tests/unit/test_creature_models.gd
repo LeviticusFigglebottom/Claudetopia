@@ -9,7 +9,7 @@ extends TestCase
 const FORGED: Array[String] = ["core:enemy/down_wolf", "core:enemy/crag_wolf", "core:enemy/thornhound",
 	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver", "core:enemy/stone_thrall", "core:enemy/bristleback",
 	"core:enemy/sallowjaw", "core:enemy/gutter_drake", "core:enemy/warden",
-	"core:enemy/wisp"]
+	"core:enemy/wisp", "core:boss/stone_thrall_king"]
 const REACTIONS: Array[String] = ["Hit_Light", "Hit_Light_L", "Stagger", "Stagger_B", "Knockdown", "Get_Up", "Death_A",
 	"Idle", "Idle_Combat", "Walk", "Run"]
 
@@ -170,3 +170,14 @@ func test_the_wisp_is_a_light_that_goes_out() -> void:
 		t += _tree().root.get_process_delta_time()
 		e.anim._physics_process(1.0 / 30.0)
 	assert_false(m._light.visible, "dead, it has gone out")
+
+
+func test_every_custom_foe_and_boss_has_a_forged_body() -> void:
+	# no def with a creature rig is left to stand as a box
+	for type in ["enemy", "boss"]:
+		for id in ContentDB.ids_of(type):
+			var def: Dictionary = ContentDB.get_or_empty(id)
+			if str(def.get("rig", "humanoid")) == "humanoid" or def.is_empty():
+				continue
+			assert_false(CreatureModel.model_for(str(def.get("body_variant", ""))).is_empty(),
+				"%s (%s) has a forged body" % [id, def.get("body_variant", "")])

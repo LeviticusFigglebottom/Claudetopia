@@ -1,12 +1,12 @@
 {
  "bones": 21,
  "bounds": [
-  -0.9127,
-  -0.8469,
-  -0.0119,
-  0.9477,
-  0.6666,
-  2.9938
+  -0.9115,
+  -0.827,
+  -0.0118,
+  0.9439,
+  0.6656,
+  3.2907
  ],
  "clips": [
   "Attack_1",
@@ -14,9 +14,7 @@
   "Attack_3",
   "Attack_4",
   "Attack_5",
-  "Crawl",
-  "Crawl_Death",
-  "Crawl_Idle",
+  "Attack_6",
   "Death",
   "Get_Up",
   "Hit",
@@ -33,9 +31,9 @@
   "Walk_Back"
  ],
  "collision": "capsule",
- "def_scale": 2.2,
+ "def_scale": 1.6,
  "generator": "creature_forge",
- "height": 2.9938,
+ "height": 3.2907,
  "hurt": [
   {
    "a": [
@@ -64,33 +62,32 @@
  "limbs": [
   {
    "index": 0,
-   "part": "ArmR"
-  },
-  {
-   "index": 1,
    "part": "ArmL"
   },
   {
-   "crawl": true,
+   "index": 1,
+   "part": "ArmR"
+  },
+  {
    "index": 2,
-   "part": "LegL"
+   "part": "Jaw"
   }
  ],
  "look": "",
- "mesh": "StoneThrall_Body",
+ "mesh": "StoneThrallKing_Body",
  "origin": null,
  "params": {
   "family": "biped",
   "style": {
-   "king": false,
+   "king": true,
    "seed": 31
   }
  },
  "parts": [
-  "StoneThrall_Body",
-  "StoneThrall_ArmL",
-  "StoneThrall_ArmR",
-  "StoneThrall_LegL"
+  "StoneThrallKing_Body",
+  "StoneThrallKing_ArmL",
+  "StoneThrallKing_ArmR",
+  "StoneThrallKing_Jaw"
  ],
  "rig": "WM_Thrall_v1",
  "rig_manifest": {
@@ -330,11 +327,11 @@
   "rig": "WM_Thrall_v1"
  },
  "seed": 31,
- "tint": "#8c8578",
+ "tint": "#7e7768",
  "tris": [
-  11994,
-  3996,
-  1196
+  13997,
+  4497,
+  1403
  ],
  "version": 1
 }

@@ -58,7 +58,9 @@
   }
  ],
  "limbs": [],
+ "look": "",
  "mesh": "Weaver_Body",
+ "origin": null,
  "params": {
   "family": "spider",
   "style": {

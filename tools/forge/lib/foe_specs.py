@@ -126,16 +126,19 @@ def spec(name: str) -> FoeSpec:
     if name in ("stone_thrall", "stone_thrall_king"):
         from . import thrall as th
         st = th.ThrallStyle(king=name.endswith("king"))
-        return FoeSpec(name, "biped", th.RIG, st, lambda: th.scene_parts(st)["Body"], def_scale=3.2 if st.king else 2.2,
-                       tex=1024, tris=12000, lod1=4000, lod2=1200, spacing=0.011,
-                       extra={"tint": "#7e7768" if st.king else "#8c8578", "module": th,
-                              "parts": lambda: th.scene_parts(st), "limbs": th.LIMBS,
-                              "part_share": {"Body": 0.6, "ArmR": 0.15, "ArmL": 0.15, "LegL": 0.1}})
+        # the King is the thrall's frame grown to 6.2 m (his def's scale 3.2 over 1.6) and crowned
+        return FoeSpec(name, "biped", th.RIG, st, lambda: th.scene_parts(st)["Body"], def_scale=1.6 if st.king else 2.2,
+                       tex=1024, tris=14000 if st.king else 12000, lod1=4500 if st.king else 4000,
+                       lod2=1400 if st.king else 1200, spacing=0.011,
+                       extra={"tint": "#7e7768" if st.king else "#8c8578", "module": th.KING if st.king else th,
+                              "parts": lambda: th.scene_parts(st), "limbs": th.KING_LIMBS if st.king else th.LIMBS,
+                              "part_share": ({"Body": 0.66, "ArmL": 0.15, "ArmR": 0.15, "Jaw": 0.04} if st.king else
+                                             {"Body": 0.6, "ArmR": 0.15, "ArmL": 0.15, "LegL": 0.1})})
     raise KeyError(name)
 
 
 FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "gutter_drake", "sallowjaw", "weaver",
-        "stone_thrall", "warden", "wisp"]
+        "stone_thrall", "stone_thrall_king", "warden", "wisp"]
 QUADS = ("canid", "boar", "reptile")
 
 
