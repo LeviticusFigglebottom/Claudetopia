@@ -66,7 +66,14 @@ cfac2a7b) and not yet merged into it.
   - Foes without a model are painted by `creature_hide.gdshader`. **11 common foes (`"rig": "custom"`) are still boxes;** the `creature-forge` agent is forging them, and the shader still wants the warm set.
   - The Briarwold's wider way-back search (b6275732) cut the Gull Holm cellars off from their way in, so it was reverted (5c19cb63) and is being redone.
   - **Every landing runs test_brightwater_places too**: Brightwater's insides are tested there, not in a test_sites_ file.
-- **Then:** rebuild the world as w4096h, the one full check, a nightly.
+- **2026-10-02 (32e4fccb): the world rebuilt twice, and the creatures in.**
+  - w4096h, then **w4096i** (a88689c0): 119 built-world Python tests and the seat, site and signpost tests pass on it.
+  - Seat baselines (1b5b843c): fence_gap was re-measured at the new places, since the test samples every Nth place. At w4096g's places (`SEAT_PLACES_FROM`) it is flat.
+  - Three sight claims the land refuses were dropped: the Name-Wife's Hollow from South Stilts, Dunnow from the Snow Shelter, Ghaleld from Brindlecrag.
+  - The twelve custom-rigged foes and the Stone-Thrall King are forged (`creature_model.gd`), so no foe stands as a box, and the Unvowed bestiary is set right.
+- **At work:** `creature-forge`, on the grey hart (the Ranger's lead) and Old Grey Bitch's own shape.
+- **Then:** the one full check (suite, journeys, flow, fights, every quest walked), and a nightly.
+
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
