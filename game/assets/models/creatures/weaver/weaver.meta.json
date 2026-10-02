@@ -1,0 +1,560 @@
+{
+ "bones": 43,
+ "bounds": [
+  -0.9721,
+  -0.9668,
+  -0.0013,
+  0.9718,
+  0.8327,
+  0.7716
+ ],
+ "clips": [
+  "Attack_1",
+  "Attack_2",
+  "Attack_3",
+  "Death",
+  "Get_Up",
+  "Hit",
+  "Idle",
+  "Idle_Combat",
+  "Knockdown",
+  "Rise",
+  "Run",
+  "Stagger",
+  "Strafe_L",
+  "Strafe_R",
+  "Turn_L90",
+  "Turn_R90",
+  "Walk",
+  "Walk_Back"
+ ],
+ "collision": "capsule",
+ "def_scale": 1.2,
+ "generator": "creature_forge",
+ "height": 0.7716,
+ "hurt": [
+  {
+   "a": [
+    0.0,
+    0.42,
+    0.2
+   ],
+   "b": [
+    0.0,
+    0.42,
+    -0.2
+   ],
+   "kind": "capsule",
+   "r": 0.16
+  },
+  {
+   "c": [
+    0.0,
+    0.52,
+    -0.44
+   ],
+   "kind": "sphere",
+   "r": 0.27
+  }
+ ],
+ "limbs": [],
+ "look": "",
+ "mesh": "Weaver_Body",
+ "origin": null,
+ "params": {
+  "family": "spider",
+  "style": {
+   "seed": 21
+  }
+ },
+ "parts": [
+  "Weaver_Body"
+ ],
+ "rig": "WM_Weaver_v1",
+ "rig_manifest": {
+  "bones": [
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "length": 0.09,
+    "name": "Root",
+    "parent": null
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.08,
+     0.4
+    ],
+    "length": 0.18,
+    "name": "Hips",
+    "parent": "Root"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.17,
+     0.44
+    ],
+    "length": 0.5787,
+    "name": "Abdomen",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.74,
+     0.5
+    ],
+    "length": 0.0922,
+    "name": "Spinner",
+    "parent": "Abdomen"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     -0.13,
+     0.43
+    ],
+    "length": 0.0906,
+    "name": "Head",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.04,
+     -0.215,
+     0.39
+    ],
+    "length": 0.1253,
+    "name": "Fang.L",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.06,
+     -0.19,
+     0.39
+    ],
+    "length": 0.1225,
+    "name": "Palp1.L",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.11,
+     -0.3,
+     0.37
+    ],
+    "length": 0.1435,
+    "name": "Palp2.L",
+    "parent": "Palp1.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.04,
+     -0.215,
+     0.39
+    ],
+    "length": 0.1253,
+    "name": "Fang.R",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.06,
+     -0.19,
+     0.39
+    ],
+    "length": 0.1225,
+    "name": "Palp1.R",
+    "parent": "Head"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.11,
+     -0.3,
+     0.37
+    ],
+    "length": 0.1435,
+    "name": "Palp2.R",
+    "parent": "Palp1.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0636,
+     -0.1272,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa1.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0927,
+     -0.1738,
+     0.41
+    ],
+    "length": 0.42,
+    "name": "Femur1.L",
+    "parent": "Coxa1.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.3005,
+     -0.5063,
+     0.5608
+    ],
+    "length": 0.46,
+    "name": "Tibia1.L",
+    "parent": "Femur1.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.5258,
+     -0.8668,
+     0.3852
+    ],
+    "length": 0.4,
+    "name": "Tarsus1.L",
+    "parent": "Tibia1.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.0636,
+     -0.1272,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa1.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.0927,
+     -0.1738,
+     0.41
+    ],
+    "length": 0.42,
+    "name": "Femur1.R",
+    "parent": "Coxa1.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.3005,
+     -0.5063,
+     0.5608
+    ],
+    "length": 0.46,
+    "name": "Tibia1.R",
+    "parent": "Femur1.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.5258,
+     -0.8668,
+     0.3852
+    ],
+    "length": 0.4,
+    "name": "Tarsus1.R",
+    "parent": "Tibia1.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.1113,
+     -0.0562,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa2.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.1623,
+     -0.0768,
+     0.41
+    ],
+    "length": 0.4,
+    "name": "Femur2.L",
+    "parent": "Coxa2.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.5216,
+     -0.222,
+     0.5092
+    ],
+    "length": 0.42,
+    "name": "Tibia2.L",
+    "parent": "Femur2.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.8768,
+     -0.3655,
+     0.337
+    ],
+    "length": 0.35,
+    "name": "Tarsus2.L",
+    "parent": "Tibia2.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.1113,
+     -0.0562,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa2.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.1623,
+     -0.0768,
+     0.41
+    ],
+    "length": 0.4,
+    "name": "Femur2.R",
+    "parent": "Coxa2.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.5216,
+     -0.222,
+     0.5092
+    ],
+    "length": 0.42,
+    "name": "Tibia2.R",
+    "parent": "Femur2.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.8768,
+     -0.3655,
+     0.337
+    ],
+    "length": 0.35,
+    "name": "Tarsus2.R",
+    "parent": "Tibia2.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.1154,
+     0.0413,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa3.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.1682,
+     0.0565,
+     0.41
+    ],
+    "length": 0.34,
+    "name": "Femur3.L",
+    "parent": "Coxa3.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.4936,
+     0.1498,
+     0.4423
+    ],
+    "length": 0.36,
+    "name": "Tibia3.L",
+    "parent": "Femur3.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.8066,
+     0.2396,
+     0.2889
+    ],
+    "length": 0.3,
+    "name": "Tarsus3.L",
+    "parent": "Tibia3.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.1154,
+     0.0413,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa3.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.1682,
+     0.0565,
+     0.41
+    ],
+    "length": 0.34,
+    "name": "Femur3.R",
+    "parent": "Coxa3.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.4936,
+     0.1498,
+     0.4423
+    ],
+    "length": 0.36,
+    "name": "Tibia3.R",
+    "parent": "Femur3.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.8066,
+     0.2396,
+     0.2889
+    ],
+    "length": 0.3,
+    "name": "Tarsus3.R",
+    "parent": "Tibia3.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0834,
+     0.1079,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa4.L",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.1216,
+     0.1475,
+     0.41
+    ],
+    "length": 0.4,
+    "name": "Femur4.L",
+    "parent": "Coxa4.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.3962,
+     0.4318,
+     0.4711
+    ],
+    "length": 0.44,
+    "name": "Tibia4.L",
+    "parent": "Femur4.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.6929,
+     0.7392,
+     0.3659
+    ],
+    "length": 0.38,
+    "name": "Tarsus4.L",
+    "parent": "Tibia4.L"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.0834,
+     0.1079,
+     0.39
+    ],
+    "length": 0.0585,
+    "name": "Coxa4.R",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.1216,
+     0.1475,
+     0.41
+    ],
+    "length": 0.4,
+    "name": "Femur4.R",
+    "parent": "Coxa4.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.3962,
+     0.4318,
+     0.4711
+    ],
+    "length": 0.44,
+    "name": "Tibia4.R",
+    "parent": "Femur4.R"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.6929,
+     0.7392,
+     0.3659
+    ],
+    "length": 0.38,
+    "name": "Tarsus4.R",
+    "parent": "Tibia4.R"
+   }
+  ],
+  "rig": "WM_Weaver_v1"
+ },
+ "seed": 21,
+ "tint": "#59504a",
+ "tris": [
+  8902,
+  3000,
+  899
+ ],
+ "version": 1
+}

@@ -209,6 +209,9 @@ func _setup_components() -> void:
 	caster.setup(self, will)
 	caster.skill_lookup = func(def: Dictionary) -> float: return get_skill(SpellRuntime.skill_for(def))
 	anim.setup(model, body_kind, tint, body_scale, body_variant)
+	# a forged beast's body says where a blow lands on it
+	if anim.model != null and anim.model.has_method("fit_hurtbox") and hurtbox != null:
+		anim.model.call("fit_hurtbox", hurtbox, self)
 	# Method references, not closures, all the way down: a closure is not disconnected when
 	# the actor that made it is freed, and one on a component that outlived its owner is a
 	# call into nothing once per stat change for the rest of the process.

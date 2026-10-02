@@ -1,0 +1,339 @@
+{
+ "Attack_1": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.62
+   },
+   {
+    "name": "strike",
+    "t": 0.76
+   },
+   {
+    "name": "hit_start",
+    "t": 0.86
+   },
+   {
+    "name": "hit_end",
+    "t": 1.02
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.32
+   }
+  ],
+  "length": 1.7,
+  "loop": false
+ },
+ "Attack_2": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.4
+   },
+   {
+    "name": "strike",
+    "t": 0.5
+   },
+   {
+    "name": "hit_start",
+    "t": 0.58
+   },
+   {
+    "name": "hit_end",
+    "t": 0.74
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.98
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
+ "Attack_3": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.4
+   },
+   {
+    "name": "strike",
+    "t": 0.5
+   },
+   {
+    "name": "hit_start",
+    "t": 0.58
+   },
+   {
+    "name": "hit_end",
+    "t": 0.74
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.98
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
+ "Attack_4": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.36
+   },
+   {
+    "name": "hit_start",
+    "t": 0.52
+   },
+   {
+    "name": "hit_end",
+    "t": 0.64
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.86
+   }
+  ],
+  "length": 1.1,
+  "loop": false
+ },
+ "Attack_5": {
+  "events": [
+   {
+    "name": "cocked",
+    "t": 0.42
+   },
+   {
+    "name": "hit_start",
+    "t": 0.58
+   },
+   {
+    "name": "hit_end",
+    "t": 0.8
+   },
+   {
+    "name": "cancel_ok",
+    "t": 1.0
+   }
+  ],
+  "length": 1.3,
+  "loop": false
+ },
+ "Crawl": {
+  "events": [],
+  "length": 1.6,
+  "loop": true,
+  "speed": 0.9
+ },
+ "Crawl_Death": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 1.12
+   }
+  ],
+  "held": true,
+  "length": 1.6,
+  "loop": false
+ },
+ "Crawl_Idle": {
+  "events": [],
+  "length": 2.0,
+  "loop": true
+ },
+ "Death": {
+  "events": [
+   {
+    "name": "death_start",
+    "t": 0.02
+   },
+   {
+    "name": "knees_land",
+    "t": 0.84
+   },
+   {
+    "name": "body_land",
+    "t": 1.8
+   }
+  ],
+  "held": true,
+  "length": 2.4,
+  "loop": false
+ },
+ "Get_Up": {
+  "events": [
+   {
+    "name": "cancel_ok",
+    "t": 0.63
+   }
+  ],
+  "length": 0.9,
+  "loop": false
+ },
+ "Hit": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.35
+   }
+  ],
+  "length": 0.5,
+  "loop": false
+ },
+ "Idle": {
+  "events": [],
+  "length": 4.0,
+  "loop": true
+ },
+ "Idle_Combat": {
+  "events": [],
+  "length": 2.4,
+  "loop": true
+ },
+ "Knockdown": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.02
+   },
+   {
+    "name": "body_land",
+    "t": 0.55
+   }
+  ],
+  "held": true,
+  "length": 1.6,
+  "loop": false
+ },
+ "Run": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.4333
+   }
+  ],
+  "length": 0.8667,
+  "loop": true,
+  "speed": 2.2
+ },
+ "Stagger": {
+  "events": [
+   {
+    "name": "hit_react",
+    "t": 0.01
+   },
+   {
+    "name": "cancel_ok",
+    "t": 0.8
+   }
+  ],
+  "length": 1.0,
+  "loop": false
+ },
+ "Strafe_L": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6667
+   }
+  ],
+  "length": 1.3333,
+  "loop": true,
+  "side": -1.0,
+  "speed": 0.6
+ },
+ "Strafe_R": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6667
+   }
+  ],
+  "length": 1.3333,
+  "loop": true,
+  "side": 1.0,
+  "speed": 0.6
+ },
+ "Turn_L90": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6667
+   }
+  ],
+  "length": 1.3333,
+  "loop": true,
+  "turn": 90.0
+ },
+ "Turn_R90": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6667
+   }
+  ],
+  "length": 1.3333,
+  "loop": true,
+  "turn": -90.0
+ },
+ "Walk": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6
+   }
+  ],
+  "length": 1.2,
+  "loop": true,
+  "speed": 1.1
+ },
+ "Walk_Back": {
+  "events": [
+   {
+    "name": "footstep_l",
+    "t": 0.0
+   },
+   {
+    "name": "footstep_r",
+    "t": 0.6667
+   }
+  ],
+  "length": 1.3333,
+  "loop": true,
+  "speed": -0.8
+ }
+}

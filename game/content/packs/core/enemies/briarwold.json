@@ -9,8 +9,8 @@
     "faction": "beasts",
     "tint": "#4a3b2c",
     "scale": 1.05,
-    "height": 1.0,
-    "radius": 0.45,
+    "height": 0.9,
+    "radius": 0.42,
     "clips": [
       "Idle",
       "Walk",
@@ -115,7 +115,7 @@
     "faction": "beasts",
     "tint": "#59504a",
     "scale": 1.2,
-    "height": 1.0,
+    "height": 0.8,
     "radius": 0.55,
     "clips": [
       "Idle",
