@@ -191,6 +191,30 @@ func test_the_hart_is_led_by_road_and_down_the_stair() -> void:
 	assert_eq(str(spec.get("way", "")), "descent", "and then it goes down the stair")
 
 
+func test_the_hart_is_the_forged_grey_stag_and_looks_back_at_who_follows() -> void:
+	# The lead's body: the forge's grey hart (horse_forge.py `hart`), not the placeholder box, with
+	# the clips Leads plays -- walk, trot, standing, alert, and looking back over either shoulder.
+	var lead := Leads._Lead.make({"id": "grey_hart", "body": "hart"})
+	_tree().root.add_child(lead)
+	_nodes.append(lead)
+	assert_true(lead.placeholder == null, "the hart is no PlaceholderBody")
+	assert_true(lead.beast != null, "the hart wears the forged body")
+	if lead.beast == null:
+		return
+	for clip in ["Idle", "Alert", "Walk", "Trot", "Run", "Look_Back", "Look_Back_R", "Turn_L90", "Turn_R90"]:
+		assert_true(lead.beast.has_clip(clip), "the hart has %s" % clip)
+	var antlers := false
+	for mi in lead.beast.meshes():
+		antlers = antlers or (String((mi as Node).name).to_lower().contains("antler") and (mi as MeshInstance3D).visible)
+	assert_true(antlers, "a stag: the antlers are shown")
+	# facing -Z: one behind it on its left is looked at over the left shoulder, on its right over
+	# the right; one ahead of it is turned to, not looked back at
+	lead.rotation.y = 0.0
+	assert_eq(lead._look_back(Vector2(-0.4, 1.0)), "Look_Back")
+	assert_eq(lead._look_back(Vector2(0.4, 1.0)), "Look_Back_R")
+	assert_eq(lead._look_back(Vector2(0.3, -1.0)), "")
+
+
 func test_rosen_shoots_only_when_you_are_hurt() -> void:
 	var quests: Node = Social.quests
 	quests.call("start", FIRST)
