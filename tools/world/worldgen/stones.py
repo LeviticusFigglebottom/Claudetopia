@@ -45,6 +45,11 @@ def _put(out: dict, grid: Grid, H: np.ndarray, x: float, z: float, yaw: float, s
         [round(x, 2), round(y, 2), round(z, 2), round(yaw, 1), round(scale, 3), tint])
 
 
+## How far from a road's centre line a set stone stands at the least: half the widest carriageway
+## (a highway's 6 m), a stone's own half-width, and a step.
+STONE_ROAD_CLEAR_M = 5.0
+
+
 def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water: np.ndarray,
           road_d: np.ndarray, pad_mask: np.ndarray, regions: list, places: list, roads: list,
           index: dict, seed: int, tint: str = "#ffffff") -> dict:
@@ -57,7 +62,10 @@ def place(grid: Grid, H: np.ndarray, owner: np.ndarray, slope: np.ndarray, water
     def standable(x: float, z: float) -> bool:
         j, i = grid.to_tex(np.array([x], dtype=np.float32), np.array([z], dtype=np.float32))
         j, i = int(np.clip(j[0], 0, n - 1)), int(np.clip(i[0], 0, n - 1))
-        return bool(water[i, j] == 0 and pad_mask[i, j] == 0 and slope[i, j] < 0.5)
+        # and off every road: a pair flanking one road where it tops a rise stood a stone in the
+        # carriageway of another that crosses there (w4096h: the Charter Delf's new track)
+        return bool(water[i, j] == 0 and pad_mask[i, j] == 0 and slope[i, j] < 0.5
+                    and float(road_d[i, j]) > STONE_ROAD_CLEAR_M)
 
     for region in regions:
         assets = _assets(index, region.art_short)
