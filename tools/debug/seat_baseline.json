@@ -1,12 +1,12 @@
 {
  "briarwold": {
-  "buried": 2.0,
-  "fence_gap": 158.0,
+  "buried": 4.0,
+  "fence_gap": 142.0,
   "on_road": 2.0,
   "overlap": 1.0
  },
  "brightwater": {
-  "fence_gap": 564,
+  "fence_gap": 587,
   "floating": 1,
   "on_road": 1
  },
