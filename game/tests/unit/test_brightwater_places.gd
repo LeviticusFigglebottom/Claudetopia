@@ -8,6 +8,7 @@ extends TestCase
 ## (the walk test_sites gives its showcases).
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
+const TestSites := preload("res://tests/unit/test_sites.gd")
 const GENERATED := "res://world/generated"
 const PEOPLE := {
 	"core:npc/linnet_whitlow": "core:poi/bleaching_green",
@@ -267,45 +268,9 @@ func test_the_insides_are_built_walkable_and_left() -> void:
 	player.free()
 
 
-## Whether two points (local to the navigation mesh) stand on polygons joined by shared edges
-## (test_sites' own reading).
+## Whether two points (local to the navigation mesh) stand on polygons joined by shared edges:
+## test_sites' own reading, a point standing on the polygon under it (or nearest it). The copy
+## kept here took the polygon whose middle lay within 4 m, and so lost a way in standing on a
+## mesh drawn in a few wide triangles (the Gull Holm cellars' mouth).
 static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
-	var verts := nm.get_vertices()
-	var n := nm.get_polygon_count()
-	if n == 0:
-		return false
-	var by_vert := {}
-	var key := func(v: Vector3) -> Vector3i: return Vector3i((v * 10.0).round())
-	for i in n:
-		for vi in nm.get_polygon(i):
-			by_vert.get_or_add(key.call(verts[vi]), []).append(i)
-	var nearest := func(p: Vector3) -> int:
-		var best := -1
-		var best_d := INF
-		for i in n:
-			var c := Vector3.ZERO
-			var poly := nm.get_polygon(i)
-			for vi in poly:
-				c += verts[vi]
-			c /= float(poly.size())
-			var dd := Vector2(c.x - p.x, c.z - p.z).length() + absf(c.y - p.y) * 2.0
-			if dd < best_d:
-				best_d = dd
-				best = i
-		return best if best_d < 4.0 else -1
-	var start: int = nearest.call(a)
-	var goal: int = nearest.call(b)
-	if start < 0 or goal < 0:
-		return false
-	var seen := {start: true}
-	var todo := [start]
-	while not todo.is_empty():
-		var i: int = todo.pop_back()
-		if i == goal:
-			return true
-		for vi in nm.get_polygon(i):
-			for j in by_vert[key.call(verts[vi])]:
-				if not seen.has(j):
-					seen[j] = true
-					todo.append(j)
-	return false
+	return TestSites._joined(nm, a, b)
