@@ -37,10 +37,12 @@
           "#545462"
         ],
         "lights": [
-          "fungus",
-          "candles"
+          "torch",
+          "candles",
+          "fungus"
         ],
-        "light_colour": "#8fb6d8"
+        "light_colour": "#ffc27a",
+        "fill_colour": "#8fb6d8"
       },
       "features": [
         {
@@ -159,8 +161,8 @@
           "#76614f"
         ],
         "lights": [
-          "lantern",
-          "torch"
+          "torch",
+          "lantern"
         ],
         "light_colour": "#ffa060"
       },

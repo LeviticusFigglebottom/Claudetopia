@@ -35,11 +35,13 @@
           "#626a70"
         ],
         "lights": [
+          "torch",
           "candles",
           "fungus"
         ],
         "light_colour": "#a9c7d0",
-        "wet": true
+        "wet": true,
+        "fill_colour": "#9fb8c4"
       },
       "features": [
         {

@@ -3211,26 +3211,28 @@ static func the_undertone(d: PoiDressing) -> void:
 	var face := into * (foot - 7.0)                           # the facade's front
 	var g := k.on_ground(face.x, face.y).y
 	var stone := m.begin()
-	var open_w := 6.2
-	var open_h := 11.0
-	var pil := 3.2
+	# big enough to read as a door in the plateau from the far side of the Ashgrid: the cliff is fifty
+	# metres, and a facade of seventeen read as a notch in it at a quarter of a kilometre
+	var open_w := 8.0
+	var open_h := 15.0
+	var pil := 4.2
 	var deep := 11.0                                           # from its front back into the rock
 	var back := face + into * deep * 0.5
 	# the pilasters, the lintel over the opening, the stepped crown
 	for s in [-1.0, 1.0]:
 		var p := back + across * (open_w * 0.5 + pil * 0.5) * float(s)
-		var xf := Transform3D(b, Vector3(p.x, g + 7.5 - 1.0, p.y))
-		_box(stone, xf, Vector3(pil, 17.0, deep))
-		k.collider(Vector3(pil, 17.0, deep), xf, "stone")
+		var xf := Transform3D(b, Vector3(p.x, g + 10.0 - 1.0, p.y))
+		_box(stone, xf, Vector3(pil, 22.0, deep))
+		k.collider(Vector3(pil, 22.0, deep), xf, "stone")
 		# its plinth and capital, stepped out
 		_box(stone, Transform3D(b, Vector3(p.x, g + 0.4, p.y) - Vector3(into.x, 0.0, into.y) * 0.35), Vector3(pil + 0.7, 1.6, deep + 0.6))
 		_box(stone, Transform3D(b, Vector3(p.x, g + open_h + 0.3, p.y) - Vector3(into.x, 0.0, into.y) * 0.3), Vector3(pil + 0.6, 0.8, deep + 0.5))
 	var lintel := Transform3D(b, Vector3(back.x, g + open_h + 1.4, back.y))
 	_box(stone, lintel, Vector3(open_w + pil * 2.0 + 0.6, 2.8, deep))
 	k.collider(Vector3(open_w + pil * 2.0, 2.8, deep), lintel, "stone")
-	for i in 3:
-		var w := open_w + pil * 2.0 - 2.2 * float(i + 1)
-		_box(stone, Transform3D(b, Vector3(back.x, g + open_h + 3.2 + 1.1 * float(i), back.y)), Vector3(w, 1.1, deep - 0.6 * float(i)))
+	for i in 4:
+		var w := open_w + pil * 2.0 - 2.6 * float(i + 1)
+		_box(stone, Transform3D(b, Vector3(back.x, g + open_h + 3.4 + 1.5 * float(i), back.y)), Vector3(w, 1.5, deep - 0.6 * float(i)))
 	# the doorway's floor, paved, going in to the dark at the cliff's foot
 	var floor_at := face + into * 3.5
 	_box(stone, Transform3D(b, Vector3(floor_at.x, g - 0.15, floor_at.y)), Vector3(open_w + 0.4, 0.4, 7.0))
@@ -3248,17 +3250,17 @@ static func the_undertone(d: PoiDressing) -> void:
 	var figures := m.begin()
 	for s in [-1.0, 1.0]:
 		var p := face - into * 1.2 + across * (open_w * 0.5 + pil * 0.5) * float(s)
-		_box(figures, Transform3D(b, Vector3(p.x, g + 0.6, p.y)), Vector3(2.6, 1.2, 2.2))
-		_chorister(d, figures, Vector3(p.x, g + 1.2, p.y), PoiKit.yaw_of(-into), 8.6, false)
-		k.collider(Vector3(2.4, 9.5, 2.0), Transform3D(b, Vector3(p.x, g + 4.8, p.y)), "stone")
+		_box(figures, Transform3D(b, Vector3(p.x, g + 0.6, p.y)), Vector3(3.4, 1.2, 2.8))
+		_chorister(d, figures, Vector3(p.x, g + 1.2, p.y), PoiKit.yaw_of(-into), 11.5, false)
+		k.collider(Vector3(3.0, 12.5, 2.6), Transform3D(b, Vector3(p.x, g + 6.4, p.y)), "stone")
 	await k.step()
 	m.commit(figures, k.surface("oroth", 0.8), "Choristers", true)
 	# black glass run down the rock from the crack over the crown
 	var glass := m.begin()
-	for i in 11:
-		var x := k.rng.randf_range(-9.0, 9.0)
-		var y := g + open_h + k.rng.randf_range(4.0, 16.0)
-		var run := k.rng.randf_range(3.0, 8.0)
+	for i in 14:
+		var x := k.rng.randf_range(-7.0, 7.0)
+		var y := g + open_h + k.rng.randf_range(7.0, 13.0)
+		var run := k.rng.randf_range(4.0, 10.0)
 		# on the rock: as far in as the cliff stands that high
 		var t := foot - 1.0
 		while t < foot + 30.0:
@@ -3266,8 +3268,11 @@ static func the_undertone(d: PoiDressing) -> void:
 			if k.on_ground(q.x, q.y).y >= y:
 				break
 			t += 0.5
+		# only where the rock is near enough to run on: no further in than the facade goes
+		if t > foot + 4.0:
+			continue
 		var at := into * (t - 0.3) + across * x
-		m.ellipsoid(glass, Vector3(at.x, y, at.y), Vector3(k.rng.randf_range(0.2, 0.5), run * 0.5, 0.3), b * Basis(Vector3.RIGHT, -0.5))
+		m.ellipsoid(glass, Vector3(at.x, y, at.y), Vector3(k.rng.randf_range(0.4, 1.1), run * 0.5, 0.35), b * Basis(Vector3.RIGHT, -0.5))
 	await k.step()
 	m.commit(glass, PoiKit.plain(PoiKit.GLASS, 0.06, 0.3), "WeptGlass", true)
 	if k.far:
@@ -3417,14 +3422,14 @@ static func founders_delf(d: PoiDressing) -> void:
 		m.limb(timber, t - Vector3(0.0, 4.0, 0.0), t + inward * 3.5 - Vector3(0.0, 1.2, 0.0), 0.18)
 	var block := Vector3(0.0, top_y - 0.8, 0.0)
 	_box(timber, Transform3D(Basis.IDENTITY, block), Vector3(0.9, 1.2, 0.6))
-	await k.step()
-	m.commit(timber, PoiKit.painted(3, {"base": "#2b2622", "accent": "#1c1916"}, 0.8), "Gantry", true)
 	var iron := m.begin()
 	var crown := base + Vector3(0.0, bell_h + 0.6, 0.0)
 	for s in [-1.0, 1.0]:
 		m.limb(iron, block + Vector3(0.2 * float(s), -0.6, 0.0), crown + Vector3(0.6 * float(s), 0.3, 0.0), 0.06)
 	await k.step()
-	m.commit(iron, PoiKit.plain(Color(0.14, 0.12, 0.11), 0.5, 0.6), "Chains", true)
+	# the chains hang from the gantry, so they are one piece with it
+	_commit_parts(d, [[timber, PoiKit.painted(3, {"base": "#2b2622", "accent": "#1c1916"}, 0.8)],
+			[iron, PoiKit.plain(Color(0.14, 0.12, 0.11), 0.5, 0.6)]], "Gantry", true)
 	# the furnace-house behind the pit, its two stacks, its fire-mouth to the pit
 	var fh := -out * 19.0
 	var fb := Basis(Vector3.UP, PoiKit.yaw_of(out))

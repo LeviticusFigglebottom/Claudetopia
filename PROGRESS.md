@@ -14981,3 +14981,84 @@ Triage 77-80, on `wip/quest-fixes`.
   - the full suite, journey, flow and the quest walker were not run (the build-first policy); the
     walker plays the starts in order and never takes the `seen` detour;
   - arrows spent are handed back as iron arrows whatever the player shot.
+
+
+## Cinderlea's second pass: every ruin from its own sentence, three large places to go into, the Choir solid (world life phase 2, 2026-10-01)
+
+Branch `wip/wl2-cinderlea` (triage 73-76 for Cinderlea). Files: `game/world/pois/regions/cinderlea.gd`
+(the region's builders), `pois/cinderlea.json`, `encounters/pois_cinderlea.json`, new
+`{dialogues,loot,items,books,interiors}/pois_cinderlea.json` and
+`{interiors,bosses,items,books,npcs,dialogues,quests,rumours}/large_cinderlea.json`, the quests'
+spots in `quests/places_cinderlea.json`; shared: `world/world_streamer.gd` (the Choir's collision),
+`world/sites/site_dress.gd` (one guard in `_ore`). Tests: `test_choir_collision` (new),
+`test_sites_cinderlea` (extended).
+
+**What was wrong (looked at, 2026-10-01, the w4096g world):** thirty of the region's places were one
+of two shared shapes. Every `ruins` whose sentence did not say colonnade/colossus/breach was the
+kind's hall (a box of courses, one gable, a campfire burning in a city dead 170 years, green grass
+tufts); Bell Street, the Weighhouse, the Silent Market, the North Gate, Ashcombe, the Bell Pit, the
+Hermit's Gate, Hesk-Morn, the Anthem Hall, the Ash-Winter Carts and the Bell Garden were all that
+box. Every one whose sentence said steps or stair (the Sunk Plaza, the Cistern of Isse, Hesk Pool,
+the Row of Mouths, the Builders' Harbour) was the colonnade out of water, with reeds, on the dry
+plateau. The six standing stones were three slabs in a ring; four towers the same drum.
+
+**Reworked (30 places, each its own builder):** In short:
+a reason to stop at each (a thing to touch that tells its story: 22 new dialogues, some with a
+choice and a small reward; a container with the new `oroth_cache` or `pilgrims_bundle` table at
+twelve), a layout that tells it (bells house-sized and sunk to the shoulder, a plaza sunk six steps
+with a fountain of hand-bells, tiers facing a singer's stone, a stair-house over a stair into the
+dark, fused scales with the other pan up, stalls of ash and one with fresh bread), and something
+hidden (the fallen bell you stand in, the untied bell in the fountain, the cistern's inside, the
+turned seat's scrape, the name on Vaelost's fallen course, the footprints that end on Hesk-Morn's
+sill). Foes and quest things stand on the builders' spots (encounters' `at`, objectives' `spot`).
+New small inside: `core:interior/cistern_of_isse` (ruined hall, 5 rooms + secret, the tank's black
+water).
+
+**Large places (3), each through the site systems, each with a quest, a rumour and a hook board:**
+- *The Undertone* (Sunken Choir plateau, west cliff): a doorway 15 m high cut into the cliff between
+  two 11.5 m choristers, glass streaks down the face, blue light in the throat; Merrin Aske camps in
+  the forecourt (quest `the_quarter_tone`). Inside `core:interior/the_undertone`: a cave of 9 rooms
+  + secret, drops and ledges (the rift ledge), choristers, wights and a fallen Tolling knight; boss
+  Hethra, who holds the Undertone (`core:boss/hethra_undertone`), the tuning stone.
+- *The Founders' Delf* (the heath): a house-sized bell in its cracked clay mould under a timber
+  gantry, a cold furnace with two stacks, read from the plateau; Clemency Brazier at the pit's lip
+  (quest `the_last_casting`). Inside `core:interior/founders_delf`: a mine of 9 rooms + secret down
+  the pit (the pouring floor, the crucibles), the founders' dead, a bell-bearer; boss the Last
+  Bellwright (`core:boss/the_last_bellwright`), the pattern book.
+- *Chalkwatch* (the Greyline): a Warden fort (`SITES` fort kind) held by the dead, with a beacon-mast
+  and its rags on the keep and Ysolde Penn's fire at the gate (quest `the_relief_of_chalkwatch`).
+  Inside `core:interior/chalkwatch_keep`: the keep's undercroft, 7 rooms + secret (barracks, cellar
+  store, forge hall); boss Captain Haddow (`core:boss/captain_haddow`), the roll.
+
+**The Choir's spires (75):** the colossi stood on simple box/capsule shapes, so you walked into air
+and through stone. `world_streamer.gd` now gives the landmarks in `COLLIDES_AS_DRAWN`
+(`choir_colossus`) a trimesh of their LOD1 mesh, cached per path. `test_choir_collision` stands the
+three and casts rays: places the ray stops more than 0.6 m from drawn stone went from 134-154 of
+~250 to 0-2; no invisible walls.
+
+**Props set straight (74):** `_settle` moves the kind builders' loose props off the roads and out of
+each other; attachments (buckets, chains, chalk, rags, rope rings, door marks) are merged with what
+holds them (`_commit_parts`) or removed; blocks are flat-shaded (`_box`) instead of pillowed;
+ash drifts take the ground's look instead of pale snow. `site_dress._ore` no longer drops a cart at
+INF when no spot is free (the NaN renderer errors).
+
+**Numbers:** `region_audit cinderlea --probe`: 72 places, far 4%, largest gap 0.00 km2, weak 3 (+12
+wayside), strong 20; problems 47 at 34 places (54 at 35 before). Seat findings at the 30 reworked
+places 9 -> 0. Region seat test: floating 2, on_road 1 (shared builders, below).
+
+**Checked:** `region_check.py cinderlea --godot` PASS; tests objects_seated_cinderlea, test_pois,
+test_poi_preview, test_poi_encounters, test_sites_cinderlea (6 insides, every room reached),
+test_choir_collision, test_world_streamer pass; quest walker for the seven quests touched (7/7, 14/14
+walks); softlock_check 125 quests 0 findings; pytest content_split/region_check/quest_softlocks.
+Looked at: shots of every reworked place and the three large ones, near and far, and each inside's
+rooms from their centres (the lights brightened after the coordinator saw black rooms; those frames
+were the review camera inside rock at the drop mouths).
+
+### Not done / for the coordinator
+- the world was not built: the Founders' Delf pad still has a green scatter tree until the rebuild;
+- the mine kind's authored layouts were flaky on the navmesh, so the Delf uses a generated seed (7724);
+- the Undertone's near view is heavy (1.48M primitives, mostly the cliff);
+- hushline_cave, headless_watch, glass_falls and stair_head keep seat findings from shared builders;
+  past_pad 11 (the long places), road_through 24 (the atlas's roads);
+- weakest left: turning_cairn, the_one_poppy, bell_wood_stone;
+- shared edits: `world_streamer.gd`, `site_dress.gd`, rows in `test_poi_encounters.gd`.
