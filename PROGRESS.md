@@ -14981,3 +14981,142 @@ Triage 77-80, on `wip/quest-fixes`.
   - the full suite, journey, flow and the quest walker were not run (the build-first policy); the
     walker plays the starts in order and never takes the `seen` detour;
   - arrows spent are handed back as iron arrows whatever the player shot.
+
+## Three large places and the dull ones built as they say: world life in Briarwold (phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for the Briarwold, on `wip/wl2-briarwold`. Looked at first (site_review on a flat
+pad, Compatibility): ten of the region's places were the ruins builder's one hall (three rooms, one
+gable) whatever their sentence said, a grave-mound, a deer park, a burial ground and a barrow among
+them, and two camps were the camp builder's one ring of tents. All of it is the region's own files
+(`pois/briarwold.json`, `world/pois/regions/briarwold.gd`, `*/places_briarwold.json`,
+`encounters/pois_briarwold.json`, `roadlife/briarwold.json`, new `enemies/places_briarwold.json`).
+
+### Three large places, each with an inside, a boss, a person and a quest
+- **The Windthrow** (delve, the Greatwood shelf over the Hollow-Fernhold road, 2943,728; builder `windthrow`): the Grandfather's
+  brother, thrown by the Long Wind of 1019. Its root plate stands 25 m wide out of the wood (earth,
+  held stones, roots that wander, droop and fork, hair-roots hanging, turf and ferns on its top edge),
+  the trunk lying 36 m away behind it to its broken crown, a crown limb leaning on its end as the way
+  up the bole to a raven's hoard by the plate. The door is a mouth under the plate where the taproot
+  tore out. Inside (`the_windthrow`, cave, 10 rooms, seed 1044): the hanging roots (foxfire), the
+  burners' drift, the Brother's well, a split crossed by a bridge, the tear where daylight comes in,
+  a Warden in the heart-hall, and **the Old Root** (the taproot stood up; extends the Warden).
+  Jory Rooke, a burner, waits at the lip: **What Falls** (his uncle's axe, the Old Root; burn the
+  Brother by the verderer's mark, leave it to the wood, or send its heartwood to the Grandfather).
+- **Tinehold** (castle_ruin, on the brink of the Lower Wold's scarp over the Wold Water, 2425,-60;
+  builder `tinehold`): the Hart-Knights' first hold, the castle ruin with its keep, and over the keep
+  the **Tine Tower**, 26 m of drum crowned with a hart's antlers 10 m across in pale stone, the one
+  thing in the Lower Wold over the oaks; up the track to its gate two rows of poles hung with the
+  antlers of harts the Unvowed took living; briar up the walls' feet. Garrison of Unvowed huntsmen,
+  thornhounds and an Unvowed knight (new `enemies/places_briarwold.json`). Inside
+  (`tinehold_undercroft`, keep, 10 rooms): kennels, the knights' hall, stores, the long stair, the
+  chapel of tines with the names chiselled off, and the vigil hall with **Aubric Vane, the Unvowed
+  Marshal** wearing Ardo's antlers. **A Gate Is Known**: Wystan Tine, kneeling at the Moot Gate
+  Stone since phase 1 without saying why, says why at the end of his 72 hours; or the Marshal's
+  challenge on the gate starts it.
+- **The Charter Delf** (delve, the Northwold by the Builders' quarry, 2476,-1460; builder
+  `charter_delf`): a Tollmere company's lead mine: an 18 m headframe with its winding wheel, braced
+  legs and back-stays to the winding house, the cage in the shaft's collar (the door), plank ways
+  and barrows, grey spoil heaped down the slope with the oaks standing dead in it, the clerk's
+  office with a lamp lit at noon. Inside (`charter_delf`, mine, 10 rooms, seed 1031): the shaft foot,
+  the smithy, the counting-room, the flooded sump, the lode, a fallen air-shaft, a Warden grown out
+  of the thorn, and **the Brake-Dam** denned in the Briar's root where the deep gallery broke into
+  it (extends the thornhound). Silas Penhallow, the clerk who stayed: **What the Ledger Owes** (the
+  ledger's last page says the Briar runs under the whole Wold: to the Company, to the layers, or burn
+  it).
+- Road life points at each: Unvowed huntsmen on the roads (hostile, tier 2+), the Company's courier
+  (reveals the Delf), burners going up to the Windthrow (reveals it). Three rumours.
+
+### Places worked again
+- Built as their sentences say (builders in `briarwold.gd`): **the Knight's Mound** (turf barrow on a
+  kerb, an oak grown over it whose roots hold the antlered helm on its crown, spear, vigil candles,
+  the Mourners' board), **the Tine Barrow** (long barrow, a crescent of antler-cut stones round a
+  paved forecourt, the door sealed with a hart's skull; Kenard's spots), **Mossgrave** (rows of moss
+  mounds round a veteran yew, antler-hooked name-staves, the seed-bed under bark), **the Antler
+  Chapel** (the hall hung with antlers along both walls and a rack on the gable, the broken altar),
+  **Pellow's Pale** (a deer-park wall on a long curve with its iron gate padlocked, gaps where the
+  oaks pushed it down, the parker's lodge and strongbox inside), **the Bark Camp** (stripped oaks
+  standing white and dead, bark racks, the sledge, the pay-box), **the Poachers' Lee** (hide frames,
+  a hart on a gallows, a bow-rack, sawn antlers), and the wayside lodges: **burnt** (scorched
+  courses, charred rafters), **webbed** (silk and egg-sacs), **the antler-smith's** (cold forge,
+  anvil, a half-made helm), **Wenna's** (the grave lid with its moss), **the masons'** (the dressed
+  block on rollers with the masons' marks).
+- Reasons where there were none: notes in the region's voice at the Knight's Mound, Mossgrave,
+  Pellow's Pale, the Bark Camp, the Poachers' Lee, the Fallen Firewatch (it went over the same night
+  as the Brother), Foxfire Falls (the pickers' rule, and a cap of foxfire to take) and the Sentinels;
+  foes where the story puts them (poachers at the Pale at dusk, weavers in the stripped crowns at
+  night, thornhounds in the firewatch's fallen top).
+
+### Placement (74)
+Moved off roads and onto the Briarwold's own ground: Countwatch (its drum stood in the
+Fernhold-Thornmarch carriageway; now on the tor east of it, pad 14), the Sentinels, the Bark Camp
+(on Skerrow's ground by the region map, with a road through it), the Rafters' Locker and the Burnt
+Lodge (on Hearthvale's and Brightwater's ground).
+Seat fixes in the new work, from the seat audit: the root plate's held stones are one batch with
+it, the Delf's rope runs down to the winding drum, the webbed lodge's egg-sacs lie at the walls'
+feet. The remaining audit rows are the shared builders' (cave throats buried or floating, the tower
+hide's campfire inside the giant oak's box, the sallow rings' willows sharing boxes, the camp
+builder's cart on Wall-Watchers' Fire's skirt) and the build's own (steep skirts, the moved places'
+old pads until the next build); the moved and reworked places were previewed where their defs now
+stand and seat clean.
+
+### Measured
+| | phase 1 (w4096g) | now | target |
+|---|---|---|---|
+| POIs | 86 | 89 | >= 84 |
+| weak (non-wayside) | 7 | 3 | share <= 0.25 |
+| strong (>= 8) | 9 | 12 | >= 6 |
+| land > 200 m from anything | 4% | 4% | <= 9% |
+
+(`region_audit.py briarwold --probe`; the audit's placement table still counts the moved places at
+their built pads until the next build.)
+
+The new places' own cost (probe): the Windthrow 22 draws, 275 k triangles; Tinehold 144, 260 k;
+the Charter Delf 22, 33 k; the reworked places 7-77 draws, 15-400 k (the Antler Chapel's 300-odd
+antlers are capsules: 400 k, under the 600 k limit, over the 250 k aim). Insides (test_sites_briarwold):
+the Windthrow 10 rooms, 20 foes, 42 lights; Tinehold's undercroft 10 rooms, 17 foes; the Delf 10
+rooms, 19 foes; every room reached on the navigation mesh from the way in.
+
+### Seen
+site_review (Compatibility, a flat pad under a low sun; outsides from four sides, near, the mouth,
+above; insides room by room): the root plate reads as a plate of earth and roots standing over a
+dark mouth, the bole lying away behind it (a first try read as a wheel with spokes, then an urchin:
+the roots now wander, droop and fork); Tinehold's tower and antlers stand over its walls and the
+antler poles line the track; the Delf's headframe and wheel, the spoil with its dead oaks, the
+office's lamp; the three insides lit and dressed (earth-brown root caverns with foxfire, the keep's
+vaulted halls, the mine's timbered adits and flooded sump). The reworked places from 13 m round:
+Pellow's Pale's first ring of wall read as a fort and is now a long curving pale with its gate;
+Mossgrave's first graves were bright green discs and are now dark moss mounds; the burnt lodge's
+first soot was a black panel and is now its own courses scorched.
+
+### Tests
+- `region_check.py briarwold --godot --edited <the 15 reworked or moved>`: PASS (18 raised, all seat
+  clean).
+- `./run.sh test --filter=test_sites_briarwold,test_map_quests,objects_seated_briarwold,
+  test_poi_preview,test_pois,test_quest_givers,test_content_db,test_quest_items,test_road_life`:
+  all passed, 0 logged errors; warnings at the baseline (49). test_sites_briarwold walks all four
+  insides (the Skarl Delving's too) and stands the three outsides and the twelve reworked places.
+- `./run.sh quests --only=what_falls,a_gate_is_known,what_the_ledger_owes`: 3 of 3 quests, 9 of 9
+  walks. `tools/quests/softlock_check.py`: 125 quests, 0 findings.
+- `pytest tools/world/tests/test_content_split.py tools/world/tests/test_region_check.py`: 8 passed.
+
+### Not done / for the coordinator
+- On real ground the Briarwold still renders slowly (as phase 1 found): `poi_sheet.py` of the three
+  places made one shot in an hour (the first view from the Windthrow's road side: nothing but the
+  Greatwood's oaks between the road and the plate, 1191 draws, 1.96 M primitives, so the place moved
+  25 m toward the road). A four-shot plan then made the Windthrow from the road (the plate, mossed,
+  standing over its root-ball with the bole running off behind it; 1328 draws, 2.12 M primitives, the
+  canopy's) and from above (the bole and plate in the clearing; 1122 draws, 1.50 M) before a
+  container restart; after the restart Tinehold from above (the pentagon in its clearing
+  on the scarp, the Tine Tower and its pale antlers standing to the canopy's height; 1423 draws, 1.60 M
+  primitives) and the Delf from above (the headframe over its shaft, the grey spoil and dead oaks in
+  their clearing by the Builders' quarry; 1248 draws, 1.46 M). The build's trees still stand over the
+  new pads until the next build clears them. A view of Tinehold from the Wold Water below was not made.
+- Views in the Greatwood run past the 1.5 M-primitive design budget with the canopy alone (1.96 M with
+  no place in view): the place's own share is 235 k.
+- Mine insides still walk only on some seeds when the rooms are written by hand: the Delf walked end
+  to end on 1031 of ten seeds tried (the secret room was the one most often cut off). The shared
+  site plan's reach repair does not catch it for written rooms.
+- `tools_gd/site_review.gd` takes `--radius=` (shared tool, three lines): an outside's views stood
+  as for a place that big, so a wayside find is not a speck at 48 m.
+- No track joins Tinehold's gate (120 m above the Elderhold-Rookhold road, up the scarp) or the
+  Delf (165 m from the Skarl Bridge-Ormhold road) to a road: an atlas track is the coordinator's.
