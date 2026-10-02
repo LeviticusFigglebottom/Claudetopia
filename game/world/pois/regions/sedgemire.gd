@@ -890,6 +890,42 @@ const BONE_WOOD := {"base": "#9c968a", "accent": "#7c766b", "grout": "#4a463f", 
 ## Rush cord as the reedfolk twist it: undyed, and dyed in the one dye.
 const RUSH := Color(0.55, 0.52, 0.38)
 
+## The highest boulder the kit has put down within `r` of `p`: Vector4(x, top, z, half-width) in
+## the dressing's space, or x NAN where there is none (the crag round a cave's mouth, say).
+static func _rock_top(d: PoiDressing, p: Vector2, r: float) -> Vector4:
+	var best := Vector4(NAN, -INF, NAN, 0.0)
+	for c in d.kit.root.get_children():
+		var n := c as Node3D
+		if n == null or not str(n.name).to_lower().contains("boulder"):
+			continue
+		var box := _box_of(n, n.transform)
+		if box.size == Vector3.ZERO:
+			continue
+		var ctr := box.get_center()
+		if Vector2(ctr.x, ctr.z).distance_to(p) > r:
+			continue
+		if box.end.y > best.y:
+			best = Vector4(ctr.x, box.end.y, ctr.z, maxf(box.size.x, box.size.z) * 0.5)
+	return best
+
+
+## A node's meshes' box, in the space `xf` (the node's own transform to its parent) puts it in.
+static func _box_of(node: Node, xf: Transform3D) -> AABB:
+	var box := AABB()
+	var any := false
+	if node is VisualInstance3D:
+		box = xf * (node as VisualInstance3D).get_aabb()
+		any = true
+	for ch in node.get_children():
+		if ch is Node3D:
+			var b := _box_of(ch, xf * (ch as Node3D).transform)
+			if b.size == Vector3.ZERO:
+				continue
+			box = b if not any else box.merge(b)
+			any = true
+	return box
+
+
 ## A dead sallow at local `at`, `height` tall: a leaning trunk forking into limbs that fork again,
 ## all in one batch `st`. Returns the tips of its smallest limbs (local Vector3), where things hang.
 static func dead_tree(d: PoiDressing, st: SurfaceTool, at: Vector2, height: float, lean_dir: Vector2,
@@ -989,28 +1025,12 @@ static func stepping_stones(d: PoiDressing, st: SurfaceTool, a: Vector2, b: Vect
 
 # --- The Name-Wife's Hollow -------------------------------------------------------------------------
 
-## The marsh-hag's hollow in the South Scarp: the cave's mouth at the foot of the scarp where it
-## curls round a cove, the scarp weeping a thread of water over the mouth into a pool; a bog-oak
+## The marsh-hag's hollow in the South Scarp: the cave's mouth a cleft of the scarp's rock at the head
+## of a gully where it curls round a cove, a thread of water weeping off the cheek into a pool; a bog-oak
 ## beam across the mouth hung with knotted name-cords; in front, a dead sallow so hung with them it
 ## reads from the delta as a grey cloud against the scarp; under it what people brought to pay with
 ## besides names; and her stepping-stones out across the cove to the reeds.
 static func name_wifes_hollow(d: PoiDressing) -> void:
-	var k0 := d.kit
-	if d.cave.is_empty():
-		# The world raises no face for a delve: this one stands at the head of a gully in the scarp, and
-		# its mouth is cut into a face of the scarp's own rock, the gully's walls either side of it.
-		var into := k0.uphill()
-		if into == Vector2.ZERO:
-			into = Vector2(0, 1)
-		var face := -into
-		# the floor at the gully's lowest along the throat, so no ring of it stands proud of the ground
-		var floor_y := k0.on_ground(into.x * 3.0, into.y * 3.0).y
-		for i in 10:
-			var q := into * (5.0 + float(i) * 2.0)
-			floor_y = minf(floor_y, k0.on_ground(q.x, q.y).y)
-		floor_y += d.world_position.y
-		d.cave = {"facing_deg": rad_to_deg(atan2(face.x, face.y)), "mouth_m": floor_y, "face_top_m": floor_y + 9.5,
-				"mouth_behind_m": 3.0, "face_half_width_m": 7.0}
 	await PoiDressing.kind_builders().SITES.build(d)
 	var k := d.kit
 	var m := d.masonry
@@ -1022,25 +1042,6 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	var across := Vector2(out.y, -out.x)
 	var m2 := Vector2(at.x, at.z)
 	var g0 := k.on_ground(m2.x, m2.y).y
-	# the gully's floor runs on level behind the mouth before the headwall rises, and would leave the
-	# throat standing out of it: a knoll of the scarp's rock heaped over it, its foot in the gully floor
-	var knoll_c := m2 - out * 14.0
-	var kg := k.on_ground(knoll_c.x, knoll_c.y).y
-	if kg < g0 + 5.0:
-		m.mound(Vector3(knoll_c.x, kg - 0.6, knoll_c.y), 10.0, g0 - kg + 7.5, k.surface("stone", 0.9), "Knoll", true, 1.3, 7, 22, true, 0.14)
-		var boulder := k.rock("boulder")
-		if boulder != "":
-			var bx: Array = []
-			for i in 7:
-				var a := k.rng.randf() * TAU
-				var r := k.rng.randf_range(3.0, 8.0)
-				var q := knoll_c + Vector2(sin(a), cos(a)) * r
-				if (q - m2).dot(out) > -2.5:
-					continue
-				var hy := (g0 - kg + 7.5) * sqrt(maxf(1.0 - pow(r / 10.0, 2.0), 0.0))
-				bx.append(PoiKit.transform_at(Vector3(q.x, kg - 0.6 + hy - 0.4, q.y), k.rng.randf() * TAU, k.rng.randf_range(1.0, 1.8)))
-			await k.step()
-			k.scatter(boulder, bx, true, true, true)
 	# the Name-Tree: in front of the mouth and to one side, leaning out over the cove
 	var tree_at := m2 + out * 10.0 - across * 6.5
 	var wood := m.begin()
@@ -1055,11 +1056,20 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(cord, PoiKit.plain(RUSH.lerp(Color(0.8, 0.78, 0.7), 0.35), 0.95), "TreeCords", true)
 	m.commit(knots, PoiKit.plain(INDIGO.lerp(Color(0.6, 0.6, 0.62), 0.3), 0.9), "TreeKnots", true)
-	# the weep: a thread of water off the brow beside the mouth, into a pool at its foot
-	var fall_at := m2 + across * 4.6 + out * 1.0
+	# the mouth's line: the marker stands three and a half metres in, where whatever lives in it waits
+	var ml := m2 + out * 3.5
+	# the weep: a thread of water off the top of the tallest rock of the mouth's right cheek, into a
+	# pool at its foot (the crag's rocks, so it comes off stone and not out of the air)
+	var cheek := _rock_top(d, ml + across * 4.0, 3.5)
+	var fall_at := ml + across * 4.2 + out * 1.6
+	var fall_top := k.on_ground(fall_at.x, fall_at.y).y + 4.0
+	if not is_nan(cheek.x):
+		var c2 := Vector2(cheek.x, cheek.z)
+		fall_at = c2 + out * maxf(cheek.w + 0.25, 0.8)
+		fall_top = cheek.y - 0.35
 	var fg := k.on_ground(fall_at.x, fall_at.y).y
-	var fall_h := maxf(float(d.cave.get("face_top_m", 0.0)) - d.world_position.y - fg - 0.3, 7.5)
-	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 1.3, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
+	var fall_h := maxf(fall_top - fg, 2.5)
+	m.sheet(Vector3(fall_at.x, fg + fall_h, fall_at.y), PoiKit.yaw_of(out), 0.9, fall_h + 0.2, PoiKit.falling_water(false, 2.2),
 			"Weep", 0.5, true, 3, 6)
 	if k.far:
 		return
@@ -1076,7 +1086,7 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(rims, k.surface("stone", 0.9), "PoolStones")
 	# the beam across the mouth on two bog-oak posts, hung with cords from end to end
-	var beam_c := m2 + out * 1.6
+	var beam_c := ml + out * 3.0
 	var timber := m.begin()
 	var tops: Array = []
 	for s in [-1.0, 1.0]:
@@ -1098,7 +1108,7 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	m.commit(cord2, PoiKit.plain(RUSH, 0.95), "BeamCords")
 	m.commit(knots2, PoiKit.plain(INDIGO, 0.9), "BeamKnots")
 	var mid := (ta + tb) * 0.5
-	k.touchable("Hook", Vector3(mid.x, g0 + 1.3, mid.z) + Vector3(out.x, 0, out.y) * 0.5, "Read the knots on the beam",
+	k.touchable("Hook", Vector3(mid.x, mid.y - 1.9, mid.z) + Vector3(out.x, 0, out.y) * 0.5, "Read the knots on the beam",
 			"core:dialogue/name_wifes_beam", "", false)
 	# what people brought besides names, heaped at the tree's foot: baskets, a coil, a lantern, a pot
 	var gifts := tree_at + out * 1.8 + across * 1.2
@@ -1138,8 +1148,8 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	if fern != "":
 		var xfs: Array = []
 		for i in 26:
-			var q := m2 + across * k.rng.randf_range(-11.0, 11.0) + out * k.rng.randf_range(-1.0, 3.0)
-			if absf((q - m2).dot(across)) < 3.6:
+			var q := ml + across * k.rng.randf_range(-11.0, 11.0) + out * k.rng.randf_range(0.5, 4.5)
+			if absf((q - ml).dot(across)) < 3.6:
 				continue
 			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y), k.rng.randf() * TAU, k.rng.randf_range(0.8, 1.3)))
 		await k.step()
