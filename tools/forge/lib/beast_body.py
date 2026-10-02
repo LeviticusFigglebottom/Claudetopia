@@ -98,6 +98,8 @@ class CanidStyle:
                               # the back let down between them, the belly slack, the muzzle gone grey
     torn_ear: float = 0.0     # the left ear's top bitten away (the share of it gone)
     scars: float = 0.0        # healed stab and rake scars along both flanks (how many, and how pale)
+    coils: float = 0.0        # briar grown into the hide: thorned stems wound round the barrel, the neck and
+                              # the haunches, and trailing off her (the Brake-Dam, who lies in the thorn)
     seed: int = 3
 
     def to_dict(self) -> dict:
@@ -198,6 +200,8 @@ def canid_scene(skel: QuadSkeleton, st: CanidStyle, trunk=WOLF_TRUNK) -> sdf.Sce
         _old_bones(sc, skel, st)
     if st.thorns > 0:
         _thorns(sc, skel, st)
+    if st.coils > 0:
+        _coils(sc, skel, st)
     # nothing below the ground
     sc.intersect(sdf.plane(np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, -1.0])))
     return _coat(sc, skel, st)
@@ -489,6 +493,71 @@ def _thorns(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
                           (J[f"Humerus.{side}"], np.array([sx * 0.05, 0.03, -0.04]))):
             base = anchor + d * s
             _hook(sc, base, _u(np.array([sx * 0.9, 0.0, 0.5])), Y, 0.075 * s * k, 0.016 * s * k, s)
+
+
+def _coils(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
+    """The briar grown into her: thorned stems wound round the barrel from the withers to the croup,
+    a turn round the neck and one round each haunch, lying on the hide (each laid where the body so
+    far is, pushed out until it stands on it) with hooked thorns along them, and two loose ends of it
+    trailing off her flanks to the ground."""
+    J = skel.J
+    s = _s(skel)
+    k = st.coils
+    rng = np.random.default_rng(st.seed + 211)
+    body = sc.near(0.12 * s)
+
+    def lay(p, off):
+        p = np.asarray(p, float).copy()
+        for _ in range(30):
+            d = float(body.eval(p[None])[0])
+            if d >= off - 1e-4:
+                break
+            e = 0.003 * s
+            g = np.array([float(body.eval((p + v)[None])[0]) - float(body.eval((p - v)[None])[0])
+                          for v in (X * e, Y * e, Z * e)])
+            n = np.linalg.norm(g)
+            if n < 1e-9:
+                break
+            p = p + g / n * min(off - d + 1e-4, 0.03 * s)
+        return p
+
+    def helix(a, b, radius, turns, phase, n=40):
+        out = []
+        ax = _u(b - a)
+        u = _u(np.cross(ax, X)) if abs(ax @ X) < 0.9 else _u(np.cross(ax, Z))
+        v = np.cross(ax, u)
+        for i in range(n + 1):
+            f = i / n
+            t = phase + 2.0 * math.pi * turns * f
+            c = a + (b - a) * f
+            out.append(c + (u * math.cos(t) + v * math.sin(t)) * radius)
+        return out
+
+    stems = []
+    # round the barrel, withers to croup, two stems crossing
+    for ph in (0.0, 2.6):
+        stems.append(helix(J["Chest"] - Y * 0.06 * s, J["Spine1"] + Y * 0.04 * s, 0.05 * s, 2.2 * k, ph))
+    # round the neck, and round each haunch
+    stems.append(helix(J["Neck1"], J["Neck2"], 0.03 * s, 1.3, 0.8, n=24))
+    for side, sx in (("L", 1.0), ("R", -1.0)):
+        stems.append(helix(J[f"Thigh.{side}"] + X * sx * 0.02 * s, J[f"Gaskin.{side}"], 0.03 * s, 1.1, 1.7 * sx, n=20))
+    r = 0.016 * s * min(1.4, 0.8 + 0.4 * k)
+    for stem in stems:
+        laid = [lay(p, r * 1.1) for p in stem]
+        sc.union(sdf.tube_path(laid, r, density=3), k=0.008 * s)
+        for i in range(2, len(laid) - 1, 3):
+            p = laid[i]
+            out = _u(p - (J["Spine2"] if p[1] > J["Neck1"][1] else J["Neck2"]))
+            along = _u(laid[i + 1] - laid[i - 1])
+            _hook(sc, p, _u(out + Z * 0.3), along, (0.035 + 0.02 * rng.random()) * s * k, 0.007 * s * k, s)
+    # two loose ends, off the flanks and down to the ground, where she was lying in it
+    for sx, at in ((1.0, J["Spine2"]), (-1.0, J["Spine1"])):
+        top = lay(at + X * sx * 0.12 * s - Z * 0.08 * s, r)
+        pts = [top, top + np.array([sx * 0.10, 0.04, -0.18]) * s, top + np.array([sx * 0.2, 0.12, -0.42]) * s,
+               np.array([top[0] + sx * 0.32 * s, top[1] + 0.22 * s, 0.03 * s])]
+        sc.union(sdf.tube_path(pts, [r, r * 0.9, r * 0.8, r * 0.6], density=3), k=0.01 * s)
+        for i in range(1, 3):
+            _hook(sc, pts[i], _u(np.array([sx, 0.0, 0.4])), _u(pts[i + 1] - pts[i]), 0.04 * s * k, 0.007 * s * k, s)
 
 
 def _hook(sc: sdf.Scene, base, out, back, size: float, r: float, s: float) -> None:

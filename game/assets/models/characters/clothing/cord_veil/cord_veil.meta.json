@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.1033,
+  -0.134,
+  1.4128,
+  0.1022,
+  0.1264,
+  1.7908
+ ],
+ "collision": "none",
+ "colour_key": "trim",
+ "colour_keys": {
+  "cord_veil": "trim"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "cord_veil": "cloth"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 6327,
+ "slot_hint": "attachment",
+ "textures": [
+  "cord_veil_albedo.png",
+  "cord_veil_orm.png"
+ ],
+ "tris": [
+  3400,
+  0,
+  0
+ ],
+ "version": 1
+}

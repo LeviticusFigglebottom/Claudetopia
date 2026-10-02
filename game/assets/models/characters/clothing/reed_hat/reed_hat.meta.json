@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.3028,
+  -0.2905,
+  1.6867,
+  0.302,
+  0.3138,
+  1.8993
+ ],
+ "collision": "none",
+ "colour_key": "trim",
+ "colour_keys": {
+  "reed_hat": "trim"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "reed_hat": "cloth"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 4162,
+ "slot_hint": "attachment",
+ "textures": [
+  "reed_hat_albedo.png",
+  "reed_hat_orm.png"
+ ],
+ "tris": [
+  2000,
+  0,
+  0
+ ],
+ "version": 1
+}

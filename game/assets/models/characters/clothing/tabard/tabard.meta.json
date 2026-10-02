@@ -1,0 +1,45 @@
+{
+ "bounds": [
+  -0.1502,
+  -0.1756,
+  0.5344,
+  0.1521,
+  0.1754,
+  1.5659
+ ],
+ "collision": "none",
+ "colour_key": "secondary",
+ "colour_keys": {
+  "tabard": "secondary",
+  "tabard_roundel": "trim"
+ },
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "tabard": "cloth",
+  "tabard_roundel": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 91328,
+ "slot_hint": "attachment",
+ "textures": [
+  "tabard_albedo.png",
+  "tabard_orm.png",
+  "tabard_roundel_albedo.png",
+  "tabard_roundel_orm.png"
+ ],
+ "tris": [
+  4198,
+  0,
+  0
+ ],
+ "version": 1
+}

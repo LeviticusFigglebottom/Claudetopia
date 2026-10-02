@@ -1,0 +1,43 @@
+{
+ "bounds": [
+  -0.098,
+  -0.1562,
+  1.5765,
+  0.097,
+  0.1291,
+  1.8104
+ ],
+ "collision": "none",
+ "colour_key": "leather",
+ "colour_keys": {
+  "shift_cap": "leather"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "shift_cap": "leather",
+  "shift_cap_brass": "iron"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 42522,
+ "slot_hint": "attachment",
+ "textures": [
+  "shift_cap_albedo.png",
+  "shift_cap_orm.png",
+  "shift_cap_brass_albedo.png",
+  "shift_cap_brass_orm.png"
+ ],
+ "tris": [
+  3297,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.1492,
+  -0.1332,
+  1.6039,
+  0.1495,
+  0.2339,
+  1.8539
+ ],
+ "collision": "none",
+ "colour_key": "primary",
+ "colour_keys": {
+  "sou_wester": "primary"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "leather",
+ "materials": {
+  "sou_wester": "leather"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "leather"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 95528,
+ "slot_hint": "attachment",
+ "textures": [
+  "sou_wester_albedo.png",
+  "sou_wester_orm.png"
+ ],
+ "tris": [
+  10904,
+  0,
+  0
+ ],
+ "version": 1
+}

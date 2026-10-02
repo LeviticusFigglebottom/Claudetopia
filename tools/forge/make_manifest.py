@@ -294,6 +294,13 @@ WEAPONS = [
     ("shield", "bone", "shield_bone", None), ("crossbow", "iron", "crossbow_iron", None),
     ("scythe", "ashen", "scythe_ashen", None),
     ("quiver", "iron", "quiver_leather", None),
+    # the bosses' own tools and what they carry (appended, so no seed above moves)
+    ("pick", "iron", "pick_chalk", {"chalk": 1.0}), ("drift_hook", "bronze", "drift_hook_brass", None),
+    ("seal_staff", "iron", "seal_staff_iron", None), ("spade", "iron", "spade_iron", None),
+    ("sledge", "iron", "sledge_iron", None), ("lamp_pole", "iron", "lamp_pole_iron", None),
+    ("rasp", "iron", "rasp_iron", None), ("leister", "iron", "leister_iron", None),
+    ("crook", "iron", "crook_thorn", None), ("censer", "bronze", "censer_bronze", None),
+    ("trumpet", "bronze", "trumpet_brass", None), ("tuning_bell", "bronze", "tuning_bell_bronze", None),
 ]
 
 

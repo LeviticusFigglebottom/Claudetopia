@@ -1491,6 +1491,10 @@ def decimate(ob, target_tris: int, symmetry: bool = True) -> None:
     # the glTF exporter triangulates that into fewer corners than it counted, fails ("Array
     # length mismatch") and writes no mesh: the coat, once its hem was left open. Validate again.
     ob.data.validate(verbose=False)
+    # A symmetric collapse stops short on a mesh whose halves do not pair up vertex for vertex (the
+    # sou'wester's drooping brim kept 10 904 of its 2 200): collapse what is left without it.
+    if symmetry and tri_count(ob) > target_tris * 1.5:
+        decimate(ob, target_tris, symmetry=False)
     for p in ob.data.polygons:
         p.use_smooth = True
 

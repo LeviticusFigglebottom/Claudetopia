@@ -1,0 +1,93 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 1.99,
+  "max": [
+   0.09,
+   1.32,
+   0.028
+  ],
+  "min": [
+   -0.09,
+   -0.67,
+   -0.29
+  ],
+  "radius": 1.012
+ },
+ "built_seconds": 9.99,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "emissive": true,
+ "generator": "gen_weapons",
+ "glb": "lamp_pole_iron.glb",
+ "grip_origin": true,
+ "hash": "1cc1ba3155cb043b",
+ "kind": "lamp_pole",
+ "lamp": [
+  0.0,
+  0.9304575090747613,
+  -0.2
+ ],
+ "materials": [
+  "lamp_pole_iron_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "glass",
+  "wood_planks"
+ ],
+ "meshes": [
+  {
+   "name": "lamp_pole_iron",
+   "tris": 2174
+  },
+  {
+   "name": "lamp_pole_iron_LOD1",
+   "tris": 868
+  },
+  {
+   "name": "lamp_pole_iron_LOD2",
+   "tris": 325
+  }
+ ],
+ "name": "lamp_pole_iron",
+ "params": {
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9774,
+ "textures": [
+  "lamp_pole_iron_albedo.png",
+  "lamp_pole_iron_normal.png",
+  "lamp_pole_iron_orm.png",
+  "lamp_pole_iron_emission.png"
+ ],
+ "tris": [
+  2174,
+  868,
+  325
+ ],
+ "two_handed": true,
+ "version": 3
+}
