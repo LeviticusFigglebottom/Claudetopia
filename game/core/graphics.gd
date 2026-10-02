@@ -29,7 +29,7 @@ const DEFAULT_PRESET := "high"
 ## Low is what a machine that is struggling should be offered first.
 const PRESETS := {
 	"low": {
-		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1,
+		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1, "distant_ground": false,
 		"shadows": true, "shadow_atlas": 2048, "shadow_cascades": 2, "shadow_distance": 0.6,
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
@@ -38,7 +38,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": false,
 	},
 	"medium": {
-		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2,
+		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
@@ -47,7 +47,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": false,
 	},
 	"high": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
@@ -56,7 +56,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": true,
 	},
 	"painted": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4, "distant_ground": true,
 		"shadows": true, "shadow_atlas": 8192, "shadow_cascades": 4, "shadow_distance": 1.5,
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
@@ -84,7 +84,7 @@ const SAFETY_DEFAULTS := {"full_terrain": true}
 ## `test_graphics_settings` pins it to High, the display keys and the look keys.
 const DEFAULTS := {
 	"preset": "high",
-	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
+	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true,
 	"vsync": true, "fps_cap": 0,
 	"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
@@ -144,6 +144,8 @@ const CONTROLS := [
 	{"key": "fxaa", "label": "FXAA", "kind": "check"},
 	{"key": "taa", "label": "Temporal smoothing (TAA)", "kind": "check"},
 	{"key": "anisotropic", "label": "Texture filtering", "kind": "option", "choices": ["Plain", "2×", "4×", "8×", "16×"]},
+	{"key": "distant_ground", "label": "Distant ground detail", "kind": "check",
+		"note": "far off, the grass is tiled larger so a far hillside does not show its pattern repeating"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},
@@ -328,6 +330,8 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 	for node in tree.get_nodes_in_group(LIGHTS):
 		if node is DirectionalLight3D:
 			apply_light(node as DirectionalLight3D, g)
+	for node in tree.get_nodes_in_group(TERRAINS):
+		apply_terrain(node, g)
 	for node in tree.get_nodes_in_group(ENVIRONMENTS):
 		if node is WorldEnvironment and (node as WorldEnvironment).environment != null:
 			apply_environment((node as WorldEnvironment).environment, g, _is_world_environment(node), r)
@@ -388,6 +392,7 @@ static func menu_pace(up: bool) -> void:
 
 
 ## Groups the adopted nodes live in, so a settings change reaches them without a tree walk.
+const TERRAINS := "graphics_terrains"
 const LIGHTS := "graphics_directional_lights"
 const ENVIRONMENTS := "graphics_environments"
 const AUTHORED := "graphics_authored"
@@ -478,6 +483,36 @@ static func apply_environment(env: Environment, g: Dictionary, world := false, r
 					env.volumetric_fog_length = 180.0
 					env.volumetric_fog_sky_affect = 0.0
 				env.volumetric_fog_enabled = on
+
+
+## Distant ground detail: Terrain3D's dual scaling. Past DUAL_SCALE_NEAR metres the ground's
+## commonest texture, the vale's grass (id 0: a fifth of the land, sampled every 64 m), is
+## drawn from a second sample at DUAL_SCALE_REDUCTION of its scale, wholly by DUAL_SCALE_FAR: a
+## field across a valley shows the grass's own colour at a third of the frequency instead of the
+## 2.6 m tile repeating like wallpaper. It costs one more texture fetch pair on that texture's
+## pixels, and only far off; Low leaves it out.
+const DUAL_SCALE_TEXTURE := 0
+const DUAL_SCALE_REDUCTION := 0.3
+const DUAL_SCALE_NEAR := 80.0
+const DUAL_SCALE_FAR := 240.0
+
+
+## The world's ground (a Terrain3D, or anything with a Terrain3DMaterial as `material`) as the
+## settings have it: dual scaling on or off, live. Off to on rebuilds Terrain3D's shader once.
+static func apply_terrain(terrain: Object, g: Dictionary) -> void:
+	if terrain == null or not is_instance_valid(terrain):
+		return
+	var mat: Object = terrain.get("material")
+	if mat == null:
+		return
+	var on := bool(g.get("distant_ground", true))
+	if on:
+		mat.call("set_shader_param", "dual_scale_texture", DUAL_SCALE_TEXTURE)
+		mat.call("set_shader_param", "dual_scale_reduction", DUAL_SCALE_REDUCTION)
+		mat.call("set_shader_param", "dual_scale_near", DUAL_SCALE_NEAR)
+		mat.call("set_shader_param", "dual_scale_far", DUAL_SCALE_FAR)
+	if bool(mat.get("dual_scaling")) != on:
+		mat.set("dual_scaling", on)
 
 
 ## The environment the atmosphere owns: the one the world is drawn in.

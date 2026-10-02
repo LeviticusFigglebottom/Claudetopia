@@ -455,6 +455,9 @@ func _setup_terrain3d() -> void:
 		mat.call("set_shader_param", "projection_threshold", PROJECTION_THRESHOLD)
 		mat.call("set_shader_param", "mipmap_bias", 0.95)
 		mat.call("set_shader_param", "bias_distance", 420.0)
+	# distant ground detail (dual scaling), and the settings' to change live (Graphics.apply_terrain)
+	terrain_node.add_to_group(Graphics.TERRAINS)
+	Graphics.apply_terrain(terrain_node, Settings.data.get("graphics", {}))
 	var collision: Object = terrain_node.get("collision")
 	if collision:
 		# dynamic collision around the camera/player; the title's world is only looked at, and

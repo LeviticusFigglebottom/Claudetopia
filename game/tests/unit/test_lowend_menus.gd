@@ -127,3 +127,35 @@ func test_the_title_reads_the_naming_ahead() -> void:
 	await _tree().process_frame
 
 
+func test_a_file_from_before_a_knob_keeps_its_preset() -> void:
+	var test_path := "user://test_lowend_menus.cfg"
+	var bindings := Settings.bindings.duplicate(true)
+	Settings.path = test_path
+	var cf := ConfigFile.new()
+	# Medium as it was saved before the title's film and the distant ground
+	for key in Graphics.PRESETS["medium"]:
+		if key in ["title_live", "distant_ground"]:
+			continue
+		cf.set_value("graphics", key, Graphics.PRESETS["medium"][key])
+	cf.set_value("graphics", "preset", "medium")
+	cf.save(test_path)
+	Settings.load_settings()
+	assert_eq(Settings.get_value("graphics", "title_live"), false, "Medium's own value, not High's")
+	assert_eq(Settings.get_value("graphics", "distant_ground"), true)
+	assert_eq(Graphics.matching_preset(Settings.data["graphics"]), "medium", "still Medium")
+	# Low as it was: the chart; Low now is the film
+	var low := ConfigFile.new()
+	for key in Graphics.PRESETS["low"]:
+		if key in ["title_live", "distant_ground"]:
+			continue
+		low.set_value("graphics", key, Graphics.PRESETS["low"][key])
+	low.set_value("graphics", "title_vista", false)
+	low.set_value("graphics", "preset", "low")
+	low.save(test_path)
+	Settings.load_settings()
+	assert_eq(Graphics.matching_preset(Settings.data["graphics"]), "low", "a Low file stays Low")
+	assert_true(bool(Settings.get_value("graphics", "title_vista")), "and shows the film")
+	Settings.bindings = bindings
+	DirAccess.remove_absolute(test_path)
+
+

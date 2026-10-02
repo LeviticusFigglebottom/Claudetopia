@@ -15,7 +15,7 @@ const GRAPHICS_TAB := 1
 const CONTROLS_TAB := 3
 ## The Graphics tab's knobs in the groups it shows them under.
 const GRAPHICS_GROUPS := [
-	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic"]],
+	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic", "distant_ground"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
 	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections", "wildlife"]],
