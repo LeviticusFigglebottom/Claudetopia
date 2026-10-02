@@ -29,12 +29,18 @@ Z = np.array([0.0, 0.0, 1.0])
 # A Briarwold red deer: shoulder 1.15 m, nose to tail about 1.9 m, the neck carried high.
 RED = QuadProportions(withers=1.15, body_length=1.2, leg_length=1.12, neck_length=1.12, head_size=1.0,
                       bulk=0.74, width=0.86, tail_length=0.30, cannon=1.22, neck_raise=16.0)
+# The grey hart: an old stag, bigger than any in the herds (1.32 m at the shoulder), longer in the
+# barrel and carrying his head a little lower under the weight of his rack.
+HART = QuadProportions(withers=1.32, body_length=1.24, leg_length=1.08, neck_length=1.08, head_size=1.05,
+                       bulk=0.82, width=0.9, tail_length=0.30, cannon=1.2, neck_raise=12.0)
 
 
 @dataclass
 class DeerStyle:
-    coat: str = "red"            # red (summer) | grey (the grey hart: desaturated, pale)
+    coat: str = "red"            # red (summer) | grey (the herd's grey: desaturated, pale) | hart (the grey hart's)
     ruff: float = 0.0            # a stag's rutting mane on the neck's underside (0 for a hind)
+    heavy: float = 1.0           # the barrel's and the neck's girth: an old stag's thick neck and deep chest
+    points: int = 12             # the antlers' points: a royal's twelve, an old hart's fourteen
     seed: int = 11
 
     def to_dict(self) -> dict:
@@ -59,17 +65,20 @@ NECK = (("Neck1", 0.11, -0.13, 0.125, 0.25), ("Neck1", 0.0, 0.0, 0.10, 0.17),
         ("Neck2", 0.02, -0.02, 0.083, 0.125), ("Head", 0.035, -0.075, 0.062, 0.085))
 
 
-def horse_style(skel: Optional[QuadSkeleton] = None) -> hb.HorseStyle:
-    """What the shared body generator is asked for: a deer's trunk, neck and legs, no horse's head."""
+def horse_style(skel: Optional[QuadSkeleton] = None, heavy: float = 1.0) -> hb.HorseStyle:
+    """What the shared body generator is asked for: a deer's trunk, neck and legs, no horse's head.
+    `heavy` deepens the girth and thickens the neck (an old stag's), the top line kept."""
     k = (skel.props.withers / 1.15) if skel is not None else 1.0
-    barrel = tuple((y * k, t * k, b * k, w * k) for y, t, b, w in BARREL)
+    barrel = tuple((y * k, t * k, t * k - (t - b) * k * (1.0 + 0.6 * (heavy - 1.0)), w * k * heavy)
+                   for y, t, b, w in BARREL)
+    neck = tuple((j, dy, dz, w * heavy, d * (1.0 + 0.8 * (heavy - 1.0))) for j, dy, dz, w, d in NECK)
     return hb.HorseStyle(girth=0.92, croup=0.6, crest=0.12, feather=0.0, mane="none", tail=0.0, hoof=0.62,
-                         head="none", cloven=True, barrel=barrel, neck=NECK, ridges=0.0, points=0.35, soft=3.0, pillow=0.75)
+                         head="none", cloven=True, barrel=barrel, neck=neck, ridges=0.0, points=0.35, soft=3.0, pillow=0.75)
 
 
 def deer_scene(skel: QuadSkeleton, st: Optional[DeerStyle] = None) -> sdf.Scene:
     st = st or DeerStyle()
-    sc = hb.horse_scene(skel, horse_style(skel))
+    sc = hb.horse_scene(skel, horse_style(skel, st.heavy))
     # horse_scene ends with the ground's plane; the head and the scut go in before it
     ground = sc.prims.pop()
     J = skel.J
@@ -179,16 +188,18 @@ def antler_scene(skel: QuadSkeleton, points: int = 12, seed: int = 4) -> sdf.Sce
     hd = J["Muzzle"] - poll
     hu = hd / float(np.linalg.norm(hd))
     dn = np.array([0.0, -hu[2], hu[1]])
+    # an old hart's rack spreads wider than a royal's
+    wide = 1.3 if points >= 14 else 1.0
     for sx in (1.0, -1.0):
         # the pedicle: on the frontal bone's top, behind the eyes and in front of the ears
         ped = poll + hd * 0.13 - dn * 0.04 * hs + X * sx * 0.045 * hs
         # the beam: up, out and back from the burr in a long sweep, turning forward at the crown
         beam = [ped,
-                ped + np.array([sx * 0.06, 0.05, 0.12]) * s,
-                ped + np.array([sx * 0.18, 0.17, 0.34]) * s,
-                ped + np.array([sx * 0.30, 0.28, 0.56]) * s,
-                ped + np.array([sx * 0.37, 0.31, 0.74]) * s,
-                ped + np.array([sx * 0.38, 0.25, 0.87]) * s]
+                ped + np.array([sx * 0.06 * wide, 0.05, 0.12]) * s,
+                ped + np.array([sx * 0.18 * wide, 0.17, 0.34]) * s,
+                ped + np.array([sx * 0.30 * wide, 0.28, 0.56]) * s,
+                ped + np.array([sx * 0.37 * wide, 0.31, 0.74]) * s,
+                ped + np.array([sx * 0.38 * wide, 0.25, 0.87]) * s]
         radii = [0.040 * s, 0.035 * s, 0.030 * s, 0.026 * s, 0.022 * s, 0.018 * s]
         sc.union(sdf.tube_path(beam, radii, density=4))
         # the burr at the pedicle: a rough collar
@@ -212,7 +223,11 @@ def antler_scene(skel: QuadSkeleton, points: int = 12, seed: int = 4) -> sdf.Sce
         tine(0.46, 1.0, 0.55, 0.15, 0.22, 0.019, 0.30)   # the trez, from the beam's middle
         # the crown: a cup of three points round the beam's end, forward, out and back
         top = len(beam) - 1
-        for fwd, out, ln in ((0.9, 0.1, 0.23), (0.1, 0.9, 0.20), (-0.6, 0.35, 0.18)):
+        crown = [(0.9, 0.1, 0.23), (0.1, 0.9, 0.20), (-0.6, 0.35, 0.18)]
+        if points >= 14:
+            # an old hart's: a fourth point in the cup, back and in
+            crown.append((-0.2, -0.5, 0.16))
+        for fwd, out, ln in crown:
             p = beam[top - 1] * 0.25 + beam[top] * 0.75
             d = np.array([sx * out, -fwd, 1.1]) + rng.normal(0.0, 0.06, 3)
             d = d / np.linalg.norm(d)

@@ -45,6 +45,20 @@ func test_custom_foes_wear_their_forged_bodies() -> void:
 		assert_eq(e.find_children("*", "PlaceholderBody", true, false).size(), 0, "%s has no box anywhere" % id)
 
 
+func test_the_old_bitch_wears_her_own_body_not_her_pack_s() -> void:
+	# Mother is the leech-hounds' dam, not one of them grown: her own model (bigger, scarred, a torn
+	# ear, a grey muzzle), drawn at the size the forge made her for her def's scale.
+	var e := _foe("core:enemy/old_grey_bitch")
+	var m := e.anim.model as CreatureModel
+	assert_true(m != null, "she wears a forged body")
+	if m == null:
+		return
+	assert_eq(m.model_name, "old_grey_bitch", "her own, not the leech-hound's")
+	var pack := _foe("core:enemy/leech_hound").anim.model as CreatureModel
+	assert_true(float(m.meta.get("height", 0.0)) * m.scale.y > float(pack.meta.get("height", 0.0)) * pack.scale.y * 1.25,
+			"and she stands well over her pack")
+
+
 func test_every_clip_the_foe_uses_is_there() -> void:
 	for id in FORGED:
 		var e := _foe(id)

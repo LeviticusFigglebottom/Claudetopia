@@ -41,10 +41,11 @@
   {
     "id": "core:enemy/old_grey_bitch",
     "extends": "core:enemy/leech_hound",
+    "body_variant": "old_grey_bitch",
     "name": "Mother, the Old Bitch",
     "tint": "#5b5160",
     "scale": 1.3,
-    "height": 1.15,
+    "height": 0.95,
     "radius": 0.5,
     "region": "core:region/sedgemire",
     "lore": "The first hound Illa Nauve bred to guard her leeches, and the one that taught the others to drink. She is grey at the muzzle and scarred along both flanks from herons, and she slipped her collar at the thaw and led the pack into the withies. She does not fight like the young ones. She takes one mouthful, and then she stands off in the reeds and lets the others take the rest, and waits for you to put your shield down.",

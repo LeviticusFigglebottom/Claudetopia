@@ -678,6 +678,12 @@ DEER_COATS = {
              "rump": (0.90, 0.88, 0.83), "rump_edge": (0.40, 0.38, 0.36), "legs": (0.50, 0.48, 0.45),
              "face": (0.58, 0.56, 0.53), "muzzle": (0.18, 0.17, 0.17), "ear_in": (0.86, 0.84, 0.80),
              "throat": (0.84, 0.82, 0.78), "ruff": (0.42, 0.40, 0.38)},
+    # the grey hart's own: an old stag's iron grey, darker on the back and the shaggy neck, the
+    # face gone frosted pale with age round a dark muzzle
+    "hart": {"body": (0.47, 0.46, 0.44), "back": (0.37, 0.36, 0.35), "belly": (0.68, 0.67, 0.64),
+             "rump": (0.84, 0.82, 0.78), "rump_edge": (0.28, 0.27, 0.26), "legs": (0.40, 0.39, 0.37),
+             "face": (0.66, 0.65, 0.62), "muzzle": (0.15, 0.14, 0.14), "ear_in": (0.80, 0.78, 0.75),
+             "throat": (0.74, 0.73, 0.70), "ruff": (0.29, 0.28, 0.27)},
 }
 DEER_FIXED = {"hoof": (0.12, 0.10, 0.09), "eye": (0.03, 0.025, 0.02), "gland": (0.10, 0.08, 0.07),
               "antler": (0.52, 0.42, 0.30), "antler_tip": (0.90, 0.86, 0.76)}
@@ -846,6 +852,133 @@ def deer_sidecars(out_dir: str) -> None:
                             ["%s_lod2_bind.glb" % DEER, "%s_stag_lod2_bind.glb" % DEER])
 
 
+# --------------------------------------------------------------------------------------
+# The grey hart (the Ranger's lead, Leads): the red deer's stag grown old -- bigger, heavier in
+# the neck and the chest, a fourteen-point rack, the grey coat his own -- with the deer's gaits and
+# a look back over either shoulder at who follows.
+# --------------------------------------------------------------------------------------
+
+HART = "grey_hart"
+HART_TRIS = 7600
+HART_LOD1 = 2600
+HART_LOD2 = 760
+
+
+def keep_barrel(ob, skel) -> int:
+    """The belly behind the elbows and before the stifles is the trunk's, down to the under line,
+    and the brisket between the forelegs and the groin between the thighs belong to no one leg
+    (skin_body's keep stops at the elbow's and the stifle's height): bone heat gave the belly to
+    the upper arms and the thighs, and the brisket to both forearms at once, and a trot or a bound,
+    folding a foreleg, hung a sheet of the chest under it. Returns how many vertices changed."""
+    bones = quad.DEFORM_NAMES
+    idx = {b: i for i, b in enumerate(bones)}
+    verts, _, tris = bodylib.mesh_arrays(ob)
+    W = bodylib.weight_matrix(ob, bones)
+    before = W.copy()
+    s = skel.props.withers / quad.DEFAULT_WITHERS
+    J = skel.J
+    x, y, z = np.abs(verts[:, 0]), verts[:, 1], verts[:, 2]
+
+    def ramp(v, lo, hi):
+        return np.clip((v - lo) / (hi - lo), 0.0, 1.0)
+
+    def move(cols, to, k):
+        """Hands share k of each bone in `cols` to the bones `to` (equally)."""
+        for c in cols:
+            w = W[:, idx[c]] * k
+            W[:, idx[c]] -= w
+            for t in to:
+                W[:, idx[t]] += w / len(to)
+    elbow, stifle = J["Forearm.L"], J["Gaskin.L"]
+    # inboard of the forearms, at the brisket's height: the lower leg's bones let go (to the upper
+    # arm and the chest), so a folded foreleg does not take the middle of the chest with it
+    brisket = ramp(elbow[0] - x, 0.03 * s, 0.07 * s) * ramp(z, elbow[2] - 0.26 * s, elbow[2] - 0.16 * s)
+    groin = ramp(stifle[0] - x, 0.04 * s, 0.08 * s) * ramp(z, stifle[2] - 0.26 * s, stifle[2] - 0.16 * s)
+    for side in ("L", "R"):
+        move(["Forearm.%s" % side, "FrontCannon.%s" % side], ["Humerus.%s" % side, "Chest"], brisket)
+        move(["Gaskin.%s" % side, "HindCannon.%s" % side], ["Thigh.%s" % side, "Hips"], groin)
+    # behind the elbows and before the stifles, the whole depth of the barrel: the trunk's
+    fore = ramp(y - elbow[1], 0.05 * s, 0.13 * s) * ramp(z, elbow[2] - 0.30 * s, elbow[2] - 0.20 * s)
+    hind = ramp(stifle[1] - y, 0.05 * s, 0.14 * s) * ramp(z, stifle[2] - 0.30 * s, stifle[2] - 0.20 * s)
+    for side in ("L", "R"):
+        move(["Scapula.%s" % side, "Humerus.%s" % side, "Forearm.%s" % side], ["Chest", "Spine2"], fore)
+        move(["Thigh.%s" % side, "Gaskin.%s" % side], ["Spine1", "Hips"], hind)
+    W = W / np.maximum(W.sum(axis=1, keepdims=True), 1e-9)
+    W = bodylib.smooth_weights(W, tris, iters=2)
+    W = bodylib.limit_influences(W, 4)
+    bodylib.apply_weight_matrix(ob, bones, W)
+    return int((np.abs(W - before).sum(axis=1) > 0.05).sum())
+
+
+def hart_style():
+    return db.DeerStyle(coat="hart", ruff=1.25, heavy=1.12, points=14, seed=23)
+
+
+def cmd_hart(args) -> None:
+    """The grey hart on WM_Quadruped_v1: body, LODs, antlers on the Head bone, the grey coat, skin
+    and clips, one GLB."""
+    t0 = time.time()
+    cf.reset_scene()
+    out_dir = cf.ensure_dir(args.out or os.path.join(OUT_ROOT, HART))
+    skel = quad.QuadSkeleton(db.HART)
+    style = hart_style()
+    arm = quad.build_armature(skel, name="Armature")
+    grid = []
+    body = mesh_object("Deer_Body", db.deer_scene(skel, style), 0.012 if args.quick else 0.0072, HART_TRIS,
+                       grid_out=grid)
+    clean_mesh(body)
+    field = sdf.SampledField.from_grid(*grid)
+    log("hart body: %d tris (%.0fs)" % (bodylib.tri_count(body), time.time() - t0))
+    bodylib.smart_uv(body, angle_deg=60.0, margin=0.008)
+    log("hart weights: %s, %d to the barrel" % (skin_body(body, arm, skel), keep_barrel(body, skel)))
+    size = 256 if args.quick else DEER_TEX
+    a, o, n = bake_maps(body, out_dir, "%s_coat" % HART, *deer_paint(skel, field, style, "hart", seed=29), size=size)
+    body.data.materials.append(cf.make_material("WM_Hart_Coat", a, o, n, roughness=0.8))
+    ant = mesh_object("Deer_Antlers", db.antler_scene(skel, style.points, seed=9), 0.004 if not args.quick else 0.008,
+                      2800, smooth_iters=2)
+    clean_mesh(ant)
+    bodylib.smart_uv(ant, angle_deg=60.0, margin=0.01)
+    head = skel.J["Head"]
+    W = np.zeros((4, len(quad.DEFORM_NAMES)))
+    W[:, quad.DEFORM_NAMES.index("Head")] = 1.0
+    skin_to_body(ant, arm, np.array([head, head + 0.01, head - 0.01, head + np.array([0.0, 0.0, 0.3])]), W)
+    aa, ao, an = bake_maps(ant, out_dir, "%s_antlers" % HART, *antler_paint(skel), size=256 if args.quick else 512)
+    ant.data.materials.append(cf.make_material("WM_Hart_Antler", aa, ao, an, roughness=0.62))
+    log("antlers: %d tris" % bodylib.tri_count(ant))
+    lods = []
+    for lname, target in (("Deer_Body_LOD1", HART_LOD1), ("Deer_Body_LOD2", HART_LOD2)):
+        lob = duplicate_joined([body if not lods else lods[-1]], lname)
+        decimate_to(lob, target)
+        clean_mesh(lob)
+        lods.append(lob)
+        log("%s: %d tris" % (lname, bodylib.tri_count(lob)))
+    solver = qc.make_solver(skel)
+    clips = qc.build_hart_clips(solver)
+    sidecar = {}
+    if not args.no_clips:
+        for name in qc.HART_CLIPS:
+            baked = clips[name].bake(solver)
+            cf.push_clip(arm, baked)
+            sidecar[name] = baked.sidecar()
+        log("baked %d clips (worst reach %.3f m)" % (len(sidecar), solver.reach_error))
+    glb = cf.export_glb(os.path.join(out_dir, "%s.glb" % HART), [arm, body, ant] + lods, with_animation=True)
+    with open(os.path.join(out_dir, "%s.clips.json" % HART), "w") as f:
+        json.dump(sidecar, f, indent=1, sort_keys=True)
+    tris = [bodylib.tri_count(body)] + [bodylib.tri_count(l) for l in lods]
+    cf.write_meta(os.path.join(out_dir, "%s.meta.json" % HART), HART,
+                  {"proportions": skel.props.to_dict(), "style": style.to_dict(), "coat": DEER_COATS["hart"]},
+                  tris, collision="none", bounds=cf.object_bounds(body), seed=style.seed,
+                  extra={"generator": GENERATOR, "version": VERSION, "rig": quad.RIG_ID,
+                         "clips": sorted(sidecar.keys()), "bones": len(arm.data.bones),
+                         "antlers": {"mesh": "Deer_Antlers", "bone": "Head", "tris": bodylib.tri_count(ant)},
+                         "note": "the Ranger's lead (world/tutorial/leads.gd), drawn by HorseModel"})
+    from pathlib import Path
+    from forge.lib import export as E
+    d = Path(out_dir)
+    E.write_import_sidecars(d, "%s.glb" % HART, sorted(p.name for p in d.glob("%s_*.png" % HART)), [])
+    log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))
+
+
 def cmd_clips(args) -> None:
     t0 = time.time()
     cf.reset_scene()
@@ -913,7 +1046,7 @@ def main(argv=None) -> int:
     if argv is None:
         argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:]
     ap = argparse.ArgumentParser(prog="horse_forge")
-    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far", "deer"])
+    ap.add_argument("command", nargs="?", default="build", choices=["build", "clips", "sheep", "far", "deer", "hart"])
     ap.add_argument("--glb", default="", help="far: the built GLB to take the far herd's mesh from")
     ap.add_argument("--kind", default="horse", choices=["horse", "sheep", "deer"], help="far: whose proportions")
     ap.add_argument("--face", default="dark", choices=["dark", "white"])
@@ -929,6 +1062,8 @@ def main(argv=None) -> int:
         cmd_far(args)
     elif args.command == "deer":
         cmd_deer(args)
+    elif args.command == "hart":
+        cmd_hart(args)
     elif args.command == "clips":
         if not args.out:
             raise SystemExit("clips needs --out")

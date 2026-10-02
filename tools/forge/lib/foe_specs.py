@@ -2,7 +2,7 @@
 
 `spec(name)` gives a `FoeSpec`: the skeleton to build, the SDF scene, the style the painter reads,
 the def `scale` the model is built for (the game scales it by the def's scale over this one, so an
-old matriarch at 1.3 is the leech-hound's own model grown), and the budgets. creature_forge.py
+matriarch built for 1.3 is drawn at the size the forge made her), and the budgets. creature_forge.py
 builds from it; the previews read it without Blender.
 """
 from __future__ import annotations
@@ -69,6 +69,16 @@ def spec(name: str) -> FoeSpec:
         return _canid(name, 0.76, 1.24, 0.7, 1.08,
                       bb.CanidStyle(kind="leech", girth=1.0, legs=0.9, ruff=0.0, fur=0.0, ears=0.55,
                                     muzzle=1.1, muzzle_w=0.92, brush=0.2, sleek=1.0, seed=11), 0.95, "#4d3f52")
+    if name == "old_grey_bitch":
+        # Mother: the first of Illa Nauve's leech-hounds, the pack's dam -- the same slick otter's
+        # build grown big (0.83 m) and heavy, her frame showing through, the back let down, the muzzle
+        # grey, the left ear bitten off and both flanks scarred by herons
+        sp = _canid(name, 1.04, 1.18, 0.72, 1.12,
+                    bb.CanidStyle(kind="leech", girth=1.18, depth=1.12, legs=1.05, ruff=0.0, fur=0.0, ears=0.6,
+                                  muzzle=1.04, muzzle_w=1.04, brush=0.25, sleek=1.0, age=1.0, torn_ear=0.9,
+                                  scars=1.0, seed=17), 1.3, "#5b5160", depth=1.12)
+        sp.extra["keep_barrel"] = True
+        return sp
     if name == "weaver":
         from . import weaver as wv
         st = wv.WeaverStyle()
@@ -137,8 +147,8 @@ def spec(name: str) -> FoeSpec:
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "gutter_drake", "sallowjaw", "weaver",
-        "stone_thrall", "stone_thrall_king", "warden", "wisp"]
+FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "old_grey_bitch", "bristleback", "gutter_drake",
+        "sallowjaw", "weaver", "stone_thrall", "stone_thrall_king", "warden", "wisp"]
 QUADS = ("canid", "boar", "reptile")
 
 

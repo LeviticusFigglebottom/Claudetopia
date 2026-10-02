@@ -94,6 +94,10 @@ class CanidStyle:
     thorns: float = 0.0       # a thornhound's thorns along the spine, the shoulders and the jaw
     bark: float = 0.0         # bark plates over the back and the flanks
     sleek: float = 0.0        # a leech-hound's slick hide: no coat, ringed and wet
+    age: float = 0.0          # an old dog: the hips and the shoulder blades standing up through the hide,
+                              # the back let down between them, the belly slack, the muzzle gone grey
+    torn_ear: float = 0.0     # the left ear's top bitten away (the share of it gone)
+    scars: float = 0.0        # healed stab and rake scars along both flanks (how many, and how pale)
     seed: int = 3
 
     def to_dict(self) -> dict:
@@ -190,11 +194,65 @@ def canid_scene(skel: QuadSkeleton, st: CanidStyle, trunk=WOLF_TRUNK) -> sdf.Sce
         _foreleg(sc, skel, st, side, sx)
         _hindleg(sc, skel, st, side, sx)
     _tail(sc, skel, st)
+    if st.age > 0:
+        _old_bones(sc, skel, st)
     if st.thorns > 0:
         _thorns(sc, skel, st)
     # nothing below the ground
     sc.intersect(sdf.plane(np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, -1.0])))
     return _coat(sc, skel, st)
+
+
+def _old_bones(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
+    """An old dog's frame showing through: the points of the hips and the tops of the shoulder
+    blades standing up out of the back line, the spine's knuckles over the loin, and the back let
+    down between withers and croup."""
+    J = skel.J
+    s = _s(skel)
+    a = st.age
+    top = lambda y: np.interp(y, [J["Chest"][1], J["Spine1"][1], J["Hips"][1]],  # noqa: E731
+                              [J["Chest"][2], J["Spine1"][2], J["Hips"][2]])
+    # the sway: the middle of the back let down
+    mid = 0.5 * (J["Chest"] + J["Spine1"])
+    sc.subtract(sdf.ellipsoid(mid + np.array([0.0, 0.0, 0.085 + 0.012 * a]) * s, np.array([0.16, 0.20, 0.05]) * s),
+                k=0.05 * s)
+    for sx in (1.0, -1.0):
+        hip = np.array([sx * 0.062 * s, J["Thigh.L"][1] - 0.075 * s, top(J["Thigh.L"][1] - 0.075 * s) + 0.035 * s])
+        sc.union(sdf.ellipsoid(hip, np.array([0.03, 0.04, 0.026]) * s * (0.8 + 0.3 * a)), k=0.03 * s)
+        blade = np.array([sx * 0.05 * s, J["Scapula.L"][1] + 0.01 * s, J["Scapula.L"][2] + 0.03 * s])
+        sc.union(sdf.ellipsoid(blade, np.array([0.022, 0.05, 0.022]) * s * (0.8 + 0.3 * a)), k=0.025 * s)
+    for i in range(6):
+        y = J["Spine1"][1] + (J["Hips"][1] - J["Spine1"][1]) * (i / 5.0) * 0.9 - 0.06 * s
+        sc.union(sdf.sphere(np.array([0.0, y, top(y) + 0.028 * s]), 0.014 * s * a), k=0.018 * s)
+
+
+def scars(skel: QuadSkeleton, st: CanidStyle, P: np.ndarray) -> np.ndarray:
+    """0..1: the healed scars along both flanks -- short stabs (a heron's bill) and long rakes --
+    hairless and pale; deterministic from the seed."""
+    if st.scars <= 0:
+        return np.zeros(len(P))
+    J = skel.J
+    s = _s(skel)
+    rng = np.random.default_rng(st.seed + 101)
+    y0, y1 = J["Chest"][1] + 0.04 * s, J["Thigh.L"][1] - 0.02 * s
+    z0, z1 = J["Forearm.L"][2] + 0.04 * s, J["Spine1"][2] - 0.02 * s
+    out = np.zeros(len(P))
+    n = int(round(7 * st.scars))
+    for sx in (1.0, -1.0):
+        side = sm(0.0, 0.03 * s, P[:, 0] * sx)
+        for i in range(n):
+            c = np.array([rng.uniform(y0, y1), rng.uniform(z0, z1)])
+            ang = rng.uniform(-0.9, 0.9) + (math.pi * 0.5 if rng.random() < 0.3 else 0.0)
+            ln = (rng.uniform(0.08, 0.16) if i % 3 == 0 else rng.uniform(0.02, 0.05)) * s
+            w = (0.006 if ln > 0.06 * s else 0.008) * s
+            d = np.array([math.cos(ang), math.sin(ang)])
+            q = np.stack([P[:, 1], P[:, 2]], axis=1) - c
+            t = np.clip(q @ d, -ln * 0.5, ln * 0.5)
+            dist = np.linalg.norm(q - t[:, None] * d[None, :], axis=1)
+            # thinning to the ends
+            taper = 1.0 - (np.abs(t) / (ln * 0.5)) ** 2 * 0.6
+            out = np.maximum(out, side * (1.0 - sm(w * taper * 0.6, w * taper, dist)))
+    return np.clip(out, 0.0, 1.0)
 
 
 def _neck(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
@@ -305,6 +363,7 @@ def _head(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
     for side, sx in (("L", 1.0), ("R", -1.0)):
         e0, e1 = J[f"Ear.{side}"], J[f"EarTip.{side}"]
         e1 = e0 + (e1 - e0) * st.ears
+        full = e1.copy()
         up = _u(e1 - e0)
         wide = _u(np.cross(up, -hu))
         base = e0 - up * 0.02 * k
@@ -314,6 +373,14 @@ def _head(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle) -> None:
             front = -front
         sc.subtract(sdf.elliptic_cone(base + up * 0.03 * k + front * 0.009 * k, e1 - up * 0.014 * k + front * 0.004 * k,
                                       0.032 * k * st.ears, 0.006 * k, 0.003 * k, 0.002 * k, wide), k=0.003 * k)
+        if side == "L" and st.torn_ear > 0:
+            # bitten: the top of the ear gone in a ragged bite, a nick out of its back edge below
+            L = float(np.linalg.norm(full - e0))
+            bite = e0 + up * L * (1.0 - st.torn_ear * 0.55) + wide * 0.012 * k
+            sc.subtract(sdf.sphere(bite + up * 0.03 * k, 0.036 * k), k=0.003 * k)
+            sc.subtract(sdf.sphere(bite - wide * 0.03 * k - up * 0.006 * k, 0.014 * k), k=0.002 * k)
+            nick = e0 + up * L * 0.42 - wide * 0.034 * k * st.ears
+            sc.subtract(sdf.sphere(nick, 0.009 * k), k=0.002 * k)
 
 
 def _foreleg(sc: sdf.Scene, skel: QuadSkeleton, st: CanidStyle, side: str, sx: float) -> None:
@@ -555,7 +622,8 @@ def regions(skel: QuadSkeleton, P: np.ndarray, st: CanidStyle, fine: bool = True
     R["ear_in"] = np.zeros(n)
     for side, sx in (("L", 1.0), ("R", -1.0)):
         e0, e1 = J[f"Ear.{side}"], J[f"EarTip.{side}"]
-        d_e, u_e = _seg(P, e0 - (e1 - e0) * 0.1, e0 + (e1 - e0) * st.ears)
+        torn = st.torn_ear * 0.55 if side == "L" else 0.0
+        d_e, u_e = _seg(P, e0 - (e1 - e0) * 0.1, e0 + (e1 - e0) * st.ears * (1.0 - torn))
         ear = (1.0 - sm(0.03 * s, 0.045 * s, d_e)) * sm(0.05, 0.2, u_e)
         R["ear"] = np.maximum(R["ear"], ear)
         front = -((P - e0) @ hu)
