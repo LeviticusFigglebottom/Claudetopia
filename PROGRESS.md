@@ -14982,6 +14982,135 @@ Triage 77-80, on `wip/quest-fixes`.
     walker plays the starts in order and never takes the `seen` detour;
   - arrows spent are handed back as iron arrows whatever the player shot.
 
+## Brightwater: the second pass, the Crown Drift and the Struck Barrow (world life phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for Brightwater (`wip/wl2-brightwater`): the places looked at again against
+their own defs, the ones whose builders did not build what the def says made over by the region's
+own builders, their seats set straight, and two large sites with a far-seen feature and an inside.
+
+### Two large sites
+- **The Crown Drift** (`delve`, own builder, -852, -1628, pad 40 level): the Tallymen's calamine
+  mine on the North Shore's upper terrace, where the brass of every lamp in Tollmere came up. A
+  timber headframe 12 m with its winding-wheel over the shaft in its collar, the ladder's head going
+  down; a roofless three-storey engine-house with tall windows, the bob-wall's opening and the
+  engine's great beam fallen out of it; a round chimney 19.7 m with a brick head (the tallest thing on
+  the terrace, seen from the Mere); spoil heaps, buddles, a tramway, the drift-captain's count-house,
+  and the shift-board with nine rings painted round nine empty hooks. Inside (`mine`, large, seed
+  2312): shaft foot, an ore gallery, a winze, the brass-takers' melting hearth (forge hall), a warm
+  stope under a daylight shaft with drakes in it, the Hushed level where their sayer keeps the
+  silence, the break into the Builders' gallery (a chasm bridge) with the held miners, and Gideon
+  Spall, Captain of the Last Shift, at the deep board. New foes: Brass-Taker, Drift Hewer, Held
+  Miner. Quest **The Last Shift** (Abel Rowse, the drift-captain who sent them down, at his
+  count-house; or the board at the shaft head): bring the nine tokens up.
+- **The Struck Barrow** (`delve`, own builder, -912, 890, pad 30 slope): the barrow the Tallymen cut
+  into the south scarp for debtors struck off the Roll. At the gully's mouth the **Tally Needle**, a
+  lime-washed obelisk 14 m on a stepped plinth with a brass pyramidion, its faces cut with struck
+  names in close rows, one chalked back over by a laundress; at the gully's head a dressed portal
+  with wing walls and RECEIVED cut in its lintel, steps up to it, a bier-stone and numbered marker
+  stones. Inside (`crypt`, large): the receiving room, numbered shelves, the weighing room, the
+  Quiet Hands' copyists' camp, a fallen vault, the deep shelves over a rift, and Obadiah Fenn, the
+  Receiver of the Struck. New foes: Struck Debtor, Struck Bailiff, Resurrection Man. Quest
+  **Entered in Error** (Dorcas Pell at the Wash-Stones, or the names on the Needle): her father's
+  name back beside his number in the Receiver's register.
+- Rumours for both; resurrection men and the struck at the Needle by night and dusk, brass-takers at
+  the shaft head by night.
+
+### Places made over (own builders in `game/world/pois/regions/brightwater.gd`)
+Each looked at against its def; where the kind's builder made something generic (a colonnade for
+"steps into the lake", a standing-stone ring for "flat stones where the washing is beaten", a chain
+suspension bridge for "a boom of chained logs"), the region builds it as the def says:
+- **The Wash-Stones**: a spring-fed kerbed wash-pool with its spout and runnel, three dished beating
+  stones, the copper steaming, lines of guild linen; Dorcas Pell works the middle stone.
+- **The Heronry**: a square black Oroth stalk, torn off at four heights, nests on its top and ledges,
+  herons on them and in the wet ground, lime streaks, fallen sticks, the clerk's hat (and his egg-tax
+  schedule, a new find).
+- **The Pilgrim Stair**: a landing with two broken stalks, a processional way between bollards, and
+  one kerbed flight down the old beach into the Mere, the Sayer's rope taut off the last dry step.
+- **The Ness Market**: awnings in the Lake's colours over trestles laid with the catch, a smoking-rack
+  over a slow fire, baskets and barrels, the toll-man's line of lime-white stones; two new people,
+  Bryony Kettle (a fishwife who sells fish) and Silas Pask (the Tallymen's clerk who enters it).
+- **The Beached Barge**: an oak grown up through her hold, her cargo of baulks lashed, the Woodfolk's
+  and the Tallymen's claims nailed to her stem (read them), the bargemaster's locker, drakes at night.
+- **The Charter Stone**: one slab broken across and stood up again, two brass staples left of eight
+  (the Charter Pins quest's own count), the sockets of the rest, the Charter and the chain-link cut,
+  swearing-stones and the trodden ring; its face can be read.
+- **The Strandline Stones**: the kind's three stones, and the old shore itself (shingle, driftwood)
+  with the Sayers' benchmark and its notches (read it).
+- **The Dry Jetty**: a level plank jetty on piles running out toward where the water was, its end
+  high over the hay, bollards, a ladder to nothing, the eel-wives' lantern, the wet last pile.
+- **The Tallyman's Folly**: a house never finished, turned to its road and set clear of it: walls to
+  uneven courses toothed for the next, a scaffold and sheer-legs still up, the masons' names on the
+  lintel, ashlar stacked, the cellar hatch the cutpurses use.
+- **The Smoke Coppice**: oak stools with their fans of poles, some cut back, a pole stack, the
+  cleaving-brake, brash bundles; a new person, Hob Tench the coppice-reeve (sells).
+- **The Log Boom**: logs chained end to end across the Wold Water at the water's level, walkable,
+  chained to posts in both banks, two rafts lashed behind it, the keeper's brazier, stool and pole.
+- Seats (triage 74), from the probe: wreck lanterns hung from their stem-posts by an iron, or taken
+  down where nobody has lit them since (Hesper's Boat, the Gullhithe Wreck; the Laundry Punt, the
+  Beached Barge); Willow Isle's boat and post set by their drawn boxes; the Long Stride's chest that
+  hung over the shallows taken off its deck; the Shingle Shrine's Hearthstone on its pebbles; a stool
+  out of the Rafters' fire; the Dry Jetty's ropes 4 m in the air gone with its kind's boardwalk.
+
+### Looked at
+- A scratch tool (not committed) raised each place on the installed world's ground round it, with the
+  preview pads laid, in a few seconds a place, from four sides, close at eye height and from above:
+  every new and made-over place was looked at that way two to four times while it was built. Found
+  and fixed by looking: the Pilgrim Stair's kind built a small colonnade on the terrace nowhere near
+  the water; the Needle's shaft read as stacked boxes (now one tapered shaft and a brass
+  pyramidion); the barrow's portal stood on the flat (now where the gully's floor turns up into the
+  hill); spoil heaps read as snow (darker, rougher); the Folly stood on its road's bend (turned to the
+  road and set clear of it); the Wash-Stones' runnel ran 14 m like an aqueduct; the Ness Market was a
+  scatter of bare tables (awnings and the catch); the Beached Barge's cargo hid her hull.
+- `site_review` of both insides, every room: the Drift's timbered levels, carts, lanterns, the
+  takers' hearth, the chasm bridge, the arena's pillars; the Barrow's ossuary niches, sarcophagi, the
+  struck in their rags, the weighing room, the Receiver's arena.
+- `poi_sheet` (the real game, Compatibility) of both large sites: the Drift's chimney and headframe
+  read from the terrace's edge against the North Shore crags; the Needle stands white at the foot of
+  the south scarp's cliff. Views 556-1021 draws, 0.86-1.30 M primitives (under the limit; two views
+  over the 1.1 M aim, like their neighbours'). From that sheet: the barrow's portal had the scarp's
+  cliff boulders over it, so its pad is 36 m now and the scatter is cleared off it.
+
+### Measured (region_audit.py brightwater --probe, on w4096g; before is the phase 1 audit)
+| | before | after | target |
+|---|---|---|---|
+| POIs | 70 | 72 | >= 70 |
+| land > 200 m from anything | 3.8% | 2.8% | <= 5% |
+| weak share (non-wayside) | 0.189 (7) | 0.051 (2: the Log Boom and the Strandline Stones, both 3) | <= 0.25 |
+| strong (>= 8) | 6 | 8 (+ the Crown Drift 12, the Struck Barrow 12) | >= 5 |
+| placement problems | 34 at 24 POIs | 26 at 17; seat findings 16 -> 5 | |
+
+The two large sites' own cost (probe): the Crown Drift 51 draws, 73 k triangles, reach 40 m on its
+40 m pad; the Struck Barrow 18 draws, 16 k, reach 36 m on its 36 m pad; both seat-clean.
+
+### Tests
+- `region_check.py brightwater --godot`: PASS (content, placement, density).
+- `./run.sh test --filter=objects_seated_brightwater,test_poi_preview,test_pois,test_brightwater_places`:
+  34 passed, 0 script errors, game warnings 49 (baseline 49). `test_brightwater_places` now also
+  raises the Drift, the Barrow and the Wash-Stones and checks their pieces, has the five new people
+  at their spots with nobody inside anything, and walks both new insides to every room on their
+  navigation meshes (the Drift's mine at seed 2312: of eight seeds tried, only 2312 and 2318 joined
+  every room; the others left the winze and what lies past it unjoined).
+- Quest walker `--only=the_last_shift,entered_in_error`: 2 of 2 end every way they can, 0 errors.
+- `tools/quests/softlock_check.py`: 124 quests, 0 findings. pytest test_content_split,
+  test_region_check, test_quest_softlocks: 20 passed.
+
+### Not done / for the coordinator
+- Two large sites, not three: the third (a castle on the east promontory facing Gull Holm) was not
+  started; the time went into the made-over places and the seats.
+- Left in the audit's seat list, all from shared kinds: North Cliff Beacon's drum and the Sedge
+  Hearth's plank in the carriageways of atlas roads that end at their middles; the Sedge Hearth's bell
+  is sunk in its pool by the shrine kind's design; Rafters' Camp's fire still shares its box with a
+  stool and Willow Isle's fire with the willow's crown (the willow's box is its crown).
+- `past_pad` at the Pilgrim Stair (49 m on a 25 m pad: the flight goes down the old beach to the
+  water, as its def says) and the Tallyman's Folly (28 on 25: set clear of its road); the next build
+  gives them their pads as they are.
+- The scratch ground-review tool used here (a POI on the real heights in seconds, no world) is not
+  committed; it is worth a shared version for every region (`site_review --poi` raises a POI on a
+  flat grass pad).
+- `~/bin/heavy` is not first come first served (it polls every 5 s), so a queued run can wait behind
+  later ones for an hour; two of this session's runs were stopped by their callers' time limits while
+  still queued.
+
 ## Three large places and the dull ones built as they say: world life in Briarwold (phase 2, 2026-10-01)
 
 Triage 73, 74 and 76 for the Briarwold, on `wip/wl2-briarwold`. Looked at first (site_review on a flat

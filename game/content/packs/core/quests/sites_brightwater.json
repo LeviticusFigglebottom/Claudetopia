@@ -1,0 +1,136 @@
+[
+  {
+    "id": "core:quest/the_last_shift",
+    "name": "The Last Shift",
+    "layer": "side",
+    "giver": "core:npc/abel_rowse",
+    "region": "core:region/brightwater",
+    "summary": "In 1012 the Crown Drift's deep level broke into a Builders' gallery and its shift-captain took eight men down for the ore stacked in it. None came up, and their brass tokens are still on the deep shift-board. Abel Rowse, the drift-captain who sent them, has waited thirty-one years at the shaft head for a token to come up.",
+    "notes": "Brightwater's world-life site, phase 2 (docs/WORLD_LIFE_INTERIORS.md): the Crown Drift (pois/brightwater.json: a delve with the region's own headframe and engine-house) and its mine (interiors/sites_brightwater.json). Started by Abel Rowse at the count-house, or by the shift-board at the shaft head (core:dialogue/crown_drift_shift_board). Gideon Spall drops the tokens; Abel takes them.",
+    "stages": [
+      {
+        "id": "the_drift",
+        "journal": "The Crown Drift's last shift went down to the Builders' gallery in 1012 and never came up: Gideon Spall, shift-captain, and eight men. Their tokens are on the deep shift-board past the break, and a token coming up is a man coming up, by the drift's rule. Brass-takers are working the old levels by night, and they do not go past the break.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_crown_drift",
+            "count": 1,
+            "text": "Go to the Crown Drift on the North Shore"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/gideon_spall",
+            "count": 1,
+            "where": "core:interior/the_crown_drift",
+            "text": "Call up the last shift's captain at the deep board"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/crown_drift_tokens",
+            "count": 1,
+            "text": "Take the last shift's tokens off the deep board"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_crown_drift",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_board",
+        "journal": "The nine tokens are green with forty years of calamine and the captain's is rubbed bright. Abel Rowse is at the shaft head with nine empty hooks.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/abel_rowse",
+            "item": "core:item/crown_drift_tokens",
+            "count": 1,
+            "text": "Bring the tokens up to Abel Rowse at the shaft head"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_crown_drift",
+          "radius": 60
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 160,
+      "renown": 10,
+      "morality": 2
+    }
+  },
+  {
+    "id": "core:quest/entered_in_error",
+    "name": "Entered in Error",
+    "layer": "side",
+    "giver": "core:npc/dorcas_pell",
+    "region": "core:region/brightwater",
+    "summary": "Amos Pell, carter, was struck off Tollmere's Roll in 1031 for a debt he had paid, and received into the Struck Barrow as number 3904. His daughter Dorcas, a laundress at the Wash-Stones, chalks his name back over its line on the Tally Needle every week. If his name stood beside his number in the Receiver's register, the Roll would have to take him back.",
+    "notes": "Brightwater's world-life site, phase 2 (docs/WORLD_LIFE_INTERIORS.md): the Struck Barrow (pois/brightwater.json: a delve with the region's own Needle and portal) and its crypt (interiors/sites_brightwater.json). Started by Dorcas Pell at the Wash-Stones, or by the names on the Needle (core:dialogue/tally_needle_names). The Receiver drops the register; Dorcas takes it.",
+    "stages": [
+      {
+        "id": "the_barrow",
+        "journal": "The Struck Barrow is cut into the south shore's scarp behind the Tally Needle: a counting-house for the dead, numbered shelves and no names, shut since its Receiver was struck himself in 1019. His register is at the bottom, and number 3904 is in it. Quiet Hands copyists go in at night, and the struck walk at dusk.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_struck_barrow",
+            "count": 1,
+            "text": "Go to the Tally Needle and the Struck Barrow on the south shore"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/the_receiver",
+            "count": 1,
+            "where": "core:interior/the_struck_barrow",
+            "text": "Receive the Receiver at the bottom of the barrow"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/barrow_register",
+            "count": 1,
+            "text": "Take the Barrow Register"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_struck_barrow",
+          "radius": 60
+        },
+        "on_complete": [
+          {
+            "renown": 10
+          }
+        ]
+      },
+      {
+        "id": "the_register",
+        "journal": "The register is a number a line, four thousand and eleven of them, and a twelfth that nobody received. Dorcas Pell will want to see 3904 with her own eyes, at the Wash-Stones.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/dorcas_pell",
+            "item": "core:item/barrow_register",
+            "count": 1,
+            "text": "Bring the register to Dorcas Pell at the Wash-Stones"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/wash_stones",
+          "radius": 80
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 150,
+      "renown": 10,
+      "morality": 3
+    }
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "core:rumour/crown_drift",
+    "name": "Brass by night",
+    "tone": "strange",
+    "text": "The Crown Drift's been closed since before I was born, the old calamine mine up on the North Shore terrace with the chimney. There's a lamp at the shaft head every night again, and brass in the Undercroft market at four marks a pig, and not a sound from the hill. Old Abel Rowse still sits up there by the board. Ask him what's on the deep level and he'll tell you it's a shift.",
+    "variants": [
+      "Every lamp in Tollmere came up the Crown Drift. The crown on the Spire too, whatever the Sayers say. Nine men went down after something the Builders left stacked and never came up, and the Tallymen called it a loss."
+    ],
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/tally_needle",
+    "name": "The names on the Needle",
+    "tone": "grim",
+    "text": "You'll have seen the Tally Needle from the Stride, the white stalk under the south scarp with the brass on top. Every soul the Charter struck off is cut on it and struck through. There's somebody chalks one of them back every week, and the struck come out of the barrow at dusk and stand round the Needle reading, and the Undercroft's selling names again, clean, forty marks.",
+    "variants": [
+      "Ask the laundresses at the Wash-Stones about the Needle. One of them will tell you more than you wanted, and then she'll ask you a favour."
+    ],
+    "tags": [
+      "brightwater",
+      "grim"
+    ]
+  }
+]
