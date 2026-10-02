@@ -904,7 +904,6 @@ static func unroping_post(d: PoiDressing) -> void:
 	var timber := m.begin()
 	var top := m.post(timber, at, 4.1, 0.26)
 	var arm := Vector3(out.x, 0.0, out.y)
-	var arm_end := top + arm * 1.8 - Vector3(0.0, 0.2, 0.0)
 	m.block(timber, Transform3D(Basis.looking_at(arm, Vector3.UP), top + arm * 0.85 - Vector3(0.0, 0.2, 0.0)), Vector3(0.18, 0.18, 2.0))
 	var brace_a := top - Vector3(0.0, 1.1, 0.0)
 	var brace_b := top + arm * 0.9 - Vector3(0.0, 0.25, 0.0)
@@ -1378,10 +1377,10 @@ static func dunnow(d: PoiDressing) -> void:
 				var lz := fd + 0.9 + (depth - 0.9) * (float(q) + 0.5) / 4.0
 				var lsz := Vector3(k.rng.randf_range(2.4, 3.6), top - bottom + k.rng.randf_range(0.4, 1.6), (depth - 0.9) / 4.0 + 1.2)
 				var lp := into * lz + across * (float(s) * (w * 0.5 + lsz.x * 0.35))
-				var lb := fb * Basis(Vector3.UP, k.rng.randf_range(-0.25, 0.25)) * Basis(Vector3.BACK, k.rng.randf_range(-0.12, 0.12))
+				var cheek_b := fb * Basis(Vector3.UP, k.rng.randf_range(-0.25, 0.25)) * Basis(Vector3.BACK, k.rng.randf_range(-0.12, 0.12))
 				if lp.length() + lsz.length() * 0.5 > reach + 0.6:
 					continue
-				sw.block(Transform3D(lb, Vector3(lp.x, (bottom + top) * 0.5 + 0.2, lp.y)), lsz, Color(0.88, 0.87, 0.84))
+				sw.block(Transform3D(cheek_b, Vector3(lp.x, (bottom + top) * 0.5 + 0.2, lp.y)), lsz, Color(0.88, 0.87, 0.84))
 		tops.append(top)
 		fronts.append(fd)
 		bottom = top - 0.4
