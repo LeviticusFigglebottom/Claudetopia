@@ -1,11 +1,15 @@
 extends TestCase
-## Hearthvale's own large site (world life, phase 1): the Hound's Swallet, a cave under Hound Down with
-## the Old Hound at the bottom, built, stood on, walked on its navigation mesh from the way in to every
-## room, its boss in an arena, and left by its way out. The walk is test_sites.gd's, copied so the
-## region's test is the region's own file.
+## Hearthvale's large sites (world life, phases 1 and 2): the Hound's Swallet (a cave under Hound
+## Down, the Old Hound at the bottom), Knappers' Deep (a flint mine, the Gaffer at the far face) and
+## the throat under the Hum Stone (the Builders' vaults, the Digger-King at the bottom). Each is built,
+## stood on, walked on its navigation mesh from the way in to every room, its boss in an arena, and
+## left by its way out. The walk is test_sites.gd's.
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
+const TS := preload("res://tests/unit/test_sites.gd")
 const SWALLET := "core:interior/hounds_swallet"
+const DEEP := "core:interior/knappers_deep"
+const THROAT := "core:interior/hum_stone_throat"
 var player: Node3D
 
 
@@ -26,16 +30,28 @@ func after_each() -> void:
 
 
 func test_the_hounds_swallet_is_built_walkable_and_left() -> void:
+	await _built_walked_and_left(SWALLET, "core:boss/old_hound", ["throat", "pelters_camp", "bourne_lake", "the_den"])
+
+
+func test_knappers_deep_is_built_walkable_and_left() -> void:
+	await _built_walked_and_left(DEEP, "core:boss/the_gaffer", ["shaft_foot", "boys_camp", "the_fall", "night_gallery", "far_face"])
+
+
+func test_the_hum_stones_throat_is_built_walkable_and_left() -> void:
+	await _built_walked_and_left(THROAT, "core:boss/digger_king", ["the_cut", "diggers_camp", "the_niches", "grey_hall", "the_throat"])
+
+
+func _built_walked_and_left(interior: String, boss: String, rooms: Array) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
-	assert_true(ContentDB.has(SWALLET), "the swallet's inside is content")
+	assert_true(ContentDB.has(interior), "%s is content" % interior)
 	var door := Door.new()
 	tree.root.add_child(door)
 	door.global_position = Vector3(110, 5, 100)
-	door.interior_id = SWALLET
-	assert_true(Interiors.enter(SWALLET, door), "it can be entered")
+	door.interior_id = interior
+	assert_true(Interiors.enter(interior, door), "it can be entered")
 	await tree.process_frame
 	await tree.physics_frame
-	var site := Interiors._loaded.get(SWALLET) as SiteInterior
+	var site := Interiors._loaded.get(interior) as SiteInterior
 	assert_true(site != null and site.is_built, "it is built")
 	if site == null:
 		door.queue_free()
@@ -51,19 +67,22 @@ func test_the_hounds_swallet_is_built_walkable_and_left() -> void:
 		var down := space.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3.UP * 1.5, c + Vector3.DOWN * 2.0, 1))
 		var head := space.intersect_ray(PhysicsRayQueryParameters3D.create(c + Vector3.UP * 0.3, c + Vector3.UP * 2.1, 1))
 		assert_false(down.is_empty(), "room %s has a floor" % r["id"])
-		assert_true(head.is_empty(), "room %s has headroom at its middle" % r["id"])
-	for want in ["throat", "pelters_camp", "bourne_lake", "the_den"]:
-		assert_true(ids.has(want), "the swallet has its %s" % want)
+		# a collapsed shaft's middle is the mound of the roof that fell (the Fall, the stone's root):
+		# that room is walked round, and its way through is the navigation walk's to prove
+		if str(r.get("set_piece", "")) != "collapsed_shaft":
+			assert_true(head.is_empty(), "room %s has headroom at its middle" % r["id"])
+	for want in rooms:
+		assert_true(ids.has(want), "%s has its %s" % [interior, want])
 	var report := _walk(site)
 	print("SITE | %s | %d rooms, %d links, %d chunks, %d lights, %d foes, %d containers | reached %s" % [
-		SWALLET, site.plan.rooms.size(), site.plan.links.size(), site.chunks.size(), site.dress.lights.size(),
+		interior, site.plan.rooms.size(), site.plan.links.size(), site.chunks.size(), site.dress.lights.size(),
 		site.dress.spawner.living.size(), site.plan.containers.size(), report["reached"]])
 	assert_eq(report["unreached"], [], "every room is walkable from the way in on the navigation mesh")
 	assert_gt(site.dress.spawner.living.size(), 4, "foes stand in it")
 	var boss_there := false
 	for e in site.dress.spawner.living:
-		boss_there = boss_there or (is_instance_valid(e) and str(e.get("enemy_id")) == "core:boss/old_hound")
-	assert_true(boss_there, "the Old Hound lies in its den")
+		boss_there = boss_there or (is_instance_valid(e) and str(e.get("enemy_id")) == boss)
+	assert_true(boss_there, "%s waits in %s" % [boss, interior])
 	assert_true(site.find_child("BossArena", true, false) != null, "the boss has an arena")
 	var way_out := site.find_child("WayOut", true, false) as Door
 	assert_true(way_out != null, "a way out")
@@ -81,52 +100,8 @@ func _walk(site: SiteInterior) -> Dictionary:
 	var reached: Array = []
 	var unreached: Array = []
 	for r in site.plan.rooms:
-		var goal: Vector3 = r["centre"]
-		if _joined(nm, site.plan.entrance, goal):
+		if TS._joined(nm, site.plan.entrance, r["centre"], SiteInterior.passage_links(site.plan)):
 			reached.append(r["id"])
 		else:
 			unreached.append(r["id"])
 	return {"reached": reached.size(), "unreached": unreached}
-
-
-## Whether two points (local to the navigation mesh) stand on polygons joined by shared edges.
-static func _joined(nm: NavigationMesh, a: Vector3, b: Vector3) -> bool:
-	var verts := nm.get_vertices()
-	var n := nm.get_polygon_count()
-	if n == 0:
-		return false
-	var by_vert := {}
-	var key := func(v: Vector3) -> Vector3i: return Vector3i((v * 10.0).round())
-	for i in n:
-		for vi in nm.get_polygon(i):
-			by_vert.get_or_add(key.call(verts[vi]), []).append(i)
-	var nearest := func(p: Vector3) -> int:
-		var best := -1
-		var best_d := INF
-		for i in n:
-			var c := Vector3.ZERO
-			var poly := nm.get_polygon(i)
-			for vi in poly:
-				c += verts[vi]
-			c /= float(poly.size())
-			var d := Vector2(c.x - p.x, c.z - p.z).length() + absf(c.y - p.y) * 2.0
-			if d < best_d:
-				best_d = d
-				best = i
-		return best if best_d < 4.0 else -1
-	var start: int = nearest.call(a)
-	var goal: int = nearest.call(b)
-	if start < 0 or goal < 0:
-		return false
-	var seen := {start: true}
-	var todo := [start]
-	while not todo.is_empty():
-		var i: int = todo.pop_back()
-		if i == goal:
-			return true
-		for vi in nm.get_polygon(i):
-			for j in by_vert[key.call(verts[vi])]:
-				if not seen.has(j):
-					seen[j] = true
-					todo.append(j)
-	return false

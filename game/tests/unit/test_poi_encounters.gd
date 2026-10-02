@@ -501,6 +501,8 @@ const WHAT_STANDS := {
 	"core:poi/sayers_gauge": "person: core:npc/idrin_fenn",
 	"core:poi/ploughed_ash": "four ash-wights",
 	"core:poi/hounds_swallet": "two down wolves, two down wolves at night",
+	"core:poi/knappers_deep": "person: core:npc/nell_knapper (the Boys and the night shift are in its inside)",
+	"core:poi/hum_stone": "three ash-wights on the grey side after dark, and person: core:npc/godwin_merrow",
 	"core:poi/drovers_pound": "three down wolves, two down wolves at night",
 	"core:poi/lime_bay_kilns": "two bristlebacks at dusk, and person: core:npc/hedda_limeburner, person: core:npc/col_limeburner",
 	"core:poi/brow_long_table": "person: core:npc/oswen_bellsey",

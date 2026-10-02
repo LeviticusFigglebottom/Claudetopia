@@ -4149,7 +4149,9 @@ static func _ruins_colonnade(d: PoiDressing) -> void:
 			var h := float([6.4, 2.1, 5.2, 1.2, 4.0, 6.8, 0.8][i % 7]) * k.rng.randf_range(0.9, 1.1)
 			var frame := Transform3D(Basis.IDENTITY, Vector3(p.x, base, p.y))
 			await k.step()
-			m.drum(stone, frame, 0.62, h, 0.35, NAN, true, 0.5)
+			# a column that still has its top drum stands whole under it: torn down raggedly, its cap
+			# floated over the tear (the Hush Steps' review render, world life phase 2)
+			m.drum(stone, frame, 0.62, h, 0.0 if h > 5.0 else 0.35, NAN, true, 0.5)
 			# the top drum of a column that is nearly whole
 			if h > 5.0:
 				m.block(stone, Transform3D(Basis(Vector3.UP, yaw), Vector3(p.x, base + h + 0.18, p.y)), Vector3(1.5, 0.36, 1.5))
