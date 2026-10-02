@@ -43,6 +43,9 @@ var _backdrop: TextureRect
 var _back: ColorRect
 ## The country behind the menu, when there is one (`TitleVista.wanted()`).
 var vista: TitleVista = null
+## The filmed country in its place (TitleReel): the live one switched off (Low, Medium), or given
+## up for this visit.
+var reel: TitleReel = null
 var _buttons: Array[Control] = []
 var _drift := 0.0
 ## `WorldStatus.current()` when the screen was built: whether there is a world to enter at all.
@@ -66,8 +69,10 @@ func _ready() -> void:
 	_build()
 	UiKit.focus_first(self)
 	_start_vista()
+	_read_ahead()
 	await get_tree().process_frame
 	StartupTrace.step("title: the menu's first frame (%s)" % ("the country is asked for" if vista != null
+			else "the filmed country" if reel != null
 			else "the chart only: safe mode" if SafeMode.active else "the chart only"))
 
 
@@ -75,22 +80,62 @@ func _ready() -> void:
 ## shot's country has come. The menu never waits for it.
 func _start_vista() -> void:
 	if not TitleVista.wanted():
+		_start_reel()
 		return
 	vista = TitleVista.new()
 	vista.name = "TitleVista"
 	vista.dip = _back
 	vista.chart = _backdrop
+	vista.given_up.connect(func(_why: String) -> void: _start_reel())
 	add_child(vista)
+
+
+## What New Game opens on, read and warmed while the title is up (NamingAhead): after the live
+## country has come up, or at once over the film or the chart.
+func _read_ahead() -> void:
+	if DisplayServer.get_name() == "headless" or not bool(world_status.get("playable", false)):
+		return
+	var ahead := NamingAhead.new()
+	# the live country reads the ground's textures itself
+	ahead.ground = vista == null
+	ahead.may_start = func() -> bool:
+		return vista == null or not is_instance_valid(vista) or vista.is_showing() or vista.phase == TitleVista.Phase.GONE
+	# the body's pipelines are compiled under a dip to dark, never in a watched shot, and never on a
+	# software rasterizer, where it is an LLVM compile a pipeline
+	ahead.warm = not TitleVista.software_renderer()
+	ahead.may_warm = func() -> bool:
+		return vista == null or not is_instance_valid(vista) or vista.phase in [TitleVista.Phase.WAIT_NEXT, TitleVista.Phase.GONE]
+	add_child(ahead)
+
+
+## The filmed country, over the chart and under the sheet, when the title is to show the country
+## and the film is in the build; otherwise the chart stays.
+func _start_reel() -> void:
+	if reel != null or not reel_wanted():
+		return
+	reel = TitleReel.new()
+	reel.chart = _backdrop
+	add_child(reel)
+	move_child(reel, _backdrop.get_index() + 1)
+
+
+## Whether the title shows the filmed country: the setting on, not starting safely, a display to
+## draw on, and the film there.
+static func reel_wanted() -> bool:
+	return TitleVista.switched_on() and DisplayServer.get_name() != "headless" and TitleReel.available() \
+			and bool(WorldStatus.current().get("playable", false))
 
 
 ## The menu is being used, whatever is dark behind it: the country behind it (TitleVista) is built a
 ## watched frame's few milliseconds at a time, never the curtain's (WorldPace).
 func _enter_tree() -> void:
 	WorldPace.menu_up += 1
+	Graphics.menu_pace(true)
 
 
 func _exit_tree() -> void:
 	WorldPace.menu_up -= 1
+	Graphics.menu_pace(false)
 	EventBus.menu_closed.emit(SCREEN_ID)
 
 
@@ -315,13 +360,29 @@ func _process(delta: float) -> void:
 
 # --- actions ------------------------------------------------------------------------------
 
+## The benchmark's hidden way in (docs/BENCHMARK.md): Ctrl+Shift+B on the title.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo or k.keycode != KEY_B or not k.ctrl_pressed or not k.shift_pressed:
+		return
+	if get_tree().root.has_node("Benchmark"):
+		return
+	get_viewport().set_input_as_handled()
+	var bench: Node = (load("res://tools_gd/benchmark.gd") as GDScript).new()
+	bench.set("from_menu", true)
+	get_tree().root.add_child(bench)
+
 func _on_new_game() -> void:
 	if not _world_is_there():
 		return
 	if not ResourceLoader.exists(NAMING_SCENE):
 		EventBus.emit_notify("The Naming is not built yet.", "warning")
 		return
-	get_tree().change_scene_to_file(NAMING_SCENE)
+	var ahead := NamingAhead.naming_scene()
+	if ahead != null:
+		get_tree().change_scene_to_packed(ahead)
+	else:
+		get_tree().change_scene_to_file(NAMING_SCENE)
 
 
 ## Asked again at the moment of going in, not only when the screen was drawn: the buttons are shut
@@ -358,6 +419,7 @@ func _enter_world(args: Dictionary) -> void:
 		return
 	if args.has("load"):
 		GameState.set_flag("_pending_load_slot", str(args["load"]))
+	NamingAhead.release()
 	for b in _buttons:
 		b.disabled = true
 	UI.fade_to_black(0.3, LOADING_LINE)

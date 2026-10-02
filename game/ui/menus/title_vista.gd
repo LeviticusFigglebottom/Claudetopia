@@ -25,6 +25,9 @@ extends Node
 ## A shot started showing (after its dip), and the vista came up or went.
 signal shot_started(index: int, shot_id: String)
 signal showing_changed(showing: bool)
+## The vista gave its country up for this visit (`gave_up`): the menu shows the filmed country
+## (TitleReel) in its place when it can, or keeps the chart.
+signal given_up(why: String)
 
 const DEF_ID := "core:cinematic/title"
 const WORLD_SCENE := "res://world/world.tscn"
@@ -44,6 +47,13 @@ const FIRST_SHOW_CAP_S := 90.0
 ## it is paced and read on threads, and has its one known long frame (the provider's maps, 2.4 s of
 ## CPU on the software renderer here): the whole wait's cap covers that.
 const LONG_FRAME_S := 4.0
+## After the first shot is shown: if the frames of its BUDGET_WINDOW_S, from BUDGET_SETTLE_S in,
+## take longer than this at the median (under 25 a second), this machine is drawing the live country
+## at a cost the menu feels, and the vista gives it up for the filmed one (`gave_up` "budget"). Never
+## headless, and never when a tool has widened the caps (`long_frame_s`) to measure to the end.
+const FRAME_BUDGET_MS := 40.0
+const BUDGET_SETTLE_S := 2.0
+const BUDGET_WINDOW_S := 4.0
 ## A shot holds on its last frame at most this long for the next one's cells, then the next is shown.
 const NEXT_WAIT_CAP_S := 8.0
 ## Frames drawn at a new place, under the dark, before the dip lifts: Terrain3D's clipmap re-centres.
@@ -81,7 +91,8 @@ var time_scale := 1.0
 ## The caps before the first shot (FIRST_SHOW_CAP_S, LONG_FRAME_S); a test or a tool may widen them.
 var first_show_cap_s := FIRST_SHOW_CAP_S
 var long_frame_s := LONG_FRAME_S
-## Why the vista was given up before its first shot ("" while it was not): "cap", "long_frame".
+## Why the vista was given up ("" while it was not): "cap", "long_frame" (before its first shot),
+## "budget" (its first shot drawn too slowly), "setting" (switched off while the title was up).
 var gave_up := ""
 
 ## What the menu gives it to draw with: the dark it dips to (alpha 1 is dark), and the chart it fades
@@ -116,14 +127,26 @@ var _sights: Dictionary = {}
 ## Whether the root viewport drew 3D before the vista stopped it, to give it back.
 var _had_3d := true
 var _holding_3d := false
+## The frame budget headless too (a test).
+var budget_anywhere := false
+## The first shot's frame times (ms) for the budget, and how long it has played.
+var _budget_ms: PackedFloat32Array = PackedFloat32Array()
+var _budget_t := 0.0
 ## The fade running on each item, so a stop or a new fade takes over from it rather than fighting it.
 var _tweens: Dictionary = {}
 
 
-## Whether the Graphics tab has it on ("The country behind the title"; off on Low), and the game is
-## not starting safely (SafeMode: "Full terrain and the title's country" off).
+## Whether the Graphics tab has the country behind the title on ("The country behind the title"),
+## and the game is not starting safely (SafeMode: "Full terrain and the title's country" off). Live
+## or filmed is `live_switched_on`.
 static func switched_on() -> bool:
 	return bool(Settings.get_value("graphics", "title_vista", true)) and not SafeMode.active
+
+
+## Whether it is the live country ("The live country behind the title": High and Painted), not the
+## filmed one (TitleReel: Low and Medium).
+static func live_switched_on() -> bool:
+	return switched_on() and bool(Settings.get_value("graphics", "title_live", true))
 
 
 ## Whether the title should show the country here: a world to show, a display to draw it on, and the
@@ -131,7 +154,7 @@ static func switched_on() -> bool:
 static func wanted() -> bool:
 	if DisplayServer.get_name() == "headless" and not headless_allowed:
 		return false
-	if not switched_on():
+	if not live_switched_on():
 		return false
 	if software_renderer() and not software_allowed:
 		return false
@@ -178,9 +201,9 @@ func _process(_delta: float) -> void:
 	_last_raw = d
 	var dt := raw * time_scale
 	_last_us = now
-	if phase != Phase.GONE and not switched_on():
-		# switched off in the settings the title opened: the chart comes back at once
-		stop()
+	if phase != Phase.GONE and not live_switched_on():
+		# switched off in the settings the title opened: the chart (or the film) comes back at once
+		_give_up("setting")
 		return
 	if _before_first_shot() and _over_budget(now, d):
 		return
@@ -215,6 +238,8 @@ func _process(_delta: float) -> void:
 		Phase.PLAY:
 			_t += dt
 			_pose(index, _t)
+			if _over_frame_budget(d):
+				return
 			var duration := float((_shots[index] as Dictionary).get("duration", 10.0))
 			if _t >= duration - DIP_OUT_S:
 				phase = Phase.DIP_OUT
@@ -267,10 +292,49 @@ func _over_budget(now_us: int, frame_s: float) -> bool:
 		Log.warn("TitleVista", "the first shot was not up %.0f s after the world was asked for (%s, longest frame %.1f s); the chart stays" % [first_show_cap_s, _phase_name(), _longest_s])
 	if why.is_empty():
 		return false
-	StartupTrace.step("vista: given up (%s); the chart stays" % why)
+	_give_up(why)
+	return true
+
+
+## The first shot's frames, after it has settled, against FRAME_BUDGET_MS. True when it gave up.
+func _over_frame_budget(frame_s: float) -> bool:
+	if not _budget_on() or shown.size() != 1:
+		return false
+	_budget_t += frame_s
+	if _budget_t < BUDGET_SETTLE_S:
+		return false
+	_budget_ms.append(frame_s * 1000.0)
+	if _budget_t < BUDGET_SETTLE_S + BUDGET_WINDOW_S:
+		return false
+	var median := median_ms(_budget_ms)
+	var over := median > FRAME_BUDGET_MS
+	Log.info("TitleVista", "the first shot drew at a median %.1f ms a frame over %d frames (budget %.0f ms)%s" % [
+			median, _budget_ms.size(), FRAME_BUDGET_MS, "; the filmed country takes over" if over else ""])
+	StartupTrace.step("vista: first shot median frame %.1f ms (budget %.0f ms)" % [median, FRAME_BUDGET_MS])
+	_budget_ms.clear()
+	_budget_t = -INF
+	if over:
+		_give_up("budget")
+	return over
+
+
+func _budget_on() -> bool:
+	return _capping and long_frame_s <= LONG_FRAME_S and (budget_anywhere or DisplayServer.get_name() != "headless")
+
+
+static func median_ms(samples: PackedFloat32Array) -> float:
+	if samples.is_empty():
+		return 0.0
+	var sorted := samples.duplicate()
+	sorted.sort()
+	return sorted[int(sorted.size() / 2.0)]
+
+
+func _give_up(why: String) -> void:
+	StartupTrace.step("vista: given up (%s); the chart or the film stays" % why)
 	stop()
 	gave_up = why
-	return true
+	given_up.emit(why)
 
 
 func _phase_name() -> String:

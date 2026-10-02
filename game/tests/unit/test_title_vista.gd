@@ -173,11 +173,55 @@ func test_stopping_it_brings_the_chart_back_and_frees_the_world() -> void:
 
 func test_the_title_setting_off_keeps_the_chart() -> void:
 	var was: Variant = Settings.get_value("graphics", "title_vista", true)
+	var was_live: Variant = Settings.get_value("graphics", "title_live", true)
 	Settings.data["graphics"]["title_vista"] = false
 	assert_false(TitleVista.wanted(), "off in the settings, there is no vista")
+	Settings.data["graphics"]["title_vista"] = true
+	Settings.data["graphics"]["title_live"] = false
+	assert_false(TitleVista.wanted(), "the filmed country stands no world up")
+	assert_true(TitleVista.switched_on(), "but the country is still behind the title, filmed")
 	Settings.data["graphics"]["title_vista"] = was
-	assert_false(bool(Graphics.PRESETS["low"]["title_vista"]), "Low keeps the chart")
-	assert_true(bool(Graphics.PRESETS["medium"]["title_vista"]), "Medium shows the country")
+	Settings.data["graphics"]["title_live"] = was_live
+	for p in ["low", "medium"]:
+		assert_true(bool(Graphics.PRESETS[p]["title_vista"]), "%s shows the country" % p)
+		assert_false(bool(Graphics.PRESETS[p]["title_live"]), "%s shows it filmed" % p)
+	for p in ["high", "painted"]:
+		assert_true(bool(Graphics.PRESETS[p]["title_live"]), "%s shows it live" % p)
+
+
+## A machine that draws the live country slowly gives it up for the film: the first shot's frames,
+## after it has settled, at a median over FRAME_BUDGET_MS.
+func test_a_first_shot_drawn_over_budget_gives_the_live_country_up() -> void:
+	var slow := _bare_vista(TitleVista.Phase.PLAY)
+	slow.budget_anywhere = true
+	slow.shown.append({"index": 0, "id": "x"})
+	var why := []
+	slow.given_up.connect(func(w: String) -> void: why.append(w))
+	var frame_s := (TitleVista.FRAME_BUDGET_MS + 15.0) / 1000.0
+	var gave := false
+	for i in int((TitleVista.BUDGET_SETTLE_S + TitleVista.BUDGET_WINDOW_S) / frame_s) + 2:
+		if slow._over_frame_budget(frame_s):
+			gave = true
+			break
+	assert_true(gave, "a %.0f ms median gives it up" % (frame_s * 1000.0))
+	assert_eq(slow.gave_up, "budget", "and says why")
+	assert_eq(why, ["budget"], "and tells the menu, which plays the film")
+	assert_eq(slow.phase, TitleVista.Phase.GONE)
+	_free_bare(slow)
+	var quick := _bare_vista(TitleVista.Phase.PLAY)
+	quick.budget_anywhere = true
+	quick.shown.append({"index": 0, "id": "x"})
+	for i in int((TitleVista.BUDGET_SETTLE_S + TitleVista.BUDGET_WINDOW_S) / 0.016) + 2:
+		assert_false(quick._over_frame_budget(0.016), "16 ms frames are kept")
+	assert_eq(quick.gave_up, "")
+	_free_bare(quick)
+	var widened := _bare_vista(TitleVista.Phase.PLAY)
+	widened.budget_anywhere = true
+	widened.long_frame_s = 600.0
+	widened.shown.append({"index": 0, "id": "x"})
+	for i in 600:
+		assert_false(widened._over_frame_budget(0.2), "a tool that widened the caps is never cut short")
+	_free_bare(widened)
 
 
 ## The safety net before the first shot (a first launch once froze behind the title): one frame of

@@ -184,6 +184,10 @@ func _ready() -> void:
 	if not await _mark("water"):
 		return
 	_setup_wildlife()
+	# the land as an occluder: what the hills hide is not drawn (TerrainOccluder; Graphics `occlusion`)
+	var occluder := TerrainOccluder.new()
+	add_child(occluder)
+	occluder.watch(provider)
 	# the POIs written since the land was built, and any asked for, on pads laid now (PoiPreview):
 	# before the streamer, so the cells' scatter is cleared off them as it is read
 	if not vista:
@@ -468,6 +472,9 @@ func _setup_terrain3d() -> void:
 		mat.call("set_shader_param", "projection_threshold", PROJECTION_THRESHOLD)
 		mat.call("set_shader_param", "mipmap_bias", 0.95)
 		mat.call("set_shader_param", "bias_distance", 420.0)
+	# distant ground detail (dual scaling), and the settings' to change live (Graphics.apply_terrain)
+	terrain_node.add_to_group(Graphics.TERRAINS)
+	Graphics.apply_terrain(terrain_node, Settings.data.get("graphics", {}))
 	var collision: Object = terrain_node.get("collision")
 	if collision:
 		# dynamic collision around the camera/player; the title's world is only looked at, and

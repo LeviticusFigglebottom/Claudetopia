@@ -15,12 +15,12 @@ const GRAPHICS_TAB := 1
 const CONTROLS_TAB := 3
 ## The Graphics tab's knobs in the groups it shows them under.
 const GRAPHICS_GROUPS := [
-	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic", "ground_textures"]],
+	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic", "ground_textures", "distant_ground"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
-	["The country", ["scatter_density", "grass_instancer", "view_range", "lod_bias", "view_distance", "water_quality", "water_reflections", "wildlife"]],
+	["The country", ["scatter_density", "grass_instancer", "view_range", "lod_bias", "view_distance", "occlusion", "water_quality", "water_reflections", "wildlife"]],
 	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
-	["The look", ["title_vista", "color_grade", "vignette", "film_grain"]],
+	["The look", ["title_vista", "title_live", "color_grade", "vignette", "film_grain"]],
 	["Starting safely", ["full_terrain"]],
 ]
 
@@ -259,7 +259,16 @@ func _build_graphics() -> void:
 		var which := p
 		b.pressed.connect(func() -> void: _choose_preset(which))
 		presets.add_child(b)
+	# the preset this machine's graphics adapter is recommended, as a first launch is given it
+	var detect := UiKit.button("Detect recommended", "FlatButton")
+	detect.name = "DetectRecommended"
+	detect.tooltip_text = "Sets the preset for this machine's graphics, as the first launch did"
+	detect.pressed.connect(_detect_recommended)
 	_content.add_child(presets)
+	var detect_row := UiKit.row(10)
+	detect_row.add_child(detect)
+	detect_row.add_child(UiKit.label(RenderingServer.get_video_adapter_name(), "Tiny"))
+	_content.add_child(detect_row)
 	_content.add_child(UiKit.wrapped(_renderer_line(), "Tiny"))
 	for group in GRAPHICS_GROUPS:
 		_content.add_child(UiKit.label(str(group[0]), "Heading"))
@@ -278,6 +287,14 @@ func _choose_preset(preset: String) -> void:
 	Settings.apply_graphics_preset(preset)
 	_show_tab(GRAPHICS_TAB)
 	_say("%s: every knob below is set to it." % str(Graphics.PRESET_LABELS.get(preset, preset)))
+
+
+func _detect_recommended() -> void:
+	var adapter := HardwareTier.adapter()
+	var verdict := Settings.recommend_graphics(adapter)
+	_show_tab(GRAPHICS_TAB)
+	_say("%s for %s (%s)." % [str(Graphics.PRESET_LABELS.get(str(verdict["preset"]), verdict["preset"])),
+			str(adapter.get("name", "this machine")), str(verdict["why"])])
 
 
 ## One knob, bound to Settings `graphics`, greyed out with its reason where this renderer cannot

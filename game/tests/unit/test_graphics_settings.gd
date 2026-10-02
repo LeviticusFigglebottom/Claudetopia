@@ -19,6 +19,11 @@ class FakeAtmosphere extends Node3D:
 	var sun: DirectionalLight3D
 
 
+## The world's ground as the settings see it: anything with a Terrain3DMaterial as `material`.
+class FakeTerrain extends Node3D:
+	var material: Object
+
+
 var _holder: Node3D
 var _light: DirectionalLight3D
 var _moon: DirectionalLight3D
@@ -29,6 +34,7 @@ var _water: WaterSurface
 var _night: NightLights
 var _horizon: HorizonLayer
 var _wild: Wildlife
+var _terrain: FakeTerrain
 ## The real atmosphere, made the first time a look knob is read: the colour grade, the vignette
 ## and the film grain are its to draw, and a stand-in would only prove the stand-in.
 var _atmos: Atmosphere = null
@@ -97,6 +103,10 @@ func _stage() -> void:
 	_holder.add_child(_water)
 	if not Settings.changed.is_connected(_water._on_setting_changed):
 		Settings.changed.connect(_water._on_setting_changed)
+	_terrain = FakeTerrain.new()
+	_terrain.material = ClassDB.instantiate("Terrain3DMaterial") if ClassDB.class_exists("Terrain3DMaterial") else null
+	_holder.add_child(_terrain)
+	_terrain.add_to_group(Graphics.TERRAINS)
 	_night = NightLights.new()
 	_holder.add_child(_night)
 	_horizon = HorizonLayer.new()
@@ -222,6 +232,14 @@ func _read(key: String) -> Variant:
 		"title_vista":
 			# read where the title reads it; a title already showing the country stops on it too
 			return TitleVista.switched_on()
+		"title_live":
+			# live or filmed: a title showing the live country gives it up for the film when it goes off
+			return TitleVista.live_switched_on()
+		"occlusion":
+			return vp.use_occlusion_culling
+		"distant_ground":
+			# Terrain3D's dual scaling on the ground's material, live
+			return _terrain.material.get("dual_scaling") if _terrain != null and _terrain.material != null else null
 		"full_terrain":
 			# safe mode: the coarse ground, one threaded read at a time, and the title's country off
 			return [SafeMode.active, WorldStatus.force_fallback, ThreadedLoads.limit(), TitleVista.switched_on()]

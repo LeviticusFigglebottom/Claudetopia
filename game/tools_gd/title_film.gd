@@ -11,6 +11,11 @@ extends Node
 ## --cut, and <out>/title_film.json: when the menu took input, when the country came up, and for
 ## each shot whether its cells were in when it was shown, its draw calls and primitives, and the
 ## slowest frame while it played. Nothing is written to the player's settings.
+##
+## `--video=<fps>` films every shot whole instead, a frame each 1/fps of its time, as JPEGs
+## (<out>/v_NNNNN.jpg) with the menu hidden, for the title's filmed country (TitleReel,
+## tools/title_reel.sh, which encodes them). Run it with the engine's `--fixed-fps <fps>`, so the
+## water, the clouds and the trees move by 1/fps a frame however long this machine takes to draw one.
 
 const MENU_SCENE := "res://ui/menus/main_menu.tscn"
 const CAP_S := 600.0
@@ -19,6 +24,12 @@ var out_dir := ""
 var preset := "medium"
 var shots_wanted := -1
 var film_cut := false
+## Frames a second of a shot's time, for the reel (0: stills only).
+var video_fps := 0
+## `--from-shot=N`: film from shot N on, its frames numbered from `--first-frame=K` (a film taken up
+## again where it stopped).
+var from_shot := 0
+var first_frame := 0
 var report := {"shots": []}
 var _menu: Node = null
 var _t0 := 0
@@ -34,6 +45,12 @@ func _ready() -> void:
 			shots_wanted = int(a.substr(8))
 		elif a == "--cut":
 			film_cut = true
+		elif a.begins_with("--video="):
+			video_fps = int(a.substr(8))
+		elif a.begins_with("--from-shot="):
+			from_shot = int(a.substr(12))
+		elif a.begins_with("--first-frame="):
+			first_frame = int(a.substr(14))
 		elif a == "--no-sight":
 			TitleVista.sight_streaming = false
 	if out_dir.is_empty():
@@ -43,6 +60,9 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	Settings.persist = false
 	Settings.apply_graphics_preset(preset)
+	# the live country is what is filmed, whatever the preset shows a player (Low and Medium the film)
+	Settings.set_value("graphics", "title_vista", true)
+	Settings.set_value("graphics", "title_live", true)
 	report["preset"] = preset
 	report["sight"] = TitleVista.sight_streaming
 	_run.call_deferred()
@@ -105,6 +125,11 @@ func _run() -> void:
 	# shot played in real time would be a handful of frames. Each is posed half way through, its
 	# country waited for, and drawn; the dip between the first two is drawn at five points.
 	var count: int = vista._shots.size() if shots_wanted < 0 else mini(shots_wanted, vista._shots.size())
+	if video_fps > 0:
+		await _film(vista, count)
+		report["shown"] = vista.shown
+		_finish(0)
+		return
 	for n in count:
 		var entry := await _still(vista, n, 0.5, "%02d_%s" % [n, str((vista._shots[n] as Dictionary).get("id", ""))])
 		(report["shots"] as Array).append(entry)
@@ -120,6 +145,58 @@ func _run() -> void:
 		await _still(vista, 1, 0.08, "cut_4_next")
 	report["shown"] = vista.shown
 	_finish(0)
+
+
+## Every frame of the first `count` shots, the menu hidden: <out>/v_NNNNN.jpg, and in the report each
+## shot's first frame and frame count, the frame rate, the dips' lengths and the dark they dip to.
+func _film(vista: TitleVista, count: int) -> void:
+	for c in _menu.get_children():
+		if c is CanvasItem:
+			(c as CanvasItem).visible = false
+	var reel := {"fps": video_fps, "dark": "#" + (_menu.get("_back") as ColorRect).color.to_html(false),
+			"dip_in_s": TitleVista.DIP_IN_S, "dip_out_s": TitleVista.DIP_OUT_S, "shots": []}
+	var frame := first_frame
+	var t_start := Time.get_ticks_msec()
+	for i in range(from_shot, count):
+		var duration := float((vista._shots[i] as Dictionary).get("duration", 10.0))
+		var n := roundi(duration * video_fps)
+		var first := frame
+		var slowest := 0
+		for k in n:
+			var t := float(k) / float(video_fps)
+			var t0 := Time.get_ticks_msec()
+			if k == 0:
+				vista.scrub(i, 0.0)
+				if vista.world != null and vista.world.streamer != null:
+					vista.world.streamer.hurry = true
+				var until := Time.get_ticks_msec() + 300000
+				while not vista.cells_in() and Time.get_ticks_msec() < until:
+					await get_tree().process_frame
+				for w in 4:
+					await get_tree().process_frame
+			else:
+				vista._t = t
+				vista._pose(i, t)
+				# nothing here is watched in real time: the streamer builds as fast as it can, so a
+				# frame is not held waiting for the cells a moving camera comes to
+				if vista.world != null and vista.world.streamer != null:
+					vista.world.streamer.hurry = true
+				# a camera that has moved into cells not yet in waits for them, a few frames at most
+				var waits := 0
+				while not vista.cells_in() and waits < 30:
+					await get_tree().process_frame
+					waits += 1
+			await RenderingServer.frame_post_draw
+			var img := get_viewport().get_texture().get_image()
+			img.save_jpg("%s/v_%05d.jpg" % [out_dir, frame], 0.95)
+			frame += 1
+			slowest = maxi(slowest, Time.get_ticks_msec() - t0)
+		(reel["shots"] as Array).append({"id": str((vista._shots[i] as Dictionary).get("id", "")), "first": first,
+				"frames": n, "slowest_frame_ms": slowest})
+		print("TITLE_FILM: filmed %s, %d frames (%d to %d), slowest %d ms, %.0f s in" % [
+				str((vista._shots[i] as Dictionary).get("id", "")), n, first, frame - 1, slowest,
+				(Time.get_ticks_msec() - t_start) / 1000.0])
+	report["reel"] = reel
 
 
 ## Shot `i` posed `u` of the way through, its country waited for, drawn with the dip at `dark`, and

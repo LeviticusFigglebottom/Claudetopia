@@ -126,6 +126,46 @@ A shader the census never saw is still compiled on the player's machine the firs
 drawn, as before. The set only has to cover what the first minutes use for the first launch to be
 smooth.
 
+## Weak graphics: the first launch's preset, the filmed title, the menus' pace
+
+The owner's laptops (an HP G11 with a Ryzen 5 PRO's Radeon iGPU) lagged on the title, the menus
+and the Naming until the game began. What a weak machine is given now:
+
+- **A preset for the adapter on the first launch** (`core/hardware_tier.gd`). When settings.cfg
+  has no `graphics` section, a player's launch reads the adapter's type, then its name as a hint,
+  and the machine's RAM:
+  - integrated graphics, or an adapter it does not recognise, gets **Medium**;
+  - a software rasterizer, old Intel HD/UHD, AMD Vega or the 610M, or an iGPU with under 8 GB of
+    RAM gets **Low**;
+  - a graphics card of its own keeps **High**, unless Forward+ reads under 2 GB of video memory
+    on it (Medium).
+
+  A driver that calls an AMD APU "discrete" is not believed when the name says APU, and on the
+  Compatibility renderer, which calls every adapter "other", the name decides. A card's video
+  memory is read only on Forward+ (Graphics.video_memory_gb). The startup trace says what was decided:
+  `graphics: first launch, <adapter> (...): Medium -- integrated graphics`. Every later launch
+  reads `graphics: preset X, the player's`. Settings, Graphics, "Detect recommended" asks again.
+  Tools, tests and the benchmark never get a first-launch verdict.
+- **Medium upscales with FSR 1** from 0.77 of the window, sharpened (`Graphics.FSR_SHARPNESS`).
+  FSR is a shader, so it runs on any GPU, but only under Forward+. On Compatibility, Medium draws
+  at 0.85, scaled bilinearly. The menus' words are always drawn at the window's own pixels.
+- **The filmed title** (`ui/menus/title_reel.gd`, `game/assets/video/title_reel.ogv`). Low and
+  Medium ("Drawn live behind the title" off) play a Theora film of the title's own shots behind
+  the menu instead of standing the world up. So does a live title whose first shot draws at a
+  median of more than 40 ms a frame (`TitleVista.FRAME_BUDGET_MS`), and one that gives up for
+  any other reason. Without the file, the drawn chart stays. `tools/title_reel.sh` films and
+  encodes it again (see its header).
+- **The menus' pace.** While the title or the Naming is up, with no game behind it, the frame rate
+  is held to 60 (30 on Low), or to the player's own lower cap. The game's cap comes back when the
+  world takes over.
+- **The Naming.** Its portrait is drawn no larger than its rectangle on the screen, at the render
+  scale and with the upscaler, with 2x MSAA on Low and Medium (4x above). On Low the hair is drawn
+  as its shell instead of its strand cards. While the title is up, the title reads the Naming's
+  scene, the body and its stage, and the world's ground textures on loader threads
+  (`ui/menus/naming_ahead.gd`). It then draws the body once on a tiny stage off the screen, so its
+  pipelines are compiled before New Game is pressed. The title's world is freed when the Naming
+  opens, since the scene changes.
+
 ## The title's safety nets
 
 On a **software rasterizer** (Mesa's lavapipe, or Windows' WARP on a PC with no graphics driver
