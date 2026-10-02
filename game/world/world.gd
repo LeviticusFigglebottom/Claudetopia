@@ -18,7 +18,8 @@ const TERRAIN_DATA := "res://terrain_data"
 const ASSETS_RESOURCE := "res://world/terrain_assets.tres"
 ## The High ground textures (Graphics "Ground texture quality"): the same slots, the most-seen six
 ## painted at 2048 (tools/world/gen_terrain_textures.py --high) and the rest scaled up to them as the
-## world loads (`match_texture_sizes`), since a Terrain3D texture array takes one size.
+## world loads, since a Terrain3D texture array takes one size; every slot is then compressed to
+## BC3 (`prepare_high_textures`), so High's arrays take the video memory Standard's do.
 const ASSETS_RESOURCE_HIGH := "res://world/terrain_assets_high.tres"
 ## `-- --ground-textures=standard|high` overrides the setting for one run (captures, the benchmark).
 const GROUND_TEXTURES_ARG := "--ground-textures="
@@ -498,7 +499,7 @@ func _setup_terrain3d() -> void:
 		share_clipmap(null)
 		return
 	_trace("terrain: %d regions in; building the texture arrays" % regions)
-	_build_texture_arrays(mat)
+	await _build_texture_arrays(mat)
 	_note("terrain_textures")
 	if GrassInstancer.active:
 		await _setup_grass_instancer()
@@ -568,42 +569,76 @@ static func assets_resource() -> String:
 	return ASSETS_RESOURCE
 
 
-## Brings every slot of `assets` to the size of its largest, so Terrain3D can build one array from
-## them: the High list's 1024 slots are scaled up (cubic) beside its 2048 ones. Nothing to do for the
-## Standard list. Returns the slots it scaled.
-static func match_texture_sizes(assets: Resource) -> int:
+## Makes the High list ready for Terrain3D's two texture arrays: every slot brought to the size of
+## its largest (the 1024 slots scaled up beside the 2048 ones; one array takes one size) and
+## compressed, mipmaps and all, to BC3/DXT5, the format Terrain3D's texture guide asks for. Its
+## imports are lossless like Standard's, and uncompressed the 2048 arrays were 981 MiB of video
+## memory against Standard's 245; compressed they are 245 too. Each texture is read back on the
+## calling (main) thread and decoded, scaled, mipmapped and compressed on worker threads, on the CPU:
+## Godot's GPU compressor is switched off meanwhile (`compress_with_gpu`), since it is not to be run
+## from worker threads (it crashed Compatibility). With `host`, frames are drawn meanwhile. Returns
+## the textures replaced.
+static func prepare_high_textures(assets: Resource, host: Node = null) -> int:
 	if assets == null:
 		return 0
+	var jobs := HighTextures.new()
 	var count := int(assets.call("get_texture_count"))
-	var want := 0
 	for i in count:
 		var t: Resource = assets.call("get_texture", i)
 		var tex: Texture2D = t.get("albedo_texture") if t != null else null
 		if tex != null:
-			want = maxi(want, tex.get_width())
-	var scaled := 0
+			jobs.size = maxi(jobs.size, tex.get_width())
 	for i in count:
 		var t: Resource = assets.call("get_texture", i)
 		if t == null:
 			continue
-		var grew := false
 		for prop in ["albedo_texture", "normal_texture"]:
 			var tex: Texture2D = t.get(prop)
-			if tex == null or tex.get_width() >= want:
+			if tex == null:
 				continue
 			var img := tex.get_image()
-			if img == null:
+			if img == null or img.get_format() == Image.FORMAT_DXT5:
 				continue
-			if img.is_compressed():
-				img.decompress()
+			jobs.slots.append([t, prop])
+			jobs.images.append(img)
+	if jobs.images.is_empty():
+		return 0
+	const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
+	var gpu_was: Variant = ProjectSettings.get_setting(GPU_COMPRESS, true)
+	ProjectSettings.set_setting(GPU_COMPRESS, false)
+	var task := WorkerThreadPool.add_group_task(jobs.run, jobs.images.size(),
+			maxi(ThreadedLoads.pool_size() - 2, 1), true, "wm_high_textures")
+	while host != null and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
+		await host.get_tree().process_frame
+	WorkerThreadPool.wait_for_group_task_completion(task)
+	ProjectSettings.set_setting(GPU_COMPRESS, gpu_was)
+	for k in jobs.slots.size():
+		var slot: Array = jobs.slots[k]
+		(slot[0] as Resource).set(str(slot[1]), ImageTexture.create_from_image(jobs.images[k]))
+	jobs.images.clear()
+	return jobs.slots.size()
+
+
+## The decoding, scaling and compressing `prepare_high_textures` hands to worker threads, an image a
+## call.
+class HighTextures extends RefCounted:
+	var size := 0
+	var slots: Array = []                 # [Terrain3DTextureAsset, property]
+	var images: Array[Image] = []
+
+	func run(i: int) -> void:
+		var img := images[i]
+		if img.is_compressed():
+			img.decompress()
+		if img.get_format() != Image.FORMAT_RGBA8:
+			img.convert(Image.FORMAT_RGBA8)
+		if img.get_width() < size:
+			# bilinear: a 1024 tile scaled up gains no detail either way, and cubic was the slow part
 			img.clear_mipmaps()
-			img.resize(want, want, Image.INTERPOLATE_CUBIC)
+			img.resize(size, size, Image.INTERPOLATE_BILINEAR)
+		if not img.has_mipmaps():
 			img.generate_mipmaps()
-			t.set(prop, ImageTexture.create_from_image(img))
-			grew = true
-		if grew:
-			scaled += 1
-	return scaled
+		img.compress(Image.COMPRESS_S3TC, Image.COMPRESS_SOURCE_GENERIC)
 
 
 ## The worker threads the region files are read on: half of what the pool has past the two a
@@ -666,10 +701,10 @@ func _terrain_assets() -> Resource:
 		assets = ThreadedLoads.take(_assets_path)
 	if _assets_path == ASSETS_RESOURCE_HIGH and assets != null:
 		var t0 := Time.get_ticks_msec()
-		var scaled := match_texture_sizes(assets)
-		if scaled > 0:
-			Log.info("World", "High ground textures: %d slots scaled up to the 2048 set in %d ms"
-					% [scaled, Time.get_ticks_msec() - t0])
+		var done: int = await prepare_high_textures(assets, self if stand_up_in_steps else null)
+		if done > 0:
+			Log.info("World", "High ground textures: %d textures at 2048 and compressed in %d ms"
+					% [done, Time.get_ticks_msec() - t0])
 	return assets
 
 
@@ -749,7 +784,8 @@ func _build_texture_arrays(mat: Object) -> void:
 	if int(assets.call("get_texture_count")) == 0 and ResourceLoader.exists(path):
 		# Terrain3D cleared the list before the arrays were made: put it back and rebuild
 		assets = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE)
-		match_texture_sizes(assets)
+		if path == ASSETS_RESOURCE_HIGH:
+			await prepare_high_textures(assets)
 		terrain_node.set("assets", assets)
 	# built already when the node took its assets: building them again was 0.4 s of one frame
 	if not (assets.call("get_albedo_array_rid") as RID).is_valid():

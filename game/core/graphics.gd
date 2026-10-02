@@ -112,13 +112,44 @@ const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
 
 
 ## The ground's texture set, 0 Standard (1024) or 1 High (2048, World.ASSETS_RESOURCE_HIGH). Unchosen
-## (-1), it is High on a discrete GPU and Standard on anything else -- an integrated GPU, a software
-## one, and the Compatibility renderer, which does not say what the adapter is.
+## (-1), it is High on a discrete GPU with HIGH_MIN_VRAM_GB or more and Standard on anything else --
+## an integrated GPU, a software one, a small card, and the Compatibility renderer, which does not
+## say what the adapter is.
 static func ground_texture_quality(g: Dictionary) -> int:
 	var v := int(g.get("ground_textures", -1))
 	if v >= 0:
 		return mini(v, 1)
-	return 1 if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else 0
+	if RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU:
+		return 0
+	return 1 if roomy_gpu(video_memory_gb(), RenderingServer.get_video_adapter_name()) else 0
+
+
+## A discrete card under this is given Standard ground unless the player chooses High. High's arrays
+## take what Standard's do once compressed, but its load holds both for a moment and a small card is
+## the one a game runs out on first.
+const HIGH_MIN_VRAM_GB := 6.0
+## Discrete GPUs sold with under 6 GB (or in such versions), by name, for when the card's memory
+## cannot be read (Godot reads it on Forward+ only).
+const SMALL_GPUS := ["GT 7", "GT 10", "GTX 9", "GTX 10", "GTX 16", " MX", "RX 4", "RX 5", "RX 64", "RX 65",
+		"RX 74", "RX 75", "R7 ", "R9 ", "Arc A3", "Quadro K", "Quadro P", "Quadro T"]
+
+
+## The video memory of the card the game draws with, in GB, or 0 when it cannot be read.
+static func video_memory_gb() -> float:
+	var rd := RenderingServer.get_rendering_device()
+	if rd == null:
+		return 0.0
+	return float(rd.get_device_total_memory()) / 1073741824.0
+
+
+## Whether a discrete card has room for High by default: its memory when known, else its name.
+static func roomy_gpu(memory_gb: float, adapter_name: String) -> bool:
+	if memory_gb > 0.0:
+		return memory_gb >= HIGH_MIN_VRAM_GB
+	for small in SMALL_GPUS:
+		if adapter_name.contains(small):
+			return false
+	return true
 
 
 static func camera_far(g: Dictionary) -> float:
@@ -163,7 +194,7 @@ const CONTROLS := [
 	{"key": "taa", "label": "Temporal smoothing (TAA)", "kind": "check"},
 	{"key": "anisotropic", "label": "Texture filtering", "kind": "option", "choices": ["Plain", "2×", "4×", "8×", "16×"]},
 	{"key": "ground_textures", "label": "Ground texture quality", "kind": "option", "choices": ["Standard", "High"],
-		"values": [0, 1], "note": "High paints the most-seen ground at twice the detail, for about 0.8 GB more video memory. Applied when a world next loads"},
+		"values": [0, 1], "note": "High paints the most-seen ground at twice the detail. Both take about 250 MB of video memory (High compressed); High adds a few seconds to a load. Applied when a world next loads"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},

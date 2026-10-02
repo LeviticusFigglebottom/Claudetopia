@@ -248,7 +248,8 @@ func _image_rgba(path: String, grid: int) -> Image:
 
 ## The texture list, Standard's or (`high`) High's: a slot with a 2048 tile in TEXTURE_HIGH_DIR takes
 ## it there, and every other slot its 1024 tile, which the world scales up as it loads
-## (World.match_texture_sizes) -- so the High set adds only its own tiles to the download.
+## and compresses every slot to BC3 (World.prepare_high_textures) -- so the High set adds only its
+## own tiles to the download, and no video memory over Standard.
 func _build_assets(high := false) -> Resource:
 	var assets: Resource = ClassDB.instantiate("Terrain3DAssets")
 	var missing: Array[String] = []

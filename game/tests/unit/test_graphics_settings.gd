@@ -502,8 +502,15 @@ func test_settings_are_written_and_a_file_from_before_is_carried_across() -> voi
 func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
 	assert_eq(Graphics.ground_texture_quality({"ground_textures": 0}), 0, "Standard chosen")
 	assert_eq(Graphics.ground_texture_quality({"ground_textures": 1}), 1, "High chosen")
-	var by_gpu := 1 if RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU else 0
+	var discrete := RenderingServer.get_video_adapter_type() == RenderingDevice.DEVICE_TYPE_DISCRETE_GPU
+	var by_gpu := 1 if discrete and Graphics.roomy_gpu(Graphics.video_memory_gb(), RenderingServer.get_video_adapter_name()) else 0
 	assert_eq(Graphics.ground_texture_quality({}), by_gpu, "unchosen, by the GPU")
+	# a discrete card: by its memory when it can be read, else by its name
+	assert_true(Graphics.roomy_gpu(16.0, "AMD Radeon RX 9070 XT"), "16 GB is room")
+	assert_false(Graphics.roomy_gpu(4.0, "AMD Radeon RX 9070 XT"), "4 GB is not, whatever the name")
+	assert_true(Graphics.roomy_gpu(0.0, "AMD Radeon RX 9070 XT"), "unread, a large card by name")
+	assert_false(Graphics.roomy_gpu(0.0, "NVIDIA GeForce GTX 1650"), "unread, a 4 GB card by name")
+	assert_false(Graphics.roomy_gpu(0.0, "NVIDIA GeForce MX450"), "unread, a laptop's small discrete card")
 	assert_eq(int(Graphics.DEFAULTS["ground_textures"]), -1, "shipped unchosen")
 	assert_true(ResourceLoader.exists(World.ASSETS_RESOURCE_HIGH), "the High list ships")
 	var was: Variant = Settings.get_value("graphics", "ground_textures", -1)
