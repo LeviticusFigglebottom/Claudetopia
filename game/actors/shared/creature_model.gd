@@ -24,12 +24,12 @@ const ROOT := "res://assets/models/creatures/"
 ## body_variant -> the forged model's folder and name under ROOT.
 const MODELS := {
 	"wolf": "down_wolf", "crag_wolf": "crag_wolf", "thornhound": "thornhound", "leech_hound": "leech_hound",
-	"old_grey_bitch": "old_grey_bitch",
+	"old_grey_bitch": "old_grey_bitch", "brake_dam": "brake_dam",
 	"boar": "bristleback", "drake": "gutter_drake", "sallowjaw": "sallowjaw", "weaver": "weaver",
 	"stone": "stone_thrall", "kingbone": "stone_thrall_king", "treant": "warden", "wisp": "wisp",
 }
 ## A variant whose own model is not built wears its kin's.
-const KIN := {"kingbone": "stone_thrall", "old_grey_bitch": "leech_hound"}
+const KIN := {"kingbone": "stone_thrall", "old_grey_bitch": "leech_hound", "brake_dam": "thornhound"}
 ## What a body with a crawling limb gone plays for what the game asks (a thrall with no arms and
 ## one leg comes on along the ground).
 const CRAWLING := {"Idle": "Crawl_Idle", "Idle_Combat": "Crawl_Idle", "Walk": "Crawl", "Trot": "Crawl", "Run": "Crawl",

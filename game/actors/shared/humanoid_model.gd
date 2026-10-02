@@ -289,6 +289,9 @@ var _part_meshes: Dictionary = {}        ## slot -> Array[MeshInstance3D]
 ## Readable because the part node cannot answer it: every variant's mesh is called `Body`
 ## inside its own glTF, so they all arrive here named `body_Body`.
 var body_variant_worn := ""
+## The body this much broader than its build makes it, across and front to back (a boss that stands
+## over its people in more than height: EnemyDress `breadth`). 1 for everyone else.
+var breadth := 1.0
 ## Turns the arms out from a padded or heavy body and holds them in under a long cloak (see
 ## ArmRoom), set with each appearance.
 var arm_room: ArmRoom = null
@@ -837,9 +840,20 @@ static func _vertex_count(mi: MeshInstance3D) -> int:
 ## the hair is under it.
 func head_covered() -> bool:
 	for slot in COVERS_HEAD:
-		if appearance.part(slot) in COVERS_HEAD[slot]:
+		if _covers_head(slot):
 			return true
 	return false
+
+
+## Whether what is worn in `slot` covers the crown: a helm or a hood, or a part the forge says does
+## (its meta's `covers_head`: a hat, a crown worn over a coif, a wimple).
+func _covers_head(slot: String) -> bool:
+	var worn := appearance.part(slot)
+	if worn.is_empty():
+		return false
+	if worn in COVERS_HEAD.get(slot, []):
+		return true
+	return bool(_part_meta(slot, worn).get("covers_head", false))
 
 
 ## The jewellery (Adornment): one merged mesh of everything the record wears, built again when what
@@ -899,7 +913,7 @@ func _hair_to_wear() -> String:
 	if chosen.is_empty() or chosen in CharacterAppearance.CLOSE_HAIR:
 		return chosen
 	for slot in COVERS_HEAD:
-		if appearance.part(slot) in COVERS_HEAD[slot]:
+		if _covers_head(slot):
 			return UNDER_A_HOOD
 	return chosen
 
@@ -935,7 +949,12 @@ func _apply_morality_parts() -> void:
 
 func _part_path(slot: String, part_name: String) -> String:
 	var dir: String = SLOT_DIRS.get(slot, "clothing")
-	return "%s%s/%s/%s.glb" % [PARTS_ROOT, dir, part_name, part_name]
+	var path := "%s%s/%s/%s.glb" % [PARTS_ROOT, dir, part_name, part_name]
+	if dir == "attachments" and not ResourceLoader.exists(path):
+		# a garment worn in the spare slot: a boss's plate over its tabard, a founder's apron over
+		# his shirt (EnemyDress), from the clothing it is built as
+		return "%sclothing/%s/%s.glb" % [PARTS_ROOT, part_name, part_name]
+	return path
 
 
 ## The forge's meta for a part (what it is made of, its fits), read once per part.
@@ -985,6 +1004,10 @@ func _add_part(slot: String, part_name: String) -> bool:
 		copy.set_meta("material", str(per_mesh.get(str(src.name), meta.get("material", ""))))
 		# a cloth woven in its own colours (the clans' tartan) is lit as cloth but not tinted
 		copy.set_meta("tint", str(meta.get("tint", "")))
+		# the palette colour it is dressed in, when the forge says (a felt hat is the cloth's, not the
+		# helm's metal its slot would give it)
+		var keys: Dictionary = meta.get("colour_keys", {}) if meta.get("colour_keys") is Dictionary else {}
+		copy.set_meta("colour_key", str(keys.get(str(src.name), meta.get("colour_key", ""))))
 		_hair_lod(copy, meta)
 		added.append(copy)
 	inst.queue_free()
@@ -1056,8 +1079,11 @@ func _apply_colours(slice: WorldPace.Slice = null) -> void:
 			# Steel is the people's metal and leather their leather, whichever slot it is worn
 			# in: a Vale cuirass was tinted the Vale's wool brown because it sat in `torso`.
 			var colour_key := key
+			var own_key := str(mi.get_meta("colour_key", ""))
 			if kind == "iron" and pal.has("metal"):
 				colour_key = "metal"
+			elif not own_key.is_empty() and pal.has(own_key):
+				colour_key = own_key
 			elif kind == "leather" and pal.has("leather"):
 				colour_key = "leather"
 			if pal.has(colour_key):
@@ -1750,7 +1776,7 @@ func _arm_hold_now() -> float:
 
 func _apply_proportions() -> void:
 	var s: float = appearance.height / (_child_height if _child_mod != null else 1.78)
-	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0))
+	var wide: float = girth_for(appearance.build) / float(VARIANT_GIRTH.get(body_variant_worn, 1.0)) * breadth
 	if _rig_root != null:
 		_rig_root.scale = Vector3(s * wide, s, s * wide)
 
@@ -2262,14 +2288,18 @@ func _update_locomotion(delta: float) -> void:
 		_way_w[key] = move_toward(float(_way_w[key]), float(want_w[key]), delta / SECTOR_BLEND_S)
 	var want_turn := hips_turn_for(_locomotion, _way) if _locomotion.length() > MOVING_FROM else 0.0
 	_hips_turn = lerp_angle(_hips_turn, want_turn, 1.0 - exp(-delta / HIPS_TURN_S))
-	var p := locomotion_params(_loco_now, _sneak_w, _locomotion.length(), _way)
+	# The gaits are read at the rig's own size: a body drawn half again as tall walks where a person
+	# would trot, and its legs go round at a giant's cadence (a 2.8 m bell-bearer's legs went round at
+	# a person's, and skated).
+	var tall := _rig_root.scale.y if _rig_root != null and _rig_root.scale.y > 0.1 else 1.0
+	var p := locomotion_params(_loco_now / tall, _sneak_w, _locomotion.length() / tall, _way)
 	p["fb/blend_amount"] = _way_w["fb"]
 	p["lr/blend_amount"] = _way_w["lr"]
 	p["dir/blend_amount"] = _way_w["dir"]
 	_update_braking(delta, p)
 	var braking := _held_gait >= 0.0
 	_in_flight = _flies(delta, braking)
-	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length(),
+	p["cycle/scale"] = _stride_rate(_way_w, float(p["gait/blend_position"]), _sneak_w, _locomotion.length() / tall,
 			braking, _in_flight)
 	var moving := smoothstep(MOVING_FROM, MOVING_FULL, _locomotion.length())
 	if _plants_feet():
