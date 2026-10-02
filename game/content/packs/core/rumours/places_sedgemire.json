@@ -1,0 +1,41 @@
+[
+  {
+    "id": "core:rumour/name_wife_tree",
+    "name": "The tree under the scarp",
+    "tone": "strange",
+    "text": "West of the South Stilts, where the scarp curls in, there's a dead sallow so hung with knotted cords you'd take it for smoke. They're names. The Name-Wife ties every name she's paid with into a cord and hangs it there, and the folk whose names they were start going grey at the edges, and nobody notices, which is the point.",
+    "variants": [
+      "Don't say a name at the foot of Crookstilts' ladder unless you mean to lose it. She keeps them all under the South Scarp, on a tree."
+    ],
+    "tags": [
+      "sedgemire",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/sounding_bell",
+    "name": "A bell nobody cast",
+    "tone": "cold",
+    "text": "There's a tower gone up on the North Shore, black, past Mor'oul, and a bell in it that no bell-maker in the Delta will own to. The Flood-Callers raised it. They say it's for the spring tide, and that it's going to be rung from the wrong end.",
+    "variants": [
+      "If you're out on the North Fen at night and hear a bell from the east, it's not the Drowned Bell. The Drowned Bell's west. That one's the Callers'."
+    ],
+    "tags": [
+      "sedgemire",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/saltgate_watch",
+    "name": "The watch on the Saltgate",
+    "tone": "cold",
+    "text": "The Guild's fort at the Outfall mouth still has its watch on the walls, if you row past at dusk. Lanterns on the towers and men at the gate. Only the lanterns are green, and the men are standing in a foot of water on the wall-walk, and the gates under them are open to the sea.",
+    "variants": [
+      "The eels came back to the Outfall this year. First time since the Guild hung the Saltgate's gates. Nobody on the south bank is asking why too loudly."
+    ],
+    "tags": [
+      "sedgemire",
+      "grim"
+    ]
+  }
+]

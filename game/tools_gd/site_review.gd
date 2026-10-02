@@ -13,6 +13,9 @@ extends Node3D
 
 var cam: Camera3D
 var out_dir := "user://site_review"
+## `--radius=<m>`: the outside's views stand as for a place this big (else the def's radius_m): a
+## wayside find seen from 48 m is a speck.
+var radius_override := 0.0
 var shots: Array = []
 var _env: Environment
 var _sun: DirectionalLight3D
@@ -28,6 +31,8 @@ func _ready() -> void:
 			pois = Array(a.substr(6).split(",", false))
 		elif a.begins_with("--out="):
 			out_dir = a.substr(6)
+		elif a.begins_with("--radius="):
+			radius_override = float(a.substr(9))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var we := WorldEnvironment.new()
 	_env = Environment.new()
@@ -171,7 +176,7 @@ func _outside(id: String) -> void:
 	for i in 30:
 		await get_tree().process_frame
 	var slug := "a_outside_" + Ids.name_of(id)
-	var r := float(def.get("radius_m", 24.0))
+	var r := float(def.get("radius_m", 24.0)) if radius_override <= 0.0 else radius_override
 	for i in 4:
 		var a := TAU * float(i) / 4.0 + 0.4
 		shots.append({"label": "%s_0%d_side" % [slug, i], "pos": Vector3(sin(a), 0.0, cos(a)) * (r * 2.0) + Vector3.UP * (r * 0.45),

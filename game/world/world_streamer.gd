@@ -1275,7 +1275,59 @@ func _build_scene(parent: Node3D, entry: Variant) -> void:
 	if not props.is_empty() and inst.has_method("configure"):
 		inst.call("configure", props)
 	parent.add_child(inst)
-	_add_collision(inst, str(entry.get("collision", "")))
+	if collides_as_drawn(path):
+		_add_drawn_collision(inst, path)
+	else:
+		_add_collision(inst, str(entry.get("collision", "")))
+
+
+## Landmarks that collide as they are drawn rather than by the forge's hull. The Choir's colossi
+## had a hull round the robe alone (lib/choir.py: a cone from the hem to the shoulders), and all
+## that stands round each one -- the ash banked two metres up its robe, the shards and fingers of
+## stone broken off it, b's snapped forearm, c's fallen body's drums -- and the robe's folds out
+## past the cone were walked through (TRIAGE 75: "its spires have no collision"). These use the
+## model's own lowest level of detail as a trimesh instead, made once a model and shared.
+const COLLIDES_AS_DRAWN := ["choir_colossus"]
+static var _drawn_shapes: Dictionary = {}
+
+
+static func collides_as_drawn(path: String) -> bool:
+	var file := path.get_file()
+	for kind: String in COLLIDES_AS_DRAWN:
+		if file.contains(kind):
+			return true
+	return false
+
+
+## A static body under `inst` whose shape is the instance's middle level (`<model>_LOD1`, by
+## LandmarkLod's names: within a hand of the finest everywhere a body can reach, where the coarsest
+## was a metre off round the rubble), where it is drawn: what you see is what you walk into.
+func _add_drawn_collision(inst: Node, path: String) -> void:
+	if not (inst is Node3D):
+		return
+	var coarsest: MeshInstance3D = null
+	var level := -1
+	for mi_v in inst.find_children("*", "MeshInstance3D", true, false):
+		var mi := mi_v as MeshInstance3D
+		if mi.mesh == null or mi.mesh.get_surface_count() == 0:
+			continue
+		var lv := LandmarkLod.level_of(mi.name)
+		# the middle level if it has one, else the coarsest it has
+		var rank := 3 if lv == 1 else lv
+		if rank > level:
+			level = rank
+			coarsest = mi
+	if coarsest == null:
+		return
+	if not _drawn_shapes.has(path):
+		_drawn_shapes[path] = coarsest.mesh.create_trimesh_shape()
+	var body := StaticBody3D.new()
+	body.name = "Collision"
+	var shape := CollisionShape3D.new()
+	shape.shape = _drawn_shapes[path]
+	shape.transform = _transform_within(coarsest, inst)
+	body.add_child(shape)
+	(inst as Node3D).add_child(body)
 
 
 ## A landmark you can walk through is worse than a landmark that is not there. The forge builds

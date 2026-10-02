@@ -1,0 +1,107 @@
+[
+  {
+    "id": "core:interior/cistern_of_isse",
+    "name": "The Cistern of Isse",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/cistern_of_isse",
+    "danger": 2,
+    "formed_by": "builder",
+    "resident": "the wights who come up the stair wet to the knee, and the bell-bearer who stands in the water at the bottom and rings for nobody",
+    "story": "The Builders' cistern under the Ashgrid: a stair down the well-house's wall into a hall of columns that held the dead city's water, a culvert, and the tank. It has been dry since the Ash Winter, every Sayer who has written of it says so; and there is water in it now, black and still, to the knee in the tank and over the head in the middle, and at the far end the stone where the Builders left their offering to Isse of the Reeds, who taught the stilts, with a jar on it that is full.",
+    "unique_object": "a jar of water on Isse's offering-stone at the tank's far end, full to the brim, and the water in it moving when nothing else does",
+    "site": {
+      "kind": "ruined_hall",
+      "seed": 4412,
+      "region": "core:region/cinderlea",
+      "size": "small",
+      "rich_loot": "core:loot/oroth_cache",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/bell_bearer"
+        ]
+      },
+      "drops": false,
+      "theme": {
+        "palette": [
+          "#4d5257",
+          "#2f3337",
+          "#626a70"
+        ],
+        "lights": [
+          "torch",
+          "candles",
+          "fungus"
+        ],
+        "light_colour": "#a9c7d0",
+        "wet": true,
+        "fill_colour": "#9fb8c4"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "offering_stone",
+          "book": "core:book/isse_cistern_offering",
+          "item": "core:item/isse_offering_slate",
+          "name": "a slate under the jar"
+        },
+        {
+          "kind": "prop",
+          "room": "stair_foot",
+          "prop": "bucket",
+          "note": "a bucket on a cut rope, wet"
+        },
+        {
+          "kind": "prop",
+          "room": "offering_stone",
+          "prop": "jar"
+        },
+        {
+          "kind": "prop",
+          "room": "offering_stone",
+          "prop": "candle_stub"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "stair_foot",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_flight",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0,
+          "note": "the stair going on down, wet to the eighth step"
+        },
+        {
+          "id": "column_hall",
+          "role": "hall",
+          "size": "large",
+          "note": "the Builders' hall of columns that held the city's water"
+        },
+        {
+          "id": "the_tank",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "drop": -2.0,
+          "note": "the tank, with water in it that should not be"
+        },
+        {
+          "id": "offering_stone",
+          "role": "shrine",
+          "size": "medium",
+          "note": "Isse's offering-stone and the full jar"
+        }
+      ]
+    }
+  }
+]

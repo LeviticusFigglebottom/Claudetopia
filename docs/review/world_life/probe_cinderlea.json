@@ -1,6 +1,6 @@
 {
  "region": "core:region/cinderlea",
- "built_at": "2026-09-28T18:00:36Z",
+ "built_at": "2026-09-30T09:38:35Z",
  "terrain": "terrain3d",
  "pois": [
   {
@@ -18,7 +18,7 @@
     "z": 89.1,
     "height": 11.1,
     "reach": 67.3,
-    "top": 10.2
+    "top": 10.3
    },
    "pieces": 14,
    "draws": 14,
@@ -30,7 +30,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.9,
-   "raise_ms": 3468,
+   "raise_ms": 1810,
    "finished": true
   },
   {
@@ -62,7 +62,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 7.3,
-   "raise_ms": 137,
+   "raise_ms": 37,
    "finished": true
   },
   {
@@ -107,7 +107,7 @@
     }
    ],
    "embankment_m": 35.4,
-   "raise_ms": 102,
+   "raise_ms": 40,
    "finished": true
   },
   {
@@ -116,7 +116,7 @@
    "preview": false,
    "pos": [
     -1150.0,
-    70.62,
+    70.61,
     3200.0
    ],
    "radius_flat_m": 25.0,
@@ -139,7 +139,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 9.7,
-   "raise_ms": 2245,
+   "raise_ms": 65,
    "finished": true
   },
   {
@@ -148,28 +148,28 @@
    "preview": false,
    "pos": [
     380.0,
-    76.14,
+    76.15,
     3060.0
    ],
-   "radius_flat_m": 25.0,
+   "radius_flat_m": 42.0,
    "footprint": {
-    "x": 56.8,
-    "z": 34.5,
+    "x": 60.8,
+    "z": 26.6,
     "height": 10.6,
-    "reach": 37.5,
-    "top": 5.8
+    "reach": 37.9,
+    "top": 6.5
    },
    "pieces": 35,
    "draws": 35,
-   "primitives": 106220,
+   "primitives": 106748,
    "interactables": {},
    "lights": 1,
    "bodies": 7,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 2.8,
-   "raise_ms": 486,
+   "embankment_m": 3.8,
+   "raise_ms": 223,
    "finished": true
   },
   {
@@ -201,7 +201,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 686,
+   "raise_ms": 110,
    "finished": true
   },
   {
@@ -217,7 +217,7 @@
    "footprint": {
     "x": 21.6,
     "z": 27.9,
-    "height": 18.7,
+    "height": 18.6,
     "reach": 23.2,
     "top": 18.4
    },
@@ -246,7 +246,7 @@
     }
    ],
    "embankment_m": 26.8,
-   "raise_ms": 1167,
+   "raise_ms": 129,
    "finished": true
   },
   {
@@ -278,7 +278,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 13.6,
-   "raise_ms": 66,
+   "raise_ms": 27,
    "finished": true
   },
   {
@@ -287,94 +287,46 @@
    "preview": false,
    "pos": [
     10.0,
-    107.55,
+    107.5,
     3670.0
    ],
    "radius_flat_m": 22.0,
    "footprint": {
     "x": 405.1,
-    "z": 538.0,
-    "height": 132.7,
-    "reach": 437.4,
-    "top": 29.3
+    "z": 546.6,
+    "height": 132.2,
+    "reach": 444.7,
+    "top": 28.7
    },
-   "pieces": 245,
-   "draws": 245,
-   "primitives": 129225,
+   "pieces": 367,
+   "draws": 367,
+   "primitives": 266411,
    "interactables": {
     "Hearthstone": 1,
     "PoiTouch": 1
    },
    "lights": 14,
-   "bodies": 24,
+   "bodies": 49,
    "hearthstones": 1,
    "seat": {
-    "floating": 5
+    "floating": 1
    },
    "findings": [
     {
      "check": "floating",
      "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@6112",
-     "asset": "@MeshInstance3D@6112",
+     "family": "@meshinstance3d@6127",
+     "asset": "@MeshInstance3D@6127",
      "x": -7.4,
-     "y": 109.37,
+     "y": 108.72,
      "z": 3669.9,
      "amount": 1.77,
      "detail": "1.77 m over the ground",
      "region": "cinderlea"
-    },
-    {
-     "check": "floating",
-     "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@6258",
-     "asset": "@MeshInstance3D@6258",
-     "x": -17.0,
-     "y": 117.15,
-     "z": 3645.8,
-     "amount": 12.22,
-     "detail": "12.22 m over the ground",
-     "region": "cinderlea"
-    },
-    {
-     "check": "floating",
-     "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@6260",
-     "asset": "@MeshInstance3D@6260",
-     "x": -16.8,
-     "y": 117.2,
-     "z": 3645.8,
-     "amount": 12.25,
-     "detail": "12.25 m over the ground",
-     "region": "cinderlea"
-    },
-    {
-     "check": "floating",
-     "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@6262",
-     "asset": "@MeshInstance3D@6262",
-     "x": -17.2,
-     "y": 117.19,
-     "z": 3645.8,
-     "amount": 12.3,
-     "detail": "12.30 m over the ground",
-     "region": "cinderlea"
-    },
-    {
-     "check": "floating",
-     "src": "poi:camp/stair_head",
-     "family": "@meshinstance3d@6263",
-     "asset": "@MeshInstance3D@6263",
-     "x": -14.0,
-     "y": 118.31,
-     "z": 3637.8,
-     "amount": 13.19,
-     "detail": "13.19 m over the ground",
-     "region": "cinderlea"
     }
    ],
-   "embankment_m": 2.8,
-   "raise_ms": 963,
+   "embankment_m": 2.7,
+   "raise_ms": 1065,
    "finished": true
   },
   {
@@ -388,38 +340,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 21.5,
-    "z": 15.9,
-    "height": 11.3,
-    "reach": 19.5,
-    "top": 9.8
+    "x": 42.4,
+    "z": 41.4,
+    "height": 5.0,
+    "reach": 31.1,
+    "top": 4.6
    },
-   "pieces": 9,
-   "draws": 9,
-   "primitives": 60936,
-   "interactables": {},
+   "pieces": 22,
+   "draws": 22,
+   "primitives": 191866,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
    "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:ruins",
-     "family": "rope_coil",
-     "asset": "sedgemire_rope_coil_b.glb",
-     "x": -1587.9,
-     "y": 70.2,
-     "z": 3272.5,
-     "amount": 0.3,
-     "detail": "0.30 m over the ground",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 0.8,
-   "raise_ms": 132,
+   "raise_ms": 334,
    "finished": true
   },
   {
@@ -433,23 +372,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 13.5,
-    "z": 11.3,
-    "height": 4.7,
-    "reach": 13.2,
-    "top": 4.5
+    "x": 40.8,
+    "z": 26.7,
+    "height": 10.3,
+    "reach": 24.2,
+    "top": 5.1
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 121199,
-   "interactables": {},
+   "pieces": 20,
+   "draws": 20,
+   "primitives": 59192,
+   "interactables": {
+    "WorldContainer": 1,
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 159,
+   "raise_ms": 104,
    "finished": true
   },
   {
@@ -463,38 +405,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.4,
-    "z": 6.5,
-    "height": 11.2,
-    "reach": 6.3,
-    "top": 11.1
+    "x": 10.7,
+    "z": 13.8,
+    "height": 25.8,
+    "reach": 15.8,
+    "top": 25.4
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 42570,
-   "interactables": {},
+   "pieces": 6,
+   "draws": 6,
+   "primitives": 43988,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 4,
+   "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "on_road": 1
-   },
-   "findings": [
-    {
-     "check": "on_road",
-     "src": "poi:tower",
-     "family": "drum",
-     "asset": "Drum",
-     "x": -2550.0,
-     "y": 70.17,
-     "z": 3350.0,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of sunk_plaza_tower_of_vaelost",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 2.0,
-   "raise_ms": 21,
+   "raise_ms": 25,
    "finished": true
   },
   {
@@ -508,23 +437,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 15.3,
-    "z": 12.7,
-    "height": 4.8,
-    "reach": 14.3,
-    "top": 4.6
+    "x": 21.1,
+    "z": 16.1,
+    "height": 7.4,
+    "reach": 21.2,
+    "top": 7.0
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 111763,
-   "interactables": {},
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 29048,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.6,
-   "raise_ms": 200,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -533,43 +465,31 @@
    "preview": false,
    "pos": [
     -2750.0,
-    70.32,
+    70.33,
     3150.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 20.5,
-    "z": 11.4,
-    "height": 10.9,
-    "reach": 17.7,
-    "top": 9.6
+    "x": 11.8,
+    "z": 20.9,
+    "height": 7.0,
+    "reach": 22.2,
+    "top": 6.4
    },
-   "pieces": 9,
-   "draws": 9,
-   "primitives": 60772,
-   "interactables": {},
+   "pieces": 12,
+   "draws": 12,
+   "primitives": 34270,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 3,
+   "bodies": 4,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:ruins",
-     "family": "rope_coil",
-     "asset": "sedgemire_rope_coil_b.glb",
-     "x": -2735.8,
-     "y": 70.84,
-     "z": 3149.6,
-     "amount": 0.29,
-     "detail": "0.29 m over the ground",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 1.0,
-   "raise_ms": 50,
+   "raise_ms": 44,
    "finished": true
   },
   {
@@ -599,7 +519,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.5,
-   "raise_ms": 249,
+   "raise_ms": 89,
    "finished": true
   },
   {
@@ -608,28 +528,30 @@
    "preview": false,
    "pos": [
     -650.0,
-    117.58,
+    117.57,
     3480.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 13.0,
-    "z": 15.2,
-    "height": 4.8,
-    "reach": 15.9,
-    "top": 4.6
+    "x": 17.9,
+    "z": 21.6,
+    "height": 2.8,
+    "reach": 23.1,
+    "top": 2.2
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 118115,
-   "interactables": {},
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 127500,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 17,
+   "raise_ms": 331,
    "finished": true
   },
   {
@@ -643,23 +565,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.9,
-    "z": 8.9,
-    "height": 3.2,
-    "reach": 6.1,
-    "top": 3.2
+    "x": 8.1,
+    "z": 8.6,
+    "height": 6.4,
+    "reach": 8.2,
+    "top": 5.8
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 51464,
-   "interactables": {},
-   "lights": 0,
-   "bodies": 6,
+   "pieces": 19,
+   "draws": 19,
+   "primitives": 6206,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 4.3,
-   "raise_ms": 78,
+   "raise_ms": 30,
    "finished": true
   },
   {
@@ -668,28 +592,31 @@
    "preview": false,
    "pos": [
     -950.0,
-    68.62,
+    68.61,
     2450.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 13.8,
-    "z": 10.5,
-    "height": 5.4,
-    "reach": 12.7,
-    "top": 5.1
+    "x": 21.2,
+    "z": 22.7,
+    "height": 4.8,
+    "reach": 25.2,
+    "top": 4.1
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 118163,
-   "interactables": {},
+   "pieces": 30,
+   "draws": 30,
+   "primitives": 48382,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 10,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 6.2,
-   "raise_ms": 16,
+   "raise_ms": 46,
    "finished": true
   },
   {
@@ -703,15 +630,15 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 4.2,
-    "z": 4.1,
-    "height": 3.4,
-    "reach": 3.4,
-    "top": 2.8
+    "x": 4.8,
+    "z": 4.9,
+    "height": 5.8,
+    "reach": 3.5,
+    "top": 5.0
    },
    "pieces": 27,
    "draws": 27,
-   "primitives": 12425,
+   "primitives": 12851,
    "interactables": {
     "Hearthstone": 1
    },
@@ -721,7 +648,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 113,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -735,23 +662,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 14.6,
-    "z": 10.9,
-    "height": 4.8,
-    "reach": 13.7,
-    "top": 4.6
+    "x": 37.8,
+    "z": 37.2,
+    "height": 9.8,
+    "reach": 26.6,
+    "top": 9.3
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 114871,
-   "interactables": {},
+   "pieces": 22,
+   "draws": 22,
+   "primitives": 29823,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 15,
+   "raise_ms": 29,
    "finished": true
   },
   {
@@ -765,38 +695,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.0,
-    "z": 19.5,
-    "height": 12.4,
-    "reach": 16.6,
-    "top": 10.0
+    "x": 21.5,
+    "z": 24.0,
+    "height": 11.1,
+    "reach": 26.6,
+    "top": 7.3
    },
-   "pieces": 9,
-   "draws": 9,
-   "primitives": 60926,
-   "interactables": {},
+   "pieces": 4,
+   "draws": 4,
+   "primitives": 34328,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
    "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:ruins",
-     "family": "rope_coil",
-     "asset": "sedgemire_rope_coil_a.glb",
-     "x": -1997.8,
-     "y": 56.87,
-     "z": 2394.0,
-     "amount": 0.27,
-     "detail": "0.27 m over the ground",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 4.6,
-   "raise_ms": 46,
+   "raise_ms": 9,
    "finished": true
   },
   {
@@ -810,23 +727,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.7,
-    "z": 8.9,
-    "height": 3.2,
-    "reach": 5.9,
-    "top": 3.2
+    "x": 23.7,
+    "z": 7.0,
+    "height": 3.1,
+    "reach": 13.8,
+    "top": 2.5
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 47464,
+   "pieces": 4,
+   "draws": 4,
+   "primitives": 484,
    "interactables": {},
    "lights": 0,
-   "bodies": 6,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 0.9,
-   "raise_ms": 10,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -835,43 +752,31 @@
    "preview": false,
    "pos": [
     -3480.0,
-    14.9,
+    14.93,
     2980.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 21.4,
-    "z": 17.6,
-    "height": 11.7,
-    "reach": 20.0,
-    "top": 9.3
+    "x": 22.9,
+    "z": 22.7,
+    "height": 7.4,
+    "reach": 26.8,
+    "top": 3.4
    },
-   "pieces": 9,
-   "draws": 9,
-   "primitives": 60806,
-   "interactables": {},
+   "pieces": 11,
+   "draws": 11,
+   "primitives": 74026,
+   "interactables": {
+    "WorldContainer": 1,
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 3,
+   "bodies": 4,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:ruins",
-     "family": "rope_coil",
-     "asset": "sedgemire_rope_coil_a.glb",
-     "x": -3491.0,
-     "y": 14.36,
-     "z": 2988.9,
-     "amount": 0.27,
-     "detail": "0.27 m over the ground",
-     "region": "cinderlea"
-    }
-   ],
-   "embankment_m": 21.1,
-   "raise_ms": 41,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 21.0,
+   "raise_ms": 77,
    "finished": true
   },
   {
@@ -891,32 +796,17 @@
     "reach": 17.6,
     "top": 4.7
    },
-   "pieces": 33,
-   "draws": 33,
-   "primitives": 39093,
+   "pieces": 36,
+   "draws": 36,
+   "primitives": 40701,
    "interactables": {},
    "lights": 1,
-   "bodies": 9,
+   "bodies": 10,
    "hearthstones": 0,
-   "seat": {
-    "lamp_unhung": 1
-   },
-   "findings": [
-    {
-     "check": "lamp_unhung",
-     "src": "poi:wreck",
-     "family": "lantern_hanging",
-     "asset": "sedgemire_lantern_hanging_b.glb",
-     "x": -3502.4,
-     "y": 17.97,
-     "z": 2430.7,
-     "amount": 0.0,
-     "detail": "nothing to hang from within 0.3 m (3.5 m over the ground)",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 119,
+   "raise_ms": 31,
    "finished": true
   },
   {
@@ -930,38 +820,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 7.2,
-    "z": 8.7,
-    "height": 12.6,
-    "reach": 6.0,
-    "top": 12.4
+    "x": 9.6,
+    "z": 8.0,
+    "height": 10.3,
+    "reach": 11.9,
+    "top": 9.6
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 77163,
-   "interactables": {},
+   "pieces": 7,
+   "draws": 7,
+   "primitives": 31016,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 1,
    "bodies": 4,
    "hearthstones": 0,
-   "seat": {
-    "on_road": 1
-   },
-   "findings": [
-    {
-     "check": "on_road",
-     "src": "poi:tower",
-     "family": "drum",
-     "asset": "Drum",
-     "x": -3420.0,
-     "y": 14.35,
-     "z": 1950.0,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of west_walk_strand_beacon",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 29.6,
-   "raise_ms": 83,
+   "raise_ms": 66,
    "finished": true
   },
   {
@@ -975,38 +853,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.9,
-    "z": 8.3,
-    "height": 3.2,
-    "reach": 5.9,
-    "top": 3.1
+    "x": 6.1,
+    "z": 6.8,
+    "height": 2.9,
+    "reach": 8.2,
+    "top": 2.3
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 55464,
-   "interactables": {},
+   "pieces": 6,
+   "draws": 6,
+   "primitives": 3560,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 3,
    "hearthstones": 0,
-   "seat": {
-    "on_road": 1
-   },
-   "findings": [
-    {
-     "check": "on_road",
-     "src": "poi:standing_stones",
-     "family": "standing_stone",
-     "asset": "briarwold_standing_stone_a.glb",
-     "x": -616.1,
-     "y": 77.03,
-     "z": 2562.1,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of glass_bridge_greyfold",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 3.9,
-   "raise_ms": 16,
+   "raise_ms": 17,
    "finished": true
   },
   {
@@ -1020,23 +885,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 13.9,
-    "z": 8.2,
-    "height": 4.8,
-    "reach": 8.1,
-    "top": 4.7
+    "x": 14.0,
+    "z": 14.8,
+    "height": 7.8,
+    "reach": 10.2,
+    "top": 7.5
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 118223,
-   "interactables": {},
-   "lights": 0,
+   "pieces": 16,
+   "draws": 17,
+   "primitives": 43109,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 1,
    "bodies": 6,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 18,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -1050,23 +917,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.3,
-    "z": 6.4,
-    "height": 12.7,
-    "reach": 6.6,
-    "top": 12.4
+    "x": 10.0,
+    "z": 25.3,
+    "height": 11.9,
+    "reach": 27.2,
+    "top": 11.4
    },
-   "pieces": 15,
-   "draws": 15,
-   "primitives": 77217,
-   "interactables": {},
-   "lights": 1,
-   "bodies": 4,
+   "pieces": 5,
+   "draws": 8,
+   "primitives": 34222,
+   "interactables": {
+    "PoiTouch": 1
+   },
+   "lights": 0,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 14.0,
-   "raise_ms": 53,
+   "raise_ms": 36,
    "finished": true
   },
   {
@@ -1110,23 +979,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 19.5,
-    "z": 10.1,
-    "height": 11.2,
-    "reach": 16.6,
-    "top": 9.4
+    "x": 36.6,
+    "z": 17.5,
+    "height": 8.3,
+    "reach": 19.7,
+    "top": 7.7
    },
-   "pieces": 9,
-   "draws": 9,
-   "primitives": 60684,
-   "interactables": {},
+   "pieces": 3,
+   "draws": 5,
+   "primitives": 30228,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 3,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 3.9,
-   "raise_ms": 274,
+   "raise_ms": 66,
    "finished": true
   },
   {
@@ -1140,23 +1011,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 11.5,
-    "z": 14.3,
-    "height": 4.8,
-    "reach": 13.9,
-    "top": 4.4
+    "x": 6.7,
+    "z": 12.7,
+    "height": 8.6,
+    "reach": 14.4,
+    "top": 7.7
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 114847,
-   "interactables": {},
+   "pieces": 5,
+   "draws": 5,
+   "primitives": 22958,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 3.3,
-   "raise_ms": 29,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1170,23 +1043,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.3,
-    "z": 14.4,
+    "x": 23.9,
+    "z": 28.8,
     "height": 4.7,
-    "reach": 8.5,
-    "top": 4.6
+    "reach": 18.0,
+    "top": 4.4
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 118103,
-   "interactables": {},
+   "pieces": 25,
+   "draws": 25,
+   "primitives": 84042,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.4,
-   "raise_ms": 24,
+   "raise_ms": 38,
    "finished": true
   },
   {
@@ -1200,38 +1076,23 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 9.5,
-    "z": 7.0,
-    "height": 11.2,
-    "reach": 7.3,
-    "top": 11.1
+    "x": 8.4,
+    "z": 11.9,
+    "height": 22.9,
+    "reach": 12.7,
+    "top": 22.7
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 42534,
+   "pieces": 4,
+   "draws": 4,
+   "primitives": 50644,
    "interactables": {},
    "lights": 0,
-   "bodies": 4,
+   "bodies": 2,
    "hearthstones": 0,
-   "seat": {
-    "on_road": 1
-   },
-   "findings": [
-    {
-     "check": "on_road",
-     "src": "poi:tower",
-     "family": "drum",
-     "asset": "Drum",
-     "x": -3120.0,
-     "y": 69.81,
-     "z": 3080.0,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of greyfold_builders_harbour",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 1.3,
-   "raise_ms": 25,
+   "raise_ms": 35,
    "finished": true
   },
   {
@@ -1245,23 +1106,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 14.4,
-    "z": 14.7,
-    "height": 4.7,
-    "reach": 10.3,
-    "top": 4.6
+    "x": 31.2,
+    "z": 30.2,
+    "height": 12.9,
+    "reach": 22.0,
+    "top": 12.6
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 114823,
-   "interactables": {},
+   "pieces": 13,
+   "draws": 13,
+   "primitives": 50304,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 5,
+   "bodies": 4,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.2,
-   "raise_ms": 16,
+   "raise_ms": 24,
    "finished": true
   },
   {
@@ -1275,23 +1138,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 10.5,
-    "z": 9.5,
-    "height": 6.0,
-    "reach": 6.5,
-    "top": 5.7
+    "x": 5.1,
+    "z": 34.2,
+    "height": 3.0,
+    "reach": 17.7,
+    "top": 2.5
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 53996,
-   "interactables": {},
+   "pieces": 4,
+   "draws": 5,
+   "primitives": 582,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 2,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 7.8,
-   "raise_ms": 51,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1321,7 +1186,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 122,
+   "raise_ms": 18,
    "finished": true
   },
   {
@@ -1351,7 +1216,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 20,
+   "raise_ms": 21,
    "finished": true
   },
   {
@@ -1365,23 +1230,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 14.9,
-    "z": 10.7,
-    "height": 4.8,
-    "reach": 9.2,
-    "top": 4.4
+    "x": 31.8,
+    "z": 34.0,
+    "height": 6.0,
+    "reach": 19.6,
+    "top": 2.8
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 121151,
-   "interactables": {},
+   "pieces": 26,
+   "draws": 26,
+   "primitives": 38579,
+   "interactables": {
+    "WorldContainer": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 4.8,
-   "raise_ms": 18,
+   "raise_ms": 63,
    "finished": true
   },
   {
@@ -1396,14 +1263,14 @@
    "radius_flat_m": 25.0,
    "footprint": {
     "x": 4.9,
-    "z": 4.4,
-    "height": 3.5,
+    "z": 4.7,
+    "height": 4.1,
     "reach": 3.5,
-    "top": 2.8
+    "top": 3.4
    },
    "pieces": 31,
    "draws": 31,
-   "primitives": 16011,
+   "primitives": 16435,
    "interactables": {
     "Hearthstone": 1
    },
@@ -1413,7 +1280,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 63,
+   "raise_ms": 22,
    "finished": true
   },
   {
@@ -1427,23 +1294,26 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 15.3,
-    "z": 12.5,
-    "height": 4.7,
-    "reach": 16.4,
-    "top": 4.6
+    "x": 18.9,
+    "z": 21.6,
+    "height": 8.0,
+    "reach": 26.2,
+    "top": 7.6
    },
-   "pieces": 21,
-   "draws": 21,
-   "primitives": 111775,
-   "interactables": {},
+   "pieces": 13,
+   "draws": 13,
+   "primitives": 56404,
+   "interactables": {
+    "PoiTouch": 1,
+    "WorldContainer": 1
+   },
    "lights": 0,
    "bodies": 5,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 11,
+   "raise_ms": 19,
    "finished": true
   },
   {
@@ -1457,15 +1327,15 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 3.2,
-    "z": 3.2,
-    "height": 2.9,
-    "reach": 2.4,
-    "top": 2.9
+    "x": 3.5,
+    "z": 3.5,
+    "height": 4.8,
+    "reach": 2.8,
+    "top": 4.1
    },
    "pieces": 20,
    "draws": 20,
-   "primitives": 12811,
+   "primitives": 13237,
    "interactables": {},
    "lights": 1,
    "bodies": 1,
@@ -1473,7 +1343,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 78.5,
-   "raise_ms": 5,
+   "raise_ms": 16,
    "finished": true
   },
   {
@@ -1482,7 +1352,7 @@
    "preview": false,
    "pos": [
     -60.0,
-    78.77,
+    78.76,
     2960.0
    ],
    "radius_flat_m": 22.0,
@@ -1491,7 +1361,7 @@
     "z": 19.1,
     "height": 2.9,
     "reach": 14.6,
-    "top": 2.6
+    "top": 2.5
    },
    "pieces": 62,
    "draws": 62,
@@ -1500,61 +1370,10 @@
    "lights": 2,
    "bodies": 20,
    "hearthstones": 0,
-   "seat": {
-    "on_road": 4
-   },
-   "findings": [
-    {
-     "check": "on_road",
-     "src": "poi:camp",
-     "family": "stool",
-     "asset": "briarwold_stool_a.glb",
-     "x": -60.6,
-     "y": 79.05,
-     "z": 2964.6,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
-     "region": "cinderlea"
-    },
-    {
-     "check": "on_road",
-     "src": "poi:camp",
-     "family": "stool",
-     "asset": "briarwold_stool_a.glb",
-     "x": -55.3,
-     "y": 78.76,
-     "z": 2960.1,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
-     "region": "cinderlea"
-    },
-    {
-     "check": "on_road",
-     "src": "poi:camp",
-     "family": "stool",
-     "asset": "briarwold_stool_a.glb",
-     "x": -60.7,
-     "y": 78.75,
-     "z": 2959.5,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
-     "region": "cinderlea"
-    },
-    {
-     "check": "on_road",
-     "src": "poi:camp",
-     "family": "bedroll",
-     "asset": "cinderlea_bedroll_b.glb",
-     "x": -53.7,
-     "y": 78.76,
-     "z": 2960.3,
-     "amount": 0.0,
-     "detail": "stands in the carriageway of sunken_choir_pilgrims_ash",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 19.1,
-   "raise_ms": 55,
+   "raise_ms": 11,
    "finished": true
   },
   {
@@ -1568,23 +1387,25 @@
    ],
    "radius_flat_m": 25.0,
    "footprint": {
-    "x": 8.6,
-    "z": 10.3,
-    "height": 3.3,
-    "reach": 6.0,
-    "top": 3.3
+    "x": 15.1,
+    "z": 10.9,
+    "height": 3.2,
+    "reach": 11.6,
+    "top": 3.0
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 47464,
-   "interactables": {},
+   "pieces": 6,
+   "draws": 6,
+   "primitives": 2488,
+   "interactables": {
+    "PoiTouch": 1
+   },
    "lights": 0,
-   "bodies": 6,
+   "bodies": 3,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 3.1,
-   "raise_ms": 8,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -1598,23 +1419,22 @@
    ],
    "radius_flat_m": 18.0,
    "footprint": {
-    "x": 21.3,
-    "z": 22.1,
-    "height": 124.2,
-    "reach": 25.8,
+    "x": 49.7,
+    "z": 34.2,
+    "height": 123.3,
+    "reach": 36.2,
     "top": 122.5
    },
    "pieces": 49,
    "draws": 49,
-   "primitives": 154112,
+   "primitives": 148046,
    "interactables": {},
    "lights": 1,
    "bodies": 17,
    "hearthstones": 0,
    "seat": {
     "buried": 5,
-    "sunk": 6,
-    "overlap": 1
+    "sunk": 6
    },
    "findings": [
     {
@@ -1683,10 +1503,10 @@
      "family": "boulder",
      "asset": "cinderlea_boulder_a.glb",
      "x": -589.7,
-     "y": 26.06,
+     "y": 27.61,
      "z": 3771.3,
-     "amount": 26.79,
-     "detail": "382% of its 7.0 m under the ground at its middle",
+     "amount": 25.24,
+     "detail": "360% of its 7.0 m under the ground at its middle",
      "region": "cinderlea"
     },
     {
@@ -1694,23 +1514,23 @@
      "src": "poi:cave",
      "family": "boulder",
      "asset": "cinderlea_boulder_b.glb",
-     "x": -588.2,
-     "y": 112.58,
-     "z": 3769.2,
-     "amount": 7.02,
-     "detail": "138% of its 5.1 m under the ground at its middle",
+     "x": -582.8,
+     "y": 113.57,
+     "z": 3772.3,
+     "amount": 8.73,
+     "detail": "172% of its 5.1 m under the ground at its middle",
      "region": "cinderlea"
     },
     {
      "check": "sunk",
      "src": "poi:cave",
      "family": "boulder",
-     "asset": "cinderlea_boulder_b.glb",
-     "x": -597.8,
-     "y": 117.86,
-     "z": 3763.6,
-     "amount": 3.18,
-     "detail": "77% of its 4.1 m under the ground at its middle",
+     "asset": "cinderlea_boulder_a.glb",
+     "x": -583.5,
+     "y": 4.37,
+     "z": 3777.2,
+     "amount": 5.28,
+     "detail": "128% of its 4.1 m under the ground at its middle",
      "region": "cinderlea"
     },
     {
@@ -1719,10 +1539,10 @@
      "family": "boulder",
      "asset": "cinderlea_boulder_a.glb",
      "x": -592.8,
-     "y": 56.68,
+     "y": 57.13,
      "z": 3768.7,
-     "amount": 3.43,
-     "detail": "97% of its 3.5 m under the ground at its middle",
+     "amount": 2.98,
+     "detail": "85% of its 3.5 m under the ground at its middle",
      "region": "cinderlea"
     },
     {
@@ -1731,10 +1551,10 @@
      "family": "boulder",
      "asset": "cinderlea_boulder_b.glb",
      "x": -595.0,
-     "y": 90.75,
+     "y": 91.48,
      "z": 3766.4,
-     "amount": 2.99,
-     "detail": "97% of its 3.1 m under the ground at its middle",
+     "amount": 2.26,
+     "detail": "73% of its 3.1 m under the ground at its middle",
      "region": "cinderlea"
     },
     {
@@ -1742,28 +1562,16 @@
      "src": "poi:cave",
      "family": "boulder",
      "asset": "cinderlea_boulder_a.glb",
-     "x": -587.4,
-     "y": 26.22,
-     "z": 3772.7,
-     "amount": 17.07,
-     "detail": "293% of its 5.8 m under the ground at its middle",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:cave",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -589.7,
-     "y": 26.06,
-     "z": 3771.3,
-     "amount": 0.61,
-     "detail": "61% of it shares its box with boulder (poi:cave)",
+     "x": -577.3,
+     "y": 63.84,
+     "z": 3778.5,
+     "amount": 13.82,
+     "detail": "238% of its 5.8 m under the ground at its middle",
      "region": "cinderlea"
     }
    ],
    "embankment_m": 119.5,
-   "raise_ms": 96,
+   "raise_ms": 55,
    "finished": true
   },
   {
@@ -1808,14 +1616,14 @@
    "radius_flat_m": 14.0,
    "footprint": {
     "x": 4.7,
-    "z": 3.1,
-    "height": 2.9,
+    "z": 3.4,
+    "height": 4.2,
     "reach": 3.4,
-    "top": 2.8
+    "top": 3.4
    },
    "pieces": 24,
    "draws": 24,
-   "primitives": 16757,
+   "primitives": 17181,
    "interactables": {},
    "lights": 1,
    "bodies": 2,
@@ -1823,7 +1631,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.2,
-   "raise_ms": 5,
+   "raise_ms": 4,
    "finished": true
   },
   {
@@ -1832,28 +1640,28 @@
    "preview": false,
    "pos": [
     -816.0,
-    121.81,
+    121.82,
     3091.0
    ],
    "radius_flat_m": 14.0,
    "footprint": {
-    "x": 9.8,
-    "z": 9.3,
-    "height": 3.7,
-    "reach": 6.3,
-    "top": 3.2
+    "x": 1.7,
+    "z": 6.6,
+    "height": 3.4,
+    "reach": 3.6,
+    "top": 2.7
    },
-   "pieces": 12,
-   "draws": 12,
-   "primitives": 43464,
+   "pieces": 1,
+   "draws": 1,
+   "primitives": 72,
    "interactables": {},
    "lights": 0,
-   "bodies": 5,
+   "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
    "embankment_m": 6.9,
-   "raise_ms": 5,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -1885,7 +1693,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 2.3,
-   "raise_ms": 10,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -1915,7 +1723,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.9,
-   "raise_ms": 15,
+   "raise_ms": 23,
    "finished": true
   },
   {
@@ -1944,8 +1752,8 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 4.0,
-   "raise_ms": 6,
+   "embankment_m": 3.9,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -1975,7 +1783,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 137,
+   "raise_ms": 5,
    "finished": true
   },
   {
@@ -1990,22 +1798,22 @@
    "radius_flat_m": 14.0,
    "footprint": {
     "x": 0.2,
-    "z": 0.2,
-    "height": 2.8,
-    "reach": 0.2,
-    "top": 2.8
+    "z": 0.1,
+    "height": 3.0,
+    "reach": 0.1,
+    "top": 3.0
    },
    "pieces": 7,
    "draws": 7,
-   "primitives": 125066,
+   "primitives": 136882,
    "interactables": {},
    "lights": 0,
    "bodies": 1,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 4.6,
-   "raise_ms": 7,
+   "embankment_m": 4.8,
+   "raise_ms": 10,
    "finished": true
   },
   {
@@ -2035,7 +1843,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.8,
-   "raise_ms": 4,
+   "raise_ms": 7,
    "finished": true
   },
   {
@@ -2044,10 +1852,10 @@
    "preview": false,
    "pos": [
     -3549.0,
-    14.24,
+    14.21,
     1623.0
    ],
-   "radius_flat_m": 14.0,
+   "radius_flat_m": 21.0,
    "footprint": {
     "x": 18.5,
     "z": 22.0,
@@ -2055,32 +1863,17 @@
     "reach": 16.7,
     "top": 4.7
    },
-   "pieces": 33,
-   "draws": 33,
-   "primitives": 39093,
+   "pieces": 36,
+   "draws": 36,
+   "primitives": 40701,
    "interactables": {},
    "lights": 1,
-   "bodies": 9,
+   "bodies": 10,
    "hearthstones": 0,
-   "seat": {
-    "lamp_unhung": 1
-   },
-   "findings": [
-    {
-     "check": "lamp_unhung",
-     "src": "poi:wreck",
-     "family": "lantern_hanging",
-     "asset": "sedgemire_lantern_hanging_b.glb",
-     "x": -3544.8,
-     "y": 17.64,
-     "z": 1633.2,
-     "amount": 0.0,
-     "detail": "nothing to hang from within 0.3 m (3.6 m over the ground)",
-     "region": "cinderlea"
-    }
-   ],
-   "embankment_m": 3.3,
-   "raise_ms": 14,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 7.3,
+   "raise_ms": 13,
    "finished": true
   },
   {
@@ -2096,9 +1889,9 @@
    "footprint": {
     "x": 12.3,
     "z": 10.6,
-    "height": 6.4,
+    "height": 6.3,
     "reach": 8.3,
-    "top": 6.4
+    "top": 6.3
    },
    "pieces": 29,
    "draws": 29,
@@ -2107,25 +1900,10 @@
    "lights": 3,
    "bodies": 4,
    "hearthstones": 0,
-   "seat": {
-    "floating": 1
-   },
-   "findings": [
-    {
-     "check": "floating",
-     "src": "poi:shrine",
-     "family": "bell_medium",
-     "asset": "cinderlea_bell_medium_a.glb",
-     "x": -2225.6,
-     "y": 70.44,
-     "z": 3503.3,
-     "amount": 0.16,
-     "detail": "0.16 m over the ground",
-     "region": "cinderlea"
-    }
-   ],
+   "seat": {},
+   "findings": [],
    "embankment_m": 2.6,
-   "raise_ms": 22,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2155,7 +1933,7 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.8,
-   "raise_ms": 7,
+   "raise_ms": 8,
    "finished": true
   },
   {
@@ -2185,226 +1963,91 @@
    "seat": {},
    "findings": [],
    "embankment_m": 3.2,
-   "raise_ms": 59,
+   "raise_ms": 9,
    "finished": true
   },
   {
    "id": "core:poi/the_kilnway",
    "kind": "delve",
-   "preview": true,
+   "preview": false,
    "pos": [
     -3152.0,
-    67.76,
+    65.62,
     2360.0
-   ],
-   "radius_flat_m": 25.0,
-   "footprint": {
-    "x": 26.4,
-    "z": 27.3,
-    "height": 9.8,
-    "reach": 27.4,
-    "top": 6.8
-   },
-   "pieces": 53,
-   "draws": 53,
-   "primitives": 89228,
-   "interactables": {
-    "Door": 1,
-    "PoiTouch": 1
-   },
-   "lights": 1,
-   "bodies": 18,
-   "hearthstones": 0,
-   "seat": {
-    "overlap": 11
-   },
-   "findings": [
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3156.5,
-     "y": 65.56,
-     "z": 2355.9,
-     "amount": 0.9,
-     "detail": "90% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3156.5,
-     "y": 65.56,
-     "z": 2355.9,
-     "amount": 0.61,
-     "detail": "61% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3156.5,
-     "y": 65.56,
-     "z": 2355.9,
-     "amount": 0.68,
-     "detail": "68% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3159.1,
-     "y": 66.31,
-     "z": 2355.8,
-     "amount": 0.83,
-     "detail": "83% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_b.glb",
-     "x": -3154.4,
-     "y": 66.73,
-     "z": 2356.1,
-     "amount": 0.73,
-     "detail": "73% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3154.5,
-     "y": 65.21,
-     "z": 2365.8,
-     "amount": 0.68,
-     "detail": "68% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3154.5,
-     "y": 65.21,
-     "z": 2365.8,
-     "amount": 0.99,
-     "detail": "99% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3154.5,
-     "y": 65.21,
-     "z": 2365.8,
-     "amount": 1.0,
-     "detail": "100% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_b.glb",
-     "x": -3157.2,
-     "y": 66.2,
-     "z": 2365.9,
-     "amount": 0.96,
-     "detail": "96% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3152.7,
-     "y": 66.76,
-     "z": 2364.6,
-     "amount": 1.0,
-     "detail": "100% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:delve",
-     "family": "boulder",
-     "asset": "cinderlea_boulder_a.glb",
-     "x": -3154.0,
-     "y": 64.74,
-     "z": 2367.9,
-     "amount": 0.82,
-     "detail": "82% of it shares its box with boulder (poi:delve)",
-     "region": "cinderlea"
-    }
-   ],
-   "embankment_m": 1.8,
-   "raise_ms": 683,
-   "finished": true
-  },
-  {
-   "id": "core:poi/turnback_keep",
-   "kind": "castle_ruin",
-   "preview": true,
-   "pos": [
-    -2676.0,
-    70.35,
-    2836.0
    ],
    "radius_flat_m": 34.0,
    "footprint": {
-    "x": 54.4,
-    "z": 46.9,
-    "height": 13.4,
-    "reach": 33.1,
-    "top": 12.0
+    "x": 55.0,
+    "z": 70.0,
+    "height": 5.5,
+    "reach": 50.7,
+    "top": 5.1
    },
-   "pieces": 79,
-   "draws": 79,
-   "primitives": 78032,
+   "pieces": 28,
+   "draws": 28,
+   "primitives": 283094,
    "interactables": {
     "Door": 1,
     "PoiTouch": 1
    },
    "lights": 3,
-   "bodies": 14,
+   "bodies": 9,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 1.1,
-   "raise_ms": 1164,
+   "embankment_m": 4.9,
+   "raise_ms": 537,
+   "finished": true
+  },
+  {
+   "id": "core:poi/turnback_keep",
+   "kind": "castle_ruin",
+   "preview": false,
+   "pos": [
+    -2676.0,
+    70.39,
+    2836.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 61.8,
+    "z": 47.5,
+    "height": 15.7,
+    "reach": 39.4,
+    "top": 14.2
+   },
+   "pieces": 154,
+   "draws": 154,
+   "primitives": 139557,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 23,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.7,
+   "raise_ms": 505,
    "finished": true
   },
   {
    "id": "core:poi/salt_landing",
    "kind": "camp",
-   "preview": true,
+   "preview": false,
    "pos": [
     -3260.0,
-    69.69,
+    69.74,
     2756.0
    ],
    "radius_flat_m": 26.0,
    "footprint": {
     "x": 22.5,
     "z": 10.1,
-    "height": 4.1,
+    "height": 4.2,
     "reach": 13.1,
-    "top": 4.1
+    "top": 3.9
    },
    "pieces": 50,
    "draws": 50,
@@ -2417,26 +2060,26 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 3.7,
-   "raise_ms": 63,
+   "embankment_m": 3.6,
+   "raise_ms": 28,
    "finished": true
   },
   {
    "id": "core:poi/bell_counters_hut",
    "kind": "hut",
-   "preview": true,
+   "preview": false,
    "pos": [
     -916.0,
-    70.32,
+    70.33,
     2740.0
    ],
    "radius_flat_m": 18.0,
    "footprint": {
-    "x": 4.2,
+    "x": 4.8,
     "z": 5.2,
     "height": 2.4,
-    "reach": 4.9,
-    "top": 1.9
+    "reach": 5.4,
+    "top": 2.0
    },
    "pieces": 10,
    "draws": 10,
@@ -2448,25 +2091,25 @@
    "seat": {},
    "findings": [],
    "embankment_m": 4.0,
-   "raise_ms": 28,
+   "raise_ms": 23,
    "finished": true
   },
   {
    "id": "core:poi/bellrope_walk",
    "kind": "camp",
-   "preview": true,
+   "preview": false,
    "pos": [
     492.0,
-    68.68,
+    68.77,
     3372.0
    ],
    "radius_flat_m": 36.0,
    "footprint": {
     "x": 36.1,
     "z": 55.7,
-    "height": 2.6,
+    "height": 5.3,
     "reach": 32.5,
-    "top": 2.5
+    "top": 5.2
    },
    "pieces": 30,
    "draws": 30,
@@ -2479,17 +2122,17 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 5.1,
-   "raise_ms": 265,
+   "embankment_m": 5.0,
+   "raise_ms": 172,
    "finished": true
   },
   {
    "id": "core:poi/greyfleece_shieling",
    "kind": "shieling",
-   "preview": true,
+   "preview": false,
    "pos": [
     -3090.0,
-    65.84,
+    65.75,
     1566.0
    ],
    "radius_flat_m": 25.0,
@@ -2498,7 +2141,7 @@
     "z": 16.6,
     "height": 2.9,
     "reach": 13.7,
-    "top": 2.7
+    "top": 2.6
    },
    "pieces": 11,
    "draws": 11,
@@ -2510,29 +2153,29 @@
    "seat": {},
    "findings": [],
    "embankment_m": 1.5,
-   "raise_ms": 24,
+   "raise_ms": 31,
    "finished": true
   },
   {
    "id": "core:poi/ashcombe_mill",
    "kind": "mill",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2492.0,
-    75.75,
+    75.82,
     1732.0
    ],
    "radius_flat_m": 25.0,
    "footprint": {
     "x": 12.5,
     "z": 13.9,
-    "height": 17.2,
+    "height": 17.3,
     "reach": 13.1,
     "top": 17.2
    },
    "pieces": 33,
    "draws": 33,
-   "primitives": 42615,
+   "primitives": 42693,
    "interactables": {
     "PoiTouch": 1
    },
@@ -2541,47 +2184,47 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 3.1,
-   "raise_ms": 176,
+   "embankment_m": 3.0,
+   "raise_ms": 50,
    "finished": true
   },
   {
    "id": "core:poi/scavengers_ring",
    "kind": "walled_camp",
-   "preview": true,
+   "preview": false,
    "pos": [
     -1404.0,
-    69.46,
+    69.53,
     3060.0
    ],
    "radius_flat_m": 24.0,
    "footprint": {
-    "x": 28.0,
-    "z": 28.0,
-    "height": 8.6,
-    "reach": 20.8,
-    "top": 7.2
+    "x": 28.5,
+    "z": 46.1,
+    "height": 10.7,
+    "reach": 32.6,
+    "top": 9.2
    },
-   "pieces": 55,
-   "draws": 55,
-   "primitives": 34787,
+   "pieces": 128,
+   "draws": 128,
+   "primitives": 97662,
    "interactables": {},
    "lights": 1,
-   "bodies": 8,
+   "bodies": 17,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 1.0,
-   "raise_ms": 81,
+   "embankment_m": 0.8,
+   "raise_ms": 54,
    "finished": true
   },
   {
    "id": "core:poi/rooftop_shaft",
    "kind": "delve",
-   "preview": true,
+   "preview": false,
    "pos": [
     -1884.0,
-    70.09,
+    70.05,
     3228.0
    ],
    "radius_flat_m": 24.0,
@@ -2592,9 +2235,9 @@
     "reach": 16.1,
     "top": 4.4
    },
-   "pieces": 28,
-   "draws": 28,
-   "primitives": 39106,
+   "pieces": 29,
+   "draws": 29,
+   "primitives": 39130,
    "interactables": {
     "Door": 1,
     "PoiTouch": 1
@@ -2605,24 +2248,24 @@
    "seat": {},
    "findings": [],
    "embankment_m": 0.6,
-   "raise_ms": 55,
+   "raise_ms": 43,
    "finished": true
   },
   {
    "id": "core:poi/unrung_graves",
    "kind": "grave",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2788.0,
-    71.78,
+    70.66,
     3468.0
    ],
    "radius_flat_m": 20.0,
    "footprint": {
-    "x": 1.4,
-    "z": 0.9,
+    "x": 1.5,
+    "z": 0.8,
     "height": 2.2,
-    "reach": 1.7,
+    "reach": 1.6,
     "top": 1.9
    },
    "pieces": 8,
@@ -2634,95 +2277,168 @@
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 3.6,
-   "raise_ms": 5,
+   "embankment_m": 1.0,
+   "raise_ms": 15,
    "finished": true
   },
   {
    "id": "core:poi/sayers_gauge",
    "kind": "watchtower",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2596.0,
-    80.39,
+    80.46,
     2028.0
    ],
    "radius_flat_m": 22.0,
    "footprint": {
-    "x": 19.6,
-    "z": 17.6,
-    "height": 15.3,
-    "reach": 13.3,
+    "x": 20.0,
+    "z": 35.9,
+    "height": 15.2,
+    "reach": 27.7,
     "top": 13.8
    },
-   "pieces": 58,
-   "draws": 58,
-   "primitives": 35267,
+   "pieces": 131,
+   "draws": 131,
+   "primitives": 96652,
    "interactables": {},
    "lights": 2,
-   "bodies": 8,
+   "bodies": 17,
    "hearthstones": 0,
-   "seat": {
-    "overlap": 2
-   },
-   "findings": [
-    {
-     "check": "overlap",
-     "src": "poi:watchtower",
-     "family": "barrel",
-     "asset": "briarwold_barrel_a.glb",
-     "x": -2593.9,
-     "y": 80.39,
-     "z": 2028.5,
-     "amount": 0.66,
-     "detail": "66% of it shares its box with crate (poi:watchtower)",
-     "region": "cinderlea"
-    },
-    {
-     "check": "overlap",
-     "src": "poi:watchtower",
-     "family": "barrel",
-     "asset": "briarwold_barrel_a.glb",
-     "x": -2599.8,
-     "y": 80.39,
-     "z": 2026.1,
-     "amount": 0.85,
-     "detail": "85% of it shares its box with crate (poi:watchtower)",
-     "region": "cinderlea"
-    }
-   ],
-   "embankment_m": 2.5,
-   "raise_ms": 14,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 2.6,
+   "raise_ms": 62,
    "finished": true
   },
   {
    "id": "core:poi/ploughed_ash",
    "kind": "farmstead",
-   "preview": true,
+   "preview": false,
    "pos": [
     -2148.0,
-    64.08,
+    64.2,
     2668.0
    ],
    "radius_flat_m": 28.0,
    "footprint": {
-    "x": 32.9,
-    "z": 32.9,
-    "height": 8.9,
-    "reach": 23.3,
-    "top": 8.7
+    "x": 31.5,
+    "z": 31.5,
+    "height": 9.6,
+    "reach": 22.3,
+    "top": 8.9
    },
-   "pieces": 40,
-   "draws": 40,
-   "primitives": 42033,
+   "pieces": 42,
+   "draws": 42,
+   "primitives": 42393,
    "interactables": {},
-   "lights": 11,
+   "lights": 8,
    "bodies": 11,
    "hearthstones": 0,
    "seat": {},
    "findings": [],
-   "embankment_m": 4.8,
-   "raise_ms": 139,
+   "embankment_m": 4.5,
+   "raise_ms": 56,
+   "finished": true
+  },
+  {
+   "id": "core:poi/the_undertone",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -1078.0,
+    68.49,
+    3450.0
+   ],
+   "radius_flat_m": 31.0,
+   "footprint": {
+    "x": 27.1,
+    "z": 24.8,
+    "height": 25.7,
+    "reach": 30.2,
+    "top": 25.3
+   },
+   "pieces": 23,
+   "draws": 23,
+   "primitives": 44168,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 4,
+   "bodies": 9,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 48.4,
+   "raise_ms": 219,
+   "finished": true
+  },
+  {
+   "id": "core:poi/founders_delf",
+   "kind": "delve",
+   "preview": true,
+   "pos": [
+    -1805.0,
+    70.06,
+    2965.0
+   ],
+   "radius_flat_m": 34.0,
+   "footprint": {
+    "x": 37.4,
+    "z": 37.8,
+    "height": 24.3,
+    "reach": 28.1,
+    "top": 23.1
+   },
+   "pieces": 36,
+   "draws": 37,
+   "primitives": 78242,
+   "interactables": {
+    "Door": 1,
+    "WorldContainer": 1,
+    "PoiTouch": 2
+   },
+   "lights": 2,
+   "bodies": 10,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 0.7,
+   "raise_ms": 79,
+   "finished": true
+  },
+  {
+   "id": "core:poi/chalkwatch",
+   "kind": "fort",
+   "preview": true,
+   "pos": [
+    -2470.0,
+    69.17,
+    2315.0
+   ],
+   "radius_flat_m": 36.0,
+   "footprint": {
+    "x": 49.7,
+    "z": 45.6,
+    "height": 26.2,
+    "reach": 32.4,
+    "top": 24.8
+   },
+   "pieces": 158,
+   "draws": 160,
+   "primitives": 144487,
+   "interactables": {
+    "Door": 1,
+    "PoiTouch": 1
+   },
+   "lights": 3,
+   "bodies": 23,
+   "hearthstones": 0,
+   "seat": {},
+   "findings": [],
+   "embankment_m": 3.2,
+   "raise_ms": 351,
    "finished": true
   }
  ]

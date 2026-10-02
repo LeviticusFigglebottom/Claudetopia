@@ -82,7 +82,9 @@ For a `delve`: `"site": {"interior": "core:interior/<id>", "mouth": "lava", "hoo
 A `hook_prompt` that says "cairn" gets a pilgrim's cairn with a note under its top stone; any other
 a notice post (two notices where it says "notices").
 A garrison block is optional; without one, nobody stands in the fort (use an `encounter` def as
-for any POI if you want the POI system's day/night groups instead).
+for any POI if you want the POI system's day/night groups instead). `"yard": "abandoned"` lays the
+yard of a fort its garrison died in: the stores, the well and the cart, but no fire lit, no table laid
+and no hens (Sedgemire's Saltgate, held by its own drowned watch).
 
 ### The interior (inside)
 

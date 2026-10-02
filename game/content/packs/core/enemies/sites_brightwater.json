@@ -1,0 +1,320 @@
+[
+  {
+    "id": "core:enemy/brass_taker",
+    "extends": "core:enemy/cutpurse",
+    "name": "Brass-Taker",
+    "faction": "bandits",
+    "tint": "#5f5a3c",
+    "region": "core:region/brightwater",
+    "lore": "Gullhithe's out-of-work and Tollmere's bad debts, down the Crown Drift by night with a borrowed lamp and a cold chisel, prising the old brass off the pump-rods and the ladder-irons and melting it into pigs for a buyer in the Undercroft. A taker works in felt slippers and never speaks below the first level, because the sayer they pay does not Hush what is said on purpose.",
+    "appearance": {
+      "seed": 4407,
+      "culture": "vale",
+      "parts": {
+        "torso": "tunic",
+        "legs": "trousers",
+        "feet": "boots",
+        "back": "hood",
+        "belt": "belt",
+        "hair": "hood_friendly"
+      },
+      "palette": {
+        "primary": "5c5440",
+        "secondary": "4a4a3e",
+        "leather": "3f3325",
+        "metal": "9a8a52"
+      },
+      "skin": "wheat",
+      "hair_colour": "dark_brown",
+      "build": 0.7,
+      "feminine": 0.0,
+      "height": 1.76
+    },
+    "marks": [
+      6,
+      22
+    ],
+    "tags": [
+      "bandit",
+      "outlaw",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/drift_hewer",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Drift Hewer",
+    "faction": "bandits",
+    "tint": "#4f4a36",
+    "region": "core:region/brightwater",
+    "lore": "A miner who knew the Crown Drift before it was closed and came back for what it still owes him: a sledge-hammer for the stubborn brass, shoulders for the ladders, and the only takers' man who will go as far as the break and look over. He does not go further. Nobody pays enough for that.",
+    "stats": {
+      "hp": 170,
+      "stamina": 120,
+      "poise": 78,
+      "armour": 6,
+      "speed": 2.7
+    },
+    "marks": [
+      20,
+      48
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "brute"
+    ]
+  },
+  {
+    "id": "core:enemy/held_miner",
+    "extends": "core:enemy/ash_wight",
+    "name": "Held Miner",
+    "tint": "#6d6a52",
+    "region": "core:region/brightwater",
+    "lore": "One of the last shift of 1012, who went down the Builders' gallery for the dressed ore and has been bringing it up ever since: a basket at a time to the foot of a ladder that is not there, and back again for the next. The calamine has greened him like a lamp left out. He does not mean you harm. He means to finish the shift, and you are standing in the gallery.",
+    "appearance": {
+      "seed": 5129,
+      "culture": "vale",
+      "parts": {
+        "torso": "shirt",
+        "legs": "leg_wraps",
+        "feet": "shoes",
+        "back": "ragged_cloak",
+        "hair": "long"
+      },
+      "palette": {
+        "primary": "6a6a50",
+        "secondary": "4f5446",
+        "leather": "3a342c",
+        "metal": "7a8a64"
+      },
+      "skin": "olive",
+      "hair_colour": "grey",
+      "build": 0.65,
+      "feminine": 0.0,
+      "height": 1.74
+    },
+    "marks": [
+      2,
+      9
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "swarm"
+    ]
+  },
+  {
+    "id": "core:enemy/struck_debtor",
+    "extends": "core:enemy/ash_wight",
+    "name": "Struck Debtor",
+    "region": "core:region/brightwater",
+    "tint": "#a9a491",
+    "lore": "A Tollmere debtor who died owing, struck off the city's Roll the same day, and received into the barrow under a number. Being known holds; being struck, it seems, holds too, in its way. The struck get up off their shelves at dusk and go to the Needle to read their own names through the line, and they take a living hand that reaches for them as a creditor's.",
+    "appearance": {
+      "seed": 5520,
+      "culture": "vale",
+      "parts": {
+        "torso": "shirt",
+        "legs": "leg_wraps",
+        "feet": "shoes",
+        "back": "ragged_cloak",
+        "hair": "long"
+      },
+      "palette": {
+        "primary": "b8b29e",
+        "secondary": "8a867a",
+        "leather": "4a443a",
+        "metal": "6f6f66"
+      },
+      "skin": "fair",
+      "hair_colour": "grey",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.74
+    },
+    "marks": [
+      1,
+      6
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "swarm"
+    ]
+  },
+  {
+    "id": "core:enemy/struck_bailiff",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Struck Bailiff",
+    "faction": "unquiet",
+    "region": "core:region/brightwater",
+    "tint": "#4e4c46",
+    "lore": "A Tallymen's bailiff whose trade was distraint: he took the goods of the dead for their debts, down to the boots. When his own fell owing he was struck with the rest and shelved in the barrow he had stocked, and he has gone on distraining down there, from the struck, from the copyists, from you. His maul is the one he broke doors with.",
+    "appearance": {
+      "seed": 5577,
+      "culture": "vale",
+      "parts": {
+        "torso": "gambeson",
+        "legs": "trousers",
+        "feet": "boots",
+        "back": "ragged_cloak",
+        "belt": "belt",
+        "hands": "gloves",
+        "hair": "short"
+      },
+      "palette": {
+        "primary": "4c4a44",
+        "secondary": "6a6458",
+        "leather": "2e2a24",
+        "metal": "7a766c"
+      },
+      "skin": "fair",
+      "hair_colour": "grey",
+      "build": 1.0,
+      "feminine": 0.0,
+      "height": 1.84
+    },
+    "stats": {
+      "hp": 190,
+      "stamina": 110,
+      "poise": 82,
+      "armour": 7,
+      "speed": 2.4
+    },
+    "marks": [
+      10,
+      30
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "brute"
+    ]
+  },
+  {
+    "id": "core:enemy/resurrection_man",
+    "extends": "core:enemy/cutpurse",
+    "name": "Resurrection Man",
+    "faction": "quiet_hands",
+    "region": "core:region/brightwater",
+    "tint": "#3d3f46",
+    "lore": "The Quiet Hands' copyist with a knife: down the Struck Barrow by night with a dark lantern and a quire of paper, copying the names of the struck out of the Receiver's register. A name the city has struck is a name nobody will ever claim, and in the Undercroft a man who needs to be somebody else pays forty marks for one, with the dead man's birthday thrown in.",
+    "appearance": {
+      "seed": 5603,
+      "culture": "vale",
+      "parts": {
+        "torso": "tunic",
+        "legs": "trousers",
+        "feet": "boots",
+        "back": "hood",
+        "belt": "belt",
+        "hair": "hood_friendly"
+      },
+      "palette": {
+        "primary": "3a3c44",
+        "secondary": "2e2e32",
+        "leather": "2a241e",
+        "metal": "6f7378"
+      },
+      "skin": "wheat",
+      "hair_colour": "black",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.76
+    },
+    "marks": [
+      8,
+      26
+    ],
+    "tags": [
+      "bandit",
+      "outlaw",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/loud_acolyte",
+    "extends": "core:enemy/cutpurse",
+    "name": "Loud Acolyte",
+    "faction": "bandits",
+    "tint": "#7a5a2e",
+    "region": "core:region/brightwater",
+    "lore": "A Spire novice who followed the Loud out of the Circle when it put them out: a staff instead of a knife, a mouth that will not stop, and the Loud's conviction that the world is going quiet because people like you keep your voices down. They shout at you while they hit you. It is part of the practice.",
+    "appearance": {
+      "seed": 4521,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "shoes",
+        "back": "hood",
+        "belt": "belt"
+      },
+      "palette": {
+        "primary": "8a6a36",
+        "secondary": "4a3d2c",
+        "leather": "3f3325",
+        "metal": "a8924e"
+      },
+      "skin": "fair",
+      "hair_colour": "auburn",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.74
+    },
+    "marks": [
+      6,
+      20
+    ],
+    "tags": [
+      "humanoid",
+      "person",
+      "caster"
+    ]
+  },
+  {
+    "id": "core:enemy/loud_sayer",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Loud Sayer",
+    "faction": "bandits",
+    "tint": "#8a5f22",
+    "region": "core:region/brightwater",
+    "lore": "A Sayer put out of the Spire for Saying too loud: the Circle teaches that a word said loudly enough makes the world more so, and then teaches that nobody should, and the Loud did. Their Saying cracks frost off the air and rings in the teeth, and every one of them is a little deaf.",
+    "appearance": {
+      "seed": 4533,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "shoes",
+        "back": "hooded_cloak",
+        "belt": "belt"
+      },
+      "palette": {
+        "primary": "9a7038",
+        "secondary": "3e3326",
+        "leather": "3f3325",
+        "metal": "c0a050"
+      },
+      "skin": "wheat",
+      "hair_colour": "grey",
+      "build": 0.65,
+      "feminine": 1.0,
+      "height": 1.72
+    },
+    "marks": [
+      12,
+      34
+    ],
+    "tags": [
+      "humanoid",
+      "person",
+      "caster"
+    ]
+  }
+]

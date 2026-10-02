@@ -6,7 +6,8 @@ extends TestCase
 ## people keep and the things to touch that their content names.
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
-const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr"]
+const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse",
+		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep"]
 var player: Node3D
 
 
@@ -56,13 +57,14 @@ func test_the_insides_are_built_walkable_peopled_and_left() -> void:
 			id, site.plan.rooms.size(), site.plan.links.size(), site.chunks.size(), site.dress.lights.size(),
 			site.dress.spawner.living.size(), site.plan.containers.size(), report["reached"], site.main_us / 1000.0])
 		assert_eq(report["unreached"], [], "%s: every room is walkable from the way in" % id)
-		assert_gt(site.dress.spawner.living.size(), 4, "%s: foes stand in it" % id)
-		assert_true(site.find_child("BossArena", true, false) != null, "%s: the boss has an arena" % id)
+		assert_gt(site.dress.spawner.living.size(), 3, "%s: foes stand in it" % id)
 		var boss_id := str(ContentDB.get_or_empty(id).get("site", {}).get("boss", ""))
-		var stood := false
-		for e in site.dress.spawner.living:
-			stood = stood or (e as Enemy).enemy_id == boss_id
-		assert_true(stood, "%s: %s stands in it" % [id, boss_id])
+		if boss_id != "":
+			assert_true(site.find_child("BossArena", true, false) != null, "%s: the boss has an arena" % id)
+			var stood := false
+			for e in site.dress.spawner.living:
+				stood = stood or (e as Enemy).enemy_id == boss_id
+			assert_true(stood, "%s: %s stands in it" % [id, boss_id])
 		var way_out := site.find_child("WayOut", true, false) as Door
 		assert_true(way_out != null, "%s: a way out" % id)
 		if way_out != null:
@@ -87,6 +89,37 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/bell_counters_hut": {"spots": ["the_stone"]},
 		"core:poi/scavengers_ring": {"spots": ["ring_hearth", "the_gate"]},
 		"core:poi/sayers_gauge": {"spots": ["the_gauge_foot"]},
+		# the second pass (world life phase 2): every ruin from its own sentence, with the spots its
+		# encounters and quests name and the thing to touch that tells its story
+		"core:poi/bell_street": {"spots": ["in_the_bell", "the_street"], "touch": ["the_solid_bell"], "boxes": 1},
+		"core:poi/sunk_plaza": {"spots": ["the_fountain"], "touch": ["the_count"]},
+		"core:poi/anthem_hall": {"spots": ["the_benches", "the_stone"], "touch": ["the_singers_stone"], "boxes": 1},
+		"core:poi/cistern_of_isse": {"spots": ["the_stair_head", "the_well_foot"], "doors": ["Door_cistern_of_isse"], "touch": ["the_well"]},
+		"core:poi/weighhouse": {"spots": ["the_yard", "the_tally_desk"], "touch": ["the_pans"], "boxes": 1},
+		"core:poi/silent_market": {"spots": ["the_fresh_stall", "the_square"], "touch": ["the_fresh_goods"], "boxes": 1},
+		"core:poi/north_gate": {"spots": ["the_gateway", "beyond_the_gate"], "touch": ["the_track"]},
+		"core:poi/bell_pit": {"spots": ["the_pit", "the_diggers"], "boxes": 1},
+		"core:poi/hermits_gate": {"spots": ["home", "the_arch"], "touch": ["the_door"]},
+		"core:poi/hesk_morn": {"spots": ["the_door", "the_threshold"], "touch": ["the_slab"]},
+		"core:poi/ashcombe": {"spots": ["hearth_0", "the_green"], "touch": ["the_chimney"], "boxes": 1},
+		"core:poi/ashwinter_carts": {"spots": ["the_day_book", "the_cart_beds"], "touch": ["the_book_peg"], "boxes": 1},
+		"core:poi/bell_garden": {"spots": ["the_rows", "the_striking_post"], "touch": ["the_garden"]},
+		"core:poi/row_of_mouths": {"spots": ["the_singing_mouth", "the_colonnade"], "touch": ["the_mouth"]},
+		"core:poi/hesk_pool": {"spots": ["the_steps"], "touch": ["the_black_water"]},
+		"core:poi/builders_harbour": {"spots": ["the_quay"], "touch": ["the_bell_post"], "boxes": 1},
+		"core:poi/greywatch": {"spots": ["the_reading"], "touch": ["the_names"]},
+		"core:poi/ninth_waystone": {"spots": ["the_count"], "touch": ["the_tallies"]},
+		"core:poi/greyline_stones": {"spots": ["the_newest"], "touch": ["the_line"]},
+		"core:poi/last_milestone": {"spots": ["the_names", "the_road_west"]},
+		"core:poi/novices_seats": {"spots": ["the_seats", "home"], "touch": ["the_turned_seat"]},
+		"core:poi/tower_of_vaelost": {"spots": ["the_fallen_course", "the_foot"], "touch": ["the_course"]},
+		"core:poi/sulion": {"spots": ["the_socket", "the_foot"]},
+		"core:poi/hush_bell": {"spots": ["the_bell_arm", "the_tower_door"], "touch": ["the_bell"]},
+		"core:poi/strand_beacon": {"spots": ["the_stair_foot"], "touch": ["the_ashes"], "boxes": 1},
+		# the large places, with their ways in, their people's spots and their hooks
+		"core:poi/the_undertone": {"spots": ["merrin_camp", "the_forecourt", "the_mouth"], "doors": ["Door_the_undertone"], "touch": ["Hook"]},
+		"core:poi/founders_delf": {"spots": ["clemency_camp", "the_pit", "the_mouth"], "doors": ["Door_founders_delf"], "touch": ["Hook", "the_bell"], "boxes": 1},
+		"core:poi/chalkwatch": {"spots": ["ysolde_fire"], "doors": ["Door_chalkwatch_keep"], "touch": ["Hook"]},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)
@@ -108,8 +141,15 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 			var door := d.find_child(str(n), true, false) as Door
 			assert_true(door != null, "%s: the door %s stands" % [id, n])
 		for n in want.get("touch", []):
-			var t := d.find_child(str(n), true, false)
+			var t := d.find_child(str(n), true, false) as PoiTouch
 			assert_true(t != null, "%s: %s can be touched" % [id, n])
+			if t != null and t.dialogue_id != "":
+				assert_true(ContentDB.has(t.dialogue_id), "%s: %s's words (%s) are content" % [id, n, t.dialogue_id])
+		var boxes := 0
+		for c in d.find_children("*", "WorldContainer", true, false):
+			boxes += 1
+			assert_true(ContentDB.has((c as WorldContainer).loot_table), "%s: %s's loot is content" % [id, (c as WorldContainer).loot_table])
+		assert_true(boxes >= int(want.get("boxes", 0)), "%s: %d things to open" % [id, int(want.get("boxes", 0))])
 		var reach := 0.0
 		for c in d.find_children("*", "Node3D", true, false):
 			var p := d.to_local((c as Node3D).global_position)

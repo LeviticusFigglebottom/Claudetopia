@@ -1,0 +1,166 @@
+[
+  {
+    "id": "core:item/crown_drift_tokens",
+    "name": "The Last Shift's Tokens",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 40,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "brass",
+      "unique"
+    ],
+    "description": "Nine brass shift-tokens on a loop of wire, each stamped with a man's number and scratched on the back with his name, green with forty years of calamine: the last shift of the Crown Drift, taken off the deep board. The ninth, the captain's, is rubbed bright from being counted."
+  },
+  {
+    "id": "core:item/crown_drift_last_entry",
+    "name": "The Drift-Captain's Last Entry",
+    "category": "book",
+    "weight": 0.2,
+    "value": 25,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "ledger",
+      "unique"
+    ],
+    "description": "A torn leaf from the Crown Drift's day-book, in Abel Rowse's hand: the last shift's names, the hour they went down, and nothing after.",
+    "reads": "core:book/crown_drift_last_entry"
+  },
+  {
+    "id": "core:item/heron_egg_schedule",
+    "name": "A Schedule of Heron Eggs",
+    "category": "book",
+    "weight": 0.1,
+    "value": 8,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "ledger",
+      "tallymen"
+    ],
+    "description": "A Tallymen's printed schedule for a tax on herons' eggs taken at the dead tower above Sedgehithe, a farthing the egg, with the clerk's own column for eggs counted left blank and, under it in pencil, 'NOT ONE'.",
+    "reads": "core:book/heron_egg_schedule"
+  },
+  {
+    "id": "core:item/barrow_register",
+    "name": "The Barrow Register",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 90,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "ledger",
+      "tallymen",
+      "unique"
+    ],
+    "description": "The Struck Barrow's register: forty years of the Receiver's fair hand, a number a line, four thousand and eleven of them, and against each the date and the debt. No names. On the last page, in the same hand, a twelfth line nobody received."
+  },
+  {
+    "id": "core:item/struck_barrow_name_list",
+    "name": "The Copyists' List",
+    "category": "book",
+    "weight": 0.2,
+    "value": 60,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "quiet_hands",
+      "unique"
+    ],
+    "description": "A quire of names copied out of the Struck Barrow's register by the Quiet Hands' resurrection men, each priced for sale in the Undercroft with the dead man's age and trade.",
+    "reads": "core:book/struck_barrow_name_list"
+  },
+  {
+    "id": "core:item/carrows_trumpet",
+    "name": "Carrow's Speaking-Trumpet",
+    "category": "misc",
+    "weight": 1.2,
+    "value": 120,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "sayers",
+      "brass",
+      "unique"
+    ],
+    "description": "A Sayer's speaking-trumpet of beaten brass as long as an arm, its bell engraved with the Circle's rings and, scratched over them, LOUDER. Blown into, it says nothing at all: whatever it carried, it carried only in her hands."
+  },
+  {
+    "id": "core:item/crown_drift_takers_tally",
+    "name": "A Brass-Taker's Weigh-Slate",
+    "category": "book",
+    "weight": 0.4,
+    "value": 2,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A roofing slate split for the purpose, chalked and wiped and chalked again by the brass-takers in the Crown Drift, the dust of a sleeve's worth of rubbing out still in its grain.",
+    "reads": "core:book/crown_drift_takers_tally"
+  },
+  {
+    "id": "core:item/struck_barrow_weights",
+    "name": "A Lead Debt-Weight's Tag",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A tag of thin grey lead on a twist of wire, cut from one of the debt-weights in the Struck Barrow's weighing room, punched with a clerk's number and scratched over on the back with a pin.",
+    "reads": "core:book/struck_barrow_weights"
+  },
+  {
+    "id": "core:item/struck_barrow_receivers_own",
+    "name": "The Receiver's Own Entry",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A single leaf ruled as the Struck register is ruled, in a fair clerk's hand, its last line inked over and over until the nib went through and tore the paper beneath it.",
+    "reads": "core:book/struck_barrow_receivers_own"
+  },
+  {
+    "id": "core:item/holmwatch_loud_creed",
+    "name": "The Creed of the Loud",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A lecturer's sheet of good rag paper with five numbered lines on it, prised off the reeves' judging-bench at Holmwatch with the nail-hole still through its head and other hands' lines crowded under it.",
+    "reads": "core:book/holmwatch_loud_creed"
+  },
+  {
+    "id": "core:item/holmwatch_last_reeve",
+    "name": "The Dues-Roll of the Last Reeve",
+    "category": "book",
+    "weight": 0.3,
+    "value": 15,
+    "stack": 1,
+    "tags": [
+      "lore",
+      "ledger",
+      "unique"
+    ],
+    "description": "A short roll of water-stained vellum on a bone rod, the Lake-Reeves' dues as they were taken at Holmwatch's water-gate, kept by the last Reeve and hidden where the Tallymen's clerks never looked.",
+    "reads": "core:book/holmwatch_last_reeve"
+  }
+]

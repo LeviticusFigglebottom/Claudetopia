@@ -1,1543 +1,2223 @@
 [
- {
-  "id": "core:dialogue/tosk_ko_skarl",
-  "speaker_name": "Tosk ko-Skarl",
-  "notes": "The Skarl Bridge's one voice (world life, Briarwold): the foreman who pays blood-price at the middle of the bridge. Gives core:quest/the_price_at_the_middle and hears its decision.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Tosk, of the Skarl. You are standing in the Wold. I am standing on the middle stone, which is in both. Step on it if you like. It does not make you anything.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Blood-price. A month's. For a boy the clan's spoil buried under the tor in the thaw of 1033. The clan's law says a death is a debt and a debt is paid. So I pay it. — Nobody takes it. The Woodfolk say nothing. The rain takes it into the Skarl Water, a coin at a time, and I come back with more. It is not a price if nobody takes it. I know that. I pay it anyway.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Because this side is custom and that side is law, and the middle is the only stone in the world where I am standing in both. The clan put me out of nothing. The Wold did not take me in. I have a stone.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "A tin vein we followed into the tor above the Colley woman's hearth. Two years. Good tin, and a good adit, square, timbered the clan way. We heaped the spoil on the slope because it was quicker. It was quicker. — The clan went home. The weavers came up out of Blackgill and took the galleries. Something big went to the bottom. I hear it moving when the wind is right.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Speak. The water is loud here; I will listen harder.",
-    "choices": [
-     {
-      "text": "What is the silver on the parapet?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Why the middle of the bridge?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What is the Skarl Delving?",
-      "next": "topic_3"
-     },
-     {
-      "text": "The silver on the bridge. Can the debt be paid some other way?",
-      "next": "q_the_price_at_the_middle_offer",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/the_price_at_the_middle"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/the_price_at_the_middle"
-        }
-       }
-      ]
-     },
-     {
-      "text": "I have the boy's whistle. It was in the web at the bottom of the shaft.",
-      "next": "q_the_price_at_the_middle_decide",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/the_price_at_the_middle",
-         "the_middle"
+  {
+    "id": "core:dialogue/tosk_ko_skarl",
+    "speaker_name": "Tosk ko-Skarl",
+    "notes": "The Skarl Bridge's one voice (world life, Briarwold): the foreman who pays blood-price at the middle of the bridge. Gives core:quest/the_price_at_the_middle and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Tosk, of the Skarl. You are standing in the Wold. I am standing on the middle stone, which is in both. Step on it if you like. It does not make you anything.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Blood-price. A month's. For a boy the clan's spoil buried under the tor in the thaw of 1033. The clan's law says a death is a debt and a debt is paid. So I pay it. — Nobody takes it. The Woodfolk say nothing. The rain takes it into the Skarl Water, a coin at a time, and I come back with more. It is not a price if nobody takes it. I know that. I pay it anyway.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Because this side is custom and that side is law, and the middle is the only stone in the world where I am standing in both. The clan put me out of nothing. The Wold did not take me in. I have a stone.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "A tin vein we followed into the tor above the Colley woman's hearth. Two years. Good tin, and a good adit, square, timbered the clan way. We heaped the spoil on the slope because it was quicker. It was quicker. — The clan went home. The weavers came up out of Blackgill and took the galleries. Something big went to the bottom. I hear it moving when the wind is right.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Speak. The water is loud here; I will listen harder.",
+        "choices": [
+          {
+            "text": "What is the silver on the parapet?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why the middle of the bridge?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What is the Skarl Delving?",
+            "next": "topic_3"
+          },
+          {
+            "text": "The silver on the bridge. Can the debt be paid some other way?",
+            "next": "q_the_price_at_the_middle_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_price_at_the_middle"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_price_at_the_middle"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the boy's whistle. It was in the web at the bottom of the shaft.",
+            "next": "q_the_price_at_the_middle_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_price_at_the_middle",
+                  "the_middle"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
+      },
+      "bye": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Mind the middle stone. It is worn in the centre, from me.",
+        "next": "end"
+      },
+      "q_the_price_at_the_middle_offer": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Some other way. — The Woodfolk bury under moss, a named moss for every one, tended until nobody is left who remembers. The boy has a moss. Orla Colley keeps it by her door. There is nothing under it. There has been nothing under it for eleven years, because he is under the tor, in the dark, with the weavers. — I cannot go in. I would need the Wold's leave, and the Wold gives none and refuses none. You are not the clan. Ask his mother. If she does not say no, go down, and bring out whatever there is of him.",
+        "choices": [
+          {
+            "text": "I'll ask her.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_price_at_the_middle"
+              }
+            ],
+            "next": "q_the_price_at_the_middle_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_the_price_at_the_middle_accept": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Her hearth is under the tor, where the smoke is. She has never been to this bridge. Do not tell her I sent you. — Tell her I sent you. She should know who is asking.",
+        "next": "hub"
+      },
+      "q_the_price_at_the_middle_decide": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "*He steps off the middle stone for the first time, and looks at it in your hand, and steps back on.* — A whistle. He whittled. The men gave him the offcuts from the timbering. — Eleven years I have paid silver to the river, and it was a whistle. — It is not mine to say where it goes. I have wanted to say it every month. You say it.",
+        "choices": [
+          {
+            "text": "To Orla Colley, to lie under his moss.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_price_at_the_middle",
+                  "under_the_moss"
+                ]
+              }
+            ],
+            "next": "q_the_price_at_the_middle_decide_under_the_moss"
+          },
+          {
+            "text": "To you, to carry to Skarlow and put his name in the Rope-Song.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_price_at_the_middle",
+                  "the_rope_song"
+                ]
+              }
+            ],
+            "next": "q_the_price_at_the_middle_decide_the_rope_song"
+          },
+          {
+            "text": "On the parapet here, at the middle, with the silver.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_price_at_the_middle",
+                  "at_the_middle"
+                ]
+              }
+            ],
+            "next": "q_the_price_at_the_middle_decide_at_the_middle"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_the_price_at_the_middle_decide_under_the_moss": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Under the moss. — Yes. That is where the Wold keeps its dead, and he was the Wold's. I will not go with you. I will stand here and I will know when it is done, because the smoke from her clamp will change. It does, when she is glad. The men used to say so.",
+        "next": "hub"
+      },
+      "q_the_price_at_the_middle_decide_the_rope_song": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "In the Song. — A woodfolk boy's name in the clans' own verses, sung at every moot until the rope rots. The Woodfolk will not like it. The clan will like it less. — I will carry it up. I will sing the verse myself if they will not, and they will not, and I will. Thank you.",
+        "next": "hub"
+      },
+      "q_the_price_at_the_middle_decide_at_the_middle": {
+        "speaker": "Tosk ko-Skarl",
+        "text": "Here. — Where both countries can see it. The Woodfolk walk past on this side and the clan on that, and there it is, on the middle stone, a boy's whistle and a heap of rained-on silver. — It is not a price and it is not a moss. It is the truth, left where anybody can read it. Perhaps that is what the middle stone was for.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_moss"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "The smoke from the Colley clamp has been white since you went up. The men were right. — I have stopped paying. I still stand here. Habit, or the view."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_song"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "They let the verse into the Song. Not the first night. The fourth. Somebody in Skarlow had been waiting eleven years for somebody else to ask."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_bridge"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "People stop at the middle now. Both sides. They look at it and they do not touch it and they go on. Nobody has said a word to me about it, which in the Wold is a great deal."
+      }
     ]
-   },
-   "bye": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Mind the middle stone. It is worn in the centre, from me.",
-    "next": "end"
-   },
-   "q_the_price_at_the_middle_offer": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Some other way. — The Woodfolk bury under moss, a named moss for every one, tended until nobody is left who remembers. The boy has a moss. Orla Colley keeps it by her door. There is nothing under it. There has been nothing under it for eleven years, because he is under the tor, in the dark, with the weavers. — I cannot go in. I would need the Wold's leave, and the Wold gives none and refuses none. You are not the clan. Ask his mother. If she does not say no, go down, and bring out whatever there is of him.",
-    "choices": [
-     {
-      "text": "I'll ask her.",
-      "effects": [
-       {
-        "start_quest": "core:quest/the_price_at_the_middle"
-       }
-      ],
-      "next": "q_the_price_at_the_middle_accept"
-     },
-     {
-      "text": "Not now.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_the_price_at_the_middle_accept": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Her hearth is under the tor, where the smoke is. She has never been to this bridge. Do not tell her I sent you. — Tell her I sent you. She should know who is asking.",
-    "next": "hub"
-   },
-   "q_the_price_at_the_middle_decide": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "*He steps off the middle stone for the first time, and looks at it in your hand, and steps back on.* — A whistle. He whittled. The men gave him the offcuts from the timbering. — Eleven years I have paid silver to the river, and it was a whistle. — It is not mine to say where it goes. I have wanted to say it every month. You say it.",
-    "choices": [
-     {
-      "text": "To Orla Colley, to lie under his moss.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/the_price_at_the_middle",
-         "under_the_moss"
-        ]
-       }
-      ],
-      "next": "q_the_price_at_the_middle_decide_under_the_moss"
-     },
-     {
-      "text": "To you, to carry to Skarlow and put his name in the Rope-Song.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/the_price_at_the_middle",
-         "the_rope_song"
-        ]
-       }
-      ],
-      "next": "q_the_price_at_the_middle_decide_the_rope_song"
-     },
-     {
-      "text": "On the parapet here, at the middle, with the silver.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/the_price_at_the_middle",
-         "at_the_middle"
-        ]
-       }
-      ],
-      "next": "q_the_price_at_the_middle_decide_at_the_middle"
-     },
-     {
-      "text": "Let me think on it.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_the_price_at_the_middle_decide_under_the_moss": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Under the moss. — Yes. That is where the Wold keeps its dead, and he was the Wold's. I will not go with you. I will stand here and I will know when it is done, because the smoke from her clamp will change. It does, when she is glad. The men used to say so.",
-    "next": "hub"
-   },
-   "q_the_price_at_the_middle_decide_the_rope_song": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "In the Song. — A woodfolk boy's name in the clans' own verses, sung at every moot until the rope rots. The Woodfolk will not like it. The clan will like it less. — I will carry it up. I will sing the verse myself if they will not, and they will not, and I will. Thank you.",
-    "next": "hub"
-   },
-   "q_the_price_at_the_middle_decide_at_the_middle": {
-    "speaker": "Tosk ko-Skarl",
-    "text": "Here. — Where both countries can see it. The Woodfolk walk past on this side and the clan on that, and there it is, on the middle stone, a boy's whistle and a heap of rained-on silver. — It is not a price and it is not a moss. It is the truth, left where anybody can read it. Perhaps that is what the middle stone was for.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_moss"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "The smoke from the Colley clamp has been white since you went up. The men were right. — I have stopped paying. I still stand here. Habit, or the view."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_song"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "They let the verse into the Song. Not the first night. The fourth. Somebody in Skarlow had been waiting eleven years for somebody else to ask."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_bridge"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "People stop at the middle now. Both sides. They look at it and they do not touch it and they go on. Nobody has said a word to me about it, which in the Wold is a great deal."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/orla_colley",
-  "speaker_name": "Orla Colley",
-  "notes": "The burner at Colley's Hearth under the Skarl tor (world life, Briarwold), and a merchant of charcoal. Davy Colley's mother; the first stage of core:quest/the_price_at_the_middle closes on her line q_price_leave.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Orla Colley",
-    "text": "Stand off the clamp. It's fretful when there's somebody new. — Charcoal, is it? Fallen wood only, by the verderers' leave, and it burns clean.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Orla Colley",
-    "text": "My boy's. Star-moss, hair-moss, feather-moss, cushion-moss. Davy. — There's nothing under it. There's a list of what it's for in a sack inside the door, if you want to read it. Most people don't.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Orla Colley",
-    "text": "No. — The clan's man stands on it with his silver. He's stood there eleven years. I know. I can see the bridge from the top of the tor on a clear day. — I don't want the silver. I never said so. It's not custom to say so.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Orla Colley",
-    "text": "Quiet. Weavers in the adit after dark, and they come down to the clamp for the warmth sometimes and I let them, and they go back up. — At night, when the draught's up the shaft, I can hear his whistle. One note. He never could play it properly.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Orla Colley",
-    "text": "Well?",
-    "choices": [
-     {
-      "text": "Whose is the moss by the door?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Do you ever go to the bridge?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What's it like, living under the delving?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Tosk ko-Skarl sent me. He wants to go into the delving for your son, and can't without the Wold's leave.",
-      "next": "q_price_leave",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/the_price_at_the_middle",
-         "the_mothers_leave"
+  {
+    "id": "core:dialogue/orla_colley",
+    "speaker_name": "Orla Colley",
+    "notes": "The burner at Colley's Hearth under the Skarl tor (world life, Briarwold), and a merchant of charcoal. Davy Colley's mother; the first stage of core:quest/the_price_at_the_middle closes on her line q_price_leave.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Orla Colley",
+        "text": "Stand off the clamp. It's fretful when there's somebody new. — Charcoal, is it? Fallen wood only, by the verderers' leave, and it burns clean.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Orla Colley",
+        "text": "My boy's. Star-moss, hair-moss, feather-moss, cushion-moss. Davy. — There's nothing under it. There's a list of what it's for in a sack inside the door, if you want to read it. Most people don't.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Orla Colley",
+        "text": "No. — The clan's man stands on it with his silver. He's stood there eleven years. I know. I can see the bridge from the top of the tor on a clear day. — I don't want the silver. I never said so. It's not custom to say so.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Orla Colley",
+        "text": "Quiet. Weavers in the adit after dark, and they come down to the clamp for the warmth sometimes and I let them, and they go back up. — At night, when the draught's up the shaft, I can hear his whistle. One note. He never could play it properly.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Orla Colley",
+        "text": "Well?",
+        "choices": [
+          {
+            "text": "Whose is the moss by the door?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Do you ever go to the bridge?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's it like, living under the delving?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Tosk ko-Skarl sent me. He wants to go into the delving for your son, and can't without the Wold's leave.",
+            "next": "q_price_leave",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_price_at_the_middle",
+                  "the_mothers_leave"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
+      },
+      "bye": {
+        "speaker": "Orla Colley",
+        "text": "Mind the clamp on your way.",
+        "next": "end"
+      },
+      "q_price_leave": {
+        "speaker": "Orla Colley",
+        "text": "*She puts the twig she is whittling into the clamp and watches it catch.* — Leave. The Wold doesn't give leave. You know that, or he wouldn't have sent you. — I'll tell you what I'd tell anyone, then, and you can take it for what it's worth up there. I hear his whistle down the delving at night. There's been nothing under his moss for eleven years. I'd like there to be something. — That's not leave. That's what I'd like.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_moss"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "It's under the moss. I put it there myself with my own hands and I sang him the list. — Go on. I've a clamp to see to, and I'd like to see to it on my own."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_song"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "The clan's singing him, I'm told. In Skerrish. He never had a word of it. — He'd have liked that. He liked a thing he couldn't understand."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "skarl_whistle_bridge"
+          },
+          {
+            "quest_done": "core:quest/the_price_at_the_middle"
+          }
+        ],
+        "text": "I went to the bridge. First time. I stood at the middle and looked at it and the clan's man looked at me. Neither of us said anything. I'll go again."
+      }
     ]
-   },
-   "bye": {
-    "speaker": "Orla Colley",
-    "text": "Mind the clamp on your way.",
-    "next": "end"
-   },
-   "q_price_leave": {
-    "speaker": "Orla Colley",
-    "text": "*She puts the twig she is whittling into the clamp and watches it catch.* — Leave. The Wold doesn't give leave. You know that, or he wouldn't have sent you. — I'll tell you what I'd tell anyone, then, and you can take it for what it's worth up there. I hear his whistle down the delving at night. There's been nothing under his moss for eleven years. I'd like there to be something. — That's not leave. That's what I'd like.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_moss"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "It's under the moss. I put it there myself with my own hands and I sang him the list. — Go on. I've a clamp to see to, and I'd like to see to it on my own."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_song"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "The clan's singing him, I'm told. In Skerrish. He never had a word of it. — He'd have liked that. He liked a thing he couldn't understand."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "skarl_whistle_bridge"
-     },
-     {
-      "quest_done": "core:quest/the_price_at_the_middle"
-     }
-    ],
-    "text": "I went to the bridge. First time. I stood at the middle and looked at it and the clan's man looked at me. Neither of us said anything. I'll go again."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/corra_bracken",
-  "speaker_name": "Corra Bracken",
-  "notes": "The Tallying Hide's hunter (world life, Briarwold): keeps the count of harts carried to the Horn Pale. Gives core:quest/custom_says_wait and hears its decision.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Corra Bracken",
-    "text": "*She does not come down out of the oak. Her voice does.* — Two hundred and eleven. That's not a greeting, it's the count. Come round the tree where I can see you.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Corra Bracken",
-    "text": "Harts. The poachers carry the heads east past this oak to the Horn Pale every morning, and I cut a notch for every one. A long notch for twelve tines and over. A cross for a hind. — I've run out of post twice. I've started on the tree.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Corra Bracken",
-    "text": "Custom. The Woodfolk may not burn a poachers' camp while there are poachers in it; that's so nobody burns a man in his sleep, and it's a good custom. The factor who built the Pale knows it. He keeps them in the yard. All of them. Every night. — So nobody burns it. And nobody says anything, because that's custom too. I don't say anything either. I count.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Corra Bracken",
-    "text": "A buying-house. Stakes and a gate, a Tallymen's man with a book, and a hedge of antlers over the door. They pay two marks the tine. They sell them in the Lantern Row at forty, with the Builders' mark burned in. Forty. I've never had forty marks in my life. I've never wanted them.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Corra Bracken",
-    "text": "Say it. Two hundred and twelve if you're slow.",
-    "choices": [
-     {
-      "text": "What are you counting?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Why doesn't anyone stop them?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What is the Horn Pale?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Custom doesn't bind me. What would you have done about the Pale?",
-      "next": "q_custom_says_wait_offer",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/custom_says_wait"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/custom_says_wait"
-        }
-       }
-      ]
-     },
-     {
-      "text": "The Pale's yard is empty. The books are read. What now?",
-      "next": "q_custom_says_wait_decide",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/custom_says_wait",
-         "what_custom_says"
+  {
+    "id": "core:dialogue/corra_bracken",
+    "speaker_name": "Corra Bracken",
+    "notes": "The Tallying Hide's hunter (world life, Briarwold): keeps the count of harts carried to the Horn Pale. Gives core:quest/custom_says_wait and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Corra Bracken",
+        "text": "*She does not come down out of the oak. Her voice does.* — Two hundred and eleven. That's not a greeting, it's the count. Come round the tree where I can see you.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Corra Bracken",
+        "text": "Harts. The poachers carry the heads east past this oak to the Horn Pale every morning, and I cut a notch for every one. A long notch for twelve tines and over. A cross for a hind. — I've run out of post twice. I've started on the tree.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Corra Bracken",
+        "text": "Custom. The Woodfolk may not burn a poachers' camp while there are poachers in it; that's so nobody burns a man in his sleep, and it's a good custom. The factor who built the Pale knows it. He keeps them in the yard. All of them. Every night. — So nobody burns it. And nobody says anything, because that's custom too. I don't say anything either. I count.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Corra Bracken",
+        "text": "A buying-house. Stakes and a gate, a Tallymen's man with a book, and a hedge of antlers over the door. They pay two marks the tine. They sell them in the Lantern Row at forty, with the Builders' mark burned in. Forty. I've never had forty marks in my life. I've never wanted them.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Corra Bracken",
+        "text": "Say it. Two hundred and twelve if you're slow.",
+        "choices": [
+          {
+            "text": "What are you counting?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why doesn't anyone stop them?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What is the Horn Pale?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Custom doesn't bind me. What would you have done about the Pale?",
+            "next": "q_custom_says_wait_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/custom_says_wait"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/custom_says_wait"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The Pale's yard is empty. The books are read. What now?",
+            "next": "q_custom_says_wait_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/custom_says_wait",
+                  "what_custom_says"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
+      },
+      "bye": {
+        "speaker": "Corra Bracken",
+        "text": "Go quietly. They look up at this oak more than they did.",
+        "next": "end"
+      },
+      "q_custom_says_wait_offer": {
+        "speaker": "Corra Bracken",
+        "text": "*She comes down, which she has not done for anybody before.* — Nothing, if I'm honest. That's the trouble with custom. — But you're not Woodfolk. — The harts are taken at the Hartswell at first light, where nobody hunts. Start there. Then find out what they're paid and what it's sold for, because I want it written down somewhere other than my tree. Then we'll see what custom says about a pale with no poachers in it.",
+        "choices": [
+          {
+            "text": "Start at the Hartswell. I'll go.",
+            "effects": [
+              {
+                "start_quest": "core:quest/custom_says_wait"
+              }
+            ],
+            "next": "q_custom_says_wait_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_custom_says_wait_accept": {
+        "speaker": "Corra Bracken",
+        "text": "First light. They'll be in the bracken on the east side, downwind. — Don't kill a hart by accident. That would be two hundred and twelve and I'd have to cut it.",
+        "next": "hub"
+      },
+      "q_custom_says_wait_decide": {
+        "speaker": "Corra Bracken",
+        "text": "*She sits on the root of her oak with the knife in her hand and does not cut anything.* — Kenard read them. I watched his face from up here. — The yard's empty. There's no poacher in it tonight, and custom has nothing to say about an empty pale, nothing at all. For the first time in three summers it's up to somebody. You brought the books. You say.",
+        "choices": [
+          {
+            "text": "Burn it, while it is empty.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/custom_says_wait",
+                  "burn_the_pale"
+                ]
+              }
+            ],
+            "next": "q_custom_says_wait_decide_burn_the_pale"
+          },
+          {
+            "text": "Give the books to the knights. Let them stand at its gate.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/custom_says_wait",
+                  "to_the_knights"
+                ]
+              }
+            ],
+            "next": "q_custom_says_wait_decide_to_the_knights"
+          },
+          {
+            "text": "Send the books to Tollmere, to the Tallymen's own clerks.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/custom_says_wait",
+                  "to_the_lantern_row"
+                ]
+              }
+            ],
+            "next": "q_custom_says_wait_decide_to_the_lantern_row"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_custom_says_wait_decide_burn_the_pale": {
+        "speaker": "Corra Bracken",
+        "text": "Burn it. — There's nobody in it. I'll carry the fire myself. I'll stand where they can see me from the Wold Water and I'll let the Tallymen's crates go up with it, and in the morning I'll cut one notch, a long one, across all the others.",
+        "next": "hub"
+      },
+      "q_custom_says_wait_decide_to_the_knights": {
+        "speaker": "Corra Bracken",
+        "text": "The knights. — Kenard will put a knight on the gate by the week's end, and no poacher will walk past a Hart-Knight with a hart's head under his arm; they're not that brave. It's slower than fire. — It's kinder than fire. I'll keep counting till the count stops.",
+        "next": "hub"
+      },
+      "q_custom_says_wait_decide_to_the_lantern_row": {
+        "speaker": "Corra Bracken",
+        "text": "Tollmere. — Let the Lantern Row read what it's been selling. The Tallymen won't like it. The Tallymen's customers will like it less. — I'll never know what happens down there. I'll know if the heads stop coming past my oak. That's all I need to know.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "horn_pale_burned"
+          },
+          {
+            "quest_done": "core:quest/custom_says_wait"
+          }
+        ],
+        "text": "One long notch, across all of them. I cut it that morning. The oak didn't mind."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "horn_pale_to_knights"
+          },
+          {
+            "quest_done": "core:quest/custom_says_wait"
+          }
+        ],
+        "text": "There's a knight at the Pale's gate, leaning on his spear, looking at every sack that goes in. Nothing's gone past my oak in nine days."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "horn_pale_to_tollmere"
+          },
+          {
+            "quest_done": "core:quest/custom_says_wait"
+          }
+        ],
+        "text": "A Tallymen's clerk came up the Wold Water in a hurry and went down again in a bigger one. The factor went with him. The count's stopped."
+      }
     ]
-   },
-   "bye": {
-    "speaker": "Corra Bracken",
-    "text": "Go quietly. They look up at this oak more than they did.",
-    "next": "end"
-   },
-   "q_custom_says_wait_offer": {
-    "speaker": "Corra Bracken",
-    "text": "*She comes down, which she has not done for anybody before.* — Nothing, if I'm honest. That's the trouble with custom. — But you're not Woodfolk. — The harts are taken at the Hartswell at first light, where nobody hunts. Start there. Then find out what they're paid and what it's sold for, because I want it written down somewhere other than my tree. Then we'll see what custom says about a pale with no poachers in it.",
-    "choices": [
-     {
-      "text": "Start at the Hartswell. I'll go.",
-      "effects": [
-       {
-        "start_quest": "core:quest/custom_says_wait"
-       }
-      ],
-      "next": "q_custom_says_wait_accept"
-     },
-     {
-      "text": "Not now.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_custom_says_wait_accept": {
-    "speaker": "Corra Bracken",
-    "text": "First light. They'll be in the bracken on the east side, downwind. — Don't kill a hart by accident. That would be two hundred and twelve and I'd have to cut it.",
-    "next": "hub"
-   },
-   "q_custom_says_wait_decide": {
-    "speaker": "Corra Bracken",
-    "text": "*She sits on the root of her oak with the knife in her hand and does not cut anything.* — Kenard read them. I watched his face from up here. — The yard's empty. There's no poacher in it tonight, and custom has nothing to say about an empty pale, nothing at all. For the first time in three summers it's up to somebody. You brought the books. You say.",
-    "choices": [
-     {
-      "text": "Burn it, while it is empty.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/custom_says_wait",
-         "burn_the_pale"
-        ]
-       }
-      ],
-      "next": "q_custom_says_wait_decide_burn_the_pale"
-     },
-     {
-      "text": "Give the books to the knights. Let them stand at its gate.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/custom_says_wait",
-         "to_the_knights"
-        ]
-       }
-      ],
-      "next": "q_custom_says_wait_decide_to_the_knights"
-     },
-     {
-      "text": "Send the books to Tollmere, to the Tallymen's own clerks.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/custom_says_wait",
-         "to_the_lantern_row"
-        ]
-       }
-      ],
-      "next": "q_custom_says_wait_decide_to_the_lantern_row"
-     },
-     {
-      "text": "Let me think on it.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_custom_says_wait_decide_burn_the_pale": {
-    "speaker": "Corra Bracken",
-    "text": "Burn it. — There's nobody in it. I'll carry the fire myself. I'll stand where they can see me from the Wold Water and I'll let the Tallymen's crates go up with it, and in the morning I'll cut one notch, a long one, across all the others.",
-    "next": "hub"
-   },
-   "q_custom_says_wait_decide_to_the_knights": {
-    "speaker": "Corra Bracken",
-    "text": "The knights. — Kenard will put a knight on the gate by the week's end, and no poacher will walk past a Hart-Knight with a hart's head under his arm; they're not that brave. It's slower than fire. — It's kinder than fire. I'll keep counting till the count stops.",
-    "next": "hub"
-   },
-   "q_custom_says_wait_decide_to_the_lantern_row": {
-    "speaker": "Corra Bracken",
-    "text": "Tollmere. — Let the Lantern Row read what it's been selling. The Tallymen won't like it. The Tallymen's customers will like it less. — I'll never know what happens down there. I'll know if the heads stop coming past my oak. That's all I need to know.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "flag": "horn_pale_burned"
-     },
-     {
-      "quest_done": "core:quest/custom_says_wait"
-     }
-    ],
-    "text": "One long notch, across all of them. I cut it that morning. The oak didn't mind."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "horn_pale_to_knights"
-     },
-     {
-      "quest_done": "core:quest/custom_says_wait"
-     }
-    ],
-    "text": "There's a knight at the Pale's gate, leaning on his spear, looking at every sack that goes in. Nothing's gone past my oak in nine days."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "horn_pale_to_tollmere"
-     },
-     {
-      "quest_done": "core:quest/custom_says_wait"
-     }
-    ],
-    "text": "A Tallymen's clerk came up the Wold Water in a hurry and went down again in a bigger one. The factor went with him. The count's stopped."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/kenard_hartwell",
-  "speaker_name": "Kenard Hartwell",
-  "notes": "The Hart-Knight who keeps the Tine Barrow's door (world life, Briarwold). The fourth stage of core:quest/custom_says_wait closes on his line q_custom_books.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Kenard Hartwell",
-    "text": "*He is chalking a name on the forecourt stone, and finishes it, and says it aloud before he looks up.* — Tamsen. — You are welcome at the barrow by day. Go before midnight. They walk then.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Kenard Hartwell",
-    "text": "The first knights. Forty of them. Each one named for the hart he would not kill: Ardo for the white hart, Bell for the hart of the Hollow ford, Tamsen for the hart that gored her. We wear the antlers of harts that died old, so they are remembered. That is all we are for.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Kenard Hartwell",
-    "text": "No. — Never. Not once. The Woodfolk will not ask us, and so they believe it, and so it goes round the Wold that the knights hang the antlers of every hart they kill. We hang the antlers of every hart that dies. It is a different sentence. It is the whole difference.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Kenard Hartwell",
-    "text": "The antlers in Tollmere. They sell them as Oroth relics, the Builders' holy things, and they put our name on the ticket. I would like them counted, and the count brought here, so that I can say the names of the harts over them. I do not know the harts' names. I will say something.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Kenard Hartwell",
-    "text": "Ask. I have sat here nineteen years; I am not in a hurry.",
-    "choices": [
-     {
-      "text": "Who lies in the barrow?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Do the Hart-Knights kill harts?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What do you want counted?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Corra Bracken sent me. These are the boilers' account book and the Horn Pale's price book.",
-      "next": "q_custom_books",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/custom_says_wait",
-         "the_knights_right"
+  {
+    "id": "core:dialogue/kenard_hartwell",
+    "speaker_name": "Kenard Hartwell",
+    "notes": "The Hart-Knight who keeps the Tine Barrow's door (world life, Briarwold). The fourth stage of core:quest/custom_says_wait closes on his line q_custom_books.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Kenard Hartwell",
+        "text": "*He is chalking a name on the forecourt stone, and finishes it, and says it aloud before he looks up.* — Tamsen. — You are welcome at the barrow by day. Go before midnight. They walk then.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Kenard Hartwell",
+        "text": "The first knights. Forty of them. Each one named for the hart he would not kill: Ardo for the white hart, Bell for the hart of the Hollow ford, Tamsen for the hart that gored her. We wear the antlers of harts that died old, so they are remembered. That is all we are for.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Kenard Hartwell",
+        "text": "No. — Never. Not once. The Woodfolk will not ask us, and so they believe it, and so it goes round the Wold that the knights hang the antlers of every hart they kill. We hang the antlers of every hart that dies. It is a different sentence. It is the whole difference.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Kenard Hartwell",
+        "text": "The antlers in Tollmere. They sell them as Oroth relics, the Builders' holy things, and they put our name on the ticket. I would like them counted, and the count brought here, so that I can say the names of the harts over them. I do not know the harts' names. I will say something.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Kenard Hartwell",
+        "text": "Ask. I have sat here nineteen years; I am not in a hurry.",
+        "choices": [
+          {
+            "text": "Who lies in the barrow?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Do the Hart-Knights kill harts?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What do you want counted?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Corra Bracken sent me. These are the boilers' account book and the Horn Pale's price book.",
+            "next": "q_custom_books",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/custom_says_wait",
+                  "the_knights_right"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
+      },
+      "bye": {
+        "speaker": "Kenard Hartwell",
+        "text": "Before midnight. I mean it kindly.",
+        "next": "end"
+      },
+      "q_custom_books": {
+        "speaker": "Kenard Hartwell",
+        "text": "*He reads the boilers' book through, and the factor's, and then both again, turning the pages with the back of his gauntlet so as not to mark them.* — Two marks. Forty in the Lantern Row. The masons' marks out of the Old Quarry, burned in and called the Builders' hand. And the Hart-Knights have no standing in the Charter. — That is true. We have none. — Go back to Corra Bracken. She has counted them. She should say what is done. Tell her the knights will stand wherever she says, and that we are ashamed it took somebody who is not Woodfolk to bring us this.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/custom_says_wait"
+          }
+        ],
+        "text": "Two hundred and eleven. Corra Bracken sent me her count. I have been saying something over each of them, a few every morning, after the knights. I will be done by the spring."
+      }
     ]
-   },
-   "bye": {
-    "speaker": "Kenard Hartwell",
-    "text": "Before midnight. I mean it kindly.",
-    "next": "end"
-   },
-   "q_custom_books": {
-    "speaker": "Kenard Hartwell",
-    "text": "*He reads the boilers' book through, and the factor's, and then both again, turning the pages with the back of his gauntlet so as not to mark them.* — Two marks. Forty in the Lantern Row. The masons' marks out of the Old Quarry, burned in and called the Builders' hand. And the Hart-Knights have no standing in the Charter. — That is true. We have none. — Go back to Corra Bracken. She has counted them. She should say what is done. Tell her the knights will stand wherever she says, and that we are ashamed it took somebody who is not Woodfolk to bring us this.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "quest_done": "core:quest/custom_says_wait"
-     }
-    ],
-    "text": "Two hundred and eleven. Corra Bracken sent me her count. I have been saying something over each of them, a few every morning, after the knights. I will be done by the spring."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/wystan_tine",
-  "speaker_name": "Wystan Tine",
-  "notes": "The Hart-Knight kneeling at the Moot Gate Stone (world life, Briarwold): the atlas's hook, 'a Hart-Knight has knelt three days and will not say what he is waiting for'.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Wystan Tine",
-    "text": "*He does not turn from the gate.* — Seventy-one hours. Speak low.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Wystan Tine",
-    "text": "For the gate to say what it is. A gate is known by what comes through it. The first knights knelt here before they took the antlers, facing the gate the Hart came through. I took them twenty years ago. I am asking the gate whether it is still the same gate. — Nothing has come through. That is an answer too. I do not like it.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Wystan Tine",
-    "text": "The Hart. So the Tine Barrow says, and Kenard Hartwell, who keeps it. Whether it came through to keep the Wold or to keep something out of it, the Barrow does not say. It is carved in stone and the stone was cut by knights who did not know either.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Wystan Tine",
-    "text": "Water. Nothing else. — No. Not water either. Seventy-two hours is the vigil. I will drink at seventy-two.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Wystan Tine",
-    "text": "Seventy-one hours and some. Ask.",
-    "choices": [
-     {
-      "text": "What are you waiting for?",
-      "next": "topic_1"
-     },
-     {
-      "text": "What came through the gate, the first time?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Is there anything I can bring you?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Wystan Tine",
-    "text": "*He says nothing, which you understand to be goodbye.*",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/merel_quill",
-  "speaker_name": "Merel Quill",
-  "notes": "The Sayer at the Listening Horns (world life, Briarwold), waiting for the Listeners of 1038. Gives core:quest/what_the_horns_heard and hears its decision.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Merel Quill",
-    "text": "*She has her ear to the brass and holds up one finger, and waits, and lowers it.* — Merel Quill, of the Circle, and I'm sorry: the east horn was humming. It does, after noon. Come in, sit, don't touch the tripods.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Merel Quill",
-    "text": "Listening. The Circle made them for the Moot's note, to hear whether it holds or shifts. The Listeners brought them here in 1038 and turned them on the northern gate instead, because the Briar is the other thing in the Wold that nobody understands. — They heard something. The last leaf of their log is under the middle horn. You can read it; it is not mine to keep.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Merel Quill",
-    "text": "Six Sayers and a dog. Imber Vane led them; I taught him his first Saying when he was nine and he corrected my accent. Ansa Rook, the Oskel twins, a girl from Isseva called Lisse who could hear a lie across a room, and Crane, who was nobody's student and everybody's. And the dog. — They went through the northern gate. The chalk they marked it with is still on the stone.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Merel Quill",
-    "text": "Because they will come back through the gate they went out by, and somebody should be listening when they do. — The Circle thinks I'm mad. The Circle pays for my paper. The Circle would very much like to send a second expedition and would very much like me to stop saying that the first one is still walking.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Merel Quill",
-    "text": "The horns are listening. So am I. Go on.",
-    "choices": [
-     {
-      "text": "What are the horns for?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Who were the Listeners?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Why come back every summer?",
-      "next": "topic_3"
-     },
-     {
-      "text": "What have the horns been hearing?",
-      "next": "q_what_the_horns_heard_offer",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/what_the_horns_heard"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/what_the_horns_heard"
-        }
-       }
-      ]
-     },
-     {
-      "text": "I've been to the beacon. Someone from the far side has been laying it.",
-      "next": "q_what_the_horns_heard_decide",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/what_the_horns_heard",
-         "what_to_do_with_it"
+  {
+    "id": "core:dialogue/wystan_tine",
+    "speaker_name": "Wystan Tine",
+    "notes": "The Hart-Knight kneeling at the Moot Gate Stone (world life, Briarwold): the atlas's hook, 'a Hart-Knight has knelt three days and will not say what he is waiting for'. Phase 2: at the end of his 72-hour vigil he gives core:quest/a_gate_is_known (Tinehold) and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Wystan Tine",
+        "text": "*He does not turn from the gate.* — Seventy-one hours. Speak low.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Wystan Tine",
+        "text": "For the gate to say what it is. A gate is known by what comes through it. The first knights knelt here before they took the antlers, facing the gate the Hart came through. I took them twenty years ago. I am asking the gate whether it is still the same gate. — Nothing has come through. That is an answer too. I do not like it.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Wystan Tine",
+        "text": "The Hart. So the Tine Barrow says, and Kenard Hartwell, who keeps it. Whether it came through to keep the Wold or to keep something out of it, the Barrow does not say. It is carved in stone and the stone was cut by knights who did not know either.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Wystan Tine",
+        "text": "Water. Nothing else. — No. Not water either. Seventy-two hours is the vigil. I will drink at seventy-two.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Wystan Tine",
+        "text": "Seventy-one hours and some. Ask.",
+        "choices": [
+          {
+            "text": "What are you waiting for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What came through the gate, the first time?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Is there anything I can bring you?",
+            "next": "topic_3"
+          },
+          {
+            "text": "What gate are you waiting for something to come through?",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/a_gate_is_known"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/a_gate_is_known"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have been to Tinehold. I have Ardo's tines.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/a_gate_is_known",
+                  "what_comes_through"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Merel Quill",
-    "text": "Go softly past the east horn. It picks up boots.",
-    "next": "end"
-   },
-   "q_what_the_horns_heard_offer": {
-    "speaker": "Merel Quill",
-    "text": "*She takes her ear from the brass, which she does not do.* — Footsteps. On the far side of the thorn, walking north along the Briar at a walker's pace, every night after the Moot's hum starts. And a dog. — Crane's dog. I would know it. — I cannot leave the horns; if they come while I'm gone I'll never forgive myself. The east horn hears it loudest where a runner of the Briar has grown out through the rampart, a mile south. The Rookhold keepers call it the Stray Thorn. Go and look. Please.",
-    "choices": [
-     {
-      "text": "I'll go to the Stray Thorn.",
-      "effects": [
-       {
-        "start_quest": "core:quest/what_the_horns_heard"
-       }
-      ],
-      "next": "q_what_the_horns_heard_accept"
-     },
-     {
-      "text": "Not now.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_what_the_horns_heard_accept": {
-    "speaker": "Merel Quill",
-    "text": "Thornhounds lie up under it, the porter says. Ivo says a great many things. Believe that one.",
-    "next": "hub"
-   },
-   "q_what_the_horns_heard_decide": {
-    "speaker": "Merel Quill",
-    "text": "*She listens to all of it with her ear against the east horn, as if checking it.* — Pressed-ash grain. There's no such wood in the Wold. There's no such wood in the Circle's herbals. — And 'I do', under the rule. — Somebody on the far side of the thorn is keeping a Woodfolk beacon laid, by the Woodfolk's own rule, and has been since the Firewatch fell. — I have been listening for six years. I am out of things to listen for. Tell me what to do.",
-    "choices": [
-     {
-      "text": "Light the beacon, so whoever is out there can see the way.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/what_the_horns_heard",
-         "light_it"
+      },
+      "bye": {
+        "speaker": "Wystan Tine",
+        "text": "*He says nothing, which you understand to be goodbye.*",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Wystan Tine",
+        "text": "*For the first time he turns from the gate.* — Seventy-two hours. The vigil is done. I may say it. — I took the antlers at Tinehold twenty years ago, on the night the order went east, the last knight out. That night Marshal Aubric killed the white hart under the Tine Tower and put Ardo's antlers on his own head. I left a letter for him. I said when he wanted to kneel again he should come through this gate, and I would know him by what came through it. — I have knelt three days for him. Nothing has come through. He is not coming. — Ardo's tines should not be on that man's head. I cannot leave the gate. You can.",
+        "choices": [
+          {
+            "text": "I'll go to Tinehold and bring Ardo's tines back.",
+            "effects": [
+              {
+                "start_quest": "core:quest/a_gate_is_known"
+              }
+            ],
+            "next": "q_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
         ]
-       }
-      ],
-      "next": "q_what_the_horns_heard_decide_light_it"
-     },
-     {
-      "text": "Leave it laid. Whoever lays it knows the rule.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/what_the_horns_heard",
-         "leave_it_laid"
+      },
+      "q_accept": {
+        "speaker": "Wystan Tine",
+        "text": "On the scarp over the Wold Water, west, past the Flood Stone. You will see the Tines from the river. He keeps the vigil hall under the keep. He will be waiting for a knight. — He will not expect you to kneel. Do not.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Wystan Tine",
+        "text": "*He does not take them. He looks at them a long time, at the fourteen points and the iron band.* — He did not come through the gate. They did. — So that is what the gate is. — They are not mine. They were Ardo's, and then they were the hold's, and then they were his. You carried them. Say where they go.",
+        "choices": [
+          {
+            "text": "Lay them here, at the Moot Gate, where the Hart came through.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_gate_is_known",
+                  "at_the_gate"
+                ]
+              }
+            ],
+            "next": "q_d_gate"
+          },
+          {
+            "text": "To Kenard Hartwell, to lie with the first knights in the Tine Barrow.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_gate_is_known",
+                  "to_the_barrow"
+                ]
+              }
+            ],
+            "next": "q_d_barrow"
+          },
+          {
+            "text": "Back on the Tine Tower, so the river can see the Wold is kept.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/a_gate_is_known",
+                  "on_the_tower"
+                ]
+              }
+            ],
+            "next": "q_d_tower"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
         ]
-       }
-      ],
-      "next": "q_what_the_horns_heard_decide_leave_it_laid"
-     },
-     {
-      "text": "Turn the horns from the gate and take them home. Stop listening.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/what_the_horns_heard",
-         "turn_the_horns"
-        ]
-       }
-      ],
-      "next": "q_what_the_horns_heard_decide_turn_the_horns"
-     },
-     {
-      "text": "Let me think on it.",
-      "next": "hub"
-     }
+      },
+      "q_d_gate": {
+        "speaker": "Wystan Tine",
+        "text": "*He sets them on the stone facing the gate, and kneels behind them, and then, after a while, stands up.* — Something has come through. I can go and drink now.",
+        "next": "hub"
+      },
+      "q_d_barrow": {
+        "speaker": "Wystan Tine",
+        "text": "Kenard will chalk Ardo's name over them every morning and say it aloud. — That is a better place than a gate. I did not want it to be. It is.",
+        "next": "hub"
+      },
+      "q_d_tower": {
+        "speaker": "Wystan Tine",
+        "text": "Then I will carry them. Tinehold is empty now, and a hold is known by what stands on it. — I will go west tomorrow. I have not been west in twenty years.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "tines_at_the_gate"
+          },
+          {
+            "quest_done": "core:quest/a_gate_is_known"
+          }
+        ],
+        "text": "*He is sitting, not kneeling, beside Ardo's tines on the stone.* — I count the hours still. Habit. They are better hours."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tines_to_the_barrow"
+          },
+          {
+            "quest_done": "core:quest/a_gate_is_known"
+          }
+        ],
+        "text": "Kenard sent word. He says Ardo's name first now, before Tamsen's. He says Tamsen would not mind."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "tines_on_the_tower"
+          },
+          {
+            "quest_done": "core:quest/a_gate_is_known"
+          }
+        ],
+        "text": "They are back on the tower. I stood on the Wold Water's bank and looked up at them. That is all the vigil I need now."
+      }
     ]
-   },
-   "q_what_the_horns_heard_decide_light_it": {
-    "speaker": "Merel Quill",
-    "text": "Light it. — The rule says fire and nothing else. — I don't care. I'll go up with Ivo tonight and put a torch to it, and the whole Wold will come with spades, and they'll find a Sayer standing by a burning beacon saying sorry. And somebody on the far side of the thorn will see it. Imber would have lit it. Imber lit everything.",
-    "next": "hub"
-   },
-   "q_what_the_horns_heard_decide_leave_it_laid": {
-    "speaker": "Merel Quill",
-    "text": "Leave it. — Yes. Whoever it is, they keep the rule better than we do. They lay it and they don't light it, every autumn, for eleven years, for a fire nobody has had. That is not a Listener. That is a keeper. — I'll write it in the log. I'll keep listening. I'll know, now, what I'm listening to.",
-    "next": "hub"
-   },
-   "q_what_the_horns_heard_decide_turn_the_horns": {
-    "speaker": "Merel Quill",
-    "text": "Stop. — *She is quiet a long time.* — The leaf says 'we will not need them'. Imber wrote that. He was right; they didn't. — Ivo, help me with the tripods. We'll turn them to the Moot, where the Circle made them to point, and carry them down in the spring. If the Listeners want me they know where the Spire is.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "flag": "wold_beacon_lit"
-     },
-     {
-      "quest_done": "core:quest/what_the_horns_heard"
-     }
-    ],
-    "text": "The Wold came with spades and found me, and I said sorry, and they said nothing, and stood with me and watched it burn. On the far side of the thorn, for a moment, there was a second fire."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "wold_beacon_laid"
-     },
-     {
-      "quest_done": "core:quest/what_the_horns_heard"
-     }
-    ],
-    "text": "The footsteps stopped at the beacon's knoll last night, and stood, and went on north. I wrote down how long they stood. It was the time it takes to lay a fire."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "listening_horns_turned"
-     },
-     {
-      "quest_done": "core:quest/what_the_horns_heard"
-     }
-    ],
-    "text": "The horns are on the Moot. It hums. It holds. It's a relief, in its way, to listen to a thing that is only what it is."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/ivo_lantry",
-  "speaker_name": "Ivo Lantry",
-  "notes": "Merel Quill's porter at the Listening Horns (world life, Briarwold).",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Ivo Lantry",
-    "text": "Ivo Lantry, porter, Lantern Row, and no, I don't know what she's listening to, and yes, there's bread.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Ivo Lantry",
-    "text": "Six summers I've carried her paper up here and sat by this fire and told her there's nothing. Wind in the thorn. Weavers on the brass. — Last two summers I've put my ear to the east horn when she's asleep. — There's somebody walking. That's all I'll say. And I've never said it.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Ivo Lantry",
-    "text": "It's the four notes the east horn does, after the Moot starts. I didn't mean to learn it. — She hasn't noticed. Don't tell her. She'll want me to write it down.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Ivo Lantry",
-    "text": "Weavers come down to the brass after dark; the horns hum and they like the hum. Thornhounds under the Stray Thorn. And the Wold folk, who look at you and say nothing, which after six summers I've come round to. It's restful.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Ivo Lantry",
-    "text": "*He is whistling four notes and stops.* — Yes?",
-    "choices": [
-     {
-      "text": "What do you make of the horns?",
-      "next": "topic_1"
-     },
-     {
-      "text": "What's the tune you whistle?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Is the Northwold dangerous?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Ivo Lantry",
-    "text": "Mind the east horn. It picks up boots. She'll tell you. She tells everyone.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/kit_laywood",
-  "speaker_name": "Kit Laywood",
-  "notes": "The eldest thorn-layer, at the Layers' Ring (world life, Briarwold). Gives core:quest/grey_under_the_green and hears its decision.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Kit Laywood",
-    "text": "*She does not take off her gauntlets to greet you. She never does.* — Kit Laywood. We lay the thorn. You'll want to stand clear of the bundles; they bite.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Kit Laywood",
-    "text": "Where the Thornmarch thins, we lay it thick again. You bend the runner that's there down into the thorn beside it and pin it with a hazel crook, and it roots where it touches. Where there's nothing to bend, the Nursery's cuttings, three to a yard. — Thirty years. It's the one work in the Wold done for nobody.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Kit Laywood",
-    "text": "Because the thorn doesn't like to be slept beside. I can't tell you more than that. Sleep a night against the Briar with no wall between and you'll wake with it round your ankle, and not remember turning over. — So: a ring.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Kit Laywood",
-    "text": "Do not lay thorn anywhere the thorn has not been. — We lay the Briar. We didn't grow it. We don't know what it's for. The Circle says it keeps something out, the Sedgish say it keeps something in, and a layer who thinks she knows is a layer who'll lay it in the wrong place.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Kit Laywood",
-    "text": "Go on. The thorn's not going anywhere. That's rather the point.",
-    "choices": [
-     {
-      "text": "What do the layers do?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Why sleep inside a ring of stone?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What's the rule on your lintel?",
-      "next": "topic_3"
-     },
-     {
-      "text": "You said there's a grey patch that isn't on the thorn.",
-      "next": "q_grey_under_the_green_offer",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/grey_under_the_green"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/grey_under_the_green"
-        }
-       }
-      ]
-     },
-     {
-      "text": "The stem leaned east with the Nursery's cuttings. It's Briar.",
-      "next": "q_grey_under_the_green_decide",
-      "conditions": [
-       {
-        "quest_at": [
-         "core:quest/grey_under_the_green",
-         "the_layers_say"
+  {
+    "id": "core:dialogue/merel_quill",
+    "speaker_name": "Merel Quill",
+    "notes": "The Sayer at the Listening Horns (world life, Briarwold), waiting for the Listeners of 1038. Gives core:quest/what_the_horns_heard and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Merel Quill",
+        "text": "*She has her ear to the brass and holds up one finger, and waits, and lowers it.* — Merel Quill, of the Circle, and I'm sorry: the east horn was humming. It does, after noon. Come in, sit, don't touch the tripods.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Merel Quill",
+        "text": "Listening. The Circle made them for the Moot's note, to hear whether it holds or shifts. The Listeners brought them here in 1038 and turned them on the northern gate instead, because the Briar is the other thing in the Wold that nobody understands. — They heard something. The last leaf of their log is under the middle horn. You can read it; it is not mine to keep.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Merel Quill",
+        "text": "Six Sayers and a dog. Imber Vane led them; I taught him his first Saying when he was nine and he corrected my accent. Ansa Rook, the Oskel twins, a girl from Isseva called Lisse who could hear a lie across a room, and Crane, who was nobody's student and everybody's. And the dog. — They went through the northern gate. The chalk they marked it with is still on the stone.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Merel Quill",
+        "text": "Because they will come back through the gate they went out by, and somebody should be listening when they do. — The Circle thinks I'm mad. The Circle pays for my paper. The Circle would very much like to send a second expedition and would very much like me to stop saying that the first one is still walking.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Merel Quill",
+        "text": "The horns are listening. So am I. Go on.",
+        "choices": [
+          {
+            "text": "What are the horns for?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who were the Listeners?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why come back every summer?",
+            "next": "topic_3"
+          },
+          {
+            "text": "What have the horns been hearing?",
+            "next": "q_what_the_horns_heard_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_horns_heard"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_horns_heard"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've been to the beacon. Someone from the far side has been laying it.",
+            "next": "q_what_the_horns_heard_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_horns_heard",
+                  "what_to_do_with_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ]
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Kit Laywood",
-    "text": "Mind the bundles.",
-    "next": "end"
-   },
-   "q_grey_under_the_green_offer": {
-    "speaker": "Kit Laywood",
-    "text": "Half a mile inside the Wold, in the ring of sallows the Hollow cuts its withies from. A forester found it. Grey to the last leaf, the moss and the bracken grey under it to the edge of the ring and no further. She cut a stem and wouldn't carry it. — Countwatch counts the patches on the Briar. They're all on the Briar. This one isn't. — I won't lay thorn round it on my own say. That's the rule. Go and look. Stay the night, if you're braver than the forester. Bring me the stem.",
-    "choices": [
-     {
-      "text": "I'll go and look.",
-      "effects": [
-       {
-        "start_quest": "core:quest/grey_under_the_green"
-       }
-      ],
-      "next": "q_grey_under_the_green_accept"
-     },
-     {
-      "text": "Not now.",
-      "next": "hub"
-     }
-    ]
-   },
-   "q_grey_under_the_green_accept": {
-    "speaker": "Kit Laywood",
-    "text": "It's due west of the Nursery and a bit north. You'll know it. The colour goes out of the ground like a tide.",
-    "next": "hub"
-   },
-   "q_grey_under_the_green_decide": {
-    "speaker": "Kit Laywood",
-    "text": "*She turns the grey stem over in her gauntlets for a long time.* — Up out of the roots. Half a mile in. Bringing the grey with it. — So the Briar isn't only on the rampart. It's under all of us, and it's come up. — And the rule says don't lay thorn where thorn hasn't been. It has been. It's there. It's just been underneath. — I asked for somebody else's say. You're somebody else. Say.",
-    "choices": [
-     {
-      "text": "Lay thorn round the ring. The Briar is already there; lay it where it is.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/grey_under_the_green",
-         "lay_it_round"
+      },
+      "bye": {
+        "speaker": "Merel Quill",
+        "text": "Go softly past the east horn. It picks up boots.",
+        "next": "end"
+      },
+      "q_what_the_horns_heard_offer": {
+        "speaker": "Merel Quill",
+        "text": "*She takes her ear from the brass, which she does not do.* — Footsteps. On the far side of the thorn, walking north along the Briar at a walker's pace, every night after the Moot's hum starts. And a dog. — Crane's dog. I would know it. — I cannot leave the horns; if they come while I'm gone I'll never forgive myself. The east horn hears it loudest where a runner of the Briar has grown out through the rampart, a mile south. The Rookhold keepers call it the Stray Thorn. Go and look. Please.",
+        "choices": [
+          {
+            "text": "I'll go to the Stray Thorn.",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_horns_heard"
+              }
+            ],
+            "next": "q_what_the_horns_heard_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
         ]
-       }
-      ],
-      "next": "q_grey_under_the_green_decide_lay_it_round"
-     },
-     {
-      "text": "Keep the rule. Put the ring on Countwatch's count and watch it.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/grey_under_the_green",
-         "leave_it_be"
+      },
+      "q_what_the_horns_heard_accept": {
+        "speaker": "Merel Quill",
+        "text": "Thornhounds lie up under it, the porter says. Ivo says a great many things. Believe that one.",
+        "next": "hub"
+      },
+      "q_what_the_horns_heard_decide": {
+        "speaker": "Merel Quill",
+        "text": "*She listens to all of it with her ear against the east horn, as if checking it.* — Pressed-ash grain. There's no such wood in the Wold. There's no such wood in the Circle's herbals. — And 'I do', under the rule. — Somebody on the far side of the thorn is keeping a Woodfolk beacon laid, by the Woodfolk's own rule, and has been since the Firewatch fell. — I have been listening for six years. I am out of things to listen for. Tell me what to do.",
+        "choices": [
+          {
+            "text": "Light the beacon, so whoever is out there can see the way.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_horns_heard",
+                  "light_it"
+                ]
+              }
+            ],
+            "next": "q_what_the_horns_heard_decide_light_it"
+          },
+          {
+            "text": "Leave it laid. Whoever lays it knows the rule.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_horns_heard",
+                  "leave_it_laid"
+                ]
+              }
+            ],
+            "next": "q_what_the_horns_heard_decide_leave_it_laid"
+          },
+          {
+            "text": "Turn the horns from the gate and take them home. Stop listening.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_horns_heard",
+                  "turn_the_horns"
+                ]
+              }
+            ],
+            "next": "q_what_the_horns_heard_decide_turn_the_horns"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
         ]
-       }
-      ],
-      "next": "q_grey_under_the_green_decide_leave_it_be"
-     },
-     {
-      "text": "Send the stem to the Sayers' Circle. Somebody should find out what the Briar is for.",
-      "effects": [
-       {
-        "quest_choice": [
-         "core:quest/grey_under_the_green",
-         "to_the_circle"
-        ]
-       }
-      ],
-      "next": "q_grey_under_the_green_decide_to_the_circle"
-     },
-     {
-      "text": "Let me think on it.",
-      "next": "hub"
-     }
+      },
+      "q_what_the_horns_heard_decide_light_it": {
+        "speaker": "Merel Quill",
+        "text": "Light it. — The rule says fire and nothing else. — I don't care. I'll go up with Ivo tonight and put a torch to it, and the whole Wold will come with spades, and they'll find a Sayer standing by a burning beacon saying sorry. And somebody on the far side of the thorn will see it. Imber would have lit it. Imber lit everything.",
+        "next": "hub"
+      },
+      "q_what_the_horns_heard_decide_leave_it_laid": {
+        "speaker": "Merel Quill",
+        "text": "Leave it. — Yes. Whoever it is, they keep the rule better than we do. They lay it and they don't light it, every autumn, for eleven years, for a fire nobody has had. That is not a Listener. That is a keeper. — I'll write it in the log. I'll keep listening. I'll know, now, what I'm listening to.",
+        "next": "hub"
+      },
+      "q_what_the_horns_heard_decide_turn_the_horns": {
+        "speaker": "Merel Quill",
+        "text": "Stop. — *She is quiet a long time.* — The leaf says 'we will not need them'. Imber wrote that. He was right; they didn't. — Ivo, help me with the tripods. We'll turn them to the Moot, where the Circle made them to point, and carry them down in the spring. If the Listeners want me they know where the Spire is.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "wold_beacon_lit"
+          },
+          {
+            "quest_done": "core:quest/what_the_horns_heard"
+          }
+        ],
+        "text": "The Wold came with spades and found me, and I said sorry, and they said nothing, and stood with me and watched it burn. On the far side of the thorn, for a moment, there was a second fire."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "wold_beacon_laid"
+          },
+          {
+            "quest_done": "core:quest/what_the_horns_heard"
+          }
+        ],
+        "text": "The footsteps stopped at the beacon's knoll last night, and stood, and went on north. I wrote down how long they stood. It was the time it takes to lay a fire."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "listening_horns_turned"
+          },
+          {
+            "quest_done": "core:quest/what_the_horns_heard"
+          }
+        ],
+        "text": "The horns are on the Moot. It hums. It holds. It's a relief, in its way, to listen to a thing that is only what it is."
+      }
     ]
-   },
-   "q_grey_under_the_green_decide_lay_it_round": {
-    "speaker": "Kit Laywood",
-    "text": "Where it is. — Yes. That keeps the rule, if you squint, and I'm squinting. Ebb and I will take the Nursery's cuttings in tomorrow and lay a ring round the ring. Whatever's under it can come up inside our thorn instead of the Hollow's withies.",
-    "next": "hub"
-   },
-   "q_grey_under_the_green_decide_leave_it_be": {
-    "speaker": "Kit Laywood",
-    "text": "Keep it. — The rule's older than me, and I've never broken it, and I don't know what I'd be laying thorn round. We'll put it on the count. Alder Wyke will chalk a new line on the tower: nineteen on the thorn, one inside. And we'll watch it grow.",
-    "next": "hub"
-   },
-   "q_grey_under_the_green_decide_to_the_circle": {
-    "speaker": "Kit Laywood",
-    "text": "The Circle. — *She hands it back to you like something hot.* — Take it, then. The layers won't carry it. The Sayers will cut it and boil it and write it up, and perhaps they'll find out what it's for, and perhaps they'll tell us. I've laid thorn thirty years without knowing. I'd like to know before I stop.",
-    "next": "hub"
-   }
   },
-  "greetings": [
-   {
-    "conditions": [
-     {
-      "flag": "greyed_ring_laid"
-     },
-     {
-      "quest_done": "core:quest/grey_under_the_green"
-     }
-    ],
-    "text": "We laid a ring round the ring. The grey came up to our thorn and stopped. — Ebb says it's leaning on it. I've told him to stop saying things like that."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "greyed_ring_counted"
-     },
-     {
-      "quest_done": "core:quest/grey_under_the_green"
-     }
-    ],
-    "text": "Nineteen on the thorn and one inside. Alder chalked it on the tower himself and stood looking at it longer than he needed to."
-   },
-   {
-    "conditions": [
-     {
-      "flag": "greyed_ring_to_circle"
-     },
-     {
-      "quest_done": "core:quest/grey_under_the_green"
-     }
-    ],
-    "text": "A Sayer wrote from the Spire. Three pages. The last line was 'we do not know either'. I've pinned it to the lintel under the rule."
-   }
-  ]
- },
- {
-  "id": "core:dialogue/ebb_laywood",
-  "speaker_name": "Ebb Laywood",
-  "notes": "Kit Laywood's son, a thorn-layer at the Layers' Ring (world life, Briarwold).",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Ebb Laywood",
-    "text": "Ebb. Laywood, the young one. Mind the bundles, Mum says. She says it to everyone. She says it to me.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Ebb Laywood",
-    "text": "I do, and she says it's a bad habit, and it probably is. — It creaks back. That's all. It's like talking to a ship. — Last month it creaked back before I'd finished.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Ebb Laywood",
-    "text": "In case. — I won't say in case of what. It'd sound daft out loud. It sounds daft in my head.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Ebb Laywood",
-    "text": "It's all thorns. Thirty years of it and look at her face. — I don't mind. Somebody has to, and nobody would, and it turns out I don't mind. Don't tell her. She'd think I'd gone soft.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Ebb Laywood",
-    "text": "*He is pinning a runner into the wall's thorn and talking to it.* — Sorry. Yes?",
-    "choices": [
-     {
-      "text": "Do you talk to the Briar?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Why do you carry a cutting in your shirt?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Is it hard work?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Ebb Laywood",
-    "text": "Mind the bundles.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/aud_yewman",
-  "speaker_name": "Aud Yewman",
-  "notes": "The bowyer of Stave Hollow (world life, Briarwold), a merchant of bows and strings.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Aud Yewman",
-    "text": "*She is flexing a stave across her knee and does not stop.* — Yew, eleven years seasoned, cut in the autumn and not in anger. That's this one. What are you?",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Aud Yewman",
-    "text": "Slip the loop off the upper nock. Let the stave come straight. It takes no strength. — It's written on my door for anyone who wants it. The harder part isn't written anywhere: you can feel exactly how much the bow was used. Some come straight like a sigh. Some come straight like a slammed door.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Aud Yewman",
-    "text": "It's true. I went up and looked. — Good gut, well knotted, the way I'd have done it myself. Whoever restrung it knew the craft. — Nobody restrings a hung bow. The hanging's the letting go. Whoever did it hasn't let go of something, and I'd like to know what.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Aud Yewman",
-    "text": "Not your business. — His. He came down the path with it and said he'd taken his last hart and he wanted to hear what it said. So I unstrung it. It came straight slow, like somebody putting a heavy thing down. He cried. Then he went home and had his supper.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Aud Yewman",
-    "text": "Buying, asking, or bringing one up to be unstrung?",
-    "choices": [
-     {
-      "text": "How do you unstring a dead hunter's bow?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Is it true a bow on Hollin Tor was restrung?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Who was the hunter who asked you to unstring his bow while he's alive?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Aud Yewman",
-    "text": "Mind the racks. They're older than you.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/wat_hurle",
-  "speaker_name": "Wat Hurle",
-  "notes": "The verderer's grandson at the foot of the Verderer's Tower (world life, Briarwold).",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Wat Hurle",
-    "text": "I'm Wat, he's up there, no he won't come down, yes I've asked, and yes I've got his bread. Hello.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Wat Hurle",
-    "text": "He saw a fire on the far side of the Thornmarch, where there's nothing, and he says he's not coming down till he knows who's tending it. — It's been since the summer. Twice a day, bread up and pot down. I've got very good at ladders.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Wat Hurle",
-    "text": "Once. — He made me lie on my back on the top deck and look where he pointed. It was small. And after the Moot started humming somebody walked away from it with a light, north along the thorn. — I didn't tell Mum.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Wat Hurle",
-    "text": "Grandad's count of fires. He chalks it on the underside of the top deck so you have to lie down to read it. I copied it out down here so I don't have to. It's there, by the ladder. You can read it. Everyone does. Nobody does anything.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Wat Hurle",
-    "text": "*He is halfway up the ladder and comes back down it.* — What?",
-    "choices": [
-     {
-      "text": "Why won't the verderer come down?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Have you seen the fire?",
-      "next": "topic_2"
-     },
-     {
-      "text": "What's the count on the wall?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Wat Hurle",
-    "text": "Mind the third rung. It's the one.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/ned_pitt",
-  "speaker_name": "Ned Pitt",
-  "notes": "The pit-man at the Sawpit (world life, Briarwold), who has not spoken to his brother on the log above in eleven years.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Ned Pitt",
-    "text": "*He looks up out of the pit with one red eye.* — Hup. — Sorry. Habit. What?",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Ned Pitt",
-    "text": "Hilde Ashby. — Married a Rafter. Neither of us. Eleven years. — It was never her, if I'm honest. It was him saying it was me that frightened her off, and me saying it was him, and then it was eleven years. The saw does our talking. Hup and pull. It's been a good conversation, for a saw.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Ned Pitt",
-    "text": "Tamwick's carts. The cider comes up the Wold road on our planks and goes down again as barrels on our planks. Good oak, fallen, by the verderers' leave. Nothing cut standing.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Ned Pitt",
-    "text": "*He looks up at the log for a long time.* — No. — Tell him the chalk line's been a hair east all week. He'll know what I mean. It's not a message. It's the line.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Ned Pitt",
-    "text": "Make it quick. The saw's waiting and so's he.",
-    "choices": [
-     {
-      "text": "Why don't you speak to your brother?",
-      "next": "topic_1"
-     },
-     {
-      "text": "What do you saw the planks for?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Is there anything you want carried up to him?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Ned Pitt",
-    "text": "Hup.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/aldo_pitt",
-  "speaker_name": "Aldo Pitt",
-  "notes": "The top-man at the Sawpit (world life, Briarwold), who has not spoken to his brother in the pit below in eleven years.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Aldo Pitt",
-    "text": "*He snaps the chalk line, twice, and looks down into the pit, and back at you.* — Aldo. Top-man. You'll have met the other one.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Aldo Pitt",
-    "text": "Because he started it. — He'll tell you I started it. We're both right, and it was eleven years ago, and the woman married a Rafter and has four children and doesn't remember either of us. — I snap the line twice. The first is always true. The second's in case he says something.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Aldo Pitt",
-    "text": "Who says? — It's a long bench. I moved along for the view. There's a better view of the Vale from the middle. — He hasn't. He's still at his end with his back to me. — That's his business.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Aldo Pitt",
-    "text": "*He looks into the pit a long time.* — Tell him I know about the line. I've been drawing it a hair east on purpose, to see if he'd say. — Don't tell him that. Tell him I know about the line.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Aldo Pitt",
-    "text": "Go on. He can't hear us up here. — He can. Go on anyway.",
-    "choices": [
-     {
-      "text": "Why don't you speak to your brother?",
-      "next": "topic_1"
-     },
-     {
-      "text": "They say you've been eating your bread in the middle of the bench.",
-      "next": "topic_2"
-     },
-     {
-      "text": "Is there anything you want carried down to him?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Aldo Pitt",
-    "text": "Mind the pit. It's deeper than it looks, and he's in it.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/skarl_delving_board",
-  "speaker_name": "The Skarl tally-board",
-  "notes": "The Skarl Delving's hook (world/sites/site_exterior.gd, _hook): the clan's tally-board by the adit. Reads the story; starts core:quest/the_price_at_the_middle for whoever has not had it from Tosk ko-Skarl.",
-  "start": "look",
-  "nodes": {
-   "look": {
-    "speaker": "The Skarl tally-board",
-    "no_talk": true,
-    "text": "A board of larch, the clan's marks burned into it in rows: six hands at the face, tin two baskets, water in the low gallery, the big vein, the big vein. The rows stop. Under them the clan's sign for a debt owed and not paid, and a boy's name in Valish letters, the C of Colley burned backwards. Across all of it one woodfolk notch, cut with a knife, and under that more notches, one a month, the newest fresh. From the adit a draught comes up, cold, smelling of wet stone and something sweetish, and very far down in it, once, a single thin note, as of a whistle badly blown.",
-    "choices": [
-     {
-      "text": "Follow the note down. Somebody should.",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/the_price_at_the_middle"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/the_price_at_the_middle"
-        }
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/the_price_at_the_middle"
-        }
-       }
-      ],
-      "effects": [
-       {
-        "start_quest": [
-         "core:quest/the_price_at_the_middle",
-         "the_delving"
+  {
+    "id": "core:dialogue/ivo_lantry",
+    "speaker_name": "Ivo Lantry",
+    "notes": "Merel Quill's porter at the Listening Horns (world life, Briarwold).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ivo Lantry",
+        "text": "Ivo Lantry, porter, Lantern Row, and no, I don't know what she's listening to, and yes, there's bread.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ivo Lantry",
+        "text": "Six summers I've carried her paper up here and sat by this fire and told her there's nothing. Wind in the thorn. Weavers on the brass. — Last two summers I've put my ear to the east horn when she's asleep. — There's somebody walking. That's all I'll say. And I've never said it.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ivo Lantry",
+        "text": "It's the four notes the east horn does, after the Moot starts. I didn't mean to learn it. — She hasn't noticed. Don't tell her. She'll want me to write it down.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Ivo Lantry",
+        "text": "Weavers come down to the brass after dark; the horns hum and they like the hum. Thornhounds under the Stray Thorn. And the Wold folk, who look at you and say nothing, which after six summers I've come round to. It's restful.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ivo Lantry",
+        "text": "*He is whistling four notes and stops.* — Yes?",
+        "choices": [
+          {
+            "text": "What do you make of the horns?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What's the tune you whistle?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Is the Northwold dangerous?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
         ]
-       }
-      ],
-      "next": "taken"
-     },
-     {
-      "text": "Leave the board as it is.",
-      "next": "end"
-     }
+      },
+      "bye": {
+        "speaker": "Ivo Lantry",
+        "text": "Mind the east horn. It picks up boots. She'll tell you. She tells everyone.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/kit_laywood",
+    "speaker_name": "Kit Laywood",
+    "notes": "The eldest thorn-layer, at the Layers' Ring (world life, Briarwold). Gives core:quest/grey_under_the_green and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Kit Laywood",
+        "text": "*She does not take off her gauntlets to greet you. She never does.* — Kit Laywood. We lay the thorn. You'll want to stand clear of the bundles; they bite.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Kit Laywood",
+        "text": "Where the Thornmarch thins, we lay it thick again. You bend the runner that's there down into the thorn beside it and pin it with a hazel crook, and it roots where it touches. Where there's nothing to bend, the Nursery's cuttings, three to a yard. — Thirty years. It's the one work in the Wold done for nobody.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Kit Laywood",
+        "text": "Because the thorn doesn't like to be slept beside. I can't tell you more than that. Sleep a night against the Briar with no wall between and you'll wake with it round your ankle, and not remember turning over. — So: a ring.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Kit Laywood",
+        "text": "Do not lay thorn anywhere the thorn has not been. — We lay the Briar. We didn't grow it. We don't know what it's for. The Circle says it keeps something out, the Sedgish say it keeps something in, and a layer who thinks she knows is a layer who'll lay it in the wrong place.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Kit Laywood",
+        "text": "Go on. The thorn's not going anywhere. That's rather the point.",
+        "choices": [
+          {
+            "text": "What do the layers do?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why sleep inside a ring of stone?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's the rule on your lintel?",
+            "next": "topic_3"
+          },
+          {
+            "text": "You said there's a grey patch that isn't on the thorn.",
+            "next": "q_grey_under_the_green_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/grey_under_the_green"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/grey_under_the_green"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The stem leaned east with the Nursery's cuttings. It's Briar.",
+            "next": "q_grey_under_the_green_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/grey_under_the_green",
+                  "the_layers_say"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Kit Laywood",
+        "text": "Mind the bundles.",
+        "next": "end"
+      },
+      "q_grey_under_the_green_offer": {
+        "speaker": "Kit Laywood",
+        "text": "Half a mile inside the Wold, in the ring of sallows the Hollow cuts its withies from. A forester found it. Grey to the last leaf, the moss and the bracken grey under it to the edge of the ring and no further. She cut a stem and wouldn't carry it. — Countwatch counts the patches on the Briar. They're all on the Briar. This one isn't. — I won't lay thorn round it on my own say. That's the rule. Go and look. Stay the night, if you're braver than the forester. Bring me the stem.",
+        "choices": [
+          {
+            "text": "I'll go and look.",
+            "effects": [
+              {
+                "start_quest": "core:quest/grey_under_the_green"
+              }
+            ],
+            "next": "q_grey_under_the_green_accept"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_grey_under_the_green_accept": {
+        "speaker": "Kit Laywood",
+        "text": "It's due west of the Nursery and a bit north. You'll know it. The colour goes out of the ground like a tide.",
+        "next": "hub"
+      },
+      "q_grey_under_the_green_decide": {
+        "speaker": "Kit Laywood",
+        "text": "*She turns the grey stem over in her gauntlets for a long time.* — Up out of the roots. Half a mile in. Bringing the grey with it. — So the Briar isn't only on the rampart. It's under all of us, and it's come up. — And the rule says don't lay thorn where thorn hasn't been. It has been. It's there. It's just been underneath. — I asked for somebody else's say. You're somebody else. Say.",
+        "choices": [
+          {
+            "text": "Lay thorn round the ring. The Briar is already there; lay it where it is.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/grey_under_the_green",
+                  "lay_it_round"
+                ]
+              }
+            ],
+            "next": "q_grey_under_the_green_decide_lay_it_round"
+          },
+          {
+            "text": "Keep the rule. Put the ring on Countwatch's count and watch it.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/grey_under_the_green",
+                  "leave_it_be"
+                ]
+              }
+            ],
+            "next": "q_grey_under_the_green_decide_leave_it_be"
+          },
+          {
+            "text": "Send the stem to the Sayers' Circle. Somebody should find out what the Briar is for.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/grey_under_the_green",
+                  "to_the_circle"
+                ]
+              }
+            ],
+            "next": "q_grey_under_the_green_decide_to_the_circle"
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_grey_under_the_green_decide_lay_it_round": {
+        "speaker": "Kit Laywood",
+        "text": "Where it is. — Yes. That keeps the rule, if you squint, and I'm squinting. Ebb and I will take the Nursery's cuttings in tomorrow and lay a ring round the ring. Whatever's under it can come up inside our thorn instead of the Hollow's withies.",
+        "next": "hub"
+      },
+      "q_grey_under_the_green_decide_leave_it_be": {
+        "speaker": "Kit Laywood",
+        "text": "Keep it. — The rule's older than me, and I've never broken it, and I don't know what I'd be laying thorn round. We'll put it on the count. Alder Wyke will chalk a new line on the tower: nineteen on the thorn, one inside. And we'll watch it grow.",
+        "next": "hub"
+      },
+      "q_grey_under_the_green_decide_to_the_circle": {
+        "speaker": "Kit Laywood",
+        "text": "The Circle. — *She hands it back to you like something hot.* — Take it, then. The layers won't carry it. The Sayers will cut it and boil it and write it up, and perhaps they'll find out what it's for, and perhaps they'll tell us. I've laid thorn thirty years without knowing. I'd like to know before I stop.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "greyed_ring_laid"
+          },
+          {
+            "quest_done": "core:quest/grey_under_the_green"
+          }
+        ],
+        "text": "We laid a ring round the ring. The grey came up to our thorn and stopped. — Ebb says it's leaning on it. I've told him to stop saying things like that."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "greyed_ring_counted"
+          },
+          {
+            "quest_done": "core:quest/grey_under_the_green"
+          }
+        ],
+        "text": "Nineteen on the thorn and one inside. Alder chalked it on the tower himself and stood looking at it longer than he needed to."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "greyed_ring_to_circle"
+          },
+          {
+            "quest_done": "core:quest/grey_under_the_green"
+          }
+        ],
+        "text": "A Sayer wrote from the Spire. Three pages. The last line was 'we do not know either'. I've pinned it to the lintel under the rule."
+      }
     ]
-   },
-   "taken": {
-    "speaker": "The Skarl tally-board",
-    "text": "The note does not come again. Somebody burns charcoal under the tor; the smoke goes straight up. Somebody stands at the middle of the bridge to the west, too far off to see.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/horn_pale_board",
-  "speaker_name": "The Horn Pale's price board",
-  "notes": "The Horn Pale's hook (world/sites/site_exterior.gd, _hook): the price board at the gate. Reads only; the quest is Corra Bracken's (core:quest/custom_says_wait).",
-  "start": "look",
-  "nodes": {
-   "look": {
-    "speaker": "The Horn Pale's price board",
-    "no_talk": true,
-    "text": "A board painted in a Tallymen's clerk's letters: OROTH ANTLER BOUGHT. Two marks the tine, sealed on the tally. Hinds not bought. Heads before noon. Below it, nailed on later, the sheet a buyer would see in Tollmere, torn from the Ledger of Prices: Oroth antler, the Builders' hand, forty marks the tine. Somebody has drawn a line from the two to the forty in charcoal, and written nothing along it.",
-    "choices": [
-     {
-      "text": "Ask the Tallying Hide's hunter about the Pale.",
-      "conditions": [
-       {
-        "quest_not_done": "core:quest/custom_says_wait"
-       },
-       {
-        "not": {
-         "quest_active": "core:quest/custom_says_wait"
-        }
-       }
-      ],
-      "next": "who"
-     },
-     {
-      "text": "Leave the board.",
-      "next": "end"
-     }
+  },
+  {
+    "id": "core:dialogue/ebb_laywood",
+    "speaker_name": "Ebb Laywood",
+    "notes": "Kit Laywood's son, a thorn-layer at the Layers' Ring (world life, Briarwold).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ebb Laywood",
+        "text": "Ebb. Laywood, the young one. Mind the bundles, Mum says. She says it to everyone. She says it to me.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ebb Laywood",
+        "text": "I do, and she says it's a bad habit, and it probably is. — It creaks back. That's all. It's like talking to a ship. — Last month it creaked back before I'd finished.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ebb Laywood",
+        "text": "In case. — I won't say in case of what. It'd sound daft out loud. It sounds daft in my head.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Ebb Laywood",
+        "text": "It's all thorns. Thirty years of it and look at her face. — I don't mind. Somebody has to, and nobody would, and it turns out I don't mind. Don't tell her. She'd think I'd gone soft.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ebb Laywood",
+        "text": "*He is pinning a runner into the wall's thorn and talking to it.* — Sorry. Yes?",
+        "choices": [
+          {
+            "text": "Do you talk to the Briar?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why do you carry a cutting in your shirt?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Is it hard work?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Ebb Laywood",
+        "text": "Mind the bundles.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/aud_yewman",
+    "speaker_name": "Aud Yewman",
+    "notes": "The bowyer of Stave Hollow (world life, Briarwold), a merchant of bows and strings.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Aud Yewman",
+        "text": "*She is flexing a stave across her knee and does not stop.* — Yew, eleven years seasoned, cut in the autumn and not in anger. That's this one. What are you?",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Aud Yewman",
+        "text": "Slip the loop off the upper nock. Let the stave come straight. It takes no strength. — It's written on my door for anyone who wants it. The harder part isn't written anywhere: you can feel exactly how much the bow was used. Some come straight like a sigh. Some come straight like a slammed door.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Aud Yewman",
+        "text": "It's true. I went up and looked. — Good gut, well knotted, the way I'd have done it myself. Whoever restrung it knew the craft. — Nobody restrings a hung bow. The hanging's the letting go. Whoever did it hasn't let go of something, and I'd like to know what.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Aud Yewman",
+        "text": "Not your business. — His. He came down the path with it and said he'd taken his last hart and he wanted to hear what it said. So I unstrung it. It came straight slow, like somebody putting a heavy thing down. He cried. Then he went home and had his supper.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Aud Yewman",
+        "text": "Buying, asking, or bringing one up to be unstrung?",
+        "choices": [
+          {
+            "text": "How do you unstring a dead hunter's bow?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Is it true a bow on Hollin Tor was restrung?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Who was the hunter who asked you to unstring his bow while he's alive?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Aud Yewman",
+        "text": "Mind the racks. They're older than you.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/wat_hurle",
+    "speaker_name": "Wat Hurle",
+    "notes": "The verderer's grandson at the foot of the Verderer's Tower (world life, Briarwold).",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Wat Hurle",
+        "text": "I'm Wat, he's up there, no he won't come down, yes I've asked, and yes I've got his bread. Hello.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Wat Hurle",
+        "text": "He saw a fire on the far side of the Thornmarch, where there's nothing, and he says he's not coming down till he knows who's tending it. — It's been since the summer. Twice a day, bread up and pot down. I've got very good at ladders.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Wat Hurle",
+        "text": "Once. — He made me lie on my back on the top deck and look where he pointed. It was small. And after the Moot started humming somebody walked away from it with a light, north along the thorn. — I didn't tell Mum.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Wat Hurle",
+        "text": "Grandad's count of fires. He chalks it on the underside of the top deck so you have to lie down to read it. I copied it out down here so I don't have to. It's there, by the ladder. You can read it. Everyone does. Nobody does anything.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Wat Hurle",
+        "text": "*He is halfway up the ladder and comes back down it.* — What?",
+        "choices": [
+          {
+            "text": "Why won't the verderer come down?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Have you seen the fire?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's the count on the wall?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Wat Hurle",
+        "text": "Mind the third rung. It's the one.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ned_pitt",
+    "speaker_name": "Ned Pitt",
+    "notes": "The pit-man at the Sawpit (world life, Briarwold), who has not spoken to his brother on the log above in eleven years.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ned Pitt",
+        "text": "*He looks up out of the pit with one red eye.* — Hup. — Sorry. Habit. What?",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ned Pitt",
+        "text": "Hilde Ashby. — Married a Rafter. Neither of us. Eleven years. — It was never her, if I'm honest. It was him saying it was me that frightened her off, and me saying it was him, and then it was eleven years. The saw does our talking. Hup and pull. It's been a good conversation, for a saw.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ned Pitt",
+        "text": "Tamwick's carts. The cider comes up the Wold road on our planks and goes down again as barrels on our planks. Good oak, fallen, by the verderers' leave. Nothing cut standing.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Ned Pitt",
+        "text": "*He looks up at the log for a long time.* — No. — Tell him the chalk line's been a hair east all week. He'll know what I mean. It's not a message. It's the line.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ned Pitt",
+        "text": "Make it quick. The saw's waiting and so's he.",
+        "choices": [
+          {
+            "text": "Why don't you speak to your brother?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What do you saw the planks for?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Is there anything you want carried up to him?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Ned Pitt",
+        "text": "Hup.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/aldo_pitt",
+    "speaker_name": "Aldo Pitt",
+    "notes": "The top-man at the Sawpit (world life, Briarwold), who has not spoken to his brother in the pit below in eleven years.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Aldo Pitt",
+        "text": "*He snaps the chalk line, twice, and looks down into the pit, and back at you.* — Aldo. Top-man. You'll have met the other one.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Aldo Pitt",
+        "text": "Because he started it. — He'll tell you I started it. We're both right, and it was eleven years ago, and the woman married a Rafter and has four children and doesn't remember either of us. — I snap the line twice. The first is always true. The second's in case he says something.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Aldo Pitt",
+        "text": "Who says? — It's a long bench. I moved along for the view. There's a better view of the Vale from the middle. — He hasn't. He's still at his end with his back to me. — That's his business.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Aldo Pitt",
+        "text": "*He looks into the pit a long time.* — Tell him I know about the line. I've been drawing it a hair east on purpose, to see if he'd say. — Don't tell him that. Tell him I know about the line.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Aldo Pitt",
+        "text": "Go on. He can't hear us up here. — He can. Go on anyway.",
+        "choices": [
+          {
+            "text": "Why don't you speak to your brother?",
+            "next": "topic_1"
+          },
+          {
+            "text": "They say you've been eating your bread in the middle of the bench.",
+            "next": "topic_2"
+          },
+          {
+            "text": "Is there anything you want carried down to him?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Aldo Pitt",
+        "text": "Mind the pit. It's deeper than it looks, and he's in it.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/skarl_delving_board",
+    "speaker_name": "The Skarl tally-board",
+    "notes": "The Skarl Delving's hook (world/sites/site_exterior.gd, _hook): the clan's tally-board by the adit. Reads the story; starts core:quest/the_price_at_the_middle for whoever has not had it from Tosk ko-Skarl.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Skarl tally-board",
+        "no_talk": true,
+        "text": "A board of larch, the clan's marks burned into it in rows: six hands at the face, tin two baskets, water in the low gallery, the big vein, the big vein. The rows stop. Under them the clan's sign for a debt owed and not paid, and a boy's name in Valish letters, the C of Colley burned backwards. Across all of it one woodfolk notch, cut with a knife, and under that more notches, one a month, the newest fresh. From the adit a draught comes up, cold, smelling of wet stone and something sweetish, and very far down in it, once, a single thin note, as of a whistle badly blown.",
+        "choices": [
+          {
+            "text": "Follow the note down. Somebody should.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_price_at_the_middle"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_price_at_the_middle"
+                }
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_price_at_the_middle"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": [
+                  "core:quest/the_price_at_the_middle",
+                  "the_delving"
+                ]
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the board as it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Skarl tally-board",
+        "text": "The note does not come again. Somebody burns charcoal under the tor; the smoke goes straight up. Somebody stands at the middle of the bridge to the west, too far off to see.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/horn_pale_board",
+    "speaker_name": "The Horn Pale's price board",
+    "notes": "The Horn Pale's hook (world/sites/site_exterior.gd, _hook): the price board at the gate. Reads only; the quest is Corra Bracken's (core:quest/custom_says_wait).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Horn Pale's price board",
+        "no_talk": true,
+        "text": "A board painted in a Tallymen's clerk's letters: OROTH ANTLER BOUGHT. Two marks the tine, sealed on the tally. Hinds not bought. Heads before noon. Below it, nailed on later, the sheet a buyer would see in Tollmere, torn from the Ledger of Prices: Oroth antler, the Builders' hand, forty marks the tine. Somebody has drawn a line from the two to the forty in charcoal, and written nothing along it.",
+        "choices": [
+          {
+            "text": "Ask the Tallying Hide's hunter about the Pale.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/custom_says_wait"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/custom_says_wait"
+                }
+              }
+            ],
+            "next": "who"
+          },
+          {
+            "text": "Leave the board.",
+            "next": "end"
+          }
+        ]
+      },
+      "who": {
+        "speaker": "The Horn Pale's price board",
+        "text": "West through the Greatwood, a hide in an oak with a post at its foot cut full of notches. Whoever keeps it has been watching this gate for three summers.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/layers_ring_count",
+    "speaker_name": "The layers' count",
+    "notes": "The Layers' Ring's hook (world/sites/site_exterior.gd, _hook): the layers' chalked count on the gate stone. Reads only; the quest is Kit Laywood's.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The layers' count",
+        "no_talk": true,
+        "text": "Chalked on the gate stone of the ring, in three hands: yards of thorn laid this season, one hundred and ninety. Cuttings planted, six hundred. Gauntlets worn through, four. Layers volunteered, none. And under it, in a fourth hand, larger: GREY PATCH, HALF A MILE IN, THE WITHY RING. NOT ON THE THORN. ASK KIT.",
+        "choices": [
+          {
+            "text": "Leave the count.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hob_yewman",
+    "speaker_name": "Hob Yewman",
+    "notes": "Aud Yewman's grandson and apprentice at Stave Hollow (world life, Briarwold), who carries the dead's bows up Hollin Tor.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hob Yewman",
+        "text": "*He twangs the string of the bow he is carrying, listens, and hums the note back.* — Hob. Yewman. Gran makes them; I string them; I carry them up the tor when it's time.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Hob Yewman",
+        "text": "Heavy, which it shouldn't be; a bow's nothing. — You hang it on a peg in the holly, and you say the words, and you come down, and you don't look back, because if you look back all thousand of them are looking at you. Not at you. At the bow you brought.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Hob Yewman",
+        "text": "*He stops waxing.* — Not me. — I know whose it is. I carried it up myself. It's not my name to say; the Wold doesn't say the names on the tor. — Whoever restrung it used gut from Gran's own reel. I'd know it anywhere; she twists it left. Don't tell her. She'll go up, and her knees won't.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Hob Yewman",
+        "text": "Mostly. Every string's got a note, and everyone's draw stretches it their own way. Corra Bracken's is high and cross. My grandad's was so low it hummed in your teeth. — His is on the tor now. I still hear it when the wind's in the holly.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hob Yewman",
+        "text": "*He is waxing a string between his thumbs.* — Go on.",
+        "choices": [
+          {
+            "text": "What is it like, carrying a bow up Hollin Tor?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who restrung the bow on the tor?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Can you tell a hunter by their bowstring?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Hob Yewman",
+        "text": "Mind the stave racks. Gran counts them.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/jory_rooke",
+    "speaker_name": "Jory Rooke",
+    "notes": "The burner at the Windthrow's lip (world life phase 2, Briarwold). Gives core:quest/what_falls and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Jory Rooke",
+        "text": "*He has the axe up before he has seen you, and puts it down when he has.* — Sorry. The roots on the plate move when the wind's up, and you get so you think it's something coming up. — Jory. Rooke. You'll know my aunt and uncle, at the camp. Everybody does.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Jory Rooke",
+        "text": "The Brother. The Grandfather's brother. They grew up together, the Hollow says, a mile apart, and when the Long Wind came the Grandfather was already dead and held, and the Brother was alive and went over. — My gran heard it. She said it was like the whole Wold sat down.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Jory Rooke",
+        "text": "Old Hurle marked it for the burners, the spring after. That's custom: the verderer walks every fallen tree and marks it, and then it's ours, after the wood's had its share. Twenty years the mark's stood. Nobody's cut it. — You'd think a tree that size would be cut by now. You'd think.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Jory Rooke",
+        "text": "Uncle Hal went under the plate last autumn with a lantern, to see how far the heartwood ran. He said it would be the making of the camp. Charcoal for the Hollow for a generation. — He didn't come up. His lantern's still down there, I can see it some nights, at the foot of the climb. It doesn't move. — I've the axe. I've sat here a month with it.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Jory Rooke",
+        "text": "Ask, then. I'm not going anywhere. That's the trouble.",
+        "choices": [
+          {
+            "text": "What is the Windthrow?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Who does the fallen tree belong to?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why are you sitting here?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll go down under the plate. For your uncle.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_falls"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_falls"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've been under the plate. I found this.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_falls",
+                  "what_falls"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Jory Rooke",
+        "text": "Mind the pit's edge. It goes further down than the light does.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Jory Rooke",
+        "text": "*He looks at the mouth under the plate, and at you, and back.* — You'd do that. — He went in at the bottom of the plate where the taproot came out, and he said the roots go down like a stair. There's poachers use it. Hounds lie up in it. He said there was something in the water at the bottom that moved when he put the lantern down. — Bring me something. His axe, if it's there. Anything. And if you see what's at the bottom, I'd like to know what it is, so I know what to tell my aunt.",
+        "choices": [
+          {
+            "text": "I'll bring you his axe, and word of what's down there.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_falls"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Jory Rooke",
+        "text": "Take a light. Take two. — I'll be here. I'm always here.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Jory Rooke",
+        "text": "*He takes the axe in both hands and turns it over, and pulls one of the fine roots out of the eye of it, and it comes out whole, a yard long.* — That's his. That's his mark on it. — And the thing at the bottom was the root. The Brother's own root, stood up. It ate him. — *He is quiet a long while.* — The mark still stands. The tree's ours by custom, and there's nothing at the bottom now to say otherwise. You went down. You say what's done with it.",
+        "choices": [
+          {
+            "text": "Burn it. It's the burners' by the verderer's mark, and Hal died for it.",
+            "next": "q_burn",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_falls",
+                  "burn_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave it. What falls feeds the wood, and the wood has taken its share.",
+            "next": "q_leave",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_falls",
+                  "feed_the_wood"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Take the heartwood to the Hollow, to the Grandfather's keeper. It's his brother.",
+            "next": "q_hollow",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_falls",
+                  "to_the_hollow"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_burn": {
+        "speaker": "Jory Rooke",
+        "text": "Then we burn it. My aunt'll bring the camp up in the spring and we'll start at the crown and work back. It'll take us ten years. — I'll cut the first chip myself. I'll cut it with his axe.",
+        "next": "hub"
+      },
+      "q_leave": {
+        "speaker": "Jory Rooke",
+        "text": "*He sets his own axe down on the moss, carefully, as if it might go off.* — Aye. It's had him. It can have the rest of itself. — I'll tell my aunt the mark's lapsed. She'll shout. Then she'll be glad.",
+        "next": "hub"
+      },
+      "q_hollow": {
+        "speaker": "Jory Rooke",
+        "text": "To Cille Tamwood. To go in the Grandfather's walls, where the Hollow women planked him. — Brothers. Aye. That's right. That's the only thing anybody's said about this tree in twenty years that's right. — Go on. I'll keep the mark till she says.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "windthrow_burned"
+          },
+          {
+            "quest_done": "core:quest/what_falls"
+          }
+        ],
+        "text": "First chip's cut. With his axe. It's good wood, all the way down. I don't go down, though. Nobody goes down."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "windthrow_left"
+          },
+          {
+            "quest_done": "core:quest/what_falls"
+          }
+        ],
+        "text": "Foxglove's come up all over the pit since. My aunt came up to look at it, and shouted, and then sat with me a while."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "windthrow_hollow"
+          },
+          {
+            "quest_done": "core:quest/what_falls"
+          }
+        ],
+        "text": "Cille Tamwood came out of the Hollow. She's never once been out. She walked the Brother end to end and put her hand on the plate. Didn't say anything. Then she went home."
+      }
     ]
-   },
-   "who": {
-    "speaker": "The Horn Pale's price board",
-    "text": "West through the Greatwood, a hide in an oak with a post at its foot cut full of notches. Whoever keeps it has been watching this gate for three summers.",
-    "next": "end"
-   }
-  }
- },
- {
-  "id": "core:dialogue/layers_ring_count",
-  "speaker_name": "The layers' count",
-  "notes": "The Layers' Ring's hook (world/sites/site_exterior.gd, _hook): the layers' chalked count on the gate stone. Reads only; the quest is Kit Laywood's.",
-  "start": "look",
-  "nodes": {
-   "look": {
-    "speaker": "The layers' count",
-    "no_talk": true,
-    "text": "Chalked on the gate stone of the ring, in three hands: yards of thorn laid this season, one hundred and ninety. Cuttings planted, six hundred. Gauntlets worn through, four. Layers volunteered, none. And under it, in a fourth hand, larger: GREY PATCH, HALF A MILE IN, THE WITHY RING. NOT ON THE THORN. ASK KIT.",
-    "choices": [
-     {
-      "text": "Leave the count.",
-      "next": "end"
-     }
+  },
+  {
+    "id": "core:dialogue/windthrow_mark",
+    "speaker_name": "The verderer's mark",
+    "notes": "The Windthrow's hook (site hook post by the pit): reads the mark; starts core:quest/what_falls at its first stage for whoever has not had it from Jory Rooke.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The verderer's mark",
+        "no_talk": true,
+        "text": "A stake of split oak driven in at the pit's lip, the verderer's hart-and-axe burned into its face twenty years deep: fallen, the burners' after the wood. Somebody has cut a notch under it every day for a month, and stopped. Below it, wedged in the crack of the stake, a fresh hazel stick with one word scratched on it in charcoal: HAL. From the mouth under the plate comes a smell of wet earth and old tea, and very faintly, at the edge of hearing, the creak of a root taking a weight.",
+        "choices": [
+          {
+            "text": "Go down under the plate and see what keeps it.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_falls"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_falls"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/what_falls"
+              }
+            ]
+          },
+          {
+            "text": "Leave the mark as it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The verderer's mark",
+        "text": "Somebody at the lip, a young burner with an axe across his knees, watches you go and does not say anything. The roots on the plate move in the wind.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/tinehold_challenge",
+    "speaker_name": "The challenge on the gate",
+    "notes": "Tinehold's hook (site hook post at the gate): the Marshal's challenge; starts core:quest/a_gate_is_known at its first stage for whoever has not had it from Wystan Tine.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The challenge on the gate",
+        "no_talk": true,
+        "text": "A board nailed to a post by the gate, the letters cut with a knife and rubbed with soot: ANY KNIGHT WHO KNEELS AT A GATE MAY COME AND KNEEL AT THIS ONE. — A. V., MARSHAL. Under it, older, cut shallower, somebody has carved a hart's head with fourteen points, and somebody else has cut a line through it. The poles up the track creak. From the keep comes the sound of a hound on a chain, turning and turning.",
+        "choices": [
+          {
+            "text": "Go in, and find the Marshal.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/a_gate_is_known"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/a_gate_is_known"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": [
+                  "core:quest/a_gate_is_known",
+                  "the_hold"
+                ]
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Leave the challenge where it is.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The challenge on the gate",
+        "text": "Up on the Tine Tower the carved antlers stand against the sky. Far to the east, the Woodfolk say, a knight has been kneeling at the Moot Gate for three days.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silas_penhallow",
+    "speaker_name": "Silas Penhallow",
+    "notes": "The clerk at the Charter Delf's shaft head (world life phase 2, Briarwold). Gives core:quest/what_the_ledger_owes and hears its decision.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Silas Penhallow",
+        "text": "*He looks at you over his spectacles, and then down at a page, and writes something.* — One visitor. Penhallow, clerk to the Charter Company. The office is open. It is always open. Nobody comes.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Silas Penhallow",
+        "text": "Lead, with silver in it, a little. Seven years. Four thousand and eleven tubs, every one weighed and written down. The spoil went down the slope. The oaks died. The Woodfolk said nothing. — I wrote that down too. Nobody asked me to.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Silas Penhallow",
+        "text": "The deep gallery broke into thorn. The Briar's own, eighty fathoms down, two miles from the Thornmarch. It came up the shaft in one summer, and the hounds came up with it. The Company left in a week. — Nobody told me to go. The Company pays me quarterly. I post its notices.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Silas Penhallow",
+        "text": "The headframe. Rafts timber. You can see the wheel from the Skarl road over the trees. The cage is at the bottom; the rope still holds. I have not been down since 1036. The hounds come up at night and sit round the shaft head and look at the office. I keep the lamp lit.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Silas Penhallow",
+        "text": "Is there a matter for the Company?",
+        "choices": [
+          {
+            "text": "What did the Delf mine?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why was it left?",
+            "next": "topic_2"
+          },
+          {
+            "text": "How does one get down?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Your notice. The ledger in the counting-room.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_ledger_owes"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_ledger_owes"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've been down. I have the ledger.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_ledger_owes",
+                  "the_ledger"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Silas Penhallow",
+        "text": "One visitor, departing. — Mind the shaft head. The hounds have been.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Silas Penhallow",
+        "text": "Seven years of the Company's lead in it, and at the back the surveyor's soundings of the deep gallery. I left it on the counting-room desk the day the thorn came up. A clerk does not leave his ledger. — The Company will not pay for it; it has forgotten it. I will pay. I have been paid for eight years for nothing. — The counting-room is off the main drift. The thorn is at the bottom. What lives in it is at the bottom. You need not go to the bottom.",
+        "choices": [
+          {
+            "text": "I'll bring up your ledger.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_ledger_owes"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Silas Penhallow",
+        "text": "The cage is at the bottom; the ladderway runs beside it. One visitor, descending. I will write it down.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Silas Penhallow",
+        "text": "*He weighs it in his palm.* — Three pounds and a quarter. — *He opens it at the back, at the soundings, and reads the last word, and shuts it.* — Thorn. Under all of us, as far west as this. The surveyor went home to the Rafts and told nobody. I wrote it down and told nobody. — It is the Company's book. It is my hand. You brought it up. Where does it go?",
+        "choices": [
+          {
+            "text": "To the Company in Tollmere. Their mine, their book, and they should know what's under it.",
+            "next": "q_d_company",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "to_the_company"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "To Kit Laywood at the Layers' Ring. The layers should know where the Briar runs.",
+            "next": "q_d_layers",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "to_the_layers"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Burn it. Nobody should come back here for the lead.",
+            "next": "q_d_burn",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_ledger_owes",
+                  "burn_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think on it.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_d_company": {
+        "speaker": "Silas Penhallow",
+        "text": "Then I shall carry it down myself, and ask to be told to go home. — They will send men back for the lead. They will read the last page and send more. I have written that down as well.",
+        "next": "hub"
+      },
+      "q_d_layers": {
+        "speaker": "Silas Penhallow",
+        "text": "The layers. Yes. They lay the thorn and do not know where it goes under the ground. Now they will. — I shall walk it over to the Ring myself. I have not walked anywhere in eight years. Two pounds lighter when I come back, I expect.",
+        "next": "hub"
+      },
+      "q_d_burn": {
+        "speaker": "Silas Penhallow",
+        "text": "*He watches it catch in the office stove and does not write anything down.* — There. The Delf has no ledger. A mine with no ledger was never worked. — I think I shall go home.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "ledger_to_company"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "The Company wrote back. They are sending men in the spring, and an engineer, and a surveyor who has not been to the Rafts. I am to stay and weigh the tubs."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "ledger_to_layers"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "Kit Laywood has the soundings. The layers have been out along the line of the root, the whole length of the Northwold, laying thorn over nothing, on bare ground, where they say it is under. I do not understand it. I have written it down."
+      },
+      {
+        "conditions": [
+          {
+            "flag": "ledger_burned"
+          },
+          {
+            "quest_done": "core:quest/what_the_ledger_owes"
+          }
+        ],
+        "text": "I have locked the office. I am going home. One visitor, the last. Will you take the key? — No. Nor would I."
+      }
     ]
-   }
+  },
+  {
+    "id": "core:dialogue/charter_delf_notice",
+    "speaker_name": "The Company's notices",
+    "notes": "The Charter Delf's hook (two notices on a post by the shaft head): starts core:quest/what_the_ledger_owes at its first stage for whoever has not had it from Silas Penhallow.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Company's notices",
+        "no_talk": true,
+        "text": "Two notices, both in the same small hand. The older: THE CHARTER COMPANY OF THE LANTERN ROW. THE DELF IS CLOSED UNTIL FURTHER NOTICE. ENQUIRIES TO THE CLERK. The newer, pinned over its corner: REWARD for the return of the Company's ledger, left on the counting-room desk off the main drift, 1036. Apply to the clerk. THE COMPANY WILL NOT PAY. THE CLERK WILL. — From the shaft beside the post comes a smell of wet stone and green sap, and very far down, a dog barking, the way a dog barks in its sleep.",
+        "choices": [
+          {
+            "text": "Go down the ladderway for the ledger.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_ledger_owes"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_ledger_owes"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_ledger_owes"
+              }
+            ]
+          },
+          {
+            "text": "Leave the notices.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Company's notices",
+        "text": "In the office window a lamp is lit at noon, and somebody behind it writes something down.",
+        "next": "end"
+      }
+    }
   }
- },
- {
-  "id": "core:dialogue/hob_yewman",
-  "speaker_name": "Hob Yewman",
-  "notes": "Aud Yewman's grandson and apprentice at Stave Hollow (world life, Briarwold), who carries the dead's bows up Hollin Tor.",
-  "start": "greet",
-  "nodes": {
-   "greet": {
-    "speaker": "Hob Yewman",
-    "text": "*He twangs the string of the bow he is carrying, listens, and hums the note back.* — Hob. Yewman. Gran makes them; I string them; I carry them up the tor when it's time.",
-    "next": "hub"
-   },
-   "topic_1": {
-    "speaker": "Hob Yewman",
-    "text": "Heavy, which it shouldn't be; a bow's nothing. — You hang it on a peg in the holly, and you say the words, and you come down, and you don't look back, because if you look back all thousand of them are looking at you. Not at you. At the bow you brought.",
-    "next": "hub"
-   },
-   "topic_2": {
-    "speaker": "Hob Yewman",
-    "text": "*He stops waxing.* — Not me. — I know whose it is. I carried it up myself. It's not my name to say; the Wold doesn't say the names on the tor. — Whoever restrung it used gut from Gran's own reel. I'd know it anywhere; she twists it left. Don't tell her. She'll go up, and her knees won't.",
-    "next": "hub"
-   },
-   "topic_3": {
-    "speaker": "Hob Yewman",
-    "text": "Mostly. Every string's got a note, and everyone's draw stretches it their own way. Corra Bracken's is high and cross. My grandad's was so low it hummed in your teeth. — His is on the tor now. I still hear it when the wind's in the holly.",
-    "next": "hub"
-   },
-   "hub": {
-    "speaker": "Hob Yewman",
-    "text": "*He is waxing a string between his thumbs.* — Go on.",
-    "choices": [
-     {
-      "text": "What is it like, carrying a bow up Hollin Tor?",
-      "next": "topic_1"
-     },
-     {
-      "text": "Who restrung the bow on the tor?",
-      "next": "topic_2"
-     },
-     {
-      "text": "Can you tell a hunter by their bowstring?",
-      "next": "topic_3"
-     },
-     {
-      "text": "Goodbye.",
-      "next": "bye"
-     }
-    ]
-   },
-   "bye": {
-    "speaker": "Hob Yewman",
-    "text": "Mind the stave racks. Gran counts them.",
-    "next": "end"
-   }
-  }
- }
 ]
