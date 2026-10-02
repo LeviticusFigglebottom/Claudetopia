@@ -8,7 +8,8 @@ extends TestCase
 ## The foes forged so far (this grows to every custom-rigged foe and boss).
 const FORGED: Array[String] = ["core:enemy/down_wolf", "core:enemy/crag_wolf", "core:enemy/thornhound",
 	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver", "core:enemy/stone_thrall", "core:enemy/bristleback",
-	"core:enemy/sallowjaw", "core:enemy/gutter_drake", "core:enemy/warden"]
+	"core:enemy/sallowjaw", "core:enemy/gutter_drake", "core:enemy/warden",
+	"core:enemy/wisp"]
 const REACTIONS: Array[String] = ["Hit_Light", "Hit_Light_L", "Stagger", "Stagger_B", "Knockdown", "Get_Up", "Death_A",
 	"Idle", "Idle_Combat", "Walk", "Run"]
 
@@ -97,6 +98,12 @@ func test_a_blow_lands_on_the_head_and_the_quarters() -> void:
 		if m == null:
 			continue
 		var shapes := e.hurtbox.find_children("*", "CollisionShape3D", false, false)
+		var family := str((m.meta.get("params", {}) as Dictionary).get("family", ""))
+		if family == "wisp":
+			# a light hanging in the air is struck where the light is
+			assert_eq(shapes.size(), 1, "the wisp is struck at its light")
+			assert_gt((shapes[0] as CollisionShape3D).position.y, e.capsule_height * 0.5, "its light hangs high")
+			continue
 		assert_gt(shapes.size(), 1, "%s is hit as a trunk and a head" % id)
 		# the head stands well ahead of the actor's middle, toward its forward (-Z)
 		var reach_fwd := -INF
@@ -111,7 +118,6 @@ func test_a_blow_lands_on_the_head_and_the_quarters() -> void:
 			for end in [cs.transform * Vector3(0.0, half, 0.0), cs.transform * Vector3(0.0, -half, 0.0)]:
 				reach_fwd = maxf(reach_fwd, -(end as Vector3).z)
 				reach_back = minf(reach_back, -(end as Vector3).z)
-		var family := str((m.meta.get("params", {}) as Dictionary).get("family", ""))
 		if family == "biped":
 			# a giant on two legs is struck from its knees to its skull
 			var top := -INF
@@ -145,3 +151,22 @@ func test_a_thralls_limbs_come_off_and_it_crawls() -> void:
 	assert_true(m.has_clip("Attack_5"), "and sweeps from there")
 	for c in e.get_tree().current_scene.find_children("FallenLimb", "RigidBody3D", false, false) if e.get_tree().current_scene != null else []:
 		c.queue_free()
+
+
+func test_the_wisp_is_a_light_that_goes_out() -> void:
+	var e := _foe("core:enemy/wisp")
+	var m := e.anim.model as CreatureModel
+	if m == null:
+		fail("the wisp has no forged body")
+		return
+	assert_true(m._light != null, "the wisp carries a light")
+	assert_gt(e.attack_origin.position.y, 0.3, "it casts from its light, not its feet")
+	await _tree().process_frame
+	assert_gt(m._light.light_energy, 0.5, "it is lit")
+	e.anim.play_intent("Death_A")
+	var t := 0.0
+	while t < 2.5:
+		await _tree().process_frame
+		t += _tree().root.get_process_delta_time()
+		e.anim._physics_process(1.0 / 30.0)
+	assert_false(m._light.visible, "dead, it has gone out")

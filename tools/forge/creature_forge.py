@@ -310,6 +310,8 @@ def build(name: str, args) -> None:
                          "hurt": hurt_volumes(sp, body), "mesh": "%s_Body" % C,
                          "height": round(float(bounds[5]), 4), "tint": sp.extra.get("tint", "#ffffff"),
                          "limbs": sp.extra.get("limbs", []), "parts": [pc.name for pc in pieces],
+                         "look": sp.extra.get("look", ""),
+                         "origin": godot(sp.extra["module"].origin()) if hasattr(sp.extra.get("module"), "origin") else None,
                          "rig_manifest": quad.rig_manifest(sp.skel) if quadish else cr.manifest(sp.skel)})
     write_sidecars(out_dir, name)
     log("wrote %s: %s tris, in %.0fs" % (glb, tris, time.time() - t0))

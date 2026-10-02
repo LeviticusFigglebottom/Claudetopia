@@ -37,6 +37,13 @@ const CRAWLING := {"Idle": "Crawl_Idle", "Idle_Combat": "Crawl_Idle", "Walk": "C
 	"Hit_Light": "Crawl_Idle", "Stagger": "Crawl_Idle", "Knockdown": "Crawl_Idle", "Get_Up": "Crawl_Idle"}
 ## How long a limb that came off lies on the ground before it is gone.
 const LIMB_LIES_S := 8.0
+## The wisp's look (meta `look`: "wisp"): its shroud is mist, its core and a halo a light.
+const VEIL_SHADER := preload("res://assets/shaders/wisp_veil.gdshader")
+const GLOW_SHADER := preload("res://assets/shaders/wisp_glow.gdshader")
+const WISP_LIGHT_ENERGY := 1.0
+const WISP_LIGHT_RANGE := 5.5
+## How long a wisp takes to go out once it is dead.
+const WISP_GOES_OUT_S := 1.6
 ## Clips the game asks for by another name, or that a beast plays as one of its own.
 const STANDS_FOR := {
 	"Death_A": "Death", "Death_B": "Death", "Hit_Light": "Hit", "Hit_Heavy": "Stagger", "Block_Hit": "Hit",
@@ -90,6 +97,11 @@ var _have_yaw := false
 var _actor: Node = null
 var _limbs_shown := 0
 var _crawl := false
+var _light: OmniLight3D = null
+var _glows: Array[ShaderMaterial] = []
+var _veils: Array[ShaderMaterial] = []
+var _out := 0.0               # how far gone out a dead wisp is, 0..1
+var _flare := 0.0             # the light brightened by a cast
 
 
 ## The model a body variant wears ("" when the forge has made none).
@@ -160,6 +172,8 @@ func build() -> void:
 		anim_player.playback_default_blend_time = 0.0
 	_set_up_lods()
 	_tint()
+	if str(meta.get("look", "")) == "wisp":
+		_wisp_look()
 	_play_loop("Idle", 0.0)
 
 
@@ -334,6 +348,8 @@ func _on_finished(clip: StringName) -> void:
 func _process(delta: float) -> void:
 	if anim_player == null:
 		return
+	if _light != null or not _glows.is_empty():
+		_wisp_light(delta)
 	_track_turn(delta)
 	if _actor != null and is_instance_valid(_actor) and _actor.has_method("limbs_broken"):
 		var n := int(_actor.call("limbs_broken"))
@@ -416,6 +432,10 @@ func fit_hurtbox(hurtbox: Area3D, actor: Node3D) -> void:
 			c.queue_free()
 	_actor = actor
 	var to_actor := actor.global_transform.affine_inverse() * global_transform
+	# what it casts from: the wisp's light, not its feet
+	var origin: Variant = meta.get("origin", null)
+	if origin is Array and actor.get("attack_origin") is Node3D:
+		(actor.get("attack_origin") as Node3D).position = to_actor * _v3(origin)
 	var s := scale.x
 	var i := 0
 	for v in vols:
@@ -518,3 +538,75 @@ func _throw(mi: MeshInstance3D) -> void:
 	rb.apply_central_impulse((away * 3.0 + Vector3.UP * 2.0) * rb.mass)
 	rb.apply_torque_impulse(Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * rb.mass * 2.0)
 	get_tree().create_timer(LIMB_LIES_S).timeout.connect(rb.queue_free)
+
+
+# --- the wisp's light ----------------------------------------------------------------------------
+
+func _wisp_look() -> void:
+	var body_tex: Texture2D = null
+	for mi in _root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null:
+			continue
+		var base := m.get_active_material(0)
+		if base is BaseMaterial3D and body_tex == null:
+			body_tex = (base as BaseMaterial3D).albedo_texture
+		var core := String(m.name).contains("Core")
+		var mat := ShaderMaterial.new()
+		if core:
+			mat.shader = GLOW_SHADER
+			_glows.append(mat)
+		else:
+			mat.shader = VEIL_SHADER
+			if body_tex != null:
+				mat.set_shader_parameter("streaks", body_tex)
+			mat.set_shader_parameter("tint", tint if tint != Color.WHITE else Color(0.62, 0.84, 0.8))
+			_veils.append(mat)
+		m.material_override = mat
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if skeleton == null:
+		return
+	var att := BoneAttachment3D.new()
+	att.name = "Lantern"
+	att.bone_name = "Hips"
+	skeleton.add_child(att)
+	var halo := MeshInstance3D.new()
+	halo.name = "Halo"
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.75, 0.75)
+	halo.mesh = quad
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var hm := ShaderMaterial.new()
+	hm.shader = GLOW_SHADER
+	hm.set_shader_parameter("billboard", true)
+	halo.material_override = hm
+	_glows.append(hm)
+	att.add_child(halo)
+	_light = OmniLight3D.new()
+	_light.name = "Light"
+	_light.light_color = Color(1.0, 0.7, 0.35)
+	_light.light_energy = WISP_LIGHT_ENERGY
+	_light.omni_range = WISP_LIGHT_RANGE
+	_light.shadow_enabled = false
+	att.add_child(_light)
+
+
+## The light breathes; a cast flares it; dead, it goes out.
+func _wisp_light(delta: float) -> void:
+	var casting := _intent_clip in ["Cast_Quick", "Attack_1", "Attack_2"]
+	_flare = move_toward(_flare, 1.0 if casting else 0.0, delta * (3.0 if casting else 1.5))
+	if _intent_clip == "Death":
+		_out = minf(_out + delta / WISP_GOES_OUT_S, 1.0)
+	else:
+		_out = 0.0
+	var fade := 1.0 - _out
+	var t := Time.get_ticks_msec() * 0.001
+	var flicker := 0.9 + 0.06 * sin(t * 13.0) + 0.04 * sin(t * 7.3 + 1.3)
+	if _light != null:
+		_light.light_energy = WISP_LIGHT_ENERGY * flicker * fade * (1.0 + 1.2 * _flare)
+		_light.visible = fade > 0.01
+	for g in _glows:
+		g.set_shader_parameter("energy", 1.0 + 1.5 * _flare)
+		g.set_shader_parameter("fade", fade)
+	for v in _veils:
+		v.set_shader_parameter("fade", fade)

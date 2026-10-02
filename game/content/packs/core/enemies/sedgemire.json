@@ -196,8 +196,8 @@
     "faction": "unquiet",
     "tint": "#9fd6c8",
     "scale": 0.35,
-    "height": 0.5,
-    "radius": 0.25,
+    "height": 1.4,
+    "radius": 0.3,
     "clips": [
       "Idle",
       "Walk",

@@ -1,0 +1,229 @@
+{
+ "bones": 14,
+ "bounds": [
+  -0.2766,
+  -0.1642,
+  0.321,
+  0.2795,
+  0.4081,
+  1.4306
+ ],
+ "clips": [
+  "Attack_1",
+  "Attack_2",
+  "Cast_Quick",
+  "Death",
+  "Get_Up",
+  "Hit",
+  "Idle",
+  "Idle_Combat",
+  "Knockdown",
+  "Run",
+  "Stagger",
+  "Strafe_L",
+  "Strafe_R",
+  "Walk",
+  "Walk_Back"
+ ],
+ "collision": "capsule",
+ "def_scale": 0.35,
+ "generator": "creature_forge",
+ "height": 1.4306,
+ "hurt": [
+  {
+   "c": [
+    0.0,
+    1.17,
+    -0.0
+   ],
+   "kind": "sphere",
+   "r": 0.26
+  }
+ ],
+ "limbs": [],
+ "look": "wisp",
+ "mesh": "Wisp_Body",
+ "origin": [
+  0.0,
+  1.15,
+  -0.0
+ ],
+ "params": {
+  "family": "wisp",
+  "style": {
+   "seed": 81
+  }
+ },
+ "parts": [
+  "Wisp_Body",
+  "Wisp_Core"
+ ],
+ "rig": "WM_Wisp_v1",
+ "rig_manifest": {
+  "bones": [
+   {
+    "deform": false,
+    "head": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "length": 0.168,
+    "name": "Root",
+    "parent": null
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.0,
+     1.15
+    ],
+    "length": 0.08,
+    "name": "Hips",
+    "parent": "Root"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.0,
+     1.19
+    ],
+    "length": 0.22,
+    "name": "Hood",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.05,
+     1.1
+    ],
+    "length": 0.2657,
+    "name": "Trail1",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.14,
+     0.85
+    ],
+    "length": 0.3046,
+    "name": "Trail2",
+    "parent": "Trail1"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0,
+     0.26,
+     0.57
+    ],
+    "length": 0.2778,
+    "name": "Trail3",
+    "parent": "Trail2"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.0866,
+     -0.05,
+     1.25
+    ],
+    "length": 0.272,
+    "name": "Tendril0A",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.2252,
+     -0.13,
+     1.03
+    ],
+    "length": 0.3059,
+    "name": "Tendril0B",
+    "parent": "Tendril0A"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.0866,
+     -0.05,
+     1.25
+    ],
+    "length": 0.272,
+    "name": "Tendril1A",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.2252,
+     -0.13,
+     1.03
+    ],
+    "length": 0.3059,
+    "name": "Tendril1B",
+    "parent": "Tendril1A"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.05,
+     0.0866,
+     1.21
+    ],
+    "length": 0.272,
+    "name": "Tendril2A",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     -0.13,
+     0.2252,
+     0.99
+    ],
+    "length": 0.3059,
+    "name": "Tendril2B",
+    "parent": "Tendril2A"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.05,
+     0.0866,
+     1.21
+    ],
+    "length": 0.272,
+    "name": "Tendril3A",
+    "parent": "Hips"
+   },
+   {
+    "deform": true,
+    "head": [
+     0.13,
+     0.2252,
+     0.99
+    ],
+    "length": 0.3059,
+    "name": "Tendril3B",
+    "parent": "Tendril3A"
+   }
+  ],
+  "rig": "WM_Wisp_v1"
+ },
+ "seed": 81,
+ "tint": "#9fd6c8",
+ "tris": [
+  2400,
+  898,
+  474
+ ],
+ "version": 1
+}

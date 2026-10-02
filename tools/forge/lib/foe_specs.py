@@ -110,6 +110,13 @@ def spec(name: str) -> FoeSpec:
                                        "lie_roll": 180.0, "turn": 45.0,
                                        "speeds": {"Walk": 0.55, "Trot": 1.1, "Run": 3.4},
                                        "cycles": {"Walk": 16, "Trot": 10, "Run": 7}}})
+    if name == "wisp":
+        from . import wisp as wp
+        st = wp.WispStyle()
+        return FoeSpec(name, "wisp", wp.RIG, st, lambda: wp.shroud_scene(st), def_scale=0.35, tex=256,
+                       tris=2400, lod1=900, lod2=300, spacing=0.008,
+                       extra={"tint": "#9fd6c8", "module": wp, "parts": lambda: wp.scene_parts(st),
+                              "part_share": {"Body": 0.85, "Core": 0.15}, "look": "wisp"})
     if name == "warden":
         from . import warden as wd
         st = wd.WardenStyle()
@@ -128,7 +135,7 @@ def spec(name: str) -> FoeSpec:
 
 
 FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "gutter_drake", "sallowjaw", "weaver",
-        "stone_thrall", "warden"]
+        "stone_thrall", "warden", "wisp"]
 QUADS = ("canid", "boar", "reptile")
 
 
