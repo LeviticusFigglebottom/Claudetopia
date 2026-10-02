@@ -16103,3 +16103,224 @@ test_content_split, test_region_check; `region_check.py briarwold` PASS.
 **For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
 and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
 (their glades only exist after a build; shoot them with `--weather clear --time 16.5`).
+## Ground texture quality (Standard/High) lands; far-tree pictures nearer and ground cover through Terrain3D's instancer are measured and not adopted (terrain-fidelity, 2026-10-02)
+
+### Ground texture quality: Standard and High
+- **Which six.** Counted from the w4096i control map (base and overlay weighted by blend), as a
+  share of the land and of the ground within 40 m of a road: vale grass 19/22%, limestone 10/9%,
+  crag 12/6%, forest floor 7/9%, grey grass 7/9%, dirt path 2/9% (the road under your feet). The
+  brief's granite is 1.4/1.0% and the ash soil 4.5/4.8% (eighth), so crag and grey grass took their places.
+  Mud (7/5%) was the close seventh.
+- **Painted again, not scaled.** `tools/world/gen_terrain_textures.py --high` paints them at 2048 into
+  `game/assets/textures/terrain_high/` with the same recipes. Everything in a recipe is in metres on the
+  ground; `terrain_micro.py`'s pixel sizes are now scaled by the tile's size (identical at 1024: the
+  committed limestone, crag and ash soil regenerate byte for byte). What 2048 adds is `fine_detail`: a
+  last octave between two and six of its texels (a band a 1024 tile cannot hold), sized by the normal
+  tilt it gives (0.14-0.20), shaped per recipe (fibres along the grass's lean, grit, crystal grain and
+  pitting in stone), deeper in the hollows. The colour is held to the shipped 1024 tile's mean in
+  linear light per channel. Vale grass, forest floor, grey grass and dirt path were painted before the
+  generator's seed was stable, so their 2048 tiles are new instances of the same recipe, not the same
+  pattern; the brightness is the same.
+- **Shipped as a second Terrain3DAssets** (`game/world/terrain_assets_high.tres`, written by
+  `tools_gd/import_terrain.gd`, also `-- --assets-only`), the same lossless import as the Standard set.
+  Terrain3D 1.0.2 builds one texture array from every slot and refuses mixed sizes ("doesn't match
+  size of first texture"), so the other 17 slots are scaled up to 2048 (bilinear) as the world loads
+  (`World.prepare_high_textures`) rather than shipped at 2048.
+- **Cost, and why the first cut cost so much.** Standard is not compressed on the card: all 46 of its
+  imports are lossless (`compress/mode=0`, chosen so they import headless), so its two arrays are
+  23 x 2 layers of 1024^2 RGBA8 with mipmaps, 245 MiB. Terrain3D makes every layer one size, so the
+  first High was 46 layers of 2048^2 RGBA8: 981 MiB (+736). Now every High layer is compressed to
+  BC3/DXT5 as the world loads (`World.prepare_high_textures`: read back, the 1024 slots scaled up,
+  compressed on worker threads; 13 ms a layer to compress here), and BC3 is a byte a texel: 46 x
+  2048^2 x 4/3 = 245 MiB, the same as Standard. BC7 would be finer but took 2.8 s a layer to
+  compress, and the project imports with `import_s3tc_bptc=false`, so it cannot be imported ready.
+  Download: the 12 PNGs are 105 MB in the repository and 117 MB imported (lossless .ctex, what an
+  export carries); with BC3 in VRAM an import as VRAM-compressed would be about 67 MB, but needs
+  `import_s3tc_bptc` on, a project-wide change left alone. Load: preparing the 46 layers took
+  6.6-7.2 s in the world on this overloaded 4-core machine (5.1 s in isolation); a desktop should be
+  a second or two. Standard is untouched (still lossless, 247 MiB measured); compressing it too
+  would take the laptops' ground from 247 to about 62 MiB, a follow-up.
+- **The setting.** Graphics, "The picture": *Ground texture quality*, Standard or High; its note says
+  both take about 250 MB of video memory and that High adds a few seconds to a load, applied when a
+  world next loads. Unchosen (-1) it is High only on a discrete GPU with 6 GB or more
+  (`RenderingDevice.get_device_total_memory()`, which Forward+ has; when it cannot be read, a list
+  of small cards by name: GTX 9xx/10xx/16xx, MX, RX 4xx/5xx/64xx/65xx and the like), Standard on
+  anything else. Compatibility does not report the adapter's type, so it gets Standard: the laptops
+  draw what they drew. `-- --ground-textures=standard|high` for one run.
+- **Looked at** (Compatibility, 1600x900): five close views, one per High slot but the dirt path, at
+  Standard; limestone at High (BC3) beside it. At the camera's feet High is a crisp grain where
+  Standard is a smear; no BC3 blocking shows. Forward+ could not be looked at: Terrain3D crashes
+  Forward+ on lavapipe here with the Standard list as well (HANDOFF section 8), so the Vulkan look
+  at High needs the owner's GPU. A High capture with five views was taken by the OOM killer
+  (another agent's run and mine at 3-4 GB each) and was not repeated, by the coordinator's call.
+- **Where it shows.** At 2.6 m a tile, a 1024 texel is 2.5 mm; a 1440p screen at 75 degrees draws
+  about 3 mm a pixel at 3 m. So High is visible within a few metres of the camera (the first-person
+  view, the ground at a third-person body's feet, 4K), and the same as Standard beyond: past that the
+  GPU reads the 2048 tile's second mip, which is the 1024's detail.
+
+### Far-tree impostors in the Greatwood (measured, not landed)
+Every tree already has a forged impostor (gen_impostors.py: eight views, 128 px a view), drawn
+past ten heights (ScatterLod), with a dissolve. A giant oak (29 m) therefore keeps its 1,300-
+triangle LOD1 out to 287 m. Modelled from the cells, drawing the Greatwood's giant oaks and black
+ash at 256 px a view and from half the distance (the picture's texels still match a 1440p screen)
+cut the main pass's tree triangles 411k -> 187k at the Windthrow and 518k -> 278k at Tinehold.
+Built and measured, it did not hold:
+- **Primitives and draws**, the Windthrow from its road (the view PROGRESS had at 2.12 M; Compatibility,
+  same build and settings, `--picture-cell=128` for before): 1,295 -> 1,129 draw calls (-13%),
+  1.75 -> 1.71 M primitives (-2.6%), still over the 1.5 M budget. Tinehold was modelled, not shot
+  (the coordinator trimmed the captures).
+- **The look** (`lod_review.tscn --sweep`, giant oak and black ash): the dissolve hides the switch, no
+  pop, and the 256 px picture's outline follows the full tree more closely than LOD1's cards do; but
+  at 80-150 m the picture reads softer and flatter-lit than the mesh, and re-calibrated at the new
+  lines its ink was 1-15% off LOD1 (giant oak b 15%, black ash b 10%), against 3% at the old ones.
+- **Not landed** (reverted, 189aa8c2): not a clear primitive win, and a visible change. What the
+  Greatwood's frame is made of is the full meshes out to four heights (116-131 m for the giant oaks,
+  6,300 triangles each, with their shadows), not the mid rung. The next lever is the full mesh's line
+  for the giant trees, or a lighter LOD0 crown; both want a look at the oak at 60-120 m first.
+
+### Ground cover through Terrain3D's instancer (a prototype, off; recommendation: don't adopt)
+`world/grass_instancer.gd`, behind `graphics.grass_instancer` (Graphics, The country: "Ground
+cover by the terrain (trial)", Off / On / On, twice the cover; off by default; `-- --grass-instancer=0|1|2`
+for the benchmark). On, Hearthvale's herbs (1.59 M rows in 195 cells, 48 meshes) are read from the
+built cells -- the builder's pads, sightline clearings, roads and seat audits hold as they do for the
+streamer -- and handed to Terrain3D 1.0.2's instancer at the streamer's herb range; the streamer
+leaves those rows alone. Measured once, at the same and default cover (Compatibility, one run each
+way, the coordinator's trim):
+- **The Hearthvale verge** (now Merrowby's street): streamer 1,766 draws, 1.69 M primitives; instancer
+  1,823 draws, 1.62 M (+3%, -4%). The main thread's CPU a frame (the renderer off, PerfMeasure) 19.6
+  -> 17.3 ms there, but 5.3 -> 6.8 ms at a Skerrow view with no Hearthvale grass in it: the instancer's
+  36,357 MultiMesh nodes (7,282 nodes before) cost every frame everywhere.
+- **Memory**: static 594 -> 1,193 MB at the first shot (+0.6 GB); the world's static memory when ready
+  373 -> 918 MB; GPU buffers +96 MB.
+- **Load**: the world 29.0 -> 78.2 s (+49 s here): 12.6 s reading the cells, 31.9 s in add_transforms,
+  2.3 s in update_mmis.
+- **Region files**: the six regions holding the instances 54.9 -> 112.7 MB (+58 MB) when saved.
+- **Compatibility**: it draws; the same tufts stand by the same posts in both.
+- **Not measured**: twice the cover (setting 2) and the render thread's own time (the capture runner
+  times frames with the renderer off, and llvmpipe's render thread is not a GPU driver's). Both want
+  the owner's benchmark, which can pick the setting.
+- **Recommendation: don't adopt** at Terrain3D 1.0.2. It holds every instance of a region at once,
+  in 32 m cells with a MultiMesh a mesh and cell, so it costs memory, load time and nodes for grass a
+  player is nowhere near, for a 4% primitive saving at the place it is drawn. The streamer's
+  per-cell MultiMeshes, built as the rings stream, are the better shape for ground cover this dense.
+
+### Tests and checks
+`./run.sh test --filter=` test_graphics_settings, test_settings_graphics_screen, test_ground_albedo,
+test_scatter_lod, test_world_streamer, test_world_status, test_objects_seated, test_world_data: all
+pass. GDScript warnings 49, at the baseline. `tools/forge/tests/test_output.py`: 12 passed. No world
+build is needed: the High list and its textures are new files, and the regions are untouched.
+
+### For the coordinator / the owner
+- On the RX 9070 XT (Forward+): look at High at the camera's feet, and read the log's "High ground
+  textures: 46 textures ... in N ms" for the load cost on a real CPU.
+- The grass instancer's numbers on a real GPU, at settings 0, 1 and 2, from the benchmark.
+- Compressing Standard to BC3 too would cut every machine's ground textures from 247 to about
+  62 MiB of video memory; it changes the laptops' picture slightly, so it is the owner's call.
+## Weak graphics: a preset for the adapter, the filmed title, the menus' pace, FSR, the benchmark (lowend, 2026-10-02)
+
+The owner's work laptops (an HP G11 with a Ryzen 5 PRO, so a Radeon 660M or 740M iGPU) lagged on
+the first launch, the title, the menus and the Naming. This machine has no GPU: OpenGL here is
+llvmpipe and Forward+ is lavapipe. So what was measured is the main thread, draw calls and
+primitives. What an iGPU does with them needs the benchmark run on one.
+
+**1. A preset for the adapter** (89e8c480, `core/hardware_tier.gd`). This runs on a player's
+launch whose settings.cfg has no `graphics` section.
+- Integrated graphics, or an adapter it does not recognise, gets Medium.
+- Software rasterizers, Intel HD/UHD, AMD Vega and the 610M, and iGPUs with under 8 GB of RAM get
+  Low.
+- A card of its own keeps High.
+
+The adapter's type is read first and its name second. A driver that calls an APU "discrete" is
+not believed when the name is an APU's, and Compatibility's "other" is read by name. A card's
+VRAM is read on Forward+ (RenderingDevice.get_device_total_memory, as terrain-fidelity found), and a
+card with under 2 GB gets Medium. The result is saved at once, so the player's choice stands, and the
+startup trace has a line `graphics: first launch, <adapter> ...`. Settings, Graphics has "Detect
+recommended". Tests use fake Radeon 660M/740M/780M (integrated, other, "discrete"), Iris Xe,
+Arc and Arc 140V, UHD 620, RX 9070 XT, RTX 4060, Arc A770/B580, llvmpipe, WARP and unknown
+adapters.
+
+**2. The filmed title** (93e498db, ca6c3a89). "Drawn live behind the title" is off on Low and
+Medium. The title then plays `assets/video/title_reel.ogv` over the chart, with dips to the
+menu's own dark. So does a live title whose first shot draws at a median over 40 ms a frame, and
+one that gives up before its first shot. Low used to keep the chart; it now shows the film too.
+- The film holds 4 of the 7 shots: 43 s, 9.6 MB of Theora at quality 5. It was filmed on llvmpipe
+  at 12 fps and interpolated to 24.
+- The other three shots took 40-50 s a frame here under the day's load. All seven at quality 5
+  would be about 17 MB, at quality 4 about 11 MB.
+- `tools/title_reel.sh` films it again: `--renderer=forward_plus --fps=24` on a machine with a GPU.
+- Title over its first 12 s, OpenGL: the live country at High cost 9.3-9.9 s of main-thread CPU,
+  with 27-30 frames over 50 ms. The film costs 8 ms a frame at p50 (10 ms on lavapipe), with no
+  frame over 50 ms while the menu comes up.
+
+**3. Menus and the Naming** (29d83b4c, 5ef4fa4a):
+- The title and the Naming hold the frame rate to 60 (30 on Low) while no game runs, and give
+  the game's cap back after.
+- The portrait's SubViewport is its rectangle on the screen, at the render scale, with the
+  upscaler. Low draws it with 2x MSAA and the hair's shell; Medium and up keep 4x.
+- The title reads the Naming's scene, the body, its stage and the ground textures ahead. It draws
+  the body once off screen, only under a dip to dark, and never on a software rasterizer: on
+  lavapipe that held the title for 17-23 s.
+- The title's world already went with the title when the Naming opened.
+
+Measured with `cpu_probe --cpu-draw --cpu-naming-s=20`; "before" is a copy of 4a0fecf5:
+
+| | Naming's first frame | Naming frame, wall p50 | title frames over 50 ms |
+|---|---|---|---|
+| OpenGL, before, High | 6.29 s cold, 1.18 s warm | 407-428 ms | 27-30 |
+| OpenGL, after, High | 0.39-0.42 s | 280-382 ms | 30-33 (still the live title) |
+| OpenGL, after, Medium | 0.35 s warm (1.47 s cold) | 282-320 ms | 0 |
+| OpenGL, after, Low | 1.5 s | 213-215 ms | 0-2 |
+| lavapipe, before, High | 0.95-2.42 s | 456-464 ms | 0 (the chart) |
+| lavapipe, after, Medium | 1.68-2.0 s (no warm on software) | 228-232 ms | 0 |
+| lavapipe, after, Low | 1.35 s | 182 ms | 0 |
+
+**4. Distant ground detail** (4342747b). This is Terrain3D's dual scaling on vale_grass. A 64 m
+grid puts it on 20.7% of the land; the next most common are crag at 10.2% and limestone at 10.0%.
+It blends in from 80 m and is the second sample alone by 240 m, at 0.3 of the texture's scale. It
+is on for Medium and up and applies live. I looked at it through a 16 degree lens on the
+Hearthvale (OpenGL): the hills at 100-250 m change and the far haze does not. The change is
+slight, with no seams and no new tiling. Draw calls went from 491 to 495. The shader warm set
+does not yet hold the dual-scaling variant of Terrain3D's shader: `./run.sh shader-warm
+--only=title` after the terrain-fidelity work lands.
+
+**7. FSR for weak GPUs** (e66a949f). Medium draws 3D at 0.77 and upscales with FSR 1 at
+sharpness 0.1. FSR 1 is the spatial one: cheap on an iGPU, and nothing to smear. On Compatibility
+Medium draws at 0.85, scaled bilinearly. High and Painted stay native. The menus are the canvas's,
+at the window's pixels. I looked at the Naming at 1080p on Forward+, High against Medium. The
+words are identical. The figure at Medium is crisp, not soft. Its 2x MSAA showed the hair cards'
+edge as dots, so the portrait keeps 4x on Medium. The world through FSR could not be looked at
+here: Forward+ with the world on lavapipe was killed twice for memory.
+
+**5. Occlusion culling** (2bb41df1). TerrainOccluder is a 64 m sheet of the land, each vertex at
+the lowest ground within 32 m and then 2 m lower, about 32k triangles. The houses are not
+occluders: Settlement merges a place into one mesh per surface. Measured in one world, off then
+on (OpenGL):
+- the Hearthvale from a height: 1178 to 1141 draws, 1.34 to 1.27 M primitives;
+- Merrowby's street: 1721 to 1706 draws, 1.74 to 1.71 M primitives;
+- in the difference images, nothing was culled that should have shown.
+
+1-3% of draws is not a clear win for a CPU raster every frame on a laptop, so "Hide what hills
+hide" is off in every preset. The sheet is built only when the setting is turned on.
+
+**6. The benchmark** (8432e53c, docs/BENCHMARK.md). `Wickmere.exe -- --benchmark`, or Ctrl+Shift+B
+on the title, times the title, the Naming and five stops: Merrowby, the Greatwood, the Hearthvale
+from a height, Tinehold, and Cinderlea by night. It writes user://benchmark/benchmark_<time>.txt
+and .json with:
+- frame-time p50/p95/p99/max and frames over 50 and 100 ms;
+- draws and primitives;
+- the CPU's draw time;
+- the adapter, renderer, preset and recommendation.
+
+It ran end to end here on OpenGL with no script errors. Draws by stop: 960 / 1341 / 1275 / 1257 /
+388; primitives 1.36 / 1.31 / 1.48 / 1.51 / 0.59 M.
+
+**Needs a real GPU**:
+- frame rates on the laptops' iGPU at Medium, for the title (film), the Naming and the world;
+- FSR 1's cost and look in the world;
+- how long the pipeline compiles the warm stage moves (milliseconds on a GPU, seconds here);
+- occlusion culling's CPU cost and gain;
+- Theora decode on the laptops' CPUs.
+
+The owner's benchmark runs at Medium and at High, on the laptop and on the 9070 XT, will say.
+Pre-existing in the targeted tests, not from this branch: dummy-renderer ERROR lines
+("Parameter material is null") in test_naming_screen.

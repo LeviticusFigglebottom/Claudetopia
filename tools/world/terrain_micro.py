@@ -78,9 +78,13 @@ def to_srgb(v):
 
 
 def apply(albedo_height: np.ndarray, normal_rough: np.ndarray, recipe: dict, seed: int = 7) -> tuple:
-    """Arrays as uint8 RGBA (h, w, 4); returns the new pair."""
+    """Arrays as uint8 RGBA (h, w, 4); returns the new pair.
+
+    The recipe's sizes are pixels of the 1024 tile. A larger tile (the High set's 2048) scales them,
+    so a grain, a pebble or a ripple is the same size on the ground at either resolution."""
     rng = np.random.default_rng(seed)
     n = albedo_height.shape[0]
+    k = n / 1024.0
     rgb = to_lin(albedo_height[..., :3].astype(np.float64) / 255.0)
     mean_before = rgb.mean(axis=(0, 1))
     height = albedo_height[..., 3].astype(np.float64) / 255.0
@@ -91,12 +95,12 @@ def apply(albedo_height: np.ndarray, normal_rough: np.ndarray, recipe: dict, see
         lum = np.log(rgb.mean(axis=2) + 1e-4)
         f = np.fft.fftfreq(n)
         fx, fy = np.meshgrid(f, f)
-        low = np.real(np.fft.ifft2(np.fft.fft2(lum) * np.exp(-(fx ** 2 + fy ** 2) * (2 * np.pi * 40.0) ** 2 / 2)))
+        low = np.real(np.fft.ifft2(np.fft.fft2(lum) * np.exp(-(fx ** 2 + fy ** 2) * (2 * np.pi * 40.0 * k) ** 2 / 2)))
         rgb = rgb * np.exp(-recipe["flatten"] * (low - low.mean()))[..., None]
     value = np.ones((n, n))
     bump = np.zeros((n, n))
     # grain: two octaves of fine noise, a few pixels across
-    grain = 0.65 * periodic_noise(n, rng, 1.5, 4.0) + 0.35 * periodic_noise(n, rng, 4.0, 10.0)
+    grain = 0.65 * periodic_noise(n, rng, 1.5 * k, 4.0 * k) + 0.35 * periodic_noise(n, rng, 4.0 * k, 10.0 * k)
     value *= 1.0 + recipe["grain"] * grain
     bump += 0.12 * grain
     # wind ripples: long, slightly wavering bands
@@ -104,10 +108,10 @@ def apply(albedo_height: np.ndarray, normal_rough: np.ndarray, recipe: dict, see
         yy, xx = np.mgrid[0:n, 0:n].astype(np.float64)
         a = np.radians(recipe["ripple_angle"])
         # an integer number of waves across the tile keeps it seamless
-        k = max(1, round(n / recipe["ripple_wl"]))
-        warp = 6.0 * periodic_noise(n, rng, 60.0, 300.0)
-        phase = 2 * np.pi * k * ((np.cos(a) * xx + np.sin(a) * yy) + warp) / n
-        mask = np.clip(0.5 + 0.8 * periodic_noise(n, rng, 120.0, 500.0), 0.0, 1.0)
+        waves = max(1, round(n / (recipe["ripple_wl"] * k)))
+        warp = 6.0 * k * periodic_noise(n, rng, 60.0 * k, 300.0 * k)
+        phase = 2 * np.pi * waves * ((np.cos(a) * xx + np.sin(a) * yy) + warp) / n
+        mask = np.clip(0.5 + 0.8 * periodic_noise(n, rng, 120.0 * k, 500.0 * k), 0.0, 1.0)
         rip = (np.sin(phase) ** 3) * mask * recipe["ripples"]
         value *= 1.0 + 0.10 * rip
         bump += 0.35 * rip
@@ -116,17 +120,17 @@ def apply(albedo_height: np.ndarray, normal_rough: np.ndarray, recipe: dict, see
     lo, hi = recipe["pebble_r"]
     for _ in range(recipe["pebbles"]):
         r = rng.uniform(lo, hi)
-        stamp(peb, rng.uniform(0, n), rng.uniform(0, n), r, 1.0, soft=0.45)
+        stamp(peb, rng.uniform(0, n), rng.uniform(0, n), r * k, 1.0, soft=0.45)
     peb = np.clip(peb, 0.0, 1.0)
     value = value * (1.0 + (recipe["pebble_value"] - 1.0) * peb)
     bump += 1.4 * peb
     # cinders and flecks: specks one to three pixels across
     specks = np.zeros((n, n))
     for _ in range(recipe["cinders"]):
-        stamp(specks, rng.uniform(0, n), rng.uniform(0, n), rng.uniform(0.8, 2.2), -1.0, soft=1.0)
+        stamp(specks, rng.uniform(0, n), rng.uniform(0, n), rng.uniform(0.8, 2.2) * k, -1.0, soft=1.0)
     flecks = np.zeros((n, n))
     for _ in range(recipe["flecks"]):
-        stamp(flecks, rng.uniform(0, n), rng.uniform(0, n), rng.uniform(0.6, 1.6), 1.0, soft=1.0)
+        stamp(flecks, rng.uniform(0, n), rng.uniform(0, n), rng.uniform(0.6, 1.6) * k, 1.0, soft=1.0)
     specks = np.clip(-specks, 0.0, 1.0)
     flecks = np.clip(flecks, 0.0, 1.0)
     value *= 1.0 - (1.0 - recipe["cinder_value"]) * specks
@@ -144,7 +148,7 @@ def apply(albedo_height: np.ndarray, normal_rough: np.ndarray, recipe: dict, see
     gx = (np.roll(bump, -1, axis=1) - np.roll(bump, 1, axis=1)) * 0.5
     gy = (np.roll(bump, -1, axis=0) - np.roll(bump, 1, axis=0)) * 0.5
     nrm = normal_rough[..., :3].astype(np.float64) / 255.0 * 2.0 - 1.0
-    s = recipe["normal"] * 0.25
+    s = recipe["normal"] * 0.25 * k
     nrm[..., 0] -= gx * s
     nrm[..., 1] += gy * s
     nrm /= np.linalg.norm(nrm, axis=2, keepdims=True) + 1e-9

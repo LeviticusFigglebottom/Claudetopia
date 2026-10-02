@@ -29,40 +29,40 @@ const DEFAULT_PRESET := "high"
 ## Low is what a machine that is struggling should be offered first.
 const PRESETS := {
 	"low": {
-		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1,
+		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1, "distant_ground": false, "occlusion": false,
 		"shadows": true, "shadow_atlas": 2048, "shadow_cascades": 2, "shadow_distance": 0.6,
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
 		"sdfgi": false, "glow": false, "water_quality": 0, "water_reflections": false, "night_lights": 2, "view_distance": 0,
 		"wildlife": 0.5,
-		"title_vista": false,
+		"title_vista": true, "title_live": false,
 	},
 	"medium": {
-		"render_scale": 0.9, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2,
+		"render_scale": 0.77, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
 		"sdfgi": false, "glow": true, "water_quality": 1, "water_reflections": true, "night_lights": 4, "view_distance": 1,
 		"wildlife": 0.75,
-		"title_vista": true,
+		"title_vista": true, "title_live": false,
 	},
 	"high": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
 		"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
 		"wildlife": 1.0,
-		"title_vista": true,
+		"title_vista": true, "title_live": true,
 	},
 	"painted": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 8192, "shadow_cascades": 4, "shadow_distance": 1.5,
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
 		"sdfgi": true, "glow": true, "water_quality": 3, "water_reflections": true, "night_lights": 8, "view_distance": 2,
 		"wildlife": 1.25,
-		"title_vista": true,
+		"title_vista": true, "title_live": true,
 	},
 }
 
@@ -78,22 +78,30 @@ const LOOK_DEFAULTS := {"color_grade": true, "vignette": true, "film_grain": fal
 ## and only the player turns it on again. It is about whether this machine starts, not about
 ## fidelity, so no preset touches it.
 const SAFETY_DEFAULTS := {"full_terrain": true}
+## What this machine's hardware decides unless the player chooses: the ground's texture set (-1 is
+## "by the GPU", `ground_texture_quality`). No preset touches it: it costs memory, not frame time.
+const MACHINE_DEFAULTS := {"ground_textures": -1}
+## A prototype, off: Hearthvale's ground cover drawn by Terrain3D's instancer (world/grass_instancer.gd),
+## 2 with twice the cover. No preset touches it; the benchmark picks it.
+const PROTOTYPE_DEFAULTS := {"grass_instancer": 0}
 
 ## The graphics section as a new settings file has it: High, plus the display, look and safety keys.
 ## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
 ## `test_graphics_settings` pins it to High, the display keys and the look keys.
 const DEFAULTS := {
 	"preset": "high",
-	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3,
+	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true, "occlusion": false,
 	"vsync": true, "fps_cap": 0,
 	"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 	"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
 	"sdfgi": false, "glow": true, "water_quality": 2, "water_reflections": true, "night_lights": 8, "view_distance": 1,
 	"wildlife": 1.0,
-	"title_vista": true,
+	"title_vista": true, "title_live": true,
 	"color_grade": true, "vignette": true, "film_grain": false,
 	"full_terrain": true,
+	"ground_textures": -1,
+	"grass_instancer": 0,
 }
 
 ## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
@@ -101,6 +109,47 @@ const DEFAULTS := {
 ## vertices in each of Terrain3D's clipmap rings, which is what the far hills' shape is drawn from.
 const CAMERA_FAR_M: Array[float] = [3000.0, 4400.0, 6500.0]
 const TERRAIN_MESH_SIZE: Array[int] = [32, 48, 56]
+
+
+## The ground's texture set, 0 Standard (1024) or 1 High (2048, World.ASSETS_RESOURCE_HIGH). Unchosen
+## (-1), it is High on a discrete GPU with HIGH_MIN_VRAM_GB or more and Standard on anything else --
+## an integrated GPU, a software one, a small card, and the Compatibility renderer, which does not
+## say what the adapter is.
+static func ground_texture_quality(g: Dictionary) -> int:
+	var v := int(g.get("ground_textures", -1))
+	if v >= 0:
+		return mini(v, 1)
+	if RenderingServer.get_video_adapter_type() != RenderingDevice.DEVICE_TYPE_DISCRETE_GPU:
+		return 0
+	return 1 if roomy_gpu(video_memory_gb(), RenderingServer.get_video_adapter_name()) else 0
+
+
+## A discrete card under this is given Standard ground unless the player chooses High. High's arrays
+## take what Standard's do once compressed, but its load holds both for a moment and a small card is
+## the one a game runs out on first.
+const HIGH_MIN_VRAM_GB := 6.0
+## Discrete GPUs sold with under 6 GB (or in such versions), by name, for when the card's memory
+## cannot be read (Godot reads it on Forward+ only).
+const SMALL_GPUS := ["GT 7", "GT 10", "GTX 9", "GTX 10", "GTX 16", " MX", "RX 4", "RX 5", "RX 64", "RX 65",
+		"RX 74", "RX 75", "R7 ", "R9 ", "Arc A3", "Quadro K", "Quadro P", "Quadro T"]
+
+
+## The video memory of the card the game draws with, in GB, or 0 when it cannot be read.
+static func video_memory_gb() -> float:
+	var rd := RenderingServer.get_rendering_device()
+	if rd == null:
+		return 0.0
+	return float(rd.get_device_total_memory()) / 1073741824.0
+
+
+## Whether a discrete card has room for High by default: its memory when known, else its name.
+static func roomy_gpu(memory_gb: float, adapter_name: String) -> bool:
+	if memory_gb > 0.0:
+		return memory_gb >= HIGH_MIN_VRAM_GB
+	for small in SMALL_GPUS:
+		if adapter_name.contains(small):
+			return false
+	return true
 
 
 static func camera_far(g: Dictionary) -> float:
@@ -132,18 +181,35 @@ const COMPATIBILITY_UNUSED := {
 	"ao_quality": "Corner shadow is off on Compatibility.",
 }
 const UPSCALER_CHOICES := ["Bilinear", "FSR 1.0", "FSR 2.2"]
+## The upscalers (FSR 1 and 2) are AMD's, but shaders like any other: they run on Intel, NVIDIA and
+## AMD alike, and only under Forward+. Medium, the preset integrated graphics is given, draws the 3D
+## at 0.77 of the window and upscales it with FSR 1: the spatial one, a fraction of a millisecond on
+## an iGPU where FSR 2's temporal pass costs several, and without FSR 2's smearing of the grass and
+## the particles it has no motion for. Its sharpening (`fsr_sharpness`, 0 the most, 2 the least)
+## is turned up from the engine's 0.2 so the upscaled picture is not soft. The menus and the Naming's
+## words are the canvas's, drawn at the window's own pixels whatever the 3D is drawn at.
+const FSR_SHARPNESS := 0.1
+## Where a preset's FSR falls back to bilinear (Compatibility), its render scale rises to this:
+## FSR's 0.77 stretched bilinearly is soft; 0.85 costs a fifth more pixels and reads as sharp.
+const BILINEAR_RENDER_SCALE := {"medium": 0.85}
 const UPSCALER_REASON := "FSR 1.0 and 2.2 are Forward+ only; Compatibility scales bilinearly."
 
 ## The controls the settings screen builds, in the order it shows them. A row is greyed out, with
 ## the reason beside it, when `unsupported_reason()` has one for the running renderer.
 const CONTROLS := [
-	{"key": "render_scale", "label": "Render scale", "kind": "slider", "min": 0.5, "max": 1.0, "step": 0.05, "suffix": "%",
+	{"key": "render_scale", "label": "Render scale", "kind": "slider", "min": 0.5, "max": 1.0, "step": 0.01, "suffix": "%",
 		"note": "the 3D picture drawn at this share of the window"},
 	{"key": "upscaler", "label": "Upscaling", "kind": "option", "choices": UPSCALER_CHOICES},
 	{"key": "msaa", "label": "Edge smoothing (MSAA)", "kind": "option", "choices": ["Off", "2×", "4×", "8×"]},
 	{"key": "fxaa", "label": "FXAA", "kind": "check"},
 	{"key": "taa", "label": "Temporal smoothing (TAA)", "kind": "check"},
 	{"key": "anisotropic", "label": "Texture filtering", "kind": "option", "choices": ["Plain", "2×", "4×", "8×", "16×"]},
+	{"key": "distant_ground", "label": "Distant ground detail", "kind": "check",
+		"note": "far off, the grass is tiled larger so a far hillside does not show its pattern repeating"},
+	{"key": "occlusion", "label": "Hide what hills hide", "kind": "check",
+		"note": "occlusion culling: what stands behind a hill is not drawn, for some of the CPU's time; off in every preset"},
+	{"key": "ground_textures", "label": "Ground texture quality", "kind": "option", "choices": ["Standard", "High"],
+		"values": [0, 1], "note": "High paints the most-seen ground at twice the detail. Both take about 250 MB of video memory (High compressed); High adds a few seconds to a load. Applied when a world next loads"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},
@@ -156,6 +222,8 @@ const CONTROLS := [
 	{"key": "shadow_filter", "label": "Shadow softness", "kind": "option", "choices": ["Hard", "Very low", "Low", "Medium", "High", "Ultra"]},
 	{"key": "scatter_density", "label": "Ground cover", "kind": "slider", "min": 0.25, "max": 1.0, "step": 0.05, "suffix": "%",
 		"note": "grass, flowers and bushes; never the trees"},
+	{"key": "grass_instancer", "label": "Ground cover by the terrain (trial)", "kind": "option",
+		"choices": ["Off", "On", "On, twice the cover"], "note": "Hearthvale's grass drawn by Terrain3D's instancer, being measured. Applied when a world next loads"},
 	{"key": "view_range", "label": "Scatter view distance", "kind": "slider", "min": 0.6, "max": 1.5, "step": 0.05, "suffix": "%"},
 	{"key": "lod_bias", "label": "Detail distance (LOD)", "kind": "slider", "min": 0.5, "max": 2.0, "step": 0.05, "suffix": "%",
 		"note": "how far away things keep their full shape"},
@@ -178,6 +246,8 @@ const CONTROLS := [
 		"note": "landmarks, towers and towns on the skyline, and the far hills' shape: 2.5, 4.2 or 6 km"},
 	{"key": "title_vista", "label": "The country behind the title", "kind": "check",
 		"note": "the title screen's slow shots of the world; off, the drawn chart"},
+	{"key": "title_live", "label": "Drawn live behind the title", "kind": "check",
+		"note": "the world stood up behind the menu; off, a film of the same shots, far lighter to draw"},
 	{"key": "color_grade", "label": "Region colour grade", "kind": "check"},
 	{"key": "vignette", "label": "Vignette", "kind": "check"},
 	{"key": "film_grain", "label": "Film grain", "kind": "check"},
@@ -221,6 +291,10 @@ static func preset_values(name: String, for_renderer := "") -> Dictionary:
 	for key in out:
 		if unsupported_reason(key, out[key], r) != "":
 			out[key] = _fallback(key, out[key])
+	# FSR's scale stretched bilinearly is soft: a preset that upscales with FSR draws more of the
+	# picture where there is none
+	if int((PRESETS.get(name, {}) as Dictionary).get("upscaler", 0)) > 0 and int(out["upscaler"]) == 0:
+		out["render_scale"] = maxf(float(out["render_scale"]), float(BILINEAR_RENDER_SCALE.get(name, 0.0)))
 	return out
 
 
@@ -293,6 +367,8 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 		return
 	var r := renderer()
 	apply_viewport(tree.root, g, r)
+	# occlusion culling (TerrainOccluder): the world's own view only; a portrait has nothing to hide
+	tree.root.use_occlusion_culling = bool(g.get("occlusion", false))
 	# The rendering server's own state is only touched when it changes: a slider dragged
 	# across the render scale would otherwise reallocate the shadow atlas at every step.
 	var atlas := int(g.get("shadow_atlas", 4096))
@@ -318,7 +394,7 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 				ao < 3, 0.5, 4, 50.0, 300.0)
 		ProjectSettings.set_setting("rendering/environment/ssao/quality", ao)
 		ProjectSettings.set_setting("rendering/environment/ssao/half_size", ao < 3)
-	Engine.max_fps = maxi(0, int(g.get("fps_cap", 0)))
+	Engine.max_fps = frame_cap(g)
 	var vsync := DisplayServer.VSYNC_ENABLED if bool(g.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
 	DisplayServer.window_set_vsync_mode(vsync)
 	last_applied = {"renderer": r, "shadow_atlas": atlas, "shadow_filter": filter, "ao_quality": ao,
@@ -326,6 +402,8 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 	for node in tree.get_nodes_in_group(LIGHTS):
 		if node is DirectionalLight3D:
 			apply_light(node as DirectionalLight3D, g)
+	for node in tree.get_nodes_in_group(TERRAINS):
+		apply_terrain(node, g)
 	for node in tree.get_nodes_in_group(ENVIRONMENTS):
 		if node is WorldEnvironment and (node as WorldEnvironment).environment != null:
 			apply_environment((node as WorldEnvironment).environment, g, _is_world_environment(node), r)
@@ -342,6 +420,7 @@ static func apply_viewport(vp: Viewport, g: Dictionary, r := "") -> void:
 		up = 0
 	vp.scaling_3d_mode = [Viewport.SCALING_3D_MODE_BILINEAR, Viewport.SCALING_3D_MODE_FSR,
 			Viewport.SCALING_3D_MODE_FSR2][clampi(up, 0, 2)]
+	vp.fsr_sharpness = FSR_SHARPNESS
 	vp.msaa_3d = clampi(int(g.get("msaa", 1)), 0, 3) as Viewport.MSAA
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA \
 			if bool(g.get("fxaa", false)) and is_supported("fxaa", null, r) \
@@ -354,7 +433,39 @@ static func apply_viewport(vp: Viewport, g: Dictionary, r := "") -> void:
 	vp.mesh_lod_threshold = base_threshold / maxf(float(g.get("lod_bias", 1.0)), 0.1)
 
 
+# --- the menus' pace ---------------------------------------------------------------------------
+
+## Screens up with no game behind them (the title, the Naming). While one is, the frame rate is held
+## to MENU_FPS (MENU_FPS_LOW on Low), or the player's own cap where that is lower: a menu over a
+## film or a lit stage gains nothing from 144 frames a second, and a laptop's iGPU that draws them
+## is a laptop that is hot and slow when the game begins. The game's own cap comes back when the
+## last of them goes.
+const MENU_FPS := 60
+const MENU_FPS_LOW := 30
+static var menu_screens := 0
+
+
+## The frame-rate cap now: the player's (`fps_cap`, 0 for none), held to the menus' while one is up.
+static func frame_cap(g: Dictionary) -> int:
+	var cap := maxi(0, int(g.get("fps_cap", 0)))
+	if menu_screens > 0:
+		var menu := MENU_FPS_LOW if str(g.get("preset", "")) == "low" else MENU_FPS
+		cap = menu if cap == 0 else mini(cap, menu)
+	return cap
+
+
+## A menu screen with no game behind it comes (`up`) or goes. Never headless: the tests and the
+## tools run as fast as they can.
+static func menu_pace(up: bool) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	menu_screens = maxi(menu_screens + (1 if up else -1), 0)
+	Engine.max_fps = frame_cap(Settings.data.get("graphics", {}))
+	last_applied["max_fps"] = Engine.max_fps
+
+
 ## Groups the adopted nodes live in, so a settings change reaches them without a tree walk.
+const TERRAINS := "graphics_terrains"
 const LIGHTS := "graphics_directional_lights"
 const ENVIRONMENTS := "graphics_environments"
 const AUTHORED := "graphics_authored"
@@ -445,6 +556,36 @@ static func apply_environment(env: Environment, g: Dictionary, world := false, r
 					env.volumetric_fog_length = 180.0
 					env.volumetric_fog_sky_affect = 0.0
 				env.volumetric_fog_enabled = on
+
+
+## Distant ground detail: Terrain3D's dual scaling. Past DUAL_SCALE_NEAR metres the ground's
+## commonest texture, the vale's grass (id 0: a fifth of the land, sampled every 64 m), is
+## drawn from a second sample at DUAL_SCALE_REDUCTION of its scale, wholly by DUAL_SCALE_FAR: a
+## field across a valley shows the grass's own colour at a third of the frequency instead of the
+## 2.6 m tile repeating like wallpaper. It costs one more texture fetch pair on that texture's
+## pixels, and only far off; Low leaves it out.
+const DUAL_SCALE_TEXTURE := 0
+const DUAL_SCALE_REDUCTION := 0.3
+const DUAL_SCALE_NEAR := 80.0
+const DUAL_SCALE_FAR := 240.0
+
+
+## The world's ground (a Terrain3D, or anything with a Terrain3DMaterial as `material`) as the
+## settings have it: dual scaling on or off, live. Off to on rebuilds Terrain3D's shader once.
+static func apply_terrain(terrain: Object, g: Dictionary) -> void:
+	if terrain == null or not is_instance_valid(terrain):
+		return
+	var mat: Object = terrain.get("material")
+	if mat == null:
+		return
+	var on := bool(g.get("distant_ground", true))
+	if on:
+		mat.call("set_shader_param", "dual_scale_texture", DUAL_SCALE_TEXTURE)
+		mat.call("set_shader_param", "dual_scale_reduction", DUAL_SCALE_REDUCTION)
+		mat.call("set_shader_param", "dual_scale_near", DUAL_SCALE_NEAR)
+		mat.call("set_shader_param", "dual_scale_far", DUAL_SCALE_FAR)
+	if bool(mat.get("dual_scaling")) != on:
+		mat.set("dual_scaling", on)
 
 
 ## The environment the atmosphere owns: the one the world is drawn in.
