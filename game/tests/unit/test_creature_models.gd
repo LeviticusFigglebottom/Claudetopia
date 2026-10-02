@@ -7,7 +7,7 @@ extends TestCase
 
 ## The foes forged so far (this grows to every custom-rigged foe and boss).
 const FORGED: Array[String] = ["core:enemy/down_wolf", "core:enemy/crag_wolf", "core:enemy/thornhound",
-	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:enemy/weaver", "core:enemy/stone_thrall", "core:enemy/bristleback",
+	"core:enemy/leech_hound", "core:enemy/old_grey_bitch", "core:boss/brake_dam", "core:enemy/weaver", "core:enemy/stone_thrall", "core:enemy/bristleback",
 	"core:enemy/sallowjaw", "core:enemy/gutter_drake", "core:enemy/warden",
 	"core:enemy/wisp", "core:boss/stone_thrall_king"]
 const REACTIONS: Array[String] = ["Hit_Light", "Hit_Light_L", "Stagger", "Stagger_B", "Knockdown", "Get_Up", "Death_A",
@@ -59,6 +59,22 @@ func test_the_old_bitch_wears_her_own_body_not_her_pack_s() -> void:
 			"and she stands well over her pack")
 
 
+func test_the_brake_dam_is_the_size_of_a_pony_not_a_hound() -> void:
+	# the thornhounds' dam: her own body (heavier, the briar grown into her), drawn at the size the forge
+	# made her for, and the size of a pony -- she stood a thornhound grown, and read as a dog
+	var e := _foe("core:boss/brake_dam")
+	var m := e.anim.model as CreatureModel
+	assert_true(m != null, "she wears a forged body")
+	if m == null:
+		return
+	assert_eq(m.model_name, "brake_dam", "her own, not a thornhound's")
+	var tall := float(m.meta.get("height", 0.0)) * m.scale.y
+	var pack := _foe("core:enemy/thornhound").anim.model as CreatureModel
+	assert_gt(tall, 1.35, "a pony's height (%.2f m)" % tall)
+	assert_gt(tall, float(pack.meta.get("height", 0.0)) * pack.scale.y * 1.7, "and twice her whelps'")
+	assert_gt(e.capsule_radius, 0.8, "as broad to a blow as she is")
+
+
 func test_every_clip_the_foe_uses_is_there() -> void:
 	for id in FORGED:
 		var e := _foe(id)
@@ -91,7 +107,12 @@ func test_it_runs_at_its_pace_and_dies_held() -> void:
 		m.set_locomotion(Vector2(0.0, e.speed), false)
 		await _tree().process_frame
 		await _tree().process_frame
-		assert_eq(m.current_clip(), "Run", "%s runs at its chasing speed %.1f" % [id, e.speed])
+		# a pony-sized dam lopes at a trot where her whelps run: the gait is the one her pace reaches
+		# (CreatureModel._gait_for), and a common foe's chasing pace is always its run
+		if e.is_boss and e.speed < m.gait_speed("Run") * 0.72:
+			assert_eq(m.current_clip(), "Trot", "%s lopes at its chasing speed %.1f" % [id, e.speed])
+		else:
+			assert_eq(m.current_clip(), "Run", "%s runs at its chasing speed %.1f" % [id, e.speed])
 		m.set_locomotion(Vector2(0.0, 1.0), false)
 		await _tree().process_frame
 		assert_true(m.current_clip() in ["Walk", "Trot"], "%s goes at a walk or a trot at 1 m/s (%s)" % [id, m.current_clip()])

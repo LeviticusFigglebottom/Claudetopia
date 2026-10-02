@@ -1,0 +1,40 @@
+{
+ "bounds": [
+  -0.1112,
+  -0.1215,
+  1.4955,
+  0.1113,
+  0.1321,
+  2.0387
+ ],
+ "collision": "none",
+ "colour_key": "primary",
+ "colour_keys": {
+  "choir_cowl": "primary"
+ },
+ "covers_head": true,
+ "fits": [],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "choir_cowl": "cloth"
+ },
+ "params": {
+  "bone": "Head",
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 14257,
+ "slot_hint": "attachment",
+ "textures": [
+  "choir_cowl_albedo.png",
+  "choir_cowl_orm.png"
+ ],
+ "tris": [
+  2600,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -1,0 +1,87 @@
+{
+ "attaches_to": "Socket.WeaponR",
+ "bounds": {
+  "height": 0.961,
+  "max": [
+   0.027,
+   0.657,
+   0.228
+  ],
+  "min": [
+   -0.027,
+   -0.304,
+   -0.292
+  ],
+  "radius": 0.547
+ },
+ "built_seconds": 12.21,
+ "category": "weapons",
+ "collision": "none",
+ "collision_params": {},
+ "generator": "gen_weapons",
+ "glb": "pick_chalk.glb",
+ "grip_origin": true,
+ "hash": "3d9540a08ffc1cfb",
+ "kind": "pick",
+ "materials": [
+  "pick_chalk_mat"
+ ],
+ "materials_used": [
+  "iron",
+  "wood_planks",
+  "leather"
+ ],
+ "meshes": [
+  {
+   "name": "pick_chalk",
+   "tris": 2084
+  },
+  {
+   "name": "pick_chalk_LOD1",
+   "tris": 728
+  },
+  {
+   "name": "pick_chalk_LOD2",
+   "tris": 312
+  }
+ ],
+ "name": "pick_chalk",
+ "params": {
+  "chalk": 1.0,
+  "finish": "iron"
+ },
+ "region_palette": {
+  "colors": [
+   "#b9a789",
+   "#4d6b3a",
+   "#e6e1d6",
+   "#3b3a36",
+   "#8a4b32",
+   "#6f7f93"
+  ],
+  "id": "forge:region/neutral",
+  "roles": {
+   "accent": "#8a4b32",
+   "cool": "#6f7f93",
+   "dark": "#3b3a36",
+   "earth": "#8a4b32",
+   "green": "#4d6b3a",
+   "light": "#e6e1d6",
+   "mid": "#6f7f93",
+   "warm": "#8a4b32"
+  }
+ },
+ "seed": 9689,
+ "textures": [
+  "pick_chalk_albedo.png",
+  "pick_chalk_normal.png",
+  "pick_chalk_orm.png"
+ ],
+ "tris": [
+  2084,
+  728,
+  312
+ ],
+ "two_handed": true,
+ "version": 3
+}

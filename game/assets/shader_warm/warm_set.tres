@@ -9,6 +9,7 @@
 [ext_resource type="Shader" path="res://assets/shaders/foliage_wind.gdshader" id="4_ggl34"]
 [ext_resource type="Shader" path="res://assets/shaders/falling_water.gdshader" id="4_i50ei"]
 [ext_resource type="Shader" path="res://assets/shaders/chimney_smoke.gdshader" id="4_rqkyd"]
+[ext_resource type="Shader" path="res://assets/shaders/boss_aura.gdshader" id="4_sieyh"]
 [ext_resource type="Shader" path="res://assets/shaders/grade_overlay.gdshader" id="5_g13gw"]
 [ext_resource type="Shader" path="res://assets/shaders/ground_mist.gdshader" id="6_0evr1"]
 [ext_resource type="Shader" path="res://assets/shaders/creature_hide.gdshader" id="6_lljb6"]
@@ -49,10 +50,10 @@
 [ext_resource type="Shader" path="res://assets/shaders/wisp_glow.gdshader" id="44_fyy4v"]
 [ext_resource type="Shader" path="res://assets/shaders/wisp_veil.gdshader" id="45_sieyh"]
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_8oq1d"]
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_fyy4v"]
 resource_name = "placeholder_2d"
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fyy4v"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sieyh"]
 emission_shape = 1
 emission_sphere_radius = 0.3
 direction = Vector3(0, 1, 0)
@@ -64,10 +65,10 @@ damping_min = 0.04
 damping_max = 0.08
 scale_min = 0.8
 scale_max = 1.3
-scale_curve = SubResource("PlaceholderTexture2D_8oq1d")
-color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
+scale_curve = SubResource("PlaceholderTexture2D_fyy4v")
+color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sieyh"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1gbky"]
 emission_shape = 3
 emission_box_extents = Vector3(2.4071379, 0.15, 0.6)
 direction = Vector3(0, 1, 0)
@@ -77,9 +78,9 @@ initial_velocity_max = 0.39
 gravity = Vector3(0, 0, 0)
 scale_min = 0.7
 scale_max = 1.3
-color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
+color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1gbky"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_m8nxs"]
 emission_shape = 3
 emission_box_extents = Vector3(2.25, 0.2, 1.25)
 angle_min = -180.0
@@ -93,16 +94,16 @@ damping_min = 0.4
 damping_max = 1.2
 scale_min = 0.6
 scale_max = 1.5
-scale_curve = SubResource("PlaceholderTexture2D_8oq1d")
-color_ramp = SubResource("PlaceholderTexture2D_8oq1d")
+scale_curve = SubResource("PlaceholderTexture2D_fyy4v")
+color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_m8nxs"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_knirb"]
 sky_top_color = Color(0.42, 0.55, 0.72, 1)
 sky_horizon_color = Color(0.75, 0.78, 0.8, 1)
 ground_bottom_color = Color(0.3, 0.3, 0.28, 1)
 ground_horizon_color = Color(0.6, 0.62, 0.6, 1)
 
-[sub_resource type="Shader" id="Shader_knirb"]
+[sub_resource type="Shader" id="Shader_sqdxb"]
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx,skip_vertex_transform;
 
@@ -650,9 +651,9 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sqdxb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yqlvi"]
 render_priority = 0
-shader = SubResource("Shader_knirb")
+shader = SubResource("Shader_sqdxb")
 shader_parameter/_camera_pos = Vector3(0, 0, 0)
 shader_parameter/_mesh_size = 48.0
 shader_parameter/_background_mode = 1
@@ -686,7 +687,7 @@ shader_parameter/noise1_angle = 0.0
 shader_parameter/noise1_offset = Vector2(0.5, 0.5)
 shader_parameter/noise2_scale = 0.076
 
-[sub_resource type="Shader" id="Shader_yqlvi"]
+[sub_resource type="Shader" id="Shader_gphvb"]
 code = "shader_type spatial;
 #define WATER_NO_MIRROR
 #define WATER_RIVER
@@ -1267,9 +1268,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_gphvb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xh3nk"]
 render_priority = 0
-shader = SubResource("Shader_yqlvi")
+shader = SubResource("Shader_gphvb")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -1304,7 +1305,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="Shader" id="Shader_xh3nk"]
+[sub_resource type="Shader" id="Shader_3wlg4"]
 code = "
 shader_type spatial;
 render_mode unshaded;
@@ -1337,11 +1338,11 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3wlg4"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dgx2d"]
 render_priority = 0
-shader = SubResource("Shader_xh3nk")
+shader = SubResource("Shader_3wlg4")
 
-[sub_resource type="Shader" id="Shader_dgx2d"]
+[sub_resource type="Shader" id="Shader_x3u56"]
 code = "shader_type canvas_item;
 uniform vec4 tint : source_color = vec4(1.0);
 void fragment() {
@@ -1349,11 +1350,11 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_x3u56"]
-shader = SubResource("Shader_dgx2d")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6qdpf"]
+shader = SubResource("Shader_x3u56")
 shader_parameter/tint = Color(1, 1, 1, 1)
 
-[sub_resource type="Shader" id="Shader_6qdpf"]
+[sub_resource type="Shader" id="Shader_8k45q"]
 code = "shader_type spatial;
 #define WATER_NO_MIRROR
 render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
@@ -1933,9 +1934,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_8k45q"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cavkc"]
 render_priority = 0
-shader = SubResource("Shader_6qdpf")
+shader = SubResource("Shader_8k45q")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -1970,7 +1971,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="Shader" id="Shader_cavkc"]
+[sub_resource type="Shader" id="Shader_4j3vn"]
 code = "shader_type spatial;
 #define WATER_RIVER
 render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
@@ -2550,9 +2551,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_4j3vn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_subcw"]
 render_priority = 0
-shader = SubResource("Shader_cavkc")
+shader = SubResource("Shader_4j3vn")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -2587,7 +2588,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_subcw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
 render_priority = 0
 shader = ExtResource("1_bg8tn")
 shader_parameter/ash = Color(0.4, 0.385, 0.37, 1)
@@ -2599,7 +2600,7 @@ shader_parameter/threshold_near = 0.555
 shader_parameter/patch_m = 9.0
 shader_parameter/ghost_m = 2.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uihw2"]
 render_priority = 0
 shader = ExtResource("2_fxsgc")
 shader_parameter/cloth_colour = Color(0.17, 0.21, 0.15, 1)
@@ -2611,7 +2612,7 @@ shader_parameter/fray = 0.09
 shader_parameter/sway = 0.12
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uihw2"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
 render_priority = 0
 shader = ExtResource("3_frfdy")
 shader_parameter/design0 = 0
@@ -2631,7 +2632,19 @@ shader_parameter/ink1 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink2 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink3 = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1gbky"]
+render_priority = 0
+shader = ExtResource("4_sieyh")
+shader_parameter/rim = Color(0.62, 0.86, 0.8, 1)
+shader_parameter/power = 2.4
+shader_parameter/energy = 1.0
+shader_parameter/pulse = 0.35
+shader_parameter/pulse_rate = 1.6
+shader_parameter/bands = 0.0
+shader_parameter/rise = 0.5
+shader_parameter/fill = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
 render_priority = 0
 shader = ExtResource("2_smsev")
 shader_parameter/bed_scale = 0.11
@@ -2652,7 +2665,7 @@ shader_parameter/brightness = 1.25
 shader_parameter/grain_fade_start = 9.0
 shader_parameter/grain_fade_end = 30.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
 render_priority = 0
 shader = ExtResource("4_rqkyd")
 shader_parameter/rise = 7.5
@@ -2660,20 +2673,20 @@ shader_parameter/life = 10.0
 shader_parameter/smoke_color = Color(0.74, 0.73, 0.72, 1)
 shader_parameter/density = 0.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
 render_priority = 0
 shader = ExtResource("6_lljb6")
 shader_parameter/pattern = 0
 shader_parameter/base_color = Color(0.8, 0.8, 0.8, 1)
 shader_parameter/unit = 0.05
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
 render_priority = 0
 shader = ExtResource("2_2un45")
 shader_parameter/core = Color(1, 0.42, 0.1, 1)
 shader_parameter/lip = Color(0.05, 0.035, 0.03, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
 render_priority = 0
 shader = ExtResource("3_i50ei")
 shader_parameter/core = Color(1, 0.46, 0.12, 1)
@@ -2681,7 +2694,7 @@ shader_parameter/crust = Color(0.045, 0.036, 0.032, 1)
 shader_parameter/stain = Color(0.16, 0.1, 0.07, 1)
 shader_parameter/plates = 5.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
 render_priority = 0
 shader = ExtResource("7_7c5sf")
 shader_parameter/iris_tint = Color(1, 1, 1, 1)
@@ -2698,7 +2711,7 @@ shader_parameter/caustic = 0.45
 shader_parameter/wet = 1.2
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
 render_priority = 0
 shader = ExtResource("9_u8gom")
 shader_parameter/brow_style = 0
@@ -2716,7 +2729,7 @@ shader_parameter/tattoo1_box = Vector4(0, 0, 0.01, 0.01)
 shader_parameter/tattoo0_ink = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/tattoo1_ink = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
 render_priority = 0
 shader = ExtResource("4_i50ei")
 shader_parameter/water_color = Color(0.7, 0.8, 0.85, 1)
@@ -2728,7 +2741,7 @@ shader_parameter/streaks = 7.0
 shader_parameter/opacity = 0.8
 shader_parameter/glass = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
 render_priority = 0
 shader = ExtResource("4_ggl34")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2749,7 +2762,7 @@ shader_parameter/backlight = 0.25
 shader_parameter/lod_fade_in = Vector2(0, 0)
 shader_parameter/lod_fade_out = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
 render_priority = 0
 shader = ExtResource("10_frfdy")
 shader_parameter/use_orm = true
@@ -2765,13 +2778,13 @@ shader_parameter/grime_height = 0.55
 shader_parameter/grime_amount = 0.45
 shader_parameter/sheen = 0.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
 shader = ExtResource("5_g13gw")
 shader_parameter/mode = 0
 shader_parameter/amount = 0.2
 shader_parameter/tint = Color(0.08, 0.06, 0.05, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
 render_priority = 0
 shader = ExtResource("6_0evr1")
 shader_parameter/world_rect = Vector4(-4096, -4096, 8, 1024)
@@ -2785,7 +2798,7 @@ shader_parameter/weather = 1.0
 shader_parameter/strength = 1.0
 shader_parameter/drift = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
 render_priority = 0
 shader = ExtResource("13_u8gom")
 shader_parameter/use_orm = true
@@ -2806,7 +2819,7 @@ shader_parameter/wrap = 0.35
 shader_parameter/edge_cut = 0.4
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
 render_priority = 0
 shader = ExtResource("14_42nll")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2831,7 +2844,7 @@ shader_parameter/diffuse_gain = 0.31831
 shader_parameter/sway_amount = 0.008
 shader_parameter/sway_speed = 1.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
 render_priority = 0
 shader = ExtResource("9_8khgv")
 shader_parameter/core_color = Color(1, 0.86, 0.55, 1)
@@ -2839,7 +2852,7 @@ shader_parameter/edge_color = Color(1, 0.42, 0.1, 1)
 shader_parameter/strength = 1.5
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
 render_priority = 0
 shader = ExtResource("7_smsev")
 shader_parameter/leg_top = Vector4(0.8, 0.8, 0.8, 0.8)
@@ -2852,7 +2865,7 @@ shader_parameter/leg_colour = Color(0.18, 0.12, 0.08, 1)
 shader_parameter/tail_colour = Color(0.12, 0.08, 0.06, 1)
 shader_parameter/antler_colour = Color(0.45, 0.37, 0.27, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
 render_priority = 0
 shader = ExtResource("9_ggl34")
 shader_parameter/mist = Color(0.78, 0.79, 0.8, 1)
@@ -2867,11 +2880,11 @@ shader_parameter/end_fade_m = 500.0
 shader_parameter/near_fade_from = 60.0
 shader_parameter/near_fade_to = 260.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
 render_priority = 0
 shader = ExtResource("20_42nll")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
 render_priority = 0
 shader = ExtResource("8_8khgv")
 shader_parameter/pane_dark = Color(0.085, 0.08, 0.075, 1)
@@ -2883,7 +2896,7 @@ shader_parameter/weathered = Color(0.56, 0.54, 0.5, 1)
 shader_parameter/weather_strength = 0.3
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
 render_priority = 0
 shader = ExtResource("13_ifdwk")
 shader_parameter/shaft_color = Color(1, 0.94, 0.78, 1)
@@ -2892,13 +2905,13 @@ shader_parameter/edge_softness = 0.6
 shader_parameter/bottom_fade = 0.7
 shader_parameter/dust_speed = 0.06
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
 render_priority = 0
 shader = ExtResource("9_ifdwk")
 shader_parameter/min_angle = 0.0028
 shader_parameter/haze_per_m = 0.00075
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
 render_priority = 0
 shader = ExtResource("10_00pen")
 shader_parameter/glass_color = Color(0.03, 0.028, 0.034, 1)
@@ -2922,7 +2935,7 @@ shader_parameter/sky_reflect = 1.0
 shader_parameter/world_uv = 0.0
 shader_parameter/world_flow = Vector2(0, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
 render_priority = 0
 shader = ExtResource("11_ayv1d")
 shader_parameter/albedo_tint = Color(1, 1, 1, 1)
@@ -2947,7 +2960,7 @@ shader_parameter/heights_bound = 0.0
 shader_parameter/own_region = 0
 shader_parameter/region_count = 6
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
 shader = ExtResource("12_b51qq")
 shader_parameter/top_color = Color(0.25, 0.45, 0.8, 1)
 shader_parameter/horizon_color = Color(0.8, 0.78, 0.72, 1)
@@ -2984,7 +2997,7 @@ shader_parameter/moon_color = Color(0.85, 0.88, 0.95, 1)
 shader_parameter/moon_disc_deg = 1.9
 shader_parameter/moon_strength = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
 render_priority = 0
 shader = ExtResource("13_n1w2m")
 shader_parameter/pattern = 0
@@ -3005,7 +3018,7 @@ shader_parameter/dado_color = Color(0.52, 0.36, 0.24, 1)
 shader_parameter/terrain_follow = false
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
 render_priority = 0
 shader = ExtResource("14_fxsgc")
 shader_parameter/has_shore = false
@@ -3042,7 +3055,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
 render_priority = 0
 shader = ExtResource("15_rqkyd")
 shader_parameter/deep_colour = Color(0.05, 0.16, 0.18, 1)
@@ -3057,7 +3070,7 @@ shader_parameter/opacity = 0.9
 shader_parameter/rim_fade = 0.3
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
 shader = ExtResource("30_xlg6m")
 shader_parameter/zenith = Color(0.22, 0.25, 0.34, 1)
 shader_parameter/upper = Color(0.47, 0.44, 0.47, 1)
@@ -3069,7 +3082,7 @@ shader_parameter/glow_strength = 0.55
 shader_parameter/vignette = 0.55
 shader_parameter/brush = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
 render_priority = 0
 shader = ExtResource("31_klbg2")
 shader_parameter/tile_metres = 1.6
@@ -3079,11 +3092,11 @@ shader_parameter/pool = 1.8
 shader_parameter/fade_from = 2.8
 shader_parameter/fade_to = 8.5
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
 render_priority = 0
 shader = ExtResource("16_7c5sf")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
 render_priority = 0
 shader = ExtResource("17_frfdy")
 shader_parameter/has_shore = false
@@ -3095,7 +3108,7 @@ shader_parameter/foam_colour = Color(0.93, 0.95, 0.95, 1)
 shader_parameter/strength = 1.0
 shader_parameter/damp = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
 render_priority = 0
 shader = ExtResource("29_8pb5p")
 shader_parameter/use_orm = true
@@ -3123,7 +3136,7 @@ shader_parameter/sss_strength = 0.18
 shader_parameter/albedo_scale = 0.84
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
 render_priority = 0
 shader = ExtResource("20_ggl34")
 shader_parameter/shallow_color = Color(0.22, 0.42, 0.4, 1)
@@ -3137,14 +3150,14 @@ shader_parameter/fresnel_power = 3.0
 shader_parameter/sheen_color = Color(0.75, 0.85, 0.9, 1)
 shader_parameter/floor_y = -1000.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
 render_priority = 0
 shader = ExtResource("34_u8gom")
 shader_parameter/use_flow = false
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/alpha = 0.42
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
 render_priority = 0
 shader = ExtResource("18_u8gom")
 shader_parameter/frame_axis = Vector2(0, 0)
@@ -3161,23 +3174,23 @@ shader_parameter/roughness_value = 0.72
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/lod_fade_in = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
 render_priority = 0
 shader = ExtResource("19_42nll")
 shader_parameter/water_colour = Color(0.06, 0.2, 0.24, 1)
 shader_parameter/depth_m = 0.5
 shader_parameter/visibility_m = 9.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
 render_priority = 0
 shader = ExtResource("20_8pb5p")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
 render_priority = 0
 shader = ExtResource("21_xlg6m")
 shader_parameter/softness = 0.8
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrhgo"]
 render_priority = 0
 shader = ExtResource("22_klbg2")
 shader_parameter/water_colour = Color(0.36, 0.5, 0.5, 1)
@@ -3192,7 +3205,7 @@ shader_parameter/opacity = 0.92
 shader_parameter/veil_opacity = 0.32
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrhgo"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b4p2s"]
 render_priority = 0
 shader = ExtResource("23_lljb6")
 shader_parameter/wing_root = Vector2(0.05, 0.1)
@@ -3204,7 +3217,7 @@ shader_parameter/beat_hz = 3.0
 shader_parameter/beat_amp = 0.75
 shader_parameter/wetness = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1gbky"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ujfdm"]
 render_priority = 0
 shader = ExtResource("44_fyy4v")
 shader_parameter/glow = Color(1, 0.68, 0.26, 1)
@@ -3212,14 +3225,14 @@ shader_parameter/energy = 1.0
 shader_parameter/fade = 1.0
 shader_parameter/billboard = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_m8nxs"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gbcet"]
 render_priority = 0
 shader = ExtResource("45_sieyh")
 shader_parameter/tint = Color(0.62, 0.84, 0.8, 1)
 shader_parameter/strength = 0.55
 shader_parameter/fade = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_b4p2s"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ct7nk"]
 render_priority = 0
 shader = ExtResource("43_klbg2")
 shader_parameter/height_origin = Vector2(-4093, -4093)
@@ -3247,7 +3260,7 @@ shader_parameter/blend_sharpness = 0.34
 shader_parameter/macro_variation1 = Color(0.95, 0.97, 0.91, 1)
 shader_parameter/macro_variation2 = Color(0.92, 0.9, 0.87, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ujfdm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2ac5y"]
 render_priority = 0
 shader = ExtResource("41_42nll")
 shader_parameter/base_color = Color(0.72, 0.68, 0.6, 1)
@@ -3273,192 +3286,215 @@ shader_parameter/lichen_amount = 0.5
 shader_parameter/streak_amount = 0.55
 shader_parameter/ground_y = 0.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gbcet"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qki7j"]
+shading_mode = 0
+albedo_color = Color(1, 0.84705883, 0.5647059, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_413rm"]
 albedo_color = Color(0.58, 0.6, 0.42, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ct7nk"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dr1q3"]
 texture_filter = 5
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ac5y"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7am8n"]
 albedo_color = Color(0.03, 0.03, 0.035, 1)
 roughness = 0.9
 emission_enabled = true
 emission = Color(0.55, 0.75, 1, 1)
 emission_energy_multiplier = 0.6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qki7j"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness = 0.95
+uv1_scale = Vector3(200, 200, 1)
+texture_filter = 5
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
 albedo_color = Color(0.42, 0.42, 0.42, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness = 0.95
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
 uv1_scale = Vector3(0.3846154, 0.3846154, 0.3846154)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_413rm"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
 resource_name = "hearthvale_chalk_hound_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness_texture_channel = 1
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
+ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dr1q3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
 resource_name = "brightwater_the_lamp_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness_texture_channel = 1
 emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_8oq1d")
+emission_texture = SubResource("PlaceholderTexture2D_fyy4v")
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
+ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7am8n"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
 vertex_color_use_as_albedo = true
 albedo_color = Color(0.92, 0.9, 0.87, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ti57r"]
 resource_name = "skerrow_juniper_c_bark"
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness_texture_channel = 1
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
-resource_name = "hearthvale_campfire_b_mat"
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness_texture_channel = 1
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_8oq1d")
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_8oq1d")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(0.78, 0.83, 0.92, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
-cull_mode = 2
-albedo_color = Color(0.05, 0.05, 0.06, 1)
-roughness = 0.85
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
-resource_name = "WM_Eye_hawk_f"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness = 0.18
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ti57r"]
-resource_name = "WM_Eye"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness = 0.18
+ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vkjtc"]
-resource_name = "WM_kirtle"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+resource_name = "hearthvale_campfire_b_mat"
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness_texture_channel = 1
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = SubResource("PlaceholderTexture2D_fyy4v")
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
+texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1hste"]
-resource_name = "WM_shirt"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness_texture_channel = 1
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
+shading_mode = 0
+albedo_color = Color(0.78, 0.83, 0.92, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ce7v7"]
-resource_name = "WM_Skin_hawk_f"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metadata/_gltf_primary_texture_coord = 0
+albedo_color = Color(0.05, 0.05, 0.06, 1)
+roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onrrp"]
-resource_name = "WM_Skin_Body"
+resource_name = "WM_Eye_hawk_f"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_8oq1d")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_8oq1d")
-texture_filter = 5
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness = 0.18
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ksov"]
+resource_name = "WM_Eye"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness = 0.18
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfdwr"]
+resource_name = "WM_kirtle"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture_channel = 1
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sieyh"]
+resource_name = "WM_miners_hat_candle"
+cull_mode = 2
+albedo_color = Color(0.9098039, 0.8627451, 0.7529412, 1)
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture_channel = 1
+metadata/_gltf_primary_texture_coord = 0
+metadata/dressed = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdda5"]
+resource_name = "WM_shirt"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture_channel = 1
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djmg8"]
+resource_name = "WM_Skin_hawk_f"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6flue"]
+resource_name = "WM_Skin_Body"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hqym3"]
 transparency = 1
 shading_mode = 0
 albedo_color = Color(0.55, 0.52, 0.49, 0.5)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfdwr"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
@@ -3468,17 +3504,17 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdda5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djmg8"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
 transparency = 1
 albedo_color = Color(0.92, 0.94, 0.9, 0.75)
 roughness = 0.35
@@ -3486,60 +3522,18 @@ emission_enabled = true
 emission = Color(0.8, 0.85, 0.82, 1)
 emission_energy_multiplier = 0.25
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6flue"]
-transparency = 1
-albedo_color = Color(0.3, 0.02, 0.02, 0.85)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness = 0.4
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hqym3"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-billboard_mode = 3
-particles_anim_h_frames = 1
-particles_anim_v_frames = 1
-particles_anim_loop = false
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-vertex_color_use_as_albedo = true
-vertex_color_is_srgb = true
-billboard_mode = 1
-billboard_keep_scale = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.82, 0.88, 0.92, 0.28)
-roughness = 0.12
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.72, 0.76, 0.85, 0.42)
-emission_enabled = true
-emission = Color(0.6, 0.68, 0.8, 1)
-emission_energy_multiplier = 0.6
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c63jk"]
 transparency = 1
-cull_mode = 2
-vertex_color_use_as_albedo = true
-roughness = 0.9
-billboard_mode = 2
-billboard_keep_scale = true
+albedo_color = Color(0.3, 0.02, 0.02, 0.85)
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness = 0.4
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p3785"]
 transparency = 1
 cull_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
-roughness = 0.35
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
@@ -3548,11 +3542,53 @@ particles_anim_loop = false
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ypxsi"]
 transparency = 1
 cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.82, 0.88, 0.92, 0.28)
+roughness = 0.12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.72, 0.76, 0.85, 0.42)
+emission_enabled = true
+emission = Color(0.6, 0.68, 0.8, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n80v5"]
+transparency = 1
+cull_mode = 2
+vertex_color_use_as_albedo = true
+roughness = 0.9
+billboard_mode = 2
+billboard_keep_scale = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ujc4"]
+transparency = 1
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness = 0.35
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pa7hx"]
+transparency = 1
+cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 vertex_color_use_as_albedo = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5jca"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
@@ -3562,24 +3598,35 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vfmcv"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.78, 0)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n80v5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m8nxs"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekx7u"]
 transparency = 1
 blend_mode = 1
 no_depth_test = true
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.7, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ujc4"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qw36s"]
 transparency = 1
 blend_mode = 1
 cull_mode = 2
@@ -3588,22 +3635,22 @@ vertex_color_use_as_albedo = true
 billboard_mode = 2
 billboard_keep_scale = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pa7hx"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmm7x"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 albedo_color = Color(0.55, 0.52, 0.48, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_8oq1d")
+albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
 roughness = 0.95
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5jca"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m55g4"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vfmcv"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5rm0o"]
 resource_name = "WM_crown_braid_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3612,7 +3659,7 @@ cull_mode = 2
 albedo_color = Color(0.6651851, 0.5657284, 0.47312066, 1)
 roughness = 0.7
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekx7u"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p70qx"]
 resource_name = "WM_short_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3624,5 +3671,5 @@ texture_filter = 5
 
 [resource]
 script = ExtResource("24_8oq1d")
-materials = Array[Material]([SubResource("ParticleProcessMaterial_fyy4v"), SubResource("ParticleProcessMaterial_sieyh"), SubResource("ParticleProcessMaterial_1gbky"), SubResource("ProceduralSkyMaterial_m8nxs"), SubResource("ShaderMaterial_sqdxb"), SubResource("ShaderMaterial_gphvb"), SubResource("ShaderMaterial_3wlg4"), SubResource("ShaderMaterial_x3u56"), SubResource("ShaderMaterial_8k45q"), SubResource("ShaderMaterial_4j3vn"), SubResource("ShaderMaterial_subcw"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_uihw2"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("ShaderMaterial_vrhgo"), SubResource("ShaderMaterial_1gbky"), SubResource("ShaderMaterial_m8nxs"), SubResource("ShaderMaterial_b4p2s"), SubResource("ShaderMaterial_ujfdm"), SubResource("StandardMaterial3D_gbcet"), SubResource("StandardMaterial3D_ct7nk"), SubResource("StandardMaterial3D_2ac5y"), SubResource("StandardMaterial3D_qki7j"), SubResource("StandardMaterial3D_413rm"), SubResource("StandardMaterial3D_dr1q3"), SubResource("StandardMaterial3D_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx"), SubResource("StandardMaterial3D_v5jca"), SubResource("StandardMaterial3D_vfmcv"), SubResource("StandardMaterial3D_ekx7u")])
-seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "creature_review.tscn @ /root/CreatureReview/@WorldEnvironment@20", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "creature_review.tscn @ /root/CreatureReview/PlaceholderBody/hips/torso/@MeshInstance3D@24", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Core", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards")
+materials = Array[Material]([SubResource("ParticleProcessMaterial_sieyh"), SubResource("ParticleProcessMaterial_1gbky"), SubResource("ParticleProcessMaterial_m8nxs"), SubResource("ProceduralSkyMaterial_knirb"), SubResource("ShaderMaterial_yqlvi"), SubResource("ShaderMaterial_xh3nk"), SubResource("ShaderMaterial_dgx2d"), SubResource("ShaderMaterial_6qdpf"), SubResource("ShaderMaterial_cavkc"), SubResource("ShaderMaterial_subcw"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_uihw2"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_1gbky"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("ShaderMaterial_vrhgo"), SubResource("ShaderMaterial_b4p2s"), SubResource("ShaderMaterial_ujfdm"), SubResource("ShaderMaterial_gbcet"), SubResource("ShaderMaterial_ct7nk"), SubResource("ShaderMaterial_2ac5y"), SubResource("StandardMaterial3D_qki7j"), SubResource("StandardMaterial3D_413rm"), SubResource("StandardMaterial3D_dr1q3"), SubResource("StandardMaterial3D_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_sieyh"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx"), SubResource("StandardMaterial3D_v5jca"), SubResource("StandardMaterial3D_vfmcv"), SubResource("StandardMaterial3D_m8nxs"), SubResource("StandardMaterial3D_ekx7u"), SubResource("StandardMaterial3D_qw36s"), SubResource("StandardMaterial3D_rmm7x"), SubResource("StandardMaterial3D_m55g4"), SubResource("StandardMaterial3D_5rm0o"), SubResource("StandardMaterial3D_p70qx")])
+seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "creature_review.tscn @ /root/CreatureReview/@WorldEnvironment@20", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "creature_review.tscn @ /root/CreatureReview/PlaceholderBody/hips/torso/@MeshInstance3D@24", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Core", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@153/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Carry_Hips/Carried_hearthvale_lantern_hand_a/CarriedFlame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "motion_studio.tscn @ /root/MotionStudio/@MeshInstance3D@18", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@1935/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/headgear_miners_hat_candle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/AuraMotes", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards")

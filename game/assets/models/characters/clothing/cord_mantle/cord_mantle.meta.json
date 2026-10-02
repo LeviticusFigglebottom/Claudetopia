@@ -1,0 +1,41 @@
+{
+ "bounds": [
+  -0.1836,
+  -0.1715,
+  0.7977,
+  0.1835,
+  0.1701,
+  1.4726
+ ],
+ "collision": "none",
+ "colour_key": "trim",
+ "colour_keys": {
+  "cord_mantle": "trim"
+ },
+ "fits": [
+  "woman"
+ ],
+ "generator": "character_forge",
+ "kind": "clothing",
+ "material": "cloth",
+ "materials": {
+  "cord_mantle": "cloth"
+ },
+ "params": {
+  "bone": null,
+  "material": "cloth"
+ },
+ "rig": "WM_Humanoid_v1",
+ "seed": 53742,
+ "slot_hint": "attachment",
+ "textures": [
+  "cord_mantle_albedo.png",
+  "cord_mantle_orm.png"
+ ],
+ "tris": [
+  3800,
+  0,
+  0
+ ],
+ "version": 1
+}

@@ -27,7 +27,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import bmesh  # noqa: E402
-from mathutils import Euler  # noqa: E402
+from mathutils import Euler, Vector  # noqa: E402
+import numpy as np  # noqa: E402
 
 from lib import build as B  # noqa: E402
 from lib import materials as M  # noqa: E402
@@ -780,10 +781,420 @@ def shield(pal, rng, params, variant):
     return done(parts, rng, "Socket.ShieldL", ["wood_planks", "iron", "leather"], jitter=0.0)
 
 
+# --- the bosses' own tools, and what they carry about them --------------------------------------
+#
+# A boss is known across a hall by what is in its hands: the overman's pick, the digger-king's spade,
+# the founder's sledge, the lampman's lamp on its pole. Each is built as the weapons above are (the
+# grip's middle at the origin, the working end up +Z and leading along +Y), so it goes into the hand
+# with no transform of its own; the carried ones (a bell on a yoke, a speaking-trumpet) are hung on
+# the body by EnemyDress `carry` and stand in their own frame, +Z up, facing -Y (the body's front).
+
+def _chain(name, pts, link, wire, mat):
+    """A chain of iron links along the polyline `pts`, each link turned a quarter to the last."""
+    parts = []
+    path = [Vector(p) for p in pts]
+    seg = []
+    for a, b in zip(path[:-1], path[1:]):
+        n = max(1, int((b - a).length / (link * 1.6)))
+        for i in range(n):
+            seg.append((a.lerp(b, (i + 0.5) / n), (b - a).normalized()))
+    for i, (c, d) in enumerate(seg):
+        ob = S.torus("%s_%d" % (name, i), major=link * 0.5, minor=wire, seg_major=10, seg_minor=5, mat=mat)
+        ob.scale = (1.0, 0.62, 1.0)
+        S.apply_transforms(ob)
+        # the link's long axis (its local X after the squash) along the chain, each turned 90 degrees
+        q = Vector((1.0, 0.0, 0.0)).rotation_difference(d)
+        ob.rotation_mode = "QUATERNION"
+        roll = Euler((math.radians(90.0 * (i % 2)), 0.0, 0.0)).to_quaternion()
+        ob.rotation_quaternion = q @ roll
+        ob.location = c
+        S.apply_transforms(ob)
+        parts.append(ob)
+    return parts
+
+
+def pick(pal, rng, params, variant):
+    """A miner's pick: an oak haft worn to one man's hands, held two-handed, and across its top an
+    iron head drawn to a point along +Y and to a chisel behind. `chalk` whitens the haft and the
+    iron with the dust of a chalk face."""
+    finish = _finish(params)
+    chalk = float(params.get("chalk", 0.0))
+    top = jit(rng, 0.62, 0.02)
+    butt = -0.30
+    steel = blade_mat(pal, rng, finish)
+    metal = fitting_mat(pal, rng, finish)
+    wood = haft_mat(pal, rng, base_hex="#b9ab90" if chalk > 0.5 else "#6e5232", name="pick_haft")
+    hide = grip_mat(pal, finish)
+    r = 0.017 * STOUT
+    parts = [_haft("haft", butt, top + 0.04, r * 1.12, r * 0.96, wood, rng, bow=rng.uniform(-0.005, 0.005))]
+    parts.append(S.lathe("butt_swell", [(r * 1.1, butt - 0.004), (r * 1.4, butt + 0.015), (r * 1.15, butt + 0.04)],
+                         segments=10, mat=wood, close=True))
+    parts += _grip("grip", -0.26, -0.04, r * 1.05, hide, rng)
+    hz = top
+    # the eye round the haft, and two arms out of it curving down: a point to +Y, a chisel to -Y
+    parts.append(S.box_centered("eye", (0.046, 0.06, 0.07), (0.0, 0.0, hz), mat=steel))
+    S.bevel(parts[-1], width=0.008, segments=2, angle_deg=40)
+    for side, reach, end_w in ((1.0, 0.27, 0.004), (-1.0, 0.2, 0.016)):
+        pts = []
+        for i in range(9):
+            f = i / 8
+            pts.append((0.0, side * (0.02 + reach * f), hz + 0.01 - 0.07 * f ** 1.6))
+        arm = S.tube_along("arm_%d" % int(side), pts, radius=0.022, segments=8, radius_end=end_w, mat=steel)
+        arm.scale = (0.75, 1.0, 1.0)
+        S.apply_transforms(arm)
+        parts.append(arm)
+    parts.append(S.box_centered("wedge", (r * 0.6, r * 1.8, 0.01), (0.0, 0.0, hz + 0.038), mat=metal))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "wood_planks", "leather"], jitter=0.0006,
+                extra={"two_handed": True})
+
+
+def drift_hook(pal, rng, params, variant):
+    """A shift-captain's drift hook: a long ash pole bound in brass, held a third of the way up, and
+    at its top a forged iron hook for drawing the tubs along the drift, its bill leading along +Y and
+    curling back down, a spike above it."""
+    finish = _finish(params)
+    iron_ = M.iron(pal, age=0.55, wear=0.7, scale=0.08, name="hook_iron")
+    brass = M.brass(pal, age=0.6, wear=0.6, scale=0.06, name="hook_brass")
+    wood = haft_mat(pal, rng, base_hex="#6a5236", name="pole_wood")
+    hide = grip_mat(pal, finish)
+    r = 0.016 * STOUT
+    butt, top = -0.55, jit(rng, 1.25, 0.02)
+    parts = [_haft("pole", butt, top, r * 1.05, r * 0.92, wood, rng, bow=rng.uniform(0.006, 0.014))]
+    parts += _grip("grip", -0.08, 0.08, r * 1.04, hide, rng)
+    for k, z in enumerate((0.42, 0.78, top - 0.12)):
+        parts.append(_band("brass_%d" % k, z, r, 0.03, brass))
+    parts.append(S.lathe("ferrule", [(r * 1.0, butt - 0.02), (r * 1.15, butt + 0.01), (r * 1.0, butt + 0.06)],
+                         segments=10, mat=brass, close=True))
+    parts.append(S.lathe("socket", [(r * 1.15, top - 0.08), (r * 1.25, top), (r * 0.9, top + 0.06)],
+                         segments=10, mat=iron_, close=True))
+    # the hook: out along +Y and round and down, tapering to its bill
+    pts = []
+    for i in range(13):
+        t = i / 12
+        a = math.pi * 1.15 * t
+        pts.append((0.0, 0.085 * math.sin(a) + 0.01, top + 0.06 + 0.085 * (1.0 - math.cos(a)) * 0.9 - 0.07 * t * t))
+    hook = S.tube_along("hook", pts, radius=0.016, segments=8, radius_end=0.004, mat=iron_)
+    hook.scale = (0.7, 1.0, 1.0)
+    S.apply_transforms(hook)
+    parts.append(hook)
+    parts.append(S.tube_along("spike", [(0.0, 0.0, top + 0.04), (0.0, -0.01, top + 0.2)], radius=0.012, segments=8,
+                              radius_end=0.002, mat=iron_))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "brass", "wood_planks"], jitter=0.0005,
+                extra={"two_handed": True})
+
+
+def seal_staff(pal, rng, params, variant):
+    """A receiver's staff of office: a tall black staff ending in the barrow's great seal, a disc of
+    iron as broad as a hand is long, its face (the struck mark) leading along +Y, ringed and bossed."""
+    finish = _finish(params)
+    iron_ = M.blackened_iron(pal, age=0.5, wear=0.55, scale=0.08, name="seal_iron")
+    brass = M.brass(pal, age=0.75, wear=0.45, scale=0.06, name="seal_brass")
+    wood = haft_mat(pal, rng, base_hex="#2e2620", name="staff_black")
+    r = 0.016 * STOUT
+    butt, top = -0.6, jit(rng, 1.2, 0.02)
+    parts = [_haft("staff", butt, top, r * 1.0, r * 1.05, wood, rng)]
+    for k, z in enumerate((-0.12, 0.12, 0.62, top - 0.06)):
+        parts.append(_band("ring_%d" % k, z, r, 0.022, brass))
+    parts.append(S.lathe("shoe", [(r * 0.9, butt - 0.03), (r * 1.1, butt + 0.01), (r * 1.0, butt + 0.06)],
+                         segments=10, mat=iron_, close=True))
+    # the seal: a thick disc across the top, face to +Y, a boss behind for the hand to strike it
+    sz = top + 0.11
+    disc = S.cylinder("seal", radius=0.11, depth=0.05, vertices=22, location=(0.0, 0.03, sz), rotation=(90, 0, 0),
+                      mat=iron_, centered=True)
+    S.bevel(disc, width=0.008, segments=2, angle_deg=40)
+    parts.append(disc)
+    parts.append(B.hoop("seal_rim", 0.105, 0.009, mat=brass, location=(0.0, 0.058, sz), rotation=(90, 0, 0),
+                        flatten=1.0))
+    parts.append(B.hoop("seal_ring", 0.055, 0.007, mat=brass, location=(0.0, 0.058, sz), rotation=(90, 0, 0),
+                        flatten=1.0))
+    parts.append(S.lathe("neck", [(r * 1.1, top - 0.02), (r * 1.5, top + 0.03), (0.03, sz - 0.06)],
+                         segments=10, mat=iron_, close=True))
+    parts.append(S.sphere("boss", radius=0.035, subdivisions=2, location=(0.0, -0.01, sz), mat=brass))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "brass", "wood_planks"], jitter=0.0004,
+                extra={"two_handed": True})
+
+
+def spade(pal, rng, params, variant):
+    """A barrow-digger's spade: an ash shaft with a crutch at its foot for the hands, and at its top
+    a wooden blade shod in iron, its face leading along +Y and its cutting edge up."""
+    finish = _finish(params)
+    iron_ = M.iron(pal, age=0.75, wear=0.85, scale=0.08, name="shoe_iron")
+    wood = haft_mat(pal, rng, base_hex="#6e5638", name="spade_wood")
+    hide = grip_mat(pal, finish)
+    r = 0.018 * STOUT
+    butt, top = -0.42, jit(rng, 0.62, 0.02)
+    parts = [_haft("shaft", butt, top, r * 1.05, r * 1.0, wood, rng, bow=rng.uniform(-0.004, 0.004))]
+    parts += _grip("grip", -0.06, 0.08, r * 1.04, hide, rng)
+    # the crutch handle across the foot of the shaft
+    parts.append(S.tube_along("crutch", [(-0.075, 0.0, butt - 0.01), (0.0, 0.0, butt - 0.035), (0.075, 0.0, butt - 0.01)],
+                              radius=r * 0.95, segments=8, mat=wood))
+    # the blade: a tapered board, flats facing +-Y, widening up to the shod edge
+    bz = top - 0.02
+    blade_h, w0, w1 = 0.34, 0.15, 0.2
+    outline = [(-w0 * 0.5, bz), (w0 * 0.5, bz), (w1 * 0.5, bz + blade_h * 0.85), (w1 * 0.45, bz + blade_h),
+               (-w1 * 0.45, bz + blade_h), (-w1 * 0.5, bz + blade_h * 0.85)]
+    blade = _prism("blade", outline, lambda y, z: 0.03 - 0.016 * (z - bz) / blade_h, wood)
+    # _prism lays the outline in YZ with its thickness on X; turn it so the face leads along +Y
+    blade.rotation_euler = Euler((0.0, 0.0, math.radians(90.0)))
+    S.apply_transforms(blade)
+    S.bevel(blade, width=0.004, segments=1, angle_deg=35)
+    parts.append(blade)
+    shoe = S.box_centered("shoe", (w1 * 1.02, 0.026, 0.06), (0.0, 0.0, bz + blade_h - 0.02), mat=iron_)
+    S.bevel(shoe, width=0.006, segments=2, angle_deg=40)
+    parts.append(shoe)
+    for sx in (-1.0, 1.0):
+        parts.append(S.box_centered("strap_%d" % int(sx), (0.022, 0.034, blade_h * 0.8),
+                                    (sx * w0 * 0.42, 0.0, bz + blade_h * 0.42), mat=iron_))
+    parts.append(S.lathe("collar", [(r * 1.1, bz - 0.07), (r * 1.4, bz - 0.02), (r * 1.6, bz + 0.03)],
+                         segments=10, mat=iron_, close=True))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "wood_planks", "leather"], jitter=0.0006,
+                extra={"two_handed": True})
+
+
+def sledge(pal, rng, params, variant):
+    """A founder's sledge: a long hickory haft and a great iron head set across it, both faces
+    banded, the one that leads along +Y crowned with bell bronze from the moulds it has broken."""
+    finish = _finish(params)
+    iron_ = M.iron(pal, age=0.7, wear=0.8, scale=0.1, name="sledge_iron")
+    bronze = M.bell_bronze_patina(pal, age=0.6, wear=0.7, scale=0.08, name="sledge_bronze")
+    wood = haft_mat(pal, rng, base_hex="#6a4e30", name="sledge_haft")
+    hide = grip_mat(pal, finish)
+    r = 0.02 * STOUT
+    butt, top = -0.38, jit(rng, 0.66, 0.02)
+    parts = [_haft("haft", butt, top + 0.05, r * 1.1, r * 0.95, wood, rng)]
+    parts += _grip("grip", -0.34, -0.02, r * 1.04, hide, rng)
+    parts.append(_band("band", 0.3, r, 0.03, iron_))
+    hz = top
+    head = S.cylinder("head", radius=0.075, depth=0.36, vertices=12, location=(0.0, 0.0, hz), rotation=(90, 0, 0),
+                      mat=iron_, centered=True)
+    S.bevel(head, width=0.01, segments=2, angle_deg=40)
+    parts.append(head)
+    for y, m in ((0.17, bronze), (-0.17, iron_)):
+        parts.append(B.hoop("face_band_%d" % int(y * 100), 0.078, 0.012, mat=m, location=(0.0, y, hz),
+                            rotation=(90, 0, 0), flatten=1.0))
+    parts.append(S.cylinder("face", radius=0.068, depth=0.03, vertices=12, location=(0.0, 0.19, hz), rotation=(90, 0, 0),
+                            mat=bronze, centered=True))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "bell_bronze_patina", "wood_planks"], jitter=0.0008,
+                extra={"two_handed": True})
+
+
+def lamp_pole(pal, rng, params, variant):
+    """The lampman's lamp on its pole: a winch-bar of iron-shod oak held two-handed, and from a hook
+    at its top the sea-mouth lamp on a short chain, its glass lit."""
+    finish = _finish(params)
+    iron_ = M.iron(pal, age=0.8, wear=0.6, scale=0.1, name="pole_iron")
+    wood = haft_mat(pal, rng, base_hex="#5a4632", name="winch_bar")
+    hide = grip_mat(pal, finish)
+    r = 0.02 * STOUT
+    butt, top = -0.62, jit(rng, 1.25, 0.02)
+    parts = [_haft("pole", butt, top, r * 1.05, r * 0.9, wood, rng, bow=rng.uniform(0.005, 0.012))]
+    parts += _grip("grip", -0.1, 0.1, r * 1.04, hide, rng)
+    parts.append(S.lathe("shoe", [(r * 1.0, butt - 0.05), (r * 1.2, butt), (r * 1.05, butt + 0.08)],
+                         segments=10, mat=iron_, close=True))
+    # the crook at the top, out along +Y, and the lamp hanging from it on three links
+    crook = [(0.0, 0.0, top - 0.04), (0.0, 0.05, top + 0.06), (0.0, 0.14, top + 0.08), (0.0, 0.2, top + 0.03)]
+    parts.append(S.tube_along("crook", crook, radius=0.012, segments=8, radius_end=0.009, mat=iron_))
+    hang = Vector((0.0, 0.2, top + 0.01))
+    parts += _chain("lamp_chain", [hang, hang + Vector((0.0, 0.0, -0.12))], 0.04, 0.0045, iron_)
+    from gen_props import _lantern_body
+    glass = M.glass(pal, color=M.P.lin("#f2d79a"), name="lamp_glass")
+    body, lr = _lantern_body(pal, rng, 0.3, iron_, glass)
+    for ob in body:
+        ob.location = (ob.location[0], ob.location[1] + 0.2, ob.location[2] + top - 0.43)
+        S.apply_transforms(ob)
+    parts += body
+    parts.append(S.torus("lamp_ring", major=0.025, minor=0.005, seg_major=12, seg_minor=5,
+                         location=(0.0, 0.2, top - 0.15), rotation=(90, 0, 0), mat=iron_))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "glass", "wood_planks"], jitter=0.0004,
+                extra={"two_handed": True, "emissive": True, "lamp": [0.0, top - 0.3, -0.2]})
+
+
+def rasp(pal, rng, params, variant):
+    """A farrier's rasp, held as a short sword: a flat bar of steel forty centimetres long, its
+    flats (±X) cut across in teeth, tapering to a blunt end, on a wooden handle."""
+    finish = _finish(params)
+    steel = M.iron(pal, age=0.35, wear=0.9, scale=0.05, name="rasp_steel")
+    wood = haft_mat(pal, rng, base_hex="#7a5a36", name="rasp_handle")
+    parts = []
+    parts.append(S.lathe("handle", [(0.012, -0.075), (0.018, -0.06), (0.02, 0.0), (0.017, 0.055), (0.012, 0.065)],
+                         segments=10, mat=wood, close=True))
+    parts.append(S.lathe("ferrule", [(0.014, 0.06), (0.016, 0.065), (0.016, 0.08), (0.013, 0.085)], segments=10,
+                         mat=steel, close=True))
+    L = jit(rng, 0.4, 0.02)
+    z0 = 0.085
+    outline = [(-0.021, z0), (0.021, z0), (0.02, z0 + L * 0.85), (0.012, z0 + L), (-0.012, z0 + L), (-0.02, z0 + L * 0.85)]
+    bar = _prism("bar", outline, lambda y, z: 0.009, steel)
+    S.bevel(bar, width=0.0015, segments=1, angle_deg=35)
+    parts.append(bar)
+    # the teeth: rows of small ridges across both flats
+    n = int(L / 0.012)
+    for i in range(n):
+        z = z0 + 0.015 + i * 0.012
+        for sx in (-1.0, 1.0):
+            t = S.box_centered("tooth_%d_%d" % (i, int(sx)), (0.0022, 0.038, 0.0035), (sx * 0.0046, 0.0, z), mat=steel)
+            t.rotation_euler = Euler((math.radians(18.0 * sx), 0.0, 0.0))
+            S.apply_transforms(t)
+            parts.append(t)
+    return done(parts, rng, "Socket.WeaponR", ["iron", "wood_planks"], jitter=0.0)
+
+
+def leister(pal, rng, params, variant):
+    """An eel spear, the Reedfolk's leister: a long shaft held two-handed and at its head a fan of
+    flat barbed tines on a crossbar, spread along ±Y like a comb, for pinning an eel in the mud."""
+    finish = _finish(params)
+    iron_ = M.iron(pal, age=0.8, wear=0.55, scale=0.06, name="tine_iron")
+    wood = haft_mat(pal, rng, base_hex="#5d4c38", name="leister_shaft")
+    cord = M.rope(pal, age=0.6, scale=0.05)
+    r = 0.016 * STOUT
+    butt, top = -0.8, jit(rng, 1.45, 0.02)
+    parts = [_haft("shaft", butt, top, r * 1.0, r * 0.88, wood, rng, bow=rng.uniform(-0.01, 0.01))]
+    for k in range(5):
+        parts.append(B.rope_loop("lash_%d" % k, r * 1.08, r * 0.24, mat=cord, segments=10,
+                                 location=(0.0, 0.0, top - 0.02 - k * r * 0.6)))
+    bar = S.box_centered("crossbar", (0.03, 0.24, 0.03), (0.0, 0.0, top + 0.02), mat=wood)
+    S.bevel(bar, width=0.006, segments=2, angle_deg=40)
+    parts.append(bar)
+    tines = 7
+    for i in range(tines):
+        y = -0.105 + 0.21 * i / (tines - 1)
+        spread = y * 0.35
+        base = (0.0, y, top + 0.02)
+        tip = (0.0, y + spread, top + 0.36 - abs(y) * 0.4)
+        parts.append(S.tube_along("tine_%d" % i, [base, (0.0, y + spread * 0.5, top + 0.2), tip], radius=0.007,
+                                  segments=6, radius_end=0.0025, mat=iron_))
+        # a barb on the inside of each tine, turned back
+        bz = top + 0.27 - abs(y) * 0.3
+        parts.append(S.tube_along("barb_%d" % i, [(0.0, y + spread * 0.8, bz), (0.0, y + spread * 0.8 - 0.012, bz - 0.04)],
+                                  radius=0.004, segments=5, radius_end=0.0015, mat=iron_))
+    return done(parts, rng, "Socket.WeaponR", ["iron", "wood_planks", "rope"], jitter=0.0004,
+                extra={"two_handed": True})
+
+
+def crook(pal, rng, params, variant):
+    """A barrow-wife's crook: a tall staff of black thorn held two-handed, its head bent over into
+    a hook along +Y, and from the hook her lamp on a cord, long gone out."""
+    finish = _finish(params)
+    wood = haft_mat(pal, rng, base_hex="#3a2e24", name="crook_wood")
+    iron_ = M.iron(pal, age=0.9, wear=0.4, scale=0.08, name="lamp_iron")
+    cord = M.rope(pal, age=0.8, scale=0.05)
+    r = 0.017 * STOUT
+    butt, top = -0.75, jit(rng, 1.05, 0.02)
+    n = 10
+    pts = [(math.sin(i / n * 2.0) * 0.012, 0.0, butt + (top - butt) * i / n) for i in range(n + 1)]
+    staff = S.tube_along("staff", pts, radius=r * 0.95, segments=10, radius_end=r * 0.9, mat=wood)
+    S.jitter_verts(staff, amount=0.0012, scale=0.2, seed=rng.randrange(999))
+    parts = [staff]
+    # the hook: up, over toward +Y and down
+    hook = []
+    for i in range(15):
+        a = math.pi * 1.25 * i / 14
+        hook.append((pts[-1][0], 0.09 * (1.0 - math.cos(a)), top + 0.1 * math.sin(a) + 0.02 * i / 14))
+    parts.append(S.tube_along("hook", [pts[-1]] + hook, radius=r * 0.9, segments=10, radius_end=r * 0.65, mat=wood))
+    for k in range(3):
+        parts.append(S.sphere("knot_%d" % k, radius=r * 0.6, subdivisions=1,
+                              location=(r * 0.7, 0.0, butt + (top - butt) * (0.3 + 0.2 * k)), mat=wood,
+                              scale=(0.7, 1.0, 1.3)))
+    # the dead lamp, hanging from the hook's end on its cord
+    end = Vector(hook[-1])
+    cord_end = end + Vector((0.0, 0.0, -0.16))
+    parts.append(S.tube_along("lamp_cord", [end, end + Vector((0.0, 0.004, -0.08)), cord_end], radius=0.0035,
+                              segments=5, mat=cord))
+    from gen_props import _lantern_body
+    dead = M.glass(pal, color=M.P.lin("#4a4a44"), name="dead_glass")
+    body, lr = _lantern_body(pal, rng, 0.24, iron_, dead)
+    # no flame: it went out a hundred years ago
+    body = [ob for ob in body if not ob.name.startswith("flame")]
+    for ob in body:
+        ob.location = (ob.location[0] + end.x, ob.location[1] + end.y, ob.location[2] + cord_end.z - 0.21)
+        S.apply_transforms(ob)
+    parts += body
+    return done(parts, rng, "Socket.WeaponR", ["wood_planks", "iron", "glass", "rope"], jitter=0.0004,
+                extra={"two_handed": True})
+
+
+def censer(pal, rng, params, variant):
+    """A chorister's censer, swung as a flail: a short bronze rod for the hand, three chains, and a
+    pierced globe of bell bronze with a lid, held up the socket's +Z as the hand swings it."""
+    finish = _finish(params)
+    metal = M.bell_bronze_patina(pal, age=0.55, wear=0.7, scale=0.06, name="censer_bronze")
+    iron_ = M.iron(pal, age=0.6, wear=0.5, scale=0.05, name="censer_chain")
+    parts = [S.lathe("rod", [(0.013, -0.09), (0.016, -0.08), (0.016, 0.07), (0.02, 0.085), (0.008, 0.1)],
+                     segments=10, mat=metal, close=True)]
+    parts.append(B.hoop("rod_ring", 0.022, 0.005, mat=metal, location=(0.0, 0.0, 0.1), flatten=1.0))
+    gz = 0.44
+    for k in range(3):
+        a = TAU * k / 3
+        foot = Vector((math.cos(a) * 0.075, math.sin(a) * 0.075, gz - 0.02))
+        parts += _chain("chain_%d" % k, [Vector((0.0, 0.0, 0.11)), foot], 0.026, 0.003, iron_)
+    globe = S.uv_sphere("globe", radius=0.085, segments=16, rings=10, location=(0.0, 0.0, gz + 0.05), mat=metal,
+                        scale=(1.0, 1.0, 0.85))
+    S.apply_transforms(globe)
+    parts.append(globe)
+    parts.append(B.hoop("globe_rim", 0.087, 0.008, mat=metal, location=(0.0, 0.0, gz + 0.05), flatten=1.0))
+    parts.append(S.lathe("lid", [(0.04, gz + 0.115), (0.03, gz + 0.15), (0.012, gz + 0.19), (0.0, gz + 0.2)],
+                         segments=10, mat=metal, close=True))
+    parts.append(S.lathe("foot", [(0.0, gz - 0.04), (0.04, gz - 0.035), (0.03, gz - 0.01)], segments=10, mat=metal,
+                         close=True))
+    return done(parts, rng, "Socket.WeaponR", ["bell_bronze_patina", "iron"], jitter=0.0003)
+
+
+def trumpet(pal, rng, params, variant):
+    """A Sayer's speaking-trumpet of beaten brass as long as an arm: a mouthpiece, a long cone
+    flaring to a bell a forearm wide, ringed with the Circle's brass ribs. Carried on the back,
+    standing in its own frame up +Z, the bell at the top."""
+    brass = M.brass(pal, age=0.45, wear=0.7, scale=0.1, name="trumpet_brass")
+    L = jit(rng, 0.8, 0.02)
+    prof = [(0.012, 0.0), (0.016, 0.03), (0.018, L * 0.2), (0.026, L * 0.45), (0.045, L * 0.7), (0.09, L * 0.88),
+            (0.16, L * 0.98), (0.17, L)]
+    inner = [(max(0.006, x - 0.004), z) for (x, z) in reversed(prof)]
+    body = S.lathe("horn", prof + inner, segments=20, mat=brass, close=False)
+    S.shade_smooth(body, 40.0)
+    parts = [body]
+    for k, f in enumerate((0.25, 0.5, 0.72, 0.86, 0.97)):
+        z = L * f
+        rr = float(np.interp(z, [p[1] for p in prof], [p[0] for p in prof]))
+        parts.append(B.hoop("rib_%d" % k, rr + 0.004, 0.005, mat=brass, location=(0.0, 0.0, z), flatten=1.0))
+    parts.append(S.lathe("mouth", [(0.0, -0.03), (0.022, -0.028), (0.016, -0.005), (0.013, 0.0)], segments=12,
+                         mat=brass, close=True))
+    return done(parts, rng, "Socket.Back", ["brass"], jitter=0.0)
+
+
+def tuning_bell(pal, rng, params, variant):
+    """The founders' great tuning-bell on its yoke of chain: a bell three hands high, hung mouth
+    down from a beam across the shoulders, the chains running from the beam's ends down to the
+    canons. Carried on the back, standing in its own frame up +Z, the beam at the top."""
+    from gen_props import _bell
+    iron_ = M.iron(pal, age=0.8, wear=0.6, scale=0.1, name="yoke_iron")
+    wood = haft_mat(pal, rng, base_hex="#4e3a26", name="yoke_wood")
+    h = jit(rng, 0.62, 0.02)
+    bell, metal, r = _bell(pal, rng, h, patina=0.5)
+    parts = list(bell)
+    beam_z = h * 1.32
+    beam = S.box_centered("yoke", (r * 2.9, 0.1, 0.09), (0.0, 0.0, beam_z), mat=wood)
+    S.bevel(beam, width=0.015, segments=2, angle_deg=40)
+    parts.append(beam)
+    for sx in (-1.0, 1.0):
+        top = Vector((sx * r * 1.25, 0.0, beam_z - 0.04))
+        bottom = Vector((sx * r * 0.14, 0.0, h * 1.05))
+        parts += _chain("yoke_chain_%d" % int(sx), [top, bottom], 0.05, 0.007, iron_)
+        parts.append(B.hoop("yoke_band_%d" % int(sx), 0.075, 0.01, mat=iron_, location=(sx * r * 1.25, 0.0, beam_z),
+                            rotation=(0, 90, 0), flatten=1.0))
+    # the founders' marks round the waist of the bell: a raised band and a ring of bosses
+    parts.append(B.hoop("waist", r * 0.72, 0.009, mat=metal, location=(0.0, 0.0, h * 0.4), flatten=1.0))
+    for k in range(10):
+        a = TAU * k / 10
+        parts.append(S.sphere("boss_%d" % k, radius=0.014, subdivisions=1,
+                              location=(math.cos(a) * r * 0.74, math.sin(a) * r * 0.74, h * 0.3), mat=metal))
+    return done(parts, rng, "Socket.Back", ["bell_bronze_patina", "iron", "wood_planks"], jitter=0.0)
+
+
 KINDS = {
     "sword": sword, "rapier": rapier, "greatsword": greatsword, "dagger": dagger, "knife": knife,
     "axe": axe, "mace": mace, "spear": spear, "staff": staff, "warhammer": warhammer, "clapper": clapper,
     "bow": bow, "shield": shield, "crossbow": crossbow, "scythe": scythe, "quiver": quiver,
+    "pick": pick, "drift_hook": drift_hook, "seal_staff": seal_staff, "spade": spade, "sledge": sledge,
+    "lamp_pole": lamp_pole, "rasp": rasp, "leister": leister, "crook": crook, "censer": censer,
+    "trumpet": trumpet, "tuning_bell": tuning_bell,
 }
 
 

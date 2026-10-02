@@ -808,17 +808,27 @@ def build_garment_part(g, skel: Skeleton, arm, body_ob, bW, seed: int, kind: str
     `fits` maps a morph-target name to (the field the part was built on, the field it should
     also fit): the heavy and slight bodies for a garment, each face for a beard."""
     out_dir = part_dir(kind, g.name)
-    objs, materials, fitted = [], {}, []
+    objs, materials, fitted, keys = [], {}, [], {}
     for i, piece in enumerate([g] + list(getattr(g, "layers", []))):
         ob, f = _part_object(piece, skel, arm, bW, seed + 97 * i, out_dir, fits)
         if ob is None:
             continue
         objs.append(ob)
         materials[ob.name] = piece.material
+        if getattr(piece, "paint_as", None):
+            keys[ob.name] = piece.paint_as
         fitted = sorted(set(fitted) | set(f))
     if not objs:
         return ""
     extra = {"material": g.material, "materials": materials, "slot_hint": _slot_hint(g.name), "fits": fitted}
+    # the palette colour each mesh is dressed in, where the garment says (regalia.py: a felt hat is
+    # the cloth's colour, not the metal its slot would give it), and a hat that covers the crown
+    if keys:
+        extra["colour_keys"] = keys
+    if getattr(g, "paint_as", None):
+        extra["colour_key"] = g.paint_as
+    if getattr(g, "covers_head", False):
+        extra["covers_head"] = True
     if getattr(g, "pattern", None) is not None:
         # woven in its own colours: HumanoidModel leaves it untinted
         extra["tint"] = "none"

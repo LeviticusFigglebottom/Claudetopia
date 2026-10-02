@@ -71,8 +71,33 @@ cfac2a7b) and not yet merged into it.
   - Seat baselines (1b5b843c): fence_gap was re-measured at the new places, since the test samples every Nth place. At w4096g's places (`SEAT_PLACES_FROM`) it is flat.
   - Three sight claims the land refuses were dropped: the Name-Wife's Hollow from South Stilts, Dunnow from the Snow Shelter, Ghaleld from Brindlecrag.
   - The twelve custom-rigged foes and the Stone-Thrall King are forged (`creature_model.gd`), so no foe stands as a box, and the Unvowed bestiary is set right.
-- **At work:** `creature-forge`, on the grey hart (the Ranger's lead) and Old Grey Bitch's own shape.
-- **Then:** the one full check (suite, journeys, flow, fights, every quest walked), and a nightly.
+- **Landed 2026-10-02 (60f60903): the grey hart and Old Grey Bitch**, and test_wildlife samples the ash at (-20, 18).
+- **Landed 2026-10-02 (3e46c45f): the boss identity pass (`wip/bosses`).**
+  - The 14 human bosses and the Brake-Dam each have their own look, size, tools and, for the uncanny ones, a light.
+  - Humanoid foes are now drawn at their def `scale`, not all at 1.78 m. For example, the bell-bearer is 2.76 m.
+  - At rest, a foe stands a long haft upright at its side.
+  - The Brake-Dam has a forged body of her own, about 1.6 m at the withers.
+  - Checked by an import and 11 targeted test files (boss fights, creature models, enemy dress, site interiors walk), with no way-back warnings.
+  - Left: Ardo's antlers still read comb-like; that comes from the shared antler generator.
+- **At work (owner's perf requests, 2026-10-02):**
+  - `lowend`:
+    - integrated-GPU detection and presets;
+    - the pre-rendered title film;
+    - fps caps in the menus and the creator;
+    - the creator preview resolution;
+    - the dual-scaling toggle;
+    - FSR (Forward+ only);
+    - a benchmark;
+    - occlusion culling, which saved only 1-6% of draws, so it lands off by default.
+  - `terrain-fidelity`:
+    - Standard/High ground textures; High is BC3-compressed at load, about 247 MiB of VRAM;
+    - a grass-instancer prototype, off by default;
+    - far-tree impostors.
+  - `polish`: seven weak large places, including the Briarwold three's canopy clearings, with clear-weather shots.
+- **Then:**
+  1. Rebuild the world (w4096j) if polish or terrain-fidelity changed the builder or scatter.
+  2. Re-shoot the large places and the boss sheet.
+  3. The one full check (suite, journeys, flow, fights, every quest walked), and a nightly.
 
 - **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.

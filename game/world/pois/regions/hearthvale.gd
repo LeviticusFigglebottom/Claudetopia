@@ -960,6 +960,10 @@ static func hushwatch(d: PoiDressing) -> void:
 
 const FLINT := Color(0.17, 0.18, 0.2)
 const SPOIL := {"base": "#a8a08c", "accent": "#878070", "grout": "#5e594d", "unit": 0.45}
+## Its tips' streaks (PoiMasonry.spoil_heap): chalk tipped white, the flint's grey and the iron's ochre
+## run down it, grass taking the old one.
+const CHALK_TINTS := {"fresh": Color(1.2, 1.2, 1.16), "streak_a": Color(0.74, 0.76, 0.8),
+		"streak_b": Color(1.16, 1.02, 0.78), "grass": Color(0.6, 0.95, 0.5)}
 
 
 ## A bank of turf in a ring about `c` (local xz), `r` to its crest, `width` across and `height` at
@@ -1017,8 +1021,9 @@ static func _flints(d: PoiDressing, spots: Array, scale_lo := 0.07, scale_hi := 
 		return
 	var xfs: Array = []
 	for s in spots:
-		var p: Vector2 = s
-		xfs.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.03), k.rng.randf() * TAU, k.rng.randf_range(scale_lo, scale_hi),
+		# a spot is local xz on the ground, or a local point (on a heap) to lie at
+		var at: Vector3 = (s as Vector3) - Vector3(0.0, 0.03, 0.0) if s is Vector3 else k.on_ground((s as Vector2).x, (s as Vector2).y, -0.03)
+		xfs.append(PoiKit.transform_at(at, k.rng.randf() * TAU, k.rng.randf_range(scale_lo, scale_hi),
 				Vector3(k.rng.randf_range(-0.5, 0.5), 0.0, k.rng.randf_range(-0.5, 0.5))))
 	await k.step()
 	var mm := k.scatter(path, xfs, false, false, false)
@@ -1293,19 +1298,29 @@ static func knappers_deep(d: PoiDressing) -> void:
 	var spoil_mat := PoiKit.painted(5, SPOIL, 0.85, 0.9)
 	var heaps := [[down * 22.0 + side * 10.0, 6.5, 3.6], [down * 27.0 - side * 3.0, 7.5, 4.4], [down * 18.0 - side * 15.0, 5.0, 2.6], [down * 30.0 + side * 6.0, 4.5, 2.2]]
 	var flint_spots: Array = []
+	var tip_stones: Array = []
 	for i in heaps.size():
 		var h: Array = heaps[i]
 		var c: Vector2 = h[0]
 		var r: float = h[1]
-		# a tip-heap: tipped from the barrow-run, its crest along the way it was tipped, lumpy, the old
-		# tips' flanks grassing over at their feet
-		_hump(d, c, down, r * 1.35, r * 0.85, float(h[2]), spoil_mat, "Spoil%d" % i, true, 1.9, true, 0.2)
-		await _builders().LAND._grass(d, "grass_clump", c + down * r * 0.9, r * 0.6, 14)
-		await _builders().LAND._grass(d, "meadow_grass", c - side * r * 0.7, r * 0.4, 8)
-		for j in 14:
-			var a := k.rng.randf() * TAU
-			flint_spots.append(c + Vector2(sin(a), cos(a)) * r * sqrt(k.rng.randf()) * 0.85)
+		# a tip-heap tipped from the barrow-run down the face: terraced, rilled, lumpy, white with the
+		# flint's grey and the iron's ochre run down it, the old tip (the third) grassing from its foot.
+		# Its loose stone is flints, on its benches and at its toe.
 		await k.step()
+		var on_heap := m.spoil_heap(c, down, r * 0.85, float(h[2]), spoil_mat, CHALK_TINTS, i == 2, "Spoil%d" % i, 1.3)
+		for j in on_heap.size():
+			if j % 3 == 0:
+				tip_stones.append(on_heap[j])
+			else:
+				flint_spots.append(on_heap[j])
+		await _builders().LAND._grass(d, "grass_clump", c + down * r * 1.1, r * 0.6, 14)
+		await _builders().LAND._grass(d, "meadow_grass", c - side * r * 0.9, r * 0.4, 8)
+	# and the odd lump of chalk the size of a head, tumbled to the toes
+	await k.step()
+	var chalk_lumps := m.spoil_stones(tip_stones, Vector2(0.12, 0.3))
+	for mm_v in chalk_lumps:
+		if mm_v != null:
+			(mm_v as MultiMeshInstance3D).material_override = spoil_mat
 	# grass taking the old heap, and the tips' edges
 	await _builders().LAND._grass(d, "grass_clump", heaps[2][0], 6.0, 18)
 	# the old shafts: rings of turf round hollows, in every direction but the face

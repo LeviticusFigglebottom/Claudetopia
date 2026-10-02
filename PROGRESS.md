@@ -15972,6 +15972,137 @@ Warning census 49, at the baseline. Forge: `tools/forge/tests/run.py foes quad` 
   (`body_variant`), height 0.95; the leech-hound's body is her fallback (KIN).
 - Still: the other dogs and the red deer could take `keep_barrel` on their next build.
 
+## The bosses of the large places, each a shape of its own (bosses, 2026-10-02)
+
+The eighteen bosses of the large places were rendered side by side. The treant, the chained
+giant and the marsh crocodile read; the fourteen people did not. Each stood at a person's height
+in stock clothes, and seven of them were three outfits between them. The Brake-Dam, "a hound the
+size of a pony", read as a dog.
+
+**Why they were all a person's height.** A humanoid foe's def `scale` sized its attack origin and
+nothing else. The rig is sized by the look's `height` alone (HumanoidModel._apply_proportions),
+and EnemyDress gave every foe 1.78 m (1.72 for a woman). The bell-bearer, built for 2.6 m of
+capsule, stood 1.78 m inside it; so did the 1.55-scale Hethra. Now:
+
+* `EnemyDress.sized_look`: a foe is drawn at its look's height (a person's own, 1.78 m when it
+  says none) times its def's scale. This is every humanoid foe, not only the bosses. The hedge
+  wight at 1.15 is 2.05 m in its 2.0 m capsule, the bell-bearer 2.76 m in its 2.6 m one, as their
+  capsules always said.
+* The gaits are read at the rig's own size (HumanoidModel._update_locomotion): a body drawn half
+  again as tall walks where a person would trot, and its legs go round at a giant's cadence.
+  At 1.78 m nothing changes.
+* `breadth`: a boss broader than its build (the Bellwright 1.14, the Digger-King 1.12, Hethra
+  0.86, worn to the shape of a throat).
+
+**What a boss is dressed and armed with: general, in EnemyDress and the forge.**
+* `holds` takes an item written out (`{"model": "weapons/spade_iron", "tags": ["two_handed"]}`):
+  a boss's own tool that is nobody's loot. It changes nothing a blow does. `off_hand` holds a
+  shield or a torch the same way. A held lamp is lit by its `light` and `flame`.
+* `carry`: forge models hung on any socket or bone. They are placed in the body's own rest
+  frame and the rig's metres, so they grow with the body and go where the bone goes: a bell on a
+  back, a register at a hip, a candle's light on a hat. They take a `light` and a `flame`.
+* `aura`: the uncanny lit by their own light. `boss_aura.gdshader` is laid over every mesh the
+  body wears as the overlay (or after a tattoo's): a breathing rim and, for Hethra, rings
+  climbing the body. There are CPU motes (added, or mixed for dark ones) and an omni light.
+  Nothing reads the screen or the depth, so it draws the same under Forward+ and Compatibility.
+* Antlers grow in the rig's metres too, so they scale with the body (`thick` for heavy ones).
+* A foe stands a long haft upright at its side at rest (HumanoidModel `rests_poles`, anything
+  held over 1.25 m). Held at the clips' rest, it lay across the body and through the cloak, and
+  nine bosses with their own poles were the same black diagonal at a distance. A swing takes the
+  arm from the clip as before.
+* A garment says which palette colour it takes (`paint_as`, written as the part meta's
+  `colour_key` / per-mesh `colour_keys`). A felt hat is the cloth's colour, not the metal its
+  slot would give it. It also says whether it covers the crown (`covers_head`: the hair under it
+  is worn close). A palette may name more colours than the four (`trim`).
+
+**The new forged things.**
+* `tools/forge/lib/regalia.py` (cloth.py's builders): the kettle hat, the overman's felt hat
+  with its candle, the shift-captain's cap with its brass lamp, the receiver's tall hat, the
+  magister's bonnet with the Circle's rings, the digger-king's crude crown with its garnets, the
+  iron band Ardo's antlers are pinned to, the Name-Wife's veil of knotted name-cords, the
+  barrow-wife's wimple and veil, the lampman's sou'wester, the Reedfolk's reed hat, the
+  chorister's peaked cowl, the Warden tabard with its roundel, the founder's apron, a mantle of
+  name-cords and the barrow-wife's ropes of chalk beads.
+* `gen_weapons.py`: the overman's pick (now also the Overman's Pick item's model), the
+  shift-captain's brass drift hook, the receiver's seal staff, the digger's spade, the founder's
+  sledge, the lampman's lamp on its pole, a farrier's rasp, an eel leister, the barrow-wife's
+  crook with her dead lamp, a censer, and the carried speaking-trumpet and tuning-bell on its
+  yoke.
+* `creature_forge brake_dam`: the Brake-Dam's own body (foe_specs, beast_body `coils`). She is
+  built 1.4 m at the withers for scale 2.4 and drawn at 2.8 (1.6 m, a big pony), heavy in the barrel, her bark thick, and the briar she lies in grown
+  round her barrel, her neck and her haunches, with two loose ends trailing off her.
+
+**Checked** (Compatibility over the motion studio, the coordinator's plan and a portrait and a
+wind-up for each boss; Forward+ stills on lavapipe for six): 226 targeted tests are green. They
+cover the enemy, dress, creature, bestiary, combat-design, combat-brain, boss-fight, humanoid,
+player-body, foot, skirt, held-item and attack-motion suites, and include new tests: the size by
+scale, the bosses above their people, no shared outfits, each one's tool, the uncanny lit, a
+carried thing on its bone, and the Brake-Dam's size. Also green: test_site_interiors_walk; the
+fights arena's boss runs (6 won, 0 flagged); and the GDScript warnings, at the baseline (49).
+The warm set took the aura's overlay, the motes and the carried lights
+(`--material-census` over the portraits).
+
+- The grey hart lead (`world/tutorial/leads.gd`) still walks as a PlaceholderBody; the deer's grey
+  coat could carry it.
+
+## Polish: the owner's seven weak places from the final photos (polish, 2026-10-02)
+
+Seven places the owner's final `poi_sheet --built --time 16.5` photos found short, each fixed at its
+cause. Looked at with poi_sheet before and after (three runs); measured with a headless dump of each
+place's pieces and its ground.
+
+- **The Founders' Delf's green tree** was world scatter, not the pad or the site: a Briarwold giant
+  oak (with Briarwold bracken and grass round it) 39 m from the bell, on a speck of Briarwold land
+  3.9 km from the Briarwold. `regions.dithered_owner` added every province's noise everywhere, so
+  some far province won a few texels in every few hundred metres; on the real atlas 24,523 texels
+  of 1,048,576 (2.3%) belonged to a region more than 150 m from its land. A province now competes
+  only where its own weight is at least 0.01 (inside its border's blend), its noise fading in to
+  0.05: 55 such texels, none at the Delf. The same specks put Briarwold and Skerrow trees at the One
+  Poppy and a Hearthvale birch at Bell Street; Greyline Stones' oaks are on the real Hearthvale
+  border and stay. `test_dithered_owner.py` (14,053 far texels before, 0 after);
+  `pytest test_build.py` (a 1024 world) passes. **Needs a world build.**
+- **The Struck Barrow**: the "stair on its side" was the flight laid on a straight line as 1.2 m
+  slabs, standing out of the gully's dip, with the facade free in the gully and its cornice a
+  beam. Now: facade across the gully head, a seated flight between parapets up to a raised
+  threshold between monolith jambs under the RECEIVED lintel, four steps down inside the door to
+  the dark, and a turf mound over the facade's head and back. The tan haze in view 2 is not the
+  place's: that camera stands on the scarp top on Hearthvale's side of the border, and Hearthvale's
+  height haze (0.018/m, top 18 m under the eye) fills the gully below it.
+- **The Undertone**: the facade stood 15 m out on the plain before the plateau's slope (its front
+  at the cliff foot less 7 m), so the side views saw its 11 m-deep pilasters as a brick slab, and its
+  1.1 m courses read as a brick house. Now its front is at the cliff foot, the Choir's cliff rock is
+  set by its bounds either side and over the crown, the facade is carved whole and fluted, and the
+  choristers stand free on plinths 7 m out. The cameras were not inside a chorister; the side views
+  stand at the cliff foot, so the cliff rock is in them (narrowed to one piece a side after the wide
+  ones walled the cameras in).
+- **Spoil** (the Crown Drift, and as asked Knappers' Deep and Ghaleld): `PoiMasonry.spoil_heap`, one
+  tip for all three, terraced, rilled, lumpy, streaked in each region's colours, with loose stone
+  over it (`spoil_stones`).
+- **The Name-Wife's Hollow**: a crag of pale limestone (Skerrow's; the marsh's lent granite is near
+  black) round the throat, cheeks of 11 m and 9 m and a narrow piece behind (the final sheet shows two pieces behind;
+  the second stood inside both cheeks and was taken out after it), the kind's boulders it stands
+  over taken out, the cleft's dark, the weep 9 m off the taller cheek (in the build; not plain in the
+  sheet's four views).
+- **The Windthrow, Tinehold, the Charter Delf**: a def's `glade_m` has the build take the trees off
+  a disc round the place and a way to its nearest road (`trees.clear_glades`, `test_glades.py`):
+  85, 68 and 60 m. **Needs a world build** to show. poi_sheet's new `--weather clear` pins the
+  weather (it rolled each region's own, rain in the Greatwood).
+
+**Budgets** (poi_sheet views): the Hollow's were over before (2.02/1.55/1.49/1.55 M primitives) and
+are 2.09/1.64/1.54/1.59 M with its crag; Ghaleld view 2 was 1.55 M and is 1.58 M.
+
+**Sheets** (clear weather, 16:30): `$SCRATCH/polish_final/the_struck_barrow_the_undertone_the_crown_drift_knappers_deep_ghaleld_name_wifes_built.jpg`
+and `$SCRATCH/polish_final2/the_undertone_built.jpg`. The Struck Barrow's parapet still steps in four
+lengths from the side.
+
+**Tests**: `./run.sh test --filter=test_pois,test_poi_preview,test_sites,test_sites_cinderlea,
+test_brightwater_places,test_site_interiors_walk,objects_seated,test_world_data`; warning census 49,
+at the baseline. Python: test_build (1024 world, with the glades), test_dithered_owner, test_glades,
+test_content_split, test_region_check; `region_check.py briarwold` PASS.
+
+**For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
+and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
+(their glades only exist after a build; shoot them with `--weather clear --time 16.5`).
 ## Ground texture quality (Standard/High) lands; far-tree pictures nearer and ground cover through Terrain3D's instancer are measured and not adopted (terrain-fidelity, 2026-10-02)
 
 ### Ground texture quality: Standard and High

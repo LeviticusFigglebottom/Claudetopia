@@ -13,7 +13,7 @@ extends Node3D
 ## simulated time.
 ##
 ## Plan: {"sequences": [{"label": "start_stop", "view": "side" | "feet" | "player" | "front" | "close"
-##          | "close_front" | "close_back",
+##          | "close_front" | "close_back" | "foe_portrait",
 ##          "equip": "core:item/iron_sword", "offhand": "core:item/...",
 ##          "length": s, "keys": [[t, "W", true], [t, "W", false], ...],
 ##          "look": [[t, dx], [t, dx, seconds], ...], "target": [x, y, z],
@@ -32,7 +32,8 @@ extends Node3D
 ## (HumanoidModel.plant_feet), for a before and after in one run. "equip" and "offhand" put a
 ## weapon (or a shield, a lantern) in the hands first; "close" is the side view near enough that
 ## the body fills the frame, for judging a swing, and "close_front" and "close_back" are the same
-## from three-quarters ahead and behind. Every sequence starts from a body
+## from three-quarters ahead and behind; "foe_portrait" is the standing foe from three-quarters ahead
+## of it, framed by its own height (a boss three metres tall). Every sequence starts from a body
 ## standing still at the origin, facing north (-Z), with the view behind it. Each shot writes
 ## <out>/<label>_<nn>.png, and one line per shot goes to <out>/motion.txt: the time, the state,
 ## the speed, the clip and where the feet are.
@@ -352,6 +353,19 @@ func _place_camera(view: String) -> void:
 	if view.begins_with("foe_") and _foe != null and is_instance_valid(_foe):
 		at = _foe.get_global_transform_interpolated().origin
 		view = view.substr(4)
+	if view == "portrait" and _foe != null and is_instance_valid(_foe):
+		# the standing foe from three-quarters ahead of it, framed by its own height: a boss three
+		# metres tall does not fit the close views, which are cut for a person
+		# (a beast by its length as well: a pony-sized hound is longer than it is tall)
+		var h := maxf(_foe.capsule_height, 1.0)
+		var big := maxf(h * 1.15, _foe.capsule_radius * 3.4) if _foe.body_kind != "humanoid" else h * 1.15
+		var ahead := -_foe.global_basis.z.normalized()
+		var side := _foe.global_basis.x.normalized()
+		var d := maxf(CLOSE_DISTANCE, big * 1.55)
+		_cam.make_current()
+		_cam.look_at_from_position(at + (ahead + side * 0.42).normalized() * d + Vector3.UP * h * 0.62,
+				at + Vector3.UP * h * 0.55)
+		return
 	match view:
 		"player":
 			_player.camera_rig.camera.make_current()
