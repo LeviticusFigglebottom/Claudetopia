@@ -69,6 +69,7 @@ func _ready() -> void:
 	_build()
 	UiKit.focus_first(self)
 	_start_vista()
+	_read_ahead()
 	await get_tree().process_frame
 	StartupTrace.step("title: the menu's first frame (%s)" % ("the country is asked for" if vista != null
 			else "the filmed country" if reel != null
@@ -87,6 +88,19 @@ func _start_vista() -> void:
 	vista.chart = _backdrop
 	vista.given_up.connect(func(_why: String) -> void: _start_reel())
 	add_child(vista)
+
+
+## What New Game opens on, read and warmed while the title is up (NamingAhead): after the live
+## country has come up, or at once over the film or the chart.
+func _read_ahead() -> void:
+	if DisplayServer.get_name() == "headless" or not bool(world_status.get("playable", false)):
+		return
+	var ahead := NamingAhead.new()
+	# the live country reads the ground's textures itself
+	ahead.ground = vista == null
+	ahead.may_start = func() -> bool:
+		return vista == null or not is_instance_valid(vista) or vista.is_showing() or vista.phase == TitleVista.Phase.GONE
+	add_child(ahead)
 
 
 ## The filmed country, over the chart and under the sheet, when the title is to show the country
@@ -111,10 +125,12 @@ static func reel_wanted() -> bool:
 ## watched frame's few milliseconds at a time, never the curtain's (WorldPace).
 func _enter_tree() -> void:
 	WorldPace.menu_up += 1
+	Graphics.menu_pace(true)
 
 
 func _exit_tree() -> void:
 	WorldPace.menu_up -= 1
+	Graphics.menu_pace(false)
 	EventBus.menu_closed.emit(SCREEN_ID)
 
 
@@ -345,7 +361,11 @@ func _on_new_game() -> void:
 	if not ResourceLoader.exists(NAMING_SCENE):
 		EventBus.emit_notify("The Naming is not built yet.", "warning")
 		return
-	get_tree().change_scene_to_file(NAMING_SCENE)
+	var ahead := NamingAhead.naming_scene()
+	if ahead != null:
+		get_tree().change_scene_to_packed(ahead)
+	else:
+		get_tree().change_scene_to_file(NAMING_SCENE)
 
 
 ## Asked again at the moment of going in, not only when the screen was drawn: the buttons are shut
@@ -382,6 +402,7 @@ func _enter_world(args: Dictionary) -> void:
 		return
 	if args.has("load"):
 		GameState.set_flag("_pending_load_slot", str(args["load"]))
+	NamingAhead.release()
 	for b in _buttons:
 		b.disabled = true
 	UI.fade_to_black(0.3, LOADING_LINE)

@@ -28,6 +28,9 @@ extends Node
 ##       the world is paced and the title and the film play as where they are drawn)
 ##
 ## Without --cpu-new it stops after the title's CPU_MENU_S seconds of country.
+## `--cpu-preset=<name>` measures at a graphics preset (in memory only).
+## `--cpu-naming-s=N` presses New Game and stays N seconds in the Naming before going on (or, with no
+## --cpu-new, stops there): the Naming's own frames, which straight through are only its first.
 
 const CAP_S := 900.0
 const CONTROL_S := 8.0
@@ -35,6 +38,9 @@ const CONTROL_S := 8.0
 var out_dir := ""
 var style := ""
 var menu_s := 30.0
+var naming_s := 0.0
+## `--cpu-preset=<name>`: measured at that graphics preset, set in memory only.
+var preset := ""
 var draw := false
 ## Off (`--cpu-no-vista-caps`), the title's caps before its first shot (TitleVista.LONG_FRAME_S,
 ## FIRST_SHOW_CAP_S) are widened, so what a first launch costs is measured to the end rather than
@@ -67,6 +73,10 @@ func _ready() -> void:
 			style = a.substr(10)
 		elif a.begins_with("--cpu-menu-s="):
 			menu_s = float(a.substr(13))
+		elif a.begins_with("--cpu-naming-s="):
+			naming_s = float(a.substr(15))
+		elif a.begins_with("--cpu-preset="):
+			preset = a.substr(13)
 		elif a == "--cpu-draw":
 			draw = true
 		elif a == "--cpu-no-vista-caps":
@@ -87,6 +97,9 @@ func _ready() -> void:
 		TitleVista.headless_allowed = true
 		CinematicPlayer.headless_allowed = true
 	Settings.persist = false
+	if Graphics.PRESETS.has(preset):
+		Settings.apply_graphics_preset(preset)
+		print("CPU: graphics preset %s" % preset)
 	# where a place's long steps begin and end (PoiKit.long_steps)
 	PoiKit.trace_steps = true
 	_mark("probe_attached")
@@ -236,7 +249,7 @@ func _advance() -> void:
 					return
 				_enter("menu_vista")
 			if _phase == "menu_vista" and Time.get_ticks_msec() - _phase_began_ms > int(menu_s * 1000.0):
-				if style.is_empty():
+				if style.is_empty() and naming_s <= 0.0:
 					_finish()
 					return
 				if not _pressed:
@@ -246,6 +259,13 @@ func _advance() -> void:
 					scene.call("_on_new_game")
 		"naming":
 			if scene_path.ends_with("naming.tscn") and not _named and scene.is_node_ready():
+				if not _marks.has("naming_ready"):
+					_mark("naming_ready")
+				if Time.get_ticks_msec() - int(_marks["naming_ready"]) < int(naming_s * 1000.0):
+					return
+				if style.is_empty():
+					_finish()
+					return
 				_named = true
 				scene.set("player_name", "Probe")
 				if str(scene.get("calling_id")).is_empty():
@@ -316,21 +336,28 @@ func _finish() -> void:
 			cpus.append(r[1])
 		var over8 := 0
 		var over12 := 0
+		var over50 := 0
+		var wall50 := 0
 		for c: float in cpus:
 			over8 += 1 if c > 8.0 else 0
 			over12 += 1 if c > 12.0 else 0
+			over50 += 1 if c > 50.0 else 0
+		for w: float in walls:
+			wall50 += 1 if w > 50.0 else 0
 		var total_cpu := 0.0
 		for c: float in cpus:
 			total_cpu += c
 		var entry := {"frames": rows.size(), "cpu_p50": _pct(cpus, 0.5), "cpu_p95": _pct(cpus, 0.95),
 				"cpu_max": _pct(cpus, 1.0), "wall_p95": _pct(walls, 0.95), "wall_max": _pct(walls, 1.0),
-				"cpu_total_s": total_cpu / 1000.0, "over_8ms": over8, "over_12ms": over12,
+				"cpu_total_s": total_cpu / 1000.0, "over_8ms": over8, "over_12ms": over12, "over_50ms": over50,
+				"wall_p50": _pct(walls, 0.5), "wall_over_50ms": wall50,
 				"worst": _slowest.get(phase, [])}
 		entry["slow_frames_by"] = _blame.get(phase, {})
 		entry["over_30ms_by"] = _blame30.get(phase, {})
 		report["phases"][phase] = entry
-		print("CPU| %-13s %5d frames  main-thread ms p50 %6.1f  p95 %6.1f  max %7.1f  (>8 ms %d, >12 ms %d; %.1f s CPU)  worst: %s"
-				% [phase, rows.size(), entry["cpu_p50"], entry["cpu_p95"], entry["cpu_max"], over8, over12,
+		print("CPU| %-13s %5d frames  main-thread ms p50 %6.1f  p95 %6.1f  max %7.1f  (>8 ms %d, >12 ms %d, >50 ms %d; wall p50 %.1f, >50 ms %d; %.1f s CPU)  worst: %s"
+				% [phase, rows.size(), entry["cpu_p50"], entry["cpu_p95"], entry["cpu_max"], over8, over12, over50,
+					entry["wall_p50"], wall50,
 					entry["cpu_total_s"], str((entry["worst"] as Array).back() if not (entry["worst"] as Array).is_empty() else "")])
 	for phase: String in _samples:
 		var by: Dictionary = _blame.get(phase, {})

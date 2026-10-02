@@ -320,7 +320,7 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 				ao < 3, 0.5, 4, 50.0, 300.0)
 		ProjectSettings.set_setting("rendering/environment/ssao/quality", ao)
 		ProjectSettings.set_setting("rendering/environment/ssao/half_size", ao < 3)
-	Engine.max_fps = maxi(0, int(g.get("fps_cap", 0)))
+	Engine.max_fps = frame_cap(g)
 	var vsync := DisplayServer.VSYNC_ENABLED if bool(g.get("vsync", true)) else DisplayServer.VSYNC_DISABLED
 	DisplayServer.window_set_vsync_mode(vsync)
 	last_applied = {"renderer": r, "shadow_atlas": atlas, "shadow_filter": filter, "ao_quality": ao,
@@ -354,6 +354,37 @@ static func apply_viewport(vp: Viewport, g: Dictionary, r := "") -> void:
 	# detail twice as far away.
 	var base_threshold := float(ProjectSettings.get_setting("rendering/mesh_lod/lod_change/threshold_pixels", 1.0))
 	vp.mesh_lod_threshold = base_threshold / maxf(float(g.get("lod_bias", 1.0)), 0.1)
+
+
+# --- the menus' pace ---------------------------------------------------------------------------
+
+## Screens up with no game behind them (the title, the Naming). While one is, the frame rate is held
+## to MENU_FPS (MENU_FPS_LOW on Low), or the player's own cap where that is lower: a menu over a
+## film or a lit stage gains nothing from 144 frames a second, and a laptop's iGPU that draws them
+## is a laptop that is hot and slow when the game begins. The game's own cap comes back when the
+## last of them goes.
+const MENU_FPS := 60
+const MENU_FPS_LOW := 30
+static var menu_screens := 0
+
+
+## The frame-rate cap now: the player's (`fps_cap`, 0 for none), held to the menus' while one is up.
+static func frame_cap(g: Dictionary) -> int:
+	var cap := maxi(0, int(g.get("fps_cap", 0)))
+	if menu_screens > 0:
+		var menu := MENU_FPS_LOW if str(g.get("preset", "")) == "low" else MENU_FPS
+		cap = menu if cap == 0 else mini(cap, menu)
+	return cap
+
+
+## A menu screen with no game behind it comes (`up`) or goes. Never headless: the tests and the
+## tools run as fast as they can.
+static func menu_pace(up: bool) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	menu_screens = maxi(menu_screens + (1 if up else -1), 0)
+	Engine.max_fps = frame_cap(Settings.data.get("graphics", {}))
+	last_applied["max_fps"] = Engine.max_fps
 
 
 ## Groups the adopted nodes live in, so a settings change reaches them without a tree walk.

@@ -205,11 +205,19 @@ func _ready() -> void:
 	_refresh_style()
 	_apply_appearance()
 	_frame(true)
+	# what the title read ahead for this screen is in use now, or in the cache while it is
+	NamingAhead.release()
 	# somewhere for a pad to start from; nothing had focus, so its first press did nothing
 	_name_edit.grab_focus()
 
 
+func _enter_tree() -> void:
+	# no game behind it: the menus' frame-rate cap (Graphics.menu_pace)
+	Graphics.menu_pace(true)
+
+
 func _exit_tree() -> void:
+	Graphics.menu_pace(false)
 	EventBus.menu_closed.emit(SCREEN_ID)
 
 
@@ -341,6 +349,7 @@ func _build_portrait() -> Control:
 	stage.add_child(_preview)
 	_view.texture = _preview.get_texture()
 	_build_stage(_preview)
+	_preview_quality()
 
 	# the two framings, and how to turn the figure, right under the portrait
 	var lens := UiKit.row(4)
@@ -1540,6 +1549,7 @@ func _apply_appearance() -> void:
 	_dress_for_calling()
 	if _model and is_instance_valid(_model) and _model.has_method("apply_appearance"):
 		_model.call("apply_appearance", appearance.to_dict())
+		_preview_hair()
 
 
 # --- the portrait ------------------------------------------------------------------------------
@@ -1571,18 +1581,57 @@ func _on_view_input(event: InputEvent) -> void:
 
 ## The view renders at the screen's own pixels, not the page's: the page is laid out at
 ## 1280x720 and stretched, and a viewport sized in layout units was drawn at a quarter of the
-## pixels on a 2560x1440 screen and scaled up, jagged, with a dark fringe round the figure.
+## pixels on a 2560x1440 screen and scaled up, jagged, with a dark fringe round the figure. Never
+## more than the screen shows either: a window smaller than the layout draws it smaller, and the
+## 3D inside is drawn at the render scale and upscaled as the world is (`_preview_quality`).
 func _fit_preview() -> void:
 	if _preview == null or _view == null:
 		return
-	_pixel_scale = maxf(get_viewport().get_final_transform().get_scale().x, 1.0)
+	_pixel_scale = _screen_scale()
 	var want := Vector2i(maxi(int(round(_view.size.x * _pixel_scale)), 2), maxi(int(round(_view.size.y * _pixel_scale)), 2))
 	if _preview.size != want:
 		_preview.size = want
 
 
+func _screen_scale() -> float:
+	return clampf(get_viewport().get_final_transform().get_scale().x, 0.25, 8.0)
+
+
+## The portrait as the Graphics settings draw the world (Graphics.apply_viewport): the render scale
+## and the upscaler (FSR on Forward+), the lod bias and the texture filtering. Its own edge
+## smoothing: 4x as it always had, but 2x on Low and Medium, which the hair's alpha-to-coverage
+## still has to work with. The key light's shadow is the settings' too (its atlas and softness are
+## the renderer's, and the light is adopted like any other).
+func _preview_quality() -> void:
+	if _preview == null:
+		return
+	Graphics.apply_viewport(_preview, Settings.data.get("graphics", {}))
+	_preview.msaa_3d = Viewport.MSAA_2X if _cheap_preview() else Viewport.MSAA_4X
+	_preview_hair()
+
+
+func _cheap_preview() -> bool:
+	return str(Settings.get_value("graphics", "preset", Graphics.DEFAULT_PRESET)) in ["low", "medium"]
+
+
+## On Low the hair is its painted shell (the far level of detail, HumanoidModel.CARDS_RANGE) rather
+## than its strand cards: a few hundred alpha-tested cards, each drawn into every MSAA sample.
+func _preview_hair() -> void:
+	if _model == null or not is_instance_valid(_model):
+		return
+	var shell := str(Settings.get_value("graphics", "preset", Graphics.DEFAULT_PRESET)) == "low"
+	for mi: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		match str(mi.get_meta("material", "")):
+			"hair_cards":
+				mi.visible = not shell
+			"hair":
+				if shell:
+					mi.visibility_range_begin = 0.0
+					mi.visibility_range_begin_margin = 0.0
+
+
 func _process(delta: float) -> void:
-	if _preview != null and not is_equal_approx(_pixel_scale, maxf(get_viewport().get_final_transform().get_scale().x, 1.0)):
+	if _preview != null and not is_equal_approx(_pixel_scale, _screen_scale()):
 		_fit_preview()
 	_idle += delta
 	if not _dragging and _idle > 5.0:
