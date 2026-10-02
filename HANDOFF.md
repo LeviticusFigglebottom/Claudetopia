@@ -113,6 +113,7 @@ cfac2a7b) and not yet merged into it.
   1. The final photos.
   2. The one full check (suite, journeys, flow, fights, every quest walked).
   3. A nightly.
+- **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
 ## 000. The fifth coordinating session (2026-09-29/30, a cloud container)
 
