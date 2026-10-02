@@ -2338,8 +2338,7 @@
    "variant": "a",
    "seed": 9323,
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    },
    "name": "briarwold_giant_oak_a_impostor"
   },
@@ -2350,8 +2349,7 @@
    "variant": "b",
    "seed": 9340,
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    },
    "name": "briarwold_giant_oak_b_impostor"
   },
@@ -2362,8 +2360,7 @@
    "variant": "a",
    "seed": 9376,
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    },
    "name": "briarwold_black_ash_a_impostor"
   },
@@ -2374,8 +2371,7 @@
    "variant": "b",
    "seed": 9393,
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    },
    "name": "briarwold_black_ash_b_impostor"
   },
@@ -2386,8 +2382,7 @@
    "variant": "c",
    "seed": 9410,
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    },
    "name": "briarwold_black_ash_c_impostor"
   },
@@ -3394,8 +3389,7 @@
    "name": "briarwold_giant_oak_c_impostor",
    "category": "trees",
    "params": {
-    "recipe": 1,
-    "cell": 256
+    "recipe": 1
    }
   },
   {

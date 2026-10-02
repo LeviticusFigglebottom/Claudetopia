@@ -14,11 +14,8 @@ extends RefCounted
 ##   beyond   the forge's impostor: eight views of the tree on one quad that turns to face you
 ##            (tools/forge/gen_impostors.py, assets/shaders/tree_impostor.gdshader)
 ##
-## both multiplied by the level-of-detail bias in the graphics settings. The picture's line is
-## for a picture of 128 px a view; one drawn finer takes over nearer, in proportion, since what
-## sets the line is the picture's texels against the screen's (`Ladder.picture_scale`).
-##
-## Each cell's trees of one asset are a `Group`: one MultiMesh per level and part, refilled with the instances in that
+## both multiplied by the level-of-detail bias in the graphics settings. Each cell's trees of one
+## asset are a `Group`: one MultiMesh per level and part, refilled with the instances in that
 ## level whenever the camera has moved a couple of metres. The canopy and the impostor dissolve
 ## into each other across a band (assets/shaders/lod_fade.gdshaderinc), so a tree changing level
 ## neither pops nor is ever drawn twice; the bark has no dissolve and switches outright in the
@@ -36,14 +33,6 @@ const NEAR_MIN := 50.0
 const NEAR_PER_METRE := 4.0
 const FAR_MIN := 70.0
 const FAR_PER_METRE := 10.0
-## The cell (px a view) FAR_PER_METRE was set for. The Greatwood's giant oaks and black ash have
-## pictures of 256 px a view (tools/forge/make_manifest.py FINE_IMPOSTORS), so theirs take over at
-## half the distance: a giant oak at 144 m, not 287, and its 1,300-triangle mid rung no longer fills
-## the wood out to there (PROGRESS, "Far-tree impostors").
-const PICTURE_CELL := 128.0
-## The mid rung keeps a band of its own: the picture never takes over nearer than this many times
-## the full mesh's line.
-const FAR_OVER_NEAR := 1.25
 ## Lines no bias moves nearer: a picture is never drawn closer than FAR_FLOOR metres, however far
 ## down a player turns the level-of-detail setting (Low's 0.6 would otherwise bring a hawthorn's
 ## picture to 42 m, which is the cardboard-at-forty-metres the picture exists to avoid), and the
@@ -91,8 +80,6 @@ class Ladder extends RefCounted:
 	var far := 0.0
 	var near_fade := 0.0
 	var far_fade := 0.0
-	## PICTURE_CELL over the picture's own cell: 1 for most trees, 0.5 for a picture drawn at 256.
-	var picture_scale := 1.0
 	## Leaf materials per level, and the impostor's, whose dissolve bands `set_bias` writes.
 	var leaf_materials: Array = []
 	var impostor_material: ShaderMaterial = null
@@ -104,8 +91,7 @@ class Ladder extends RefCounted:
 		bias = clampf(b, 0.1, 4.0)
 		if tree:
 			near = maxf(maxf(NEAR_MIN, NEAR_PER_METRE * size) * bias, NEAR_FLOOR)
-			far = maxf(maxf(FAR_MIN, FAR_PER_METRE * size * picture_scale) * bias, FAR_FLOOR)
-			far = maxf(far, near * FAR_OVER_NEAR)
+			far = maxf(maxf(FAR_MIN, FAR_PER_METRE * size) * bias, FAR_FLOOR)
 		else:
 			near = maxf(SOLID_NEAR_MIN, SOLID_NEAR_PER_METRE * size) * bias
 			far = maxf(SOLID_FAR_MIN, SOLID_FAR_PER_METRE * size) * bias
@@ -352,11 +338,6 @@ static func _build_ladder(asset_path: String, packed: PackedScene) -> Ladder:
 			calibrate_material(mat, base)
 			lad.impostor = _with_material(lod2, mat)
 			lad.impostor_material = mat
-			var cell := float((meta.get("impostor", {}) as Dictionary).get("cell", PICTURE_CELL))
-			# `-- --picture-cell=128` draws every picture from ten heights as before, for an A/B
-			if OS.get_cmdline_user_args().has("--picture-cell=128"):
-				cell = PICTURE_CELL
-			lad.picture_scale = clampf(PICTURE_CELL / maxf(cell, 1.0), 0.25, 1.0)
 		for level in lad.levels:
 			var mats: Array = []
 			var leaves: Mesh = level["leaves"]

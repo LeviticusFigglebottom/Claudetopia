@@ -270,20 +270,7 @@ PROPS_LIVESTOCK = [
 # reads the tree TREES built rather than growing one, so it names the same kind, region and
 # variants, its entry is called <tree>_impostor, and build_assets.py builds it after the trees.
 # `recipe` is the impostor generator's own version: bump it to draw every impostor again.
-# The Greatwood's giant oaks and black ash are drawn at twice the cell (256 px a view), so their
-# picture can take over at half the distance (world/scatter_lod.gd puts the line where the
-# picture's texels match the screen's): their mid rung out to ten heights was most of the wood's
-# primitives (PROGRESS, "Far-tree impostors").
-FINE_IMPOSTORS = {("giant_oak", "briarwold"), ("black_ash", "briarwold")}
-
-
-def impostor_params(kind: str, reg: str, params: dict | None = None) -> dict:
-    """A sapling's picture is drawn from FAR_MIN whatever its cell, so it keeps the small one."""
-    fine = (kind, reg) in FINE_IMPOSTORS and (params or {}).get("age") != "sapling"
-    return {"recipe": 1, "cell": 256} if fine else {"recipe": 1}
-
-
-IMPOSTORS = [(kind, reg, variants, impostor_params(kind, reg, params)) for kind, reg, variants, params in TREES]
+IMPOSTORS = [(kind, reg, variants, {"recipe": 1}) for kind, reg, variants, _params in TREES]
 
 # What is held (tools/forge/gen_weapons.py): each named for its kind and what it is made of,
 # which is how game/actors/shared/held_items.gd finds the one an item is drawn with. The region
@@ -382,7 +369,7 @@ def tree_variety_entries(seed: int, table=None) -> list[dict]:
         out.append(tree)
         out.append({"generator": "gen_impostors", "kind": kind, "palette": region(reg), "variant": label[-1],
                     "seed": seed + i * 17, "name": name + "_impostor", "category": "trees",
-                    "params": impostor_params(kind, reg, params)})
+                    "params": {"recipe": 1}})
     return out
 
 

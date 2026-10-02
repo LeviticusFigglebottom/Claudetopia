@@ -247,28 +247,3 @@ func test_the_calibration_file_names_only_trees_that_exist() -> void:
 	if cal.has("hearthvale_oak_a") and not (cal["hearthvale_oak_a"] as Dictionary).has(Graphics.RENDERER_FORWARD_PLUS):
 		assert_eq(ScatterLod.calibration_for("hearthvale_oak_a", Graphics.RENDERER_FORWARD_PLUS),
 				cal["hearthvale_oak_a"][Graphics.RENDERER_COMPATIBILITY])
-
-
-## The Greatwood's giant oaks and black ash carry pictures of 256 px a view, so their picture takes
-## over at half the ten heights a 128 px picture waits for -- never nearer than FAR_OVER_NEAR of the
-## full mesh's line -- and the bias still moves it (PROGRESS, "Far-tree impostors").
-func test_a_finer_picture_takes_over_nearer() -> void:
-	for name in ["briarwold_giant_oak_a", "briarwold_black_ash_a"]:
-		var path := "res://assets/models/trees/%s/%s.glb" % [name, name]
-		var imp: Dictionary = ScatterLod._meta(path).get("impostor", {})
-		assert_eq(int(imp.get("cell", 0)), 256, "%s's picture is 256 px a view" % name)
-		var lad := ScatterLod._build_ladder(path, load(path) as PackedScene)
-		assert_true(lad != null and lad.has_impostor(), "%s has its ladder and picture" % name)
-		if lad == null:
-			continue
-		lad.set_bias(1.0)
-		var h := float(ScatterLod._meta(path)["bounds"]["height"])
-		assert_near(lad.picture_scale, 0.5, 0.001, name)
-		var want := maxf(maxf(ScatterLod.FAR_MIN, ScatterLod.FAR_PER_METRE * h * 0.5), lad.near * ScatterLod.FAR_OVER_NEAR)
-		assert_near(lad.far, want, 0.001, "%s: the picture at %.0f m" % [name, want])
-		assert_gt(ScatterLod.FAR_PER_METRE * h, lad.far, "%s: nearer than ten heights" % name)
-		assert_gt(lad.far - lad.far_fade * 0.5, lad.near + lad.near_fade * 0.5,
-				"%s: the two dissolves do not overlap" % name)
-	# a tree with the ordinary picture keeps its line
-	var lad0 := _ladder()
-	assert_near(lad0.picture_scale, 1.0, 0.001, "the hawthorn's picture is 128 px a view")
