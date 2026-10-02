@@ -62,13 +62,21 @@ def godot(p) -> list:
 # skinning: the quadruped's, and the jaw its own
 # --------------------------------------------------------------------------------------
 
-def jaw_weights(ob, skel, style, bones) -> None:
+def jaw_weights(ob, sp, bones) -> None:
     """Everything under the mouth's cut and forward of its corner is the jaw's, wholly: bone heat
     shares the lower jaw with the head, and an open bite then stretches the lips into a web."""
+    skel = sp.skel
+    mod = sp.extra.get("module")
+    if mod is not None and hasattr(mod, "mouth_line"):
+        corner, tip = mod.mouth_line(skel)
+        poll, hu, dn, hl = mod.head_axes(skel)
+        k = hl / 0.29
+    else:
+        corner, tip = bb.mouth_line(skel, sp.style)
+        poll, hu, dn, hl = bb.head_axes(skel)
+        k = bb.head_k(skel)
     verts, _, _ = bodylib.mesh_arrays(ob)
     W = bodylib.weight_matrix(ob, bones)
-    corner, tip = bb.mouth_line(skel, style)
-    poll, hu, dn, hl = bb.head_axes(skel)
     along = tip - corner
     L = float(np.linalg.norm(along))
     d_al = along / L
@@ -77,15 +85,16 @@ def jaw_weights(ob, skel, style, bones) -> None:
     rel = verts - corner
     u = (rel @ d_al) / L
     below = rel @ n
-    k = bb.head_k(skel)
-    near = np.linalg.norm(rel - np.outer(rel @ d_al, d_al) - np.outer(below, n), axis=1) < 0.07 * k
+    reach = 0.07 * k if mod is None else 0.12 * k
+    near = np.linalg.norm(rel - np.outer(rel @ d_al, d_al) - np.outer(below, n), axis=1) < reach
+    # and only the head's: a foreleg standing under a low-carried head is not its jaw
+    d_head, _ = bb._seg(verts, poll, poll + hu * hl)
+    near = near & (d_head < 0.36 * hl)
     jw = bb.sm(-0.003 * k, 0.003 * k, below) * bb.sm(-0.35, 0.02, u) * near * (u < 1.3)
-    # the lower jaw's back, under the cheek, belongs with it as far as the hinge
     hinge = skel.J["Jaw"]
     jw = np.maximum(jw, near * bb.sm(-0.003 * k, 0.004 * k, below) * (1.0 - bb.sm(0.03 * k, 0.05 * k, np.linalg.norm(verts - hinge, axis=1))) * 0.6)
     head = bones.index("Head")
     jaw = bones.index("Jaw")
-    # the upper jaw ahead of the eyes is the head's alone
     hw = bb.sm(0.2, 0.5, u) * near * (1.0 - jw)
     W = W * (1.0 - hw)[:, None]
     W[:, head] += hw
@@ -141,12 +150,17 @@ def skin(ob, arm, sp) -> str:
     if sp.family not in foe_specs.QUADS:
         return skin_free(ob, arm, sp.skel, sp)
     method = hf.skin_body(ob, arm, sp.skel)
-    if method.startswith("segment") and sp.family == "canid":
+    mod = sp.extra.get("module")
+    if method.startswith("segment") and (sp.family == "canid" or (mod is not None and hasattr(mod, "bare_scene"))):
         # bone heat does not solve over a hull broken by thorns and plates: solve it on the bare
-        # dog under them and give each vertex its nearest bare neighbours' weights
+        # beast under them and give each vertex its nearest bare neighbours' weights
         import bpy
-        bare = bb.CanidStyle(**{**sp.style.to_dict(), "thorns": 0.0, "bark": 0.0, "fur": 0.0})
-        proxy = hf.mesh_object("Proxy", bb.canid_scene(sp.skel, bare, sp.extra["trunk"]), sp.spacing * 1.4, 5000)
+        if sp.family == "canid":
+            bare = bb.CanidStyle(**{**sp.style.to_dict(), "thorns": 0.0, "bark": 0.0, "fur": 0.0})
+            bare_sc = bb.canid_scene(sp.skel, bare, sp.extra["trunk"])
+        else:
+            bare_sc = mod.bare_scene(sp)
+        proxy = hf.mesh_object("Proxy", bare_sc, sp.spacing * 1.4, 5000)
         hf.clean_mesh(proxy)
         pm = hf.skin_body(proxy, arm, sp.skel)
         if not pm.startswith("segment"):
@@ -157,8 +171,7 @@ def skin(ob, arm, sp) -> str:
             hf.skin_to_body(ob, arm, pv, pW)
             method = "heat on the bare body (%s), carried over" % pm
         bpy.data.objects.remove(proxy, do_unlink=True)
-    if sp.family == "canid":
-        jaw_weights(ob, sp.skel, sp.style, quad.DEFORM_NAMES)
+    jaw_weights(ob, sp, quad.DEFORM_NAMES)
     return method
 
 
@@ -265,7 +278,18 @@ def build(name: str, args) -> None:
         share = bodylib.tri_count(pc) / max(total, 1)
         for lvl, target in ((1, sp.lod1), (2, sp.lod2)):
             lob = hf.duplicate_joined([prev], "%s_LOD%d" % (pc.name, lvl))
-            hf.decimate_to(lob, max(int(target * share), 60))
+            # bristles, spines and thorns are many small shells the decimator cannot collapse: past
+            # the first level they go, and the hull carries the read
+            if bare_for(sp) is not None:
+                drop_small_islands(lob, 40 if lvl == 1 else 160)
+            want = max(int(target * share), 60)
+            hf.decimate_to(lob, want)
+            if lvl == 2 and bodylib.tri_count(lob) > want * 1.4 and len(pieces) == 1 and bare_for(sp) is not None:
+                # spines and bristles stop the collapse well short: this level is the bare hull
+                # under them, its UVs and weights carried over from the full body
+                import bpy
+                bpy.data.objects.remove(lob, do_unlink=True)
+                lob = bare_lod(sp, pc, arm, "%s_LOD%d" % (pc.name, lvl), want, out_dir, name, field)
             hf.clean_mesh(lob)
             lods.append(lob)
             prev = lob
@@ -338,6 +362,65 @@ def split_parts(body, C: str, sp, mat) -> list:
         out.append(ob)
     out.sort(key=lambda o: (0 if o.name.endswith("_Body") else 1, o.name))
     return out
+
+
+def bare_for(sp):
+    mod = sp.extra.get("module")
+    if sp.family == "canid" and (sp.style.thorns > 0 or sp.style.bark > 0):
+        bare = bb.CanidStyle(**{**sp.style.to_dict(), "thorns": 0.0, "bark": 0.0, "fur": 0.0})
+        return bb.canid_scene(sp.skel, bare, sp.extra["trunk"])
+    if mod is not None and hasattr(mod, "bare_scene"):
+        return mod.bare_scene(sp)
+    return None
+
+
+def bare_lod(sp, body, arm, name: str, target: int, out_dir: str, stem: str, field):
+    """A far level made from the bare hull: meshed coarse, decimated, unwrapped and painted on a
+    small map of its own by the same painter (UVs carried over from the body smear across its
+    seams), and skinned with the body's weights."""
+    ob = hf.mesh_object(name, bare_for(sp), sp.spacing * 2.2, target)
+    hf.clean_mesh(ob)
+    hf.decimate_to(ob, target)
+    bodylib.smart_uv(ob, angle_deg=60.0, margin=0.02)
+    albedo, orm, _ = foe_paint.painter(sp, field)
+    a, o, _ = hf.bake_maps(ob, out_dir, "%s_far" % stem, albedo, orm, None, size=256)
+    ob.data.materials.append(cf.make_material("WM_%s_Far" % cap(stem), a, o, None, roughness=0.85))
+    bones = quad.DEFORM_NAMES if sp.family in foe_specs.QUADS else sp.skel.deform_names
+    bv, _, _ = bodylib.mesh_arrays(body)
+    bW = bodylib.weight_matrix(body, bones)
+    bodylib.transfer_weights(ob, bv, bW, arm, bones=bones, k=4, smooth=1)
+    return ob
+
+
+def drop_small_islands(ob, min_verts: int) -> int:
+    """Deletes the mesh's loose pieces of fewer than `min_verts` vertices; returns how many went."""
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bm.verts.ensure_lookup_table()
+    seen = set()
+    doomed = []
+    for v in bm.verts:
+        if v.index in seen:
+            continue
+        stack = [v]
+        island = []
+        seen.add(v.index)
+        while stack:
+            cur = stack.pop()
+            island.append(cur)
+            for e in cur.link_edges:
+                o = e.other_vert(cur)
+                if o.index not in seen:
+                    seen.add(o.index)
+                    stack.append(o)
+        if len(island) < min_verts:
+            doomed.extend(island)
+    if doomed:
+        bmesh.ops.delete(bm, geom=doomed, context='VERTS')
+        bm.to_mesh(ob.data)
+    bm.free()
+    return len(doomed)
 
 
 def half_size(*paths) -> None:

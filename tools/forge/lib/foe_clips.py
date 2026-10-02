@@ -173,10 +173,11 @@ def canid_gaits(K: Kind) -> List[GaitSpec]:
                  footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
                  lift=0.085 * k, fold=0.85, bob=0.018 * k, bobs=2, bob_at=0.2, nod=2.5, nods=2, nod_at=0.25,
                  carriage=8.0, tail=tail + 4.0, ears=4.0),
-        GaitSpec("Run", speed=sp["Run"] * k ** 0.5, cycle=10 / FPS, duty=0.21,
+        GaitSpec("Run", speed=sp["Run"] * k ** 0.5, cycle=(10 if K.family == "canid" else 8) / FPS, duty=0.21,
                  footfalls={"HL": 0.0, "HR": 0.09, "FR": 0.42, "FL": 0.52},
                  lift=0.11 * k, fold=1.0, bob=0.03 * k, bobs=1, bob_at=0.3, pitch=6.0, pitch_at=0.85,
-                 nod=6.0, nods=1, nod_at=0.6, flex=13.0, flex_at=0.75, carriage=12.0, tail=tail + 12.0, ears=24.0),
+                 nod=6.0, nods=1, nod_at=0.6, flex=13.0 if K.family == "canid" else 6.0, flex_at=0.75,
+                 carriage=12.0 if K.family == "canid" else 2.0, tail=tail + 12.0, ears=24.0),
         GaitSpec("Walk_Back", speed=-0.9 * k ** 0.5, cycle=24 / FPS, duty=0.65,
                  footfalls={"HL": 0.0, "FR": 0.0, "HR": 0.5, "FL": 0.5},
                  lift=0.05 * k, fold=0.4, bob=0.006 * k, bobs=2, nod=3.0, nods=2, carriage=10.0, tail=tail - 8.0,
@@ -362,6 +363,66 @@ def lunge_clip(solver, K: Kind, name: str = "Attack_2", length: float = 1.15, he
     return QuadClip(name, length, False, sample,
                     [(cocked, "cocked"), (strike, "strike"), (hs, "hit_start"), (he, "hit_end"), (land, "land"),
                      (ok, "cancel_ok")], {})
+
+
+def gore_clip(solver, K: Kind, name: str = "Attack_1", length: float = 0.95) -> QuadClip:
+    """The gore: the head dropped low between the forelegs, the snout near the ground, then a short
+    rush and the head flung up and to the side, the tusks ripping upward through `hit_start`."""
+    k = K.k
+    cocked, strike, hs, he, ok = 0.30, 0.36, 0.42, 0.56, 0.72
+
+    def sample(t: float) -> QuadPose:
+        feet = stand(solver)
+        low = smooth(t / cocked) * (1.0 - smooth((t - cocked) / (hs - cocked)))
+        toss = bump((t - cocked) / (length - cocked), 0.25) if t > cocked else 0.0
+        qp = QuadPose(feet=feet)
+        qp.lift = -0.05 * k * low
+        qp.ahead = -0.03 * k * low + 0.04 * k * toss
+        qp.pitch = -6.0 * low + 3.0 * toss
+        qp.lift = qp.lift - 0.02 * k * toss
+        qp.neck = 20.0 * low - 14.0 * toss
+        qp.head = 10.0 * low - 18.0 * toss
+        qp.neck_turn = 18.0 * toss
+        qp.head_turn = 12.0 * toss
+        qp.ears = (K.ears_back, K.ears_back)
+        qp.tail = K.tail_carriage + 10.0 * toss
+        qp.jaw = 10.0 * toss
+        return qp
+    return QuadClip(name, length, False, sample,
+                    [(cocked, "cocked"), (strike, "strike"), (hs, "hit_start"), (he, "hit_end"), (ok, "cancel_ok")], {})
+
+
+def charge_clip(solver, K: Kind, name: str = "Attack_2", length: float = 1.2) -> QuadClip:
+    """The charge's wind-up and its blow: a forefoot scraping the ground twice with the head down and
+    the back humped, then off -- the game runs it at the foe -- and the tusks hooked up at the end."""
+    k = K.k
+    cocked, strike, hs, he, ok = 0.62, 0.7, 0.78, 0.94, 1.06
+
+    def sample(t: float) -> QuadPose:
+        feet = stand(solver)
+        set_ = smooth(t / 0.25) * (1.0 - smooth((t - cocked) / (hs - cocked)))
+        toss = bump((t - cocked) / (length - cocked), 0.3) if t > cocked else 0.0
+        qp = QuadPose(feet=feet)
+        qp.lift = -0.05 * k * set_
+        qp.loin = 8.0 * set_
+        qp.pitch = -5.0 * set_ + 10.0 * toss
+        qp.ahead = 0.08 * k * toss
+        qp.neck = 18.0 * set_ - 14.0 * toss
+        qp.head = 10.0 * set_ - 18.0 * toss
+        qp.neck_turn = 20.0 * toss
+        qp.ears = (K.ears_back, K.ears_back)
+        qp.tail = K.tail_carriage + 25.0 * set_
+        # the scrape: the near forefoot raked back along the ground, twice
+        for c0 in (0.08, 0.32):
+            w = (t - c0) / 0.22
+            if 0.0 < w < 1.0:
+                feet["FL"].toe[1] += 0.14 * k * math.sin(math.pi * w)
+                feet["FL"].toe[2] += 0.05 * k * bump(w, 0.3) * (1.0 if w < 0.4 else 0.0)
+                feet["FL"].planted = w > 0.4
+        return qp
+    return QuadClip(name, length, False, sample,
+                    [(cocked, "cocked"), (strike, "strike"), (hs, "hit_start"), (he, "hit_end"), (ok, "cancel_ok"),
+                     (0.15, "scrape"), (0.39, "scrape")], {})
 
 
 # --------------------------------------------------------------------------------------
@@ -581,8 +642,12 @@ def build(spec) -> Dict[str, QuadClip]:
     clips["Strafe_R"] = strafe_clip(solver, side_walk, "Strafe_R", -1.0)
     clips["Idle"] = idle_clip(solver, K)
     clips["Idle_Combat"] = combat_idle_clip(solver, K)
-    clips["Attack_1"] = bite_clip(solver, K)
-    clips["Attack_2"] = lunge_clip(solver, K)
+    if spec.family == "boar":
+        clips["Attack_1"] = gore_clip(solver, K)
+        clips["Attack_2"] = charge_clip(solver, K)
+    else:
+        clips["Attack_1"] = bite_clip(solver, K)
+        clips["Attack_2"] = lunge_clip(solver, K)
     clips["Hit"] = flinch_clip(solver, K)
     clips["Stagger"] = stagger_clip(solver, K)
     clips["Knockdown"] = knockdown_clip(solver, K)

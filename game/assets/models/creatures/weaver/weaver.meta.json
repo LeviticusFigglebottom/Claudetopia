@@ -56,6 +56,7 @@
    "r": 0.27
   }
  ],
+ "limbs": [],
  "mesh": "Weaver_Body",
  "params": {
   "family": "spider",
@@ -63,6 +64,9 @@
    "seed": 21
   }
  },
+ "parts": [
+  "Weaver_Body"
+ ],
  "rig": "WM_Weaver_v1",
  "rig_manifest": {
   "bones": [
@@ -546,8 +550,8 @@
  "tint": "#59504a",
  "tris": [
   8902,
-  2998,
-  1522
+  3000,
+  899
  ],
  "version": 1
 }

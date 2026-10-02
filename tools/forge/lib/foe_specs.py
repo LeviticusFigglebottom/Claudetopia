@@ -43,6 +43,11 @@ def _canid(name: str, k: float, length: float, leg: float, head: float, style: b
                    extra={"trunk": trunk, "tint": tint})
 
 
+def _lod1(sp: FoeSpec, n: int) -> FoeSpec:
+    sp.lod1 = n
+    return sp
+
+
 def spec(name: str) -> FoeSpec:
     if name == "down_wolf":
         # lean, grey-gold, patient: the Vale's wolf, 0.80 m at the withers
@@ -56,9 +61,9 @@ def spec(name: str) -> FoeSpec:
                       depth=1.1)
     if name == "thornhound":
         # a hound crossed with the wall: bark-skinned, thorn-jawed, a whip of a tail; 0.71 m
-        return _canid(name, 0.9, 0.98, 0.86, 1.04,
+        return _lod1(_canid(name, 0.9, 0.98, 0.86, 1.04,
                       bb.CanidStyle(kind="thorn", girth=1.0, legs=1.2, ruff=0.0, fur=0.002, ears=0.8,
-                                    muzzle=1.05, brush=0.25, thorns=1.15, bark=1.0, seed=7), 1.05, "#4a3b2c")
+                                    muzzle=1.05, brush=0.25, thorns=1.15, bark=1.0, seed=7), 1.05, "#4a3b2c"), 3200)
     if name == "leech_hound":
         # sleek, low, long in the body: an otter's build on a hound's head; 0.48 m at the withers
         return _canid(name, 0.76, 1.24, 0.7, 1.08,
@@ -70,6 +75,15 @@ def spec(name: str) -> FoeSpec:
         return FoeSpec(name, "spider", wv.RIG, st, lambda: wv.weaver_scene(wv.RIG, st), def_scale=1.2, tex=1024,
                        tris=9000, lod1=3000, lod2=900, spacing=0.0045,
                        extra={"tint": "#59504a", "module": wv})
+    if name == "bristleback":
+        from . import boar as bo
+        skel = bo.make_skel()
+        st = bo.BoarStyle()
+        return FoeSpec(name, "boar", skel, st, lambda: bo.boar_scene(skel, st), def_scale=1.1, tex=1024,
+                       tris=7500, lod1=3900, lod2=750, spacing=0.0065,
+                       extra={"tint": "#5a4436", "module": bo, "trunk": bo.TRUNK,
+                              "kind": {"tail_carriage": 25.0, "ears_back": 20.0, "lie_height": 0.24, "sternal": 0.36,
+                                       "speeds": {"Walk": 0.95, "Trot": 2.0, "Run": 4.2}}})
     if name in ("stone_thrall", "stone_thrall_king"):
         from . import thrall as th
         st = th.ThrallStyle(king=name.endswith("king"))
@@ -81,5 +95,5 @@ def spec(name: str) -> FoeSpec:
     raise KeyError(name)
 
 
-FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "weaver", "stone_thrall"]
+FOES = ["down_wolf", "crag_wolf", "thornhound", "leech_hound", "bristleback", "weaver", "stone_thrall"]
 QUADS = ("canid", "boar", "reptile")
