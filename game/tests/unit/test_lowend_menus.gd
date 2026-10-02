@@ -199,3 +199,19 @@ func test_the_lands_occluder_stays_under_the_ground_it_stands_for() -> void:
 	assert_false(bool(Graphics.PRESETS["painted"]["occlusion"]), "off in every preset, Painted too")
 
 
+func test_the_benchmark_sums_a_segment() -> void:
+	var samples := []
+	for i in 98:
+		samples.append([16.0, 1000, 500000])
+	samples.append([60.0, 1200, 600000])
+	samples.append([120.0, 1100, 550000])
+	var s := Benchmark.summarise(samples)
+	assert_eq(int(s["frames"]), 100)
+	assert_near(float(s["p50_ms"]), 16.0, 0.01)
+	assert_eq(int(s["over_50ms"]), 2)
+	assert_eq(int(s["over_100ms"]), 1)
+	assert_near(float(s["max_ms"]), 120.0, 0.01)
+	assert_eq(int(s["draws_max"]), 1200)
+	assert_eq((s["worst_hitches"] as Array).size(), 2, "the two hitches named")
+	var text := Benchmark.text_report({"started": "now", "machine": {"gpu": "AMD Radeon(TM) 740M"}, "segments": [s.merged({"id": "town", "what": "a town"})]})
+	assert_true(text.contains("AMD Radeon(TM) 740M") and text.contains("town"), "the text report names the GPU and the segment")

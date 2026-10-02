@@ -249,6 +249,11 @@ func _advance() -> void:
 					return
 				_enter("menu_vista")
 			if _phase == "menu_vista" and Time.get_ticks_msec() - _phase_began_ms > int(menu_s * 1000.0):
+				if draw and not _marks.has("menu_shot"):
+					# what the title looked like at the end of its time, for a look (drawn runs only)
+					_mark("menu_shot")
+					DirAccess.make_dir_recursive_absolute(out_dir)
+					get_viewport().get_texture().get_image().save_png(out_dir.path_join("menu.png"))
 				if style.is_empty() and naming_s <= 0.0:
 					_finish()
 					return

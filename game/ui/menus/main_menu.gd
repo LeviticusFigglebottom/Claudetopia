@@ -360,6 +360,18 @@ func _process(delta: float) -> void:
 
 # --- actions ------------------------------------------------------------------------------
 
+## The benchmark's hidden way in (docs/BENCHMARK.md): Ctrl+Shift+B on the title.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var k := event as InputEventKey
+	if k == null or not k.pressed or k.echo or k.keycode != KEY_B or not k.ctrl_pressed or not k.shift_pressed:
+		return
+	if get_tree().root.has_node("Benchmark"):
+		return
+	get_viewport().set_input_as_handled()
+	var bench: Node = (load("res://tools_gd/benchmark.gd") as GDScript).new()
+	bench.set("from_menu", true)
+	get_tree().root.add_child(bench)
+
 func _on_new_game() -> void:
 	if not _world_is_there():
 		return

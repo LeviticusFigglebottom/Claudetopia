@@ -17,6 +17,8 @@ extends Node
 ##                      (New Game) <s> seconds after the menu is up, and say whether the game went on
 ##   --cpu=<dir>        attach the CPU probe (tools_gd/cpu_probe.gd): the main thread's time per frame
 ##                      on the title and, with --cpu-new=<style>, through a new game's opening
+##   --benchmark        run the built-in benchmark (tools_gd/benchmark.gd, docs/BENCHMARK.md): the
+##                      title, the Naming and a fixed flight through the world, timed, then quit
 
 @onready var label: Label = $Label
 
@@ -42,6 +44,8 @@ func _ready() -> void:
 			cpu.set("out_dir", str(args["cpu"]))
 	if args.has("click"):
 		_attach_probe("res://tools_gd/click_probe.gd", "ClickProbe")
+	if args.has("benchmark"):
+		_attach_probe("res://tools_gd/benchmark.gd", "Benchmark")
 	if args.has("smoke"):
 		_run_smoke()
 		return
