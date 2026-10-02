@@ -4730,15 +4730,15 @@ static func _bones_skull(d: PoiDressing) -> void:
 	await k.step()
 	k.scatter(k.rock("bone_finger"), antlers, false, true)
 	# the vigil: a knight's fire, a spear set in the ground, a shield against the jaw
-	var out := 7.0
-	while out < d.pad_radius:
+	var vigil_out := 7.0
+	while vigil_out < d.pad_radius:
 		var clear := true
 		for b in boxes:
-			clear = clear and not (b as Rect2).grow(1.3).has_point(face * out + perp * 2.5)
+			clear = clear and not (b as Rect2).grow(1.3).has_point(face * vigil_out + perp * 2.5)
 		if clear:
 			break
-		out += 0.5
-	var camp_at := face * out + perp * 2.5
+		vigil_out += 0.5
+	var camp_at := face * vigil_out + perp * 2.5
 	await k.step()
 	k.place(k.prop("campfire"), k.on_ground(camp_at.x, camp_at.y), 0.0)
 	k.light(k.on_ground(camp_at.x, camp_at.y, 0.9), Color(1.0, 0.66, 0.34), 2.4, 12.0)
