@@ -4986,7 +4986,8 @@ static func _tree_willow_isle(d: PoiDressing) -> void:
 	var stool := Vector3(camp_at.x, stand.call(camp_at.x, camp_at.y), camp_at.y)
 	await k.step()
 	k.place(k.prop("stool"), stool, yaw)
-	var crate := camp_at + aside * 1.2 - grain * 0.4
+	# (clear of where he stands by the stool: at 0.7 m off it he stood inside it)
+	var crate := camp_at + aside * 1.6 + grain * 0.2
 	var crate_y: float = stand.call(crate.x, crate.y)
 	await k.step()
 	k.place(k.prop("crate"), Vector3(crate.x, crate_y, crate.y), yaw + 0.6)

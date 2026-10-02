@@ -119,10 +119,11 @@ func test_a_cave_goes_dark_ten_metres_into_the_hill() -> void:
 			if at.y < d.kit.on_ground(at.x, at.z).y:
 				sunk += 1
 	assert_eq(slabs, 0, "no slabs stood on the slope")
-	assert_gt(boulders, 11, "boulders for its cheeks, its capstones, its brow, its roof and its flanks")
-	# the cheeks, the brow and the flanks have their feet in the slope (the capstones and the rocks
+	# (one that cannot be laid clear of the others is left out, one to four a mouth: 9aec5445)
+	assert_gt(boulders, 8, "boulders for its cheeks, its capstones, its brow, its roof and its flanks")
+	# the cheeks, the brow and the flanks have their feet in the slope (the two capstones and the rocks
 	# over the passage rest on its roof instead)
-	assert_gt(sunk, 10, "the crag's feet in the slope (%d of %d)" % [sunk, boulders])
+	assert_true(sunk >= boulders - 2, "the crag's feet in the slope (%d of %d)" % [sunk, boulders])
 	# light thrown back into the mouth, so its rock does not go black with the sun behind the hill
 	var bounce := 0
 	for s in NightLights.sources_of(d):
@@ -823,11 +824,13 @@ class CaveRise extends TerrainProvider:
 		return 50.0 + rise * (1.0 - smoothstep(-behind - 3.0, -behind, u))
 
 
-## Where the world raised a face for a cave (`cave` on its entry), the mouth is cut into it: on the
-## face's line, looking the way the face says, the throat level into the hill and under its top, the
-## first of it the region's stone and not black, the region's rock in the face either side, nothing
-## heaped on the roof, and a lip of stones and ferns at the threshold. The w4096c shots had every
-## cave as a black box standing proud of flat ground with rubble on top.
+## Where the world raised a face for a cave (`cave` on its entry), the mouth is at its foot: looking the
+## way the face says, the throat standing on the level ground in front of it and ending at the face's
+## line (the land cannot be holed: run on into the face it was under the ground from its second ring,
+## 9aec5445), under the cave's own bank meeting the face, its first ring the dark lining and not the
+## painted stone's courses (they stood as a squared doorway), the region's rock in the face either
+## side, nothing heaped behind the face's line. The w4096c shots had every cave as a black box
+## standing proud of flat ground with rubble on top.
 func test_a_cave_is_cut_into_the_face_the_world_raised_for_it() -> void:
 	var ground := CaveRise.new()
 	ground.facing = Vector2(1.0, 0.0)
@@ -843,7 +846,7 @@ func test_a_cave_is_cut_into_the_face_the_world_raised_for_it() -> void:
 	assert_true(mouth != null and end != null, "a mouth and the end of its throat")
 	if end != null:
 		var c := end.mesh.get_aabb().get_center()
-		assert_lt_or_eq(c.x, -9.0, "the throat runs into the face, against the facing (end at x %.1f)" % c.x)
+		assert_true(c.x < 0.0 and absf(c.x + 3.0) < 1.5, "the throat ends at the face's foot, against the facing (end at x %.1f)" % c.x)
 		assert_true(absf(c.z) < 1.5, "square into it")
 	# every ring's roof under the land over it, past the face's ramp
 	var proud: Array[String] = []
@@ -857,9 +860,9 @@ func test_a_cave_is_cut_into_the_face_the_world_raised_for_it() -> void:
 			proud.append("ring %d at %.1f over %.1f" % [i, box.end.y, ground.get_height(u, 0.0) - 50.0])
 	assert_true(proud.is_empty(), "the throat is in the hill, not standing out of it (%s)" % ", ".join(proud))
 	var first := d.find_child("Throat0", true, false) as MeshInstance3D
-	assert_true(first != null and first.material_override is ShaderMaterial, "the mouth's first ring is the region's stone, not black")
+	assert_true(first != null and first.material_override is StandardMaterial3D, "the mouth's first ring is the lining, not the painted stone's courses")
 	assert_false(d.find_children("*cliff_ledge*", "MultiMeshInstance3D", true, false).is_empty(), "the region's rock in the face either side")
-	assert_true(d.find_child("Bank", true, false) == null, "no bank of its own, since the world raised the hill")
+	assert_true(d.find_child("Bank", true, false) != null, "its own bank over the throat, meeting the face")
 	# nothing heaped on the throat's roof: no boulder stands over the passage, behind the face's line
 	var heaped := 0
 	for c in d.get_children():
