@@ -18,8 +18,8 @@ extends RefCounted
 ## * `fence_gap`: a gap of FENCE_GAP_M to FENCE_GAP_MAX_M in the middle of a fence or rail run, in
 ##   line with the run on both sides, with no gate or road through it;
 ## * `fence_lone`: a placed length of fence or rail joined to nothing, stood alone in a field;
-## * `overlap`: two solid props sharing more than OVERLAP_SHARE of the smaller's box (not a tent or
-##   a stall and what is in it), or a tree
+## * `overlap`: two solid props sharing more than OVERLAP_SHARE of the smaller's box (a tree's being
+##   its trunk, not its crown; not a tent or a stall and what is in it), or a tree
 ##   whose trunk stands inside a building.
 ##
 ## Each finding names its source: which builder or data put the thing there (`scatter` is the
@@ -39,6 +39,8 @@ const LIGHT_REACH_M := 0.5
 const FENCE_GAP_M := 1.0
 const FENCE_GAP_MAX_M := 4.0
 const OVERLAP_SHARE := 0.6
+## A tree's trunk, per unit of its scale, as far as overlapping it goes (`_solid_box`).
+const TRUNK_HALF_M := 0.45
 ## Taller than this and a thing in a carriageway is in the way (grass and flowers are not).
 const STANDING_M := 0.35
 ## A mesh whose box is wider than this is a merge of many things (a cell's gates, a town's fences)
@@ -331,6 +333,11 @@ func _add_mesh(g: GeometryInstance3D, out: Array[Dictionary], anchor: String, re
 		if _merged_standing_re.search(nm.to_lower()) != null and g is MeshInstance3D:
 			out.append({"kind": "merged", "src": anchor, "family": family(nm), "asset": nm, "aabb": box,
 				"node": g, "at": box.get_center()})
+		elif _has_body(g) or _has_body(g.get_parent()):
+			# one great solid thing (a carved head, a hill of rock): not looked at as a piece, but what
+			# is set into it is held by it (the Headless Watch's eyes in its face)
+			out.append({"kind": "bulk", "src": anchor, "family": family(nm), "asset": nm, "aabb": box,
+				"node": g, "at": box.get_center()})
 		return
 	out.append({"kind": "mesh", "src": anchor, "family": family(nm), "asset": nm, "aabb": box,
 		"at": box.get_center(), "node": g, "solid": _has_body(g)})
@@ -408,6 +415,8 @@ func _check(objects: Array[Dictionary]) -> void:
 				_check_light(o, tops)
 			"merged":
 				_check_merged(o)
+			"bulk":
+				pass
 			_:
 				_check_seat(o, tops)
 				_check_lamp(o, tops)
@@ -677,11 +686,12 @@ func _check_overlaps(objects: Array[Dictionary], tops: Dictionary, buildings: Ar
 				or _shelter_re.search(str(o["family"])) != null:
 			continue
 		var c := box.get_center()
+		box = _solid_box(o)
 		for other: Dictionary in _near(tops, Vector2(c.x, c.z)):
 			if other == o or str(other["kind"]) not in ["prop", "building"] or not bool(other.get("solid", false)) \
 					or _shelter_re.search(str(other["family"])) != null:
 				continue
-			var ob: AABB = other["aabb"]
+			var ob: AABB = _solid_box(other)
 			if not box.intersects(ob):
 				continue
 			var inter := box.intersection(ob)
@@ -694,7 +704,24 @@ func _check_overlaps(objects: Array[Dictionary], tops: Dictionary, buildings: Ar
 			if seen.has(pair):
 				continue
 			seen[pair] = true
-			_add(o, "overlap", "%.0f%% of it shares its box with %s (%s)" % [100.0 * share, str(other["family"]), str(other["src"])], share)
+			_add(o, "overlap", "%.0f%% of it shares its box with %s (%s) at (%.1f, %.1f), boxes %.1f x %.1f and %.1f x %.1f m" % [
+					100.0 * share, str(other["family"]), str(other["src"]), ob.get_center().x, ob.get_center().z,
+					box.size.x, box.size.z, ob.size.x, ob.size.z], share)
+
+
+## What of a thing two things can share: its drawn box, or a tree's trunk. A tree's box is its crown,
+## and everything set down under a crown shared it (a hunter's sack 15 m out under a giant oak, the
+## baskets under the Sallow King's willows, the willows of its ring in each other's crowns).
+func _solid_box(o: Dictionary) -> AABB:
+	var box: AABB = o["aabb"]
+	if not str(o.get("asset", "")).contains("/trees/") or not o.has("node"):
+		return box
+	var n := o["node"] as Node3D
+	if n == null:
+		return box
+	var half := TRUNK_HALF_M * n.global_transform.basis.get_scale().x
+	var foot := n.global_position
+	return AABB(Vector3(foot.x - half, box.position.y, foot.z - half), Vector3(half * 2.0, box.size.y, half * 2.0))
 
 
 ## The COLUMN_M columns in which some merged mesh of `parent` (a town, a place) meets the ground:
@@ -791,6 +818,9 @@ func _add(o: Dictionary, check: String, detail: String, amount := 0.0) -> void:
 		"x": snappedf(at.x, 0.1), "y": snappedf(box.position.y, 0.01), "z": snappedf(at.z, 0.1),
 		"amount": snappedf(amount, 0.01), "detail": detail,
 		"region": World.region_id_at(Vector3(at.x, 0.0, at.z)).get_slice("/", 1)}
+	# what holds it, for a thing whose own name says nothing (an unnamed mesh)
+	if o.get("node") is Node and (o["node"] as Node).get_parent() != null:
+		row["parent"] = str((o["node"] as Node).get_parent().name)
 	findings.append(row)
 	var key := "%s | %s" % [src, str(o["family"])]
 	if not counts.has(key):
