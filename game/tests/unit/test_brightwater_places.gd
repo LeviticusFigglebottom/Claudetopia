@@ -21,8 +21,14 @@ const PEOPLE := {
 	"core:npc/emmet_quarle": "core:poi/the_listening_post",
 	"core:npc/crispin_tolley": "core:poi/counting_tower",
 	"core:npc/ghedda_clanless": "core:poi/brindle_mill",
+	"core:npc/abel_rowse": "core:poi/the_crown_drift",
+	"core:npc/dorcas_pell": "core:poi/wash_stones",
+	"core:npc/bryony_kettle": "core:poi/ness_market",
+	"core:npc/silas_pask": "core:poi/ness_market",
+	"core:npc/hob_tench": "core:poi/smoke_coppice",
 }
-const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_hole", "core:interior/gull_holm_cellars"]
+const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_hole", "core:interior/gull_holm_cellars",
+		"core:interior/the_crown_drift", "core:interior/the_struck_barrow", "core:interior/holmwatch_undercroft"]
 
 var host: Node3D
 var provider: TerrainProvider = null
@@ -159,7 +165,7 @@ func test_the_places_stand_what_their_defs_promise() -> void:
 		assert_false(provider.is_water(door.global_position.x, door.global_position.z), "standing on the holm")
 	assert_true(holm.find_child("the_hinge_less_door", true, false) != null, "and the egg-collectors' chalk has a step to lie on")
 	# the sites: a hook to start the quest, a door into the inside
-	for pid in ["core:poi/pennyfold_keep", "core:poi/the_hush_hole"]:
+	for pid in ["core:poi/pennyfold_keep", "core:poi/the_hush_hole", "core:poi/the_crown_drift", "core:poi/the_struck_barrow", "core:poi/holmwatch"]:
 		var d: PoiDressing = await _dress(pid)
 		var hook := d.find_child("Hook", true, false) as PoiTouch
 		assert_true(hook != null and ContentDB.has(hook.dialogue_id), "%s has its hook" % pid)
@@ -172,6 +178,33 @@ func test_the_places_stand_what_their_defs_promise() -> void:
 	assert_eq(green.find_children("*", "JobBoard", true, false).size(), 1, "and a notice post with day-work")
 	for spot in ["the_frames", "the_lye_tubs"]:
 		assert_true(green.find_child(spot, true, false) != null, "and '%s'" % spot)
+	# phase 2's large sites: the drift's headframe, engine-house and chimney, spoil and shift-board; the
+	# barrow's Needle with its names and brass cap, its portal and the night's people's marks
+	var drift: PoiDressing = await _dress("core:poi/the_crown_drift")
+	for what in ["Headframe", "EngineHouse", "Chimney", "Spoil", "sign_ShiftBoardPaint", "the_shaft_head", "the_count_house"]:
+		assert_true(drift.find_child(what, true, false) != null, "the Crown Drift has %s" % what)
+	drift.queue_free()
+	var barrow: PoiDressing = await _dress("core:poi/the_struck_barrow")
+	for what in ["TallyNeedle", "NeedlePlinth", "NeedleCap", "StruckNames", "Chalk", "Portal", "the_portal_step", "the_needle_foot"]:
+		assert_true(barrow.find_child(what, true, false) != null, "the Struck Barrow has %s" % what)
+	var needle := barrow.find_child("TallyNeedle", true, false) as MeshInstance3D
+	var plinth := barrow.find_child("NeedlePlinth", true, false) as MeshInstance3D
+	if needle != null and plinth != null:
+		assert_gt(needle.get_aabb().end.y - plinth.get_aabb().position.y, 12.0, "the Needle stands tall enough to be seen across the Mere")
+	barrow.queue_free()
+	# Holmwatch: the castle, and the Reeves' lamp-tower over it with its cage and bowl
+	var hw: PoiDressing = await _dress("core:poi/holmwatch")
+	for what in ["LampTower", "LampCage", "ReevesBowl", "the_lamp_head"]:
+		assert_true(hw.find_child(what, true, false) != null, "Holmwatch has %s" % what)
+	var tower := hw.find_child("LampTower", true, false) as MeshInstance3D
+	if tower != null:
+		assert_gt(tower.get_aabb().size.y, 17.0, "the lamp-tower stands over the castle's towers")
+	hw.queue_free()
+	# the Wash-Stones: the spring's pool, the three dished stones, the linen, where Dorcas beats
+	var wash: PoiDressing = await _dress("core:poi/wash_stones")
+	for what in ["WashPool", "WashStones", "Dishes", "LinenBunting", "the_beating_stone"]:
+		assert_true(wash.find_child(what, true, false) != null, "the Wash-Stones have %s" % what)
+	wash.queue_free()
 	# the slate cut: the black course, the bench, the humming slate where the thousand-book lies
 	var cut: PoiDressing = await _dress("core:poi/cadbrae_slate_cut")
 	for what in ["BlackCourse", "SlateStacks", "the_splitting_bench", "the_humming_slate", "the_face"]:

@@ -14982,6 +14982,409 @@ Triage 77-80, on `wip/quest-fixes`.
     walker plays the starts in order and never takes the `seen` detour;
   - arrows spent are handed back as iron arrows whatever the player shot.
 
+## Brightwater: the second pass, the Crown Drift and the Struck Barrow (world life phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for Brightwater (`wip/wl2-brightwater`): the places looked at again against
+their own defs, the ones whose builders did not build what the def says made over by the region's
+own builders, their seats set straight, and two large sites with a far-seen feature and an inside.
+
+### Two large sites
+- **The Crown Drift** (`delve`, own builder, -852, -1628, pad 40 level): the Tallymen's calamine
+  mine on the North Shore's upper terrace, where the brass of every lamp in Tollmere came up. A
+  timber headframe 12 m with its winding-wheel over the shaft in its collar, the ladder's head going
+  down; a roofless three-storey engine-house with tall windows, the bob-wall's opening and the
+  engine's great beam fallen out of it; a round chimney 19.7 m with a brick head (the tallest thing on
+  the terrace, seen from the Mere); spoil heaps, buddles, a tramway, the drift-captain's count-house,
+  and the shift-board with nine rings painted round nine empty hooks. Inside (`mine`, large, seed
+  2312): shaft foot, an ore gallery, a winze, the brass-takers' melting hearth (forge hall), a warm
+  stope under a daylight shaft with drakes in it, the Hushed level where their sayer keeps the
+  silence, the break into the Builders' gallery (a chasm bridge) with the held miners, and Gideon
+  Spall, Captain of the Last Shift, at the deep board. New foes: Brass-Taker, Drift Hewer, Held
+  Miner. Quest **The Last Shift** (Abel Rowse, the drift-captain who sent them down, at his
+  count-house; or the board at the shaft head): bring the nine tokens up.
+- **The Struck Barrow** (`delve`, own builder, -912, 890, pad 30 slope): the barrow the Tallymen cut
+  into the south scarp for debtors struck off the Roll. At the gully's mouth the **Tally Needle**, a
+  lime-washed obelisk 14 m on a stepped plinth with a brass pyramidion, its faces cut with struck
+  names in close rows, one chalked back over by a laundress; at the gully's head a dressed portal
+  with wing walls and RECEIVED cut in its lintel, steps up to it, a bier-stone and numbered marker
+  stones. Inside (`crypt`, large): the receiving room, numbered shelves, the weighing room, the
+  Quiet Hands' copyists' camp, a fallen vault, the deep shelves over a rift, and Obadiah Fenn, the
+  Receiver of the Struck. New foes: Struck Debtor, Struck Bailiff, Resurrection Man. Quest
+  **Entered in Error** (Dorcas Pell at the Wash-Stones, or the names on the Needle): her father's
+  name back beside his number in the Receiver's register.
+- Rumours for both; resurrection men and the struck at the Needle by night and dusk, brass-takers at
+  the shaft head by night.
+
+### Places made over (own builders in `game/world/pois/regions/brightwater.gd`)
+Each looked at against its def; where the kind's builder made something generic (a colonnade for
+"steps into the lake", a standing-stone ring for "flat stones where the washing is beaten", a chain
+suspension bridge for "a boom of chained logs"), the region builds it as the def says:
+- **The Wash-Stones**: a spring-fed kerbed wash-pool with its spout and runnel, three dished beating
+  stones, the copper steaming, lines of guild linen; Dorcas Pell works the middle stone.
+- **The Heronry**: a square black Oroth stalk, torn off at four heights, nests on its top and ledges,
+  herons on them and in the wet ground, lime streaks, fallen sticks, the clerk's hat (and his egg-tax
+  schedule, a new find).
+- **The Pilgrim Stair**: a landing with two broken stalks, a processional way between bollards, and
+  one kerbed flight down the old beach into the Mere, the Sayer's rope taut off the last dry step.
+- **The Ness Market**: awnings in the Lake's colours over trestles laid with the catch, a smoking-rack
+  over a slow fire, baskets and barrels, the toll-man's line of lime-white stones; two new people,
+  Bryony Kettle (a fishwife who sells fish) and Silas Pask (the Tallymen's clerk who enters it).
+- **The Beached Barge**: an oak grown up through her hold, her cargo of baulks lashed, the Woodfolk's
+  and the Tallymen's claims nailed to her stem (read them), the bargemaster's locker, drakes at night.
+- **The Charter Stone**: one slab broken across and stood up again, two brass staples left of eight
+  (the Charter Pins quest's own count), the sockets of the rest, the Charter and the chain-link cut,
+  swearing-stones and the trodden ring; its face can be read.
+- **The Strandline Stones**: the kind's three stones, and the old shore itself (shingle, driftwood)
+  with the Sayers' benchmark and its notches (read it).
+- **The Dry Jetty**: a level plank jetty on piles running out toward where the water was, its end
+  high over the hay, bollards, a ladder to nothing, the eel-wives' lantern, the wet last pile.
+- **The Tallyman's Folly**: a house never finished, turned to its road and set clear of it: walls to
+  uneven courses toothed for the next, a scaffold and sheer-legs still up, the masons' names on the
+  lintel, ashlar stacked, the cellar hatch the cutpurses use.
+- **The Smoke Coppice**: oak stools with their fans of poles, some cut back, a pole stack, the
+  cleaving-brake, brash bundles; a new person, Hob Tench the coppice-reeve (sells).
+- **The Log Boom**: logs chained end to end across the Wold Water at the water's level, walkable,
+  chained to posts in both banks, two rafts lashed behind it, the keeper's brazier, stool and pole.
+- Seats (triage 74), from the probe: wreck lanterns hung from their stem-posts by an iron, or taken
+  down where nobody has lit them since (Hesper's Boat, the Gullhithe Wreck; the Laundry Punt, the
+  Beached Barge); Willow Isle's boat and post set by their drawn boxes; the Long Stride's chest that
+  hung over the shallows taken off its deck; the Shingle Shrine's Hearthstone on its pebbles; a stool
+  out of the Rafters' fire; the Dry Jetty's ropes 4 m in the air gone with its kind's boardwalk.
+
+### Looked at
+- A scratch tool (not committed) raised each place on the installed world's ground round it, with the
+  preview pads laid, in a few seconds a place, from four sides, close at eye height and from above:
+  every new and made-over place was looked at that way two to four times while it was built. Found
+  and fixed by looking: the Pilgrim Stair's kind built a small colonnade on the terrace nowhere near
+  the water; the Needle's shaft read as stacked boxes (now one tapered shaft and a brass
+  pyramidion); the barrow's portal stood on the flat (now where the gully's floor turns up into the
+  hill); spoil heaps read as snow (darker, rougher); the Folly stood on its road's bend (turned to the
+  road and set clear of it); the Wash-Stones' runnel ran 14 m like an aqueduct; the Ness Market was a
+  scatter of bare tables (awnings and the catch); the Beached Barge's cargo hid her hull.
+- `site_review` of both insides, every room: the Drift's timbered levels, carts, lanterns, the
+  takers' hearth, the chasm bridge, the arena's pillars; the Barrow's ossuary niches, sarcophagi, the
+  struck in their rags, the weighing room, the Receiver's arena.
+- `poi_sheet` (the real game, Compatibility) of both large sites: the Drift's chimney and headframe
+  read from the terrace's edge against the North Shore crags; the Needle stands white at the foot of
+  the south scarp's cliff. Views 556-1021 draws, 0.86-1.30 M primitives (under the limit; two views
+  over the 1.1 M aim, like their neighbours'). From that sheet: the barrow's portal had the scarp's
+  cliff boulders over it, so its pad is 36 m now and the scatter is cleared off it.
+
+### Measured (region_audit.py brightwater --probe, on w4096g; before is the phase 1 audit)
+| | before | after | target |
+|---|---|---|---|
+| POIs | 70 | 72 | >= 70 |
+| land > 200 m from anything | 3.8% | 2.8% | <= 5% |
+| weak share (non-wayside) | 0.189 (7) | 0.051 (2: the Log Boom and the Strandline Stones, both 3) | <= 0.25 |
+| strong (>= 8) | 6 | 8 (+ the Crown Drift 12, the Struck Barrow 12) | >= 5 |
+| placement problems | 34 at 24 POIs | 26 at 17; seat findings 16 -> 5 | |
+
+The two large sites' own cost (probe): the Crown Drift 51 draws, 73 k triangles, reach 40 m on its
+40 m pad; the Struck Barrow 18 draws, 16 k, reach 36 m on its 36 m pad; both seat-clean.
+
+### Tests
+- `region_check.py brightwater --godot`: PASS (content, placement, density).
+- `./run.sh test --filter=objects_seated_brightwater,test_poi_preview,test_pois,test_brightwater_places`:
+  34 passed, 0 script errors, game warnings 49 (baseline 49). `test_brightwater_places` now also
+  raises the Drift, the Barrow and the Wash-Stones and checks their pieces, has the five new people
+  at their spots with nobody inside anything, and walks both new insides to every room on their
+  navigation meshes (the Drift's mine at seed 2312: of eight seeds tried, only 2312 and 2318 joined
+  every room; the others left the winze and what lies past it unjoined).
+- Quest walker `--only=the_last_shift,entered_in_error`: 2 of 2 end every way they can, 0 errors.
+- `tools/quests/softlock_check.py`: 124 quests, 0 findings. pytest test_content_split,
+  test_region_check, test_quest_softlocks: 20 passed.
+
+### Not done / for the coordinator
+- Two large sites, not three: the third (a castle on the east promontory facing Gull Holm) was not
+  started; the time went into the made-over places and the seats.
+- Left in the audit's seat list, all from shared kinds: North Cliff Beacon's drum and the Sedge
+  Hearth's plank in the carriageways of atlas roads that end at their middles; the Sedge Hearth's bell
+  is sunk in its pool by the shrine kind's design; Rafters' Camp's fire still shares its box with a
+  stool and Willow Isle's fire with the willow's crown (the willow's box is its crown).
+- `past_pad` at the Pilgrim Stair (49 m on a 25 m pad: the flight goes down the old beach to the
+  water, as its def says) and the Tallyman's Folly (28 on 25: set clear of its road); the next build
+  gives them their pads as they are.
+- The scratch ground-review tool used here (a POI on the real heights in seconds, no world) is not
+  committed; it is worth a shared version for every region (`site_review --poi` raises a POI on a
+  flat grass pad).
+- `~/bin/heavy` is not first come first served (it polls every 5 s), so a queued run can wait behind
+  later ones for an hour; two of this session's runs were stopped by their callers' time limits while
+  still queued.
+
+## Three large places and the dull ones built as they say: world life in Briarwold (phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for the Briarwold, on `wip/wl2-briarwold`. Looked at first (site_review on a flat
+pad, Compatibility): ten of the region's places were the ruins builder's one hall (three rooms, one
+gable) whatever their sentence said, a grave-mound, a deer park, a burial ground and a barrow among
+them, and two camps were the camp builder's one ring of tents. All of it is the region's own files
+(`pois/briarwold.json`, `world/pois/regions/briarwold.gd`, `*/places_briarwold.json`,
+`encounters/pois_briarwold.json`, `roadlife/briarwold.json`, new `enemies/places_briarwold.json`).
+
+### Three large places, each with an inside, a boss, a person and a quest
+- **The Windthrow** (delve, the Greatwood shelf over the Hollow-Fernhold road, 2943,728; builder `windthrow`): the Grandfather's
+  brother, thrown by the Long Wind of 1019. Its root plate stands 25 m wide out of the wood (earth,
+  held stones, roots that wander, droop and fork, hair-roots hanging, turf and ferns on its top edge),
+  the trunk lying 36 m away behind it to its broken crown, a crown limb leaning on its end as the way
+  up the bole to a raven's hoard by the plate. The door is a mouth under the plate where the taproot
+  tore out. Inside (`the_windthrow`, cave, 10 rooms, seed 1044): the hanging roots (foxfire), the
+  burners' drift, the Brother's well, a split crossed by a bridge, the tear where daylight comes in,
+  a Warden in the heart-hall, and **the Old Root** (the taproot stood up; extends the Warden).
+  Jory Rooke, a burner, waits at the lip: **What Falls** (his uncle's axe, the Old Root; burn the
+  Brother by the verderer's mark, leave it to the wood, or send its heartwood to the Grandfather).
+- **Tinehold** (castle_ruin, on the brink of the Lower Wold's scarp over the Wold Water, 2425,-60;
+  builder `tinehold`): the Hart-Knights' first hold, the castle ruin with its keep, and over the keep
+  the **Tine Tower**, 26 m of drum crowned with a hart's antlers 10 m across in pale stone, the one
+  thing in the Lower Wold over the oaks; up the track to its gate two rows of poles hung with the
+  antlers of harts the Unvowed took living; briar up the walls' feet. Garrison of Unvowed huntsmen,
+  thornhounds and an Unvowed knight (new `enemies/places_briarwold.json`). Inside
+  (`tinehold_undercroft`, keep, 10 rooms): kennels, the knights' hall, stores, the long stair, the
+  chapel of tines with the names chiselled off, and the vigil hall with **Aubric Vane, the Unvowed
+  Marshal** wearing Ardo's antlers. **A Gate Is Known**: Wystan Tine, kneeling at the Moot Gate
+  Stone since phase 1 without saying why, says why at the end of his 72 hours; or the Marshal's
+  challenge on the gate starts it.
+- **The Charter Delf** (delve, the Northwold by the Builders' quarry, 2476,-1460; builder
+  `charter_delf`): a Tollmere company's lead mine: an 18 m headframe with its winding wheel, braced
+  legs and back-stays to the winding house, the cage in the shaft's collar (the door), plank ways
+  and barrows, grey spoil heaped down the slope with the oaks standing dead in it, the clerk's
+  office with a lamp lit at noon. Inside (`charter_delf`, mine, 10 rooms, seed 1031): the shaft foot,
+  the smithy, the counting-room, the flooded sump, the lode, a fallen air-shaft, a Warden grown out
+  of the thorn, and **the Brake-Dam** denned in the Briar's root where the deep gallery broke into
+  it (extends the thornhound). Silas Penhallow, the clerk who stayed: **What the Ledger Owes** (the
+  ledger's last page says the Briar runs under the whole Wold: to the Company, to the layers, or burn
+  it).
+- Road life points at each: Unvowed huntsmen on the roads (hostile, tier 2+), the Company's courier
+  (reveals the Delf), burners going up to the Windthrow (reveals it). Three rumours.
+
+### Places worked again
+- Built as their sentences say (builders in `briarwold.gd`): **the Knight's Mound** (turf barrow on a
+  kerb, an oak grown over it whose roots hold the antlered helm on its crown, spear, vigil candles,
+  the Mourners' board), **the Tine Barrow** (long barrow, a crescent of antler-cut stones round a
+  paved forecourt, the door sealed with a hart's skull; Kenard's spots), **Mossgrave** (rows of moss
+  mounds round a veteran yew, antler-hooked name-staves, the seed-bed under bark), **the Antler
+  Chapel** (the hall hung with antlers along both walls and a rack on the gable, the broken altar),
+  **Pellow's Pale** (a deer-park wall on a long curve with its iron gate padlocked, gaps where the
+  oaks pushed it down, the parker's lodge and strongbox inside), **the Bark Camp** (stripped oaks
+  standing white and dead, bark racks, the sledge, the pay-box), **the Poachers' Lee** (hide frames,
+  a hart on a gallows, a bow-rack, sawn antlers), and the wayside lodges: **burnt** (scorched
+  courses, charred rafters), **webbed** (silk and egg-sacs), **the antler-smith's** (cold forge,
+  anvil, a half-made helm), **Wenna's** (the grave lid with its moss), **the masons'** (the dressed
+  block on rollers with the masons' marks).
+- Reasons where there were none: notes in the region's voice at the Knight's Mound, Mossgrave,
+  Pellow's Pale, the Bark Camp, the Poachers' Lee, the Fallen Firewatch (it went over the same night
+  as the Brother), Foxfire Falls (the pickers' rule, and a cap of foxfire to take) and the Sentinels;
+  foes where the story puts them (poachers at the Pale at dusk, weavers in the stripped crowns at
+  night, thornhounds in the firewatch's fallen top).
+
+### Placement (74)
+Moved off roads and onto the Briarwold's own ground: Countwatch (its drum stood in the
+Fernhold-Thornmarch carriageway; now on the tor east of it, pad 14), the Sentinels, the Bark Camp
+(on Skerrow's ground by the region map, with a road through it), the Rafters' Locker and the Burnt
+Lodge (on Hearthvale's and Brightwater's ground).
+Seat fixes in the new work, from the seat audit: the root plate's held stones are one batch with
+it, the Delf's rope runs down to the winding drum, the webbed lodge's egg-sacs lie at the walls'
+feet. The remaining audit rows are the shared builders' (cave throats buried or floating, the tower
+hide's campfire inside the giant oak's box, the sallow rings' willows sharing boxes, the camp
+builder's cart on Wall-Watchers' Fire's skirt) and the build's own (steep skirts, the moved places'
+old pads until the next build); the moved and reworked places were previewed where their defs now
+stand and seat clean.
+
+### Measured
+| | phase 1 (w4096g) | now | target |
+|---|---|---|---|
+| POIs | 86 | 89 | >= 84 |
+| weak (non-wayside) | 7 | 3 | share <= 0.25 |
+| strong (>= 8) | 9 | 12 | >= 6 |
+| land > 200 m from anything | 4% | 4% | <= 9% |
+
+(`region_audit.py briarwold --probe`; the audit's placement table still counts the moved places at
+their built pads until the next build.)
+
+The new places' own cost (probe): the Windthrow 22 draws, 275 k triangles; Tinehold 144, 260 k;
+the Charter Delf 22, 33 k; the reworked places 7-77 draws, 15-400 k (the Antler Chapel's 300-odd
+antlers are capsules: 400 k, under the 600 k limit, over the 250 k aim). Insides (test_sites_briarwold):
+the Windthrow 10 rooms, 20 foes, 42 lights; Tinehold's undercroft 10 rooms, 17 foes; the Delf 10
+rooms, 19 foes; every room reached on the navigation mesh from the way in.
+
+### Seen
+site_review (Compatibility, a flat pad under a low sun; outsides from four sides, near, the mouth,
+above; insides room by room): the root plate reads as a plate of earth and roots standing over a
+dark mouth, the bole lying away behind it (a first try read as a wheel with spokes, then an urchin:
+the roots now wander, droop and fork); Tinehold's tower and antlers stand over its walls and the
+antler poles line the track; the Delf's headframe and wheel, the spoil with its dead oaks, the
+office's lamp; the three insides lit and dressed (earth-brown root caverns with foxfire, the keep's
+vaulted halls, the mine's timbered adits and flooded sump). The reworked places from 13 m round:
+Pellow's Pale's first ring of wall read as a fort and is now a long curving pale with its gate;
+Mossgrave's first graves were bright green discs and are now dark moss mounds; the burnt lodge's
+first soot was a black panel and is now its own courses scorched.
+
+### Tests
+- `region_check.py briarwold --godot --edited <the 15 reworked or moved>`: PASS (18 raised, all seat
+  clean).
+- `./run.sh test --filter=test_sites_briarwold,test_map_quests,objects_seated_briarwold,
+  test_poi_preview,test_pois,test_quest_givers,test_content_db,test_quest_items,test_road_life`:
+  all passed, 0 logged errors; warnings at the baseline (49). test_sites_briarwold walks all four
+  insides (the Skarl Delving's too) and stands the three outsides and the twelve reworked places.
+- `./run.sh quests --only=what_falls,a_gate_is_known,what_the_ledger_owes`: 3 of 3 quests, 9 of 9
+  walks. `tools/quests/softlock_check.py`: 125 quests, 0 findings.
+- `pytest tools/world/tests/test_content_split.py tools/world/tests/test_region_check.py`: 8 passed.
+
+### Not done / for the coordinator
+- On real ground the Briarwold still renders slowly (as phase 1 found): `poi_sheet.py` of the three
+  places made one shot in an hour (the first view from the Windthrow's road side: nothing but the
+  Greatwood's oaks between the road and the plate, 1191 draws, 1.96 M primitives, so the place moved
+  25 m toward the road). A four-shot plan then made the Windthrow from the road (the plate, mossed,
+  standing over its root-ball with the bole running off behind it; 1328 draws, 2.12 M primitives, the
+  canopy's) and from above (the bole and plate in the clearing; 1122 draws, 1.50 M) before a
+  container restart; after the restart Tinehold from above (the pentagon in its clearing
+  on the scarp, the Tine Tower and its pale antlers standing to the canopy's height; 1423 draws, 1.60 M
+  primitives) and the Delf from above (the headframe over its shaft, the grey spoil and dead oaks in
+  their clearing by the Builders' quarry; 1248 draws, 1.46 M). The build's trees still stand over the
+  new pads until the next build clears them. A view of Tinehold from the Wold Water below was not made.
+- Views in the Greatwood run past the 1.5 M-primitive design budget with the canopy alone (1.96 M with
+  no place in view): the place's own share is 235 k.
+- Mine insides still walk only on some seeds when the rooms are written by hand: the Delf walked end
+  to end on 1031 of ten seeds tried (the secret room was the one most often cut off). The shared
+  site plan's reach repair does not catch it for written rooms.
+- `tools_gd/site_review.gd` takes `--radius=` (shared tool, three lines): an outside's views stood
+  as for a place that big, so a wayside find is not a speck at 48 m.
+- No track joins Tinehold's gate (120 m above the Elderhold-Rookhold road, up the scarp) or the
+  Delf (165 m from the Skarl Bridge-Ormhold road) to a road: an atlas track is the coordinator's.
+
+### Brightwater: Holmwatch, the third large site (2026-10-01, later)
+- **Holmwatch** (`castle_ruin`, own builder `holmwatch`, 1292, -772, pad 38): the Lake-Reeves' castle on
+  the east shore's promontory, facing Gull Holm. The site builder's ruined castle (five drum towers,
+  a curtain torn down in places, gatehouse to the east toward the road, keep, yard, a garrison of the
+  Loud's acolytes, hired bravos and Loud Sayers on the towers), and over it the region's own
+  **Reeves' lamp-tower**: an 18.5 m round tower just outside the curtain on the side nearest the holm, a
+  corbelled head with an iron cage and a brass fire-bowl in it, a trumpet left at its door.
+- Inside, **the Reeves' Halls** (`keep`, large): the keep door, the court-hall (barracks), the dues
+  stair and cellar, the acolytes' camp (forge hall), the well stair, the **water-gate** (a vaulted
+  dock on an underground lake, drakes in it), the trumpet gallery, and the Saying-hall where
+  **Magister Ysolde Carrow, the Loud** says into the brass ribs. Notes: the Loud's creed, the last
+  Reeve's dues-roll in the secret room.
+- New foes Loud Acolyte and Loud Sayer; boss Ysolde Carrow (drops her speaking-trumpet).
+- Quest **Louder Than the Toll** from Emmet Quarle at the Listening Post (phase 1's clerk under the
+  horn): every dusk since spring a voice from Holmwatch drowns the Toll's hum in his horn. Also started
+  by the trumpet nailed to the gate. A rumour.
+- Checks: `region_check.py brightwater --godot` PASS (Holmwatch score 10, reach 37 m, 139 draws, 139 k
+  tris, seat clean; 73 POIs, 9 scoring 8+); targeted tests (objects_seated_brightwater, test_poi_preview,
+  test_pois, test_brightwater_places) 34 of 34; quest walker `louder_than_the_toll` PASS (every way);
+  softlock_check 125 quests, 0 findings. The undercroft's seed is 4411: of 4410 to 4416 it was the only
+  one where every room is reached and a way back from the boss is laid (10 rooms, 12 links).
+- Looked at from the shore road and the holm side (the lamp-tower carries over the curtain), at eye
+  height from the gate, and room by room inside (robed acolytes at the keep door, drakes in the dues
+  cellar, the water-gate's pool, the pillared Saying-hall).
+
+
+## What the water kept, second look: Sedgemire's places reworked and three large sites (world life phase 2, 2026-10-01)
+
+Triage 73, 74 and 76 for Sedgemire. Every place in the region was walked again against three
+questions (a reason to come, more than one layer, nothing else like it); the generic ones were given
+a builder of their own in `world/pois/regions/sedgemire.gd`, with something to stop at and look at,
+and three large sites were added, each with a feature you see from far off, an inside, a boss, a quest
+and its people. Everything is Sedgemire's own files, plus two small shared changes (below).
+
+### Three large sites
+- **The Name-Wife's Hollow** (delve, -2918,1500, at the head of a gully in the South Scarp): the marsh-hag
+  the bible promised. The mouth a cleft in the scarp's own rock (the cave kind's crag and bank, no squared
+  face: a faked raised face read as stacked blocks with a brick knoll, and was taken out), a thread of
+  water weeping off the cheek's tallest rock into a pool, a bog-oak beam before the mouth hung with
+  knotted name-cords (the hook), and before it a dead sallow 12 m tall hung so thick with cords that it reads as a grey
+  cloud against the scarp. Inside `core:interior/name_wifes_hollow` (cave, large: the weep, a cord
+  gallery in a fungus grotto, the hounds' den, a daylight shaft, the forgotten at an underground lake),
+  boss **the Name-Wife** (`core:boss/the_name_wife`: cold light, the name said (silence), knotting hands;
+  at half, calls the forgotten up out of the water). Quest *What the Name-Wife Took* (Iffo Nauve, the
+  new watchman at the South Stilts, paid for his daughter's cure with his dead father's name): three
+  endings. Crookstilts, her trading-stilts in the carr, now carries her price-slate and points here.
+- **The Sounding** (tower, -1930,-1340, the North Shore): the Flood-Callers' bell-tower, a black
+  bog-oak frame 15 m to its deck and 24 m to its hood on a drowned Builders' platform of fused black
+  stone in a mere, inside the stumps of its ring-wall; a stair of four flights climbs round its outside
+  to the deck (Callers stand on it), their bell under the hood, cut burial lanterns strung round the
+  eaves, their camp and lantern-heaps at the steps. The door is in a recess at the platform's back:
+  `core:interior/the_sounding_undercroft` (ruined hall, large: the lantern hall, the Callers' sleeping
+  hall, the drowned floor, the rope shaft, the choir on a ledge), boss **Ama Lissa, the Sounder**
+  (Tuo Lissa's sister; at half she hauls the bell-rope and the well's water comes over with the drowned
+  in it). Quest *The Sounding* from Tuo Lissa at Heron Watch (his dialogue gains the lines): three endings.
+- **The Saltgate** (fort, -3482,440, the headland at the Outfall's mouth): the Tallymen's sluice-fort,
+  its gates broken from below at the spring tide and its garrison drowned at their posts and still on
+  the walls (the fort's site garrison: bog-drowned on the walls and gate, wisps on the towers). Its yard
+  is the new `"yard": "abandoned"` (no fire, no table, no hens), standing water and wrack in it; out
+  past the gate on the channel's bank the great sluice, two weathered ashlar piers with a walkway and
+  windlass-house and the sea-gates hanging open between. The keep leads to `core:interior/saltgate_culverts`
+  (keep, large: guardroom, salt stores, the culvert stair, the sluice race on a chasm bridge, the flooded
+  hall, the windlass chamber), boss **Old Mudmouth** (`core:boss/old_mudmouth`, a sallowjaw 2.3 times
+  the size, whose young come up the race at half). Quest *The Saltgate* from Hal Ruddock, the sluice-hand
+  who got out, now at the Tide Hearth across the water: shut the gates (the Guild), leave them open (the
+  eels), or keep the key.
+
+### Places reworked (33, each a builder of its own in `world/pois/regions/sedgemire.gd`)
+Before, the region's towers were one stilt-tower three times over (Heron Watch, Crookstilts, the South
+Stilts: the same 15 pieces), its ruins one hall (Mor'oul, Saoul, the Eel Stews, the Old Crannog, the
+Drowned Road: 21 pieces each), its wrecks one hull, its camps one camp. Now:
+- **The drowned and the sunk:** *the Sunken Tower* drowned to its third course in black water, the face of
+  the Thirteenth colossus cut in its fourth (a touch), the children's diving plank and slate; *Mor'oul*, roof
+  ridges and stilt-tops breaking black water with the village's own lanterns still lit under it; *Saoul*,
+  twelve stilts in a pool each with its lantern lit, and a thirteenth under the water; *the Drowned Road*,
+  fused slabs running down under the sea to a milestone in the shallows; *the Drowned Arch*, one arch at
+  Mormere's edge you can walk through the wrong way; *the Old Crannog*, a wattle round-house on a stone
+  islet with its fire laid and a causeway with three loose stones (Aue Sa's spots kept).
+- **The stilts:** *Heron Watch* (the bittern's bell-cote, Tuo's knotted rope to the stair's foot), *the
+  South Stilts* (braced, a 20-step stair, the knot-rail, the beacon, the grey-tagged withies up the scarp),
+  *Crookstilts* (every stilt leaning its own way, the names under the deck, the saying-stone, her price),
+  *the Fog Bell* (a bell-frame and the ringer's empty hut, the rope you can pull).
+- **The working places:** *the Eel Stews* (six walled stews, the high one empty and wet outside, drag-marks),
+  *the Cockle Beds* (every stake moved a row seaward, the old holes behind), *the Salt Pans* (pans wet and
+  crusted, footprints from the sea), *the Greyreed Decoy* (three netted pipes, the torn one), *the Indigo
+  Beds* (the pale trough), *the Withy Beds* (stools in rows, the pack's trodden lair), *the Eel Hurdles*
+  (the raft and three vees of hurdles), *the Peat Hags* (the stepped cutting, the turf stacks, the
+  finds-board; Deo and Lia Oul's spots kept), *the Traders' Post* (bare tent-frames, the one tent, the
+  chart on its pole, kept off the street through it).
+- **Ships:** *the Reed Wreck* upright in the reeds with mast, yard and deckhouse; *the Grey Gull* hard over,
+  her gull figurehead with Senne Oul's face; *the Drowned Trader* sunk to her rails, water on her deck.
+- **Ways and stones:** *the Lantern Causeway*, *the Boardwalk Gate*, *the Long Jetty* (one boardwalk helper:
+  the ropes are the poles' own, which was the audit's six floating ropes a place); *the Knuckle Cairn*,
+  *the Round Stones*, *the Tideflat Stones* (the quay's facing stones, the survey-cairn; still nothing to fight, its crabs on the strand), *Oskel Ford*'s abandoned ore-cart; *the Tide Hearth* (Hal
+  Ruddock's shelter and knot-line facing the Saltgate).
+- **Small ruins by the ways:** *the Drowned Byre*, *the Settled House*, *the Broken Stilts*.
+- 19 touches (something to read or do: say a name at Crookstilts, ring the Fog Bell, sing the second voice
+  flat at the Round Stones, walk through the Drowned Arch the wrong way ...), `dialogues/touches_sedgemire.json`.
+
+### Measured
+- `tools/world/region_check.py sedgemire --godot --edited <the 31 reworked>`: PASS (content, placement,
+  density). Every new and reworked place seat clean on its pad; the three large sites score 11 to 12.
+- Audit (`docs/review/world_life/audit_sedgemire.md`, measured on the installed world of 2026-09-30):
+  60 POIs (57 before), weak 2 and 9 wayside (8 before), strong 11 (8), land further than 200 m from
+  anything 6% (7%), largest empty stretch 0.00 km2 (0.07: the North Shore gap is where the Sounding
+  stands), placement problems 18 at 15 POIs (23 at 17).
+- `run.sh quests --only=` the three new quests and the ten Sedgemire quests whose places changed: 13 of 13,
+  37 of 37 walks. `test_sites_sedgemire` walks the four Sedgemire interiors (the Unsung Vault and the
+  three new) from door to boss to way out. The GDScript census is at its baseline (49).
+- Looked at: every reworked place from its approach (sheets of 4 to 18 at a time), the three large
+  sites near and from 160 m, the interiors in the site review. The Name-Wife's Hollow was redone after
+  the coordinator's look at it (a faked raised face read as squared blocks, a knoll in brick texture
+  with a rock floating on it): now the cave kind's own crag and bank in a gully head.
+
+### Shared files touched (minimally)
+- `game/world/sites/site_exterior.gd`: `site.yard = "abandoned"` (no fire, table set or hens in a fort's
+  yard); documented in docs/WORLD_LIFE_INTERIORS.md.
+- `game/content/packs/core/tables/poi_hooks.json` regenerated; `game/tests/unit/test_poi_encounters.gd`: Sedgemire's rows of its
+  table only (the new places, and what now stands at the reworked ones).
+
+### Not done / for the coordinator
+- Sedgemire's backcountry has no roads or paths; the three large sites are reached across the marsh
+  (the Saltgate from the Tide Hearth, the Sounding along the North Shore, the Hollow up its gully from
+  the cove). A footpath to each is the road pass's.
+- Audit findings that depend on the world build (the installed world predates these pads): the Old
+  Crannog's door 1.3 m over the ground there (clean on its pad), the steep skirts at the Grey Gull, the
+  Old Crannog and the South Stilts, and the roads through the Traders' Post, the Eel Hurdles, the Drowned
+  Bell Shrine and the Stair of Isse (the last two not mine). The atlas puts the Name-Wife's Hollow in
+  province ash_heath (Cinderlea's); the region map and region_check say Sedgemire.
+- Not reworked: the Sallow King's willows overlapping (18), the two cinderlea bells sunk at the Drowned
+  Bell Shrine and the Lantern Hummock, the Lead-Carriers' Rest crates; the Indigo Beds' trough still
+  reads as a long pipe from far off; Mor'oul's water is paler than the other black water.
+- `test_poi_encounters` and `test_books` fail on main for Brightwater's new places and people (the Crown
+  Drift, the Struck Barrow, the beached barge, Ness Market's traders); untouched here.
+
 
 ## Cinderlea's second pass: every ruin from its own sentence, three large places to go into, the Choir solid (world life phase 2, 2026-10-01)
 
