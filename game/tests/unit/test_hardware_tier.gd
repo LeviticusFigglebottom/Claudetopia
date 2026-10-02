@@ -64,6 +64,12 @@ func test_discrete_cards_keep_high() -> void:
 		assert_eq(_preset(a), "high", str(a["name"]))
 	assert_eq(_preset(_a(DISCRETE, "NVIDIA GeForce RTX 4070", "NVIDIA", 4.0)), "high",
 			"a card's own memory is its own: the RAM floor is for iGPUs")
+	var small := _a(DISCRETE, "NVIDIA GeForce GT 1030", "NVIDIA")
+	small["vram_mb"] = 2000
+	assert_eq(_preset(small), "medium", "a card with under 2 GB of its own, where it can be read")
+	var big := _a(DISCRETE, "AMD Radeon RX 9070 XT", "AMD")
+	big["vram_mb"] = 16304
+	assert_eq(_preset(big), "high")
 
 
 func test_software_low_and_an_unknown_adapter_medium() -> void:

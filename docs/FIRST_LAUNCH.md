@@ -137,11 +137,12 @@ and the Naming until the game began. What a weak machine is given now:
   - integrated graphics, or an adapter it does not recognise, gets **Medium**;
   - a software rasterizer, old Intel HD/UHD, AMD Vega or the 610M, or an iGPU with under 8 GB of
     RAM gets **Low**;
-  - a graphics card of its own keeps **High**.
+  - a graphics card of its own keeps **High**, unless Forward+ reads under 2 GB of video memory
+    on it (Medium).
 
   A driver that calls an AMD APU "discrete" is not believed when the name says APU, and on the
-  Compatibility renderer, which calls every adapter "other", the name decides. Godot 4.7 cannot
-  tell a card's video memory, so that is not used. The startup trace says what was decided:
+  Compatibility renderer, which calls every adapter "other", the name decides. A card's video
+  memory is read only on Forward+ (Graphics.video_memory_gb). The startup trace says what was decided:
   `graphics: first launch, <adapter> (...): Medium -- integrated graphics`. Every later launch
   reads `graphics: preset X, the player's`. Settings, Graphics, "Detect recommended" asks again.
   Tools, tests and the benchmark never get a first-launch verdict.

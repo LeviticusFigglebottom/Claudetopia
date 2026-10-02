@@ -11,9 +11,9 @@ extends RefCounted
 ## changes, and every knob stays the player's.
 ##
 ## What is read: the adapter's type (integrated, discrete, virtual, CPU) first, then its name and
-## vendor as a hint, and the machine's RAM. Godot 4.7 has no call for a card's total video memory
-## (the startup trace says so too), so it is never part of the verdict; an iGPU's memory is the
-## machine's own, which is why the RAM is. The Compatibility renderer reports every adapter's type
+## vendor as a hint, the machine's RAM, and the card's own video memory where the renderer can say
+## (Forward+'s RenderingDevice; Graphics.video_memory_gb). An iGPU's memory is the machine's own,
+## which is why the RAM is read for one. The Compatibility renderer reports every adapter's type
 ## as "other", and some drivers call an AMD APU "discrete", so then the name decides (`kind_of`).
 ##
 ## Integrated graphics gets Medium (Iris Xe, Arc graphics, Radeon 660M-890M, Apple M-series,
@@ -27,10 +27,15 @@ extends RefCounted
 ##     (two RDNA 2 compute units, a third of a 660M);
 ##   - an integrated adapter in a machine with under 8 GB of RAM, which the iGPU shares: the
 ##     world's texture arrays and streamed cells alone want about 2 GB of it.
+## A card of its own with under 2 GB of video memory, where that can be read (a GT 710 or 1030 class
+## card), gets Medium: the ground's arrays, the shadow atlas and the streamed cells do not fit it at
+## High.
 
 const TYPE_NAMES := ["other", "integrated", "discrete", "virtual", "cpu"]
 ## RAM (GB) under which an integrated adapter is given Low.
 const IGPU_RAM_FLOOR_GB := 8.0
+## Video memory (MB) under which a card of its own is given Medium, when it can be read.
+const CARD_VRAM_FLOOR_MB := 2048
 
 ## What `adapter()` returns instead of the machine's, for a test.
 static var fake_adapter: Dictionary = {}
@@ -50,8 +55,8 @@ static func adapter() -> Dictionary:
 		"vendor": RenderingServer.get_video_adapter_vendor(),
 		"renderer": RenderingServer.get_current_rendering_method(),
 		"ram_gb": float(mem.get("physical", 0)) / 1073741824.0,
-		# no Godot call gives a card's total; kept in the record so a later engine's can go here
-		"vram_mb": -1,
+		# Forward+ only (RenderingDevice); -1 where it cannot be read
+		"vram_mb": roundi(Graphics.video_memory_gb() * 1024.0) if Graphics.video_memory_gb() > 0.0 else -1,
 	}
 
 
@@ -102,8 +107,12 @@ static func recommend(a: Dictionary) -> Dictionary:
 		"virtual":
 			why = "a virtual graphics adapter"
 		"discrete":
-			preset = Graphics.DEFAULT_PRESET
-			why = "a graphics card of its own"
+			var vram := int(a.get("vram_mb", -1))
+			if vram > 0 and vram < CARD_VRAM_FLOOR_MB:
+				why = "a graphics card with %d MB of video memory" % vram
+			else:
+				preset = Graphics.DEFAULT_PRESET
+				why = "a graphics card of its own"
 		_:
 			why = "the graphics adapter was not recognised; Medium is the safe middle"
 	return {"preset": preset, "kind": kind, "why": why}
@@ -114,7 +123,7 @@ static func describe(a: Dictionary, verdict: Dictionary) -> String:
 	var vram := int(a.get("vram_mb", -1))
 	return "%s (%s, %s; %s; RAM %.1f GB; VRAM %s): %s -- %s" % [str(a.get("name", "?")), str(a.get("vendor", "?")),
 			str(verdict.get("kind", "?")), str(a.get("renderer", "?")), float(a.get("ram_gb", 0.0)),
-			("%d MB" % vram) if vram > 0 else "not known to Godot",
+			("%d MB" % vram) if vram > 0 else "not read on this renderer",
 			str(Graphics.PRESET_LABELS.get(str(verdict.get("preset", "")), verdict.get("preset", ""))), str(verdict.get("why", ""))]
 
 

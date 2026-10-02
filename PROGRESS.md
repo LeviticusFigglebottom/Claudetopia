@@ -16231,8 +16231,9 @@ launch whose settings.cfg has no `graphics` section.
 - A card of its own keeps High.
 
 The adapter's type is read first and its name second. A driver that calls an APU "discrete" is
-not believed when the name is an APU's, and Compatibility's "other" is read by name. Godot 4.7
-cannot read a card's VRAM. The result is saved at once, so the player's choice stands, and the
+not believed when the name is an APU's, and Compatibility's "other" is read by name. A card's
+VRAM is read on Forward+ (RenderingDevice.get_device_total_memory, as terrain-fidelity found), and a
+card with under 2 GB gets Medium. The result is saved at once, so the player's choice stands, and the
 startup trace has a line `graphics: first launch, <adapter> ...`. Settings, Graphics has "Detect
 recommended". Tests use fake Radeon 660M/740M/780M (integrated, other, "discrete"), Iris Xe,
 Arc and Arc 140V, UHD 620, RX 9070 XT, RTX 4060, Arc A770/B580, llvmpipe, WARP and unknown
