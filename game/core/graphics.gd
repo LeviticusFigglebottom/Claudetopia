@@ -81,6 +81,9 @@ const SAFETY_DEFAULTS := {"full_terrain": true}
 ## What this machine's hardware decides unless the player chooses: the ground's texture set (-1 is
 ## "by the GPU", `ground_texture_quality`). No preset touches it: it costs memory, not frame time.
 const MACHINE_DEFAULTS := {"ground_textures": -1}
+## A prototype, off: Hearthvale's ground cover drawn by Terrain3D's instancer (world/grass_instancer.gd),
+## 2 with twice the cover. No preset touches it; the benchmark picks it.
+const PROTOTYPE_DEFAULTS := {"grass_instancer": 0}
 
 ## The graphics section as a new settings file has it: High, plus the display, look and safety keys.
 ## Spelled out rather than merged because `Settings.DEFAULTS` is a constant and names this one;
@@ -98,6 +101,7 @@ const DEFAULTS := {
 	"color_grade": true, "vignette": true, "film_grain": false,
 	"full_terrain": true,
 	"ground_textures": -1,
+	"grass_instancer": 0,
 }
 
 ## View distance (Near, Far, Epic): the player camera's far plane, which the settlements are drawn
@@ -172,6 +176,8 @@ const CONTROLS := [
 	{"key": "shadow_filter", "label": "Shadow softness", "kind": "option", "choices": ["Hard", "Very low", "Low", "Medium", "High", "Ultra"]},
 	{"key": "scatter_density", "label": "Ground cover", "kind": "slider", "min": 0.25, "max": 1.0, "step": 0.05, "suffix": "%",
 		"note": "grass, flowers and bushes; never the trees"},
+	{"key": "grass_instancer", "label": "Ground cover by the terrain (trial)", "kind": "option",
+		"choices": ["Off", "On", "On, twice the cover"], "note": "Hearthvale's grass drawn by Terrain3D's instancer, being measured. Applied when a world next loads"},
 	{"key": "view_range", "label": "Scatter view distance", "kind": "slider", "min": 0.6, "max": 1.5, "step": 0.05, "suffix": "%"},
 	{"key": "lod_bias", "label": "Detail distance (LOD)", "kind": "slider", "min": 0.5, "max": 2.0, "step": 0.05, "suffix": "%",
 		"note": "how far away things keep their full shape"},

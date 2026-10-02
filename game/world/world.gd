@@ -133,6 +133,8 @@ func _ready() -> void:
 		_stand_down()
 		return
 	_start_reading_terrain()
+	# the prototype (world/grass_instancer.gd): decided before the first cell streams in
+	GrassInstancer.active = not vista and str(status.get("terrain", "")) == "terrain3d" and GrassInstancer.mode() > 0
 	if stand_up_in_steps:
 		# the places' builders (seven thousand lines) are compiled on a loader thread while the
 		# ground is read, not in the frame the first place is raised (half a second there)
@@ -256,6 +258,7 @@ func tear_down() -> void:
 		provider.bind_terrain(null)
 	if instance == self:
 		share_clipmap(null)
+		GrassInstancer.active = false
 
 
 func _exit_tree() -> void:
@@ -497,6 +500,30 @@ func _setup_terrain3d() -> void:
 	_trace("terrain: %d regions in; building the texture arrays" % regions)
 	_build_texture_arrays(mat)
 	_note("terrain_textures")
+	if GrassInstancer.active:
+		await _setup_grass_instancer()
+
+
+## The prototype's ground cover (world/grass_instancer.gd): the region's rows read on a worker
+## thread, then handed to Terrain3D's instancer.
+func _setup_grass_instancer() -> void:
+	var t0 := Time.get_ticks_msec()
+	var read := {"rows": {}}
+	var task := WorkerThreadPool.add_task(func() -> void: read["rows"] = GrassInstancer.read_rows(), true,
+			"wm_grass_instancer")
+	while is_inside_tree() and not WorkerThreadPool.is_task_completed(task):
+		await _frame()
+	WorkerThreadPool.wait_for_task_completion(task)
+	if not is_inside_tree() or terrain_node == null:
+		return
+	var read_ms := Time.get_ticks_msec() - t0
+	var g: Dictionary = Settings.data.get("graphics", {})
+	GrassInstancer.populate(terrain_node, read["rows"], float(g.get("view_range", 1.0)),
+			float(g.get("scatter_density", 1.0)), GrassInstancer.mode() == 2)
+	GrassInstancer.last["read_ms"] = read_ms
+	GrassInstancer.last["total_ms"] = Time.get_ticks_msec() - t0
+	Log.info("World", "grass instancer: %s" % str(GrassInstancer.last))
+	_note("grass_instancer")
 
 
 ## Begins reading the terrain's texture list and its region files on worker threads, so that by the

@@ -228,6 +228,9 @@ func _read(key: String) -> Variant:
 		"ground_textures":
 			# the texture list the next world reads (World._start_reading_terrain)
 			return World.assets_resource()
+		"grass_instancer":
+			# what the next world's terrain is asked to do (World._ready, GrassInstancer)
+			return GrassInstancer.mode()
 	return null
 
 
@@ -254,9 +257,10 @@ func test_defaults_are_high_and_the_display_keys() -> void:
 	expected.merge(Graphics.LOOK_DEFAULTS)
 	expected.merge(Graphics.SAFETY_DEFAULTS)
 	expected.merge(Graphics.MACHINE_DEFAULTS)
+	expected.merge(Graphics.PROTOTYPE_DEFAULTS)
 	expected["preset"] = "high"
 	assert_eq(Graphics.DEFAULTS, expected, "Graphics.DEFAULTS is High plus the display, look and safety keys")
-	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys() + Graphics.MACHINE_DEFAULTS.keys():
+	for key in Graphics.LOOK_DEFAULTS.keys() + Graphics.SAFETY_DEFAULTS.keys() + Graphics.MACHINE_DEFAULTS.keys() + Graphics.PROTOTYPE_DEFAULTS.keys():
 		assert_false((Graphics.PRESETS["painted"] as Dictionary).has(key), "no preset touches %s" % key)
 	assert_eq(Settings.DEFAULTS["graphics"], Graphics.DEFAULTS, "and Settings.DEFAULTS names it")
 
@@ -508,3 +512,15 @@ func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
 	Settings.data["graphics"]["ground_textures"] = 0
 	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE, "Standard reads the Standard list")
 	Settings.data["graphics"]["ground_textures"] = was
+	assert_eq(int(Graphics.DEFAULTS["grass_instancer"]), 0, "the instancer trial is off unless chosen")
+	GrassInstancer.active = false
+	assert_false(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/flora/x/x.glb"),
+			"off, the streamer keeps every row")
+	GrassInstancer.active = true
+	assert_true(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/flora/hearthvale_grass_clump_a/hearthvale_grass_clump_a.glb"),
+			"on, the region's grass is the instancer's")
+	assert_false(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/trees/hearthvale_oak_a/hearthvale_oak_a.glb"),
+			"and never a tree")
+	assert_false(GrassInstancer.takes("core:region/skerrow", "res://assets/models/flora/skerrow_grass_clump_a/skerrow_grass_clump_a.glb"),
+			"nor another region's grass")
+	GrassInstancer.active = false
