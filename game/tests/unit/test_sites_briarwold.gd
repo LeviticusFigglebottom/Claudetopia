@@ -8,7 +8,11 @@ extends TestCase
 
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
 const TestSites := preload("res://tests/unit/test_sites.gd")
-const INSIDE := ["core:interior/skarl_delving"]
+## Each inside and the boss that waits at its bottom.
+const INSIDE := {"core:interior/skarl_delving": "core:boss/reel_mother",
+		"core:interior/the_windthrow": "core:boss/old_root",
+		"core:interior/tinehold_undercroft": "core:boss/unvowed_marshal",
+		"core:interior/charter_delf": "core:boss/brake_dam"}
 var player: Node3D
 
 
@@ -28,7 +32,7 @@ func after_each() -> void:
 	player.free()
 
 
-func test_the_skarl_delving_is_built_walkable_and_left() -> void:
+func test_the_insides_are_built_walkable_and_left() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	for id in INSIDE:
 		assert_true(ContentDB.has(id), "%s is content" % id)
@@ -63,9 +67,9 @@ func test_the_skarl_delving_is_built_walkable_and_left() -> void:
 		assert_true(site.find_child("BossArena", true, false) != null, "%s: the boss has an arena" % id)
 		var boss_there := false
 		for e in site.dress.spawner.living:
-			if (e as Enemy).enemy_id == "core:boss/reel_mother":
+			if (e as Enemy).enemy_id == str(INSIDE[id]):
 				boss_there = true
-		assert_true(boss_there, "%s: the Reel-Mother waits in it" % id)
+		assert_true(boss_there, "%s: %s waits in it" % [id, INSIDE[id]])
 		var way_out := site.find_child("WayOut", true, false) as Door
 		assert_true(way_out != null, "%s: a way out" % id)
 		if way_out != null:
@@ -128,6 +132,108 @@ func test_the_horn_pale_is_walled_with_a_gate_and_a_garrison_on_the_step() -> vo
 	assert_true(hook != null and hook.dialogue_id == "core:dialogue/horn_pale_board", "the price board at the gate")
 	d.queue_free()
 	await tree.process_frame
+
+
+## The Windthrow (phase 2): the root plate stands, a door in its foot, the verderer's mark by the pit,
+## the bole lies on the ground and can be walked from the leaning limb to the hoard by the plate.
+func test_the_windthrow_stands_with_its_door_its_mark_and_a_way_up_the_bole() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/the_windthrow")
+	var entry := {"place_id": "core:poi/the_windthrow", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 30.0, "radius_level_m": 30.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	await tree.physics_frame
+	assert_true(d.finished, "the windthrow is built")
+	for part in ["RootPlate", "Roots", "Bole", "CrownLimbs", "Throat", "RootBall"]:
+		assert_true(d.find_child(part, true, false) != null, "the windthrow has its %s" % part)
+	var door := d.find_child("Door_the_windthrow", true, false) as Door
+	assert_true(door != null, "a door in the plate's foot, under the roots")
+	var hook := d.find_child("Hook", true, false) as PoiTouch
+	assert_true(hook != null and hook.dialogue_id == "core:dialogue/windthrow_mark", "the verderer's mark by the pit")
+	var hoard := d.find_child("Container_hoard", true, false) as WorldContainer
+	assert_true(hoard != null, "a hoard up on the bole")
+	if hoard != null:
+		# up on the bole, high over the ground, and something solid under it
+		assert_gt(hoard.position.y, 6.0, "the hoard is up on the bole, %.1f m" % hoard.position.y)
+		var space := d.get_world_3d().direct_space_state
+		var at := d.to_global(hoard.position) + Vector3.UP * 1.5
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(at, at + Vector3.DOWN * 4.0, 1))
+		assert_false(hit.is_empty(), "the bole is solid under the hoard")
+	d.queue_free()
+	await tree.process_frame
+
+
+## Tinehold (phase 2): the castle ruin with its garrison and the keep's door into its undercroft,
+## the Tine Tower and its antlers standing over it, the challenge at the gate.
+func test_tinehold_stands_with_its_tower_its_keep_and_its_garrison() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/tinehold")
+	var entry := {"place_id": "core:poi/tinehold", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 32.0, "radius_level_m": 32.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	await tree.physics_frame
+	assert_true(d.finished, "Tinehold is built")
+	for part in ["TineTower", "TheTines", "AntlerPoles", "Walls", "Keep"]:
+		assert_true(d.find_child(part, true, false) != null, "Tinehold has its %s" % part)
+	var tower := d.find_child("TineTower", true, false) as MeshInstance3D
+	if tower != null and tower.mesh != null:
+		assert_gt(tower.mesh.get_aabb().end.y, 24.0, "the Tine Tower stands over the oaks")
+	var keep_door := d.find_child("Door_tinehold_undercroft", true, false) as Door
+	assert_true(keep_door != null, "the keep's door leads down into the undercroft")
+	var garrison := d.find_child("Garrison", true, false) as EnemySpawner
+	assert_true(garrison != null and garrison.living.size() >= 5, "a garrison of %d" % (garrison.living.size() if garrison else 0))
+	var hook := d.find_child("Hook", true, false) as PoiTouch
+	assert_true(hook != null and hook.dialogue_id == "core:dialogue/tinehold_challenge", "the challenge on the gate")
+	d.queue_free()
+	await tree.process_frame
+
+
+## The Charter Delf (phase 2): the headframe over the shaft with its wheel, the cage that is the
+## way down, the winding house, the spoil, the clerk's office and the Company's notices.
+func test_the_charter_delf_stands_with_its_headframe_its_cage_and_its_notices() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var def := ContentDB.get_def("core:poi/charter_delf")
+	var entry := {"place_id": "core:poi/charter_delf", "pos": [0.0, 0.0, 0.0], "radius_flat_m": 26.0, "radius_level_m": 26.0}
+	var d := PoiDressing.raise(entry, def)
+	tree.root.add_child(d)
+	await tree.process_frame
+	await tree.physics_frame
+	assert_true(d.finished, "the Delf is built")
+	for part in ["Headframe", "Cage", "WindingHouse", "Spoil", "DeadOaks", "Office"]:
+		assert_true(d.find_child(part, true, false) != null, "the Delf has its %s" % part)
+	var frame := d.find_child("Headframe", true, false) as MeshInstance3D
+	if frame != null and frame.mesh != null:
+		assert_gt(frame.mesh.get_aabb().end.y, 18.0, "the headframe's wheel stands over the oaks")
+	assert_true(d.find_child("Door_charter_delf", true, false) != null, "the cage is the way down")
+	var hook := d.find_child("Hook", true, false) as PoiTouch
+	assert_true(hook != null and hook.dialogue_id == "core:dialogue/charter_delf_notice", "the Company's notices by the shaft")
+	d.queue_free()
+	await tree.process_frame
+
+
+## The places worked again in phase 2 are built by the Briarwold's own builders, not their kinds':
+## each stands up the thing its sentence is about.
+func test_the_reworked_places_build_what_they_are_about() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var want := {"knights_mound": ["Mound", "Helm", "HelmTines"], "tine_barrow": ["Mound1", "Forecourt", "Carving"],
+			"mossgrave": ["MossGraves", "NameStaves", "SeedBed"], "antler_chapel": ["Courses", "HungTines", "Altar"],
+			"pellows_pale": ["Pale", "Gate", "Lodge", "Container_parkers_box"], "bark_camp": ["StrippedOaks", "Racks", "Container_pay_box"],
+			"poachers_lee": ["HideFrames", "Hides", "Gallows", "BowRack"], "burnt_lodge": ["Char"], "webbed_lodge": ["Silk"],
+			"antler_smiths_house": ["HalfHelm"], "wennas_house": ["GraveLid"], "masons_lodge": ["DressedBlock", "MasonsMarks"]}
+	for slug in want:
+		var id := "core:poi/" + str(slug)
+		var def := ContentDB.get_def(id)
+		var entry := {"place_id": id, "pos": [0.0, 0.0, 0.0], "radius_flat_m": 24.0, "radius_level_m": 24.0}
+		var d := PoiDressing.raise(entry, def)
+		tree.root.add_child(d)
+		await tree.process_frame
+		assert_true(d.finished, "%s is built" % slug)
+		for part in want[slug]:
+			assert_true(d.find_child(str(part), true, false) != null, "%s has its %s" % [slug, part])
+		d.queue_free()
+		await tree.process_frame
 
 
 func _walk(site: SiteInterior) -> Dictionary:

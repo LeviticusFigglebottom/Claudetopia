@@ -2644,3 +2644,64 @@ static func _container(d: PoiDressing, key: String, at: Vector3, yaw: float, tab
 	box.rotation.y = yaw
 	d.add_child(box)
 	k.collider(Vector3(1.0, 0.8, 0.7), Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0.0, 0.4, 0.0)), "wood")
+
+
+# --- Holmwatch ---------------------------------------------------------------------------------------
+
+## The Lake-Reeves' castle as the site builder raises a ruined castle (its curtain, drum towers, gate,
+## keep and garrison), and over it on the lake side the Reeves' lamp-tower: a tall round tower outside
+## the curtain's corner nearest Gull Holm, its head an iron cage round a brass fire-bowl where the
+## reeve's light burned before the Lamp at Gullhithe, and at its foot a door to the castle side; the
+## tallest thing on the east shore, seen from Merrowhithe and the holm.
+static func holmwatch(d: PoiDressing) -> void:
+	await _sites().build(d)
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var radius := float(site.get("radius", 20.0))
+	var holm := (Vector2(1100.0, -980.0) - Vector2(k.origin.x, k.origin.z)).normalized()
+	var to_water := k.water_direction(80.0)
+	var dir := (holm + to_water).normalized() if to_water != Vector2.ZERO else holm
+	var at := dir * (radius * 1.06 + 5.8)
+	var g := _ground_low(k, at, 0.0, Vector2(6.4, 6.4)) - 0.2
+	var r := 3.1
+	var h := 18.5
+	var stone := m.begin()
+	var door_yaw := PoiKit.yaw_of(-dir)
+	m.drum(stone, Transform3D(Basis.IDENTITY, Vector3(at.x, g, at.y)), r, h, 0.06, door_yaw, true, 0.6)
+	# a corbelled course under its head, and the head itself a little wider
+	m.drum(stone, Transform3D(Basis.IDENTITY, Vector3(at.x, g + h * 0.94 - 0.4, at.y)), r + 0.35, 0.6, 0.0, NAN, false, 0.6)
+	await k.step()
+	m.commit(stone, _sites().stone_look(k, g), "LampTower", true)
+	# the cage at its head: eight iron bars flaring from a ring, two hoops, the brass bowl in it
+	var iron := m.begin()
+	var top := Vector3(at.x, g + h * 0.94 + 0.2, at.y)
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		var foot := top + Vector3(sin(a), 0.0, cos(a)) * 1.1
+		var head := top + Vector3(sin(a), 0.0, cos(a)) * 1.5 + Vector3(0.0, 2.2, 0.0)
+		m.limb(iron, foot, head, 0.05)
+	for hoop in [0.9, 2.1]:
+		for i in 12:
+			var a0 := TAU * float(i) / 12.0
+			var a1 := TAU * float(i + 1) / 12.0
+			var rr: float = 1.1 + 0.4 * float(hoop) / 2.2
+			m.limb(iron, top + Vector3(sin(a0) * rr, hoop, cos(a0) * rr), top + Vector3(sin(a1) * rr, hoop, cos(a1) * rr), 0.035)
+	await k.step()
+	m.commit(iron, PoiKit.plain(Color(0.16, 0.15, 0.14), 0.6, 0.6), "LampCage", true)
+	var bowl := m.begin()
+	m.ellipsoid(bowl, top + Vector3(0.0, 0.55, 0.0), Vector3(0.85, 0.4, 0.85))
+	m.commit(bowl, PoiKit.plain(BRASS, 0.4, 0.6), "ReevesBowl", true)
+	if k.far:
+		return
+	# the walkway round its head, inside the corbel: where the Loud stand to Say at dusk
+	k.collider(Vector3(r * 1.6, 0.3, r * 1.6), Transform3D(Basis.IDENTITY, top - Vector3(0.0, 0.25, 0.0)), "stone")
+	k.marker("the_lamp_head", top + Vector3(0.0, 0.1, 0.0))
+	# a trumpet's stand and a brass trumpet left leaning at the tower's door, facing the water
+	var door := at - dir * (r + 0.9)
+	var dg := k.on_ground(door.x, door.y)
+	var brass := m.begin()
+	m.limb(brass, dg + Vector3(0.0, 0.05, 0.0), dg + Vector3(dir.x * 0.4, 1.3, dir.y * 0.4), 0.05)
+	m.limb(brass, dg + Vector3(dir.x * 0.4, 1.3, dir.y * 0.4), dg + Vector3(dir.x * 0.75, 1.55, dir.y * 0.75), 0.16)
+	m.commit(brass, PoiKit.plain(BRASS, 0.35, 0.6), "TowerTrumpet")
+	k.marker("the_lamp_tower_door", dg)

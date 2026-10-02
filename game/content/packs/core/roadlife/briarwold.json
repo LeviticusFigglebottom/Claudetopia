@@ -3,65 +3,296 @@
     "id": "core:roadtable/briarwold",
     "region": "core:region/briarwold",
     "notes": "The Briarwold's forest roads (docs/WORLD_LIFE_ROADS.md), owned by the Briarwold region agent. Custom, not law: poachers and silk-thieves in the trees, weavers dropping at night, thornhounds, Woodfolk hunters walking out to do what custom allows, a Hart-Knight looking at what you carry, oil-carriers going up to the Moot, mourners with a moss, a child lost in the bracken, a runaway poacher with hunters behind him. Caravans: the pack-trader between the Hollow and Hazelwick, Tamwick's cider cart to the Hollow, an oil-train from Fernhold to the Moot's stones, and a wagon between Elderhold and Rookhold.",
-    "budget": {"max_active": 3, "gap_s": 60, "every_m": [280, 540]},
+    "budget": {
+      "max_active": 3,
+      "gap_s": 60,
+      "every_m": [
+        280,
+        540
+      ]
+    },
     "rows": [
-      {"event": "core:roadevent/briarwold_poachers", "weight": 3, "sites": ["woods", "bend", "pass"], "cooldown_h": 8},
-      {"event": "core:roadevent/briarwold_silk_thieves_on_a_carter", "weight": 2, "tier": [1, 99], "cooldown_h": 12},
-      {"event": "core:roadevent/briarwold_thornhounds", "weight": 2, "biome": ["woods", "open", "upland"], "cooldown_h": 6},
-      {"event": "core:roadevent/briarwold_weavers_drop", "weight": 2, "when": "night", "biome": ["woods"], "cooldown_h": 6},
-      {"event": "core:roadevent/briarwold_woodfolk_hunters", "weight": 2, "when": "day", "cooldown_h": 5},
-      {"event": "core:roadevent/briarwold_hart_knight", "weight": 1, "when": "day", "cooldown_h": 10},
-      {"event": "core:roadevent/briarwold_oil_carriers", "weight": 2, "when": "day", "cooldown_h": 8},
-      {"event": "core:roadevent/briarwold_moss_bearers", "weight": 1, "when": "dusk", "cooldown_h": 16},
-      {"event": "core:roadevent/briarwold_lost_child", "weight": 1, "when": "day", "cooldown_h": 14},
-      {"event": "core:roadevent/briarwold_runaway_poacher", "weight": 1, "cooldown_h": 16},
-      {"event": "core:roadevent/briarwold_charcoal_pedlar", "weight": 1, "when": "day", "cooldown_h": 30},
-      {"event": "core:roadevent/wardens_patrol", "weight": 1, "cooldown_h": 8},
-      {"event": "core:roadevent/broken_cart", "weight": 1, "when": "day", "cooldown_h": 10},
-      {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36}
+      {
+        "event": "core:roadevent/briarwold_poachers",
+        "weight": 3,
+        "sites": [
+          "woods",
+          "bend",
+          "pass"
+        ],
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/briarwold_silk_thieves_on_a_carter",
+        "weight": 2,
+        "tier": [
+          1,
+          99
+        ],
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/briarwold_thornhounds",
+        "weight": 2,
+        "biome": [
+          "woods",
+          "open",
+          "upland"
+        ],
+        "cooldown_h": 6
+      },
+      {
+        "event": "core:roadevent/briarwold_weavers_drop",
+        "weight": 2,
+        "when": "night",
+        "biome": [
+          "woods"
+        ],
+        "cooldown_h": 6
+      },
+      {
+        "event": "core:roadevent/briarwold_woodfolk_hunters",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 5
+      },
+      {
+        "event": "core:roadevent/briarwold_hart_knight",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/briarwold_oil_carriers",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/briarwold_moss_bearers",
+        "weight": 1,
+        "when": "dusk",
+        "cooldown_h": 16
+      },
+      {
+        "event": "core:roadevent/briarwold_lost_child",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 14
+      },
+      {
+        "event": "core:roadevent/briarwold_runaway_poacher",
+        "weight": 1,
+        "cooldown_h": 16
+      },
+      {
+        "event": "core:roadevent/briarwold_charcoal_pedlar",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 30
+      },
+      {
+        "event": "core:roadevent/wardens_patrol",
+        "weight": 1,
+        "cooldown_h": 8
+      },
+      {
+        "event": "core:roadevent/broken_cart",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/wanderer_merchant",
+        "weight": 1,
+        "cooldown_h": 36
+      },
+      {
+        "event": "core:roadevent/briarwold_unvowed_huntsmen",
+        "weight": 2,
+        "biome": [
+          "woods",
+          "open"
+        ],
+        "tier": [
+          2,
+          99
+        ],
+        "cooldown_h": 10
+      },
+      {
+        "event": "core:roadevent/briarwold_penhallows_courier",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 24
+      },
+      {
+        "event": "core:roadevent/briarwold_burners_to_the_brother",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 18
+      }
     ],
     "caravans": [
-      {"event": "core:roadevent/pack_train", "route": ["core:place/grandfather_hollow", "core:place/hazelwick"], "speed": 1.25, "start": 0.2},
-      {"event": "core:roadevent/briarwold_cider_cart", "route": ["core:place/tamwick", "core:place/grandfather_hollow"], "speed": 1.2, "start": 0.55},
-      {"event": "core:roadevent/briarwold_oil_train", "route": ["core:place/fernhold", "core:place/standing_moot"], "speed": 1.2, "start": 0.4},
-      {"event": "core:roadevent/carters_wagon", "route": ["core:place/elderhold", "core:place/rookhold"], "speed": 1.25, "start": 0.7}
+      {
+        "event": "core:roadevent/pack_train",
+        "route": [
+          "core:place/grandfather_hollow",
+          "core:place/hazelwick"
+        ],
+        "speed": 1.25,
+        "start": 0.2
+      },
+      {
+        "event": "core:roadevent/briarwold_cider_cart",
+        "route": [
+          "core:place/tamwick",
+          "core:place/grandfather_hollow"
+        ],
+        "speed": 1.2,
+        "start": 0.55
+      },
+      {
+        "event": "core:roadevent/briarwold_oil_train",
+        "route": [
+          "core:place/fernhold",
+          "core:place/standing_moot"
+        ],
+        "speed": 1.2,
+        "start": 0.4
+      },
+      {
+        "event": "core:roadevent/carters_wagon",
+        "route": [
+          "core:place/elderhold",
+          "core:place/rookhold"
+        ],
+        "speed": 1.25,
+        "start": 0.7
+      }
     ],
     "sites": [
-      {"at": {"place": "core:poi/skarl_bridge", "offset": [0, 0]}, "kind": "bridge", "tell": "felled_tree"},
-      {"at": {"place": "core:poi/foxgill_arch", "offset": [0, 0]}, "kind": "bridge", "tell": "crows"},
-      {"at": {"place": "core:poi/drunk_stones", "offset": [0, 0]}, "kind": "bend", "tell": "felled_tree"},
-      {"at": {"place": "core:poi/knights_challenge", "offset": [0, 0]}, "kind": "pass", "tell": "crows"}
+      {
+        "at": {
+          "place": "core:poi/skarl_bridge",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        "kind": "bridge",
+        "tell": "felled_tree"
+      },
+      {
+        "at": {
+          "place": "core:poi/foxgill_arch",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        "kind": "bridge",
+        "tell": "crows"
+      },
+      {
+        "at": {
+          "place": "core:poi/drunk_stones",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        "kind": "bend",
+        "tell": "felled_tree"
+      },
+      {
+        "at": {
+          "place": "core:poi/knights_challenge",
+          "offset": [
+            0,
+            0
+          ]
+        },
+        "kind": "pass",
+        "tell": "crows"
+      }
     ]
   },
   {
     "id": "core:roadevent/briarwold_poachers",
     "name": "Poachers in the trees",
     "kind": "ambush",
-    "tell": ["felled_tree", "crows", "injured_traveller"],
-    "cast": [
-      {"role": "bandit", "enemy": "core:enemy/poacher", "count": [2, 3]},
-      {"role": "bait", "folk": {"name": "A man with an arrow in his leg", "tags": ["person"]}, "pose": "Cower", "only_tell": "injured_traveller",
-       "talk": {"prompt": "Help the wounded man", "do": "spring"}}
+    "tell": [
+      "felled_tree",
+      "crows",
+      "injured_traveller"
     ],
-    "lines": {"speaker": "A poacher", "spring": "Wrong road, friend. Custom says the Wold won't come looking."}
+    "cast": [
+      {
+        "role": "bandit",
+        "enemy": "core:enemy/poacher",
+        "count": [
+          2,
+          3
+        ]
+      },
+      {
+        "role": "bait",
+        "folk": {
+          "name": "A man with an arrow in his leg",
+          "tags": [
+            "person"
+          ]
+        },
+        "pose": "Cower",
+        "only_tell": "injured_traveller",
+        "talk": {
+          "prompt": "Help the wounded man",
+          "do": "spring"
+        }
+      }
+    ],
+    "lines": {
+      "speaker": "A poacher",
+      "spring": "Wrong road, friend. Custom says the Wold won't come looking."
+    }
   },
   {
     "id": "core:roadevent/briarwold_silk_thieves_on_a_carter",
     "name": "Silk-thieves on a carter",
     "kind": "ambush",
     "prey": "caravan",
-    "tell": ["crows"],
-    "cast": [
-      {"role": "bandit", "enemy": "core:enemy/poacher", "count": [2, 3]}
+    "tell": [
+      "crows"
     ],
-    "lines": {"speaker": "A silk-thief", "spring": "The load, and the silk under the load. We know it's there."}
+    "cast": [
+      {
+        "role": "bandit",
+        "enemy": "core:enemy/poacher",
+        "count": [
+          2,
+          3
+        ]
+      }
+    ],
+    "lines": {
+      "speaker": "A silk-thief",
+      "spring": "The load, and the silk under the load. We know it's there."
+    }
   },
   {
     "id": "core:roadevent/briarwold_thornhounds",
     "name": "Thornhounds hunting",
     "kind": "beasts",
     "cast": [
-      {"role": "beast", "enemy": "core:enemy/thornhound", "count": [2, 3]}
+      {
+        "role": "beast",
+        "enemy": "core:enemy/thornhound",
+        "count": [
+          2,
+          3
+        ]
+      }
     ]
   },
   {
@@ -70,7 +301,14 @@
     "kind": "beasts",
     "notes": "The Woodfolk cross under the canopy after dark without once looking up. This is why.",
     "cast": [
-      {"role": "beast", "enemy": "core:enemy/weaver", "count": [1, 2]}
+      {
+        "role": "beast",
+        "enemy": "core:enemy/weaver",
+        "count": [
+          1,
+          2
+        ]
+      }
     ]
   },
   {
@@ -79,14 +317,32 @@
     "kind": "patrol",
     "speed": 1.4,
     "cast": [
-      {"role": "hunter", "enemy": "core:enemy/woodfolk_hunter", "count": [2, 3],
-       "talk": {"prompt": "Talk to the hunter", "do": "say",
-                "say": "*She looks at what you are carrying before she looks at you.* — Go on. — The poachers take the harts at the Hartswell at first light, since you're walking that way. Nobody says so. I'm not saying so.",
-                "hook": {"rumour": "The Woodfolk hunter did not say that the poachers wait at {place}.", "reveals": "core:poi/hartswell", "once": true}}}
+      {
+        "role": "hunter",
+        "enemy": "core:enemy/woodfolk_hunter",
+        "count": [
+          2,
+          3
+        ],
+        "talk": {
+          "prompt": "Talk to the hunter",
+          "do": "say",
+          "say": "*She looks at what you are carrying before she looks at you.* — Go on. — The poachers take the harts at the Hartswell at first light, since you're walking that way. Nobody says so. I'm not saying so.",
+          "hook": {
+            "rumour": "The Woodfolk hunter did not say that the poachers wait at {place}.",
+            "reveals": "core:poi/hartswell",
+            "once": true
+          }
+        }
+      }
     ],
-    "consequence": {"faction": "core:faction/woodfolk", "reputation": -12, "killing": -25,
-                    "notice": "The Woodfolk say nothing. They will remember your face for a long time.",
-                    "killing_notice": "A Woodfolk hunter is dead on the road. Custom has nothing to say about it. The Hollow will."}
+    "consequence": {
+      "faction": "core:faction/woodfolk",
+      "reputation": -12,
+      "killing": -25,
+      "notice": "The Woodfolk say nothing. They will remember your face for a long time.",
+      "killing_notice": "A Woodfolk hunter is dead on the road. Custom has nothing to say about it. The Hollow will."
+    }
   },
   {
     "id": "core:roadevent/briarwold_hart_knight",
@@ -94,14 +350,27 @@
     "kind": "wanderer",
     "speed": 1.0,
     "cast": [
-      {"role": "knight", "enemy": "core:enemy/hart_knight_wayfarer",
-       "talk": {"prompt": "Speak to the knight", "do": "say",
-                "say": "*He lowers his head, antlers and all, to look at what you carry.* — No heads. Good. — If you pass the Tine Barrow below Moot Tor, go by day. The first knights walk after midnight, and they do not know you.",
-                "hook": {"reveals": "core:poi/tine_barrow", "once": true}}}
+      {
+        "role": "knight",
+        "enemy": "core:enemy/hart_knight_wayfarer",
+        "talk": {
+          "prompt": "Speak to the knight",
+          "do": "say",
+          "say": "*He lowers his head, antlers and all, to look at what you carry.* — No heads. Good. — If you pass the Tine Barrow below Moot Tor, go by day. The first knights walk after midnight, and they do not know you.",
+          "hook": {
+            "reveals": "core:poi/tine_barrow",
+            "once": true
+          }
+        }
+      }
     ],
-    "consequence": {"faction": "core:faction/woodfolk", "reputation": -10, "killing": -20,
-                    "notice": "You struck a Hart-Knight on the Wold's road. The Woodfolk saw.",
-                    "killing_notice": "A Hart-Knight lies dead on the road, antlers in the bracken."}
+    "consequence": {
+      "faction": "core:faction/woodfolk",
+      "reputation": -10,
+      "killing": -20,
+      "notice": "You struck a Hart-Knight on the Wold's road. The Woodfolk saw.",
+      "killing_notice": "A Hart-Knight lies dead on the road, antlers in the bracken."
+    }
   },
   {
     "id": "core:roadevent/briarwold_oil_carriers",
@@ -109,10 +378,30 @@
     "kind": "pilgrims",
     "speed": 0.95,
     "cast": [
-      {"role": "carrier", "folk": {"name": "An oil-carrier", "tags": ["person", "pilgrim"]}, "count": [2, 3],
-       "talk": {"prompt": "Talk to the oil-carrier", "do": "say",
-                "say": "Oil for the Moot's stones. Every week, from Fernhold, a jar each, and back empty. Oiling is tending, and tending keeps the note. — The stones hum when you stand in the middle. Don't stand in the middle.",
-                "hook": {"rumour": "The oil-carriers go up past {place} every week.", "reveals": "nearest:standing_stones", "once": true}}}
+      {
+        "role": "carrier",
+        "folk": {
+          "name": "An oil-carrier",
+          "tags": [
+            "person",
+            "pilgrim"
+          ]
+        },
+        "count": [
+          2,
+          3
+        ],
+        "talk": {
+          "prompt": "Talk to the oil-carrier",
+          "do": "say",
+          "say": "Oil for the Moot's stones. Every week, from Fernhold, a jar each, and back empty. Oiling is tending, and tending keeps the note. — The stones hum when you stand in the middle. Don't stand in the middle.",
+          "hook": {
+            "rumour": "The oil-carriers go up past {place} every week.",
+            "reveals": "nearest:standing_stones",
+            "once": true
+          }
+        }
+      }
     ]
   },
   {
@@ -121,10 +410,28 @@
     "kind": "pilgrims",
     "speed": 0.8,
     "cast": [
-      {"role": "mourner", "folk": {"name": "A mourner", "tags": ["person"]}, "count": [2, 4],
-       "talk": {"prompt": "Speak to the mourners", "do": "say",
-                "say": "*They carry a flat of moss between them on a hurdle, green and wet, and do not stop walking.* — Star-moss, hair-moss, feather-moss. For my father. We start it at the Moss Bed and carry it to him. — You may walk with us. You needn't say anything. Nobody does.",
-                "hook": {"reveals": "core:poi/moss_bed", "once": true}}}
+      {
+        "role": "mourner",
+        "folk": {
+          "name": "A mourner",
+          "tags": [
+            "person"
+          ]
+        },
+        "count": [
+          2,
+          4
+        ],
+        "talk": {
+          "prompt": "Speak to the mourners",
+          "do": "say",
+          "say": "*They carry a flat of moss between them on a hurdle, green and wet, and do not stop walking.* — Star-moss, hair-moss, feather-moss. For my father. We start it at the Moss Bed and carry it to him. — You may walk with us. You needn't say anything. Nobody does.",
+          "hook": {
+            "reveals": "core:poi/moss_bed",
+            "once": true
+          }
+        }
+      }
     ]
   },
   {
@@ -132,11 +439,34 @@
     "name": "A child lost in the bracken",
     "kind": "lost_traveller",
     "cast": [
-      {"role": "child", "folk": {"name": "A woodfolk child", "tags": ["person", "child"], "appearance": {"age": 10}}, "pose": "Sit_Idle",
-       "talk": {"prompt": "Ask the child what's wrong", "do": "escort",
-                "say": "I was following a hart. It went into the bracken and so did I and now the bracken's everywhere. — Do you know the way to {place}? I'm not crying. It's the bracken.",
-                "thanks": "That's our smoke! — Thank you. Here, I found it in the bracken; it's lucky. Don't tell Mum I went after the hart.",
-                "hook": {"item": "core:item/shed_antler", "count": 1, "reputation": {"faction": "core:faction/woodfolk", "delta": 4}}}}
+      {
+        "role": "child",
+        "folk": {
+          "name": "A woodfolk child",
+          "tags": [
+            "person",
+            "child"
+          ],
+          "appearance": {
+            "age": 10
+          }
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Ask the child what's wrong",
+          "do": "escort",
+          "say": "I was following a hart. It went into the bracken and so did I and now the bracken's everywhere. — Do you know the way to {place}? I'm not crying. It's the bracken.",
+          "thanks": "That's our smoke! — Thank you. Here, I found it in the bracken; it's lucky. Don't tell Mum I went after the hart.",
+          "hook": {
+            "item": "core:item/shed_antler",
+            "count": 1,
+            "reputation": {
+              "faction": "core:faction/woodfolk",
+              "delta": 4
+            }
+          }
+        }
+      }
     ]
   },
   {
@@ -145,18 +475,51 @@
     "kind": "fugitive",
     "speed": 1.4,
     "cast": [
-      {"role": "fugitive", "folk": {"name": "A poacher running", "tags": ["person"]},
-       "talk": {"prompt": "Let the poacher past", "do": "help",
-                "say": "They'll not hurt me, they never do, they just follow, for days, saying nothing. — Here. Take it. There's a pale in the Greatwood that pays for heads. Go and see what it pays. Go and see what they sell them for.",
-                "hook": {"marks": 10, "rumour": "The runaway poacher said the heads go to {place}.", "reveals": "core:poi/horn_pale", "once": true}}},
-      {"role": "hunter", "enemy": "core:enemy/woodfolk_hunter", "count": 2,
-       "talk": {"prompt": "Point the hunters after the poacher", "do": "turn_in",
-                "say": "*She nods once and goes on after him, and does not thank you, and the other one does.*",
-                "hook": {"marks": 15, "reputation": {"faction": "core:faction/woodfolk", "delta": 5}}}}
+      {
+        "role": "fugitive",
+        "folk": {
+          "name": "A poacher running",
+          "tags": [
+            "person"
+          ]
+        },
+        "talk": {
+          "prompt": "Let the poacher past",
+          "do": "help",
+          "say": "They'll not hurt me, they never do, they just follow, for days, saying nothing. — Here. Take it. There's a pale in the Greatwood that pays for heads. Go and see what it pays. Go and see what they sell them for.",
+          "hook": {
+            "marks": 10,
+            "rumour": "The runaway poacher said the heads go to {place}.",
+            "reveals": "core:poi/horn_pale",
+            "once": true
+          }
+        }
+      },
+      {
+        "role": "hunter",
+        "enemy": "core:enemy/woodfolk_hunter",
+        "count": 2,
+        "talk": {
+          "prompt": "Point the hunters after the poacher",
+          "do": "turn_in",
+          "say": "*She nods once and goes on after him, and does not thank you, and the other one does.*",
+          "hook": {
+            "marks": 15,
+            "reputation": {
+              "faction": "core:faction/woodfolk",
+              "delta": 5
+            }
+          }
+        }
+      }
     ],
-    "consequence": {"faction": "core:faction/woodfolk", "reputation": -12, "killing": -25,
-                    "notice": "You struck a Woodfolk hunter. They say nothing, and they will not forget.",
-                    "killing_notice": "A Woodfolk hunter lies dead on the road."}
+    "consequence": {
+      "faction": "core:faction/woodfolk",
+      "reputation": -12,
+      "killing": -25,
+      "notice": "You struck a Woodfolk hunter. They say nothing, and they will not forget.",
+      "killing_notice": "A Woodfolk hunter lies dead on the road."
+    }
   },
   {
     "id": "core:roadevent/briarwold_charcoal_pedlar",
@@ -164,10 +527,32 @@
     "kind": "wanderer",
     "speed": 1.05,
     "cast": [
-      {"role": "wanderer", "folk": {"name": "A charcoal-burner with a pack", "tags": ["person"], "appearance": {"age": 58}},
-       "talk": {"prompt": "See what the burner has", "do": "trade", "say": "Charcoal, fallen wood only, by the verderers' leave. And tinder, and a bit of news, which burns quicker."}}
+      {
+        "role": "wanderer",
+        "folk": {
+          "name": "A charcoal-burner with a pack",
+          "tags": [
+            "person"
+          ],
+          "appearance": {
+            "age": 58
+          }
+        },
+        "talk": {
+          "prompt": "See what the burner has",
+          "do": "trade",
+          "say": "Charcoal, fallen wood only, by the verderers' leave. And tinder, and a bit of news, which burns quicker."
+        }
+      }
     ],
-    "merchant": {"stock": "core:table/stock_charcoal_burner", "marks": 120, "buys": ["material", "misc"]}
+    "merchant": {
+      "stock": "core:table/stock_charcoal_burner",
+      "marks": 120,
+      "buys": [
+        "material",
+        "misc"
+      ]
+    }
   },
   {
     "id": "core:roadevent/briarwold_cider_cart",
@@ -176,13 +561,53 @@
     "notes": "The Hollow buys Tamwick's cider and will not take it without a gift going back, which is custom: the Bread Stone on the Wold road is where the gift is left. The cart comes up the Wold road and slows at the Drunk Stones' bend.",
     "speed": 1.2,
     "cast": [
-      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Trade with the cider-carter", "do": "trade", "say": "Tamwick's best, for the Hollow. The Hollow sends bread back down, and I eat it on the way, and nobody minds. What'll you have?"}},
-      {"role": "guard", "enemy": "core:enemy/caravan_guard", "talk": {"prompt": "Talk to the guard", "do": "say", "say": "Mind the bend at the Drunk Stones. Carts slow there. So do the ones who wait for carts."}}
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Trade with the cider-carter",
+          "do": "trade",
+          "say": "Tamwick's best, for the Hollow. The Hollow sends bread back down, and I eat it on the way, and nobody minds. What'll you have?"
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/caravan_guard",
+        "talk": {
+          "prompt": "Talk to the guard",
+          "do": "say",
+          "say": "Mind the bend at the Drunk Stones. Carts slow there. So do the ones who wait for carts."
+        }
+      }
     ],
-    "train": {"kind": "wagon", "goods": "core:loot/common_chest"},
-    "merchant": {"stock": "core:table/stock_carters_load", "marks": 200, "buys": ["consumable", "ingredient", "misc"]},
-    "consequence": {"faction": "core:faction/tallymen", "reputation": -8, "killing": -15, "notice": "Tamwick will hear its cider cart was set on.", "killing_notice": "A Tamwick carter's man is dead on the Wold road."},
-    "rescue": {"say": "They'd have had the barrels and the horse. Here, a jug for your trouble, and a fair price from me any day.", "marks": 20, "reputation": {"faction": "core:faction/tallymen", "delta": 4}}
+    "train": {
+      "kind": "wagon",
+      "goods": "core:loot/common_chest"
+    },
+    "merchant": {
+      "stock": "core:table/stock_carters_load",
+      "marks": 200,
+      "buys": [
+        "consumable",
+        "ingredient",
+        "misc"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/tallymen",
+      "reputation": -8,
+      "killing": -15,
+      "notice": "Tamwick will hear its cider cart was set on.",
+      "killing_notice": "A Tamwick carter's man is dead on the Wold road."
+    },
+    "rescue": {
+      "say": "They'd have had the barrels and the horse. Here, a jug for your trouble, and a fair price from me any day.",
+      "marks": 20,
+      "reputation": {
+        "faction": "core:faction/tallymen",
+        "delta": 4
+      }
+    }
   },
   {
     "id": "core:roadevent/briarwold_oil_train",
@@ -191,12 +616,130 @@
     "notes": "The Standing Moot's stones are oiled by hand every week, and the oil comes up from Fernhold on a packhorse, jars in straw.",
     "speed": 1.15,
     "cast": [
-      {"role": "trader", "enemy": "core:enemy/road_trader", "talk": {"prompt": "Talk to the oil-carrier", "do": "trade", "say": "Oil for the stones, mostly. What's over I'll sell. Candles, rope, a jar for your lamp. Tending's work, and work wants paying."}},
-      {"role": "guard", "enemy": "core:enemy/woodfolk_hunter", "talk": {"prompt": "Talk to the hunter", "do": "say", "say": "*She walks beside the horse and says nothing, and then, because you are still there:* The stones don't need guarding. The oil does."}}
+      {
+        "role": "trader",
+        "enemy": "core:enemy/road_trader",
+        "talk": {
+          "prompt": "Talk to the oil-carrier",
+          "do": "trade",
+          "say": "Oil for the stones, mostly. What's over I'll sell. Candles, rope, a jar for your lamp. Tending's work, and work wants paying."
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/woodfolk_hunter",
+        "talk": {
+          "prompt": "Talk to the hunter",
+          "do": "say",
+          "say": "*She walks beside the horse and says nothing, and then, because you are still there:* The stones don't need guarding. The oil does."
+        }
+      }
     ],
-    "train": {"kind": "packhorse", "goods": "core:loot/pockets_merchant"},
-    "merchant": {"stock": "core:table/stock_hollow_trader", "marks": 160, "buys": ["consumable", "ingredient", "material", "misc"]},
-    "consequence": {"faction": "core:faction/woodfolk", "reputation": -10, "killing": -20, "notice": "You set on the Moot's oil. The Woodfolk will not forget it.", "killing_notice": "The Moot's oil-carrier lies dead on the road, and the stones will go dry this week."},
-    "rescue": {"say": "The jars are whole. The stones will be oiled. — That's all that matters, and it's a great deal. Take this.", "marks": 15, "reputation": {"faction": "core:faction/woodfolk", "delta": 5}}
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/pockets_merchant"
+    },
+    "merchant": {
+      "stock": "core:table/stock_hollow_trader",
+      "marks": 160,
+      "buys": [
+        "consumable",
+        "ingredient",
+        "material",
+        "misc"
+      ]
+    },
+    "consequence": {
+      "faction": "core:faction/woodfolk",
+      "reputation": -10,
+      "killing": -20,
+      "notice": "You set on the Moot's oil. The Woodfolk will not forget it.",
+      "killing_notice": "The Moot's oil-carrier lies dead on the road, and the stones will go dry this week."
+    },
+    "rescue": {
+      "say": "The jars are whole. The stones will be oiled. — That's all that matters, and it's a great deal. Take this.",
+      "marks": 15,
+      "reputation": {
+        "faction": "core:faction/woodfolk",
+        "delta": 5
+      }
+    }
+  },
+  {
+    "id": "core:roadevent/briarwold_unvowed_huntsmen",
+    "name": "Unvowed huntsmen with a hart",
+    "kind": "patrol",
+    "speed": 1.2,
+    "cast": [
+      {
+        "role": "huntsman",
+        "enemy": "core:enemy/unvowed_huntsman",
+        "count": [
+          2,
+          3
+        ],
+        "hostile": true
+      }
+    ],
+    "lines": {
+      "speaker": "An Unvowed huntsman",
+      "spring": "Tinehold's road! The Marshal's meat! Off it!"
+    }
+  },
+  {
+    "id": "core:roadevent/briarwold_penhallows_courier",
+    "name": "The Charter Company's courier",
+    "kind": "wanderer",
+    "speed": 1.1,
+    "cast": [
+      {
+        "role": "courier",
+        "folk": {
+          "name": "A Company courier",
+          "tags": [
+            "tallymen"
+          ]
+        },
+        "talk": {
+          "prompt": "Speak to the courier",
+          "do": "say",
+          "say": "Quarter-day pay for a clerk at a mine nobody works. Every quarter. The Company's forgotten it owns the Delf and nobody's told the paymaster. — Up by the Builders' quarry. You'll see the wheel over the trees. He'll weigh your hand before he shakes it.",
+          "hook": {
+            "reveals": "core:poi/charter_delf",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_burners_to_the_brother",
+    "name": "Burners going up to the Windthrow",
+    "kind": "pilgrims",
+    "speed": 1.0,
+    "cast": [
+      {
+        "role": "burner",
+        "folk": {
+          "name": "A charcoal-burner",
+          "tags": [
+            "woodfolk"
+          ]
+        },
+        "count": [
+          2,
+          2
+        ],
+        "talk": {
+          "prompt": "Speak to the burner",
+          "do": "say",
+          "say": "Up to the Windthrow with bread for Jory Rooke. He's sat at the pit a month with his uncle's mark and his own axe. — The Brother's ours by the verderer's mark. Nobody'll cut it. You'll see the plate from the Hollow road, stood up over the oaks like a door.",
+          "hook": {
+            "reveals": "core:poi/the_windthrow",
+            "once": true
+          }
+        }
+      }
+    ]
   }
 ]

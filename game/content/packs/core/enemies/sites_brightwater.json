@@ -238,5 +238,83 @@
       "humanoid",
       "person"
     ]
+  },
+  {
+    "id": "core:enemy/loud_acolyte",
+    "extends": "core:enemy/cutpurse",
+    "name": "Loud Acolyte",
+    "faction": "bandits",
+    "tint": "#7a5a2e",
+    "region": "core:region/brightwater",
+    "lore": "A Spire novice who followed the Loud out of the Circle when it put them out: a staff instead of a knife, a mouth that will not stop, and the Loud's conviction that the world is going quiet because people like you keep your voices down. They shout at you while they hit you. It is part of the practice.",
+    "appearance": {
+      "seed": 4521,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "shoes",
+        "back": "hood",
+        "belt": "belt"
+      },
+      "palette": {
+        "primary": "8a6a36",
+        "secondary": "4a3d2c",
+        "leather": "3f3325",
+        "metal": "a8924e"
+      },
+      "skin": "fair",
+      "hair_colour": "auburn",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.74
+    },
+    "marks": [
+      6,
+      20
+    ],
+    "tags": [
+      "humanoid",
+      "person",
+      "caster"
+    ]
+  },
+  {
+    "id": "core:enemy/loud_sayer",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Loud Sayer",
+    "faction": "bandits",
+    "tint": "#8a5f22",
+    "region": "core:region/brightwater",
+    "lore": "A Sayer put out of the Spire for Saying too loud: the Circle teaches that a word said loudly enough makes the world more so, and then teaches that nobody should, and the Loud did. Their Saying cracks frost off the air and rings in the teeth, and every one of them is a little deaf.",
+    "appearance": {
+      "seed": 4533,
+      "culture": "vale",
+      "parts": {
+        "torso": "robe",
+        "feet": "shoes",
+        "back": "hooded_cloak",
+        "belt": "belt"
+      },
+      "palette": {
+        "primary": "9a7038",
+        "secondary": "3e3326",
+        "leather": "3f3325",
+        "metal": "c0a050"
+      },
+      "skin": "wheat",
+      "hair_colour": "grey",
+      "build": 0.65,
+      "feminine": 1.0,
+      "height": 1.72
+    },
+    "marks": [
+      12,
+      34
+    ],
+    "tags": [
+      "humanoid",
+      "person",
+      "caster"
+    ]
   }
 ]
