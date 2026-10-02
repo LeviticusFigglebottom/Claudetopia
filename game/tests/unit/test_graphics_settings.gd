@@ -235,6 +235,8 @@ func _read(key: String) -> Variant:
 		"title_live":
 			# live or filmed: a title showing the live country gives it up for the film when it goes off
 			return TitleVista.live_switched_on()
+		"occlusion":
+			return vp.use_occlusion_culling
 		"distant_ground":
 			# Terrain3D's dual scaling on the ground's material, live
 			return _terrain.material.get("dual_scaling") if _terrain != null and _terrain.material != null else null

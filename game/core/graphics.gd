@@ -29,7 +29,7 @@ const DEFAULT_PRESET := "high"
 ## Low is what a machine that is struggling should be offered first.
 const PRESETS := {
 	"low": {
-		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1, "distant_ground": false,
+		"render_scale": 0.75, "upscaler": 1, "msaa": 0, "fxaa": true, "taa": false, "anisotropic": 1, "distant_ground": false, "occlusion": false,
 		"shadows": true, "shadow_atlas": 2048, "shadow_cascades": 2, "shadow_distance": 0.6,
 		"shadow_filter": 1, "scatter_density": 0.5, "view_range": 0.75, "lod_bias": 0.6,
 		"fog": true, "volumetric_fog": false, "ssao": false, "ao_quality": 0, "ssil": false,
@@ -38,7 +38,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": false,
 	},
 	"medium": {
-		"render_scale": 0.77, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true,
+		"render_scale": 0.77, "upscaler": 1, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 2, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 0.8,
 		"shadow_filter": 2, "scatter_density": 0.75, "view_range": 0.9, "lod_bias": 0.8,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 1, "ssil": false,
@@ -47,7 +47,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": false,
 	},
 	"high": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 		"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
 		"fog": true, "volumetric_fog": false, "ssao": true, "ao_quality": 2, "ssil": false,
@@ -56,7 +56,7 @@ const PRESETS := {
 		"title_vista": true, "title_live": true,
 	},
 	"painted": {
-		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4, "distant_ground": true,
+		"render_scale": 1.0, "upscaler": 0, "msaa": 2, "fxaa": false, "taa": true, "anisotropic": 4, "distant_ground": true, "occlusion": false,
 		"shadows": true, "shadow_atlas": 8192, "shadow_cascades": 4, "shadow_distance": 1.5,
 		"shadow_filter": 4, "scatter_density": 1.0, "view_range": 1.25, "lod_bias": 1.5,
 		"fog": true, "volumetric_fog": true, "ssao": true, "ao_quality": 3, "ssil": true,
@@ -84,7 +84,7 @@ const SAFETY_DEFAULTS := {"full_terrain": true}
 ## `test_graphics_settings` pins it to High, the display keys and the look keys.
 const DEFAULTS := {
 	"preset": "high",
-	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true,
+	"render_scale": 1.0, "upscaler": 0, "msaa": 1, "fxaa": false, "taa": false, "anisotropic": 3, "distant_ground": true, "occlusion": false,
 	"vsync": true, "fps_cap": 0,
 	"shadows": true, "shadow_atlas": 4096, "shadow_cascades": 4, "shadow_distance": 1.0,
 	"shadow_filter": 2, "scatter_density": 1.0, "view_range": 1.0, "lod_bias": 1.0,
@@ -157,6 +157,8 @@ const CONTROLS := [
 	{"key": "anisotropic", "label": "Texture filtering", "kind": "option", "choices": ["Plain", "2×", "4×", "8×", "16×"]},
 	{"key": "distant_ground", "label": "Distant ground detail", "kind": "check",
 		"note": "far off, the grass is tiled larger so a far hillside does not show its pattern repeating"},
+	{"key": "occlusion", "label": "Hide what hills hide", "kind": "check",
+		"note": "occlusion culling: what stands behind a hill is not drawn, for some of the CPU's time; off in every preset"},
 	{"key": "vsync", "label": "Wait for the frame (vsync)", "kind": "check"},
 	{"key": "fps_cap", "label": "Frame rate cap", "kind": "option", "choices": ["None", "30", "60", "90", "120", "144"],
 		"values": [0, 30, 60, 90, 120, 144]},
@@ -312,6 +314,8 @@ static func apply(g: Dictionary, tree: SceneTree) -> void:
 		return
 	var r := renderer()
 	apply_viewport(tree.root, g, r)
+	# occlusion culling (TerrainOccluder): the world's own view only; a portrait has nothing to hide
+	tree.root.use_occlusion_culling = bool(g.get("occlusion", false))
 	# The rendering server's own state is only touched when it changes: a slider dragged
 	# across the render scale would otherwise reallocate the shadow atlas at every step.
 	var atlas := int(g.get("shadow_atlas", 4096))

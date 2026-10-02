@@ -176,3 +176,26 @@ func test_fsr_on_medium_and_bilinear_a_little_larger_on_compatibility() -> void:
 	vp.free()
 
 
+func test_the_lands_occluder_stays_under_the_ground_it_stands_for() -> void:
+	# a valley between two ridges, 8 m texels: no vertex may stand above any ground within half a
+	# step of it, so the sheet never hides what stands on the ground
+	var grid := 33
+	var heights := PackedFloat32Array()
+	heights.resize(grid * grid)
+	for z in grid:
+		for x in grid:
+			heights[z * grid + x] = 40.0 * absf(sin(float(x) * 0.3)) + float(z) * 0.5
+	var arrays := TerrainOccluder.build_arrays(heights, grid, 8.0, Vector2(-128.0, -128.0), 8, 2.0)
+	var verts: PackedVector3Array = arrays[0]
+	var idx: PackedInt32Array = arrays[1]
+	assert_eq(verts.size(), 25, "a vertex every 8 texels, 5 by 5")
+	assert_eq(idx.size(), 4 * 4 * 6, "two triangles a square")
+	for v in verts:
+		var gx := roundi((v.x + 128.0) / 8.0)
+		var gz := roundi((v.z + 128.0) / 8.0)
+		for z in range(maxi(gz - 4, 0), mini(gz + 4, grid - 1) + 1):
+			for x in range(maxi(gx - 4, 0), mini(gx + 4, grid - 1) + 1):
+				assert_true(v.y <= heights[z * grid + x] - 2.0 + 0.001, "under the ground near it")
+	assert_false(bool(Graphics.PRESETS["painted"]["occlusion"]), "off in every preset, Painted too")
+
+
