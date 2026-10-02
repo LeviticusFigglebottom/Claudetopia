@@ -97,7 +97,8 @@ eye height, the first from the nearest road's side, and one from above):
 ```
 GODOT=$HOME/godot/Godot_v4.7.2-stable_linux.x86_64 ~/bin/heavy python3 tools/world/poi_sheet.py drovers_hall
     -> captures/poi_sheet/drovers_hall.jpg (each tile labelled with its draw calls and primitives)
-       --time 20.5 for dusk; several ids at once; --built for the built world's own, for a before/after;
+       --time 20.5 for dusk; --weather clear to pin the weather (else each region rolls its own);
+       several ids at once; --built for the built world's own, for a before/after;
        --plan-only writes captures/poi_sheet/<name>/plan.json for ./run.sh shots
 ```
 
