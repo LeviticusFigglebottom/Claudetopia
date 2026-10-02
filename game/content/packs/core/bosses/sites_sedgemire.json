@@ -7,7 +7,88 @@
     "arena": "core:poi/name_wifes_hollow",
     "region": "core:region/sedgemire",
     "tint": "#5d6a5c",
-    "scale": 1.15,
+    "scale": 1.42,
+    "height": 2.5,
+    "radius": 0.4,
+    "appearance": {
+      "seed": 5577,
+      "culture": "reedfolk",
+      "skin": "amber",
+      "hair_colour": "white",
+      "build": 0.15,
+      "feminine": 1.0,
+      "height": 1.74,
+      "age": 0.95,
+      "parts": {
+        "torso": "kirtle",
+        "legs": "long_skirt",
+        "back": "shawl",
+        "headgear": "cord_veil",
+        "attachment": "cord_mantle",
+        "belt": "cord_beads",
+        "feet": "shoes",
+        "hair": "long_loose"
+      },
+      "palette": {
+        "primary": "2b3442",
+        "secondary": "4c5a50",
+        "leather": "2e2a24",
+        "metal": "5f6259",
+        "trim": "a39a6a"
+      },
+      "tattoos": [
+        {
+          "design": "water_lines",
+          "on": "hand_l",
+          "ink": "indigo",
+          "fade": 0.6
+        },
+        {
+          "design": "water_lines",
+          "on": "hand_r",
+          "ink": "indigo",
+          "fade": 0.6
+        }
+      ]
+    },
+    "carry": [
+      {
+        "model": "props/sedgemire_rope_coil_a",
+        "at": "Hips",
+        "pos": [
+          0.22,
+          0.86,
+          0.05
+        ],
+        "turn": [
+          0,
+          0,
+          80
+        ],
+        "scale": 0.32
+      }
+    ],
+    "aura": {
+      "rim": "#9fe6cc",
+      "energy": 1.15,
+      "power": 2.2,
+      "pulse": 0.55,
+      "pulse_rate": 1.1,
+      "motes": {
+        "colour": "#b8f0d8",
+        "count": 28,
+        "size": 0.05,
+        "rise": 0.12,
+        "spread": 0.55,
+        "height": 2.4
+      },
+      "light": {
+        "colour": "#8fe0c0",
+        "energy": 0.7,
+        "range": 6.0,
+        "height": 1.8
+      }
+    },
     "lore": "Nobody in the Delta knows what she was called. She says she gave her own name first, for the first cure, to see whether it could be done; it could, and she has been nobody's since, which is the only thing in the marsh she cannot cure. She knots every name she takes in its own family's weave, and she has a better memory of the Delta's families than the Reed Council does, and none of them remember her.",
     "stats": {
       "hp": 460,
@@ -219,7 +300,94 @@
     "arena": "core:poi/the_sounding",
     "region": "core:region/sedgemire",
     "tint": "#22334f",
-    "scale": 1.1,
+    "scale": 1.26,
+    "height": 2.2,
+    "radius": 0.4,
+    "appearance": {
+      "seed": 5611,
+      "culture": "reedfolk",
+      "skin": "umber",
+      "hair_colour": "black",
+      "build": 0.45,
+      "feminine": 1.0,
+      "height": 1.72,
+      "age": 0.4,
+      "parts": {
+        "torso": "wrap_torso",
+        "legs": "wrap_skirt",
+        "belt": "sash",
+        "headgear": "reed_hat",
+        "feet": "shoes",
+        "hands": "gloves",
+        "hair": "twin_braids"
+      },
+      "palette": {
+        "primary": "22334f",
+        "secondary": "1a2638",
+        "leather": "3a2c22",
+        "metal": "8a7a5a",
+        "trim": "b8a05a"
+      },
+      "tattoos": [
+        {
+          "design": "water_lines",
+          "on": "forearm_l",
+          "ink": "indigo",
+          "fade": 0.2
+        },
+        {
+          "design": "reeds",
+          "on": "forearm_r",
+          "ink": "indigo",
+          "fade": 0.2
+        }
+      ],
+      "jewellery": [
+        {
+          "kind": "hoop",
+          "on": "ears",
+          "metal": "bronze"
+        },
+        {
+          "kind": "beads",
+          "on": "neck",
+          "metal": "glass"
+        }
+      ]
+    },
+    "holds": {
+      "model": "weapons/leister_iron",
+      "tags": [
+        "two_handed"
+      ]
+    },
+    "carry": [
+      {
+        "model": "props/sedgemire_rope_coil_a",
+        "at": "Chest",
+        "pos": [
+          0.0,
+          1.22,
+          -0.17
+        ],
+        "turn": [
+          90,
+          0,
+          25
+        ],
+        "scale": 0.55
+      },
+      {
+        "model": "props/sedgemire_lantern_hanging_a",
+        "at": "Hips",
+        "pos": [
+          -0.21,
+          0.6,
+          0.06
+        ],
+        "scale": 0.8
+      }
+    ],
     "lore": "Tuo Lissa's younger sister, who knotted the watch's rope with him every night as a girl and married an eel-man from Moreva who went into the water off the Gullhithe flats and did not come up, and whose lantern went out on the water before it had burned for a single verse. She went to Aunsa Mor the next spring. Aunsa wanted the drowned to walk; Ama wants one of them to, and she has worked out that the bell has to be rung from underneath.",
     "stats": {
       "hp": 420,

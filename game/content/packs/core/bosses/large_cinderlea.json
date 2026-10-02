@@ -13,7 +13,60 @@
     "arena": "core:poi/the_undertone",
     "region": "core:region/cinderlea",
     "tint": "#4c5266",
-    "scale": 1.55,
+    "scale": 1.72,
+    "height": 3.05,
+    "radius": 0.46,
+    "breadth": 0.86,
+    "appearance": {
+      "seed": 4473,
+      "culture": "ash_pilgrims",
+      "skin": "porcelain",
+      "hair_colour": "white",
+      "build": 0.05,
+      "feminine": 1.0,
+      "height": 1.76,
+      "age": 0.7,
+      "parts": {
+        "torso": "robe",
+        "back": "shoulder_cape",
+        "headgear": "choir_cowl",
+        "belt": "cord_beads",
+        "feet": "shoes",
+        "hair": "long"
+      },
+      "palette": {
+        "primary": "5e5a66",
+        "secondary": "3e3a46",
+        "leather": "2e2a2c",
+        "metal": "8a7a4a",
+        "trim": "c8c0d8"
+      }
+    },
+    "holds": {
+      "model": "weapons/censer_bronze"
+    },
+    "aura": {
+      "rim": "#c4b4ff",
+      "energy": 1.25,
+      "power": 2.0,
+      "pulse": 0.3,
+      "bands": 1.6,
+      "rise": 0.55,
+      "motes": {
+        "colour": "#d8d0ff",
+        "count": 22,
+        "size": 0.035,
+        "rise": 0.3,
+        "spread": 0.5,
+        "height": 3.0
+      },
+      "light": {
+        "colour": "#a898ff",
+        "energy": 0.6,
+        "range": 6.5,
+        "height": 2.6
+      }
+    },
     "lore": "A chorister of the Ash who went down after the Order's knight the night the doors fell, to bring him back up, and found the note with nobody holding it, and took it up. She has held it a hundred and seventy years. It has worn her to the shape of a throat. She is not cruel; she cannot stop to be anything else. This year she has begun, very slowly, to sing it higher, as if she were trying to reach somebody.",
     "stats": {
       "hp": 560,
@@ -78,7 +131,78 @@
     "arena": "core:poi/founders_delf",
     "region": "core:region/cinderlea",
     "tint": "#5c4532",
-    "scale": 1.6,
+    "scale": 1.64,
+    "height": 3.05,
+    "radius": 0.62,
+    "breadth": 1.14,
+    "appearance": {
+      "seed": 4521,
+      "culture": "ash_pilgrims",
+      "skin": "amber",
+      "hair_colour": "salt_pepper",
+      "build": 0.95,
+      "feminine": 0.0,
+      "height": 1.86,
+      "age": 0.7,
+      "scar": "jaw",
+      "parts": {
+        "torso": "shirt",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "attachment": "founders_apron",
+        "headgear": "hood",
+        "belt": "belt",
+        "hair": "shaven",
+        "beard": "long_beard"
+      },
+      "palette": {
+        "primary": "4a3a2c",
+        "secondary": "2e261e",
+        "leather": "5a3a22",
+        "metal": "6a4a2a",
+        "trim": "c87838"
+      }
+    },
+    "holds": {
+      "model": "weapons/sledge_iron",
+      "tags": [
+        "two_handed"
+      ]
+    },
+    "carry": [
+      {
+        "model": "weapons/tuning_bell_bronze",
+        "at": "Chest",
+        "pos": [
+          0.0,
+          0.92,
+          -0.44
+        ],
+        "scale": 1.15
+      }
+    ],
+    "aura": {
+      "rim": "#ff8a3a",
+      "energy": 0.55,
+      "power": 3.0,
+      "pulse": 0.45,
+      "pulse_rate": 2.2,
+      "motes": {
+        "colour": "#ffb050",
+        "count": 26,
+        "size": 0.025,
+        "rise": 0.7,
+        "spread": 0.55,
+        "height": 2.6
+      },
+      "light": {
+        "colour": "#ff9a48",
+        "energy": 0.8,
+        "range": 6.0,
+        "height": 1.4
+      }
+    },
     "lore": "The master of the Builders' foundry, who would not let the last bell be spoiled by a cold mould. He took the founders down into the galleries to keep the metal warm until it could be poured, and the Ash Winter outlasted them all, and he is still keeping it warm. He carries the founders' great tuning-bell on his back on a yoke of chain and strikes it with his hammer to hear whether the metal is ready. It is never ready.",
     "stats": {
       "hp": 620,
@@ -142,7 +266,71 @@
     "arena": "core:poi/chalkwatch",
     "region": "core:region/cinderlea",
     "tint": "#5d6655",
-    "scale": 1.25,
+    "scale": 1.4,
+    "height": 2.6,
+    "radius": 0.48,
+    "appearance": {
+      "seed": 4597,
+      "culture": "vale",
+      "skin": "fair",
+      "hair_colour": "grey",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.82,
+      "age": 0.55,
+      "parts": {
+        "torso": "gambeson",
+        "attachment": "tabard",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "back": "cloak",
+        "headgear": "kettle_hat",
+        "belt": "belt",
+        "hair": "cropped",
+        "beard": "moustache"
+      },
+      "palette": {
+        "primary": "56594c",
+        "secondary": "2f4a2a",
+        "leather": "3a2e22",
+        "metal": "7a7d80",
+        "trim": "c9a24a"
+      }
+    },
+    "holds": {
+      "model": "weapons/mace_iron"
+    },
+    "off_hand": {
+      "model": "weapons/shield_wood",
+      "tags": [
+        "shield"
+      ]
+    },
+    "carry": [
+      {
+        "model": "props/brightwater_scroll_a",
+        "at": "Hips",
+        "pos": [
+          -0.24,
+          0.9,
+          0.03
+        ],
+        "turn": [
+          0,
+          0,
+          90
+        ],
+        "scale": 0.55
+      }
+    ],
+    "aura": {
+      "rim": "#d6ddd6",
+      "energy": 0.45,
+      "power": 3.2,
+      "pulse": 0.5,
+      "pulse_rate": 0.8
+    },
     "lore": "Chalkwatch's last captain, who held the grey line the night it moved and was still holding it in the morning, from the other side. He reads the roll every evening and every name answers. When the relief came up from the Rest he stood his men on the walls to wave them in, as is proper, and could not understand why they turned back.",
     "stats": {
       "hp": 600,
