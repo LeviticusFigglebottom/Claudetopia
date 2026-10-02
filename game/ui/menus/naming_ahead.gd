@@ -107,7 +107,7 @@ func _stand_warm_stage(model_scene: PackedScene) -> void:
 	_warm.name = "NamingWarmStage"
 	_warm.own_world_3d = true
 	_warm.size = WARM_SIZE
-	_warm.msaa_3d = Viewport.MSAA_2X if str(Settings.get_value("graphics", "preset", "high")) in ["low", "medium"] \
+	_warm.msaa_3d = Viewport.MSAA_2X if str(Settings.get_value("graphics", "preset", "high")) == "low" \
 			else Viewport.MSAA_4X
 	_warm.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_warm)

@@ -1599,9 +1599,10 @@ func _screen_scale() -> float:
 
 ## The portrait as the Graphics settings draw the world (Graphics.apply_viewport): the render scale
 ## and the upscaler (FSR on Forward+), the lod bias and the texture filtering. Its own edge
-## smoothing: 4x as it always had, but 2x on Low and Medium, which the hair's alpha-to-coverage
-## still has to work with. The key light's shadow is the settings' too (its atlas and softness are
-## the renderer's, and the light is adopted like any other).
+## smoothing: 4x as it always had, but 2x on Low, where the hair is its shell. Medium keeps 4x:
+## at 2x behind FSR's sharpening the strand cards' alpha-to-coverage edge showed as dots (looked
+## at, Forward+ at 1080p), and the portrait is a small picture. The key light's shadow is the
+## settings' too (its atlas and softness are the renderer's, and the light is adopted like any other).
 func _preview_quality() -> void:
 	if _preview == null:
 		return
@@ -1611,7 +1612,7 @@ func _preview_quality() -> void:
 
 
 func _cheap_preview() -> bool:
-	return str(Settings.get_value("graphics", "preset", Graphics.DEFAULT_PRESET)) in ["low", "medium"]
+	return str(Settings.get_value("graphics", "preset", Graphics.DEFAULT_PRESET)) == "low"
 
 
 ## On Low the hair is its painted shell (the far level of detail, HumanoidModel.CARDS_RANGE) rather

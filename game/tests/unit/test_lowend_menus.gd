@@ -62,7 +62,7 @@ func test_the_portrait_is_drawn_at_the_render_scale_and_no_larger_than_shown() -
 			"no larger than the rectangle it fills (%s for %s)" % [str(preview.size), str(view.size * scale)])
 	assert_near(preview.scaling_3d_scale, float(Graphics.PRESETS["medium"]["render_scale"]), 0.001,
 			"its 3D at Medium's render scale")
-	assert_eq(preview.msaa_3d, Viewport.MSAA_2X, "2x on Medium")
+	assert_eq(preview.msaa_3d, Viewport.MSAA_4X, "4x on Medium: the hair's edge wants it behind FSR")
 	n.queue_free()
 	await _tree().process_frame
 	Settings.apply_graphics_preset("high")

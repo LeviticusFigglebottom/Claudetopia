@@ -268,6 +268,10 @@ func _advance() -> void:
 					_mark("naming_ready")
 				if Time.get_ticks_msec() - int(_marks["naming_ready"]) < int(naming_s * 1000.0):
 					return
+				if draw and not _marks.has("naming_shot"):
+					_mark("naming_shot")
+					DirAccess.make_dir_recursive_absolute(out_dir)
+					get_viewport().get_texture().get_image().save_png(out_dir.path_join("naming.png"))
 				if style.is_empty():
 					_finish()
 					return
