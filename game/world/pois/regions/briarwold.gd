@@ -156,6 +156,8 @@ static func _facing(k: PoiKit) -> Vector2:
 ## darker grey run down it, the oldest greening from its foot.
 const GRANITE_TINTS := {"fresh": Color(1.0, 1.0, 1.0), "streak_a": Color(0.74, 0.75, 0.79),
 		"streak_b": Color(1.12, 1.0, 0.82), "grass": Color(0.62, 1.0, 0.52)}
+## Their ground (PoiKit.painted's beaten earth): broken granite, mid grey.
+const GRANITE_SPOIL := {"base": "#5f5f5a", "accent": "#4a4a46", "grout": "#26261f", "unit": 0.35}
 
 
 ## The ground's own texture, darkened: the earth a root plate tore up, a grave's turned soil.
@@ -1521,8 +1523,9 @@ static func charter_delf(d: PoiDressing) -> void:
 	m.commit(drum, k.surface("timber", 0.5), "WindingDrum")
 	# the spoil: grey heaps of broken granite down the slope, the oaks standing dead in them
 	# (tips, PoiMasonry.spoil_heap: a smooth mound of it read as a tarpaulin over a heap)
-	var spoil_look := _earth_look(k, "scree", 0.55)
-	spoil_look.vertex_color_use_as_albedo = true
+	# (the painted beaten earth the other mines' tips have: the ground's scree texture, darkened, read
+	# as brown cloth on a tip, puckered at its top like a sack's neck)
+	var spoil_look := PoiKit.painted(5, GRANITE_SPOIL, 0.85, 0.85)
 	var heaps := [[down * 10.0 + side * 2.0, 8.5, 3.6], [down * 17.0 - side * 3.0, 7.0, 2.8], [down * 23.0 + side * 1.5, 5.5, 1.8]]
 	var loose: Array = []
 	for hi in heaps.size():

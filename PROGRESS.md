@@ -16103,6 +16103,58 @@ test_content_split, test_region_check; `region_check.py briarwold` PASS.
 **For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
 and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
 (their glades only exist after a build; shoot them with `--weather clear --time 16.5`).
+
+## Polish, second pass: the Briarwold three's glades and the Name-Wife's Hollow, shot on w4096j (polish, 2026-10-03)
+
+The pass's last five commits (from `wip/polish`), checked, tested and shot in one batch
+(`poi_sheet --weather clear --time 16.5`, previews on the installed w4096j):
+
+- **The Hollow faces the way to its road** (afdb8ebd): `_to_road` takes the nearest point of the
+  nearest road within 400 m (its road is 302 m off). The sheet's first view, from the road's side,
+  looks into the mouth with the weep and the Name-Tree beside it.
+- **The Hollow's crag** (4bc31548): cheeks of 15 and 11 m, the piece behind leaning, two slab
+  pinnacles, a toppled slab and four blocks on the apron, moss and fern on the bank. It reads as a
+  limestone outcrop over its mouth; the right-hand pinnacle still reads as a squared pillar from the
+  north-east (view 2). View 1 is 2.01 M primitives against the 1.5 M budget (2.09 M before).
+- **A glade is open sky** (81d574bd): `clear_glades` takes a tree whose crown (0.4 of its height times
+  its scale) reaches over the disc or the way. **It needs the next world build to be seen.** w4096j
+  was built before it, and neither the built world nor a poi_sheet preview applies it (a preview only
+  clears its pad, `PoiPreview.clear_cell`). Run over w4096j's own cells, it would still take 78
+  trees: 38 at the Windthrow, 28 at Tinehold, 12 at the Charter Delf. Those include every tree whose
+  crown is over a sheet camera, so the sheets show the problem the commit fixes:
+  - the Windthrow: view 1 under a 44 m oak's crown, view 3 against a 52 m oak's trunk 24 m off;
+  - Tinehold: views 1 and 2 inside giant oaks' crowns, near black;
+  - the Delf: view 2 under an oak's crown.
+
+  Views 2 and 4 of the Windthrow show the open glade round the plate and the trunk.
+- **The Charter Delf's tips** (10b1d674): tips, not domes, at 16 loose stones a tip. On the sheet
+  they still read as brown cloth, and the old tip's grass tint looked mint on the scree texture. That
+  material was the cause: the other mines' tips are `PoiKit.painted(5, ...)` beaten earth, and the
+  Delf's was the ground's scree texture, darkened. It is now painted beaten earth too, in granite grey
+  (`GRANITE_SPOIL`). On the re-check sheet the tips read as grey stone waste. **Still open (shared, all
+  four mines):** each tip's top is puckered like a sack's neck. The lumps and rills reach full
+  strength at ring 1, round the single apex vertex, so they fold in to it. Fading them in over the
+  top quarter of `f` in `PoiMasonry.spoil_heap` should fix it; that was not done or shot.
+- **Rain cleared on settle** (132368dd): `settle()` restarts the stopped CPUParticles3D, so a
+  pinned-clear capture has no drops left. None are in any view.
+- `briarwold.gd`'s `GRANITE_TINTS` had been put between `_earth_look` and its doc comment. Moved.
+- Not changed: the Windthrow's trunk is a smooth, pale grey bole with peg-like stubs (DEADWOOD,
+  painted timber). From the east it reads more like a beam than a tree.
+
+**Sheets**: `$SCRATCH/sheets/the_windthrow_tinehold.jpg` (the Windthrow, and Tinehold's views 1-2;
+the first run was stopped there by the background limit on this loaded box, and Tinehold's last
+two views were not taken again), `$SCRATCH/sheets/charter_delf_name_wifes_hollow.jpg`,
+`$SCRATCH/recheck/charter_delf.jpg` (after the spoil fix). Views ran at about 9 minutes each, with
+the machine at under 200 MB free.
+
+**Tests**: `pytest test_glades.py` (3 pass); `./run.sh test --filter=test_sites_briarwold,
+test_sites_sedgemire,test_atmosphere,test_objects_seated_briarwold,test_objects_seated_sedgemire`:
+33 tests, 0 failed, 0 script errors. Seat counts: Briarwold on_road 2, buried 4, overlap 1,
+fence_gap 142; Sedgemire floating 1, buried 1.
+
+**For the coordinator**: shoot the Windthrow, Tinehold and the Delf again after the next world
+build. The glades with the crown rule, and the Delf's tree, exist only after it.
+
 ## Ground texture quality (Standard/High) lands; far-tree pictures nearer and ground cover through Terrain3D's instancer are measured and not adopted (terrain-fidelity, 2026-10-02)
 
 ### Ground texture quality: Standard and High
