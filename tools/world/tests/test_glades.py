@@ -21,6 +21,9 @@ from worldgen import trees as TR  # noqa: E402
 from worldgen.rows import Rows  # noqa: E402
 
 OAK = "res://assets/models/trees/briarwold_giant_oak_a/briarwold_giant_oak_a.glb"
+## its height, as the contact table has it: a crown reaching 0.4 of that
+TABLE = {"briarwold_giant_oak_a": (None, 28.7)}
+CROWN = 28.7 * TR.GLADE_CROWN_PER_H
 FERN = "res://assets/models/flora/briarwold_fern_a/briarwold_fern_a.glb"
 
 
@@ -55,14 +58,15 @@ class Glades(unittest.TestCase):
     def test_trees_go_off_the_disc_and_the_way_and_nothing_else(self):
         buckets = _wood()
         before = len(buckets[(0, 0)][OAK])
-        out = TR.clear_glades(buckets, TR.glades(self.pois, self.roads))
+        out = TR.clear_glades(buckets, TR.glades(self.pois, self.roads), TABLE)
         left = buckets[(0, 0)][OAK]
         xz = left.xz() if isinstance(left, Rows) else np.array([(r[0], r[2]) for r in left])
         d = np.hypot(xz[:, 0], xz[:, 1])
         self.assertFalse((d < 30.0).any(), "a tree is left in the glade")
-        on_way = (xz[:, 0] >= 0.0) & (xz[:, 0] <= 62.0) & (np.abs(xz[:, 1]) < TR.GLADE_APPROACH_M * 0.5)
-        self.assertFalse(on_way.any(), "a tree is left on the way to the road")
-        self.assertTrue(((d > 34.0) & ~on_way).sum() > 0)
+        self.assertFalse((d - CROWN < 30.0).any(), "a crown reaches over the glade")
+        on_way = (xz[:, 0] >= 0.0) & (xz[:, 0] <= 62.0) & (np.abs(xz[:, 1]) < TR.GLADE_APPROACH_M * 0.5 + CROWN)
+        self.assertFalse(on_way.any(), "a tree's crown is over the way to the road")
+        self.assertTrue(((d > 30.0 + CROWN + 2.0) & ~on_way).sum() > 0, "the wood beyond stands")
         self.assertEqual(out["trees"], before - len(left))
         self.assertEqual(out["by_glade"], [out["trees"]])
         # the low cover is not touched
@@ -71,7 +75,7 @@ class Glades(unittest.TestCase):
     def test_no_glade_no_change(self):
         buckets = _wood()
         before = len(buckets[(0, 0)][OAK])
-        out = TR.clear_glades(buckets, TR.glades([self.pois[1]], self.roads))
+        out = TR.clear_glades(buckets, TR.glades([self.pois[1]], self.roads), TABLE)
         self.assertEqual(out["trees"], 0)
         self.assertEqual(len(buckets[(0, 0)][OAK]), before)
 
