@@ -16418,3 +16418,70 @@ the way into the world. Triage 81.
 - `./run.sh flow`: PASS in new (103 checks), load (36) and continue (39).
 - `start_towns_canopy` capture in `captures/`: Fernhold, Warden's Rest, Gullhithe and Moreva
   show no crown in a house or prop.
+## The Greatwood under the primitive budget: the sun's shadow made cheaper, not the trees (terrain-fidelity, 2026-10-03)
+
+The brief was to bring the Greatwood's views under 1.5 M primitives with per-species LOD distances.
+Attribution showed the frame's cost was not the canopy's own meshes. It was the canopy, the crag
+pieces and the land each drawn again into the sun's four cascades: 0.96-1.41 M of a 1.58-2.25 M
+frame went to the shadow passes. A per-species cap on the full mesh's line (aa30faec,
+`-- --lod-near-max=M`) moved the views by 1-2% at 70 m, so it stays as an option and is **off by
+default**. What landed instead (6051b2e2, finished here) makes each shadow cheaper and leaves every
+drawn tree, crag piece and stone as it was:
+- **Shadow LOD** (`world/scatter_lod.gd`). A tree or a scatter rock at a level with a coarser one
+  below it casts nothing itself. A shadow-only MultiMesh of the next level down casts for the same
+  instances: LOD1's bark and cards for a full tree, LOD1/LOD2 for a rock. The caster's cards never
+  dissolve. Finished here: the crown's caster covers every tree whose full crown is drawn at all
+  (`leaves0`), not only those before the bark's line. A tree just past the middle of the near band
+  had cast only LOD1's half-dissolved cards, a thinned shadow.
+- **Small dressing casts none** (`world/shadow_trim.gd`). A mesh raised inside a streamed cell whose
+  longest side is under 1 m (cups, stools, crates, ferns) loses its sun shadow. Anything a body
+  carries, a scatter MultiMesh, and everything bigger keep theirs.
+- **The land casts from a coarse caster** (`world/shadow_ground.gd`). Terrain3D casts nothing, and a
+  shadow-only mesh from the runtime 8 m map is built round the camera: 7 x 7 chunks of 192 m, two a
+  frame. Each vertex is the lowest of its texel and its four neighbours, less 0.5 m, so the caster
+  never stands above the ground.
+- Each is on by default and can be switched off for an A/B: `--no-shadow-lod`, `--no-shadow-trim`,
+  `--no-shadow-ground`.
+
+**Measured** (Compatibility under xvfb, 1280x720, the default High preset, w4096j, `run_plan.sh
+--attribute`). Before is the same build with the three flags; after is the default.
+
+| view | draws before | draws after | primitives before | primitives after | shadow passes before | shadow passes after |
+|---|---|---|---|---|---|---|
+| Tinehold, from its approach | 1,718 | 1,591 | 1.58 M | **1.15 M** | 0.96 M | 0.53 M |
+| the Windthrow, from its road | 1,277 | 1,193 | 1.88 M | **1.50 M** (1,498,805) | 1.16 M | 0.78 M |
+| the Greatwood (perf_suite's `briarwold_wood`) | 1,708 | 1,595 | 2.25 M | **1.34 M** | 1.41 M | 0.49 M |
+
+By owner in the wood view: trees 640 -> 331 k, scatter rock 620 -> 367 k, Terrain3D 557 -> 199 k.
+The Windthrow's remainder is its own place: "scenes (landmarks, encounters)" are 0.72 M there,
+unchanged by the trim. That is the camp's people and the plate, not the canopy.
+
+**Looked at**: `docs/review/perf/greatwood_shadow_cost.jpg` shows the Windthrow before, after, and
+the difference x4, with crops of the canopy and the ground.
+- The canopy is the same density and outline. Its dissolve stipple sits in the same places, and no
+  crown is thinned or popped.
+- The difference is wind sway and a little light on the leaf edges. LOD1's cards shade the crowns
+  where the full crowns did.
+- The ground in shade is identical.
+- At Tinehold one sunlit fleck on the ground beside the wall closed. A LOD1 crown is blobbier than
+  the full one and fills a gap the full crown had. Elsewhere the dapple is the same.
+
+**Tests**:
+- `test_shadow_cost.gd` is new (3 tests): the full tree casts through LOD1, whole across the band;
+  small things in a cell cast none, while walls, scaled pieces and what bodies carry keep theirs; the
+  land's caster is never above its texel and reaches past the 260 m shadow distance.
+- The same run took in test_scatter_lod, test_scatter_solids and test_graphics_settings: 39 passed.
+- test_world_streamer, test_sites_briarwold, test_objects_seated (the Briarwold), test_walking_into_the_scatter,
+  test_ledge_lod and test_landmarks_seated: 17 passed, 0 script errors.
+
+**Limits / left**:
+- Not measured: Painted (1.5x shadow distance, an 8192 atlas). Forward+ cannot be looked at here,
+  because Terrain3D is kept off lavapipe.
+- The Windthrow sits on the line, at 1.4988 M. A further cut there would come from the people's
+  shadows, not the wood.
+- The land's caster reaches at least 576 m round the camera. Near sunset a hill farther off than that
+  no longer throws its shadow into the view; Terrain3D's clipmap cast to 12 km. It also does not
+  know Terrain3D's holes, so a cave mouth is shadowed as if the ground were whole.
+- The trim weighs every geometry node that enters the tree, a frame later (a type check and a walk
+  up to the cell). It has not been timed on its own.
+- The before run exited 134 after "quit (the game ended)", at teardown; the after runs exited 0.
