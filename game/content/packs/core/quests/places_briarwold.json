@@ -1018,7 +1018,7 @@
               },
               {
                 "id": "burn_it",
-                "text": "Burn it.",
+                "text": "Burn it, so nobody comes back for the lead.",
                 "effects": [
                   {
                     "take_item": "core:item/charter_ledger"

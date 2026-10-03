@@ -66,8 +66,8 @@
     "unique_habit": "Licks his pencil before every entry and has a grey tongue for it.",
     "personality": {
       "traits": [
-        "honest",
-        "stubborn",
+        "generous",
+        "brave",
         "humble"
       ]
     },
@@ -115,12 +115,12 @@
     "personality": {
       "traits": [
         "proud",
-        "stubborn",
+        "brave",
         "kind"
       ]
     },
     "appearance": {
-      "seed": 7311,
+      "seed": 7544,
       "build": "stocky",
       "age": 71.0,
       "feminine": 0.0,
@@ -162,8 +162,8 @@
     "unique_habit": "Talks to the oak stools as he passes them, by name, and the names are all of dead coppicers.",
     "personality": {
       "traits": [
-        "stubborn",
-        "honest",
+        "brave",
+        "generous",
         "humble"
       ]
     },
@@ -218,9 +218,9 @@
     "unique_habit": "Keeps a stub of chalk behind her ear the way a clerk keeps a pen, and writes capitals in the air when she is thinking.",
     "personality": {
       "traits": [
-        "stubborn",
-        "honest",
-        "warm"
+        "proud",
+        "generous",
+        "kind"
       ]
     },
     "appearance": {

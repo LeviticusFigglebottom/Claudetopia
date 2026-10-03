@@ -19,7 +19,7 @@
        "on_enter": [{"set_flag": "recruit_at_the_rest"}],
        "on_complete": []},
       {"id": "the_yard",
-       "journal": "Sergeant Dole needs a recruit to ride the Stair Head's pay south today, and it will be whoever can fight. He starts you on the pells.\n\nGo to the three pells in the drill yard, the wooden posts in a row. Strike them: three light blows, then two heavy blows, then lock on to one.\n\nHow: the light blow is quick. The heavy blow is held back and let go; it breaks a guard, and it costs more of your stamina, the bar that empties as you fight. Lock-on {key:lock_on} keeps your eyes on one enemy, because a bandit does not stand still to be looked at.",
+       "journal": "Sergeant Dole needs a recruit to ride the Stair Head's pay south today, and it will be whoever can fight. He starts you on the pells.\n\nGo to the three pells in the drill yard, the wooden posts in a row. Strike them: three light blows, then two heavy blows, then lock on to one.\n\nHow: the light blow is quick. The heavy blow is held back and let go; it breaks a guard, and it costs more of your stamina, the bar that empties as you fight. Lock on, and your eyes stay on one enemy, because a bandit does not stand still to be looked at.",
        "marker": {"place_id": "core:place/wardens_rest", "radius": 40},
        "objectives": [
          {"type": "act", "target": "hit_light", "against": "prop:pell", "count": 3, "text": "Strike a pell with light blows {key:attack_light}",
