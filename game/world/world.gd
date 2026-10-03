@@ -194,6 +194,9 @@ func _ready() -> void:
 		_pois = PoiPreview.apply(_pois, provider)
 	_trace("streamer step begins")
 	_setup_streamer()
+	# small things raised in the cells cast no sun shadow (world/shadow_trim.gd)
+	if ShadowTrim.enabled and not get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.connect(_on_node_added)
 	if not await _mark("streamer"):
 		return
 	_trace("horizon step begins")
@@ -257,6 +260,8 @@ func tear_down() -> void:
 	if streamer != null and is_instance_valid(streamer):
 		streamer.enabled = false
 		streamer.also_cells = {}
+	if is_inside_tree() and get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.disconnect(_on_node_added)
 	# Terrain3D keeps its camera: set_camera(null) crashes Terrain3D 1.0.2 (a segfault in the
 	# library, here on the title's teardown). The camera is the world's own and goes with it.
 	if terrain_node != null and is_instance_valid(terrain_node) and provider != null:
@@ -439,7 +444,13 @@ func _setup_terrain3d() -> void:
 	# the build's own texel (2 m at 4096): a preview world imported at its 8 m and drawn at 2 m
 	# would be a quarter of the world in its north-west corner
 	terrain_node.set("vertex_spacing", float(provider.manifest.get("spacing_m", 2.0)) if provider != null else 2.0)
-	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+	# the land's sun shadow is cast by ShadowGround (world/shadow_ground.gd), a coarse caster round
+	# the camera, not by Terrain3D's clipmap drawn again into every cascade
+	var shadow_ground := ShadowGround.enabled() and provider != null and provider.has_runtime_maps()
+	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if shadow_ground
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+	if shadow_ground:
+		add_child(ShadowGround.new(provider))
 	# The clipmap has to cover the whole world, not a circle around the camera. At 7 LODs and
 	# 2 m spacing it reached about 6 km, so from any hill the terrain stopped in a dead straight
 	# line with a visible corner -- a flat shelf across the distance with the land cut off
@@ -894,6 +905,12 @@ func _setup_horizon() -> void:
 		await horizon.build_from_in_steps(self)
 	else:
 		horizon.build_from(self)
+
+
+## A geometry node entering the tree is weighed for its shadow a frame later (ShadowTrim).
+func _on_node_added(node: Node) -> void:
+	if node is GeometryInstance3D and streamer != null:
+		ShadowTrim.consider.call_deferred(node, streamer)
 
 
 func _setup_streamer() -> void:
