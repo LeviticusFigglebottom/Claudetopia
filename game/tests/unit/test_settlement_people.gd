@@ -115,9 +115,17 @@ func test_every_schedule_entry_names_a_real_place_and_a_spot() -> void:
 			assert_ne(str(entry.get("spot", "")), "", "%s has a schedule entry with no spot" % id)
 
 
+## Bosses and foes with a face of their own are drawn from the same seeds as the people: a boss who
+## rolls a villager's seed wears that villager's face (four did: 4521, 7311, 5577, 5520). A foe that
+## extends another and keeps its parent's appearance shares its parent's face, and is counted so.
 func test_no_two_people_share_a_face_seed() -> void:
 	var seen: Dictionary = {}
-	for def in _people():
+	var faces: Array[Dictionary] = _people()
+	for kind in ["boss", "enemy"]:
+		for def in ContentDB.all(kind):
+			if not bool(def.get("example", false)):
+				faces.append(def)
+	for def in faces:
 		var face_seed: Variant = (def.get("appearance", {}) as Dictionary).get("seed")
 		if face_seed == null:
 			continue
