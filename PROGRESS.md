@@ -16521,7 +16521,7 @@ Page's ride and Stair Head.
 queue and on the HUD, the plate's place clear of the crosshair, the key, the journal at the quest, the
 glow, the setting, every starter stage's reason line); test_quest_cues updated to the new heads.
 Green with test_quests, test_journal_*, test_waymark*, test_start_*, test_content_social, test_the_start,
-test_quest_tracker, test_compass*, test_settings*, test_ui_fits_at_every_scale (210 in one run).
+test_quest_tracker, test_compass*, test_settings*, test_ui_fits_at_every_scale (210 in one run). Journeys: warrior 7/7, ranger 6/6 (1 skipped), mage 7/7, rogue 7/7, 0 logged errors.
 `tools/quests/softlock_check.py`: 140 quests, 0 findings. Screenshot: `./run.sh shots
 tools/capture/plans/quest_notice.json` (the plan's `"hud": {"quest_notice": true}` puts the followed
 quest's notice up for the exposure).
