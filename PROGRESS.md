@@ -16703,3 +16703,79 @@ test_quest_tracker, test_compass*, test_settings*, test_ui_fits_at_every_scale (
 `tools/quests/softlock_check.py`: 140 quests, 0 findings. Screenshot: `./run.sh shots
 tools/capture/plans/quest_notice.json` (the plan's `"hud": {"quest_notice": true}` puts the followed
 quest's notice up for the exposure).
+### Past the grass: a neighbour's props, the far ring's bushes, a corner cell's trees (ground-cover 2, 2026-10-03)
+
+The same rule, measured to a MultiMesh's box centre, cut three more kinds of scatter. These are
+counts along the same road, every 32 m, High, with the renderer's rule applied to w4096j/k's cells
+(`route_far.py`):
+- **The near ring's lighter rocks and props** (200-230 m reach): 91.7% of those within 0.8 of their
+  reach were drawn on High and 78.3% on Low. A neighbouring cell's fences and stones dropped out
+  130-200 m away.
+- **The far ring's bushes** (430 m):
+  - 93.4% of those within reach were drawn on High, and 35.5% on Low;
+  - 10.2% of those *past* it were drawn, because whole far cells switched on and off at 380-670 m.
+- **The near ring's trees 340-700 m off**: 53.0% were drawn on High and 23.0% on Low. A corner
+  cell's pictures were culled at 340 m from its middle, while the far ring's trees beyond them
+  still stood.
+
+**The fix:**
+- **`GroundCover` takes rocks and props without a forge ladder, in both rings.** Each kind draws up
+  to two tiers, each one MultiMesh:
+  - *near*: every row, out to the near reach;
+  - *far*: the far ring's share of the rows, picked exactly as a far-ring cell picks it
+    (`WorldStreamer._every_nth`), out to the far reach.
+
+  A near-ring cell draws both tiers and a far-ring cell draws only the far one, so a cell crossing
+  rings draws the same things at the same distances.
+- **Foliage dissolves at each edge.** The far tier fades in (`lod_fade_in`) over the same band where
+  the near tier fades out, using the same noise.
+- **Stone and wood have no dissolve**, so they are sorted one by one into exactly one tier at the
+  line.
+- **Step and slack grow with the reach** (1/30 of it, at least 4 m and 8 m).
+- **Only the near tier casts shadows**, as before.
+- **A near-ring ScatterLod group's MultiMeshes no longer have a visibility range.**
+  - A tree with its picture is held at its level wherever it stands in the near ring.
+  - A solid ladder (crates, boulders, walls) is cut at its kind's near reach, and its far share at
+    the far reach (`reach_near`, `reach_far`, `far_kept`, `ScatterLod.OUT`).
+- **`--cover-by-cell` brings all of the old behaviour back.**
+
+**Cost**: `docs/review/perf/ground_cover_far_scatter.jpg` has four views along the road, looking
+toward where the old rule dropped the most. Before is `--cover-by-cell` (the grass too); after is
+the default. Compatibility, High, w4096k:
+
+| view | draws before → after | primitives before → after |
+|---|---|---|
+| far_785_1539 | 453 → 590 | 0.37 → 0.41 M |
+| far_1049_1480 | 857 → 949 | 0.67 → 0.61 M |
+| Merrowby, far_250_1330 | 909 → 1,081 | 0.91 → 0.99 M |
+| far_595_1549 | 640 → 800 | 0.57 → 0.56 M |
+
+All four views are inside the 2,000 draw and 1.5 M budget.
+- The extra draws are the streamer's own (+85 to +141) and the shadow passes (+38 to +61), from what
+  now stands. They include the grass fix, since before is fully the old behaviour.
+- These were measured with the far tier casting. It no longer does, which takes some of the shadow
+  draws back; that has not been re-measured.
+
+**What the views show:**
+- The verge grass now stands, and a few more bushes and stones show at distance (the x3 crops of the
+  far band).
+- These four views are hill-bound, so the far trees' gain is slight in them. The 53% → all count is
+  the measure for those.
+
+**Tests**:
+- `test_ground_cover` grew to 9 tests: a neighbour's milestones within reach; a far cell's bracken
+  out to the far reach and no further; a cell keeping its far share across rings; a corner cell's
+  hawthorns all drawn 360-720 m off; and a crate ladder's reach.
+- With `--cover-by-cell`, all 9 fail.
+- The set from before (with test_world_data, test_fallback_terrain, test_walking_into_the_scatter
+  and test_settings_graphics_screen): 84 tests, 0 failed. GDScript warnings are at the 49 baseline.
+- test_objects_seated for Hearthvale and the Briarwold passed, findings at their baselines
+  (Briarwold fence_gap 142, buried 4).
+
+**Not done / noticed:**
+- `asset_kind` calls every Briarwold flora asset a bush, grass included, because "briar" matches
+  "briarwold". So the Briarwold's grass reaches 190 m, and a 30% share stands in its far ring.
+  That predates this work and has not been touched.
+- The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
+  what is streamed, so on Low a far corner cell can still go at 700-900 m.
+- Forward+ was not looked at.
