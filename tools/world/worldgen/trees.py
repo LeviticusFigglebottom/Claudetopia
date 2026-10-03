@@ -232,6 +232,11 @@ def clear_sightlines(buckets: dict, grid: Grid, H: np.ndarray, claims: list, k: 
 
 ## A glade's way to its road, metres wide, where its def does not say (`glade_approach_m`).
 GLADE_APPROACH_M = 18.0
+## How far a tree's crown reaches out from its trunk, as a share of its height: a glade is open sky,
+## so a tree goes if its crown reaches in, not only if its trunk stands in. (Taken by the trunk, the
+## w4096j glades round the Windthrow and Tinehold had the giant oaks just outside them roofing
+## the ground inside, and poi_sheet's views stood under their crowns.)
+GLADE_CROWN_PER_H = 0.4
 
 
 def glades(pois: list, roads: list) -> list:
@@ -262,13 +267,16 @@ def glades(pois: list, roads: list) -> list:
     return out
 
 
-def clear_glades(buckets: dict, glade_list: list) -> dict:
-    """Take out of `buckets` (in place) every tree inside a glade (`glades`): on its disc, or on the
-    way from its middle to its road and two metres past the road's middle. Only trees: the ground's
-    low cover, the logs and the rocks stay. Returns {"trees": taken, "by_glade": [taken per glade]}."""
+def clear_glades(buckets: dict, glade_list: list, table: dict | None = None) -> dict:
+    """Take out of `buckets` (in place) every tree whose crown reaches into a glade (`glades`): over
+    its disc, or over the way from its middle to its road and two metres past the road's middle. A
+    crown reaches GLADE_CROWN_PER_H of the tree's height (the contact table's, times its scale) from
+    its trunk. Only trees: the ground's low cover, the logs and the rocks stay. Returns
+    {"trees": taken, "by_glade": [taken per glade]}."""
     out = {"trees": 0, "by_glade": [0] * len(glade_list)}
     if not glade_list:
         return out
+    table = load_table() if table is None else table
     for key in list(buckets):
         by_asset = buckets[key]
         for asset in list(by_asset):
@@ -277,14 +285,19 @@ def clear_glades(buckets: dict, glade_list: list) -> dict:
             rows = by_asset[asset]
             if not len(rows):
                 continue
+            name = os.path.splitext(os.path.basename(asset))[0]
+            height = table[name][1] if name in table else TREE_HEIGHT_DEFAULT_M
             if isinstance(rows, Rows):
                 xz = rows.xz()
+                scale = rows.column(4, "scale")
             else:
                 xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64).reshape(-1, 2)
+                scale = np.array([float(r[4]) for r in rows], dtype=np.float64)
+            crown = height * np.asarray(scale, dtype=np.float64) * GLADE_CROWN_PER_H
             hit = np.zeros(len(xz), dtype=bool)
             for gi, (c, radius, road, width) in enumerate(glade_list):
                 c = np.asarray(c, dtype=np.float64)
-                inside = np.hypot(xz[:, 0] - c[0], xz[:, 1] - c[1]) < radius
+                inside = np.hypot(xz[:, 0] - c[0], xz[:, 1] - c[1]) - crown < radius
                 if road is not None:
                     e = np.asarray(road, dtype=np.float64)
                     seg = e - c
@@ -294,7 +307,7 @@ def clear_glades(buckets: dict, glade_list: list) -> dict:
                         rel = xz - c
                         along = rel @ u
                         off = np.abs(rel[:, 0] * u[1] - rel[:, 1] * u[0])
-                        inside |= (along >= 0.0) & (along <= length + 2.0) & (off < width * 0.5)
+                        inside |= (along >= -crown) & (along <= length + 2.0 + crown) & (off - crown < width * 0.5)
                 n = int((inside & ~hit).sum())
                 out["by_glade"][gi] += n
                 hit |= inside
