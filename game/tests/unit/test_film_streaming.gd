@@ -33,6 +33,11 @@ func before_each() -> void:
 func after_each() -> void:
 	CinematicPlayer.headless_allowed = false
 	WorldPace.paced_override = _paced_was
+	# a film played as a new game leaves that game's flags: the next test's game is not still opening
+	# (Wren's hold at the Stair Head reads new_game and style_start)
+	for flag in ["new_game", Openings.STYLE_START, Openings.STYLE_DUE, StyleDef.FLAG, "player_name", "player_calling"]:
+		GameState.clear_flag(flag)
+	Social.reset_for_new_game()
 
 
 func test_the_warriors_film_never_waits_once_it_has_begun() -> void:

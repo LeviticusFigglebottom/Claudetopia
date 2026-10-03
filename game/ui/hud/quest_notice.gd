@@ -124,9 +124,9 @@ func _build() -> void:
 	col.add_child(_hint)
 
 
-func _line(variation: String, size: int, colour: Color) -> Label:
+func _line(variation: String, font_px: int, colour: Color) -> Label:
 	var l := UiKit.label("", variation, HORIZONTAL_ALIGNMENT_CENTER)
-	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_font_size_override("font_size", font_px)
 	l.add_theme_color_override("font_color", colour)
 	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.75))
 	l.add_theme_constant_override("shadow_offset_x", 1)
