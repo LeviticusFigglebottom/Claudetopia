@@ -310,8 +310,10 @@ static func make_group(cell: Node3D, asset_path: String, kind: String, near_mesh
 	var base := asset_path.get_file().get_basename()
 	for entry in plan:
 		var key: String = entry[0]
+		# only the near tier casts: the far ring's share never has, and past 200 m a crate's shadow
+		# is a few pixels at the shadow distance's edge
 		var t := _tier(cell, asset_path, "%s_%s" % [base, key] if key != "near" else base, entry[1], entry[2],
-				near_base if key == "near" else far_base, casts)
+				near_base if key == "near" else far_base, casts and key == "near")
 		t.key = key
 		t.mesh = mesh_for(asset_path, entry[1], key, Vector2.ZERO, Vector2.ZERO)
 		t.mmi.multimesh.mesh = t.mesh
