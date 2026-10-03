@@ -10,10 +10,10 @@
     "unique_habit": "Hums the note under her breath to check her fork against it, and frowns at herself when she is flat.",
     "personality": {
       "traits": [
-        "curious",
-        "exacting",
+        "gossip",
+        "proud",
         "brave",
-        "dry"
+        "cynical"
       ]
     },
     "appearance": {
@@ -73,10 +73,9 @@
     "unique_habit": "Taps everything with a knuckle and listens to it, the cart, the tent-pole, your shield.",
     "personality": {
       "traits": [
-        "practical",
-        "stubborn",
-        "warm",
-        "proud"
+        "cynical",
+        "proud",
+        "kind"
       ]
     },
     "appearance": {
@@ -137,10 +136,10 @@
     "unique_habit": "Waves back, every time, and is ashamed of it, and does it anyway.",
     "personality": {
       "traits": [
-        "dutiful",
+        "pious",
         "kind",
-        "nervous",
-        "honest"
+        "timid",
+        "generous"
       ]
     },
     "appearance": {
