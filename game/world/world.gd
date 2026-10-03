@@ -261,6 +261,9 @@ func tear_down() -> void:
 	if streamer != null and is_instance_valid(streamer):
 		streamer.enabled = false
 		streamer.also_cells = {}
+	# the water's workers read the ground through the provider: done before it lets Terrain3D go
+	if water != null and is_instance_valid(water):
+		water.finish_tasks()
 	# Terrain3D keeps its camera: set_camera(null) crashes Terrain3D 1.0.2 (a segfault in the
 	# library, here on the title's teardown). The camera is the world's own and goes with it.
 	if terrain_node != null and is_instance_valid(terrain_node) and provider != null:

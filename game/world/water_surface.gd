@@ -63,6 +63,9 @@ const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
 
 var provider: TerrainProvider
+## The worker tasks building this water (the sheet, the river ribbons): they read `provider` and
+## this node, so the world finishes them (finish_tasks) before it lets either go.
+var _tasks: Array[int] = []
 var sheet: MeshInstance3D
 var skirt: MeshInstance3D
 var rivers_root: Node3D
@@ -116,8 +119,28 @@ static func shader_for(mirrored: bool, river := false) -> Shader:
 
 
 func _exit_tree() -> void:
+	finish_tasks()
 	if current == self:
 		current = null
+
+
+## Waits for the worker tasks still building this water. World.tear_down calls it before the
+## provider lets go of Terrain3D and the world is freed: a click on the title's Continue while its
+## world was laying the rivers freed the provider and this node under the worker (a segfault in
+## `_river_mesh`, flow 2026-10-03). The wait is the rest of one task, on a click that leaves.
+func finish_tasks() -> void:
+	if _tasks.is_empty():
+		return
+	var t0 := Time.get_ticks_usec()
+	for task in _tasks.duplicate():
+		_finish_task(task)
+	Log.info("WaterSurface", "torn down while building: waited %.1f ms for its worker" % ((Time.get_ticks_usec() - t0) / 1000.0))
+
+
+func _finish_task(task: int) -> void:
+	if _tasks.has(task):
+		_tasks.erase(task)
+		WorkerThreadPool.wait_for_task_completion(task)
 
 
 func _ready() -> void:
@@ -305,9 +328,10 @@ func _build_sheet(slice: WorldPace.Slice = null) -> void:
 		var out: Array = [null]
 		var cell_m: float = QUALITY_CELL_M[quality]
 		var task := WorkerThreadPool.add_task(func() -> void: out[0] = water_mesh(cell_m), true, "wm_water_sheet")
-		while not WorkerThreadPool.is_task_completed(task):
+		_tasks.append(task)
+		while _tasks.has(task) and not WorkerThreadPool.is_task_completed(task):
 			await WorldPace.next_frame()
-		WorkerThreadPool.wait_for_task_completion(task)
+		_finish_task(task)
 		slice.t0 = Time.get_ticks_usec()
 		cells = out[0]
 	else:
@@ -533,9 +557,10 @@ func _build_rivers(slice: WorldPace.Slice = null) -> void:
 			for i in parsed.size():
 				if typeof(parsed[i]) == TYPE_DICTIONARY:
 					made[i] = _river_mesh(parsed[i]), true, "wm_river_meshes")
-		while not WorkerThreadPool.is_task_completed(task):
+		_tasks.append(task)
+		while _tasks.has(task) and not WorkerThreadPool.is_task_completed(task):
 			await WorldPace.next_frame()
-		WorkerThreadPool.wait_for_task_completion(task)
+		_finish_task(task)
 		slice.t0 = Time.get_ticks_usec()
 	for ri in parsed.size():
 		var entry: Variant = parsed[ri]

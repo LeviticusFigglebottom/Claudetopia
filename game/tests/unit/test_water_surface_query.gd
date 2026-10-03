@@ -148,3 +148,23 @@ func test_it_is_cheap_enough_for_every_tick() -> void:
 		w.surface_at(float(at[0]) + float(i % 20) * 0.3, float(at[1]))
 	var each := float(Time.get_ticks_usec() - t0) / 2000.0
 	assert_true(each < 200.0, "a query costs %.1f µs" % each)
+
+
+## A world torn down while its water is laid on a worker (the title's Continue clicked during the
+## water step) finishes the worker before the provider and the water go: freed under it, the river
+## ribbons' worker crashed the game (flow, 2026-10-03).
+func test_a_water_torn_down_while_it_builds_finishes_its_workers_first() -> void:
+	var p := TerrainProvider.new()
+	p.load_data()
+	var w := WaterSurface.new()
+	_tree().root.add_child(w)
+	w.add_child(p)
+	w.build(p, WorldPace.Slice.new())
+	var frames := 0
+	while w._tasks.is_empty() and frames < 600:
+		await _tree().process_frame
+		frames += 1
+	assert_false(w._tasks.is_empty(), "the paced build puts a worker to it (%d frames)" % frames)
+	_tree().root.remove_child(w)
+	assert_true(w._tasks.is_empty(), "leaving the tree waited for the worker")
+	w.free()
