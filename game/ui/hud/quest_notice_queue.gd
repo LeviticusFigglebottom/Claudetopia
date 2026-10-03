@@ -79,7 +79,10 @@ func push(n: Dictionary) -> bool:
 
 ## Moves the clock on `dt` seconds. `blocked`: a conversation, a film, a full menu or the loading
 ## screen has the screen. Returns true when a notice came up (or went back) this step.
-func step(dt: float, blocked: bool) -> bool:
+## `clear_dt`: the frame's own time for the wait before a notice comes up (the read itself is timed
+## on `dt`, which the caller caps so one long frame does not eat it): on a slow machine the capped
+## step made the 0.6 s settle after a film take a dozen seconds. Below zero, `dt` serves for both.
+func step(dt: float, blocked: bool, clear_dt := -1.0) -> bool:
 	if blocked:
 		_clear = 0.0
 		_wait = SETTLE_S
@@ -90,7 +93,7 @@ func step(dt: float, blocked: bool) -> bool:
 			_age = 0.0
 			return true
 		return false
-	_clear += dt
+	_clear += clear_dt if clear_dt >= 0.0 else dt
 	if _current.is_empty():
 		if _pending.is_empty() or _clear < _wait:
 			return false

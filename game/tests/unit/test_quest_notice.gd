@@ -319,3 +319,17 @@ func test_a_new_games_first_quest_begun_before_the_hud_is_announced_as_it_comes_
 	hud.queue_free()
 	quests.call("reset_for_new_game")
 	GameState.set_flag("new_game", had)
+
+
+func test_a_slow_frame_does_not_stretch_the_wait_before_a_notice() -> void:
+	# frames of 3 s (a slow machine) after a film: the 0.6 s settle is the frame's own time, not
+	# 0.25 s capped steps that made it a dozen seconds; the read itself stays capped
+	var q := QuestNoticeQueue.new()
+	q.push({"quest": "q", "kind": "started", "objective": "Go", "why": ""})
+	q.step(0.25, true, 3.0)
+	assert_true(q.current().is_empty(), "nothing while the screen is taken")
+	q.step(0.25, false, 3.0)
+	assert_false(q.current().is_empty(), "up on the first clear frame of 3 s")
+	var held := q.held_seconds()
+	q.step(0.25, false, 3.0)
+	assert_false(q.current().is_empty(), "and still up a capped step later (%.1f s held)" % held)

@@ -202,11 +202,11 @@ func screen_taken() -> bool:
 
 
 func _process(delta: float) -> void:
-	_step(minf(delta, MAX_STEP_S))
+	_step(minf(delta, MAX_STEP_S), delta)
 
 
-func _step(dt: float) -> void:
-	var changed := queue.step(dt, screen_taken())
+func _step(dt: float, clear_dt := -1.0) -> void:
+	var changed := queue.step(dt, screen_taken(), clear_dt)
 	if changed:
 		_draw_current(true)
 	_show_ink()
