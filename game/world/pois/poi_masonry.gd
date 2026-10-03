@@ -613,18 +613,23 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 			var y := gp + maxf(top - gp, h * 0.4) * share
 			if i == rings:
 				y = gp - 0.35
-			elif i > 0:
-				# the loads on the top
+			else:
+				# the loads on the top, the middle point too: raised round a middle left low, the
+				# top read as a sack's neck drawn in
 				for l: Vector4 in loads:
 					var lc := Vector2(l.x, l.y) * l.z
 					var dd := (Vector2(sin(a), cos(a)) * f - lc).length() / l.w
 					if dd < 1.6:
 						y += h * 0.07 * exp(-dd * dd * 1.6) * (1.0 - steep)
-				# lumps everywhere, rougher on the faces; rills down the faces
-				y += h * lump * (0.6 + steep) * (0.5 * sin(a * 14.0 + f * 23.0 + ph) * sin(f * 31.0 - a * 9.0 + ph2)
+			if i > 0 and i < rings:
+				# lumps everywhere, rougher on the faces; rills down the faces. Both come in over the
+				# level top (TIP_PROFILE's first 0.28): at full strength round the one middle point
+				# they folded in to it like a sack's neck.
+				var crown := smoothstep(0.0, 0.3, f)
+				y += crown * h * lump * (0.6 + steep) * (0.5 * sin(a * 14.0 + f * 23.0 + ph) * sin(f * 31.0 - a * 9.0 + ph2)
 						+ k.rng.randf_range(-0.6, 0.6))
 				var rill := pow(maxf(cos(a * float(rills) + ph + 3.0 * f), 0.0), 10.0)
-				y -= h * (0.04 if old else 0.09) * steep * rill
+				y -= crown * h * (0.04 if old else 0.09) * steep * rill
 			row.append(Vector3(p.x, y, p.y))
 			# the faces fresh and darker, the benches and the top weathered paler; the streaks run
 			# down the faces; an old tip greens from its foot
