@@ -977,6 +977,16 @@ def build(args) -> dict:
         print("[world] glades: %d trees from %d places (%s)" % (opened["trees"], len(glade_list), ", ".join(
             "%s %d" % (str(p["id"]).split("/")[-1], c) for p, c in zip([q for q in pois if q.get("glade_m")], opened["by_glade"]))
             or "none"), flush=True)
+        # and no tree's crown over a town: its trunk was kept off the pad, but a giant oak's leaves
+        # reach 20-40 m from it and down to the ground, and came through Fernhold's houses (worldgen.trees)
+        town_places = [p for p in pad_targets if ":place/" in str(p["id"])
+                       and RD.FABRIC_COUNT.get(str(p.get("kind", "")), 0) > 0]
+        towns = [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p)) for p in town_places]
+        off_towns = TR.clear_off_towns(buckets, towns, REPO)
+        most = sorted(((n, str(p["id"]).split("/")[-1]) for n, p in zip(off_towns["by_town"], town_places) if n), reverse=True)
+        print("[world] crowns off the towns: %d trees from %d of %d towns (most: %s)" % (
+            off_towns["trees"], len(most), len(towns), ", ".join("%s %d" % (nm, n) for n, nm in most[:6]) or "none"),
+              flush=True)
         # and every tree set into the ground at its whole foot, not at its pivot (worldgen.trees)
         seated = TR.seat(buckets, grid, H)
         print("[world] trees seated: %d, %d sunk over 0.5 m, %d at their cap" % (
@@ -1002,9 +1012,7 @@ def build(args) -> dict:
         # and last, now every sweep has taken its pieces out: no run of rail, hedge or wall too short
         # that meets nothing, and no gate post without its boundary (worldgen.linework;
         # tools/world/prune_lines.py runs the same over an installed world)
-        pruned = LW.prune(buckets, [(float(p["position"][0]), float(p["position"][1]), RD.pad_radius(p))
-                                    for p in pad_targets if ":place/" in str(p["id"])
-                                    and RD.FABRIC_COUNT.get(str(p.get("kind", "")), 0) > 0],
+        pruned = LW.prune(buckets, towns,
                           [np.asarray(r.points, dtype=np.float64)[:, :2] for r in roads_list])
         print("[world] line-work pruned: %s" % json.dumps({k: v for k, v in pruned.items() if k != "cells_changed"}),
               flush=True)

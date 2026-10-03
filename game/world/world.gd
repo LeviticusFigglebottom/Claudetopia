@@ -85,6 +85,10 @@ var _assets_requested := false
 ## setting meanwhile waits for the next world, as the settings screen says.
 var _assets_path := ""
 var _holding_3d := false
+## The step the world is on as it stands up, in the startup trace's words ("terrain: waiting for the
+## region reads"), kept whether or not the trace is written: the loading caption's watch says it
+## when a load has stopped moving (UI.loading_wait).
+var standing := ""
 
 
 static func terrain() -> TerrainProvider:
@@ -300,6 +304,7 @@ func _mark(step: String) -> bool:
 
 ## A line in the startup trace (StartupTrace), which costs nothing once the game has started.
 func _trace(what: String) -> void:
+	standing = what
 	if StartupTrace.active:
 		StartupTrace.step("world%s: %s" % [" (title)" if vista else "", what])
 
@@ -620,20 +625,44 @@ static func prepare_high_textures(assets: Resource, host: Node = null) -> int:
 			jobs.images.append(img)
 	if jobs.images.is_empty():
 		return 0
-	const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
-	var gpu_was: Variant = ProjectSettings.get_setting(GPU_COMPRESS, true)
-	ProjectSettings.set_setting(GPU_COMPRESS, false)
+	_gpu_compress_off(true)
 	var task := WorkerThreadPool.add_group_task(jobs.run, jobs.images.size(),
 			maxi(ThreadedLoads.pool_size() - 2, 1), true, "wm_high_textures")
-	while host != null and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
-		await host.get_tree().process_frame
+	var stepped := host != null
+	while stepped and is_instance_valid(host) and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	if stepped and not (is_instance_valid(host) and host.is_inside_tree()) and not WorkerThreadPool.is_group_task_completed(task):
+		# the world went while its textures were compressed (the title's, on a click): the jobs are
+		# left to finish on their own and never waited for here, as the region reads are
+		ThreadedLoads.after_task(task, true, jobs, _gpu_compress_off.bind(false))
+		return 0
 	WorkerThreadPool.wait_for_group_task_completion(task)
-	ProjectSettings.set_setting(GPU_COMPRESS, gpu_was)
+	_gpu_compress_off(false)
 	for k in jobs.slots.size():
 		var slot: Array = jobs.slots[k]
 		(slot[0] as Resource).set(str(slot[1]), ImageTexture.create_from_image(jobs.images[k]))
 	jobs.images.clear()
 	return jobs.slots.size()
+
+
+const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
+## How many worlds' High textures are being compressed now, and Godot's GPU compressor setting from
+## before the first: it stays off until the last is done (a title's world left mid-compress finishes
+## after the game's world has begun its own).
+static var _compressing := 0
+static var _gpu_was: Variant = true
+
+
+static func _gpu_compress_off(on: bool) -> void:
+	if on:
+		if _compressing == 0:
+			_gpu_was = ProjectSettings.get_setting(GPU_COMPRESS, true)
+			ProjectSettings.set_setting(GPU_COMPRESS, false)
+		_compressing += 1
+		return
+	_compressing = maxi(_compressing - 1, 0)
+	if _compressing == 0:
+		ProjectSettings.set_setting(GPU_COMPRESS, _gpu_was)
 
 
 ## The decoding, scaling and compressing `prepare_high_textures` hands to worker threads, an image a
