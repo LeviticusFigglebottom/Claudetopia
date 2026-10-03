@@ -424,7 +424,8 @@ func _enter_world(args: Dictionary) -> void:
 		b.disabled = true
 	UI.fade_to_black(0.3, LOADING_LINE)
 	await get_tree().create_timer(0.32).timeout
-	get_tree().change_scene_to_file(WORLD_SCENE)
+	# never read here and now: the title's country may be reading the same scene this moment
+	await UI.change_scene_when_read(WORLD_SCENE)
 
 
 # --- slots --------------------------------------------------------------------------------
