@@ -28,6 +28,9 @@ var player_xz := Vector2.ZERO
 var markers: Array[Dictionary] = []      ## [{bearing, texture, kind, label, distance, faint?}]
 var areas: Array[Dictionary] = []        ## [{bearing, width_deg}]
 var pins: Array[Dictionary] = []         ## [{bearing}]: the tracked objectives outside their radius
+## Until when (Time.get_ticks_msec) the pins glow: a new objective's notice is up (glow_pins).
+var pins_glow_until_ms := -1
+const PIN_GLOW_S := 4.0
 
 var _strip: TextureRect
 var _marker_root: Control
@@ -188,10 +191,27 @@ func refresh() -> void:
 		var bearing := float(p["bearing"])
 		var node := _take(used)
 		used += 1
-		_as_texture(node, _pin, PIN_SIZE)
+		var glow := pin_glow()
+		_as_texture(node, _pin, PIN_SIZE * (1.0 + 0.3 * glow))
 		var x := pin_offset(bearing, heading_deg, w)
 		node.position = Vector2(x - node.size.x * 0.5, size.y * 0.5 - node.size.y * 0.62)
 		node.modulate = Color(1, 1, 1, 1.0 if on_strip(bearing, heading_deg, SPAN_DEG, 0.0) else PIN_EDGE_ALPHA)
+		if glow > 0.0:
+			node.modulate = node.modulate.lerp(Color(1.4, 1.15, 0.6, 1.0), glow)
+
+
+## A new objective's notice is up: the pins swell and glow gold for PIN_GLOW_S, slowly beating.
+func glow_pins(seconds := PIN_GLOW_S) -> void:
+	pins_glow_until_ms = Time.get_ticks_msec() + int(seconds * 1000.0)
+
+
+## How much the pins glow now, 0-1: a slow beat that dies away.
+func pin_glow() -> float:
+	var left := float(pins_glow_until_ms - Time.get_ticks_msec()) / 1000.0
+	if left <= 0.0:
+		return 0.0
+	var beat := 0.5 + 0.5 * cos(left * TAU / 1.2)
+	return clampf(left / 1.0, 0.0, 1.0) * (0.45 + 0.55 * beat)
 
 
 ## Where a pin sits on a strip `width` wide: at its bearing while that is on the strip, else at

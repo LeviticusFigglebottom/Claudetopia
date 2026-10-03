@@ -191,7 +191,7 @@
        "on_complete": []},
       {
         "id": "the_strongbox",
-        "journal": "Tomorrow is tithe-day.\n\nBrannock Tole, the Tallymen's collector, sleeps tonight against his strongbox, and the tithe-book in it says Moreva owes forty baskets of eels more than it ever caught. At the count the Charter believes the book, not the eels. Sauve means to have the book before he wakes.\n\nGo to the collector's strongbox on the landing's south-east boards, crouched. Pick its lock, and take the tithe-book out of it. Don't wake him.\n\nHow: crouched, you make less noise and are harder to see. Set the lock's pin as the needle crosses the band. A lock picked is a crime, and a crime seen is a bounty, so do it where nobody is watching. And if you have the hands for it, his pocket too: a sleeping man's pocket is a lock with no pin at all, if you come at it low.",
+        "journal": "Tomorrow is tithe-day, and the collector's tithe-book says Moreva owes forty baskets of eels it never caught: Sauve wants that book out of his strongbox before he wakes.\n\nBrannock Tole, the Tallymen's collector, sleeps tonight against the box. At the count the Charter believes the book, not the eels.\n\nGo to the collector's strongbox on the landing's south-east boards, crouched. Pick its lock, and take the tithe-book out of it. Don't wake him.\n\nHow: crouched, you make less noise and are harder to see. Set the lock's pin as the needle crosses the band. A lock picked is a crime, and a crime seen is a bounty, so do it where nobody is watching. And if you have the hands for it, his pocket too: a sleeping man's pocket is a lock with no pin at all, if you come at it low.",
         "marker": {
           "place_id": "core:place/moreva",
           "radius": 60
@@ -613,7 +613,7 @@
     "stages": [
       {
         "id": "follow",
-        "journal": "The courier carries the other copy of the unsaid page, and he ought to be on the Tollmere road with it.\n\nInstead he is walking south out of the Delta, grey in the face. Sauve's man in Gullhithe wants your copy; Sauve wants to know who is getting his.\n\nGet up on Tally and ride after the courier, out of the Delta by Nauve's Landing and the Eelweir, to Sedgehithe. Keep him in sight; don't catch him. He keeps a field ahead of you however you come on, and does not look back.\n\nSauve says there is a Hearthstone at Ansel's Hedge Shrine, past Merrowby: touch it on the way, and if the road kills you, you wake there. Whistle for Tally if you leave her behind.",
+        "journal": "The courier carries the other copy of the unsaid page, and Sauve wants to know who is getting it: he ought to be on the Tollmere road, and he is walking south.\n\nHe is going out of the Delta, grey in the face. Sauve's man in Gullhithe wants your copy.\n\nGet up on Tally and ride after the courier, out of the Delta by Nauve's Landing and the Eelweir, to Sedgehithe. Keep him in sight; don't catch him. He keeps a field ahead of you however you come on, and does not look back.\n\nSauve says there is a Hearthstone at Ansel's Hedge Shrine, past Merrowby: touch it on the way, and if the road kills you, you wake there. Whistle for Tally if you leave her behind.",
         "objectives": [
           {
             "type": "act",
@@ -697,7 +697,7 @@
       },
       {
         "id": "the_stair_head",
-        "journal": "The courier walks on south, and you follow him to where the road ends.\n\nHe goes by Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to a Wardens' camp on a cliff's edge, above a stair going down into grey mist.\n\nFollow him there, and speak to the Warden at her fire.",
+        "journal": "The courier walks on south, and Sauve still wants to know who is getting his copy: follow him to where the road ends.\n\nHe goes by Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to a Wardens' camp on a cliff's edge, above a stair going down into grey mist.\n\nFollow him there, and speak to the Warden at her fire.",
         "marker": {
           "place_id": "core:poi/stair_head",
           "radius": 40
