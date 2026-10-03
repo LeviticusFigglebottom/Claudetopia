@@ -233,8 +233,10 @@ class Group extends RefCounted:
 					pictures.append(i)
 		var idx := {"solid0": solid0, "solid1": solid1, "solid2": solid2, "leaves0": leaves0,
 				"leaves1": leaves1, "impostor": pictures,
-				# a level's shadow casters stand for exactly its instances
-				"shadow0_solid": solid0, "shadow0_leaves": solid0, "shadow1_solid": solid1,
+				# a level's shadow casters stand for exactly its instances; the leaves' for every
+				# tree whose full crown is drawn at all, so a crown fading out across the band still
+				# casts whole (LOD1's own leaves cast dithered there, the same cards)
+				"shadow0_solid": solid0, "shadow0_leaves": leaves0, "shadow1_solid": solid1,
 				"shadow1_leaves": solid1}
 		for key in mmis:
 			var list: PackedInt32Array = idx[key]
