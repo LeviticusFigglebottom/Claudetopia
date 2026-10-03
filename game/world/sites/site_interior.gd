@@ -135,6 +135,38 @@ func _way_in() -> void:
 	add_child(_temp_floor)
 
 
+## What the player arriving sees, local: [the camera's eye, its forward]. camera_rig.gd's
+## third-person camera: the pivot 1.55 m over the feet, the arm 3.6 m back and 0.4 m to the right
+## (0.12 up), pitched 0.18 rad down, cut short where a cast along it meets the rock. Needs the rock
+## in the physics space.
+func arrival_view() -> Array:
+	var fwd := Vector3(-sin(plan.entrance_yaw), 0.0, -cos(plan.entrance_yaw))
+	var pitch_fwd := (fwd * cos(0.18) + Vector3.DOWN * sin(0.18)).normalized()
+	var pivot := plan.entrance + Vector3.UP * 1.6
+	var right := fwd.cross(Vector3.UP).normalized()
+	var arm := right * 0.4 + Vector3.UP * 0.12 - pitch_fwd * 3.6
+	var k := 1.0
+	if is_inside_tree():
+		var q := PhysicsRayQueryParameters3D.create(to_global(pivot), to_global(pivot + arm), 1 | (1 << 9))
+		var hit := get_world_3d().direct_space_state.intersect_ray(q)
+		if not hit.is_empty():
+			k = maxf((to_global(pivot).distance_to(hit["position"]) - 0.25) / arm.length(), 0.1)
+	return [pivot + arm * k, pitch_fwd]
+
+
+## How much light the rock gives back: its palette's brightness as cave_rock.gdshader takes it (the
+## vertex colour as albedo, times the formation's brightness). The lava tube's black rock is about
+## half the others'.
+func rock_albedo() -> float:
+	var pal: Array = plan.spec.get("palette", ["#8c8577", "#5f5a50", "#a39b8a"])
+	var sum := 0.0
+	for c in pal:
+		sum += Color(str(c)).get_luminance()
+	var formation := str(plan.spec.get("formation", "water"))
+	var tuned: Dictionary = CaveInterior.ROCK_BY_FORMATION.get(formation, CaveInterior.ROCK_BY_FORMATION["water"])
+	return sum / maxf(float(pal.size()), 1.0) * float(tuned.get("brightness", 1.1)) * float(plan.spec.get("brightness", 1.0))
+
+
 func _physics_process(_delta: float) -> void:
 	if is_built:
 		set_physics_process(false)
