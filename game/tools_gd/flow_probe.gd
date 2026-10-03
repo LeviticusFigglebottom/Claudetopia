@@ -1074,6 +1074,21 @@ func _first_moment_of_control() -> void:
 			and not str(hud.call("objective_shown")).is_empty(), 5.0)
 	line = str(hud.call("objective_shown")) if hud != null and hud.has_method("objective_shown") else ""
 	_check(not line.is_empty(), "the first objective is written under the compass: %s" % line)
+	if line.is_empty() and hud != null:
+		var held := []
+		for runner in get_tree().get_nodes_in_group("dialogue_runner"):
+			if runner.has_method("is_running") and bool(runner.call("is_running")):
+				held.append("a conversation")
+		for n in get_tree().get_nodes_in_group(CinematicPlayer.GROUP):
+			if n.has_method("is_playing") and bool(n.call("is_playing")):
+				held.append("a film")
+		if UI.is_menu_open():
+			held.append("a menu")
+		if UI.is_loading_shown():
+			held.append("the loading screen")
+		if UI.is_faded_out():
+			held.append("a fade")
+		_notes.append("the quest notice was held by: %s" % (", ".join(held) if not held.is_empty() else "nothing (none queued?)"))
 	await _capture("first_moment_of_control")
 	var services := get_tree().get_first_node_in_group("game_services")
 	var words := str(services.get("first_words")) if services != null else ""

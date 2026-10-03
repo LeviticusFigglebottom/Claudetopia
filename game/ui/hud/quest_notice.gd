@@ -162,6 +162,16 @@ func _fit() -> void:
 
 ## Puts a notice in line (see QuestNoticeQueue for its keys). It comes up at once when nothing is
 ## up and nothing has the screen.
+## Whether a notice about `quest_id` is up now or waiting.
+func has_quest(quest_id: String) -> bool:
+	if str(queue.current().get("quest", "")) == quest_id:
+		return true
+	for n in queue.pending():
+		if str(n.get("quest", "")) == quest_id:
+			return true
+	return false
+
+
 func push(note: Dictionary) -> void:
 	var replaced := queue.push(note)
 	if replaced:
@@ -180,6 +190,12 @@ func screen_taken() -> bool:
 			return true
 	for n in tree.get_nodes_in_group(CinematicPlayer.GROUP):
 		if n.has_method("is_playing") and bool(n.call("is_playing")):
+			return true
+		# its black before the first shot, while the whole film's country is laid (seconds long):
+		# a notice spent there was gone before the player had the screen
+		if n.has_method("is_starting") and bool(n.call("is_starting")):
+			return true
+		if n.has_method("is_handing_over") and bool(n.call("is_handing_over")):
 			return true
 	if UI.is_menu_open() or UI.is_loading_shown() or UI.is_faded_out():
 		return true

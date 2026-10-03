@@ -193,6 +193,7 @@ func _build() -> void:
 	_notice.name = "QuestNotice"
 	add_child(_notice)
 	_notice.notice_shown.connect(_on_notice_shown)
+	_announce_opening_quest.call_deferred()
 
 	# the tracked quest, top left: the compass has the top middle and the toasts the top right
 	_tracker = QuestTracker.new()
@@ -1283,6 +1284,23 @@ func _on_quest_moved(quest_id: String, _stage: Variant = null, kind := "updated"
 ## one's place in the queue, still saying "Quest started" (QuestNoticeQueue).
 func _on_quest_started(quest_id: String) -> void:
 	_on_quest_moved(quest_id, null, "started")
+
+
+## A new game's first quest is begun before the HUD stands (under the opening), so its "Quest started"
+## was told to nobody: the HUD tells it as it comes up, while the game is still new (a quest may be
+## begun past its first stage, as the Naming is at the wake). A load or a Continue is not new, and says nothing.
+func _announce_opening_quest() -> void:
+	if not (GameState.has_flag("new_game") or GameState.has_flag(Openings.STYLE_START)):
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("tracked_quest"):
+		return
+	var quest_id := str(log_node.call("tracked_quest"))
+	if quest_id == "":
+		return
+	if _notice != null and _notice.has_quest(quest_id):
+		return
+	announce_quest(quest_id, "started")
 
 
 ## Says the quest's stage as it stands on the notice again (a capture, a probe): "Journal updated".

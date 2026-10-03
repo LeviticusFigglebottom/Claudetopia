@@ -376,6 +376,11 @@ func is_starting() -> bool:
 	return _phase == Phase.STARTING
 
 
+## The camera gliding back to the player after the last shot: still the film's, not yet the player's.
+func is_handing_over() -> bool:
+	return _phase == Phase.HANDOVER
+
+
 func current_shot() -> int:
 	return _index
 

@@ -300,3 +300,22 @@ func test_every_starter_stage_has_a_reason_line() -> void:
 			assert_false(lines.has(first), "%s: its reason is its own, not %s's" % [where, str(lines.get(first, ""))])
 			lines[first] = where
 			assert_false((stage.get("objectives", []) as Array).is_empty(), "%s has an objective to show" % where)
+
+
+func test_a_new_games_first_quest_begun_before_the_hud_is_announced_as_it_comes_up() -> void:
+	# the opening begins the first quest under its black, before the HUD stands: its "Quest started"
+	# was heard by nobody, and the first objective was never shown (flow, 2026-10-03)
+	var quests: Node = Social.quests
+	quests.call("reset_for_new_game")
+	var had := GameState.has_flag("new_game")
+	GameState.set_flag("new_game", true)
+	quests.call("start", "core:quest/the_naming", "wake")
+	var hud: Node = (load("res://ui/hud/hud.tscn") as PackedScene).instantiate()
+	_tree().root.add_child(hud)
+	await _tree().process_frame
+	await _tree().process_frame
+	var notice: QuestNotice = hud.get_node("QuestNotice")
+	assert_true(notice.has_quest("core:quest/the_naming"), "the quest begun before the HUD is told as it comes up")
+	hud.queue_free()
+	quests.call("reset_for_new_game")
+	GameState.set_flag("new_game", had)
