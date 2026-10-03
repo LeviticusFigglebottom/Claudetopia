@@ -275,7 +275,7 @@ static func _bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: float,
 const OAK_BARK := "res://assets/models/trees/_species/briarwold_giant_oak/briarwold_giant_oak_bark_%s.png"
 
 
-static func _bark_look(tint := Color(0.86, 0.82, 0.78)) -> BaseMaterial3D:
+static func _bark_look(tint := Color(0.64, 0.6, 0.57)) -> BaseMaterial3D:
 	var mat := ORMMaterial3D.new()
 	if ResourceLoader.exists(OAK_BARK % "albedo"):
 		mat.albedo_texture = load(OAK_BARK % "albedo")
@@ -295,7 +295,7 @@ static func _bark_look(tint := Color(0.86, 0.82, 0.78)) -> BaseMaterial3D:
 const BARK_TINT := Color(1.0, 1.0, 1.0)
 const BARK_WET := Color(0.66, 0.64, 0.62)
 const BARK_MOSS := Color(0.62, 1.18, 0.34)
-const BARK_HEART := Color(1.75, 1.5, 1.15)
+const BARK_HEART := Color(1.6, 1.4, 1.1)
 
 
 ## A log like _bole, but barked (UVs for _bark_look, the oak's furrows along it, `tile` m a repeat
@@ -379,26 +379,38 @@ static func _bark_bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: f
 			var j1 := (j + 1) % segs
 			for v in [c_end, ring_end[j], ring_end[j1]]:
 				st.set_uv(Vector2((v as Vector3).dot(x), (v as Vector3).dot(z)) / vlen)
-				st.set_color(BARK_HEART * 0.8 if v == c_end else BARK_TINT)
+				# (a stub's inner piece ends inside the next: a pale sawn disc showed there as a peg's end)
+				st.set_color(BARK_WET)
 				st.add_vertex(v)
 		return
 	# a break: the heartwood torn out in a jagged fan, splinters standing off the rim, the middle
 	# drawn out furthest (wood tears along the grain)
+	# Its UVs as the sides' (round it, and along it by how far out each point is), so the grain runs
+	# along the torn fibres: projected across the log, the texture smeared into zig-zags.
 	var mid: Array = []
+	var mid_v: Array = []
 	for j in segs:
 		var ang := TAU * float(j) / float(segs)
 		var reach := rb * (0.15 + rng.randf_range(0.0, 0.9) * (1.0 if j % 2 == 0 else 0.35))
 		var rr := rb * rng.randf_range(0.45, 0.7)
 		mid.append(c_end + (x * cos(ang) + z * sin(ang)) * rr + y * reach)
-	var spike := c_end + y * rb * rng.randf_range(0.5, 0.9) + x * rb * rng.randf_range(-0.2, 0.2)
+		mid_v.append((length + reach) / vlen)
+	var spike_reach := rb * rng.randf_range(0.5, 0.9)
+	var spike := c_end + y * spike_reach + x * rb * rng.randf_range(-0.2, 0.2)
 	for j in segs:
 		var j1 := (j + 1) % segs
-		for tri: Array in [[ring_end[j], mid[j1], mid[j]], [ring_end[j], ring_end[j1], mid[j1]], [mid[j], mid[j1], spike]]:
-			for v in tri:
-				var vv: Vector3 = v
-				st.set_uv(Vector2(vv.dot(x), vv.dot(z)) / vlen)
-				st.set_color(BARK_TINT if vv in ring_end else BARK_HEART)
-				st.add_vertex(vv)
+		var u0 := around * float(j) / float(segs)
+		var u1 := around * float(j + 1) / float(segs)
+		var re0 := [ring_end[j], Vector2(u0, length / vlen), BARK_TINT]
+		var re1 := [ring_end[j1], Vector2(u1, length / vlen), BARK_TINT]
+		var m0 := [mid[j], Vector2(u0, mid_v[j]), BARK_HEART]
+		var m1 := [mid[j1], Vector2(u1, mid_v[j1]), BARK_HEART]
+		var sp := [spike, Vector2((u0 + u1) * 0.5, (length + spike_reach) / vlen), BARK_HEART]
+		for tri: Array in [[re0, m1, m0], [re0, re1, m1], [m0, m1, sp]]:
+			for vtx: Array in tri:
+				st.set_uv(vtx[1])
+				st.set_color(vtx[2])
+				st.add_vertex(vtx[0])
 
 
 ## A broken branch's stub off a bole at `root_at` (local), out along `dir` (unit) `long` m, `r`
@@ -686,7 +698,7 @@ static func windthrow(d: PoiDressing) -> void:
 		if j == 3:
 			_bark_bole(bole, root_at - dir * 1.0, root_at + dir * 11.0, 1.0, 0.45, k.rng, 14, 8, true, 0.6, 1.2, 0.4)
 		else:
-			_stub(bole, root_at, dir, k.rng.randf_range(1.2, 3.2), k.rng.randf_range(0.3, 0.65), k.rng)
+			_stub(bole, root_at, dir, k.rng.randf_range(1.8, 4.0), k.rng.randf_range(0.4, 0.85), k.rng)
 	await k.step()
 	m.commit(bole, _bark_look(), "Bole", true)
 	if k.far:
