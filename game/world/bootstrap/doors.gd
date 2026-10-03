@@ -141,8 +141,8 @@ func _process(delta: float) -> void:
 func _raise_next() -> void:
 	if _raising != null or _queue.is_empty():
 		return
-	# while a film's pictures are watched nothing is raised: its holds (black, or the last frame) are
-	# where the towns its next shot opens on are raised, and a shot waits for them (ShotSight.TOWNS_M)
+	# while a film's pictures are watched nothing is raised: its opening's black is where the towns
+	# its shots open on are raised, and its first picture waits for them (ShotSight.TOWNS_M)
 	if not WorldPace.curtained() and get_tree().get_first_node_in_group(CinematicPlayer.GROUP) != null:
 		return
 	var next := _nearest_queued(_eyes(), WANT_M if WorldPace.curtained() else WANT_WATCHED_M)

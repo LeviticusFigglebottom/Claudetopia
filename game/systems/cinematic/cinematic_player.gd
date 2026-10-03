@@ -12,9 +12,15 @@ extends Node
 ## Each shot is resolved against the live ground when the cinematic starts (`CinematicPath`), the
 ## streamer follows the camera, and every cell a shot's camera will see along its path is asked for
 ## when it begins (ShotSight), with what the next one opens on, so the far ground is not bare while
-## it is watched. A shot whose opening's cells have not arrived is not shown: the last frame holds, then the picture goes to black
-## with a caption and the music waits, and the shot plays when the country is there -- or after
-## HOLD_CAP_SECONDS, with what has come. The pictures keep real time, as the music does, and
+## it is watched. The whole film's country is asked for as it begins (`_plan_film`): every cell any
+## shot sees or flies through, every place its towns stand and everyone who lives there, dressed; and
+## the first picture waits under the opening's black until the near part of all of it stands
+## (PREROLL_*), because the places, the towns and the people are pieces of tens of milliseconds that
+## are never built while the pictures are watched. Once the first picture is up nothing waits on the
+## country again: a cut holds its still a few frames, never goes to black and never says it is
+## loading, and a shot whose country is somehow not all in is shown after MID_HOLD_CAP_SECONDS with
+## what there is. Before the first picture the black shows the hold line after HOLD_GRACE_SECONDS,
+## and the music waits. The pictures keep real time, as the music does, and
 ## OVERALL_CAP_SECONDS after the first shot it hands over as a skip would: however slow the machine,
 ## nobody is left inside it. While it holds the game, no slot is written (`SaveSystem.hold_saves`).
 ##
@@ -44,6 +50,20 @@ const HOLD_GRACE_SECONDS := 0.5
 ## whatever the missing cells carry comes in while it plays. A few seconds: on a machine that
 ## keeps up, a shot's country is in within a fraction of one.
 const HOLD_CAP_SECONDS := 4.0
+## Before the first picture, the whole film's country (`_plan_film`) is waited for until it stands,
+## until nothing of it has come for PREROLL_STALL_FRAMES frames and PREROLL_STALL_S seconds together,
+## or for PREROLL_CAP_SECONDS in all; then the film plays with what has come.
+const PREROLL_CAP_SECONDS := 90.0
+const PREROLL_STALL_S := 6.0
+const PREROLL_STALL_FRAMES := 90
+## Once the near country stands, the far ring's is waited for this much longer at most.
+const PREROLL_FAR_GRACE_S := 3.0
+## After the first picture a cut never waits on the country more than this, on its still, without a
+## caption: then it is shown with what has come (the near country is all in by then unless the
+## opening gave up on it).
+const MID_HOLD_CAP_SECONDS := 1.0
+## Where a shot's camera is sampled along its path for the near ground under it (`_plan_film`).
+const PATH_SAMPLES := 9
 ## A hold that has lasted this long says in the log what it is waiting for, once.
 const HOLD_REPORT_SECONDS := 2.0
 ## Real seconds from the first shot after which the opening hands over as though a key had been
@@ -91,6 +111,25 @@ var skipped := false
 ## The caps, as values a test can shorten.
 var hold_cap_seconds := HOLD_CAP_SECONDS
 var overall_cap_seconds := OVERALL_CAP_SECONDS
+var preroll_cap_seconds := PREROLL_CAP_SECONDS
+var mid_hold_cap_seconds := MID_HOLD_CAP_SECONDS
+## The whole film's country (`_plan_film`): every cell any shot will see or fly over, at its ring;
+## of them the near ones, which the first picture waits for; and every point a shot opens on or looks
+## at, round which the near ring and the towns must stand. Empty when not planned (a scrub, or
+## `sight_streaming` off).
+var film_cells: Dictionary = {}
+var film_near: Dictionary = {}
+var film_points: Array[Vector3] = []
+## How the opening's wait for the whole film went: {ms, cells, near, people, why} (why: "" when all of
+## it came, "stalled" or "cap"), and when each picture's own country was all in, ms from the hold's
+## start (for the log and the probe).
+var preroll: Dictionary = {}
+var _preroll_key := ""
+var _preroll_moved_ms := 0
+var _preroll_quiet := 0
+var _preroll_done := false
+var _near_ready_ms := -1
+var _preroll_each: Dictionary = {}
 ## Whether the overall cap handed over, and the shots shown before their country had all come.
 var gave_up := false
 var shown_early: Array[String] = []
@@ -410,6 +449,14 @@ func _take_over() -> void:
 	if _player != null:
 		_player.set_physics_process(false)
 	WorldClock.running = false
+	var atm := _atmosphere()
+	if atm != null and "quiet" in atm:
+		# the game's own weather at the hand-over is told now, under the black, once; the shots'
+		# weather is the pictures' and is told to nobody (Atmosphere.quiet)
+		var weather := str((def.get("handover", {}) as Dictionary).get("weather", ""))
+		if mode == Mode.OPENING and not weather.is_empty():
+			atm.call("force_weather", weather, true)
+		atm.set("quiet", true)
 
 
 ## Where control comes back. The opening decides it, and a scrub shows the opening's; a replay
@@ -468,22 +515,30 @@ func _restore() -> void:
 	if _restored:
 		return
 	_restored = true
+	var t0 := Time.get_ticks_usec()
 	_restore_world()
+	t0 = _counted("film_restore_world", t0)
 	_restore_globals()
+	_counted("film_restore_globals", t0)
 
 
 ## What belongs to the world: the streamer, the sky, the body and its camera.
 func _restore_world() -> void:
 	if _world == null or not is_instance_valid(_world):
 		return
+	var t0 := Time.get_ticks_usec()
 	var streamer := _world.streamer
 	if streamer != null:
 		var target: Variant = _saved.get("target", null)
 		streamer.target = target if target is Node3D and is_instance_valid(target) else _player
 		streamer.report_regions = bool(_saved.get("report_regions", true))
-		streamer.also_cells = (_saved.get("also_cells", {}) as Dictionary).duplicate()
 		streamer.hurry = bool(_saved.get("hurry", false))
-		streamer.set_also_around(_saved.get("also_around", []))
+		if _planned and _phase == Phase.HANDOVER:
+			# the film's country is let go once the hand-over is over (`_finish`): a cell let go is a
+			# frame of a tenth of a second here, and the gameplay camera arriving is watched
+			streamer.refresh()
+		else:
+			_let_the_film_go()
 	var terrain_camera: Variant = _saved.get("terrain_camera", null)
 	if _world.terrain_node != null and terrain_camera is Camera3D and is_instance_valid(terrain_camera):
 		_world.terrain_node.call("set_camera", terrain_camera)
@@ -492,6 +547,7 @@ func _restore_world() -> void:
 	# fly camera let go (World.follow).
 	if mode == Mode.OPENING and _player != null and is_instance_valid(_player):
 		_world.follow(_player)
+	t0 = _counted("film_restore_streaming", t0)
 	var atm := _atmosphere()
 	if atm != null:
 		atm.call("from_save", _saved.get("sky", {}))
@@ -502,6 +558,10 @@ func _restore_world() -> void:
 		var weather := str((def.get("handover", {}) as Dictionary).get("weather", ""))
 		if mode == Mode.OPENING and not weather.is_empty():
 			atm.call("force_weather", weather, true)
+		if "quiet" in atm:
+			atm.set("quiet", false)
+			atm.call("tell_if_changed")
+	t0 = _counted("film_restore_sky", t0)
 	if _player != null and is_instance_valid(_player):
 		_put_player_at_handover()
 		_player.set_physics_process(bool(_saved.get("body_physics", true)))
@@ -518,6 +578,15 @@ func _restore_world() -> void:
 
 ## What belongs to the autoloads, which outlive the world: put back even if the world is torn down
 ## halfway through, or the next scene inherits a stopped clock and a quiet mix.
+## What the streamer was asked for besides its target before the film, given back.
+func _let_the_film_go() -> void:
+	var streamer := _world.streamer if _world != null and is_instance_valid(_world) else null
+	if streamer == null or not streamer.is_inside_tree() or _world.torn_down:
+		return
+	streamer.also_cells = (_saved.get("also_cells", {}) as Dictionary).duplicate()
+	streamer.set_also_around(_saved.get("also_around", []))
+
+
 func _restore_globals() -> void:
 	_draw_3d(true)
 	if _warm_step >= 0 and _world != null and is_instance_valid(_world):
@@ -550,6 +619,11 @@ func _restore_globals() -> void:
 
 
 func _exit_tree() -> void:
+	var atm := _atmosphere()
+	if atm != null and "quiet" in atm and bool(atm.get("quiet")):
+		atm.set("quiet", false)
+	if _planned and _restored and _phase != Phase.DONE:
+		_let_the_film_go()
 	for i in _sight_tasks:
 		WorkerThreadPool.wait_for_task_completion(int(_sight_tasks[i]))
 	_sight_tasks.clear()
@@ -667,8 +741,11 @@ func _enter_conditions(picture: int) -> void:
 	if picture < 0:
 		return
 	var path := path_of(picture)
+	var t0 := Time.get_ticks_usec()
 	_set_conditions(picture, 0.0)
+	t0 = _counted("film_enter_sky", t0)
 	_pose(path, 0.0, picture == _handover)
+	_counted("film_enter_pose", t0)
 	_need.append(path.position_at(0.0))
 	for p in path.looks:
 		_need.append(p)
@@ -686,6 +763,10 @@ func _stream_ahead(picture: int) -> void:
 	var streamer := _world.streamer
 	if streamer == null:
 		return
+	if _planned:
+		# the whole film's country is wanted from the opening's hold to the hand-over (`_plan_film`):
+		# nothing a later shot needs is let go meanwhile, nor asked for again at a cut
+		return
 	var points: Array = []
 	var path := path_of(picture)
 	if path != null:
@@ -701,6 +782,161 @@ func _stream_ahead(picture: int) -> void:
 	streamer.also_cells = ShotSight.merged(ShotSight.rings(sight_of(picture)),
 			ShotSight.rings(sight_of(next), OPENING_U)) if sight_streaming else {}
 	streamer.set_also_around(points)
+
+
+## The whole film's country, asked for at once (`film_cells`, `film_points`): what every shot's camera
+## sees along its path (ShotSight), the near ground under its path, and the rings and the towns round
+## where it opens and what it looks at. False until every shot's sight has been worked out (on worker
+## threads since the film began: `_see_ahead`), so the frame never waits on one; true at once, and
+## nothing planned, where there is nothing to plan (a scrub, `sight_streaming` off, no streamer).
+var _planned := false
+
+
+func _plan_film() -> bool:
+	if _planned:
+		return true
+	if mode == Mode.SCRUB or not sight_streaming or _world == null or _world.streamer == null:
+		return true                        # nothing to plan: each shot asks for its own (`_stream_ahead`)
+	for i in _sight_tasks:
+		if not WorkerThreadPool.is_task_completed(int(_sight_tasks[i])):
+			return false
+	var streamer := _world.streamer
+	var cells: Dictionary = {}
+	var points: Array[Vector3] = []
+	for i in _shots.size():
+		var path := path_of(i)
+		if path == null:
+			continue
+		cells = ShotSight.merged(cells, ShotSight.rings(sight_of(i)))
+		points.append(path.position_at(0.0))
+		for p in path.looks:
+			points.append(p)
+		# what the streamer wants round its target (the camera) anyway as it flies: the near ring at
+		# full detail and the far ring round it, so nothing new is asked for, and nothing let go, at a
+		# cut or while a shot plays
+		for k in PATH_SAMPLES:
+			var under := streamer.cell_of(path.position_at(float(k) / float(PATH_SAMPLES - 1)))
+			for dz in range(-streamer.far_ring, streamer.far_ring + 1):
+				for dx in range(-streamer.far_ring, streamer.far_ring + 1):
+					var c := Vector2i(under.x + dx, under.y + dz)
+					var ring := 1 if maxi(absi(dx), absi(dz)) <= streamer.full_ring else 2
+					cells[c] = mini(ring, int(cells.get(c, 99)))
+	for p in points:
+		for c in streamer.cells_around(p):
+			cells[c] = 1
+	film_cells = cells
+	film_near = ShotSight.near_only(cells)
+	film_points = points
+	_planned = true
+	streamer.also_cells = film_cells
+	streamer.set_also_around(film_points)
+	Log.info("Cinematic", "%s asks for its whole country: %d cells, %d of them near, round %d points"
+			% [def.get("id", "?"), film_cells.size(), film_near.size(), film_points.size()])
+	return true
+
+
+## Whether the whole film's near country stands: the cells, the rings and the towns round every point
+## a shot opens on or looks at, and everybody living there stood up and dressed.
+func _film_ready() -> bool:
+	if not _planned:
+		return true
+	var streamer := _world.streamer
+	var near := streamer.standing_of(film_near)
+	if near.x < near.y:
+		return false
+	for p in film_points:
+		if not streamer.is_loaded_around(p):
+			return false
+		var towns := WorldDoors.towns_near(get_tree(), p, ShotSight.TOWNS_M)
+		if towns.x < towns.y:
+			return false
+	return _people_settled()
+
+
+## Nobody queued to be stood up, and nobody still being dressed.
+func _people_settled() -> bool:
+	var reg := NpcRegistry.instance
+	if reg != null and is_instance_valid(reg) and not reg.settled():
+		return false
+	return Npc.dressing_count() == 0
+
+
+## The opening's wait for the whole film: true once it stands, or once it is given up on (stalled,
+## or the cap). Writes `preroll`.
+func _preroll_ready(held_ms: int) -> bool:
+	if _preroll_done or not _planned:
+		return true
+	var streamer := _world.streamer
+	var all := streamer.standing_of(film_cells)
+	var near := streamer.standing_of(film_near)
+	var reg := NpcRegistry.instance
+	var people := reg.spawned.size() if reg != null and is_instance_valid(reg) else 0
+	for i in _shots.size():
+		if not _preroll_each.has(i) and path_of(i) != null and _shot_ready(i):
+			_preroll_each[i] = held_ms
+	var why := ""
+	if not _film_ready():
+		# not WorldPace.built: the film counts its own frames there, and a starved streamer looked busy
+		var towns := Vector2i.ZERO
+		for p in film_points:
+			towns += WorldDoors.towns_near(get_tree(), p, ShotSight.TOWNS_M)
+		var key := "%d|%d|%d|%d|%d|%d" % [all.x, near.x, people, Npc.dressing_count(), streamer.progress(), towns.x]
+		if key != _preroll_key:
+			_preroll_key = key
+			_preroll_moved_ms = held_ms
+			_preroll_quiet = 0
+		else:
+			_preroll_quiet += 1
+		if held_ms >= int(preroll_cap_seconds * 1000.0):
+			why = "cap"
+		elif _preroll_quiet >= PREROLL_STALL_FRAMES and held_ms - _preroll_moved_ms >= int(PREROLL_STALL_S * 1000.0):
+			why = "stalled"
+		if why.is_empty():
+			return false
+	elif all.x < all.y:
+		# the near country stands; the far ring's (its places' silhouettes wait for the film's end
+		# once it plays) is given a moment more while it keeps coming
+		if _near_ready_ms < 0:
+			_near_ready_ms = held_ms
+		if held_ms - _near_ready_ms < int(PREROLL_FAR_GRACE_S * 1000.0) and held_ms < int(preroll_cap_seconds * 1000.0):
+			return false
+	_preroll_done = true
+	preroll = {"ms": held_ms, "cells": all, "near": near, "people": people, "why": why, "each": _preroll_each.duplicate()}
+	var line := "%s: the whole film's country in %.1f s before the first picture (near %d of %d, all %d of %d, %d people; each shot's own in %s ms)%s" % [
+			def.get("id", "?"), held_ms / 1000.0, near.x, near.y, all.x, all.y, people, str(_preroll_each),
+			"" if why.is_empty() else ", given up (%s): %s" % [why, waiting_for()]]
+	if why.is_empty():
+		Log.info("Cinematic", line)
+	else:
+		Log.warn("Cinematic", line)
+	return true
+
+
+## Whether picture `index`'s own opening stands (its point rings, its towns, the near cells it sees
+## first): what `_cells_ready` asks of the current one.
+func _shot_ready(index: int) -> bool:
+	var path := path_of(index)
+	var streamer := _world.streamer
+	if path == null or streamer == null:
+		return true
+	var points: Array = [path.position_at(0.0)]
+	points.append_array(path.looks)
+	for p in points:
+		if not streamer.is_loaded_around(p):
+			return false
+	var towns := WorldDoors.towns_near(get_tree(), points[0], ShotSight.TOWNS_M)
+	if towns.x < towns.y:
+		return false
+	var seen := streamer.standing_of(ShotSight.near_only(ShotSight.rings(sight_of(index), OPENING_U)))
+	return seen.x >= seen.y
+
+
+## Whether the film's pictures are being watched, from its first picture to the end of the hand-over
+## (cuts included): what builds the world in pieces too big for a watched frame (a place, a town, a
+## person) waits until the film is over, since everything the film needs came before its first
+## picture, and the gameplay camera arriving is watched too.
+func watched() -> bool:
+	return _revealed_once and _phase in [Phase.PLAY, Phase.HOLD, Phase.HANDOVER]
 
 
 ## The cells shot `index`'s camera sees along its path (ShotSight.seen); {} for a black one.
@@ -790,12 +1026,15 @@ func _set_conditions(index: int, u: float) -> void:
 	if region.is_empty() and path != null and _world.provider != null:
 		var at := path.position_at(0.0)
 		region = _world.provider.nearest_region_id_at(at.x, at.z)
+	var t0 := Time.get_ticks_usec()
 	if atm != null and not region.is_empty():
 		atm.call("set_region", region, true)
 		if shot.has("weather"):
 			atm.call("force_weather", str(shot["weather"]), true)
+	t0 = _counted("film_sky_atmosphere", t0)
 	if not region.is_empty():
 		Ambience.call("set_region", region)
+	_counted("film_sky_ambience", t0)
 
 
 func _pose(path: CinematicPath, u: float, handover := false) -> void:
@@ -841,6 +1080,8 @@ func _process_film(_delta: float) -> void:
 		# (ShotSight: tens of milliseconds each), so a cut does not pay for it in a watched frame
 		for i in range(maxi(_index, 0), _shots.size()):
 			if path_of(i) != null and not _sights.has(i):
+				if _sight_tasks.has(i) and not WorkerThreadPool.is_task_completed(int(_sight_tasks[i])):
+					break                  # still being worked out on its thread: never waited for here
 				var ts := Time.get_ticks_usec()
 				sight_of(i)
 				WorldPace.count("film_sight", Time.get_ticks_usec() - ts)
@@ -935,8 +1176,11 @@ func _real_delta() -> float:
 
 func _begin_hold() -> void:
 	_phase = Phase.HOLD
-	# nothing new is watched while a shot holds (the last frame, or the black): the country hurries
-	_hurry(true)
+	# Before the first picture (and after a skip) nothing is watched but the black: the country
+	# hurries. At a cut mid-film it does not: the still is on the screen for a few frames, the
+	# country is in already (`_plan_film`), and the curtain's budget there stood people and places up
+	# in frames of a tenth of a second at every cut.
+	_hurry(not _mid_film() or bool((_shots[_index] as Dictionary).get("black", false)))
 	_waited = 0.0
 	_settle = SETTLE_FRAMES
 	_hold_began_ms = Time.get_ticks_msec()
@@ -956,8 +1200,23 @@ func _tick_hold(delta: float) -> void:
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
 	var held_ms := Time.get_ticks_msec() - _hold_began_ms
-	# after the overall cap nothing is waited for: the hand-over comes at once
-	var cap_ms := 0 if gave_up else int(hold_cap_seconds * 1000.0)
+	var mid := _mid_film()
+	# after the overall cap nothing is waited for: the hand-over comes at once; mid-film a cut waits
+	# a moment at most, on its still
+	var cap_ms := 0 if gave_up else int((minf(hold_cap_seconds, mid_hold_cap_seconds) if mid else hold_cap_seconds) * 1000.0)
+	if not _revealed_once and not skipped and not gave_up:
+		# before the first picture: the whole film's country, so that no cut waits on it again
+		if not _plan_film():
+			return
+		var was_done := _preroll_done
+		if not _preroll_ready(held_ms):
+			_hold_line_if_late(shot)
+			return
+		if not was_done and _planned:
+			# the first shot's own wait (its cap, its settling frames) counts from here
+			_hold_rec["preroll_ms"] = held_ms
+			_hold_began_ms = Time.get_ticks_msec()
+			held_ms = 0
 	var shown := black or _cells_ready()
 	if _hold_rec.get("ready") == null:
 		_hold_rec["ready"] = shown
@@ -990,13 +1249,27 @@ func _tick_hold(delta: float) -> void:
 			return
 		_reveal(black)
 		return
-	if _waited > HOLD_GRACE_SECONDS and not _overlay.caption_shown():
-		# the country is late: hold on black with a caption, and the music waits with the pictures
-		_fade_curtain(1.0, 0.35)
-		_overlay.caption_in(str(def.get("hold_line", DEFAULT_HOLD_LINE)))
-		_hold_rec["caption"] = true
-		Music.pause_cue(true)
-		_held_music = true
+	if not mid:
+		_hold_line_if_late(shot)
+
+
+## Before the first picture (or after a skip), a country late past HOLD_GRACE_SECONDS: the black
+## with the hold line, and the music waits with the pictures. Never once the film has begun: a cut
+## holds its still and nothing else (MID_HOLD_CAP_SECONDS).
+func _hold_line_if_late(_shot: Dictionary) -> void:
+	if _mid_film() or _waited <= HOLD_GRACE_SECONDS or _overlay.caption_shown():
+		return
+	_fade_curtain(1.0, 0.35)
+	_overlay.caption_in(str(def.get("hold_line", DEFAULT_HOLD_LINE)))
+	_hold_rec["caption"] = true
+	Music.pause_cue(true)
+	_held_music = true
+
+
+## Whether the film's pictures have begun and it was not skipped: from then on nothing waits on black
+## or says it is loading.
+func _mid_film() -> bool:
+	return _revealed_once and not skipped and not gave_up
 
 
 func _reveal(black: bool) -> void:
@@ -1191,7 +1464,9 @@ func _arrive_at_the_end() -> void:
 # --- handing over --------------------------------------------------------------------------------------
 
 func _hand_over() -> void:
+	var t0 := Time.get_ticks_usec()
 	_stand_people_up()
+	_counted("film_handover_people", t0)
 	_phase = Phase.HANDOVER
 	_overlay.unsay()
 	_overlay.prompt(false)
@@ -1208,6 +1483,7 @@ func _hand_over() -> void:
 
 func _finish() -> void:
 	_phase = Phase.DONE
+	_let_the_film_go()
 	set_process(false)
 	set_process_input(false)
 	finished.emit(skipped)

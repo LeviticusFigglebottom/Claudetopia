@@ -852,6 +852,12 @@ func _on_player_spawned(player: Node) -> void:
 	# and the country around it has arrived, and not before.
 	if _fade.visible:
 		await _wait_for_the_country(player)
+		# the world's first frames drawn under the caption, a layer a frame, so the lift is not onto
+		# one frame that draws (and compiles) everything at once; a film warms its own picture
+		var world := _world_node()
+		if world != null and is_instance_valid(world) and world.has_method("warm_in") \
+				and get_tree().get_first_node_in_group("cinematic") == null:
+			await world.call("warm_in")
 		fade_from_black(0.8)
 
 

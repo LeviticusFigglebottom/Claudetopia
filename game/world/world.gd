@@ -387,6 +387,41 @@ func _setup_fallback() -> void:
 	fallback = null
 
 
+## The world's first frames under the loading fade, a layer a frame (`warm_layers`), drawn behind the
+## caption before the fade lifts (UI, after its wait for the country): the frame that drew everything
+## at once for the first time was the first frame after the lift, 3.7 s on this box's software
+## renderer with the caption's last frame on the screen all of it (the flow's Continue). A film warms
+## its own first picture under its curtain (CinematicPlayer); the title its own (TitleVista).
+## Nobody sees these frames (the fade is opaque), so they are drawn at WARM_SCALE of the 3D
+## resolution: what they are for is every shader's first use and every mesh's upload, which do not
+## depend on how many pixels are filled, and on the software renderer a frame of this world at full
+## size is seconds of filling. Returns once every layer is shown; at once where nothing was held.
+func warm_in() -> void:
+	if vista or not stand_up_in_steps or not is_inside_tree() or _warmed_in:
+		return
+	_warmed_in = true
+	var vp := get_viewport()
+	var scale_was := vp.scaling_3d_scale
+	vp.scaling_3d_scale = minf(scale_was, WARM_SCALE)
+	# the last step shows every layer, and its frame too is drawn before the fade begins to lift
+	for step in WARM_LAYERS.size() + 1:
+		warm_layers(step)
+		_hold_3d(false)
+		await _frame()
+		if not is_inside_tree():
+			break
+	warm_layers(WARM_LAYERS.size())
+	if is_instance_valid(vp):
+		vp.scaling_3d_scale = scale_was
+
+
+## The 3D resolution the frames under the fade are drawn at (`warm_in`): Godot's least.
+const WARM_SCALE := 0.25
+
+
+var _warmed_in := false
+
+
 ## The `step`th frame of drawing a place for the first time: the ground and the sky, with the layers
 ## after WARM_LAYERS[step - 1] hidden. True once every layer is shown (and from then on). Whoever
 ## warms a place hides nothing for good: a large step shows every layer.
