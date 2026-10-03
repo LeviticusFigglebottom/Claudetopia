@@ -21,6 +21,15 @@ extends RefCounted
 ## neither pops nor is ever drawn twice; the bark has no dissolve and switches outright in the
 ## middle of the band, where the canopy covers it.
 ##
+## **Shadow LOD.** The sun's shadow is drawn up to four times, once a cascade, and a tree or a cliff
+## piece at its full mesh cast all of it each time: the shadow passes were two thirds of a Greatwood
+## frame (1.14 of 1.74 M primitives at the Windthrow, 1.30 of 1.99 M at the Name-Wife's Hollow,
+## where the crag pieces alone were 0.65 M). So a level with a coarser one below it does not cast:
+## the coarser level casts for it, from a shadow-only MultiMesh of the same instances. A shadow on
+## the ground a few metres off is soft-edged and dappled whatever drew it; LOD1's crown of cards
+## and a cliff piece's LOD1 throw the same shape. The coarsest level casts its own, as before.
+## `-- --no-shadow-lod` draws every level's own shadow, for an A/B.
+##
 ## An opaque asset with a LOD ladder and weight to lose (a drystone wall, a boulder) takes the
 ## same treatment without the dissolve, at distances set by its size.
 
@@ -37,6 +46,7 @@ const NEAR_PER_METRE := 4.0
 ## and that was most of the wood's frame. `-- --lod-near-max=M` tries another (0: none).
 const NEAR_MAX := 0.0
 static var near_max := _near_max()
+static var shadow_lod := not OS.get_cmdline_user_args().has("--no-shadow-lod")
 
 const FAR_MIN := 70.0
 const FAR_PER_METRE := 10.0
@@ -99,6 +109,8 @@ class Ladder extends RefCounted:
 	## Leaf materials per level, and the impostor's, whose dissolve bands `set_bias` writes.
 	var leaf_materials: Array = []
 	var impostor_material: ShaderMaterial = null
+	## Per level, its leaves as a shadow caster for the level above: own materials, no dissolve.
+	var shadow_leaves: Array = []
 
 	func has_impostor() -> bool:
 		return impostor != null
@@ -220,7 +232,10 @@ class Group extends RefCounted:
 				if imp and d > far - fh - SLACK:
 					pictures.append(i)
 		var idx := {"solid0": solid0, "solid1": solid1, "solid2": solid2, "leaves0": leaves0,
-				"leaves1": leaves1, "impostor": pictures}
+				"leaves1": leaves1, "impostor": pictures,
+				# a level's shadow casters stand for exactly its instances
+				"shadow0_solid": solid0, "shadow0_leaves": solid0, "shadow1_solid": solid1,
+				"shadow1_leaves": solid1}
 		for key in mmis:
 			var list: PackedInt32Array = idx[key]
 			var sig := hash(list)
@@ -363,6 +378,15 @@ static func _build_ladder(asset_path: String, packed: PackedScene) -> Ladder:
 					if m is ShaderMaterial:
 						mats.append(m)
 			lad.leaf_materials.append(mats)
+			# the same leaves casting for the level above them: never dissolved, whatever the distance
+			var caster := _with_own_materials(leaves)
+			if caster != null:
+				for i in caster.get_surface_count():
+					var m := caster.surface_get_material(i)
+					if m is ShaderMaterial:
+						(m as ShaderMaterial).set_shader_parameter("lod_fade_in", Vector2.ZERO)
+						(m as ShaderMaterial).set_shader_parameter("lod_fade_out", Vector2.ZERO)
+			lad.shadow_leaves.append(caster)
 	else:
 		var lod2: Mesh = meshes.get(base + "_LOD2", null)
 		var tris := _tri_count(lod0)
@@ -538,12 +562,23 @@ static func make_group(lad: Ladder, cell: Node3D, rows: Array, far_ring: bool, c
 		return g
 	for level in lad.levels.size():
 		var parts: Dictionary = lad.levels[level]
+		# a level with a coarser one below casts through it (Shadow LOD, above)
+		var proxy := cast_shadows and shadow_lod and level + 1 < lad.levels.size()
 		if parts["solid"] != null:
 			g.mmis["solid%d" % level] = _mmi(cell, "%s_lod%d" % [base, level], parts["solid"],
-					cast_shadows, range_end, asset_path)
+					cast_shadows and not proxy, range_end, asset_path)
 		if parts["leaves"] != null:
 			g.mmis["leaves%d" % level] = _mmi(cell, "%s_lod%d_leaves" % [base, level], parts["leaves"],
-					cast_shadows, range_end, asset_path)
+					cast_shadows and not proxy, range_end, asset_path)
+		if proxy:
+			var below: Dictionary = lad.levels[level + 1]
+			if below["solid"] != null:
+				g.mmis["shadow%d_solid" % level] = _mmi(cell, "%s_lod%d_shadow" % [base, level], below["solid"],
+						true, range_end, asset_path, true)
+			var leaves_below: Mesh = lad.shadow_leaves[level + 1] if level + 1 < lad.shadow_leaves.size() else null
+			if leaves_below != null:
+				g.mmis["shadow%d_leaves" % level] = _mmi(cell, "%s_lod%d_shadow_leaves" % [base, level],
+						leaves_below, true, range_end, asset_path, true)
 	if lad.has_impostor():
 		g.mmis["impostor"] = _mmi(cell, "%s_impostor" % base, lad.impostor, cast_shadows, range_end,
 				asset_path)
@@ -551,7 +586,7 @@ static func make_group(lad: Ladder, cell: Node3D, rows: Array, far_ring: bool, c
 
 
 static func _mmi(cell: Node3D, node_name: String, mesh: Mesh, cast_shadows: bool, range_end: float,
-		asset_path: String) -> MultiMeshInstance3D:
+		asset_path: String, shadow_only := false) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true
@@ -566,8 +601,9 @@ static func _mmi(cell: Node3D, node_name: String, mesh: Mesh, cast_shadows: bool
 	# refilled from _process as the eye moves, and never moved itself: nothing to interpolate
 	# between physics ticks, and an interpolated MultiMesh warns when its buffer is set off-tick
 	mmi.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
-			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if shadow_only \
+			else (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if cast_shadows \
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 	mmi.visibility_range_end = range_end
 	mmi.visibility_range_end_margin = range_end * 0.15
 	mmi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
