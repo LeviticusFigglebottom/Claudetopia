@@ -5,7 +5,7 @@
     "layer": "main",
     "giver": "core:npc/sauve_mor",
     "description": "Tomorrow is tithe-day at Moreva, the eel-landing on the Delta where you trap with Sauve Mor. The Tallymen's collector sleeps tonight against his strongbox, and the tithe-book in it says Moreva owes forty baskets of eels it never caught. Sauve means to have that book before the collector wakes, and nobody is to know it was Moreva.",
-    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue; reworked for triage 44 (PROGRESS.md, 'The Rogue's first quest makes sense, and its stealth can be done') and made plainer for triage 51-52: one goal (the collector's tithe-book gone before the count, and nobody the wiser), and each step is a part of it, in the order a thief would do it: (1) the box: crouch, pick it, take the book (core:item/tithe_book, in the strongbox's loot core:loot/tithe_strongbox), and the sleeper's pocket if you like; (2) the traps: carry the book down to Sauve's punt at his traps past the night-watch, who must not see a stranger coming away from the box; (3) the sack, one blow from behind to learn it; (4) the bravo, whose round ends at the empty box; (5) the report: the page, Tally, the courier. The traps: Tella Oul (the Reed Council's night-watch, a lantern on her: the stage's `unseen`, NightWatch) stands at the head of the way down to the South Channel looking down it; the lane on the way's east side is sheltered from her by five `cover` props (QuestCover); the straight way down passes six metres in front of her lantern. Seen, the try fails (triage 78): the quest goes to the `seen` detour (NightWatch, the `unseen`'s `fail_stage`), whose one objective is to speak to Sauve again, back where the night began (his landing spot, out of her sight); speaking to him (`traps_again`) sends the quest back to the_traps, and the attempt begins clean: the flag down, her meter from nothing, the book still in your bag (Sauve hands it back if it is not). Sauve waits at his traps through that stage (she knows him) and is `with_you_when` the quest is active, so the HUD's eye reads the watch and not him. The strongbox is a QuestSpots prop (a locked WorldContainer the Tallymen own, `prop:strongbox`) opened on the lockpick screen (`pick_lock`); the collector (core:npc/tithe_collector) sleeps beside it through the three night lessons, and lifting from his pocket is the optional `pickpocket` act. The sack is a Pell of kind sack (`prop:sack`), which never sees anybody, so a crouched blow from behind is a sneak attack. The bravo walks the landing's round at first grey (QuestFoes, `round`), in fog. Tally, Sauve's own mare, is handed over after the first lesson (the_strongbox's on_complete, tied on the south-east boards: `tally_tether`), not to be ridden on the boards that night; getting up on her is the report's (`mount`), for the road after the courier. Every change of stage is said out loud by Sauve as it happens, and each journal entry opens on why. test_rogue_plays plays it with the body and the keys.",
+    "notes": "The rogue's tutorial (docs/FIGHTING_STYLE_STARTS.md 3.4, 3.4a), begun by core:opening/rogue; reworked for triage 44 (PROGRESS.md, 'The Rogue's first quest makes sense, and its stealth can be done') and made plainer for triage 51-52: one goal (the collector's tithe-book gone before the count, and nobody the wiser), and each step is a part of it, in the order a thief would do it: (1) the box: crouch, pick it, take the book (core:item/tithe_book, in the strongbox's loot core:loot/tithe_strongbox), and the sleeper's pocket if you like; (2) the traps: carry the book down to Sauve's punt at his traps past the night-watch, who must not see a stranger coming away from the box; (3) the sack, one blow from behind to learn it; (4) the bravo, whose round ends at the empty box; (5) the report: the page, Tally, the courier. The traps: Tella Oul (the Reed Council's night-watch, a lantern on her: the stage's `unseen`, NightWatch) stands at the head of the way down to the South Channel looking down it; the lane on the way's east side is sheltered from her by eleven `cover` props (QuestCover) set end to end, so that from her post a crouched body anywhere in the lane is behind one (test_start_rogue rays it); the straight way down passes six metres in front of her lantern. Seen, the try fails (triage 78): the quest goes to the `seen` detour (NightWatch, the `unseen`'s `fail_stage`), whose one objective is to speak to Sauve again, back where the night began (his landing spot, out of her sight); speaking to him (`traps_again`) sends the quest back to the_traps, and the attempt begins clean: the flag down, her meter from nothing, the book still in your bag (Sauve hands it back if it is not). Sauve waits at his traps through that stage (she knows him) and is `with_you_when` the quest is active, so the HUD's eye reads the watch and not him. The strongbox is a QuestSpots prop (a locked WorldContainer the Tallymen own, `prop:strongbox`) opened on the lockpick screen (`pick_lock`); the collector (core:npc/tithe_collector) sleeps beside it through the three night lessons, and lifting from his pocket is the optional `pickpocket` act. The sack is a Pell of kind sack (`prop:sack`), which never sees anybody, so a crouched blow from behind is a sneak attack. The bravo walks the landing's round at first grey (QuestFoes, `round`), in fog. Tally, Sauve's own mare, is handed over after the first lesson (the_strongbox's on_complete, tied on the south-east boards: `tally_tether`), not to be ridden on the boards that night; getting up on her is the report's (`mount`), for the road after the courier. Every change of stage is said out loud by Sauve as it happens, and each journal entry opens on why. test_rogue_plays plays it with the body and the keys.",
     "spots": [
       {
         "name": "sauve_landing",
@@ -72,13 +72,43 @@
       },
       {
         "kind": "cover",
+        "look": "traps",
+        "name": "lane_traps_head",
+        "place": "core:place/moreva",
+        "bearing": 177.99,
+        "distance": 45.53,
+        "facing": 275,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
+        "look": "crates",
+        "name": "lane_crates_head",
+        "place": "core:place/moreva",
+        "bearing": 178.06,
+        "distance": 47.18,
+        "facing": 275,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
         "look": "crates",
         "name": "lane_crates_upper",
         "place": "core:place/moreva",
-        "bearing": 178.1,
-        "distance": 49.0,
+        "bearing": 178.12,
+        "distance": 48.83,
         "facing": 275,
-        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her"
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
+        "look": "traps",
+        "name": "lane_traps_gap",
+        "place": "core:place/moreva",
+        "bearing": 178.18,
+        "distance": 50.48,
+        "facing": 275,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
       },
       {
         "kind": "cover",
@@ -86,29 +116,59 @@
         "name": "lane_traps_upper",
         "place": "core:place/moreva",
         "bearing": 178.3,
-        "distance": 52.4,
-        "facing": 280,
-        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her"
+        "distance": 52.12,
+        "facing": 277,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
+        "look": "crates",
+        "name": "lane_crates_mid",
+        "place": "core:place/moreva",
+        "bearing": 178.4,
+        "distance": 53.77,
+        "facing": 278,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
       },
       {
         "kind": "cover",
         "look": "boat",
         "name": "lane_boat",
         "place": "core:place/moreva",
-        "bearing": 178.6,
-        "distance": 57.5,
+        "bearing": 178.58,
+        "distance": 56.52,
         "facing": 280,
-        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her"
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
+        "look": "traps",
+        "name": "lane_traps_landing",
+        "place": "core:place/moreva",
+        "bearing": 178.85,
+        "distance": 60.01,
+        "facing": 283,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
       },
       {
         "kind": "cover",
         "look": "traps",
         "name": "lane_traps_lower",
         "place": "core:place/moreva",
-        "bearing": 179.1,
-        "distance": 62.5,
-        "facing": 290,
-        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her"
+        "bearing": 179.07,
+        "distance": 61.61,
+        "facing": 287,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
+      },
+      {
+        "kind": "cover",
+        "look": "crates",
+        "name": "lane_crates_foot",
+        "place": "core:place/moreva",
+        "bearing": 179.46,
+        "distance": 63.85,
+        "facing": 292,
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
       },
       {
         "kind": "cover",
@@ -118,7 +178,7 @@
         "bearing": 180.5,
         "distance": 66.4,
         "facing": 305,
-        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her"
+        "notes": "the lane down the way's east side: between the watch and the lane, its face turned to her; end to end with the next, so no gap between them shows her the lane"
       }
     ],
     "stages": [
