@@ -279,16 +279,22 @@ func _add_multimesh(mmi: MultiMeshInstance3D, out: Array[Dictionary], anchor: St
 func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> void:
 	for g: Variant in streamer.get("_lod_groups"):
 		var group := g as ScatterLod.Group
-		if group == null or group.cell != cell_node or group.ladder == null:
+		if group == null or group.cell != cell_node:
 			continue
-		var asset := group.ladder.asset_path
-		var mesh: Mesh = null
-		for level: Dictionary in group.ladder.levels:
-			mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
-			if mesh != null:
-				break
+		# the ground cover (world/ground_cover.gd) was a plain MultiMesh, read back only when drawn
+		var cover := group as GroundCover.Group
+		if group.ladder == null and (cover == null or headless):
+			continue
+		var asset := cover.asset_path if cover != null else group.ladder.asset_path
+		var mesh: Mesh = cover.cover_mesh if cover != null else null
+		if cover == null:
+			for level: Dictionary in group.ladder.levels:
+				mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
+				if mesh != null:
+					break
 		if mesh == null:
 			continue
+		var solid := _has_body(cell_node) if cover != null else true
 		var local := mesh.get_aabb()
 		var fam := family(asset)
 		var n := group.count()
@@ -304,7 +310,7 @@ func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> 
 			if not rect.has_point(Vector2(ctr.x, ctr.z)):
 				continue
 			out.append({"kind": "instance", "src": "scatter", "family": fam, "asset": asset, "aabb": box,
-				"at": xf.origin, "solid": true, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
+				"at": xf.origin, "solid": solid, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
 
 
 ## A placed scene or a built building: one object, the box of everything drawn in it.

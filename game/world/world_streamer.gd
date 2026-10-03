@@ -197,6 +197,10 @@ func apply_view_range() -> void:
 				var base := float(child.get_meta("range_base"))
 				(child as GeometryInstance3D).visibility_range_end = base * view_range
 				(child as GeometryInstance3D).visibility_range_end_margin = base * view_range * 0.15
+	for g in _lod_groups:
+		if g is GroundCover.Group:
+			var cover := g as GroundCover.Group
+			cover.set_reach(_range_for(asset_kind(cover.asset_path), 0) * view_range)
 
 
 func apply_lod_bias() -> void:
@@ -1133,6 +1137,18 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	elif kind in ["herb", "bush"]:
 		keep = int(ceil(float(rows.size()) * scatter_density))
 	if keep <= 0:
+		return
+	if GroundCover.takes(kind, ring <= full_ring):
+		# drawn out to its reach from the eye wherever the eye is in the cell (world/ground_cover.gd)
+		var kept: Array = []
+		var every := float(rows.size()) / float(keep)
+		for i in keep:
+			kept.append(rows[int(floor(float(i) * every))])
+		var cover := GroundCover.make_group(parent, asset_path, mesh, kept, _range_for(kind, ring), view_range)
+		# a streamer following nothing (a tool, a test) has no eye to measure from: all of it
+		var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+		cover.update(lod_eye() if target != null or cam != null else Vector3.INF)
+		_lod_groups.append(cover)
 		return
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
