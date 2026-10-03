@@ -1684,9 +1684,13 @@ func _wait_for_scene(script_file: String, timeout: float) -> Node:
 	return null
 
 
-func _wait_until(pred: Callable, timeout: float) -> bool:
+## Waits for `pred` up to `timeout` seconds and at least `min_frames` frames: on the software
+## renderer a frame is seconds long, and something due a frame or two on is not late.
+func _wait_until(pred: Callable, timeout: float, min_frames := 6) -> bool:
 	var deadline := Time.get_ticks_msec() + int(timeout * 1000.0)
-	while Time.get_ticks_msec() < deadline:
+	var frames := 0
+	while Time.get_ticks_msec() < deadline or frames < min_frames:
+		frames += 1
 		if bool(pred.call()):
 			return true
 		await get_tree().process_frame
