@@ -8,6 +8,8 @@ extends TestCase
 
 const SIDE := "core:quest/_notice_side"
 const OTHER := "core:quest/_notice_other"
+## The tracker's right edge on the canvas (the HUD sets it 22 px in, QuestTracker.WIDTH wide).
+const TRACKER_EDGE := 22.0 + QuestTracker.WIDTH
 const STARTERS := ["core:quest/first_warrior", "core:quest/the_relief", "core:quest/first_ranger",
 		"core:quest/the_grey_hart", "core:quest/first_mage", "core:quest/the_note_under_the_water",
 		"core:quest/first_rogue", "core:quest/the_unsaid_page"]
@@ -225,6 +227,8 @@ func test_the_plate_is_large_near_the_top_and_clear_of_the_crosshair() -> void:
 	var r := notice.plate_rect()
 	assert_gt(r.size.x, 400.0, "a plate, not a line: %s" % str(r))
 	assert_true(r.position.y >= 70.0, "under the compass: %s" % str(r))
+	assert_near(r.get_center().x, view.x * 0.5, 4.0, "in the middle of the screen: %s in %s" % [str(r), str(view)])
+	assert_true(r.position.x >= TRACKER_EDGE or notice.over_tracker, "beside the tracker, not over it: %s" % str(r))
 	assert_true(r.end.y < view.y * 0.5 - 40.0, "clear of the crosshair at the middle: %s in %s" % [str(r), str(view)])
 	var objective := notice.find_child("Objective", true, false) as Label
 	assert_true(objective.get_theme_font_size("font_size") >= 22, "the objective is large")

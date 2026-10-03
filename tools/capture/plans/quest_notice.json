@@ -10,10 +10,22 @@
  "shots": [
   {
    "label": "notice_the_ditch",
-   "at": {"place": "core:place/wardens_rest", "bearing": 300, "distance": 30.0, "height": 2.3},
-   "body": {"place": "core:place/wardens_rest", "bearing": 300, "distance": 26},
-   "look": {"place": "core:poi/wynstead_ditch_camp", "height": 2.0},
-   "time": 11.0,
+   "at": {
+    "place": "core:place/wardens_rest",
+    "bearing": 142.6,
+    "distance": 17.0,
+    "height": 2.2
+   },
+   "body": {
+    "place": "core:place/wardens_rest",
+    "bearing": 142.6,
+    "distance": 13.5
+   },
+   "look": {
+    "place": "core:place/wardens_rest",
+    "height": 3.0
+   },
+   "time": 10.5,
    "weather": "core:weather/clear",
    "fov": 70
   }
