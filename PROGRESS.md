@@ -16485,3 +16485,77 @@ the difference x4, with crops of the canopy and the ground.
 - The trim weighs every geometry node that enters the tree, a frame later (a type check and a walk
   up to the cell). It has not been timed on its own.
 - The before run exited 134 after "quit (the game ended)", at teardown; the after runs exited 0.
+## Ground cover in patches: a visibility range is measured from the box's centre (ground-cover, 2026-10-03)
+
+The owner, on the RX 9070 XT (Forward+, High): grass and the small scatter came and went in patches
+as he walked, present in some places and absent in others.
+
+**The cause.** Godot's scene cull measures a visibility range from the camera to the **centre of the
+node's bounding box**. This is the same under Forward+ and Compatibility, because it is the
+renderer-independent `RendererSceneCull`. Each near-ring cell drew each herb or bush kind as one
+MultiMesh over the whole 256 m cell, so its box's centre was roughly the cell's middle. That is up to
+181 m from a player standing inside the same cell. The herbs' reach is `VIEW_RANGE.herb` 110 m, times
+the view range (0.75 on Low, 0.9 on Medium). So a cell's grass was drawn only while the eye was
+within about 110 m of the cell's middle, and then the whole cell's grass at once. A neighbouring
+cell's grass was almost never drawn. The data is continuous. What the player sees is a 256 m grid
+switching on and off.
+
+**Measured.** Walking the Tamwick road east out of Merrowby, I took 51 stops 16 m apart and counted
+the herb instances within 40 m in the baked cells. I then counted how many sat in a MultiMesh the
+cull would draw (`route_herbs.py`, the renderer's rule applied to the cells' rows):
+
+| | herbs within 40 m drawn | stops with under half drawn |
+|---|---|---|
+| High (view range 1.0), before | 72% | 19 of 51 (5 with none) |
+| Medium (0.9), before | 57% | 32 |
+| Low (0.75), before | 44% | 37 |
+| any preset, after | 100% | 0 |
+
+Every stop but Merrowby's own pad had 200-1,400 herbs within 40 m in the data. The baked cells,
+the scatter rules, the ground paint and the first-launch preset are not the cause. Neither is
+GrassInstancer (off unless chosen), ShadowTrim (shadows only, and it skips scatter), ScatterLod's
+near-max (off; trees only) or the MultiMesh's frustum box (correct, just too big for a range).
+
+**The fix** (`world/ground_cover.gd`):
+- The near ring's herbs and bushes are sorted into 32 m tiles a kind and cell.
+- Each kind is still **one MultiMesh a cell**. It holds only the tiles within reach + 8 m of the eye,
+  refilled when the eye has moved 4 m. These groups ride in the streamer's `_lod_groups` with the
+  trees, so unloading, the LOD budget and FallbackTerrain's set-down take them as they take a tree.
+- The edge is a dissolve per plant over the last fifth of the reach. It uses the foliage shader's
+  `lod_fade_out`, written into the plant's own copy of its materials.
+- The MultiMesh's own visibility range is now a backstop at three reaches.
+- The view-range setting moves the reach and the band live.
+- `-- --cover-by-cell` draws the cover the old way, for an A/B.
+- world_streamer.gd took a 12-line branch in `_build_multimesh` and 4 lines in `apply_view_range`.
+  `seat_audit.gd` reads the cover groups' rows where it read the plain MultiMesh before (rendered
+  runs only, as before).
+
+**Looked at, and cost**: `docs/review/perf/ground_cover_tamwick_road.jpg` (Compatibility, High,
+1280x720, w4096j). It has six stops along the road, before (`--cover-by-cell`) over after. At 317,
+555 and 773 m the verges were bare before and have their grass and flowers after. Where the cover
+was already drawn, nothing changed. Draws per frame went from 625-921 to 655-948 (+0 to +45).
+Primitives went from 0.45-0.78 M to 0.48-0.77 M (-0.04 to +0.05 M), well inside the 2,000 draw and
+1.5 M budget. Fewer plants are drawn than when a whole cell was on, and more than when it was off.
+
+**Tests**:
+- `test_ground_cover` (4 tests) stands an eye at a cell's corner, edge, middle and walking across it.
+  By the renderer's rule, it asks that every plant within reach is in a MultiMesh that is drawn. It
+  also checks that each kind is one MultiMesh, that nothing is held past reach plus a tile, and that
+  the band follows the view range while the shared material keeps none.
+- Run with `--cover-by-cell`, it fails as the bug did: 0 of 100-230 plants drawn at the corner and
+  the edges.
+- With it, and with test_scatter_lod, test_shadow_cost, test_world_streamer, test_graphics_settings,
+  test_scatter_solids, test_world_data, test_fallback_terrain, test_walking_into_the_scatter and
+  test_settings_graphics_screen: 79 tests, 0 failed. GDScript warnings are at the 49 baseline.
+
+**Not verified / left**:
+- Forward+ was not looked at here, because Terrain3D is kept off lavapipe. The cause and the fix are
+  in the renderer-independent cull and in a shader path (`lod_fade.gdshaderinc`) that the trees
+  already use under Forward+. A walk on the 9070 XT should confirm it, and the benchmark's
+  Merrowby/Hearthvale stops should show the draw count.
+- The same box-centre rule still applies to the other plain scatter MultiMeshes:
+  - the near ring's light props and rocks (200/230 m reach, so a neighbour's fence or stones can drop
+    out 130-200 m away);
+  - the far ring's bushes (430 m, whole far cells at 380-500 m);
+  - the trees' impostor MultiMesh in a near-ring corner cell (340 m).
+  These are much less visible than grass at the feet, and they are a follow-up of the same shape.
