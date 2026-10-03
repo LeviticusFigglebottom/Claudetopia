@@ -21,7 +21,16 @@ static var enabled := not OS.get_cmdline_user_args().has("--no-shadow-trim")
 static var trimmed := 0
 
 
-## Called (deferred) for a geometry node that entered the tree under `streamer`.
+## The deferred form of consider: by instance id, since either may be freed before it runs.
+static func consider_ids(node_id: int, streamer_id: int) -> void:
+	var node := instance_from_id(node_id) as Node
+	var streamer := instance_from_id(streamer_id) as Node
+	if node == null or streamer == null:
+		return
+	consider(node, streamer)
+
+
+## Weighs a geometry node that entered the tree under `streamer`.
 static func consider(node: Node, streamer: Node) -> void:
 	if not enabled or streamer == null or not is_instance_valid(node) or not node.is_inside_tree():
 		return

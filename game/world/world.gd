@@ -942,7 +942,9 @@ func _setup_horizon() -> void:
 ## A geometry node entering the tree is weighed for its shadow a frame later (ShadowTrim).
 func _on_node_added(node: Node) -> void:
 	if node is GeometryInstance3D and streamer != null:
-		ShadowTrim.consider.call_deferred(node, streamer)
+		# by id: a node freed before the frame ends (a place let go as it rises) cannot be passed as a
+		# Node to the deferred call, which fails before the method can see it is gone
+		ShadowTrim.consider_ids.call_deferred(node.get_instance_id(), streamer.get_instance_id())
 
 
 func _setup_streamer() -> void:

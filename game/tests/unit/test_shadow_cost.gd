@@ -143,3 +143,18 @@ func test_the_land_casts_from_a_coarse_caster_that_never_stands_above_it() -> vo
 	assert_true(left > 0, "a far move builds a few a frame")
 	await _tree().process_frame
 	provider.free()
+
+
+func test_a_node_freed_before_its_turn_is_passed_over() -> void:
+	# a place let go in the frame it rose: the deferred weighing is handed ids, not the freed node
+	var streamer := Node3D.new()
+	_tree().root.add_child(streamer)
+	var cell := Node3D.new()
+	streamer.add_child(cell)
+	var mi := MeshInstance3D.new()
+	cell.add_child(mi)
+	var node_id := mi.get_instance_id()
+	mi.free()
+	ShadowTrim.consider_ids(node_id, streamer.get_instance_id())
+	assert_true(true, "a freed node is passed over without an error")
+	streamer.free()
