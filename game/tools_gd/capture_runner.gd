@@ -119,6 +119,8 @@ var overrides: Array[String] = []
 var horizon := true
 ## `--no-sight`: a cinematic's shots ask only for the rings round their camera and what they look
 ## at, as before ShotSight (CinematicPlayer.sight_streaming), for a before and after of bare ground.
+## `--no-film-picture`: a cinematic is drawn with the graphics settings as they stand, not with
+## Graphics.FILM over them (CinematicPlayer.film_picture), for a before and after.
 ## `--measure=<frames>`: after each shot's exposure the game is left running that many frames and
 ## timed (PerfMeasure): the wall clock and the main thread's CPU a frame, the process and physics
 ## steps, what is drawn, memory and nodes, into the shot's `timing` in perf.json. A plan's `walks`
@@ -166,6 +168,9 @@ func _ready() -> void:
 		elif a == "--no-sight":
 			# a cinematic's shots ask only for the rings round their camera, as before ShotSight
 			CinematicPlayer.sight_streaming = false
+		elif a == "--no-film-picture":
+			# a cinematic drawn with the settings as they stand, as before Graphics.FILM
+			CinematicPlayer.film_picture = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -1540,6 +1545,8 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	# the body drops the last half-metre onto the ground before the last shot is composed on it
 	for i in 40:
 		await get_tree().physics_frame
+	if bool(spec.get("play", false)):
+		return await _play_cinematic(id, player)
 	var cin := CinematicPlayer.new()
 	_world.add_child(cin)
 	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
@@ -1585,6 +1592,9 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				"loaded": _world.streamer.loaded_count(),
 				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+				# what the frame was drawn at, against the window (CinematicPlayer.render_report)
+				"render": cin.render_report(),
+				"image": [img.get_width(), img.get_height()] if img != null else [0, 0],
 			})
 			if not ready and not black:
 				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
@@ -1600,3 +1610,51 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 		Log.error("Capture", failure)
 	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
 	return 1 if not _failures.is_empty() else 0
+
+
+## A cinematic block with `"play": true` plays the film as the pause menu's replay does, in real
+## time, and writes down what every drawn frame was drawn at (CinematicPlayer.render_report) into
+## <out>/cinematic_play.json, with the first frame past each shot's middle on disk: the render size a
+## player gets, measured frame by frame rather than at a scrubbed pose.
+func _play_cinematic(id: String, player: Node3D) -> int:
+	var cin := CinematicPlayer.new()
+	cin.name = "Replay"
+	_world.add_child(cin)
+	cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.REPLAY)
+	var rows: Array = []
+	var shot_at := -1
+	var shot_saved := false
+	var frame := 0
+	var until := Time.get_ticks_msec() + 900000
+	var off_window := 0
+	while is_instance_valid(cin) and cin.phase_name() != "DONE" and Time.get_ticks_msec() < until:
+		await RenderingServer.frame_post_draw
+		if not is_instance_valid(cin):
+			break
+		frame += 1
+		var r := cin.render_report()
+		var shots := CinematicDef.shots_of(cin.def)
+		var i := cin.current_shot()
+		var sid := str((shots[i] as Dictionary).get("id", "")) if i >= 0 and i < shots.size() else ""
+		var row := {"frame": frame, "phase": cin.phase_name(), "shot": sid, "t": snappedf(cin.shot_time(), 0.01), "render": r}
+		if cin.phase_name() == "PLAY" and r.get("render_3d", []) != r.get("window", []):
+			off_window += 1
+		if i != shot_at:
+			shot_at = i
+			shot_saved = false
+		var dur := float((shots[i] as Dictionary).get("duration", 1.0)) if i >= 0 and i < shots.size() else 1.0
+		if not shot_saved and cin.phase_name() == "PLAY" and cin.shot_time() >= dur * 0.5:
+			shot_saved = true
+			var img := get_viewport().get_texture().get_image()
+			var file := "play_%02d_%s.png" % [i, sid]
+			if img != null and img.save_png("%s/%s" % [out_dir, file]) == OK:
+				row["file"] = file
+				row["image"] = [img.get_width(), img.get_height()]
+		rows.append(row)
+	var f := FileAccess.open("%s/cinematic_play.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows, "frames_off_window": off_window}, "  "))
+		f.close()
+	Log.info("Capture", "played %s: %d frames drawn, %d of them in a picture not drawn at the window's size"
+			% [id, frame, off_window])
+	return 0

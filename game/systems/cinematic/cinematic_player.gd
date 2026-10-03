@@ -82,6 +82,9 @@ static var headless_allowed := false
 ## Off, a shot asks only for the rings round its camera and what it looks at, as it did before
 ## ShotSight: for a capture (`--no-sight`) to show the difference on one build.
 static var sight_streaming := true
+## Off, a film is drawn with the graphics settings as they stand rather than with Graphics.FILM over
+## them: for a capture (`--no-film-picture`) to show the difference on one build.
+static var film_picture := true
 
 var def: Dictionary = {}
 var mode := Mode.OPENING
@@ -150,6 +153,8 @@ var _shot_engine_s := 0.0
 var _shot_slowest_s := 0.0
 ## Whether this player has stopped the viewport drawing 3D while a hold covers the screen.
 var _holding_3d := false
+## Whether the picture is drawn with Graphics.FILM over the settings (`_film_graphics`).
+var _film_drawn := false
 ## The frames since the film's first picture began to be drawn (World.warm_layers), or -1: its first
 ## use of the ground's, the water's and the trees' shaders is paid a layer a frame under the curtain,
 ## as the title's is. Once a film: warming every shot cost each hold three frames, seconds apiece on
@@ -403,6 +408,7 @@ func _take_over() -> void:
 	if _player != null:
 		_player.set_physics_process(false)
 	WorldClock.running = false
+	_film_graphics(true)
 
 
 ## Where control comes back. The opening decides it, and a scrub shows the opening's; a replay
@@ -513,6 +519,7 @@ func _restore_world() -> void:
 ## halfway through, or the next scene inherits a stopped clock and a quiet mix.
 func _restore_globals() -> void:
 	_draw_3d(true)
+	_film_graphics(false)
 	if _warm_step >= 0 and _world != null and is_instance_valid(_world):
 		_world.warm_layers(99)
 	_warm_step = -1
@@ -902,6 +909,28 @@ func _draw_3d(on: bool) -> void:
 		_holding_3d = false
 
 
+## The film's picture (Graphics.film_values) on, or the settings' own back: the viewport's edges and
+## mesh detail, the sun's shadow reach, and how far the trees keep their meshes (the streamer's
+## lod_bias). Nothing is written to the settings; the render scale is never touched. Taken under the
+## curtain as the film takes over, given back with everything else it borrowed (`_restore_globals`).
+func _film_graphics(on: bool) -> void:
+	if on == _film_drawn or (on and not film_picture):
+		return
+	var tree := get_tree() if is_inside_tree() else Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	_film_drawn = on
+	var own: Dictionary = Settings.data.get("graphics", {})
+	if Graphics.film_tier(own) == "":
+		return
+	var g := Graphics.film_values(own) if on else own
+	Graphics.apply(g, tree)
+	var streamer := _world.streamer if _world != null and is_instance_valid(_world) else null
+	if streamer != null and is_instance_valid(streamer):
+		streamer.lod_bias = clampf(float(g.get("lod_bias", 1.0)), 0.1, 4.0)
+		streamer.apply_lod_bias()
+
+
 func _hurry(on: bool) -> void:
 	if mode != Mode.SCRUB and _world != null and is_instance_valid(_world) and _world.streamer != null:
 		_world.streamer.hurry = on
@@ -1018,9 +1047,61 @@ func _reveal(black: bool) -> void:
 ## A machine that cannot keep up shows here first, as few frames and a slow slowest one.
 func _log_shot() -> void:
 	var shot: Dictionary = _shots[_index]
-	Log.info("Cinematic", "shot '%s': %.1f s of pictures in %.1f s on the wall, %d frames (slowest %.2f s; the engine counted %.1f s)"
+	var r := render_report()
+	Log.info("Cinematic", "shot '%s': %.1f s of pictures in %.1f s on the wall, %d frames (slowest %.2f s; the engine counted %.1f s); drawn at %s in a %s window"
 			% [shot.get("id", ""), minf(_t, float(shot.get("duration", 1.0))),
-				(Time.get_ticks_msec() - _shot_began_ms) / 1000.0, _shot_frames, _shot_slowest_s, _shot_engine_s])
+				(Time.get_ticks_msec() - _shot_began_ms) / 1000.0, _shot_frames, _shot_slowest_s, _shot_engine_s,
+				_wxh(r.get("render_3d", [0, 0])), _wxh(r.get("window", [0, 0]))])
+
+
+## What the picture is drawn at, now: the window, the frame the viewport hands the screen, the 3D
+## render inside it (the frame times the render scale) and how it is smoothed, and whose eye the
+## camera, the streaming and Terrain3D's clipmap follow. The capture runner writes it beside every
+## cinematic frame, and the log gives it once a shot (`_log_shot`).
+func render_report() -> Dictionary:
+	if not is_inside_tree():
+		return {}
+	var vp := get_viewport()
+	# the frame the 3D is drawn into is the viewport's own size: the root window's pixels (the
+	# canvas is stretched to them, never the other way), or a SubViewport's if a film were ever
+	# drawn in one
+	var frame := (vp as Window).size if vp is Window else (vp as SubViewport).size if vp is SubViewport else Vector2i.ZERO
+	var win := DisplayServer.window_get_size() if DisplayServer.get_name() != "headless" else frame
+	var scale := vp.scaling_3d_scale
+	var cam := vp.get_camera_3d()
+	var streamer := _world.streamer if _world != null and is_instance_valid(_world) else null
+	var tcam: Variant = _world.terrain_node.call("get_camera") \
+			if _world != null and is_instance_valid(_world) and _world.terrain_node != null else null
+	return {
+		"window": [win.x, win.y],
+		"frame": [frame.x, frame.y],
+		"render_scale": snappedf(scale, 0.001),
+		"render_3d": [int(round(frame.x * scale)), int(round(frame.y * scale))],
+		"scaling_mode": ["bilinear", "fsr", "fsr2", "metalfx_spatial", "metalfx_temporal", "nearest", "off"][clampi(int(vp.scaling_3d_mode), 0, 6)],
+		"msaa": [0, 2, 4, 8][clampi(int(vp.msaa_3d), 0, 3)],
+		"taa": vp.use_taa,
+		"fxaa": vp.screen_space_aa == Viewport.SCREEN_SPACE_AA_FXAA,
+		"mesh_lod_threshold": snappedf(vp.mesh_lod_threshold, 0.001),
+		"camera_is_film": cam != null and cam == _camera,
+		"streams_round_film": streamer != null and streamer.target == _camera,
+		"terrain_round_film": tcam != null and tcam == _camera,
+		"tree_lod_bias": snappedf(streamer.lod_bias, 0.01) if streamer != null else 0.0,
+		"sun_shadow_m": snappedf(_sun_shadow_reach(), 1.0),
+	}
+
+
+## How far the furthest-reaching sun or moon casts its shadows now (0 when none does).
+func _sun_shadow_reach() -> float:
+	var reach := 0.0
+	for node in get_tree().get_nodes_in_group(Graphics.LIGHTS):
+		var light := node as DirectionalLight3D
+		if light != null and light.shadow_enabled:
+			reach = maxf(reach, light.directional_shadow_max_distance)
+	return reach
+
+
+static func _wxh(v: Array) -> String:
+	return "%dx%d" % [int(v[0]), int(v[1])] if v.size() >= 2 else "?"
 
 
 func _tick_play(dt: float) -> void:
