@@ -200,7 +200,9 @@ func apply_view_range() -> void:
 	for g in _lod_groups:
 		if g is GroundCover.Group:
 			var cover := g as GroundCover.Group
-			cover.set_reach(_range_for(asset_kind(cover.asset_path), 0) * view_range)
+			cover.set_reach(_range_for(cover.kind, 0) * view_range, _range_for(cover.kind, full_ring + 1) * view_range)
+		elif GroundCover.enabled and not (g as ScatterLod.Group).far_ring:
+			_set_lod_reach(g as ScatterLod.Group)
 
 
 func apply_lod_bias() -> void:
@@ -1131,24 +1133,15 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	if lad != null and (ring <= full_ring or lad.has_impostor()):
 		_build_lod_group(parent, asset_path, lad, rows, ring, kind)
 		return
+	if GroundCover.takes(kind):
+		_build_cover(parent, asset_path, mesh, rows, ring, kind)
+		return
 	var keep := rows.size()
 	if ring > full_ring:
 		keep = int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density))))
 	elif kind in ["herb", "bush"]:
 		keep = int(ceil(float(rows.size()) * scatter_density))
 	if keep <= 0:
-		return
-	if GroundCover.takes(kind, ring <= full_ring):
-		# drawn out to its reach from the eye wherever the eye is in the cell (world/ground_cover.gd)
-		var kept: Array = []
-		var every := float(rows.size()) / float(keep)
-		for i in keep:
-			kept.append(rows[int(floor(float(i) * every))])
-		var cover := GroundCover.make_group(parent, asset_path, mesh, kept, _range_for(kind, ring), view_range)
-		# a streamer following nothing (a tool, a test) has no eye to measure from: all of it
-		var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
-		cover.update(lod_eye() if target != null or cam != null else Vector3.INF)
-		_lod_groups.append(cover)
 		return
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -1182,6 +1175,45 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	parent.add_child(mmi)
 
 
+## Ground cover and the lighter scatter, drawn out to their reach from the eye (world/ground_cover.gd):
+## in a near-ring cell every row (the density setting thinning grass and bushes) to the near reach
+## and the far ring's share beyond it; in a far-ring cell that share alone, picked the same way.
+func _build_cover(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int, kind: String) -> void:
+	var near := ring <= full_ring
+	var near_rows: Array = []
+	if near and _range_for(kind, 0) > 0.0:
+		near_rows = _every_nth(rows, int(ceil(float(rows.size()) * scatter_density)) \
+				if kind in ["herb", "bush"] else rows.size())
+	var far_rows: Array = []
+	if _range_for(kind, full_ring + 1) > 0.0:
+		far_rows = _every_nth(rows, int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density)))))
+	if near_rows.is_empty() and far_rows.is_empty():
+		return
+	var far_mesh := mesh if not near else (_mesh_for(asset_path, full_ring + 1) if not far_rows.is_empty() else null)
+	if far_mesh == null:
+		far_rows = []
+	var cover := GroundCover.make_group(parent, asset_path, kind, mesh, far_mesh, near_rows, far_rows,
+			_range_for(kind, 0) * view_range, _range_for(kind, full_ring + 1) * view_range,
+			_range_for(kind, 0), _range_for(kind, full_ring + 1), near and kind in ["rock", "prop"])
+	for t: GroundCover.Tier in cover.tiers:
+		t.mmi.lod_bias = (1.0 if t.key == "near" else lod_bias_far) * lod_bias
+	# a streamer following nothing (a tool, a test) has no eye to measure from: all of it
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	cover.update(lod_eye() if target != null or cam != null else Vector3.INF)
+	_lod_groups.append(cover)
+
+
+## `n` of `rows`, evenly through them: how the far ring has always picked its share.
+static func _every_nth(rows: Array, n: int) -> Array:
+	var out: Array = []
+	if n <= 0 or rows.is_empty():
+		return out
+	var every := float(rows.size()) / float(mini(n, rows.size()))
+	for i in mini(n, rows.size()):
+		out.append(rows[int(floor(float(i) * every))])
+	return out
+
+
 ## How far a kind is drawn in a ring, before the view-range setting multiplies it.
 func _range_for(kind: String, ring: int) -> float:
 	return float(VIEW_RANGE.get(kind, 220.0)) if ring <= full_ring \
@@ -1205,13 +1237,48 @@ func _build_lod_group(parent: Node3D, asset_path: String, lad: ScatterLod.Ladder
 	var far := ring > full_ring
 	var group := ScatterLod.make_group(lad, parent, rows, far, not far, range_end, asset_path)
 	for mmi in group.mmis.values():
+		if not far and GroundCover.enabled:
+			# a near-ring group holds each instance at its level out to its reach, so the reach is the
+			# group's (`_set_lod_reach`); a range measured to the MultiMesh's box centre dropped a
+			# corner cell's trees 340-720 m off while the far ring's beyond them stood
+			(mmi as Node).set_meta("range_base", 0.0)
+			(mmi as GeometryInstance3D).visibility_range_end = 0.0
+			(mmi as GeometryInstance3D).visibility_range_end_margin = 0.0
+			continue
 		(mmi as GeometryInstance3D).visibility_range_end = range_end * view_range
 		(mmi as GeometryInstance3D).visibility_range_end_margin = range_end * view_range * 0.15
+	if not far and GroundCover.enabled:
+		if not lad.has_impostor():
+			# the far ring's share of a solid ladder's rows stands out to the far ring's reach, as a
+			# far-ring cell's would (GroundCover); the rest to the near ring's
+			var n := rows.size()
+			var share := int(ceil(float(n) * float(FAR_KEEP.get(kind, far_density))))
+			group.far_kept.resize(n)
+			if share > 0:
+				var every := float(n) / float(mini(share, n))
+				for i in mini(share, n):
+					group.far_kept[int(floor(float(i) * every))] = 1
+		_set_lod_reach(group)
 	if far:
 		group.fill_far()
 	else:
 		group.update(lod_eye())
 	_lod_groups.append(group)
+
+
+## A near-ring group's reach: a tree with its picture is drawn wherever it stands in the near ring
+## (every near-ring tree is within the far ring's reach, and a far-ring cell keeps all of its
+## pictured trees); a solid ladder (a wall, a boulder) to its kind's near reach, and its far share
+## to the far ring's.
+func _set_lod_reach(g: ScatterLod.Group) -> void:
+	if g.ladder == null or g.ladder.has_impostor():
+		g.reach_near = INF
+		g.reach_far = INF
+	else:
+		var kind := asset_kind(g.ladder.asset_path)
+		g.reach_near = _range_for(kind, 0) * view_range
+		g.reach_far = _range_for(kind, full_ring + 1) * view_range
+	g.last_eye = Vector3(INF, INF, INF)
 
 
 ## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6), and

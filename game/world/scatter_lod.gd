@@ -72,6 +72,8 @@ const STEP := 2.0
 const SLACK := 3.0
 ## The bark has no dissolve, so it switches outright, this far either side of its line.
 const HYSTERESIS := 1.5
+## An instance past its group's reach is at no level.
+const OUT := 255
 ## Floats a MultiMesh instance takes with a 3D transform and a colour.
 const STRIDE := 16
 const IMPOSTOR_SHADER := "res://assets/shaders/tree_impostor.gdshader"
@@ -151,6 +153,12 @@ class Group extends RefCounted:
 	var box := AABB()
 	var last_eye := Vector3(INF, INF, INF)
 	var far_ring := false
+	## A near-ring group draws an instance out to `reach_near`, and one of the far ring's share
+	## (`far_kept`, 1 where kept) out to `reach_far` (WorldStreamer._set_lod_reach): past them it is
+	## at no level. INF for a tree with its picture, which is drawn wherever it stands.
+	var reach_near := INF
+	var reach_far := INF
+	var far_kept := PackedByteArray()
 
 	func count() -> int:
 		return positions.size()
@@ -162,7 +170,7 @@ class Group extends RefCounted:
 		if last_eye.distance_to(eye) < STEP:
 			return false
 		# a group wholly past the impostor line, and sorted as such, stays as it is
-		var reach := ladder.far + ladder.far_fade * 0.5 + SLACK + STEP
+		var reach := minf(ladder.far + ladder.far_fade * 0.5, maxf(reach_near, reach_far)) + SLACK + STEP
 		if _box_distance(eye) > reach and _all_far():
 			last_eye = eye
 			return false
@@ -170,6 +178,8 @@ class Group extends RefCounted:
 
 	func _all_far() -> bool:
 		var last := ladder.levels.size() if ladder.has_impostor() else ladder.levels.size() - 1
+		if reach_near < INF or reach_far < INF:
+			last = OUT          # past a reach, only an instance at no level is settled
 		for i in level_of.size():
 			if level_of[i] < last:
 				return false
@@ -203,9 +213,16 @@ class Group extends RefCounted:
 		var leaves0 := PackedInt32Array()
 		var leaves1 := PackedInt32Array()
 		var pictures := PackedInt32Array()
+		var cut := reach_near < INF or reach_far < INF
+		var kept := far_kept.size() == n
 		for i in n:
 			var d := positions[i].distance_to(eye)
+			if cut and d > reach_near and (d > reach_far or not kept or far_kept[i] == 0):
+				level_of[i] = OUT
+				continue
 			var was := int(level_of[i])
+			if was == OUT:
+				was = 0 if d < line1 else (1 if d < line2 or not ((nlev > 2 or imp)) else 2)
 			var lvl := 0
 			if d >= line1:
 				lvl = 1
