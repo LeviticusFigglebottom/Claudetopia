@@ -168,6 +168,113 @@ func test_the_showcase_insides_are_built_walkable_and_left() -> void:
 		await tree.process_frame
 
 
+## The player arriving in every shipped large site sees the room arrived in: its walls, its floor
+## and the way on. Read from the arrival's own camera (SiteInterior.arrival_view: behind the
+## shoulder, cut short by the rock) over a 16 x 9 grid of its view. Of the rays that go on past the
+## player into the room (the throat's roof over the camera is the way out, not the room; a ray
+## meeting nothing within 60 m, the sky down a shaft, is left out), the share whose rock gives back
+## at least ARRIVAL_LIT: the lights on for that eye (SiteDress.near_set, after the per-chunk budget)
+## worked out as the renderer works them out (SiteDress.light_at), times the rock's own brightness
+## (SiteInterior.rock_albedo). The Kilnway's mouth room read dark from its arrival and lit from its
+## other doorway (HANDOFF §00000): its black rock gave back too little of its few lights. Measured
+## 2026-10-03 (Compatibility renders checked against it): without SiteDress._arrival_light the
+## Kilnway's room is 57% lit by this reading and renders dark; with it, 83% and it reads (and
+## Anthe-Ondr, the Cistern of Isse and the Windthrow go from 35-37% to 78-97%). The least, with
+## it: the Name-Wife's Hollow, 74%.
+const ARRIVAL_LIT := 0.04
+const ARRIVAL_COVER := 0.7
+## The rays that count meet the room this far ahead of the arrival or more: past the player.
+const ARRIVAL_PAST_M := 1.0
+
+
+func test_every_site_arrival_sees_its_room_lit() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var ids: Array = []
+	for id in ContentDB.ids_of("interior"):
+		if ContentDB.get_def(id).get("site", null) is Dictionary:
+			ids.append(id)
+	ids.sort()
+	assert_gt(ids.size(), 10, "the packs' large sites are found (%d)" % ids.size())
+	var bad: Array = []
+	for id in ids:
+		var site := SiteInterior.new()
+		site.def_override = ContentDB.get_def(id)
+		site.paced_override = 0
+		tree.root.add_child(site)
+		await tree.process_frame
+		await tree.physics_frame
+		var got := arrival_light(site)
+		# a built site's way out is a door shut in a frame: the camera stands on the room's side of
+		# it, not between its planks and the wall (it did, in every keep, crypt and ruined hall)
+		var cam: Vector3 = site.arrival_view()[0]
+		var into := Vector3(-sin(site.plan.entrance_yaw), 0.0, -cos(site.plan.entrance_yaw))
+		if site.plan._built() and (cam - site.plan.exit_at).dot(into) < 0.2:
+			bad.append("%s: the arrival's camera stands behind the way out's door (%.2f m)" % [id, (cam - site.plan.exit_at).dot(into)])
+		print("SITE ARRIVAL | %s | %s | %d rays into the room: lit %.0f%% (%.0f%% without its arrival light), given back: quarter %.3f, median %.3f (without %.3f; rock %.2f), %d lights on" % [
+				id, site.plan.spec.get("kind", "?"), int(got["rays"]), float(got["cover"]) * 100.0, float(got["without"]) * 100.0,
+				float(got["p25"]), float(got["median"]), float(got["median_without"]), float(got["albedo"]), int(got["on"])])
+		if float(got["cover"]) < ARRIVAL_COVER:
+			bad.append("%s: %.0f%% of the room seen from the arrival lit" % [id, float(got["cover"]) * 100.0])
+			for l in got["near"]:
+				print("SITE ARRIVAL |   %s" % l)
+		site.queue_free()
+		await tree.process_frame
+	assert_eq(bad, [], "every site's arrival sees its room lit (%d%% of it or more)" % int(ARRIVAL_COVER * 100.0))
+
+
+## What of the room the arrival sees is lit (see the test above): {"rays", "cover", "without" (the
+## same without SiteDress._arrival_light), "albedo", "p25", "median", "median_without", "on", "near"}.
+static func arrival_light(site: SiteInterior) -> Dictionary:
+	var av := site.arrival_view()
+	var eye: Vector3 = av[0]
+	var fwd: Vector3 = av[1]
+	var right := fwd.cross(Vector3.UP).normalized()
+	var up := right.cross(fwd).normalized()
+	var ahead := Vector3(fwd.x, 0.0, fwd.z).normalized()
+	var on := SiteDress.near_set(site.dress.lights, eye)
+	var albedo := site.rock_albedo()
+	var space := site.get_world_3d().direct_space_state
+	var tan_v := tan(deg_to_rad(75.0) * 0.5)
+	var tan_h := tan_v * 16.0 / 9.0
+	var values: Array = []
+	var without: Array = []
+	for j in 9:
+		for i in 16:
+			var u := (float(i) + 0.5) / 16.0 * 2.0 - 1.0
+			var v := 1.0 - (float(j) + 0.5) / 9.0 * 2.0
+			var dir := (fwd + right * u * tan_h + up * v * tan_v).normalized()
+			var from := site.to_global(eye)
+			var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + dir * 60.0, 1))
+			if hit.is_empty():
+				continue
+			var p := site.to_local(hit["position"])
+			if (p - site.plan.entrance).dot(ahead) < ARRIVAL_PAST_M:
+				continue
+			var n := (site.global_transform.basis.inverse() * (hit["normal"] as Vector3)).normalized()
+			var sum := 0.0
+			var own := 0.0
+			for l in on:
+				var here := SiteDress.light_at(l, p, n)
+				sum += here
+				own += here if l.name != "ArrivalLight" else 0.0
+			values.append(sum * albedo)
+			without.append(own * albedo)
+	var share := func(list: Array) -> float:
+		return float(list.filter(func(x: float) -> bool: return x >= ARRIVAL_LIT).size()) / maxf(float(list.size()), 1.0)
+	var at := func(list: Array, q: float) -> float:
+		var sorted := list.duplicate()
+		sorted.sort()
+		return float(sorted[int(float(sorted.size()) * q)]) if not sorted.is_empty() else 0.0
+	var near: Array = []
+	for l in site.dress.lights:
+		if (l.position as Vector3).distance_to(eye) < 16.0:
+			near.append("%s at %s, %.1f m from the eye, reach %.1f, energy %.2f, %s" % [l.get_class(), (l.position as Vector3).snapped(Vector3.ONE * 0.1),
+					(l.position as Vector3).distance_to(eye), SiteDress.reach_of(l), float(l.get_meta("base_energy", l.light_energy)),
+					"on" if on.has(l) else ("budgeted out" if not bool(l.get_meta("budget_on", true)) else "not among the nearest")])
+	return {"rays": values.size(), "cover": share.call(values), "without": share.call(without), "albedo": albedo,
+			"p25": at.call(values, 0.25), "median": at.call(values, 0.5), "median_without": at.call(without, 0.5), "on": on.size(), "near": near}
+
+
 ## Saved inside and loaded: back inside, standing at the way in, and able to leave.
 func test_a_game_saved_inside_a_site_comes_back_inside() -> void:
 	var tree := Engine.get_main_loop() as SceneTree

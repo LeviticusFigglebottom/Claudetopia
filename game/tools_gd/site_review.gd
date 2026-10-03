@@ -17,6 +17,9 @@ var out_dir := "user://site_review"
 ## wayside find seen from 48 m is a speck.
 var radius_override := 0.0
 var shots: Array = []
+## `--only=<part>[,<part>]`: render only the shots whose label holds one of these (`00_,01_`: the
+## way in, the arrival and the first room).
+var only: Array = []
 var _env: Environment
 var _sun: DirectionalLight3D
 
@@ -33,6 +36,8 @@ func _ready() -> void:
 			out_dir = a.substr(6)
 		elif a.begins_with("--radius="):
 			radius_override = float(a.substr(9))
+		elif a.begins_with("--only="):
+			only = Array(a.substr(7).split(",", false))
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var we := WorldEnvironment.new()
 	_env = Environment.new()
@@ -95,6 +100,11 @@ func _inside(id: String) -> void:
 	print("site review: way in eye %s: floor %.2f below, roof %.2f above, wall %.2f ahead, lights %d" % [eye,
 			probe.call(eye, eye + Vector3.DOWN * 8.0), probe.call(eye, eye + Vector3.UP * 12.0),
 			probe.call(eye, eye + fwd * 20.0), site.dress.lights.size() if site.dress != null else 0])
+	# and as the player arriving sees it: the third-person camera behind the shoulder
+	# (SiteInterior.arrival_view, camera_rig.gd's numbers)
+	var av := site.arrival_view()
+	shots.append({"label": "%s_00_arrival" % slug, "pos": av[0], "look": (av[0] as Vector3) + (av[1] as Vector3) * 10.0})
+	print("site review: arrival camera %s" % av[0])
 	var n := 1
 	for r in plan.rooms:
 		var c: Vector3 = r["centre"]
@@ -257,6 +267,8 @@ func _take() -> void:
 	for i in 30:
 		await get_tree().process_frame
 	for s in shots:
+		if not only.is_empty() and not only.any(func(part: String) -> bool: return str(s["label"]).contains(part)):
+			continue
 		if s.has("ortho"):
 			cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 			cam.size = float(s["ortho"])
