@@ -364,6 +364,11 @@ func settle() -> void:
 	_weather_t = 1.0
 	_grade_dirty = true
 	_apply(0.0)
+	# and no rain left falling from the weather before: stopped, the drops already in the air fall on
+	# for their lifetime, and a capture pinned to clear weather shot the Windthrow through them
+	if precipitation != null and not precipitation.emitting:
+		precipitation.restart()
+		precipitation.emitting = false
 
 
 func look() -> Dictionary:
