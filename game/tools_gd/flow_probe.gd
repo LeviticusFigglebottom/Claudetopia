@@ -1088,7 +1088,7 @@ func _first_moment_of_control() -> void:
 			held.append("the loading screen")
 		if UI.is_faded_out():
 			held.append("a fade")
-		_notes.append("the quest notice was held by: %s" % (", ".join(held) if not held.is_empty() else "nothing (none queued?)"))
+		_notes.append("the quest notice was held by: %s (t=%.1f s)" % [(", ".join(held) if not held.is_empty() else "nothing (none queued?)"), Time.get_ticks_msec() / 1000.0])
 	await _capture("first_moment_of_control")
 	var services := get_tree().get_first_node_in_group("game_services")
 	var words := str(services.get("first_words")) if services != null else ""

@@ -173,6 +173,7 @@ func has_quest(quest_id: String) -> bool:
 
 
 func push(note: Dictionary) -> void:
+	Log.info("QuestNotice", "queued %s %s: %s (t=%.1f s)" % [str(note.get("kind", "")), str(note.get("quest", "")), str(note.get("objective", "")), Time.get_ticks_msec() / 1000.0])
 	var replaced := queue.push(note)
 	if replaced:
 		_draw_current(false)
@@ -194,8 +195,6 @@ func screen_taken() -> bool:
 		# its black before the first shot, while the whole film's country is laid (seconds long):
 		# a notice spent there was gone before the player had the screen
 		if n.has_method("is_starting") and bool(n.call("is_starting")):
-			return true
-		if n.has_method("is_handing_over") and bool(n.call("is_handing_over")):
 			return true
 	if UI.is_menu_open() or UI.is_loading_shown() or UI.is_faded_out():
 		return true
@@ -235,6 +234,7 @@ func advance(seconds: float, blocked := false) -> void:
 
 
 func _draw_current(fresh: bool) -> void:
+	Log.info("QuestNotice", "%s: %s (t=%.1f s)" % ["up" if not queue.current().is_empty() else "down", str(queue.current().get("quest", "")), Time.get_ticks_msec() / 1000.0])
 	var note := queue.current()
 	if note.is_empty():
 		_shown_key = ""
