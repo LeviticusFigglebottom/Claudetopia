@@ -432,6 +432,11 @@ const WATER_NODES := ["Pool", "TidePool", "Basin", "Stream", "Spring", "TroughWa
 ## A body set down is a capsule this wide and tall.
 const ARRIVAL_RADIUS_M := 0.35
 const ARRIVAL_HEIGHT_M := 1.8
+## The highest over the ground a body is set down on what the dressing laid to be stood on: a
+## bank's brow, a bridge's deck, a step. A barrow's crown or a cave's hill is a floor too, but
+## the road sets you down beside the mound, not on top of it (the travel set-down test holds
+## every place to 1.6 m over the land).
+const ARRIVAL_OVER_GROUND_M := 1.4
 
 var _arrival := Vector3.INF
 
@@ -505,6 +510,8 @@ func arrival() -> Vector3:
 			var a := first + TAU * float(k) / float(steps)
 			var p := Vector2(sin(a), cos(a)) * r
 			var at := _stand_at(p, floors)
+			if at.y - kit.on_ground(p.x, p.y).y > ARRIVAL_OVER_GROUND_M:
+				continue
 			if _open(at, solids, wet) and _clear_of_floors(at, floors):
 				_arrival = at
 				return _arrival

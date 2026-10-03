@@ -918,12 +918,15 @@ static func _footprints(d: PoiDressing, a: Vector2, b: Vector2, stop := 1.0) -> 
 
 
 ## The Builders' broken stone lying about: lumps of fused masonry, half in the ash.
-static func _rubble(d: PoiDressing, centre: Vector2, reach: float, count: int, size := Vector2(0.25, 0.6)) -> void:
+## `keep` and `keep_r`: a spot the lumps keep off (where a place's foes gather), drawn for all the
+## same so the rest lie where they would.
+static func _rubble(d: PoiDressing, centre: Vector2, reach: float, count: int, size := Vector2(0.25, 0.6),
+		keep := Vector2.INF, keep_r := 0.0) -> void:
 	var k := d.kit
 	var lumps: Array = []
 	for i in count:
 		var p := centre + Vector2(k.rng.randf_range(-reach, reach), k.rng.randf_range(-reach, reach))
-		if not _off_road(k, p):
+		if not _off_road(k, p) or (keep != Vector2.INF and p.distance_to(keep) < keep_r):
 			continue
 		lumps.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU),
 				k.rng.randf_range(size.x, size.y), Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))))
@@ -1655,13 +1658,15 @@ static func silent_market(d: PoiDressing) -> void:
 	k.marker("the_fresh_stall", Vector3(fat.x, fg + 0.05, fat.y) + Vector3(ff.x, 0.0, ff.y) * 0.1)
 	k.touchable("the_fresh_goods", Vector3(fat.x, fg + 0.3, fat.y) + Vector3(ff.x, 0.0, ff.y) * 0.8, "Look at the goods on the stall",
 			"core:dialogue/silent_market_stall", "", false)
-	k.marker("the_square", k.on_ground(axis.x * 4.0, axis.y * 4.0))
+	# off the cross's steps by more than the ring PoiEncounters spreads the square's wights round
+	k.marker("the_square", k.on_ground(axis.x * 6.0, axis.y * 6.0))
 	await _cache(d, k.on_ground(-axis.x * 11.5 + side.x * 8.0, -axis.y * 11.5 + side.y * 8.0), PoiKit.yaw_of(axis), "chest",
 			"core:loot/oroth_cache", "stallholders_box")
 	for i in 5:
 		var p := Vector2(k.rng.randf_range(-12.0, 12.0), k.rng.randf_range(-9.0, 9.0))
 		await _drift(d, axis * p.x + side * p.y * 1.4, k.rng.randf_range(1.4, 2.6), k.rng.randf_range(0.4, 0.9), false)
-	await _rubble(d, Vector2.ZERO, 16.0, 18)
+	# the square's wights stand 3 m round its marker: no rubble there
+	await _rubble(d, Vector2.ZERO, 16.0, 18, Vector2(0.25, 0.6), axis * 6.0, 5.0)
 	await _grey_grass(d, 20.0, 40)
 
 
@@ -1963,6 +1968,9 @@ static func hesk_morn(d: PoiDressing) -> void:
 
 # --- Ashcombe -----------------------------------------------------------------------------------------
 
+## How far out from a door its hearth's wights gather (m).
+const HEARTH_OUT_M := 4.0
+
 ## A hamlet emptied in the Ash Winter, standing as it was left: four houses of the grey country
 ## along the West Walk, their doors shut, ash grey on their roofs, garden walls round plots of grey
 ## stalks, a well on the green with its bucket down, a dead ash over the last house -- and smoke
@@ -2025,13 +2033,20 @@ static func ashcombe(d: PoiDressing) -> void:
 				"core:dialogue/ashcombe_chimney", "", false)
 		await _cache(d, k.on_ground(at.x + face.y * 3.6, at.y - face.x * 3.6), PoiKit.yaw_of(face), "barrel",
 				"core:loot/pilgrims_bundle", "hearth_barrel")
+	# the hearths' wights stand out in the street before the doors, where the ring PoiEncounters
+	# spreads them round (3 m) reaches neither the house behind nor the one across the way
 	for i in mini(doors.size(), 4):
 		var dd: Array = doors[i]
-		k.marker("hearth_%d" % i, k.on_ground((dd[0] as Vector2).x, (dd[0] as Vector2).y))
+		var out_front: Vector2 = (dd[0] as Vector2) + (dd[1] as Vector2) * HEARTH_OUT_M
+		k.marker("hearth_%d" % i, k.on_ground(out_front.x, out_front.y))
 	k.marker("the_green", k.on_ground(green.x, green.y))
 
 
 # --- the Ash-Winter Carts -----------------------------------------------------------------------------
+
+## Where the two columns of carts stand across the yard, by their own origin (`side` metres): each
+## cart reaches 4.0 m one way and 1.2 m the other, so the lane between them is 8.3 m wide.
+const CART_COLUMNS := [-5.4, 8.1]
 
 ## A carters' waystation on the old Ash Road, roofless since the Ash Winter: its long range down one
 ## side of a walled yard, a gate onto the road, and the yard full of the grain carts that came in
@@ -2078,14 +2093,17 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	m.commit(stone, k.surface("stone", 0.7), "Range", true)
 	if k.far:
 		return
-	# the carts in two rows, their beds heaped with sacks gone grey and hard
+	# the carts in three rows either side of a lane up the middle from the gate, as they were drawn
+	# in, their beds heaped with sacks gone grey and hard. A cart lies long across the yard (its
+	# local x, -4.0 to 1.2 m, is `side`); the lane is kept wide enough that the wights PoiEncounters
+	# spreads 3 m round the cart beds' marker stand in it, not in a cart.
 	var sacks := m.begin()
 	var cart := k.prop("cart")
-	for row in 2:
-		for i in 3:
-			var at := yard + side * (-6.0 + 6.0 * float(i)) + into * (-2.4 + 4.0 * float(row)) + k.jitter(0.3)
+	for row in 3:
+		for i in 2:
+			var at: Vector2 = yard + side * float(CART_COLUMNS[i]) + into * (-3.4 + 3.4 * float(row)) + k.jitter(0.3)
 			var yaw := PoiKit.yaw_of(into) + k.rng.randf_range(-0.15, 0.15)
-			if row == 1 and i == 2:
+			if row == 2 and i == 0:
 				yaw += 0.6           # the one whose horse was led off, shafts down
 			await k.step()
 			k.place(cart, k.on_ground(at.x, at.y), yaw)
@@ -2095,7 +2113,7 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(sacks, PoiKit.plain(Color(0.45, 0.43, 0.4), 0.98), "GreySacks")
 	# the trough by the gate, the carter's peg-board in the range's doorway
-	var trough := gate + side * 3.4 + into * 1.4
+	var trough := gate - side * 3.4 + into * 1.4
 	await k.step()
 	k.place(k.prop("trough") if k.prop("trough") != "" else k.prop("crate"), k.on_ground(trough.x, trough.y), PoiKit.yaw_of(side))
 	var book_at := r0 + (r1 - r0) * 0.47 + into * 0.6
@@ -2105,7 +2123,8 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	k.marker("the_cart_beds", k.on_ground(yard.x, yard.y))
 	await _cache(d, k.on_ground(r1.x - side.x * 2.0 + into.x * 2.5, r1.y - side.y * 2.0 + into.y * 2.5), PoiKit.yaw_of(-into),
 			"chest", "core:loot/pilgrims_bundle", "carters_chest")
-	await _drift(d, yard + side * 8.0 + into * 5.0, 2.2, 0.8)
+	# the ash drifted up against the outside of the yard's wall, clear of the carts inside it
+	await _drift(d, yard + side * 12.6 + into * 3.0, 2.2, 0.8)
 	await _grey_grass(d, 14.0, 40, yard)
 
 
