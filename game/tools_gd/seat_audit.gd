@@ -94,6 +94,9 @@ var _flora_re := RegEx.new()
 var _shelter_re := RegEx.new()
 var _merged_standing_re := RegEx.new()
 var _poi_kind_cache: Dictionary = {}
+## The boxes of lamps strewn as a MultiMesh (a settlement's lanterns and braziers, `lamp_boxes`), in
+## the world: a light hangs from one, and a headless run cannot read the MultiMesh itself.
+var _lamp_boxes: Array[AABB] = []
 
 
 func _init(w: World) -> void:
@@ -119,6 +122,7 @@ func _init(w: World) -> void:
 ## settlements' fabric over them. Returns the findings added.
 func audit_cells(cells: Array) -> Array[Dictionary]:
 	var start := findings.size()
+	_lamp_boxes.clear()
 	var rects: Array[Rect2] = []
 	var objects: Array[Dictionary] = []
 	for c: Vector2i in cells:
@@ -147,6 +151,7 @@ func audit_cells(cells: Array) -> Array[Dictionary]:
 ## findings added.
 func audit_node(node: Node, rect: Rect2) -> Array[Dictionary]:
 	var start := findings.size()
+	_lamp_boxes.clear()
 	var objects: Array[Dictionary] = []
 	_visit(node, objects, _anchor_of(node, "probe"), rect)
 	looked_at += objects.size()
@@ -180,6 +185,10 @@ func _visit(n: Node, out: Array[Dictionary], anchor: String, rect: Rect2) -> voi
 		return
 	var a := _anchor_of(n, anchor)
 	if n is MultiMeshInstance3D:
+		if n.has_meta("lamp_boxes"):
+			var xf := (n as Node3D).global_transform
+			for b: AABB in n.get_meta("lamp_boxes"):
+				_lamp_boxes.append(xf * b)
 		if not n.has_meta("lod_group") and not headless:
 			_add_multimesh(n as MultiMeshInstance3D, out, a, rect)
 		return
@@ -531,6 +540,9 @@ func _check_light(o: Dictionary, tops: Dictionary) -> void:
 		return
 	if _anything_near(o, AABB(p, Vector3.ZERO).grow(LIGHT_REACH_M), tops):
 		return
+	for b in _lamp_boxes:
+		if b.grow(LIGHT_REACH_M).has_point(p):
+			return
 	_add(o, "light_unhung", "a light %.1f m over the ground with nothing within %.1f m" % [p.y - ground, LIGHT_REACH_M])
 
 

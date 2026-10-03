@@ -14,6 +14,10 @@ const STYLES := ["core:style/warrior", "core:style/ranger", "core:style/mage", "
 const RUN_TIMEOUT := 300.0
 
 var _paced_was := -1
+## The clock as the test found it: a film played as a new game hands over at its own hour (the
+## evening for some styles), and the next test's world would be lit for the night it left
+## (test_objects_seated then judged the night's lamps by a clock it never set).
+var _clock_was := Vector3(8.0, 1.0, 1.0)
 
 
 func _tree() -> SceneTree:
@@ -27,12 +31,15 @@ func _built() -> bool:
 func before_each() -> void:
 	CinematicPlayer.headless_allowed = true
 	_paced_was = WorldPace.paced_override
+	_clock_was = Vector3(WorldClock.time_hours, float(WorldClock.day), 1.0 if WorldClock.running else 0.0)
 	Settings.set_value("gameplay", "play_opening", true, false)
 
 
 func after_each() -> void:
 	CinematicPlayer.headless_allowed = false
 	WorldPace.paced_override = _paced_was
+	WorldClock.set_time(_clock_was.x, int(_clock_was.y))
+	WorldClock.running = _clock_was.z > 0.5
 	# a film played as a new game leaves that game's flags: the next test's game is not still opening
 	# (Wren's hold at the Stair Head reads new_game and style_start)
 	for flag in ["new_game", Openings.STYLE_START, Openings.STYLE_DUE, StyleDef.FLAG, "player_name", "player_calling"]:
