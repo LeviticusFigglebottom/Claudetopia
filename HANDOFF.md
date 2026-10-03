@@ -79,27 +79,40 @@ cfac2a7b) and not yet merged into it.
   - The Brake-Dam has a forged body of her own, about 1.6 m at the withers.
   - Checked by an import and 11 targeted test files (boss fights, creature models, enemy dress, site interiors walk), with no way-back warnings.
   - Left: Ardo's antlers still read comb-like; that comes from the shared antler generator.
-- **At work (owner's perf requests, 2026-10-02):**
-  - `lowend`:
-    - integrated-GPU detection and presets;
-    - the pre-rendered title film;
-    - fps caps in the menus and the creator;
-    - the creator preview resolution;
-    - the dual-scaling toggle;
-    - FSR (Forward+ only);
-    - a benchmark;
-    - occlusion culling, which saved only 1-6% of draws, so it lands off by default.
-  - `terrain-fidelity`:
-    - Standard/High ground textures; High is BC3-compressed at load, about 247 MiB of VRAM;
-    - a grass-instancer prototype, off by default;
-    - far-tree impostors.
-  - `polish`: seven weak large places, including the Briarwold three's canopy clearings, with clear-weather shots.
+- **Landed 2026-10-02:**
+  - **The polish pass (630269ab, 87710124):**
+    - the Struck Barrow's crypt door;
+    - the Undertone set into its cliff;
+    - spoil heaps from the shared `PoiMasonry.spoil_heap`;
+    - the Name-Wife's Hollow rising from a bank with its own mouth;
+    - `glade_m` glades round the Briarwold three;
+    - `dithered_owner` no longer scatters a province's specks far from its region.
+    - Six tests that had been failing on main were fixed with it: the cave tests now match 9aec5445's opened caves, Willow Isle's crate was moved, and test_poi_steps passes.
+  - **w4096j (03e9970f), built from 630269ab:**
+    - 91 built-world Python tests pass, and so do the seat, site, signpost and interior-walk tests.
+    - Seat baselines (e4eae268): Briarwold buried 2→4 (cliff pieces wholly underground), Brightwater fence_gap 564→587, Briarwold fence_gap 158→142.
+  - **Ground texture quality (6076788c):**
+    - High paints the six most-seen slots at 2048 and compresses them to BC3 at load (247 MiB).
+    - It is on by default only for a discrete GPU with 6 GB or more.
+    - The grass instancer stays an off-by-default prototype, and far-tree impostors were measured and not landed.
+    - **Owner's call pending:** compress Standard the same way (247 → ~62 MiB for everyone).
+  - **The low-end pass (7abbc174):**
+    - a first-launch preset by adapter type, then by name;
+    - a Theora title film for Low and Medium, or for a live title that misses its frame budget;
+    - 60/30 fps caps on the menus;
+    - a cheaper Naming, read ahead;
+    - dual scaling on vale_grass for Medium and up;
+    - FSR 1 at 0.77 on Medium under Forward+ (0.85 bilinear under Compatibility);
+    - occlusion culling as a setting that is off;
+    - a benchmark (`-- --benchmark`, Ctrl+Shift+B; see docs/BENCHMARK.md).
+- **At work:**
+  - `lowend`: the title film's last 3 shots (all 7 at about 11 MB), and dual scaling in the shader warm set.
+  - `terrain-fidelity`: the Greatwood's views under the 1.5 M primitive budget by per-species LOD distances.
+  - `polish`: shots of the Briarwold three's glades and the Hollow on w4096j.
 - **Then:**
-  1. Rebuild the world (w4096j) if polish or terrain-fidelity changed the builder or scatter.
-  2. Re-shoot the large places and the boss sheet.
-  3. The one full check (suite, journeys, flow, fights, every quest walked), and a nightly.
-
-- **Then:** land each hand-back (import plus targeted tests), rebuild the world as w4096h, the one full check, a nightly.
+  1. The final photos.
+  2. The one full check (suite, journeys, flow, fights, every quest walked).
+  3. A nightly.
 - **Machine:** Godot 4.7.2 at /usr/local/bin/godot, Blender 4.0 at /usr/bin/blender. `~/bin/heavy` was rebuilt as three flock slots that wait for 3 GB free. The nine stale worktrees from 2026-09-26 were removed with the owner's leave (13 GB free after); their uncommitted diffs and unpushed commits are kept in the scratchpad's `old-worktrees/`, and their local `wip/*` branches remain.
 
 ## 000. The fifth coordinating session (2026-09-29/30, a cloud container)

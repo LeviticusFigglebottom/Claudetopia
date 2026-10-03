@@ -16216,3 +16216,111 @@ build is needed: the High list and its textures are new files, and the regions a
 - The grass instancer's numbers on a real GPU, at settings 0, 1 and 2, from the benchmark.
 - Compressing Standard to BC3 too would cut every machine's ground textures from 247 to about
   62 MiB of video memory; it changes the laptops' picture slightly, so it is the owner's call.
+## Weak graphics: a preset for the adapter, the filmed title, the menus' pace, FSR, the benchmark (lowend, 2026-10-02)
+
+The owner's work laptops (an HP G11 with a Ryzen 5 PRO, so a Radeon 660M or 740M iGPU) lagged on
+the first launch, the title, the menus and the Naming. This machine has no GPU: OpenGL here is
+llvmpipe and Forward+ is lavapipe. So what was measured is the main thread, draw calls and
+primitives. What an iGPU does with them needs the benchmark run on one.
+
+**1. A preset for the adapter** (89e8c480, `core/hardware_tier.gd`). This runs on a player's
+launch whose settings.cfg has no `graphics` section.
+- Integrated graphics, or an adapter it does not recognise, gets Medium.
+- Software rasterizers, Intel HD/UHD, AMD Vega and the 610M, and iGPUs with under 8 GB of RAM get
+  Low.
+- A card of its own keeps High.
+
+The adapter's type is read first and its name second. A driver that calls an APU "discrete" is
+not believed when the name is an APU's, and Compatibility's "other" is read by name. A card's
+VRAM is read on Forward+ (RenderingDevice.get_device_total_memory, as terrain-fidelity found), and a
+card with under 2 GB gets Medium. The result is saved at once, so the player's choice stands, and the
+startup trace has a line `graphics: first launch, <adapter> ...`. Settings, Graphics has "Detect
+recommended". Tests use fake Radeon 660M/740M/780M (integrated, other, "discrete"), Iris Xe,
+Arc and Arc 140V, UHD 620, RX 9070 XT, RTX 4060, Arc A770/B580, llvmpipe, WARP and unknown
+adapters.
+
+**2. The filmed title** (93e498db, ca6c3a89). "Drawn live behind the title" is off on Low and
+Medium. The title then plays `assets/video/title_reel.ogv` over the chart, with dips to the
+menu's own dark. So does a live title whose first shot draws at a median over 40 ms a frame, and
+one that gives up before its first shot. Low used to keep the chart; it now shows the film too.
+- The film holds 4 of the 7 shots: 43 s, 9.6 MB of Theora at quality 5. It was filmed on llvmpipe
+  at 12 fps and interpolated to 24.
+- The other three shots took 40-50 s a frame here under the day's load. All seven at quality 5
+  would be about 17 MB, at quality 4 about 11 MB.
+- `tools/title_reel.sh` films it again: `--renderer=forward_plus --fps=24` on a machine with a GPU.
+- Title over its first 12 s, OpenGL: the live country at High cost 9.3-9.9 s of main-thread CPU,
+  with 27-30 frames over 50 ms. The film costs 8 ms a frame at p50 (10 ms on lavapipe), with no
+  frame over 50 ms while the menu comes up.
+
+**3. Menus and the Naming** (29d83b4c, 5ef4fa4a):
+- The title and the Naming hold the frame rate to 60 (30 on Low) while no game runs, and give
+  the game's cap back after.
+- The portrait's SubViewport is its rectangle on the screen, at the render scale, with the
+  upscaler. Low draws it with 2x MSAA and the hair's shell; Medium and up keep 4x.
+- The title reads the Naming's scene, the body, its stage and the ground textures ahead. It draws
+  the body once off screen, only under a dip to dark, and never on a software rasterizer: on
+  lavapipe that held the title for 17-23 s.
+- The title's world already went with the title when the Naming opened.
+
+Measured with `cpu_probe --cpu-draw --cpu-naming-s=20`; "before" is a copy of 4a0fecf5:
+
+| | Naming's first frame | Naming frame, wall p50 | title frames over 50 ms |
+|---|---|---|---|
+| OpenGL, before, High | 6.29 s cold, 1.18 s warm | 407-428 ms | 27-30 |
+| OpenGL, after, High | 0.39-0.42 s | 280-382 ms | 30-33 (still the live title) |
+| OpenGL, after, Medium | 0.35 s warm (1.47 s cold) | 282-320 ms | 0 |
+| OpenGL, after, Low | 1.5 s | 213-215 ms | 0-2 |
+| lavapipe, before, High | 0.95-2.42 s | 456-464 ms | 0 (the chart) |
+| lavapipe, after, Medium | 1.68-2.0 s (no warm on software) | 228-232 ms | 0 |
+| lavapipe, after, Low | 1.35 s | 182 ms | 0 |
+
+**4. Distant ground detail** (4342747b). This is Terrain3D's dual scaling on vale_grass. A 64 m
+grid puts it on 20.7% of the land; the next most common are crag at 10.2% and limestone at 10.0%.
+It blends in from 80 m and is the second sample alone by 240 m, at 0.3 of the texture's scale. It
+is on for Medium and up and applies live. I looked at it through a 16 degree lens on the
+Hearthvale (OpenGL): the hills at 100-250 m change and the far haze does not. The change is
+slight, with no seams and no new tiling. Draw calls went from 491 to 495. The shader warm set
+does not yet hold the dual-scaling variant of Terrain3D's shader: `./run.sh shader-warm
+--only=title` after the terrain-fidelity work lands.
+
+**7. FSR for weak GPUs** (e66a949f). Medium draws 3D at 0.77 and upscales with FSR 1 at
+sharpness 0.1. FSR 1 is the spatial one: cheap on an iGPU, and nothing to smear. On Compatibility
+Medium draws at 0.85, scaled bilinearly. High and Painted stay native. The menus are the canvas's,
+at the window's pixels. I looked at the Naming at 1080p on Forward+, High against Medium. The
+words are identical. The figure at Medium is crisp, not soft. Its 2x MSAA showed the hair cards'
+edge as dots, so the portrait keeps 4x on Medium. The world through FSR could not be looked at
+here: Forward+ with the world on lavapipe was killed twice for memory.
+
+**5. Occlusion culling** (2bb41df1). TerrainOccluder is a 64 m sheet of the land, each vertex at
+the lowest ground within 32 m and then 2 m lower, about 32k triangles. The houses are not
+occluders: Settlement merges a place into one mesh per surface. Measured in one world, off then
+on (OpenGL):
+- the Hearthvale from a height: 1178 to 1141 draws, 1.34 to 1.27 M primitives;
+- Merrowby's street: 1721 to 1706 draws, 1.74 to 1.71 M primitives;
+- in the difference images, nothing was culled that should have shown.
+
+1-3% of draws is not a clear win for a CPU raster every frame on a laptop, so "Hide what hills
+hide" is off in every preset. The sheet is built only when the setting is turned on.
+
+**6. The benchmark** (8432e53c, docs/BENCHMARK.md). `Wickmere.exe -- --benchmark`, or Ctrl+Shift+B
+on the title, times the title, the Naming and five stops: Merrowby, the Greatwood, the Hearthvale
+from a height, Tinehold, and Cinderlea by night. It writes user://benchmark/benchmark_<time>.txt
+and .json with:
+- frame-time p50/p95/p99/max and frames over 50 and 100 ms;
+- draws and primitives;
+- the CPU's draw time;
+- the adapter, renderer, preset and recommendation.
+
+It ran end to end here on OpenGL with no script errors. Draws by stop: 960 / 1341 / 1275 / 1257 /
+388; primitives 1.36 / 1.31 / 1.48 / 1.51 / 0.59 M.
+
+**Needs a real GPU**:
+- frame rates on the laptops' iGPU at Medium, for the title (film), the Naming and the world;
+- FSR 1's cost and look in the world;
+- how long the pipeline compiles the warm stage moves (milliseconds on a GPU, seconds here);
+- occlusion culling's CPU cost and gain;
+- Theora decode on the laptops' CPUs.
+
+The owner's benchmark runs at Medium and at High, on the laptop and on the 9070 XT, will say.
+Pre-existing in the targeted tests, not from this branch: dummy-renderer ERROR lines
+("Parameter material is null") in test_naming_screen.

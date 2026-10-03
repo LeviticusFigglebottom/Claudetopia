@@ -411,6 +411,14 @@ func _set_terrain_view(view: String) -> void:
 
 func _take_shot(index: int, shot: Dictionary) -> void:
 	var label := str(shot.get("label", "shot_%d" % index))
+	# a shot's own settings over the run's, applied live: `"set": {"graphics.occlusion": false}`
+	# photographs one place with a knob off and on in one world (the run's --set= is for all of them)
+	var own: Variant = shot.get("set", {})
+	if own is Dictionary:
+		for k: String in own:
+			var dot := k.find(".")
+			if dot > 0:
+				Settings.set_value(k.substr(0, dot), k.substr(dot + 1), (own as Dictionary)[k])
 	if shot.has("time"):
 		# a shot's `day` (the clock's count from 1) photographs a day of the week: a market day
 		WorldClock.set_time(float(shot["time"]), int(shot.get("day", -1)))

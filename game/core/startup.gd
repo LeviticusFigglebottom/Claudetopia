@@ -106,11 +106,16 @@ func _machine() -> void:
 		ErrorLog.game_commit(), Engine.get_version_info().get("string", "?"), "debug" if OS.is_debug_build() else "release"])
 	StartupTrace.step("OS %s %s; CPU %s, %d threads; RAM %.1f GB, %.1f GB free" % [OS.get_name(), OS.get_version(),
 		OS.get_processor_name(), OS.get_processor_count(), int(mem.get("physical", 0)) / 1073741824.0, int(mem.get("available", 0)) / 1073741824.0])
-	StartupTrace.step("GPU %s (%s, %s); driver %s; %s via %s, API %s; VRAM total not known to Godot" % [
+	var vram := Graphics.video_memory_gb()
+	StartupTrace.step("GPU %s (%s, %s); driver %s; %s via %s, API %s; VRAM %s" % [
 		RenderingServer.get_video_adapter_name(), RenderingServer.get_video_adapter_vendor(),
 		types[t] if t >= 0 and t < types.size() else str(t), " ".join(driver) if not driver.is_empty() else "?",
 		RenderingServer.get_current_rendering_method(), RenderingServer.get_current_rendering_driver_name(),
-		RenderingServer.get_video_adapter_api_version()])
+		RenderingServer.get_video_adapter_api_version(), ("%.1f GB" % vram) if vram > 0.0 else "not read on this renderer"])
+	# the preset a first launch was given for this adapter (HardwareTier), or the player's own
+	var d := HardwareTier.decision
+	StartupTrace.step(("graphics: first launch, %s" % HardwareTier.describe(d["adapter"], d)) if bool(d.get("first_launch", false))
+			else "graphics: preset %s, the player's (settings.cfg)" % str(Settings.get_value("graphics", "preset", "")))
 	StartupTrace.step("worker pool %d threads; threaded reads at once %d; window %s; args %s" % [ThreadedLoads.pool_size(),
 		ThreadedLoads.limit(), str(DisplayServer.window_get_size()), " ".join(OS.get_cmdline_user_args())])
 
