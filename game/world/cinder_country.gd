@@ -37,7 +37,11 @@ const JITTER := 8.0
 ## Rows of sites planned a piece in the streamer (a cell has eleven).
 const PLAN_ROWS := 1
 ## The vent country: where `heat_at` is over this. Its tongues are a few hundred metres across.
-const HEAT_VENTS := 0.26
+## The field is fixed in world space and the region is the atlas's: at 0.26 it warmed about 15% of
+## the 202-cell region it was tuned on (w4096f), but the hand-drawn atlas's Cinderlea is 137 cells
+## and the cold ground is what it lost, so 0.26 warmed 21% of it and put cracks in 76% of its
+## cells. 0.32 gives the warm share back (15% of the sites).
+const HEAT_VENTS := 0.32
 const HEAT_FREQUENCY := 1.0 / 420.0
 ## The steepest ground each thing stands on (degrees).
 const CRACK_SLOPE := 16.0

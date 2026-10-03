@@ -122,8 +122,8 @@
             "t": 0.0,
             "at": {
               "place": "core:poi/wynstead_ditch_camp",
-              "bearing": 304,
-              "distance": 44,
+              "bearing": 318,
+              "distance": 38,
               "height": 9
             },
             "look": {
@@ -135,8 +135,8 @@
             "t": 1.0,
             "at": {
               "place": "core:poi/wynstead_ditch_camp",
-              "bearing": 308,
-              "distance": 30,
+              "bearing": 322,
+              "distance": 28,
               "height": 6
             },
             "look": {
