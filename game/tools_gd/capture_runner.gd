@@ -1551,6 +1551,9 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	_world.add_child(cin)
 	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
 	var samples: Array = spec.get("samples", [0.0, 0.5, 1.0])
+	# `"film_ab": true` shoots every frame twice, with the settings as they stand and with the
+	# film's picture over them (Graphics.FILM): a before and after from one world
+	var ab := bool(spec.get("film_ab", false))
 	var only: Array = spec.get("shots", [])
 	var shots := CinematicDef.shots_of(cin.def)
 	var rows: Array = []
@@ -1561,8 +1564,14 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 		if not only.is_empty() and not only.has(sid):
 			continue
 		var black := bool(shot.get("black", false))
+		var takes: Array = []
 		for u_v in ([0.5] if black else samples):
-			var u := float(u_v)
+			for film: bool in ([false, true] if ab else [true]):
+				takes.append([float(u_v), film])
+		for take: Array in takes:
+			var u := float(take[0])
+			if ab:
+				cin.set_film_picture(bool(take[1]))
 			cin.scrub(i, u)
 			var waited := 0
 			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
@@ -1575,7 +1584,14 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				await get_tree().process_frame
 				frames += 1
 			await RenderingServer.frame_post_draw
-			var file := "%02d_%s_%03d.png" % [index, sid, int(round(u * 100.0))]
+			# the trees go to the levels the film's detail asks for a few at a time (WorldStreamer.update_lods)
+			var lod_frames := 0
+			while lod_frames < 900 and not _world.streamer.lods_settled():
+				await get_tree().process_frame
+				lod_frames += 1
+			await RenderingServer.frame_post_draw
+			var file := "%02d_%s_%03d%s.png" % [index, sid, int(round(u * 100.0)),
+					("_film" if bool(take[1]) else "_plain") if ab else ""]
 			var img := get_viewport().get_texture().get_image()
 			if img == null or img.save_png("%s/%s" % [out_dir, file]) != OK:
 				_failures.append("cannot write %s" % file)
@@ -1593,6 +1609,7 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
 				# what the frame was drawn at, against the window (CinematicPlayer.render_report)
+				"film_picture": bool(take[1]) if ab else CinematicPlayer.film_picture,
 				"render": cin.render_report(),
 				"image": [img.get_width(), img.get_height()] if img != null else [0, 0],
 			})

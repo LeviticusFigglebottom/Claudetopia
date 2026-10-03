@@ -931,6 +931,12 @@ func _film_graphics(on: bool) -> void:
 		streamer.apply_lod_bias()
 
 
+## The film's picture on or off for the frames that follow, for the capture runner's A/B
+## (`"film_ab"`); the film gives back the settings' own either way when it ends.
+func set_film_picture(on: bool) -> void:
+	_film_graphics(on)
+
+
 func _hurry(on: bool) -> void:
 	if mode != Mode.SCRUB and _world != null and is_instance_valid(_world) and _world.streamer != null:
 		_world.streamer.hurry = on
