@@ -269,6 +269,162 @@ static func _bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: float,
 			st.add_vertex(pts[rings][j1])
 
 
+## The Greatwood oak's own bark, as the forge painted it for the giant oaks (albedo, normal, ORM),
+## for a bole drawn by _bark_bole: its UVs run the furrows along the log. Its vertex colours darken
+## it and lay the moss on (green on the upper side), so `tint` is the bark's colour as a multiplier.
+const OAK_BARK := "res://assets/models/trees/_species/briarwold_giant_oak/briarwold_giant_oak_bark_%s.png"
+
+
+static func _bark_look(tint := Color(0.64, 0.6, 0.57)) -> BaseMaterial3D:
+	var mat := ORMMaterial3D.new()
+	if ResourceLoader.exists(OAK_BARK % "albedo"):
+		mat.albedo_texture = load(OAK_BARK % "albedo")
+		mat.normal_enabled = true
+		mat.normal_texture = load(OAK_BARK % "normal")
+		mat.normal_scale = 1.4
+		mat.orm_texture = load(OAK_BARK % "orm")
+	else:
+		tint *= Color(0.36, 0.31, 0.25)
+	mat.albedo_color = tint
+	mat.vertex_color_use_as_albedo = true
+	return mat
+
+
+## Wood's colours as multipliers of the bark (vertex colours, _bark_look): the bark, wet and dark
+## where it lies near the ground; moss on its upper side; the pale wood of a break.
+const BARK_TINT := Color(1.0, 1.0, 1.0)
+const BARK_WET := Color(0.66, 0.64, 0.62)
+const BARK_MOSS := Color(0.62, 1.18, 0.34)
+const BARK_HEART := Color(1.6, 1.4, 1.1)
+
+
+## A log like _bole, but barked (UVs for _bark_look, the oak's furrows along it, `tile` m a repeat
+## round it) and grown, not turned: bowed `bend` m sideways along its length, its section a little
+## flattened, swollen in `burrs` burls, and `moss` (0-1) of moss in vertex colour on its upper side.
+## `broken` ends it in a jagged break of pale heartwood, not a cap. Into `st`, with colours and UVs
+## on every vertex (so nothing without them, a PoiMasonry.limb, may go in the same SurfaceTool).
+static func _bark_bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: float, rng: RandomNumberGenerator,
+		segs := 20, rings := 14, broken := false, moss := 0.6, tile := 1.6, bend := 0.0, burrs := 0) -> void:
+	var axis := b - a
+	var length := axis.length()
+	if length < 0.05:
+		return
+	var y := axis / length
+	var x := y.cross(Vector3.UP)
+	if x.length() < 0.01:
+		x = Vector3.RIGHT
+	x = x.normalized()
+	var z := x.cross(y).normalized()
+	var phase := rng.randf_range(0.0, TAU)
+	var phase2 := rng.randf_range(0.0, TAU)
+	var ridge := rng.randi_range(7, 11)
+	var lumps: Array = []
+	for n in burrs:
+		lumps.append(Vector4(rng.randf_range(0.12, 0.92), rng.randf_range(0.0, TAU), rng.randf_range(0.05, 0.12),
+				rng.randf_range(0.35, 0.7)))
+	var around := maxf(1.0, roundf(TAU * (ra + rb) * 0.5 / tile))
+	var pts: Array = []
+	var cols: Array = []
+	for i in rings + 1:
+		var t := float(i) / float(rings)
+		# the taper eases off along it, and the butt flares into its roots
+		var r := lerpf(ra, rb, t) * (1.0 + 0.22 * pow(maxf(0.0, 1.0 - t * 6.0), 2.0))
+		var centre := a + y * (length * t) + x * (bend * sin(PI * t))
+		var row: Array = []
+		var crow: Array = []
+		for j in segs:
+			var ang := TAU * float(j) / float(segs)
+			var bump := 1.0 + 0.07 * sin(ang * float(ridge) + phase + t * 3.0) + 0.04 * sin(ang * 3.0 - phase * 2.0 + t * 7.0)
+			bump += 0.035 * sin(ang * 2.0 + phase2 + t * 4.3) * sin(t * 9.0 + phase)
+			for l: Vector4 in lumps:
+				var dt := (t - l.x) * length / (ra * l.w * 2.0)
+				var da := wrapf(ang - l.y, -PI, PI) / l.w
+				bump += l.z * exp(-(dt * dt + da * da) * 2.2)
+			var out := x * cos(ang) * 1.05 + z * sin(ang) * 0.96
+			row.append(centre + out * r * bump)
+			# moss on the upper side, in drifts; the underside dark and wet
+			var up := (x * cos(ang) + z * sin(ang)).dot(Vector3.UP)
+			var drift := 0.5 * sin(ang * 3.0 + t * 11.0 + phase2) * sin(t * 17.0 - ang * 2.0 + phase)
+			var c := BARK_TINT.lerp(BARK_WET, clampf(-up * 1.4 - 0.2, 0.0, 1.0))
+			c = c.lerp(BARK_MOSS, moss * smoothstep(0.05, 0.55, up + drift * 0.6))
+			c *= rng.randf_range(0.92, 1.05)
+			c.a = 1.0
+			crow.append(c)
+		pts.append(row)
+		cols.append(crow)
+	var vlen := tile * 2.0
+	for i in rings:
+		for j in segs:
+			var j1 := (j + 1) % segs
+			var u0 := around * float(j) / float(segs)
+			var u1 := around * float(j + 1) / float(segs)
+			var v0 := length * float(i) / float(rings) / vlen
+			var v1 := length * float(i + 1) / float(rings) / vlen
+			for q: Array in [[i, j, u0, v0], [i + 1, j, u0, v1], [i + 1, j1, u1, v1],
+					[i, j, u0, v0], [i + 1, j1, u1, v1], [i, j1, u1, v0]]:
+				st.set_color(cols[q[0]][q[1]])
+				st.set_uv(Vector2(q[2], q[3]))
+				st.add_vertex(pts[q[0]][q[1]])
+	# the butt's cap
+	st.set_color(BARK_WET)
+	for j in segs:
+		var j1 := (j + 1) % segs
+		for v in [a, pts[0][j1], pts[0][j]]:
+			st.set_uv(Vector2((v as Vector3).dot(x), (v as Vector3).dot(z)) / vlen)
+			st.add_vertex(v)
+	var ring_end: Array = pts[rings]
+	var c_end := a + axis
+	if not broken:
+		for j in segs:
+			var j1 := (j + 1) % segs
+			for v in [c_end, ring_end[j], ring_end[j1]]:
+				st.set_uv(Vector2((v as Vector3).dot(x), (v as Vector3).dot(z)) / vlen)
+				# (a stub's inner piece ends inside the next: a pale sawn disc showed there as a peg's end)
+				st.set_color(BARK_WET)
+				st.add_vertex(v)
+		return
+	# a break: the heartwood torn out in a jagged fan, splinters standing off the rim, the middle
+	# drawn out furthest (wood tears along the grain)
+	# Its UVs as the sides' (round it, and along it by how far out each point is), so the grain runs
+	# along the torn fibres: projected across the log, the texture smeared into zig-zags.
+	var mid: Array = []
+	var mid_v: Array = []
+	for j in segs:
+		var ang := TAU * float(j) / float(segs)
+		var reach := rb * (0.15 + rng.randf_range(0.0, 0.9) * (1.0 if j % 2 == 0 else 0.35))
+		var rr := rb * rng.randf_range(0.45, 0.7)
+		mid.append(c_end + (x * cos(ang) + z * sin(ang)) * rr + y * reach)
+		mid_v.append((length + reach) / vlen)
+	var spike_reach := rb * rng.randf_range(0.5, 0.9)
+	var spike := c_end + y * spike_reach + x * rb * rng.randf_range(-0.2, 0.2)
+	for j in segs:
+		var j1 := (j + 1) % segs
+		var u0 := around * float(j) / float(segs)
+		var u1 := around * float(j + 1) / float(segs)
+		var re0 := [ring_end[j], Vector2(u0, length / vlen), BARK_TINT]
+		var re1 := [ring_end[j1], Vector2(u1, length / vlen), BARK_TINT]
+		var m0 := [mid[j], Vector2(u0, mid_v[j]), BARK_HEART]
+		var m1 := [mid[j1], Vector2(u1, mid_v[j1]), BARK_HEART]
+		var sp := [spike, Vector2((u0 + u1) * 0.5, (length + spike_reach) / vlen), BARK_HEART]
+		for tri: Array in [[re0, m1, m0], [re0, re1, m1], [m0, m1, sp]]:
+			for vtx: Array in tri:
+				st.set_uv(vtx[1])
+				st.set_color(vtx[2])
+				st.add_vertex(vtx[0])
+
+
+## A broken branch's stub off a bole at `root_at` (local), out along `dir` (unit) `long` m, `r`
+## thick where it leaves the bole: a short barked log from inside the bole, bending a little up, its
+## end snapped (_bark_bole's break). Into `st`, as _bark_bole.
+static func _stub(st: SurfaceTool, root_at: Vector3, dir: Vector3, long: float, r: float,
+		rng: RandomNumberGenerator, moss := 0.5) -> void:
+	var a := root_at - dir * r * 1.2
+	var mid := root_at + dir * long * 0.55
+	var tip := mid + (dir + Vector3.UP * rng.randf_range(0.05, 0.3)).normalized() * long * 0.45
+	_bark_bole(st, a, mid, r * 1.15, r * 0.82, rng, 10, 3, false, moss, 0.9)
+	_bark_bole(st, mid - (mid - a).normalized() * r * 0.3, tip, r * 0.84, r * 0.6, rng, 10, 2, true, moss, 0.9)
+
+
 ## A pair of antlers rising from `base` (local), the head facing `facing` (unit, horizontal), each
 ## beam sweeping out, back and up with its tines rising off its front: a hart's of `span` metres
 ## from tip to tip. Bone-coloured capsules into `st`.
@@ -500,7 +656,9 @@ static func windthrow(d: PoiDressing) -> void:
 	var length := 36.0
 	var tip2 := Vector2(butt.x, butt.z) + into * length
 	var r0 := 3.5
-	var r1 := 2.6
+	var r1 := 2.3
+	# how far it bows sideways at its middle (_bark_bole): an oak's bole is not a turned beam
+	var bow := 0.7
 	var tip := Vector3(tip2.x, k.on_ground(tip2.x, tip2.y).y + r1 * 0.75, tip2.y)
 	# lie on the ground where it rises under the line: the bole rests, it does not cut the hill
 	for t in [0.3, 0.5, 0.7, 0.9]:
@@ -511,29 +669,38 @@ static func windthrow(d: PoiDressing) -> void:
 		if line_y - r < g - r * 0.25:
 			var need := g - r * 0.25 + r - line_y
 			tip.y += need / float(t)
+	# the bole in the Greatwood oak's own bark, tapering, bowed, burred, mossed along its top (a
+	# smooth pale bole with peg stubs read from the east as a beam, not a tree)
 	var bole := m.begin()
-	_bole(bole, butt, tip, r0, r1, k.rng, 22, 18, true)
-	# the broken end: splinters standing out of the break
+	_bark_bole(bole, butt, tip, r0, r1, k.rng, 30, 30, true, 0.8, 2.2, bow, 6)
 	var axis := (tip - butt).normalized()
 	var ax := axis.cross(Vector3.UP).normalized()
 	var az := ax.cross(axis).normalized()
-	for j in 16:
-		var ang := TAU * float(j) / 16.0 + k.rng.randf_range(-0.1, 0.1)
-		var at := tip + (ax * cos(ang) + az * sin(ang)) * r1 * k.rng.randf_range(0.55, 0.95)
-		var reach := k.rng.randf_range(0.6, 3.2)
-		m.limb(bole, at - axis * 0.4, at + axis * reach + (ax * cos(ang) + az * sin(ang)) * 0.3, k.rng.randf_range(0.1, 0.3))
-	# limbs: snapped stubs along its sides, and one great limb still reaching up
-	for j in 7:
-		var t := k.rng.randf_range(0.35, 0.95)
-		var at := butt.lerp(tip, t)
+	# splinters standing out of the break, torn along the grain
+	for j in 10:
+		var ang := TAU * float(j) / 10.0 + k.rng.randf_range(-0.2, 0.2)
+		var radial := ax * cos(ang) + az * sin(ang)
+		var at := tip + radial * r1 * k.rng.randf_range(0.55, 0.9)
+		var reach := k.rng.randf_range(0.8, 3.2)
+		var rr := k.rng.randf_range(0.12, 0.3)
+		_bark_bole(bole, at - axis * 0.5, at + axis * reach + radial * 0.3, rr, rr * 0.12, k.rng, 5, 1, false, 0.0, 0.6)
+	# limbs: broken stubs along its flanks (none straight up: the top is the way to the hoard), and
+	# one great limb still reaching up, snapped
+	for j in 9:
+		var t := k.rng.randf_range(0.3, 0.95)
+		var at := butt.lerp(tip, t) + ax * bow * sin(PI * t)
 		var s := -1.0 if j % 2 == 0 else 1.0
 		var r := lerpf(r0, r1, t)
-		var root_at := at + ax * float(s) * r * 0.8 + Vector3.UP * r * 0.35
-		var dir := (ax * float(s) * 0.8 + Vector3.UP * k.rng.randf_range(0.2, 0.9) + axis * k.rng.randf_range(0.0, 0.5)).normalized()
-		var long := k.rng.randf_range(1.5, 4.0) if j != 3 else 11.0
-		m.limb(bole, root_at, root_at + dir * long, k.rng.randf_range(0.35, 0.7) if j != 3 else 0.9)
+		var up_ang := k.rng.randf_range(0.2, 1.0)
+		var side := ax * float(s) * cos(up_ang) + az * sin(up_ang)
+		var dir := (side + axis * k.rng.randf_range(0.1, 0.6)).normalized()
+		var root_at := at + side * r * 0.9
+		if j == 3:
+			_bark_bole(bole, root_at - dir * 1.0, root_at + dir * 11.0, 1.0, 0.45, k.rng, 14, 8, true, 0.6, 1.2, 0.4)
+		else:
+			_stub(bole, root_at, dir, k.rng.randf_range(1.8, 4.0), k.rng.randf_range(0.4, 0.85), k.rng)
 	await k.step()
-	m.commit(bole, PoiKit.painted(3, DEADWOOD, 0.7), "Bole", true)
+	m.commit(bole, _bark_look(), "Bole", true)
 	if k.far:
 		return
 	# the bole underfoot: capsules along it, so it is walked on
@@ -554,7 +721,7 @@ static func windthrow(d: PoiDressing) -> void:
 	var lean_foot := tip2 + into * 1.5 + across * 8.5
 	var lean_top := tip + Vector3.UP * (r1 * 0.85) - axis * 2.0
 	var lf := k.on_ground(lean_foot.x, lean_foot.y, 0.35)
-	m.limb(limbs, lf, lean_top, 0.75)
+	_bark_bole(limbs, lf, lean_top, 0.8, 0.62, k.rng, 12, 8, false, 0.5, 1.0, 0.25)
 	var lcap := CapsuleShape3D.new()
 	lcap.radius = 0.75
 	lcap.height = lf.distance_to(lean_top) + 1.5
@@ -569,10 +736,10 @@ static func windthrow(d: PoiDressing) -> void:
 		var rr := k.rng.randf_range(0.45, 0.8)
 		var a := k.on_ground(p0.x, p0.y, rr * 0.7)
 		var b := k.on_ground(p1.x, p1.y, rr * 0.5)
-		m.limb(limbs, a, b, rr)
+		_bark_bole(limbs, a, b, rr * 1.05, rr * 0.75, k.rng, 10, 6, true, 0.6, 1.0, rr * 0.4)
 		k.collider(Vector3(rr * 1.8, rr * 1.6, a.distance_to(b)), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(dirj)), (a + b) * 0.5), "wood")
 	await k.step()
-	m.commit(limbs, PoiKit.painted(3, DEADWOOD, 0.6), "CrownLimbs")
+	m.commit(limbs, _bark_look(), "CrownLimbs")
 	# the mouth: a black throat a few paces into the bank under the plate, and the door at its back
 	var throat := m.begin()
 	var mouth_at := Vector3(hinge.x, g_h, hinge.y)
@@ -641,7 +808,7 @@ static func windthrow(d: PoiDressing) -> void:
 			var at := butt.lerp(tip, t)
 			var r := lerpf(r0, r1, t)
 			var s := -1.0 if i % 2 == 0 else 1.0
-			var spot := at + ax * float(s) * r * 0.98 + Vector3.UP * k.rng.randf_range(-0.6, 0.6)
+			var spot := at + ax * (float(s) * r * 1.02 + bow * sin(PI * t)) + Vector3.UP * k.rng.randf_range(-0.6, 0.6)
 			shelves.append([spot, PoiKit.yaw_of(Vector2(ax.x, ax.z) * float(s)), k.rng.randf_range(1.0, 1.8)])
 		await _row(k, fungus, shelves)
 	# up on the bole by the plate: the hoard. Ravens and worse have carried things up here for
