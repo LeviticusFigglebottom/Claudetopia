@@ -7,11 +7,49 @@ The **Last refreshed** line below says when. `PROGRESS.md` (the long, dated reco
 `DECISIONS.md`, `DESIGN.md`, `WORLD_BIBLE.md`, `ARCHITECTURE.md` and `docs/CONTRACTS.md` stay the
 detailed references. This file is the map.
 
-**Last refreshed:** 2026-10-01, by the sixth coordinating session (see §0000). Earlier: the fifth (§000). Earlier: the fourth (§00). Its work is on
+**Last refreshed:** 2026-10-03, by the seventh coordinating session (see §00000). Earlier: the sixth (§0000), the fifth (§000). Earlier: the fourth (§00). Its work is on
 `claude/game-bugs-triage-fixes-6ffit0`, branched from main (`claude/blissful-volta-dg80e6` at
 cfac2a7b) and not yet merged into it.
 
 ---
+
+## 00000. The seventh coordinating session (2026-10-03, a cloud container)
+
+Picked up the sixth session's open lines after it went quiet, and ran the one full check.
+**Main (`claude/blissful-volta-dg80e6`), the default branch (`claude/gifted-brahmagupta-29u39r`) and
+`claude/game-bugs-triage-fixes-6ffit0` are kept at the same commit**; the nightly builds main.
+- **Landed:**
+  - polish (the Hollow's crag and road, the Delf's spoil in granite grey, rain cleared on settling);
+  - triage 81 (585 crowns off 37 start towns in the installed world; the loading caption offers the title back);
+  - terrain fidelity (the wood's sun shadows cheaper: every Greatwood view at or under 1.5 M primitives, the canopy unchanged).
+- **The full check on 2026-10-03:**
+  - flow passes (new 103, load 36, continue 39);
+  - all four journeys pass;
+  - fights pass over seeds 1,2,3 (198 fights; parry_outside is dice-dependent on an unseeded run);
+  - the quest walker passed 138/140, the two since fixed.
+  - The suite had 10 failures, all fixed and landed:
+    - a crash on Continue while the title's water was building (WaterSurface starts no worker after finish_tasks);
+    - NPC traits off the six axes, and six shared face seeds;
+    - a `{key:}` token in a journal;
+    - an empty dialogue button;
+    - Cinderlea fights inside masonry;
+    - set-downs on barrow crowns (`ARRIVAL_OVER_GROUND_M`);
+    - the Warrior's road shot through an oak;
+    - the vent share after the region shrank (`HEAT_VENTS` 0.32);
+    - the Rogue's lane seen through gaps (11 cover stacks; peak 0.13);
+    - ShadowTrim's deferred call on freed nodes (888 errors, now by id).
+  - Each fix ran its own targeted tests; the full suite has not been run again end to end.
+- **Waiting on the next world build:**
+  - the glade rule (78 more trees at the Windthrow, Tinehold and the Delf: reshoot them with `--weather clear --time 16.5`);
+  - the road-carve fix.
+- **Open, not started:**
+  - every mine's spoil heap puckers at its top (`PoiMasonry.spoil_heap`);
+  - the Windthrow's trunk reads as a beam;
+  - the Name-Wife's Hollow view 1 at 2.0 M primitives;
+  - the Kilnway's mouth room dark from the arrival;
+  - four boss/enemy face seeds shared;
+  - ~3.7 s with no frame drawn on Continue while the world stands up.
+- **Machine:** Godot at `~/godot/Godot_v4.7.2-stable_linux.x86_64`; `~/bin/heavy` is two slots, queued in order.
 
 ## 0000. The sixth coordinating session (2026-10-01, a cloud container)
 
