@@ -26,7 +26,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1107,
+     "metres": 1112,
      "miles": "¾",
      "road": "core:road/clanless_camp_oskelcrag"
     },
@@ -63,7 +63,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1310,
+     "metres": 1314,
      "miles": "¾",
      "road": "core:road/clanless_camp_oskelcrag"
     },
@@ -100,7 +100,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1589,
+     "metres": 1593,
      "miles": "1",
      "road": "core:road/clanless_camp_oskelcrag"
     }
@@ -130,7 +130,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1414,
+     "metres": 1418,
      "miles": "1",
      "road": "core:road/clanless_camp_oskelcrag"
     },
@@ -212,7 +212,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 2507,
+     "metres": 2511,
      "miles": "1½",
      "road": "core:road/clanless_camp_oskelcrag"
     }
@@ -1117,8 +1117,8 @@
   },
   {
    "at": [
-    575.6,
-    2866.2
+    585.7,
+    2880.9
    ],
    "junction": [
     582.7,
@@ -1130,16 +1130,23 @@
    ],
    "arms": [
     {
+     "place": "core:poi/wake_barrow",
+     "name": "Wake Barrow",
+     "metres": 172,
+     "miles": "¼",
+     "road": "core:road/wake_barrow_pilgrims_ash"
+    },
+    {
      "place": "core:place/pilgrims_ash",
      "name": "Pilgrim's Ash",
-     "metres": 626,
+     "metres": 618,
      "miles": "½",
      "road": "core:road/wake_barrow_pilgrims_ash"
     },
     {
      "place": "core:place/bramcombe",
      "name": "Bramcombe",
-     "metres": 1291,
+     "metres": 1287,
      "miles": "¾",
      "road": "core:road/pilgrims_ash_bramcombe"
     }
@@ -2979,14 +2986,14 @@
   },
   {
    "at": [
-    -2849.4,
-    -2464.5
+    -2849.1,
+    -2464.3
    ],
    "entry": [
-    -2852.5,
-    -2461.2
+    -2852.2,
+    -2461.0
    ],
-   "yaw": 47.1,
+   "yaw": 47.3,
    "road": "core:road/clanless_camp_oskelcrag",
    "place": "core:place/oskelcrag",
    "name": "Oskelcrag"

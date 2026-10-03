@@ -39,8 +39,8 @@
    "reeds"
   ]
  },
- "built_at": "2026-10-02T22:07:12Z",
- "build_seconds": 3057.4,
+ "built_at": "2026-10-03T17:07:31Z",
+ "build_seconds": 2049.8,
  "height_range": [
   -24.24,
   784.13
@@ -49,7 +49,7 @@
  "rivers": 14,
  "roads": 137,
  "pois": 601,
- "scatter_instances": 5750219,
+ "scatter_instances": 5749556,
  "encounters": 517,
  "texture_slots": [
   "vale_grass",
