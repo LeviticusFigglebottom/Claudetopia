@@ -94,6 +94,13 @@ var overall_cap_seconds := OVERALL_CAP_SECONDS
 ## Whether the overall cap handed over, and the shots shown before their country had all come.
 var gave_up := false
 var shown_early: Array[String] = []
+## Every hold the film made, in order, for a probe or a test: {shot, mid (after its first picture),
+## ready (its country was in when first asked), caption (the hold line went up), early (shown on the
+## cap without all of it), ms (from the cut to the picture)}. A hold mid-film that was not `ready`
+## is a wait the player sat through.
+var holds: Array[Dictionary] = []
+var _hold_rec: Dictionary = {}
+var _revealed_once := false
 
 var _world: World = null
 var _player: Node3D = null
@@ -934,6 +941,7 @@ func _begin_hold() -> void:
 	_settle = SETTLE_FRAMES
 	_hold_began_ms = Time.get_ticks_msec()
 	_hold_reported = false
+	_hold_rec = {"shot": _index, "mid": _revealed_once, "ready": null, "caption": false, "early": false, "ms": 0}
 
 
 func _tick_hold(delta: float) -> void:
@@ -951,6 +959,8 @@ func _tick_hold(delta: float) -> void:
 	# after the overall cap nothing is waited for: the hand-over comes at once
 	var cap_ms := 0 if gave_up else int(hold_cap_seconds * 1000.0)
 	var shown := black or _cells_ready()
+	if _hold_rec.get("ready") == null:
+		_hold_rec["ready"] = shown
 	if not shown:
 		if held_ms >= int(HOLD_REPORT_SECONDS * 1000.0) and not _hold_reported:
 			_hold_reported = true
@@ -959,6 +969,7 @@ func _tick_hold(delta: float) -> void:
 			Log.warn("Cinematic", "shot '%s' shown after %.1f s without all of its country: %s"
 					% [shot.get("id", ""), held_ms / 1000.0, waiting_for()])
 			shown_early.append(str(shot.get("id", "")))
+			_hold_rec["early"] = true
 			shown = true
 	if shown:
 		# the settling frames draw the new place, under the curtain or the still; a place that was
@@ -983,6 +994,7 @@ func _tick_hold(delta: float) -> void:
 		# the country is late: hold on black with a caption, and the music waits with the pictures
 		_fade_curtain(1.0, 0.35)
 		_overlay.caption_in(str(def.get("hold_line", DEFAULT_HOLD_LINE)))
+		_hold_rec["caption"] = true
 		Music.pause_cue(true)
 		_held_music = true
 
@@ -1002,6 +1014,11 @@ func _reveal(black: bool) -> void:
 		_overlay.clear_freeze()
 		_fade_curtain(0.0, FADE_IN_SECONDS)
 	var held := (Time.get_ticks_msec() - _hold_began_ms) / 1000.0
+	if not _hold_rec.is_empty():
+		_hold_rec["ms"] = Time.get_ticks_msec() - _hold_began_ms
+		holds.append(_hold_rec)
+		_hold_rec = {}
+	_revealed_once = true
 	if held > 1.0:
 		Log.info("Cinematic", "shot '%s' held %.1f s for its country" % [_shots[_index].get("id", ""), held])
 	if _index == _handover:

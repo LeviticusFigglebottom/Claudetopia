@@ -128,6 +128,11 @@ var _mouse := Vector2.ZERO
 var _last_frame_ms := 0
 var _gap_ms := 0
 var _gap_from_ms := 0
+## Every frame over LONG_FRAME_MS after the press, [s after the press, ms, what the screen and the world
+## were at when it began]: where a stall comes from, not only the longest.
+const LONG_FRAME_MS := 1000
+var _long_frames: Array = []
+var _frame_state := ""
 
 
 func _ready() -> void:
@@ -891,6 +896,8 @@ func _watch_the_world_stand_up() -> void:
 	if _gap_ms > 1500:
 		_notes.append("no frame was drawn between %.1f s and %.1f s after the press: the world stands up synchronously, and the caption drawn last is what the player looks at for all of it"
 				% [(_gap_from_ms - _t0) / 1000.0, (_gap_from_ms + _gap_ms - _t0) / 1000.0])
+	if not _long_frames.is_empty():
+		_notes.append("frames over %d ms after the press [s, ms, what it began on]: %s" % [LONG_FRAME_MS, str(_long_frames)])
 
 
 ## A style's start's first objective is a lesson, done with the body (the warrior's: cut at the pells).
@@ -1470,7 +1477,26 @@ func _process(_delta: float) -> void:
 	if _last_frame_ms > 0 and _t0 > 0 and now - _last_frame_ms > _gap_ms:
 		_gap_ms = now - _last_frame_ms
 		_gap_from_ms = _last_frame_ms
+	if _last_frame_ms > 0 and _t0 > 0 and now - _last_frame_ms > LONG_FRAME_MS and _long_frames.size() < 40:
+		_long_frames.append([snappedf((_last_frame_ms - _t0) / 1000.0, 0.1), now - _last_frame_ms, _frame_state])
 	_last_frame_ms = now
+	if _t0 > 0:
+		_frame_state = _screen_state()
+
+
+## What is on the screen and what the world is at, in a few words.
+func _screen_state() -> String:
+	var world_script := load("res://world/world.gd") as GDScript
+	var world: Node = world_script.get("instance") if world_script != null else null
+	var bits: Array[String] = []
+	bits.append("caption" if UI.is_loading_shown() else ("fade" if UI.is_faded_out() else "clear"))
+	if UI.is_holding_for_country():
+		bits.append("holding for the country")
+	if get_viewport().disable_3d:
+		bits.append("no 3D")
+	if world != null:
+		bits.append("world: %s" % ("ready" if bool(world.get("is_world_ready")) else str(world.get("standing"))))
+	return ", ".join(bits)
 
 
 func _cells() -> int:
