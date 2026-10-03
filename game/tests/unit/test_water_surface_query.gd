@@ -168,3 +168,23 @@ func test_a_water_torn_down_while_it_builds_finishes_its_workers_first() -> void
 	_tree().root.remove_child(w)
 	assert_true(w._tasks.is_empty(), "leaving the tree waited for the worker")
 	w.free()
+
+
+func test_a_water_torn_down_before_its_worker_starts_starts_none() -> void:
+	# the world let go between the build's steps: finish_tasks ran with no worker yet, and the build,
+	# pacing itself, started one next frame on the node being freed (flow, 2026-10-03, water_mesh)
+	var p := TerrainProvider.new()
+	p.load_data()
+	var w := WaterSurface.new()
+	_tree().root.add_child(w)
+	w.add_child(p)
+	w.build(p, WorldPace.Slice.new())
+	w.finish_tasks()
+	var started := false
+	for i in 240:
+		await _tree().process_frame
+		if not w._tasks.is_empty():
+			started = true
+	assert_false(started, "no worker is put to a water already torn down")
+	_tree().root.remove_child(w)
+	w.free()
