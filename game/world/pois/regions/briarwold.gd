@@ -152,13 +152,13 @@ static func _facing(k: PoiKit) -> Vector2:
 	return f.normalized() if f != Vector2.ZERO else Vector2(0.0, 1.0)
 
 
-## The ground's own texture, darkened: the earth a root plate tore up, a grave's turned soil.
 ## The Charter Delf's tips (PoiMasonry.spoil_heap): broken granite, grey fresh, the iron's ochre and a
 ## darker grey run down it, the oldest greening from its foot.
 const GRANITE_TINTS := {"fresh": Color(1.0, 1.0, 1.0), "streak_a": Color(0.74, 0.75, 0.79),
 		"streak_b": Color(1.12, 1.0, 0.82), "grass": Color(0.62, 1.0, 0.52)}
 
 
+## The ground's own texture, darkened: the earth a root plate tore up, a grave's turned soil.
 static func _earth_look(k: PoiKit, slot := "mud", value := 0.42) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	var path := "res://assets/textures/terrain/%s_albedo_height.png" % slot
