@@ -1,0 +1,33 @@
+{
+ "note": "The quest notice (QuestNotice: the owner's 'make objective transitions appear on screen like Oblivion does it'): the Warrior's First Blood moved on to the Wynstead ditch, the plate under the compass with the quest, the head, the objective and why, over the fort's yard. ./run.sh shots tools/capture/plans/quest_notice.json --resolution 1280x720",
+ "hud": {
+  "discovered": "none",
+  "quest_notice": true
+ },
+ "quests": {
+  "core:quest/first_warrior": "the_ditch"
+ },
+ "shots": [
+  {
+   "label": "notice_the_ditch",
+   "at": {
+    "place": "core:place/wardens_rest",
+    "bearing": 142.6,
+    "distance": 17.0,
+    "height": 2.2
+   },
+   "body": {
+    "place": "core:place/wardens_rest",
+    "bearing": 142.6,
+    "distance": 13.5
+   },
+   "look": {
+    "place": "core:place/wardens_rest",
+    "height": 3.0
+   },
+   "time": 10.5,
+   "weather": "core:weather/clear",
+   "fov": 70
+  }
+ ]
+}

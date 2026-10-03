@@ -245,12 +245,17 @@ func test_a_stage_moving_on_says_so_and_why() -> void:
 	var n: Dictionary = hud.call("quest_notice_shown")
 	await _tree().process_frame
 	n = hud.call("quest_notice_shown")
-	assert_true(str(n.get("head", "")).begins_with("NEW QUEST"), "a quest taken: %s" % str(n))
+	assert_eq(str(n.get("head", "")), "QUEST STARTED  ·  SIDE QUEST", "a quest taken: %s" % str(n))
+	assert_eq(str(n.get("why", "")), "Tam knows where the pens are. Ask him first.", "and why")
+	# read, and let go: the next stage is a notice of its own (one a moment after would take its place)
+	var notice: QuestNotice = hud.call("quest_notice")
+	notice.advance(QuestNoticeQueue.FADE_IN_S + QuestNoticeQueue.MAX_HOLD_S * 2.0 + QuestNoticeQueue.FADE_OUT_S)
+	assert_true((hud.call("quest_notice_shown") as Dictionary).is_empty(), "the notice goes once it has been read")
 	log_node.call("set_stage", SIDE, "last")
-	await _tree().process_frame
+	notice.advance(QuestNoticeQueue.GAP_S + 0.2)
 	await _tree().process_frame
 	n = hud.call("quest_notice_shown")
-	assert_eq(str(n.get("head", "")), "NEW OBJECTIVE  ·  SIDE QUEST")
+	assert_eq(str(n.get("head", "")), "JOURNAL UPDATED  ·  SIDE QUEST")
 	assert_eq(str(n.get("why", "")), "Back to the Sergeant with it.", "the stage's first journal line says why")
 	assert_true(str(n.get("line", "")).begins_with("Fixture Side: "), str(n.get("line", "")))
 	assert_eq(QuestCues.first_line("One.\nTwo."), "One.")

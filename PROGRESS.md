@@ -16663,3 +16663,43 @@ picture. The warrior's is longest because the road's opening takes 7.4 s on its 
 - Not looked at on a GPU. The probe's frames are main-thread time with no renderer.
 - The ranger's 240 ms frame at its first cut is engine-side process (Terrain3D's clipmap at the new
   place, or the people there first posed close); not traced.
+
+## Quest news on the screen, the way Oblivion says it (quest-notice, 2026-10-03)
+
+The owner: "make objective transitions appear on screen like Oblivion does it; almost every starter
+quest progresses from point-to-point with no clear reason why, or the bit that pops up is small and
+disappears". The notice of triage 49/50 was one Small line under the compass with a Tiny head and the
+journal's first line, held 7-9 s from the moment the stage moved, under whatever had the screen.
+
+**The notice (`ui/hud/quest_notice.gd`, `quest_notice_queue.gd`).** A dark plate under the compass
+(568 px at the 1280x720 canvas, beside the tracker; wider and over it, the tracker stepped back, when
+a large UI leaves no room): "QUEST STARTED / JOURNAL UPDATED / QUEST COMPLETE · <tier>" in the tier's
+colour, the quest's name, the objective at 23 px, the stage's reason in the journal italic (up to three
+lines), and "[J] Journal" (the bound key, the pad's on a pad).
+- Held 6-10 s at full ink by its words (2.5 s + 0.045 s a letter), 0.45 s in, 1.1 s out; Gameplay
+  "Quest news stays up" scales it (0.75, 1, 1.5, 2).
+- Several wait their turn; none writes over another. A newer one of the same quest takes the place of
+  its own waiting ones and of one up less than 1.5 s (a quest taken and moved on by one answer shows
+  its latest objective, still "Quest started"); a completion takes an update's place.
+- Nothing is spent while a conversation runs, a film plays, a menu or the loading screen is up or the
+  HUD is hidden: it waits, comes up 0.6 s after, and one taken down half read comes back in full.
+- A page turned (`ui_page_turn`) as it comes up; the tracker's quest and its open rows glow gold and
+  settle, and the compass's pins swell and beat gold for 4 s, when it is the quest followed.
+- The journal key opens the journal at the notice's quest (up now or gone under 30 s).
+- The HUD's `objective_shown`/`quest_notice_shown` keep their meaning for the tests and the probe.
+
+**Reason lines.** Every stage of the four starts and their tie-ins opens on why you are now going
+there, in the giver's terms, whole in 170 letters. Sharpened: the Rogue's strongbox ("Tomorrow is
+tithe-day." alone), the Warrior's ditch ("Dole has seen you take a blow." alone), the Glass Bridge, the
+Relief's Stair Head (opened on Tam's letter, not the pay), the Mage's boat and report, the Note's ride
+and Stair Head, the Grey Hart's shrine and Stair Head, the butts (cut at 174 letters), the Unsaid
+Page's ride and Stair Head.
+
+**Tests:** test_quest_notice (new, 11: the timing, the queue, the defer under talk and films on the
+queue and on the HUD, the plate's place clear of the crosshair, the key, the journal at the quest, the
+glow, the setting, every starter stage's reason line); test_quest_cues updated to the new heads.
+Green with test_quests, test_journal_*, test_waymark*, test_start_*, test_content_social, test_the_start,
+test_quest_tracker, test_compass*, test_settings*, test_ui_fits_at_every_scale (210 in one run). Journeys: warrior 7/7, ranger 6/6 (1 skipped), mage 7/7, rogue 7/7, 0 logged errors.
+`tools/quests/softlock_check.py`: 140 quests, 0 findings. Screenshot: `./run.sh shots
+tools/capture/plans/quest_notice.json` (the plan's `"hud": {"quest_notice": true}` puts the followed
+quest's notice up for the exposure).

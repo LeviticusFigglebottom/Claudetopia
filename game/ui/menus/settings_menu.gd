@@ -398,6 +398,8 @@ func _build_gameplay() -> void:
 	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
 	_check("gameplay", "pickup_glint", "Things on the ground glint", "a soft glint now and then, so a dropped blade can be seen")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
+	_option("gameplay", "quest_notice_time", "Quest news stays up", ["Shorter", "Ordinary", "Longer", "Longest"],
+			"a quest taken, moved on or finished, under the compass", [0.75, 1.0, 1.5, 2.0])
 
 
 func _build_accessibility() -> void:

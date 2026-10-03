@@ -28,7 +28,7 @@
        "on_enter": [{"set_flag": "hunter_at_fernhold"}],
        "on_complete": []},
       {"id": "the_butts",
-       "journal": "This evening Rosen clears the thornhounds from Wold Force, where they have been killing the lodge's deer, and you are to shoot them from the high ground before they find you.\n\nFirst she wants to see you hit what you aim at.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range in turn: the near one twice, then the middle one, then the far one. Only the butt you are on counts; the marker is on it.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
+       "journal": "This evening Rosen clears the thornhounds killing the lodge's deer at Wold Force, shooting from the high ground, and first she wants to see you hit what you aim at.\n\nYou are to shoot them from up there before they find you.\n\nGo to the shooting line across Fernhold's common and hit the three straw butts down the range in turn: the near one twice, then the middle one, then the far one. Only the butt you are on counts; the marker is on it.\n\nHow: draw and hold, and let go on the out-breath. Holding the draw costs stamina for as long as you hold it. The further the butt, the more the arrow falls on the way, so aim over the far one.",
        "marker": {"place_id": "core:place/fernhold", "radius": 70},
        "objectives": [
          {"type": "act", "target": "arrow_hit", "against": "prop:butt", "prop": "butt_near", "min_range": 10, "count": 2, "text": "Hit the near butt twice, at fifteen paces: draw with {key:attack_light}, hold, let go", "supply": {"item": "core:item/iron_arrow", "count": 12, "say": ["core:npc/rosen_wyke", "Out? Here. Twelve more, and fetch the ones in the grass after; arrows are dear.", 0.3, 5.0]},
@@ -104,7 +104,7 @@
        "on_enter": [{"notify": "Thornhounds on the road behind the hart, come out of the Briar."}],
        "on_complete": [{"set_flag": "briar_hounds_walking_south"}, {"notify": "The hart has stopped on the road, and waits. A Hearthstone stands at Ansel's Hedge Shrine, just off it."}]},
       {"id": "the_shrine",
-       "journal": "The hart has stopped on the road past Tamwick and is waiting, which a hart does not do.\n\nAlder said to touch the Hearthstone at Ansel's Hedge Shrine on the way: if the road kills you, you wake at the last stone you touched.\n\nTurn off the road west of Tamwick to Ansel's Hedge Shrine and put your hand on the Hearthstone in its lee.",
+       "journal": "The hart has stopped on the road past Tamwick and is waiting, which a hart does not do: this is the turn for the Hearthstone Alder told you to touch on the way.\n\nIf the road kills you, you wake at the last stone you touched.\n\nTurn off the road west of Tamwick to Ansel's Hedge Shrine and put your hand on the Hearthstone in its lee.",
        "marker": {"place_id": "core:poi/hedge_shrine_of_ansel", "radius": 50},
        "objectives": [
          {"type": "reach", "target": "core:poi/hedge_shrine_of_ansel", "count": 1, "radius": 40, "text": "Turn off to Ansel's Hedge Shrine"},
@@ -113,7 +113,7 @@
        "on_enter": [],
        "on_complete": [{"notify": "The hart walks on south, into the Vale."}]},
       {"id": "the_stair_head",
-       "journal": "The hart walks on south, and you follow it to where the road ends.\n\nIt goes through the Vale, by Merrowby, Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to a Wardens' camp on a cliff's edge, at the top of a stair going down into grey mist.\n\nFollow it there, and speak to the Warden at her fire.",
+       "journal": "The hart walks on south, and Rosen and Alder want to know where it goes: follow it to where the road ends.\n\nIt goes through the Vale, by Merrowby, Wynstead and Ashwell to Pilgrim's Ash, and past the Sunken Choir to a Wardens' camp on a cliff's edge, at the top of a stair going down into grey mist.\n\nFollow it there, and speak to the Warden at her fire.",
        "marker": {"place_id": "core:poi/stair_head", "radius": 40},
        "objectives": [{"type": "talk", "target": "core:npc/wren_tallow", "topic": "the_hart_came", "text": "Speak to the Warden at the Stair Head"}],
        "on_enter": [],
