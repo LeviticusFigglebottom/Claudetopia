@@ -16324,3 +16324,9 @@ It ran end to end here on OpenGL with no script errors. Draws by stop: 960 / 134
 The owner's benchmark runs at Medium and at High, on the laptop and on the 9070 XT, will say.
 Pre-existing in the targeted tests, not from this branch: dummy-renderer ERROR lines
 ("Parameter material is null") in test_naming_screen.
+
+**Follow-up, 2026-10-03 (lowend):** the title's film now holds all seven shots. It is 75 s and
+12.5 MB, Theora at quality 4, 1280x720, filmed at 12 fps on llvmpipe and played at 24. Each shot
+dips in from and out to the menu's dark, so the loop's seam is dark to dark. The Briarwold road
+took 37-45 s a frame to film here, and the other shots about 5 s. The shader warm set holds
+Terrain3D's dual-scaling shader (a9470fd8; 100 to 101 materials).
