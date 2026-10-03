@@ -16559,3 +16559,107 @@ Primitives went from 0.45-0.78 M to 0.48-0.77 M (-0.04 to +0.05 M), well inside 
   - the far ring's bushes (430 m, whole far cells at 380-500 m);
   - the trees' impostor MultiMesh in a near-ring corner cell (340 m).
   These are much less visible than grass at the feet, and they are a follow-up of the same shape.
+
+## The intro films never wait once they have begun; Continue draws its first frames under the caption (films-stream, 2026-10-03)
+
+The owner: during the class intros the picture kept freezing, "loading N cells" came up mid-film, and
+only then did the film go on. The flow's Continue: "no frame was drawn between 12.9 s and 16.6 s after
+the press".
+
+### The cause
+- **Mid-film waits.** A cut asked for the next shot's country only when the shot before it began
+  (`_stream_ahead`), and the big pieces of that country were never built while the pictures played: a
+  place (WorldStreamer, `_film_watched`), a town (WorldDoors) and a person (NpcRegistry) all waited for
+  the film's next hold. A cell is not loaded until its places are, so the next shot's cells could only
+  finish in the hold at the cut. The hold hurried the streamer (the curtain's budget), stood those
+  pieces up in frames of 50-300 ms on the frozen still, and after HOLD_GRACE_SECONDS went to black
+  with the hold line and "Laying the country: N cells", music paused, for up to HOLD_CAP_SECONDS.
+- **The frames at every cut.** Each cut forced its shot's weather and region, and `_start_weather`
+  told `weather_changed` every time, same weather or not: NpcRegistry ran `simulate_all` over the whole
+  roster, with the ambience and the stealth. That was 60-250 ms of one frame at every cut and at the
+  hand-over (`film_enter_sky`, `film_restore_sky`).
+- **Continue.** When the fade's wait for the country ended, the world's 3D was given back and the fade
+  lifted in the same frame. The next frame drew, and first used, everything at once.
+
+### What changed
+- **The whole film's country before its first picture** (`CinematicPlayer._plan_film`, `_preroll_ready`):
+  - It asks for every cell every shot sees (ShotSight), the near and far rings round its camera's path,
+    and the rings and towns round every point a shot opens on or looks at. That is 45-62 cells, 12-22 of
+    them near.
+  - It keeps all of it wanted until the hand-over is over, so nothing is let go or asked for again at a cut.
+  - The first picture waits under the opening's black for all of the near part and its towns, and for
+    everybody living there to be stood up and dressed (`NpcRegistry.settled`, `Npc.dressing_count`).
+    It then gives the far ring up to 3 s more.
+  - It gives up when nothing has moved for 6 s and 90 frames (`streamer.progress()`, never
+    `WorldPace.built`, which the film's own counting moves), or after 90 s.
+  - The wait for each shot's own opening is logged.
+- **Nothing waits after the first picture** (`_mid_film`):
+  - A cut holds its still for its settling frames without hurrying the streamer.
+  - It never goes to black and never shows the hold line.
+  - If its country is somehow not in, it is shown after `MID_HOLD_CAP_SECONDS` (1 s) with what there
+    is (`shown_early`). A skip still goes to black as before.
+- **Big pieces wait for the film** (`CinematicPlayer.watched()`, from the first picture to the end of
+  the hand-over): the streamer's places, WorldDoors' towns and NpcRegistry's people.
+- **The weather is told only when the game's weather changes** (`Atmosphere.quiet`, `tell_if_changed`):
+  - While a film borrows the sky, nothing is told.
+  - The hand-over's weather is told once, under the opening's black.
+  - The restore tells it again only if it differs from what was last told.
+- **Continue and Load** (`World.warm_in`, called from `UI._on_player_spawned` when no film plays):
+  - After the wait for the country, the world is drawn a layer a frame under the caption (ground and
+    sky, then water, then horizon, then cells), at a quarter of the 3D resolution.
+  - The fade lifts only after that.
+- **Measuring:**
+  - `CinematicPlayer.holds` records every hold (ready, caption, early, ms).
+  - The CPU probe prints `FILM|` lines: mid-film waits, hold captions, captions up, the longest frame,
+    frames over 50 ms and what each was spent on.
+  - The flow lists every frame over a second after the press, with what was on the screen.
+
+### Measured: films (CPU probe, headless, paced, `--cpu-new=core:style/<x>`; this box under other agents' load)
+| film | mid-film waits / captions | longest frame | frames > 50 ms | opening hold | cut holds (ms) |
+|---|---|---|---|---|---|
+| warrior before | 1 / 1 (shot 3, 1.3 s on black, 27 frames of caption) | 171 ms | 22 | 5.1 s | 374, 1317, 545 |
+| warrior after | 0 / 0 | 97 ms | 3 | 11.4 s | 85, 104, 101 |
+| ranger before | 1 / 1 (shot 3, 1.2 s) | 315 ms | 23 | 3.1 s | 1094, 1167, 510 |
+| ranger after | 0 / 0 | 240 ms | 4 | 6.1 s | 326, 108, 156 |
+| mage before | 0 / 0 | 132 ms | 13 | 4.4 s | 346, 277, 217 |
+| mage after | 0 / 0 | 65 ms | 1 | 5.8 s | 95, 74, 57 |
+| rogue before | 0 / 0 | 171 ms | 13 | 4.5 s | 395, 251, 213 |
+| rogue after | 0 / 0 | 222 ms | 2 | 6.3 s | 87, 71, 71 |
+
+The opening hold is longer: 3.4-9.1 s of it is the whole film's country, in the black before the first
+picture. The warrior's is longest because the road's opening takes 7.4 s on its own.
+
+**What is left over 50 ms:**
+- one engine-side frame at the ranger's first cut, on the held still (240 ms, not a paced piece);
+- the frame control comes back in (the story starting, 66-222 ms);
+- the first cell let go after the hand-over (60-97 ms).
+
+### Measured: Continue (the flow, Compatibility on llvmpipe, 1280x720)
+- **Before:** the fade lifted about 17.5 s after the press. The next frame drew the world for the first
+  time and took 5.1 s, with the caption's last frame on the screen. After that, every frame took
+  3.1-3.8 s.
+- **After:**
+  - Under the caption, the world was drawn a layer a frame: 1.8, 1.0 and 1.4 s, then 3.7 s for the
+    cells. The bell moved between them.
+  - The fade then lifted onto frames of 3.2-3.5 s.
+  - The longest frame from the press to control was 3.7 s, against 5.1 s before. This box draws any
+    frame of this world in about 3.2 s.
+  - The quarter resolution does not help the cells' frame on llvmpipe, which is bound by vertices.
+- Load is the same: 5.7 s before, and at most 2.6 s while the caption is up after.
+- flow passes: new 103, load 36, continue 39.
+
+### Tests
+- **New:** `test_film_streaming.gd` (4 tests). It plays each style's film as a new game in the built
+  world, headless, with the streaming paced from `world_ready` on, at the pictures' own speed. It fails
+  on any hold after the first picture that waited, showed the hold line or was cut short, on any
+  loading caption or hold line after the first picture, and on a wait before the first picture that
+  ended on a cap rather than with the country. 4 passed.
+- test_cinematic_player (after the stall-key fix), test_shot_sight, test_loading_watch,
+  test_cinematic_def, test_audio_wired, test_screen_fade, test_atmosphere, test_npc_registry: all pass,
+  0 script errors.
+- `./run.sh flow`: PASS. `./run.sh journey`: 16 of 16.
+
+### Not done
+- Not looked at on a GPU. The probe's frames are main-thread time with no renderer.
+- The ranger's 240 ms frame at its first cut is engine-side process (Terrain3D's clipmap at the new
+  place, or the people there first posed close); not traced.

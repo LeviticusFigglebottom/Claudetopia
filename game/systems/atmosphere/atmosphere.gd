@@ -433,7 +433,29 @@ func _start_weather(weather_id: String, instant := false) -> void:
 	_weather_to = _params_of(weather_id)
 	_weather_t = 1.0 if instant else 0.0
 	weather_by_region[region_id] = weather_id
-	EventBus.weather_changed.emit(region_id, weather_id)
+	if not quiet:
+		_tell()
+
+
+## While a film borrows the sky (CinematicPlayer), its shots' weather is the picture's, not the
+## game's: nothing is told of it (`weather_changed`), and when the sky is given back the game hears
+## once, if the weather it ends on is not what it was last told (`tell_if_changed`). Every cut of a
+## film forced its weather, and every force told the roster (NpcRegistry.simulate_all, the whole
+## world's people), the ambience and the stealth: up to a quarter of a second of one frame.
+var quiet := false
+var _told: Array = ["", ""]
+
+
+func _tell() -> void:
+	var id := current_weather_id()
+	_told = [region_id, id]
+	EventBus.weather_changed.emit(region_id, id)
+
+
+## Says the weather now if it is not what was last said (after `quiet`).
+func tell_if_changed() -> void:
+	if _told != [region_id, current_weather_id()]:
+		_tell()
 
 
 func force_weather(weather_id: String, instant := true) -> void:

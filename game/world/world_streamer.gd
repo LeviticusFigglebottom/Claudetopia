@@ -451,6 +451,15 @@ func cell_state(c: Vector2i) -> String:
 	return "not asked for"
 
 
+## How far the building has got, as one number that grows with every piece of a cell built and every
+## cell standing: whoever waits on the streamer tells moving from stuck by it (CinematicPlayer).
+func progress() -> int:
+	var n := _loaded.size() * 10000
+	for c in _building:
+		n += maxi(int((_building[c] as Dictionary).get("next", 0)), 0)
+	return n
+
+
 func queue() -> Dictionary:
 	_mutex.lock()
 	var parsed := _parsed.size()
@@ -984,8 +993,8 @@ func _build_piece(cell: Vector2i) -> bool:
 	var at := step - assets.size() - 1
 	var world_pois := _world_pois()
 	if at < places.size():
-		# a place is a piece of tens of milliseconds: while a film's pictures are watched it waits for
-		# the film's next hold (the black, or the last frame held), where a long frame is not seen
+		# a place is a piece of tens of milliseconds: while a film's pictures are watched (its cuts
+		# too) it waits for the film to end; the film asked for its own before its first picture
 		if WorldPace.paced() and not WorldPace.curtained() and _film_watched():
 			b["next"] = step
 			b["waiting"] = true
@@ -1055,7 +1064,12 @@ var _cinder_assets_asked := false
 ## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).
 func _film_watched() -> bool:
 	var film := get_tree().get_first_node_in_group("cinematic") if is_inside_tree() else null
-	return film != null and film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
+	if film == null:
+		return false
+	# from its first picture to the hand-over, its cuts too: everything it shows came before it began
+	if film.has_method("watched"):
+		return bool(film.call("watched"))
+	return film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
 
 
 ## The places' dressings (WorldPois), by its group: the group name as a literal, not
