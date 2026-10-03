@@ -664,7 +664,9 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 		k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
 	# loose stone: over its faces and benches, and round the toe where it rolled further down the land
 	var out: Array = []
-	for n in (18 if old else 64):
+	# (each stone is one of the forge's, some 2500 triangles near: 64 a tip took the Charter Delf's
+	# three from 33k triangles to 433k)
+	for n in (6 if old else 16):
 		var i := k.rng.randi_range(int(rings * 0.3), rings - 1)
 		if n % 4 == 0:
 			i = rings - k.rng.randi_range(0, 1)
@@ -681,7 +683,7 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 ## Loose stone at `points` (local, as spoil_heap returns them): every third one of the region's
 ## boulders at a small scale, the rest its scree. The two scatters, either of them null where the
 ## region has no such rock or in the far ring.
-func spoil_stones(points: Array, big_scale := Vector2(0.32, 0.75)) -> Array:
+func spoil_stones(points: Array, big_scale := Vector2(0.4, 0.9)) -> Array:
 	var k := kit
 	if k.far or points.is_empty():
 		return [null, null]
@@ -695,7 +697,7 @@ func spoil_stones(points: Array, big_scale := Vector2(0.32, 0.75)) -> Array:
 			var sc := k.rng.randf_range(big_scale.x, big_scale.y)
 			big.append(PoiKit.transform_at(p - Vector3(0.0, 0.3 * sc, 0.0), k.rng.randf_range(0.0, TAU), sc))
 		elif scree != "":
-			small.append(PoiKit.transform_at(p - Vector3(0.0, 0.08, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.0)))
+			small.append(PoiKit.transform_at(p - Vector3(0.0, 0.08, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.3)))
 	var a: MultiMeshInstance3D = k.scatter(rock, big, true) if not big.is_empty() else null
 	var b: MultiMeshInstance3D = k.scatter(scree, small, false) if not small.is_empty() else null
 	return [a, b]

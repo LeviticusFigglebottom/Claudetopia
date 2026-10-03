@@ -1040,7 +1040,7 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
-	var out := k.road_direction(220.0)
+	var out := _to_road(k, 400.0)
 	if out == Vector2.ZERO:
 		out = k.downhill() if k.downhill() != Vector2.ZERO else Vector2(0, -1)
 	out = out.normalized()
@@ -1092,7 +1092,11 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	if lime_rock.is_empty():
 		lime_rock = [k.rock("cliff_face", 0)]
 	# [across (+ the weep's side), back from the mouth's line, height, turn in, which piece]
-	var crag := [[1.0, 0.0, 13.0, -0.3, 0], [-1.0, 0.0, 11.0, 0.3, 1], [0.1, 9.5, 12.0, 0.0, 1]]
+	# (the weep's cheek the tallest, the other lower, the one behind leaning: three pieces of one height
+	# read as a squared block)
+	# (the narrow piece: the wide one is nineteen metres across at that height, a block in itself)
+	var crag := [[1.0, 0.0, 15.0, -0.3, 1], [-1.0, 0.0, 11.0, 0.3, 1], [0.1, 9.5, 12.5, 0.0, 1]]
+	var cheek_at: Array = []
 	for ci in crag.size():
 		var cr: Array = crag[ci]
 		var rp: String = lime_rock[int(cr[4]) % lime_rock.size()]
@@ -1111,16 +1115,51 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 			c += across * (gap + 0.4 + half) * signf(side_s)
 		else:
 			c += across * half * side_s
-		# sunk a metre and a half: the bank closes over its foot
-		var base := k.on_ground(c.x, c.y, -1.5)
+		# sunk two and a half metres: the bank closes over its foot, so it grows out of it
+		var base := k.on_ground(c.x, c.y, -2.5)
+		sc = clampf((tall + 1.0) / maxf(float(bd.get("height", 16.7)), 0.5), 0.2, 2.0)
 		await k.step()
-		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, Vector3.ZERO, true)
+		var lean := Vector3(0.0, 0.0, 0.07) if ci == 2 else Vector3.ZERO
+		var node := k.place(rp, base, PoiKit.yaw_of(out) + float(cr[3]), sc, true, lean, true)
+		cheek_at.append([c, half, fore])
 		if node != null:
 			node.name = "Crag%d" % ci
 		if ci < 2:
 			# its face toward the way, a little in from its outer side
 			cheek_tops.append(Vector3(c.x - across.x * half * 0.35 * side_s + out.x * fore * 0.8, base.y + tall,
 					c.y - across.y * half * 0.35 * side_s + out.y * fore * 0.8))
+	# pinnacles of it leaning out beside the cheeks, so its top is a broken line and not a box's, and
+	# blocks fallen off it lying on the apron; moss and fern at its foot, where it is wet
+	var slab := PoiKit.variants_of(PoiKit.ROCKS, "skerrow", "cliff_slab")
+	if not slab.is_empty() and cheek_at.size() >= 2:
+		for si in 2:
+			var ch: Array = cheek_at[si]
+			var sgn := 1.0 if si == 0 else -1.0
+			var sp: String = slab[si % slab.size()]
+			var sbd: Dictionary = PoiKit.meta(sp).get("bounds", {})
+			var ssc := (10.5 if si == 0 else 8.5) / maxf(float(sbd.get("height", 6.4)), 0.5)
+			var sh := 2.0 * ssc
+			var pc: Vector2 = ch[0] + across * sgn * (float(ch[1]) + sh * 0.55) + into * 1.5
+			await k.step()
+			k.place(sp, k.on_ground(pc.x, pc.y, -2.0), PoiKit.yaw_of(out) + 0.4 * sgn, ssc, true,
+					Vector3(0.0, 0.0, -0.16 * sgn), true)
+		if not k.far:
+			# one toppled on the apron
+			var fallen_at := ml + out * 10.0 - across * 6.5
+			await k.step()
+			k.place(slab[0], k.on_ground(fallen_at.x, fallen_at.y, -0.4), PoiKit.yaw_of(across) + 0.3, 1.1, true,
+					Vector3(1.35, 0.0, 0.1))
+	var blocks := k.rock("boulder")
+	if blocks != "" and not k.far:
+		var lying: Array = []
+		for bi2 in 4:
+			var bs := 1.0 if bi2 % 2 == 0 else -1.0
+			var q := ml + out * k.rng.randf_range(8.0, 11.0) + across * bs * k.rng.randf_range(4.5, 8.0)
+			var bsc := k.rng.randf_range(0.9, 1.6)
+			lying.append(PoiKit.transform_at(k.on_ground(q.x, q.y, -0.35 * bsc), k.rng.randf() * TAU, bsc,
+					Vector3(k.rng.randf_range(-0.4, 0.4), 0.0, k.rng.randf_range(-0.4, 0.4))))
+		await k.step()
+		k.scatter(blocks, lying, true)
 	# the Name-Tree: in front of the mouth and to one side, leaning out over the cove
 	var tree_at := m2 + out * 10.0 - across * 6.5
 	var wood := m.begin()
@@ -1239,6 +1278,28 @@ static func name_wifes_hollow(d: PoiDressing) -> void:
 	await reeds(d, 12.0, 19.5, 60, [[m2 + out * 12.0, 4.0], [tree_at, 3.0], [m2 - out * 14.0, 17.0]])
 
 
+## The way from a place to the nearest point of its nearest road within `max_m` (local, unit), where a
+## body comes from; ZERO with none. (PoiKit.road_direction is the road's own heading, not the way to it:
+## a mouth faced along it looked across the approach, not at it.)
+static func _to_road(k: PoiKit, max_m: float) -> Vector2:
+	var here := Vector2(k.origin.x, k.origin.z)
+	var best := INF
+	var to := Vector2.ZERO
+	for s in k.roads_near(max_m):
+		var pa: Vector2 = s[0]
+		var pb: Vector2 = s[1]
+		var seg := pb - pa
+		if seg.length() < 0.5:
+			continue
+		var t := clampf((here - pa).dot(seg) / seg.length_squared(), 0.0, 1.0)
+		var q := pa + seg * t
+		var dd := q.distance_to(here)
+		if dd < best and dd <= max_m and dd > 0.5:
+			best = dd
+			to = (q - here) / dd
+	return to
+
+
 ## The bank a hollow's crag comes up out of: the marsh's own turf rising from the cove to `crest`
 ## (local) over and either side of the cleft (`gap` its half-width at the mouth's line `ml`, `deep`
 ## its depth along `into`), falling away behind into the ground and out to the sides, and coming
@@ -1297,6 +1358,19 @@ static func _crag_bank(d: PoiDressing, ml: Vector2, into: Vector2, across: Vecto
 	var shape := ConcavePolygonShape3D.new()
 	shape.set_faces(faces)
 	k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
+	# moss and fern on it round the crag's foot, where the rock keeps it wet
+	for kind_path in [k.flora("moss_patch"), k.flora("fern")]:
+		if kind_path == "":
+			continue
+		var wet: Array = []
+		for n in 26:
+			var q: Vector3 = pts[k.rng.randi_range(1, nu >> 1)][k.rng.randi_range(2, nv - 2)]
+			var rel := Vector2(q.x - ml.x, q.z - ml.y)
+			if absf(rel.dot(across)) < gap + 0.8 or q.y < k.on_ground(q.x, q.z).y - 0.1:
+				continue
+			wet.append(PoiKit.transform_at(q - Vector3(0.0, 0.04, 0.0), k.rng.randf() * TAU, k.rng.randf_range(1.0, 1.7)))
+		await k.step()
+		k.scatter(kind_path, wet, false, false, false)
 	# rough grass and sedge over it
 	var tuft := k.flora("grass_clump")
 	if tuft != "":
