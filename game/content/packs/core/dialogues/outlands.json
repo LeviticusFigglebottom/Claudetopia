@@ -49,6 +49,10 @@
     {"conditions": [{"flag": "daybook_to_quill"}], "text": "...Door. The door is behind you and it is the last thing you touched and it is the last thing you will touch down here."},
     {"conditions": [{"flag": "daybook_returned"}], "text": "Railing. You put it back. That is not nothing and it is not enough, and both of those are going in the book."},
     {"conditions": [{"flag": "learned_first_hush"}], "text": "Lamp-post. You are standing in the light again. We have discussed the light."},
+    {"conditions": [{"quest_done": "core:quest/every_price"}, {"flag": "ledger_published"}], "text": "Charter-board. You touched it last and the whole of Lantern Row has touched it since, with its finger, reading down the fourth column. Thirty-one in the pound, out loud, in the street. Sit on the step. Somebody down here ought to say it was well carried, and it will not be anybody else.", "weight": 2},
+    {"conditions": [{"quest_done": "core:quest/every_price"}, {"flag": "ledger_unsaid"}], "text": "Strap. You buckled it and handed it down, and now it is a reading we have not done yet, which is all the Hands ever were. Sit on the step. Do not tell me whether you are sorry; I have not decided whether I am.", "weight": 2},
+    {"conditions": [{"quest_done": "core:quest/every_price"}, {"flag": "ledger_sold_back"}], "text": "...Purse. It is the last thing you touched and it is the only thing anybody down here will say you touched. The step is for people who have carried something. You may stand.", "weight": 2},
+    {"conditions": [{"quest_done": "core:quest/every_price"}, {"flag": "ledger_of_prices_burned"}], "text": "Ash. Ninety-one years of it up a chimney, and the Guild and the Hands poorer by the same book on the same night, which nobody has ever managed before. I have not forgiven you. I have stopped counting, which down here is nearer than it sounds.", "weight": 2},
     {"conditions": [{"renown_min": 300}], "text": "Loud one. You cannot Hush at that volume; it is like asking a bonfire to be a candle. We shall have to find you other work."}
   ],
   "nodes": {

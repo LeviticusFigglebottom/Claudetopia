@@ -210,6 +210,13 @@ func _play() -> void:
 			if not bool(began["ok"]):
 				var times := int((tried_begin.get(next, {"times": 0}) as Dictionary)["times"]) + 1
 				tried_begin[next] = {"why": str(began["why"]), "after": results.size(), "times": times}
+			elif not log_node.is_active(next) and not _walked(next):
+				# begun and ended in the same breath: every objective was already met when its
+				# stages opened (QuestLog._sync_stage). The Scathe Tithe, read at the fort's gate
+				# after The Other Ink has put its captain down and taken his book, with the Wardens'
+				# Rest already found. Nothing is left to walk, but its end is checked like any other.
+				_say("QW: %s ended as it began: its objectives were already met" % _short(next))
+				await _walk_quest(next)
 			continue
 		active = _pick_active(order, true)
 		if active != "":
