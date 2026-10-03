@@ -16382,3 +16382,39 @@ Pre-existing in the targeted tests, not from this branch: dummy-renderer ERROR l
 dips in from and out to the menu's dark, so the loop's seam is dark to dark. The Briarwold road
 took 37-45 s a frame to film here, and the other shots about 5 s. The shader warm set holds
 Terrain3D's dual-scaling shader (a9470fd8; 100 to 101 materials).
+
+## Playtest fixes: crowns off the start towns, a load that offers the way back (playtest-fixes, 2026-10-03)
+
+The owner's playtest (2026-10-02) found tree crowns reaching into the start towns' houses and
+props (the Ranger's opening had leaves through Fernhold's houses), and a load that could hang
+the way into the world. Triage 81.
+
+- **The builder keeps every crown off the towns** (8aa0cbab). Before this, only the trunk was
+  kept off. `worldgen.trees.clear_off_towns` takes out every tree whose crown reaches over a
+  town's pad and the gardens past it, as the build writes the cells.
+- **The installed world took the same pass without a rebuild.** `tools/world/crowns_off_towns.py`
+  (8601bf73) was only dry-run in its first session. It has now run over w4096j (d8210835): 585
+  trees off 37 towns, in 69 cells.
+  - Biggest removals: Ormhold 61, Hazelwick 56, Grandfather 55, Rookhold 51, Fernhold 35.
+  - The diff was checked cell by cell. Only tree instances were dropped (Cinderlea's dead ash and
+    char stumps among them), all within 116 m of a town centre. No other field or bucket changed.
+  - A second dry run finds nothing left to take.
+- **The loading caption watches its load** (31fc6ea0). After 60 s without movement it says what
+  it waits on, reports it, and offers "Back to the title". Continue, Load and Be named take the
+  world's scene from the cache, or read it on the loader's threads, never on the main thread.
+- **A crash the flow found, fixed** (caa62afb). Clicking Continue while the title's world was
+  laying its rivers crashed the game (signal 11 in `WaterSurface._river_mesh`).
+  - The cause: `World.tear_down` unbound Terrain3D and the world was freed while the river
+    worker still read heights through the provider.
+  - The fix: the water keeps its worker tasks, and `tear_down` and its `_exit_tree` finish them
+    first. That costs the rest of one task on a click that leaves (231 ms on llvmpipe here).
+  - `test_water_surface_query` covers it.
+
+**Checks:**
+- test_start_towns_clear_of_crowns, test_loading_watch, naming, the title/menu tests,
+  world_streamer, threaded_loads, safe_mode and world_status: 97 tests, all passing.
+- The water, river, loading-watch, world-streamer and title-vista tests: 62 tests, all passing.
+- tools/world/tests for crowns, sightlines and seating: 16 passed, 1 skipped.
+- `./run.sh flow`: PASS in new (103 checks), load (36) and continue (39).
+- `start_towns_canopy` capture in `captures/`: Fernhold, Warden's Rest, Gullhithe and Moreva
+  show no crown in a house or prop.
