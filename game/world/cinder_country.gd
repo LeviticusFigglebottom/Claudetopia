@@ -7,7 +7,7 @@ extends Node
 ## Cinderlea cell gets, from its own cell coordinates and nothing else (so the same every time):
 ##
 ## * the vent country: a low-frequency field over the heath (`heat_at`) marks where the ground is
-##   still warm, a fifth or so of the region, in broad tongues. In it lie ember cracks in smouldering
+##   still warm, about a seventh of the region (15% of its sites, as tuned), in broad tongues. In it lie ember cracks in smouldering
 ##   clusters and alone, a few larger vents -- a mouth of glowing crust, cracks radiating from it, a
 ##   ring of black cinders, a thread of smoke or steam, a warm light at night and a soft hiss -- a
 ##   rarer ember pool, and obsidian shards where the heat glassed the ash;
