@@ -2821,3 +2821,1251 @@ static func holmwatch(d: PoiDressing) -> void:
 	m.limb(brass, dg + Vector3(dir.x * 0.4, 1.3, dir.y * 0.4), dg + Vector3(dir.x * 0.75, 1.55, dir.y * 0.75), 0.16)
 	m.commit(brass, PoiKit.plain(BRASS, 0.35, 0.6), "TowerTrumpet")
 	k.marker("the_lamp_tower_door", dg)
+
+
+# --- the novel places --------------------------------------------------------------------------------
+#
+# Seven kinds of place the country had none of, each from the Mere's own trades and lore, and two
+# large sites: the Sounding Mirror (a Builders' listening-dish), the Ropewalk, the Widows' Keels
+# (boats turned over for houses), the Charter Scale (a beam-balance that weighed boats), the
+# Cormorant Perches, the Kite-Fishers' Shore, the Dumb Fair (a silent smugglers' market behind black
+# screens); the Saltmound (the Charter's salt-heap, tunnelled into) and Fathom Shears (the salvors'
+# sheer-legs and diving bell over the Drowned Quarter).
+
+const SLATE := {"base": "#4b5058", "accent": "#3b3f46", "grout": "#23262b", "unit": 0.3}
+const TAR := {"base": "#2c2824", "accent": "#1e1b18", "grout": "#100e0c", "unit": 0.22}
+const SALT := {"base": "#e4e2da", "accent": "#cfcbc0", "grout": "#a9a497", "unit": 0.5}
+const SAILCLOTH_BLACK := {"base": "#22211f", "accent": "#181715", "grout": "#0c0b0a", "unit": 0.6}
+const IRON := Color(0.13, 0.13, 0.14)
+const CHALK := Color(0.9, 0.89, 0.84)
+
+
+## The way a place on the shore faces: toward the Mere where it is near, else the road, else
+## downhill; never ZERO.
+static func _to_water(k: PoiKit, reach := 90.0) -> Vector2:
+	var f := k.water_direction(reach)
+	if f == Vector2.ZERO:
+		f = _toward_road(k, 220.0)
+	if f == Vector2.ZERO:
+		f = k.downhill()
+	if f == Vector2.ZERO:
+		f = Vector2(0.0, 1.0)
+	return f.normalized()
+
+
+## A quad into `st`, laid both ways round so it shows from either side.
+static func _quad_both(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
+	for v in [a, b, c, a, c, d, a, c, b, a, d, c]:
+		st.add_vertex(v as Vector3)
+
+
+## The lowest ground under a footprint `size` (x across, y along) at local `at` turned `yaw`.
+static func _ground_min(k: PoiKit, at: Vector2, yaw: float, size: Vector2) -> float:
+	var lo := INF
+	var b := Basis(Vector3.UP, yaw)
+	for sx in [-0.5, 0.0, 0.5]:
+		for sz in [-0.5, 0.0, 0.5]:
+			var c := Vector3(at.x, 0.0, at.y) + b * Vector3(size.x * float(sx), 0.0, size.y * float(sz))
+			lo = minf(lo, k.on_ground(c.x, c.z).y)
+	return lo
+
+
+# --- the Sounding Mirror -------------------------------------------------------------------------------
+
+## A point on the Mirror's hollow: `u`, `v` -1..1 across and up it, `r` from the centre of its curve.
+static func _dish_point(centre: Vector3, F: Vector3, A: Vector3, u: float, v: float, r: float) -> Vector3:
+	var a := u * 0.44
+	var b := v * 0.4
+	var dir := -F * cos(a) * cos(b) + A * sin(a) * cos(b) + Vector3.UP * sin(b)
+	return centre + dir * r
+
+
+## A Builders' listening-dish on the north shingle: a hollow of black stone twelve metres across
+## standing on edge on a stepped plinth, turned to the Mere and the city; buttresses behind it; in
+## front at its focus a brass horn on an iron stalk, its speaking-tube running down to the cup on a
+## waist-high stone; Mab Larrow's lean-to and stool to one side.
+static func the_sounding_mirror(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k, 170.0)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var back := -F2 * 4.0
+	var yaw := PoiKit.yaw_of(F2)
+	var pb := Basis(Vector3.UP, yaw)
+	var g := _ground_min(k, back, yaw, Vector2(13.0, 5.0))
+	var rc := 14.0           # the hollow's radius of curve
+	var thick := 0.9
+	var mid := Vector3(back.x, g + 7.4, back.y)
+	var centre := mid + F * rc
+	var n := 14              # cells each way
+	var dish := m.begin()
+	for i in n:
+		for j in n:
+			if not _dish_in(i, j, n):
+				continue
+			var u0 := float(i) / float(n) * 2.0 - 1.0
+			var u1 := float(i + 1) / float(n) * 2.0 - 1.0
+			var v0 := float(j) / float(n) * 2.0 - 1.0
+			var v1 := float(j + 1) / float(n) * 2.0 - 1.0
+			var f00 := _dish_point(centre, F, A, u0, v0, rc)
+			var f10 := _dish_point(centre, F, A, u1, v0, rc)
+			var f11 := _dish_point(centre, F, A, u1, v1, rc)
+			var f01 := _dish_point(centre, F, A, u0, v1, rc)
+			var b00 := _dish_point(centre, F, A, u0, v0, rc + thick)
+			var b10 := _dish_point(centre, F, A, u1, v0, rc + thick)
+			var b11 := _dish_point(centre, F, A, u1, v1, rc + thick)
+			var b01 := _dish_point(centre, F, A, u0, v1, rc + thick)
+			_quad_both(dish, f00, f10, f11, f01)
+			_quad_both(dish, b00, b10, b11, b01)
+			if not _dish_in(i - 1, j, n):
+				_quad_both(dish, f00, f01, b01, b00)
+			if not _dish_in(i + 1, j, n):
+				_quad_both(dish, f10, f11, b11, b10)
+			if not _dish_in(i, j - 1, n):
+				_quad_both(dish, f00, f10, b10, b00)
+			if not _dish_in(i, j + 1, n):
+				_quad_both(dish, f01, f11, b11, b01)
+	# the plinth it stands on: three steps of the same stone up to its lowest edge
+	var low := _dish_point(centre, F, A, 0.0, -1.0, rc + thick * 0.5)
+	for s in 3:
+		var w := 9.0 - float(s) * 2.2
+		var dd := 4.6 - float(s) * 1.1
+		var top := low.y + 0.1 if s == 2 else g + 0.45 * float(s + 1)
+		var foot := g - 0.3 if s == 0 else g + 0.45 * float(s)
+		var at := Vector3(low.x, (top + foot) * 0.5, low.z) - F * 0.3
+		m.block(dish, Transform3D(pb, at), Vector3(w, top - foot, dd))
+		k.collider(Vector3(w, top - foot, dd), Transform3D(pb, at), "stone")
+	# two buttresses raking up its back
+	for sd in [-1.0, 1.0]:
+		var foot2 := back - F2 * 3.4 + A2 * 3.4 * float(sd)
+		var head := _dish_point(centre, F, A, 0.42 * float(sd), 0.3, rc + thick * 0.6)
+		var gf := k.on_ground(foot2.x, foot2.y, -0.3)
+		m.limb(dish, gf, head, 0.55)
+		k.collider(Vector3(1.0, 2.6, 1.0), Transform3D(Basis.IDENTITY, gf + Vector3(0.0, 1.3, 0.0)), "stone")
+	await k.step()
+	m.commit(dish, k.surface("oroth", 0.35), "MirrorDish", true)
+	# what stands against it: a box for every second column of the hollow, its own height
+	for i in range(1, n, 2):
+		var u := (float(i) + 0.5) / float(n) * 2.0 - 1.0
+		var vv := sqrt(maxf(1.0 - u * u, 0.05))
+		var pv := _dish_point(centre, F, A, u, 0.0, rc + thick * 0.5)
+		var hi := _dish_point(centre, F, A, u, vv * 0.95, rc + thick * 0.5)
+		var nx := _dish_point(centre, F, A, u + 0.1, 0.0, rc + thick * 0.5)
+		var along := nx - pv
+		var cb := Basis(Vector3.UP, atan2(along.x, along.z))
+		var h := hi.y - g
+		k.collider(Vector3(1.0, h, 1.7), Transform3D(cb * Basis(Vector3.UP, PI * 0.5), Vector3(pv.x, g + h * 0.5, pv.z)), "stone")
+	# the horn at the focus on its iron stalk, the speaking-tube down to the stone's cup
+	var focus := mid + F * (rc * 0.5)
+	var stalk := Vector2(focus.x, focus.z)
+	var sg := k.on_ground(stalk.x, stalk.y)
+	var iron := m.begin()
+	m.limb(iron, sg - Vector3(0.0, 0.2, 0.0), focus - Vector3(0.0, 0.5, 0.0), 0.07)
+	for sd in [-1.0, 1.0]:
+		m.limb(iron, sg + A * 0.9 * float(sd) + F * 0.4 - Vector3(0.0, 0.1, 0.0), focus - Vector3(0.0, 2.2, 0.0), 0.04)
+	var stone_at := stalk + F2 * 1.4
+	var st_top := k.on_ground(stone_at.x, stone_at.y, 1.0)
+	m.limb(iron, focus - Vector3(0.0, 0.4, 0.0) + F * 0.1, st_top + Vector3(0.0, 0.12, 0.0) - F * 0.2, 0.035)
+	await k.step()
+	m.commit(iron, PoiKit.plain(IRON, 0.6, 0.5), "FocusStalk", true)
+	var brass := m.begin()
+	m.limb(brass, focus - F * 0.1, focus - F * 0.9, 0.38)
+	m.limb(brass, focus + F * 0.2, focus - F * 0.2, 0.14)
+	m.ellipsoid(brass, st_top + Vector3(0.0, 0.18, 0.0) - F * 0.15, Vector3(0.16, 0.1, 0.16))
+	m.commit(brass, PoiKit.plain(BRASS, 0.35, 0.65), "FocusHorn", true)
+	var plinth := m.begin()
+	m.block(plinth, Transform3D(pb, st_top - Vector3(0.0, 0.55, 0.0)), Vector3(0.8, 1.15, 0.7))
+	k.collider(Vector3(0.8, 1.1, 0.7), Transform3D(pb, st_top - Vector3(0.0, 0.55, 0.0)), "stone")
+	k.collider(Vector3(0.3, focus.y - sg.y, 0.3), Transform3D(Basis.IDENTITY, sg + Vector3(0.0, (focus.y - sg.y) * 0.5, 0.0)), "metal")
+	await k.step()
+	m.commit(plinth, k.surface("oroth", 0.5), "SpeakingStone", true)
+	if k.far:
+		return
+	k.touchable("the_cup", st_top + Vector3(0.0, 0.3, 0.0), "Put your ear to the cup", "core:dialogue/sounding_mirror_cup", "", false)
+	# Mab Larrow's lean-to, her stool by the stone, a lamp for the dark
+	var lean := _clear_spot(k, stalk + A2 * 7.5 + F2 * 1.0, A2, 2.0, true)
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(lean.x, lean.y), PoiKit.yaw_of(-A2))
+	var stool := stone_at + A2 * 1.6
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(stool.x, stool.y), yaw, 1.0, false)
+	_spot(k, "mab_stone", _clear_spot(k, stone_at + A2 * 1.6 - F2 * 0.7, A2, 1.0), -A2)
+	var lamp := stone_at + A2 * 2.6 + F2 * 0.6
+	await k.step()
+	k.place(k.prop("lantern_standing"), k.on_ground(lamp.x, lamp.y), yaw, 1.0, false)
+	k.light(k.on_ground(lamp.x, lamp.y, 0.9), Color(1.0, 0.78, 0.5), 1.1, 6.0)
+	k.marker("the_focus", k.on_ground(stone_at.x + F2.x * 1.2, stone_at.y + F2.y * 1.2))
+
+
+## Whether cell (i, j) of an n x n grid lies in the Mirror's round outline.
+static func _dish_in(i: int, j: int, n: int) -> bool:
+	if i < 0 or j < 0 or i >= n or j >= n:
+		return false
+	var u := (float(i) + 0.5) / float(n) * 2.0 - 1.0
+	var v := (float(j) + 0.5) / float(n) * 2.0 - 1.0
+	return u * u + v * v <= 1.0
+
+
+# --- the Ropewalk ----------------------------------------------------------------------------------------
+
+## A shed fifty paces long and two wide along the south shore, open-sided on lime-washed posts under a
+## slate roof stepped bay by bay with the land; three strands of rope down its whole length on T-stakes,
+## the jack-wheel at the head and the weighted sledge at the foot; at the head the tar-copper smoking,
+## hemp in bales and finished rope in coils.
+static func the_ropewalk(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var FX := Vector3(F2.x, 0.0, F2.y)
+	var length := 46.0
+	var bays := 12
+	var bay := length / float(bays)
+	var half_w := 2.6
+	var yaw_a := PoiKit.yaw_of(A2)
+	var ab := Basis(Vector3.UP, yaw_a)
+	# each bay's eave over the highest of its four feet
+	var eave: Array[float] = []
+	for i in bays:
+		var a0 := -length * 0.5 + bay * float(i)
+		var hi := -INF
+		for t in [a0, a0 + bay]:
+			for s in [-1.0, 1.0]:
+				var p := A2 * float(t) + F2 * half_w * float(s)
+				hi = maxf(hi, k.on_ground(p.x, p.y).y)
+		eave.append(hi + 2.45)
+	var posts := m.begin()
+	var roof := m.begin()
+	for i in bays + 1:
+		var t := -length * 0.5 + bay * float(i)
+		var top := -INF
+		if i > 0:
+			top = maxf(top, eave[i - 1])
+		if i < bays:
+			top = maxf(top, eave[i])
+		for s in [-1.0, 1.0]:
+			var p := A2 * t + F2 * half_w * float(s)
+			var gp := k.on_ground(p.x, p.y).y
+			m.post(posts, p, top - gp + 0.05, 0.2)
+	for i in bays:
+		var c := A2 * (-length * 0.5 + bay * (float(i) + 0.5))
+		var y0: float = eave[i]
+		for s in [-1.0, 1.0]:
+			# each slope a slab along the bay, leaning down from the ridge to its eave
+			var rb := Basis(Vector3.UP, yaw_a) * Basis(Vector3.FORWARD, -0.33 * float(s))
+			var at := Vector3(c.x, y0 + 0.5, c.y) + FX * (half_w * 0.5 + 0.1) * float(s)
+			m.block(roof, Transform3D(rb, at), Vector3(half_w + 0.6, 0.12, bay + 0.05))
+			k.collider(Vector3(half_w + 0.6, 0.15, bay + 0.05), Transform3D(rb, at), "stone")
+		# the ridge-beam, and a tie-beam across under it
+		m.block(posts, Transform3D(ab, Vector3(c.x, y0 + 0.92, c.y)), Vector3(0.2, 0.2, bay + 0.05))
+		m.block(posts, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(F2)), Vector3(c.x, y0 + 0.02, c.y) - A * bay * 0.5), Vector3(0.14, 0.14, half_w * 2.0 + 0.3))
+	await k.step()
+	m.commit(posts, PoiKit.painted(0, LIMEWASH, 0.6, 0.5), "RopewalkPosts", true)
+	m.commit(roof, PoiKit.painted(2, SLATE, 0.5, 0.5), "RopewalkRoof", true)
+	if k.far:
+		return
+	# the strands: three, from the jack's hooks to the sledge's top, on T-stakes every second bay
+	var stakes := m.begin()
+	var rope := m.begin()
+	var head := -A2 * (length * 0.5 + 1.5)
+	var foot := A2 * (length * 0.5 + 1.0)
+	var supports: Array[Vector3] = []
+	supports.append(k.on_ground(head.x, head.y, 1.05) + A * 0.1)
+	for i in range(2, bays, 2):
+		var p := A2 * (-length * 0.5 + bay * float(i)) + F2 * 0.6
+		var t := m.post(stakes, p, 1.0, 0.1)
+		m.block(stakes, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(F2)), t + Vector3(0.0, 0.03, 0.0) - FX * 0.6), Vector3(0.08, 0.08, 1.2))
+		supports.append(t + Vector3(0.0, 0.09, 0.0) - FX * 0.6)
+	supports.append(k.on_ground(foot.x, foot.y, 0.95))
+	for strand in 3:
+		var off := FX * (float(strand) - 1.0) * 0.3
+		for i in supports.size() - 1:
+			var a := supports[i] + off
+			var b := supports[i + 1] + off
+			var sag := (a + b) * 0.5 - Vector3(0.0, 0.1, 0.0)
+			m.limb(rope, a, sag, 0.028)
+			m.limb(rope, sag, b, 0.028)
+	await k.step()
+	m.commit(stakes, k.surface("timber", 0.6), "RopeStakes")
+	m.commit(rope, PoiKit.plain(Color(0.62, 0.52, 0.36), 0.95), "Strands")
+	# the jack: a frame with a wheel turned across the walk, its hooks, its crank
+	var jack := m.begin()
+	var jack_at := head - A2 * 0.6
+	var jt := m.frame(jack, jack_at, PoiKit.yaw_of(F2) + PI * 0.5, 1.4, 1.9, 0.16)
+	var hub := Vector3(jack_at.x, jt.y - 0.75, jack_at.y)
+	for i in 12:
+		var a0 := TAU * float(i) / 12.0
+		var a1 := TAU * float(i + 1) / 12.0
+		m.limb(jack, hub + (FX * cos(a0) + Vector3.UP * sin(a0)) * 0.6, hub + (FX * cos(a1) + Vector3.UP * sin(a1)) * 0.6, 0.04)
+		if i % 3 == 0:
+			m.limb(jack, hub, hub + (FX * cos(a0) + Vector3.UP * sin(a0)) * 0.58, 0.025)
+	m.limb(jack, hub - A * 0.35, hub + A * 0.4, 0.05)
+	m.limb(jack, hub - A * 0.35, hub - A * 0.35 + Vector3.UP * 0.35, 0.03)
+	await k.step()
+	m.commit(jack, k.surface("timber", 0.7), "Jack")
+	# the sledge at the foot, weighted with stones, the strands' top on it
+	var sledge := m.begin()
+	var sl := foot + A2 * 0.8
+	var sg := k.on_ground(sl.x, sl.y)
+	m.block(sledge, Transform3D(ab, sg + Vector3(0.0, 0.2, 0.0)), Vector3(1.3, 0.32, 1.8))
+	for s in [-1.0, 1.0]:
+		m.limb(sledge, sg + FX * 0.6 * float(s) + A * 0.9 + Vector3(0, 0.06, 0), sg + FX * 0.6 * float(s) - A * 1.1 + Vector3(0, 0.3, 0), 0.06)
+	m.block(sledge, Transform3D(ab, sg + Vector3(0.0, 0.72, 0.0) - A * 0.5), Vector3(0.3, 0.75, 0.3))
+	await k.step()
+	m.commit(sledge, k.surface("timber", 0.8), "Sledge")
+	k.collider(Vector3(1.3, 0.9, 1.9), Transform3D(ab, sg + Vector3(0.0, 0.45, 0.0)), "wood")
+	var stones: Array = []
+	for i in 4:
+		stones.append(PoiKit.transform_at(sg + Vector3(0.0, 0.36, 0.0) + A * (0.2 + 0.18 * float(i)) + FX * k.rng.randf_range(-0.4, 0.4), k.rng.randf() * TAU, 0.22))
+	await k.step()
+	k.scatter(k.rock("boulder"), stones, false)
+	# by the head, off the walk: the tar-copper on its fire, hemp in bales, finished coils
+	var fire := _clear_spot(k, head + F2 * (half_w + 3.4) + A2 * 2.0, A2, 2.0, true)
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0, 0.9, false)
+	await k.step()
+	k.place(k.prop("cooking_pot"), k.on_ground(fire.x, fire.y, 0.25), 0.3, 1.3, false)
+	k.light(k.on_ground(fire.x, fire.y, 0.7), Color(1.0, 0.66, 0.38), 1.4, 7.0)
+	k.puffs(k.on_ground(fire.x, fire.y, 1.4), Vector3(0.4, 0.3, 0.4), 2.4, 10, Color(0.18, 0.16, 0.15, 0.55), 1.6, 5.0)
+	for i in 3:
+		var bale := head + F2 * (half_w + 2.4) - A2 * (1.5 + 1.6 * float(i))
+		if not k.roads.is_empty() and k.road_distance(bale) < 3.0:
+			continue
+		await k.step()
+		k.place(k.prop("hay_bale"), k.on_ground(bale.x, bale.y), yaw_a + k.rng.randf_range(-0.2, 0.2), 0.9, true)
+	for i in 4:
+		var coil := head - F2 * (half_w + 1.4) - A2 * (1.0 + 1.1 * float(i))
+		await k.step()
+		k.place(k.prop("rope_coil"), k.on_ground(coil.x, coil.y), k.rng.randf() * TAU, 1.2, false)
+	k.touchable("the_jack", hub + Vector3(0.0, 0.1, 0.0), "Turn the jack", "core:dialogue/ropewalk_jack", "", false)
+	k.touchable("the_sledge", sg + Vector3(0.0, 1.0, 0.0), "Bring the top home", "core:dialogue/ropewalk_sledge", "", false)
+	_spot(k, "tarr_jack", _clear_spot(k, head + F2 * 1.6 - A2 * 0.4, F2, 1.5), A2)
+	k.marker("the_walk", k.on_ground(0.0, 0.0))
+
+
+# --- the Widows' Keels ----------------------------------------------------------------------------------
+
+## One section of a hull turned keel-up, `s` 0 at the stern to 1 at the bow: n+1 points from one
+## gunwale over the keel to the other.
+static func _hull_ring(base: Vector3, L: Vector3, X: Vector3, length: float, beam: float, height: float,
+		s: float, n: int) -> Array[Vector3]:
+	var b := beam * 0.5 * sqrt(maxf(1.0 - pow(s, 3.0), 0.0)) * (0.82 + 0.18 * minf(s * 3.0, 1.0))
+	var h := height * (1.0 - 0.12 * s) * (0.85 + 0.15 * sqrt(maxf(1.0 - pow(s, 4.0), 0.0)))
+	var out: Array[Vector3] = []
+	for j in n + 1:
+		var th := PI * float(j) / float(n)
+		out.append(base + L * (s - 0.5) * length + X * cos(th) * b + Vector3.UP * sin(th) * h)
+	return out
+
+
+## One lake-boat turned keel-up on the shingle for a house: its hull a tarred arch of strakes from the
+## pointed bow (toward the water) to the square stern, the door cut in the stern, the keel along its
+## top. `at` is the hull's middle (local), `along` its bow's way. Returns the top of its middle.
+static func _keel_house(d: PoiDressing, tar: SurfaceTool, keel: SurfaceTool, door: SurfaceTool, at: Vector2,
+		along: Vector2, length: float, beam: float, height: float) -> Vector3:
+	var k := d.kit
+	var m := d.masonry
+	var yaw := PoiKit.yaw_of(along)
+	var g := _ground_min(k, at, yaw, Vector2(beam, length)) - 0.18
+	var L := Vector3(along.x, 0.0, along.y)
+	var X := Vector3(along.y, 0.0, -along.x)
+	var base := Vector3(at.x, g, at.y)
+	var n_s := 12
+	var n_t := 8
+	var prev := _hull_ring(base, L, X, length, beam, height, 0.0, n_t)
+	var stern := prev
+	for i in range(1, n_s + 1):
+		var cur := _hull_ring(base, L, X, length, beam, height, float(i) / float(n_s), n_t)
+		for j in n_t:
+			_quad_both(tar, prev[j], prev[j + 1], cur[j + 1], cur[j])
+		prev = cur
+	# the stern's flat transom, the door in it
+	var mid_s := base - L * length * 0.5 + Vector3.UP * height * 0.35
+	for j in n_t:
+		for v in [mid_s, stern[j], stern[j + 1], mid_s, stern[j + 1], stern[j]]:
+			tar.add_vertex(v as Vector3)
+	m.block(door, Transform3D(Basis(Vector3.UP, yaw), Vector3(at.x, g + 0.95, at.y) - L * (length * 0.5 + 0.03)), Vector3(0.95, 1.85, 0.08))
+	# the keel along its top, sternpost to stem
+	var top0 := _hull_ring(base, L, X, length, beam, height, 0.0, n_t)[4]
+	var topm := _hull_ring(base, L, X, length, beam, height, 0.5, n_t)[4]
+	var top1 := _hull_ring(base, L, X, length, beam, height, 0.97, n_t)[4]
+	m.limb(keel, top0 + Vector3(0, 0.05, 0), topm + Vector3(0, 0.08, 0), 0.09)
+	m.limb(keel, topm + Vector3(0, 0.08, 0), top1 + Vector3(0, 0.04, 0), 0.09)
+	m.limb(keel, top1 + Vector3(0, 0.04, 0), base + L * length * 0.5 + Vector3(0, 0.1, 0), 0.08)
+	k.collider(Vector3(beam * 0.92, height * 0.9, length * 0.86), Transform3D(Basis(Vector3.UP, yaw), base + Vector3(0.0, height * 0.45, 0.0)), "wood")
+	return topm
+
+
+## Three lake-boats turned keel-up on the south-west shingle for houses, bows to the water, doors in
+## their sterns to the yard behind; stovepipes through their bottoms; the eel-racks and their smoulder
+## in the yard; at the water's edge the drowned-board chalked with the boats that did not come home.
+static func the_widows_keels(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var FX := Vector3(F2.x, 0.0, F2.y)
+	var tar := m.begin()
+	var keel := m.begin()
+	var door := m.begin()
+	var tops: Array[Vector3] = []
+	var lengths: Array[float] = [9.4, 10.2, 8.6]
+	for i in 3:
+		var c := -F2 * 1.5 + A2 * (float(i) - 1.0) * 6.6 + F2 * (0.6 if i == 1 else 0.0)
+		var along := (F2 + A2 * (float(i) - 1.0) * 0.06).normalized()
+		tops.append(_keel_house(d, tar, keel, door, c, along, lengths[i], 3.3, 2.5))
+		await k.step()
+	m.commit(tar, PoiKit.painted(1, TAR, 0.55, 0.6), "KeelHulls", true)
+	m.commit(keel, k.surface("timber", 0.8), "Keels", true)
+	# the stovepipes through their bottoms
+	var pipes := m.begin()
+	for i in 3:
+		var t := tops[i] - FX * 1.2
+		m.limb(pipes, t - Vector3(0.0, 0.3, 0.0), t + Vector3(0.0, 1.1, 0.0), 0.11)
+		m.ellipsoid(pipes, t + Vector3(0.0, 1.2, 0.0), Vector3(0.2, 0.08, 0.2))
+	await k.step()
+	m.commit(pipes, PoiKit.plain(IRON, 0.7, 0.3), "Stovepipes", true)
+	m.commit(door, k.surface("planks", 0.7), "KeelDoors")
+	if k.far:
+		return
+	k.puffs(tops[1] - FX * 1.2 + Vector3(0.0, 1.5, 0.0), Vector3(0.2, 0.2, 0.2), 2.2, 8, Color(0.55, 0.55, 0.56, 0.45), 1.2, 5.0)
+	# the eel-racks in the yard behind the sterns, the smoulder under one
+	var racks := m.begin()
+	var eels := m.begin()
+	var yard := -F2 * 9.2
+	for r in 2:
+		var rc := yard + A2 * (float(r) * 2.0 - 1.0) * 4.4
+		var e0 := m.post(racks, rc - A2 * 1.3, 2.0, 0.12)
+		var e1 := m.post(racks, rc + A2 * 1.3, 2.0, 0.12)
+		m.limb(racks, e0 - Vector3(0.0, 0.08, 0.0), e1 - Vector3(0.0, 0.08, 0.0), 0.045)
+		for e in 9:
+			var p := e0.lerp(e1, (float(e) + 0.5) / 9.0) - Vector3(0.0, 0.12, 0.0)
+			m.limb(eels, p, p - Vector3(0.0, k.rng.randf_range(0.5, 0.75), 0.0), 0.035)
+	await k.step()
+	m.commit(racks, k.surface("timber", 0.7), "EelRacks")
+	m.commit(eels, PoiKit.plain(Color(0.2, 0.15, 0.1), 0.55, 0.1), "SmokedEels")
+	var smoulder := yard + A2 * 4.4 - F2 * 1.6
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(smoulder.x, smoulder.y), 0.0, 0.7, false)
+	k.light(k.on_ground(smoulder.x, smoulder.y, 0.5), Color(1.0, 0.62, 0.35), 0.9, 5.0)
+	k.puffs(k.on_ground(smoulder.x, smoulder.y, 0.8), Vector3(0.5, 0.2, 0.3), 1.6, 8, Color(0.6, 0.6, 0.62, 0.35), 1.4, 5.0)
+	# the drowned-board at the water's edge, its face to the land: names chalked, a few struck through
+	var board_at := F2 * 7.5 + A2 * 8.0
+	if k.is_water(board_at.x, board_at.y):
+		board_at = F2 * 4.5 + A2 * 8.0
+	var bd := m.begin()
+	var bb := Basis(Vector3.UP, PoiKit.yaw_of(-F2))
+	var t0 := m.post(bd, board_at - A2 * 1.1, 2.9, 0.16)
+	m.post(bd, board_at + A2 * 1.1, 2.9, 0.16)
+	var bc := Vector3(board_at.x, t0.y - 0.95, board_at.y)
+	m.block(bd, Transform3D(bb, bc), Vector3(2.5, 1.6, 0.08))
+	await k.step()
+	m.commit(bd, PoiKit.painted(1, TAR, 0.5, 0.5), "DrownedBoard")
+	var chalk := m.begin()
+	for row in 7:
+		var words := k.rng.randi_range(2, 4)
+		var x := -1.05
+		for w in words:
+			var wl := k.rng.randf_range(0.18, 0.46)
+			if x + wl > 1.05:
+				break
+			m.block(chalk, Transform3D(bb, bc + bb * Vector3(x + wl * 0.5, 0.62 - float(row) * 0.19, 0.05)), Vector3(wl, 0.05, 0.01))
+			x += wl + 0.12
+		if row % 3 == 1:
+			m.block(chalk, Transform3D(bb * Basis(Vector3.BACK, 0.04), bc + bb * Vector3(-0.2, 0.62 - float(row) * 0.19, 0.055)), Vector3(1.6, 0.015, 0.01))
+	m.commit(chalk, PoiKit.plain(CHALK, 0.95), "sign_DrownedBoardChalk")
+	k.touchable("the_board", bc - FX * 0.5, "Read the drowned-board", "core:dialogue/keels_drowned_board", "", false)
+	# a boat that still floats, drawn up; Grisel's bench by her door
+	var boat := F2 * 5.0 - A2 * 10.0
+	await k.step()
+	k.place(k.prop("rowboat"), k.on_ground(boat.x, boat.y), PoiKit.yaw_of(F2) + 0.3, 1.0, true)
+	var hope_door := -F2 * 6.4
+	var bench := hope_door - F2 * 1.8 + A2 * 1.8
+	await k.step()
+	k.place(k.prop("bench"), k.on_ground(bench.x, bench.y), PoiKit.yaw_of(A2), 1.0, true)
+	_spot(k, "grisel_door", _clear_spot(k, hope_door - F2 * 1.5 - A2 * 1.0, -F2, 1.5), F2)
+	k.marker("the_yard", k.on_ground(yard.x, yard.y))
+
+
+# --- the Charter Scale ------------------------------------------------------------------------------------
+
+## A pan of planks on the scale: `at` its middle (local xz), its deck's top at `top`, square `side`.
+static func _scale_pan(m: PoiMasonry, st: SurfaceTool, at: Vector2, yaw: float, top: float, side: float) -> void:
+	var b := Basis(Vector3.UP, yaw)
+	m.block(st, Transform3D(b, Vector3(at.x, top - 0.14, at.y)), Vector3(side, 0.26, side))
+	for s in [-1.0, 1.0]:
+		m.block(st, Transform3D(b, Vector3(at.x, top + 0.08, at.y) + b * Vector3(side * 0.5 * float(s), 0.0, 0.0)), Vector3(0.16, 0.22, side))
+		m.block(st, Transform3D(b, Vector3(at.x, top + 0.08, at.y) + b * Vector3(0.0, 0.0, side * 0.5 * float(s))), Vector3(side, 0.22, 0.16))
+
+
+## A beam-balance big enough to weigh a boat, on the north shore below Merrowhithe: two A-frames of
+## black timber twelve metres high carrying a brass axle, the beam across it tilted toward the land
+## where its pan lies grounded under the iron weights, the other pan swung up on its chains toward the
+## water and come to rest on its trestle; the Weighmaster's lime-washed booth with its ledger.
+static func the_charter_scale(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var g := k.on_ground(0.0, 0.0).y
+	var top := g + 11.6
+	var timber := m.begin()
+	var apex: Array[Vector3] = []
+	for s in [-1.0, 1.0]:
+		var side := A * 1.9 * float(s)
+		var ap := Vector3(0.0, top, 0.0) + side
+		apex.append(ap)
+		var feet: Array[Vector3] = []
+		for e in [-1.0, 1.0]:
+			var fp := F2 * 3.6 * float(e) + A2 * 2.4 * float(s)
+			var gf := k.on_ground(fp.x, fp.y, -0.25)
+			feet.append(gf)
+			m.limb(timber, gf, ap, 0.22)
+			k.collider(Vector3(0.5, 2.4, 0.5), Transform3D(Basis.IDENTITY, gf + Vector3(0.0, 1.2, 0.0)), "wood")
+		for lv in [0.3, 0.62]:
+			m.limb(timber, feet[0].lerp(ap, lv), feet[1].lerp(ap, lv), 0.13)
+	m.limb(timber, apex[0] - Vector3(0.0, 1.2, 0.0), apex[1] - Vector3(0.0, 1.2, 0.0), 0.15)
+	# the beam: sixteen metres, tilted down toward the land
+	var tilt := 0.075
+	var pivot := Vector3(0.0, top + 0.35, 0.0)
+	var land_end := pivot - F * 8.0 * cos(tilt) - Vector3(0.0, 8.0 * sin(tilt), 0.0)
+	var water_end := pivot + F * 8.0 * cos(tilt) + Vector3(0.0, 8.0 * sin(tilt), 0.0)
+	m.limb(timber, land_end, water_end, 0.32)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.75), "ScaleGantry", true)
+	var brass := m.begin()
+	m.limb(brass, apex[0] + Vector3(0.0, 0.3, 0.0) - A * 0.3, apex[1] + Vector3(0.0, 0.3, 0.0) + A * 0.3, 0.16)
+	for e in [land_end, water_end]:
+		m.limb(brass, (e as Vector3) - (water_end - land_end).normalized() * 0.5, (e as Vector3) + (water_end - land_end).normalized() * 0.1, 0.38)
+	m.ellipsoid(brass, pivot, Vector3(0.5, 0.5, 0.5))
+	m.commit(brass, PoiKit.plain(BRASS, 0.35, 0.65), "ScaleBrass", true)
+	# the land pan on the ground with its chains, the weights on it
+	var yaw_f := PoiKit.yaw_of(F2)
+	var land_pan := Vector2(land_end.x, land_end.z)
+	var lp_top := _ground_min(k, land_pan, yaw_f, Vector2(5.2, 5.2)) + 0.3
+	var pans := m.begin()
+	_scale_pan(m, pans, land_pan, yaw_f, lp_top, 5.2)
+	k.collider(Vector3(5.2, 0.5, 5.2), Transform3D(Basis(Vector3.UP, yaw_f), Vector3(land_pan.x, lp_top - 0.25, land_pan.y)), "wood")
+	var chain_l := m.begin()
+	for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+		var corner := Vector3(land_pan.x, lp_top + 0.15, land_pan.y) + F * 2.4 * c.x + A * 2.4 * c.y
+		m.limb(chain_l, land_end - Vector3(0.0, 0.3, 0.0), corner, 0.035)
+	await k.step()
+	m.commit(pans, k.surface("planks", 0.7), "LandPan", true)
+	m.commit(chain_l, PoiKit.plain(IRON, 0.6, 0.6), "LandChains", true)
+	# the water pan, swung up on its chains and come to rest on its trestle: one mesh, standing
+	var water_pan := Vector2(water_end.x, water_end.z)
+	var wg := _ground_min(k, water_pan, yaw_f, Vector2(4.6, 4.6))
+	var wp_top := wg + 1.45
+	var up := m.begin()
+	_scale_pan(m, up, water_pan, yaw_f, wp_top, 4.6)
+	for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+		var corner := Vector3(water_pan.x, wp_top + 0.15, water_pan.y) + F * 2.1 * c.x + A * 2.1 * c.y
+		m.limb(up, water_end - Vector3(0.0, 0.3, 0.0), corner, 0.035)
+		var leg := water_pan + F2 * 1.6 * c.x + A2 * 1.6 * c.y
+		m.post(up, leg, wp_top - 0.27 - k.on_ground(leg.x, leg.y).y, 0.2)
+	await k.step()
+	m.commit(up, k.surface("planks", 0.75), "WaterPan", true)
+	k.collider(Vector3(4.6, 0.4, 4.6), Transform3D(Basis(Vector3.UP, yaw_f), Vector3(water_pan.x, wp_top - 0.2, water_pan.y)), "wood")
+	if k.far:
+		return
+	# the iron weights, stacked on the land pan and lying by it
+	var iron := m.begin()
+	var plates := m.begin()
+	var wb := Basis(Vector3.UP, yaw_f + 0.1)
+	var y := lp_top
+	for i in 4:
+		var sz := 1.1 - 0.16 * float(i)
+		var at := Vector3(land_pan.x, y + sz * 0.35, land_pan.y) - A * 0.9 + F * 0.4
+		m.block(iron, Transform3D(wb * Basis(Vector3.UP, k.rng.randf_range(-0.12, 0.12)), at), Vector3(sz, sz * 0.7, sz))
+		m.block(plates, Transform3D(wb, at - wb.z * (sz * 0.5 + 0.01)), Vector3(sz * 0.4, sz * 0.24, 0.02))
+		y += sz * 0.7
+	k.collider(Vector3(1.1, y - lp_top, 1.1), Transform3D(wb, Vector3(land_pan.x, (y + lp_top) * 0.5, land_pan.y) - A * 0.9 + F * 0.4), "metal")
+	for i in 3:
+		var p := land_pan + A2 * (3.8 + 0.2 * float(i)) - F2 * (1.4 * float(i) - 1.4)
+		var gp := k.on_ground(p.x, p.y)
+		m.block(iron, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), gp + Vector3(0.0, 0.3, 0.0)), Vector3(0.75, 0.62, 0.75))
+		k.collider(Vector3(0.75, 0.62, 0.75), Transform3D(Basis.IDENTITY, gp + Vector3(0.0, 0.3, 0.0)), "metal")
+	await k.step()
+	m.commit(iron, PoiKit.plain(IRON, 0.75, 0.4), "Weights")
+	m.commit(plates, PoiKit.plain(BRASS, 0.4, 0.6), "sign_WeightPlates")
+	# the Weighmaster's booth: three lime-washed walls and a slate roof, open to the pans
+	var booth := land_pan - A2 * 6.2 - F2 * 1.0
+	if not k.roads.is_empty() and k.road_distance(booth) < 5.0:
+		booth = land_pan + A2 * 7.2 - F2 * 1.0
+	var walls := m.begin()
+	var bw := 3.4
+	var bdp := 2.6
+	var c0 := booth - F2 * bdp * 0.5 - A2 * bw * 0.5
+	var c1 := booth - F2 * bdp * 0.5 + A2 * bw * 0.5
+	var c2 := booth + F2 * bdp * 0.5 + A2 * bw * 0.5
+	var c3 := booth + F2 * bdp * 0.5 - A2 * bw * 0.5
+	m.wall(walls, c0, c1, 2.4)
+	m.wall(walls, c1, c2, 2.4)
+	m.wall(walls, c3, c0, 2.4)
+	await k.step()
+	m.commit(walls, PoiKit.painted(0, LIMEWASH, 0.6, 0.5), "WeighBooth", true)
+	var broof := m.begin()
+	var bgy := maxf(maxf(k.on_ground(c0.x, c0.y).y, k.on_ground(c1.x, c1.y).y), maxf(k.on_ground(c2.x, c2.y).y, k.on_ground(c3.x, c3.y).y))
+	var rb := Basis(Vector3.UP, PoiKit.yaw_of(A2)) * Basis(Vector3.FORWARD, 0.18)
+	m.block(broof, Transform3D(rb, Vector3(booth.x, bgy + 2.6, booth.y)), Vector3(bdp + 0.9, 0.14, bw + 0.9))
+	k.collider(Vector3(bdp + 0.9, 0.2, bw + 0.9), Transform3D(rb, Vector3(booth.x, bgy + 2.6, booth.y)), "stone")
+	await k.step()
+	m.commit(broof, PoiKit.painted(2, SLATE, 0.5, 0.5), "BoothRoof", true)
+	# the ledger on its desk at the booth's mouth
+	var desk := booth + F2 * (bdp * 0.5 - 0.5)
+	var dg := k.on_ground(desk.x, desk.y)
+	var desk_st := m.begin()
+	m.block(desk_st, Transform3D(Basis(Vector3.UP, yaw_f) * Basis(Vector3.RIGHT, -0.35), dg + Vector3(0.0, 1.05, 0.0)), Vector3(0.9, 0.06, 0.6))
+	m.block(desk_st, Transform3D(Basis(Vector3.UP, yaw_f), dg + Vector3(0.0, 0.5, 0.0)), Vector3(0.2, 1.0, 0.2))
+	m.commit(desk_st, k.surface("timber", 0.6), "LedgerDesk")
+	k.collider(Vector3(0.9, 1.1, 0.6), Transform3D(Basis(Vector3.UP, yaw_f), dg + Vector3(0.0, 0.55, 0.0)), "wood")
+	await k.step()
+	k.place(k.prop("book"), dg + Vector3(0.0, 1.11, 0.0), yaw_f, 1.3, false)
+	k.touchable("the_pan", Vector3(land_pan.x, lp_top + 0.6, land_pan.y) + F * 2.0 + A * 1.2, "Weigh at the Charter Scale", "core:dialogue/charter_scale_weights", "", false)
+	_spot(k, "prudence_ledger", _clear_spot(k, desk + F2 * 0.9, F2, 1.5), -F2)
+	k.marker("the_scale", k.on_ground(0.0, 0.0))
+
+
+# --- the Cormorant Perches -------------------------------------------------------------------------------
+
+## A cormorant on a perch's crossbar at `at` (its feet), facing `face`: a black body, its neck up and
+## its head turned, and where `spread` its wings held out to dry like a coat on a peg.
+static func _cormorant(m: PoiMasonry, st: SurfaceTool, at: Vector3, face: Vector3, spread: bool, s := 1.0) -> void:
+	var side := face.cross(Vector3.UP).normalized()
+	var body := at + Vector3(0.0, 0.26, 0.0) * s
+	var bb := Basis.looking_at(face, Vector3.UP)
+	m.ellipsoid(st, body, Vector3(0.13, 0.25, 0.12) * s, bb * Basis(Vector3.RIGHT, 0.35))
+	var neck := body + Vector3(0.0, 0.2, 0.0) * s + face * 0.05 * s
+	m.limb(st, neck, neck + Vector3(0.0, 0.2, 0.0) * s + face * 0.05 * s, 0.035 * s)
+	var head := neck + Vector3(0.0, 0.24, 0.0) * s + face * 0.06 * s
+	m.ellipsoid(st, head, Vector3(0.05, 0.05, 0.08) * s, bb)
+	m.limb(st, head + face * 0.05 * s, head + face * 0.15 * s - Vector3(0.0, 0.015, 0.0), 0.012 * s)
+	m.limb(st, body - Vector3(0.0, 0.2, 0.0) * s - face * 0.06 * s, body - Vector3(0.0, 0.34, 0.0) * s - face * 0.1 * s, 0.03 * s)
+	for sd in [-1.0, 1.0]:
+		var root := body + Vector3(0.0, 0.1, 0.0) * s + side * 0.1 * float(sd) * s
+		if spread:
+			var tip := root + side * 0.5 * float(sd) * s + Vector3(0.0, 0.08, 0.0) * s - face * 0.04 * s
+			var wb := Basis.looking_at(face, Vector3.UP) * Basis(Vector3.BACK, 0.25 * float(sd))
+			m.block(st, Transform3D(wb, (root + tip) * 0.5 - Vector3(0.0, 0.08, 0.0) * s), Vector3(0.5, 0.26, 0.025) * s)
+		else:
+			m.ellipsoid(st, root - Vector3(0.0, 0.08, 0.0) * s - face * 0.02 * s, Vector3(0.03, 0.18, 0.1) * s, bb)
+
+
+## Two staggered rows of tall T-perches along the south-east shore, a cormorant on each crossbar, most
+## with their wings held out to dry, all facing the water; Corbin Vell's reed shelter, his flat boat
+## drawn up, a creel of fish.
+static func the_cormorant_perches(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var perches := m.begin()
+	var birds := m.begin()
+	for row in 2:
+		for i in 8:
+			var along := (float(i) - 3.5) * 3.2 + (1.6 if row == 1 else 0.0)
+			var p := A2 * along + F2 * (3.2 + 2.6 * float(row))
+			if k.is_water(p.x, p.y):
+				p -= F2 * 2.4
+				if k.is_water(p.x, p.y):
+					continue
+			var h := 2.4 + k.rng.randf_range(0.0, 1.5) + 0.4 * float(row)
+			var t := m.post(perches, p, h, 0.13, Vector3(k.rng.randf_range(-0.04, 0.04), 0.0, k.rng.randf_range(-0.04, 0.04)))
+			m.block(perches, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(A2)), t + Vector3(0.0, 0.03, 0.0)), Vector3(0.07, 0.07, 0.9))
+			var turn := F.rotated(Vector3.UP, k.rng.randf_range(-0.35, 0.35))
+			_cormorant(m, birds, t + Vector3(0.0, 0.06, 0.0) + A * k.rng.randf_range(-0.2, 0.2), turn, k.rng.randf() < 0.75)
+		await k.step()
+	m.commit(perches, k.surface("timber", 0.75), "Perches", true)
+	m.commit(birds, PoiKit.plain(Color(0.06, 0.07, 0.07), 0.45, 0.15), "Birds", true)
+	if k.far:
+		return
+	# Corbin's reed shelter: two pitched slabs of reed on a ridge-pole, its back to the wind
+	var hut := -F2 * 6.0 + A2 * 5.0
+	if not k.roads.is_empty() and k.road_distance(hut) < 5.0:
+		hut = -F2 * 6.0 - A2 * 5.0
+	var reed := m.begin()
+	var poles := m.begin()
+	var hg := _ground_min(k, hut, PoiKit.yaw_of(A2), Vector2(2.6, 3.4))
+	var hb := Basis(Vector3.UP, PoiKit.yaw_of(A2))
+	for s in [-1.0, 1.0]:
+		var rb := hb * Basis(Vector3.FORWARD, -0.78 * float(s))
+		m.block(reed, Transform3D(rb, Vector3(hut.x, hg + 0.95, hut.y) + F * 0.75 * float(s)), Vector3(2.3, 0.16, 3.4))
+	m.limb(poles, Vector3(hut.x, hg + 1.85, hut.y) - A * 1.9, Vector3(hut.x, hg + 1.85, hut.y) + A * 1.9, 0.06)
+	for e in [-1.0, 1.0]:
+		for s in [-1.0, 1.0]:
+			var foot := Vector3(hut.x, hg, hut.y) + A * 1.6 * float(e) + F * 1.45 * float(s)
+			m.limb(poles, foot, Vector3(hut.x, hg + 1.85, hut.y) + A * 1.6 * float(e), 0.05)
+	await k.step()
+	m.commit(reed, PoiKit.painted(3, {"base": "#9a8a5e", "accent": "#7a6c48", "grout": "#4d4430", "unit": 0.2}, 0.6, 0.6), "ReedShelter", true)
+	m.commit(poles, k.surface("timber", 0.7), "ShelterPoles")
+	for s in [-1.0, 1.0]:
+		k.collider(Vector3(3.4, 0.2, 2.3), Transform3D(hb * Basis(Vector3.FORWARD, -0.78 * float(s)) * Basis(Vector3.UP, PI * 0.5), Vector3(hut.x, hg + 0.95, hut.y) + F * 0.75 * float(s)), "wood")
+	var boat := F2 * 6.0 - A2 * 15.5
+	await k.step()
+	k.place(k.prop("rowboat"), k.on_ground(boat.x, boat.y), PoiKit.yaw_of(F2) - 0.4, 1.0, true)
+	var creel := -F2 * 2.0 - A2 * 2.5
+	await k.step()
+	k.place(k.prop("basket"), k.on_ground(creel.x, creel.y), 0.4, 1.1, false)
+	var fish := m.begin()
+	var cg := k.on_ground(creel.x, creel.y)
+	for i in 4:
+		m.ellipsoid(fish, cg + Vector3(k.rng.randf_range(-0.12, 0.12), 0.34 + 0.03 * float(i), k.rng.randf_range(-0.12, 0.12)), Vector3(0.05, 0.035, 0.2), Basis(Vector3.UP, k.rng.randf() * TAU))
+	m.commit(fish, PoiKit.plain(Color(0.55, 0.58, 0.52), 0.35, 0.2), "CreelFish")
+	var fire := -F2 * 5.0 - A2 * 2.0
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0, 0.8, false)
+	k.light(k.on_ground(fire.x, fire.y, 0.6), Color(1.0, 0.68, 0.4), 1.2, 6.0)
+	k.touchable("the_birds", k.on_ground(F2.x * 2.0, F2.y * 2.0, 1.2), "Watch the birds dive", "core:dialogue/cormorant_watch", "", false)
+	_spot(k, "corbin_creel", _clear_spot(k, creel - A2 * 1.2, F2, 1.5), F2)
+	k.marker("the_perches", k.on_ground(F2.x * 4.0, F2.y * 4.0))
+
+
+# --- the Kite-Fishers' Shore -----------------------------------------------------------------------------
+
+## A row of heavy reel-posts on the north shingle paying lines up into the wind to kites of oiled silk
+## hanging out over the Mere, each painted with a pair of staring eyes, and from each kite a baited
+## dropper trailing down to the water; a gutting board, a creel, Dilly Fane's lean-to.
+static func the_kite_shore(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var reels := m.begin()
+	var lines := m.begin()
+	var silk := m.begin()
+	var eyes := m.begin()
+	var pupils := m.begin()
+	var colours: Array[Color] = []
+	for i in 5:
+		var along := (float(i) - 2.0) * 3.8
+		var base := A2 * along - F2 * 1.0
+		var t := m.post(reels, base, 1.3, 0.3)
+		var hub := t - Vector3(0.0, 0.35, 0.0) + F * 0.25
+		for e in 10:
+			var a0 := TAU * float(e) / 10.0
+			var a1 := TAU * float(e + 1) / 10.0
+			m.limb(reels, hub + (F * cos(a0) + Vector3.UP * sin(a0)) * 0.32, hub + (F * cos(a1) + Vector3.UP * sin(a1)) * 0.32, 0.03)
+		m.limb(reels, hub - A * 0.25, hub + A * 0.5, 0.04)
+		m.limb(reels, hub + A * 0.5, hub + A * 0.5 + Vector3(0.0, -0.3, 0.0), 0.03)
+		# the kite: out over the water, high, leaning back into the wind toward the shore
+		var out := 17.0 + k.rng.randf_range(0.0, 5.0)
+		var up := 13.0 + k.rng.randf_range(0.0, 7.0)
+		var kc := Vector3(base.x, t.y, base.y) + F * out + A * (along * 0.15 + k.rng.randf_range(-1.5, 1.5)) + Vector3(0.0, up, 0.0)
+		var kb := Basis.looking_at(-F, Vector3.UP) * Basis(Vector3.RIGHT, -0.5) * Basis(Vector3.BACK, k.rng.randf_range(-0.2, 0.2))
+		var top := kc + kb.y * 1.5
+		var bot := kc - kb.y * 1.2
+		var lft := kc - kb.x * 1.1 + kb.y * 0.4
+		var rgt := kc + kb.x * 1.1 + kb.y * 0.4
+		_quad_both(silk, top, rgt, bot, lft)
+		# the eyes on its face to the shore
+		for sd in [-1.0, 1.0]:
+			var ec := kc + kb.x * 0.42 * float(sd) + kb.y * 0.45 - kb.z * 0.03
+			m.ellipsoid(eyes, ec, Vector3(0.3, 0.22, 0.02), kb)
+			m.ellipsoid(pupils, ec - kb.z * 0.02, Vector3(0.12, 0.13, 0.02), kb)
+		# the tail of bows hanging from its foot
+		var tail := bot
+		for b in 5:
+			var nxt := tail - Vector3(0.0, 0.55, 0.0) + F * 0.12
+			m.limb(lines, tail, nxt, 0.012)
+			m.block(silk, Transform3D(kb, nxt), Vector3(0.22, 0.05, 0.02))
+			tail = nxt
+		# the line from the reel to its bridle, and the dropper down to the water
+		m.limb(lines, hub + F * 0.3, kc + kb.z * 0.05, 0.012)
+		var drop := Vector2(kc.x, kc.z) + F2 * 1.5
+		var wy := k.water_y(drop.x, drop.y)
+		var gy := k.on_ground(drop.x, drop.y).y
+		var bottom := (wy - 0.4) if not is_nan(wy) else gy
+		m.limb(lines, kc - kb.y * 0.3, Vector3(drop.x, bottom, drop.y), 0.01)
+		colours.append(Color.from_hsv(k.rng.randf_range(0.0, 0.12), 0.55, 0.85))
+		await k.step()
+	m.commit(reels, k.surface("timber", 0.75), "KiteReels", true)
+	m.commit(silk, PoiKit.plain(Color(0.78, 0.36, 0.18), 0.8), "Kites", true)
+	m.commit(eyes, PoiKit.plain(Color(0.92, 0.9, 0.82), 0.8), "KiteEyes", true)
+	m.commit(pupils, PoiKit.plain(Color(0.05, 0.05, 0.06), 0.8), "KitePupils", true)
+	m.commit(lines, PoiKit.plain(Color(0.7, 0.66, 0.56), 0.9), "KiteLines", true)
+	if k.far:
+		return
+	# the gutting board, the creel, Dilly's lean-to
+	var board := -F2 * 5.0 + A2 * 6.0
+	await k.step()
+	k.place(k.prop("table_trestle"), k.on_ground(board.x, board.y), PoiKit.yaw_of(A2), 1.0, true)
+	var creel := board + A2 * 2.0
+	await k.step()
+	k.place(k.prop("basket"), k.on_ground(creel.x, creel.y), 0.7, 1.0, false)
+	var lean := _clear_spot(k, -F2 * 8.0 - A2 * 6.0, -F2, 2.0, true)
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(lean.x, lean.y), PoiKit.yaw_of(F2))
+	k.touchable("the_reel", k.on_ground(A2.x * 0.4 - F2.x * 1.6, A2.y * 0.4 - F2.y * 1.6, 1.0), "Take a turn on a reel", "core:dialogue/kite_reel", "", false)
+	_spot(k, "dilly_reel", _clear_spot(k, A2 * 1.9 - F2 * 2.6, -F2, 1.5), F2)
+	k.marker("the_reels", k.on_ground(-F2.x * 2.5, -F2.y * 2.5))
+
+
+# --- the Dumb Fair ----------------------------------------------------------------------------------------
+
+## A ring of tall black poles on the south-east shore hung with screens of tarred sailcloth, a gap left
+## toward the land to come in by; hooded lanterns on iron arms between; inside, trestles of salt sacks,
+## crates and covered baskets round a flat stone with a felt-wrapped bell on it.
+static func the_dumb_fair(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var into := -F2
+	var r := 9.0
+	var count := 12
+	var poles := m.begin()
+	var cloth := m.begin()
+	var tops: Array[Vector3] = []
+	var a0 := atan2(into.x, into.y)
+	for i in count:
+		var a := a0 + TAU * (float(i) + 0.5) / float(count)
+		var p := Vector2(sin(a), cos(a)) * r
+		tops.append(m.post(poles, p, 5.2 + k.rng.randf_range(-0.2, 0.3), 0.17))
+	for i in count:
+		var j := (i + 1) % count
+		# the way in: the bay facing the land is left open, and its neighbour on the water side too
+		if i == count - 1 or i == 5:
+			continue
+		var t0 := tops[i]
+		var t1 := tops[j]
+		var g0 := k.on_ground(t0.x, t0.z).y + 0.45
+		var g1 := k.on_ground(t1.x, t1.z).y + 0.45
+		var hi0 := t0 - Vector3(0.0, 0.5, 0.0)
+		var hi1 := t1 - Vector3(0.0, 0.5, 0.0)
+		var midh := (hi0 + hi1) * 0.5 - Vector3(0.0, 0.25, 0.0)
+		var midl := Vector3((t0.x + t1.x) * 0.5, (g0 + g1) * 0.5 + 0.15, (t0.z + t1.z) * 0.5)
+		_quad_both(cloth, Vector3(t0.x, g0, t0.z), hi0, midh, midl)
+		_quad_both(cloth, midl, midh, hi1, Vector3(t1.x, g1, t1.z))
+		var mid := (Vector2(t0.x, t0.z) + Vector2(t1.x, t1.z)) * 0.5
+		var span := Vector2(t1.x - t0.x, t1.z - t0.z)
+		k.collider(Vector3(span.length(), 4.0, 0.15), Transform3D(Basis(Vector3.UP, atan2(span.x, span.y) + PI * 0.5), k.on_ground(mid.x, mid.y, 2.4)), "wood")
+	await k.step()
+	m.commit(poles, k.surface("timber", 0.8), "FairPoles", true)
+	m.commit(cloth, PoiKit.painted(5, SAILCLOTH_BLACK, 0.4, 0.4), "FairScreens", true)
+	if k.far:
+		return
+	# hooded lanterns on iron arms off every second pole, inward
+	var arms := m.begin()
+	var hang := k.prop("lantern_hanging")
+	var lamps: Array[Vector3] = []
+	for i in range(0, count, 2):
+		var t := tops[i]
+		var inward := Vector3(-t.x, 0.0, -t.z).normalized()
+		var end := t - Vector3(0.0, 0.35, 0.0) + inward * 0.7
+		m.limb(arms, t - Vector3(0.0, 0.35, 0.0), end, 0.03)
+		m.limb(arms, end, end - Vector3(0.0, 0.12, 0.0), 0.012)
+		lamps.append(end - Vector3(0.0, 0.12, 0.0))
+	await k.step()
+	m.commit(arms, PoiKit.plain(IRON, 0.6, 0.5), "LanternArms")
+	if hang != "":
+		for p in lamps:
+			await k.step()
+			k.place(hang, p - Vector3(0.0, PoiKit.height_of(hang), 0.0), 0.0, 1.0, false)
+	for i in lamps.size():
+		if i % 2 == 0:
+			k.light(lamps[i] - Vector3(0.0, 0.4, 0.0), Color(1.0, 0.7, 0.42), 0.8, 6.0)
+	# the trestles round the stone, with what is sold on them
+	for i in 3:
+		var a := a0 + PI + (float(i) - 1.0) * 1.15
+		var p := Vector2(sin(a), cos(a)) * 5.0
+		var face := -p.normalized()
+		await k.step()
+		k.place(k.prop("table_trestle"), k.on_ground(p.x, p.y), PoiKit.yaw_of(Vector2(face.y, -face.x)), 1.0, true)
+		var behind := p - face * 1.4
+		await k.step()
+		k.place(k.prop("sack" if i != 1 else "crate"), k.on_ground(behind.x, behind.y), k.rng.randf() * TAU, 1.0, true)
+		var side := behind + Vector2(face.y, -face.x) * 1.0
+		await k.step()
+		k.place(k.prop("sack"), k.on_ground(side.x, side.y), k.rng.randf() * TAU, 0.9, true)
+	# the stone, and the bell on it in its felt
+	var stone := m.begin()
+	var sg := k.on_ground(0.0, 0.0)
+	m.ellipsoid(stone, sg + Vector3(0.0, 0.18, 0.0), Vector3(0.85, 0.32, 0.7), Basis(Vector3.UP, 0.4))
+	k.collider(Vector3(1.4, 0.5, 1.1), Transform3D(Basis(Vector3.UP, 0.4), sg + Vector3(0.0, 0.25, 0.0)), "stone")
+	await k.step()
+	m.commit(stone, k.surface("stone", 0.6), "SilenceStone")
+	var felt := m.begin()
+	m.ellipsoid(felt, sg + Vector3(0.0, 0.62, 0.0), Vector3(0.22, 0.2, 0.22))
+	m.commit(felt, PoiKit.plain(Color(0.36, 0.3, 0.26), 0.95), "FeltBell")
+	k.touchable("the_bell", sg + Vector3(0.0, 0.8, 0.0), "Ring the muffled bell", "core:dialogue/dumb_fair_bell", "", false)
+	var stall := Vector2(sin(a0 + PI), cos(a0 + PI)) * 6.6
+	_spot(k, "hushwife_stall", _clear_spot(k, stall, -stall.normalized(), 1.5), -stall.normalized())
+	k.marker("the_ring", k.on_ground(into.x * 3.0, into.y * 3.0))
+
+
+# --- the Saltmound ---------------------------------------------------------------------------------------
+
+## A cone of grey-white salt as high as a church on the west shore: the barrow-trestle up its flank to
+## the Tallymen's seal-pole on the summit, the lime-washed salt-gate in its landward face with its
+## brass-bound doors under the Charter's wax, the salt-reeve's sentry box; round the back toward the
+## water, the Free Salters' timbered cut going in, their boats drawn up and their sacks by it.
+static func the_saltmound(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var gate_dir := _toward_road(k, 260.0)
+	if gate_dir == Vector2.ZERO or gate_dir.dot(F2) > 0.3:
+		gate_dir = -F2
+	var GX := Vector3(gate_dir.x, 0.0, gate_dir.y)
+	var C := -F2 * 2.0
+	var r := 18.0
+	var h := 16.0
+	var pw := 3.2
+	var g := _ground_min(k, C, 0.0, Vector2(r * 1.6, r * 1.6)) - 0.35
+	var salt := PoiKit.painted(5, SALT, 0.3, 0.45)
+	m.mound(Vector3(C.x, g, C.y), r, h, salt, "Saltmound", true, pw, 9, 30, true, 0.04)
+	# the seal-pole: from the ground up through the salt to stand four metres over the summit
+	var brass := m.begin()
+	var pole := m.begin()
+	var summit := Vector3(C.x, g + h, C.y)
+	m.limb(pole, Vector3(C.x, g + 0.2, C.y), summit + Vector3(0.0, 4.2, 0.0), 0.14)
+	m.limb(pole, summit + Vector3(0.0, 3.4, 0.0) - A * 0.9, summit + Vector3(0.0, 3.4, 0.0) + A * 0.9, 0.05)
+	m.ellipsoid(brass, summit + Vector3(0.0, 4.4, 0.0), Vector3(0.45, 0.45, 0.08), Basis(Vector3.UP, PoiKit.yaw_of(gate_dir)))
+	for sd in [-1.0, 1.0]:
+		m.limb(brass, summit + Vector3(0.0, 3.4, 0.0) + A * 0.9 * float(sd), summit + Vector3(0.0, 2.8, 0.0) + A * 0.9 * float(sd), 0.015)
+		m.ellipsoid(brass, summit + Vector3(0.0, 2.75, 0.0) + A * 0.9 * float(sd), Vector3(0.3, 0.05, 0.3))
+	await k.step()
+	m.commit(pole, k.surface("timber", 0.7), "SealPole", true)
+	m.commit(brass, PoiKit.plain(BRASS, 0.35, 0.65), "SealPoleBrass", true)
+	# the barrow-trestle up the flank on the side away from the gate and the cut
+	var run := A2 if absf(A2.dot(gate_dir)) < 0.7 else -A2
+	var trestle := m.begin()
+	var steps_n := 8
+	var foot_d := r + 6.0
+	var head_d := 3.2
+	var prev := Vector3.ZERO
+	for i in steps_n + 1:
+		var t := float(i) / float(steps_n)
+		var dd := lerpf(foot_d, head_d, t)
+		var p := C + run * dd
+		var gy := k.on_ground(p.x, p.y).y
+		var y := maxf(g + _salt_h(dd, r, h, pw) + 0.9, gy + 0.5) if i > 0 else gy + 0.25
+		if i == steps_n:
+			y = g + h - 1.2
+		var here := Vector3(p.x, y, p.y)
+		if i > 0:
+			var mid := (prev + here) * 0.5
+			var dir := here - prev
+			var b := Basis.looking_at(dir.normalized(), Vector3.UP)
+			m.block(trestle, Transform3D(b, mid), Vector3(1.4, 0.12, dir.length() + 0.05))
+			for sd in [-1.0, 1.0]:
+				m.block(trestle, Transform3D(b, mid + b.x * 0.62 * float(sd) + Vector3(0.0, 0.1, 0.0)), Vector3(0.08, 0.1, dir.length()))
+			k.collider(Vector3(1.4, 0.2, dir.length()), Transform3D(b, mid), "wood")
+		if i < steps_n:
+			for sd in [-1.0, 1.0]:
+				var leg := p + Vector2(run.y, -run.x) * 0.6 * float(sd)
+				m.limb(trestle, k.on_ground(leg.x, leg.y, -0.2), Vector3(leg.x, y, leg.y), 0.08)
+		prev = here
+	await k.step()
+	m.commit(trestle, k.surface("timber", 0.75), "BarrowTrestle", true)
+	# the salt-gate: a lime-washed front built out of the salt, its doors brass-bound and sealed
+	var gf := C + gate_dir * (r - 1.0)
+	var gy0 := _ground_min(k, gf + gate_dir * 2.0, PoiKit.yaw_of(gate_dir), Vector2(6.4, 3.0)) - 0.2
+	var gb := Basis(Vector3.UP, PoiKit.yaw_of(gate_dir))
+	var front := m.begin()
+	m.block(front, Transform3D(gb, Vector3(gf.x, gy0 + 2.6, gf.y)), Vector3(6.4, 5.2, 6.0))
+	m.block(front, Transform3D(gb, Vector3(gf.x, gy0 + 5.45, gf.y) + GX * 2.85), Vector3(7.0, 0.5, 0.7))
+	m.block(front, Transform3D(gb, Vector3(gf.x, gy0 + 6.0, gf.y) + GX * 2.8), Vector3(3.0, 0.7, 0.5))
+	k.collider(Vector3(6.4, 5.2, 6.0), Transform3D(gb, Vector3(gf.x, gy0 + 2.6, gf.y)), "stone")
+	await k.step()
+	m.commit(front, PoiKit.painted(0, LIMEWASH, 0.55, 0.5), "SaltGate", true)
+	var doors := m.begin()
+	var straps := m.begin()
+	var seals := m.begin()
+	var door_c := Vector3(gf.x, gy0 + 1.6, gf.y) + GX * 3.05
+	for sd in [-1.0, 1.0]:
+		var leaf := door_c + gb.x * 0.72 * float(sd)
+		m.block(doors, Transform3D(gb, leaf), Vector3(1.4, 3.1, 0.12))
+		for y in [-1.0, 0.0, 1.0]:
+			m.block(straps, Transform3D(gb, leaf + Vector3(0.0, float(y) * 1.05, 0.0) + GX * 0.07), Vector3(1.3, 0.1, 0.03))
+	for y in [-0.5, 0.5]:
+		m.ellipsoid(seals, door_c + Vector3(0.0, float(y), 0.0) + GX * 0.09, Vector3(0.09, 0.09, 0.03), gb)
+	await k.step()
+	m.commit(doors, k.surface("planks", 0.6), "SaltGateDoors")
+	m.commit(straps, PoiKit.plain(BRASS, 0.4, 0.6), "SaltGateStraps")
+	m.commit(seals, PoiKit.plain(Color(0.62, 0.08, 0.06), 0.5), "CharterSeals")
+	# the Free Salters' cut on the water side: a timbered tunnel out of the salt's foot
+	var cut_dir := (F2 + A2 * 0.35).normalized()
+	if cut_dir.dot(gate_dir) > -0.2:
+		cut_dir = F2
+	var CX := Vector3(cut_dir.x, 0.0, cut_dir.y)
+	var cut_b := Basis(Vector3.UP, PoiKit.yaw_of(cut_dir))
+	var mouth := C + cut_dir * (r + 0.6)
+	var my := _ground_min(k, mouth, PoiKit.yaw_of(cut_dir), Vector2(3.6, 3.0))
+	var shoring := m.begin()
+	var dark := m.begin()
+	for i in 3:
+		var fp := mouth - cut_dir * (1.6 * float(i))
+		var fy := my if i == 0 else minf(my, k.on_ground(fp.x, fp.y).y)
+		for sd in [-1.0, 1.0]:
+			var post := Vector3(fp.x, fy, fp.y) + cut_b.x * 1.5 * float(sd)
+			m.block(shoring, Transform3D(cut_b, post + Vector3(0.0, 1.45, 0.0)), Vector3(0.24, 3.0, 0.24))
+		m.block(shoring, Transform3D(cut_b, Vector3(fp.x, fy + 3.05, fp.y)), Vector3(3.6, 0.28, 0.3))
+	m.block(shoring, Transform3D(cut_b, Vector3(mouth.x, my + 3.25, mouth.y) - CX * 1.6), Vector3(3.6, 0.12, 4.0))
+	m.block(dark, Transform3D(cut_b, Vector3(mouth.x, my + 1.5, mouth.y) - CX * 3.6), Vector3(2.8, 3.0, 0.2))
+	for sd in [-1.0, 1.0]:
+		k.collider(Vector3(0.3, 3.0, 4.0), Transform3D(cut_b, Vector3(mouth.x, my + 1.5, mouth.y) - CX * 1.6 + cut_b.x * 1.5 * float(sd)), "wood")
+	k.collider(Vector3(3.6, 0.3, 4.0), Transform3D(cut_b, Vector3(mouth.x, my + 3.25, mouth.y) - CX * 1.6), "wood")
+	await k.step()
+	m.commit(shoring, k.surface("timber", 0.8), "SaltersCut", true)
+	m.commit(dark, PoiKit.plain(Color(0.02, 0.02, 0.025), 1.0), "SaltersCutDark")
+	var curtain := m.begin()
+	var ctop := Vector3(mouth.x, my + 2.9, mouth.y) + cut_b.x * 0.4 + CX * 0.2
+	_quad_both(curtain, ctop - cut_b.x * 0.2, ctop + cut_b.x * 1.1, ctop + cut_b.x * 1.25 - Vector3(0.0, 2.7, 0.0) + CX * 0.15, ctop - cut_b.x * 0.05 - Vector3(0.0, 2.7, 0.0))
+	m.commit(curtain, PoiKit.painted(5, SAILCLOTH_BLACK, 0.5, 0.4), "CutCurtain")
+	if k.far:
+		return
+	_sites()._door(d, str(site.get("interior", "")), Vector3(mouth.x, my + 0.05, mouth.y) - CX * 0.8, atan2(cut_dir.x, cut_dir.y))
+	# the Salters' boats drawn up, their sacks and crates by the cut
+	var shore := mouth + cut_dir * 7.0
+	for i in 2:
+		var bp := shore + Vector2(cut_dir.y, -cut_dir.x) * (float(i) * 2.0 - 1.0) * 3.2
+		await k.step()
+		k.place(k.prop("rowboat"), k.on_ground(bp.x, bp.y), PoiKit.yaw_of(cut_dir) + k.rng.randf_range(-0.3, 0.3), 1.0, true)
+	for i in 4:
+		var sp := mouth + cut_dir * 2.6 + Vector2(cut_dir.y, -cut_dir.x) * (2.6 + 0.9 * float(i))
+		await k.step()
+		k.place(k.prop("sack" if i % 2 == 0 else "crate"), k.on_ground(sp.x, sp.y), k.rng.randf() * TAU, 1.0, true)
+	k.marker("the_boats", k.on_ground(shore.x, shore.y))
+	# spilled salt round the foot
+	for i in 5:
+		var a := k.rng.randf() * TAU
+		var p := C + Vector2(sin(a), cos(a)) * (r + k.rng.randf_range(0.5, 4.0))
+		if (p - mouth).length() < 4.0 or (p - gf).length() < 7.0:
+			continue
+		m.mound(k.on_ground(p.x, p.y, -0.05), k.rng.randf_range(0.8, 1.6), k.rng.randf_range(0.25, 0.5), salt, "SaltSpill", false, 1.6, 3, 10)
+	# the salt-reeve's sentry box by the gate, and the tithe-board that starts the business
+	var box_at := gf + gate_dir * 5.6 + Vector2(gate_dir.y, -gate_dir.x) * 4.6
+	if not k.roads.is_empty() and k.road_distance(box_at) < 3.0:
+		box_at = gf + gate_dir * 5.6 - Vector2(gate_dir.y, -gate_dir.x) * 4.6
+	var bx := m.begin()
+	var bby := _ground_min(k, box_at, PoiKit.yaw_of(gate_dir), Vector2(1.4, 1.4))
+	var bxb := Basis(Vector3.UP, PoiKit.yaw_of(gate_dir))
+	var bxc := Vector3(box_at.x, bby, box_at.y)
+	m.block(bx, Transform3D(bxb, bxc + Vector3(0.0, 1.2, 0.0) - GX * 0.6), Vector3(1.4, 2.4, 0.1))
+	for sd in [-1.0, 1.0]:
+		m.block(bx, Transform3D(bxb, bxc + Vector3(0.0, 1.2, 0.0) + bxb.x * 0.65 * float(sd)), Vector3(0.1, 2.4, 1.3))
+	m.block(bx, Transform3D(bxb * Basis(Vector3.RIGHT, 0.2), bxc + Vector3(0.0, 2.5, 0.0)), Vector3(1.6, 0.1, 1.6))
+	await k.step()
+	m.commit(bx, PoiKit.painted(0, LIMEWASH, 0.6, 0.5), "SentryBox")
+	k.collider(Vector3(1.4, 2.4, 0.1), Transform3D(bxb, bxc + Vector3(0.0, 1.2, 0.0) - GX * 0.6), "wood")
+	for sd in [-1.0, 1.0]:
+		k.collider(Vector3(0.1, 2.4, 1.3), Transform3D(bxb, bxc + Vector3(0.0, 1.2, 0.0) + bxb.x * 0.65 * float(sd)), "wood")
+	_spot(k, "obed_gate", _clear_spot(k, box_at + gate_dir * 1.4, gate_dir, 1.5), gate_dir)
+	await _sites()._hook(d, site, Vector3(gf.x, 0.0, gf.y) + GX * 5.4 - Vector3(gate_dir.y, 0.0, -gate_dir.x) * 3.0)
+	k.marker("the_salt_gate", k.on_ground(gf.x + gate_dir.x * 5.0, gf.y + gate_dir.y * 5.0))
+
+
+# --- Fathom Shears ---------------------------------------------------------------------------------------
+
+## A bell's outline, bottom to crown: [radius, height] in metres.
+const BELL_PROFILE := [[1.9, 0.0], [1.86, 0.35], [1.72, 1.3], [1.52, 2.25], [1.38, 2.85], [1.06, 3.3], [0.55, 3.55], [0.0, 3.62]]
+
+
+## The salvors' sheer-legs on Tollmere's west tail: two ship's masts from the quay's back leaning out
+## to a head twenty metres up over the quay's end, guyed back to an anchor-stone; the diving bell, the
+## Patience, on its cradle under the head with its chain up to the block; a shot-line from the head
+## down into the Mere; the windlass, the company's shed and its salvage heaped on the quay.
+static func fathom_shears(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var F2 := _to_water(k)
+	var A2 := Vector2(F2.y, -F2.x)
+	var F := Vector3(F2.x, 0.0, F2.y)
+	var A := Vector3(A2.x, 0.0, A2.y)
+	var ws := k.water_span(F2, 60.0).x
+	if ws < 6.0:
+		ws = 26.0
+	var yaw_f := PoiKit.yaw_of(F2)
+	var fb := Basis(Vector3.UP, yaw_f)
+	# the quay: dressed stone from the shingle out over the water's edge, level with its landward end
+	var q0 := F2 * (ws - 12.0)
+	var q1 := F2 * (ws + 1.2)
+	var qtop := k.on_ground(q0.x, q0.y).y + 0.35
+	var qmid := (q0 + q1) * 0.5
+	var qlen := (q1 - q0).length()
+	var qlow := minf(_ground_min(k, qmid, yaw_f, Vector2(11.0, qlen)), qtop - 1.0) - 0.6
+	var stone := m.begin()
+	var qxf := Transform3D(fb, Vector3(qmid.x, (qtop + qlow) * 0.5, qmid.y))
+	m.block(stone, qxf, Vector3(11.0, qtop - qlow, qlen))
+	k.collider(Vector3(11.0, qtop - qlow, qlen), qxf, "stone")
+	# steps down its side into the Mere
+	for i in 5:
+		var p := q1 - F2 * (1.0 + 0.8 * float(i)) + A2 * 6.2
+		var top := qtop - 0.4 * float(5 - i)
+		var foot := qlow
+		m.block(stone, Transform3D(fb, Vector3(p.x, (top + foot) * 0.5, p.y)), Vector3(1.4, top - foot, 0.82))
+		k.collider(Vector3(1.4, top - foot, 0.82), Transform3D(fb, Vector3(p.x, (top + foot) * 0.5, p.y)), "stone")
+	await k.step()
+	m.commit(stone, k.surface("oroth", 0.5), "Quay", true)
+	# the sheer-legs, the guy back to its anchor, the block at the head
+	var head_at := q1 - F2 * 2.6
+	var head := Vector3(head_at.x, qtop + 20.0, head_at.y)
+	var masts := m.begin()
+	for sd in [-1.0, 1.0]:
+		var foot := q0 + F2 * 1.5 + A2 * 4.6 * float(sd)
+		var fy := k.on_ground(foot.x, foot.y).y
+		m.limb(masts, Vector3(foot.x, minf(fy, qtop) - 0.2, foot.y), head + A * 0.35 * float(sd), 0.34)
+		k.collider(Vector3(0.7, 3.0, 0.7), Transform3D(Basis.IDENTITY, Vector3(foot.x, qtop + 1.5, foot.y)), "wood")
+	var anchor := -F2 * 2.0 + F2 * (ws - 34.0)
+	var ay := k.on_ground(anchor.x, anchor.y).y
+	m.limb(masts, head, Vector3(anchor.x, ay + 0.9, anchor.y), 0.06)
+	m.block(masts, Transform3D(fb, head - Vector3(0.0, 0.6, 0.0)), Vector3(0.7, 1.0, 0.5))
+	await k.step()
+	m.commit(masts, k.surface("timber", 0.8), "SheerLegs", true)
+	var anchor_st := m.begin()
+	m.block(anchor_st, Transform3D(fb, Vector3(anchor.x, ay + 0.35, anchor.y)), Vector3(1.6, 0.9, 1.2))
+	k.collider(Vector3(1.6, 0.9, 1.2), Transform3D(fb, Vector3(anchor.x, ay + 0.35, anchor.y)), "stone")
+	m.commit(anchor_st, k.surface("oroth", 0.6), "GuyAnchor", true)
+	# the Patience on her cradle under the head
+	var bell_at := head_at
+	var cradle := m.begin()
+	for sd in [-1.0, 1.0]:
+		m.block(cradle, Transform3D(fb, Vector3(bell_at.x, qtop + 0.3, bell_at.y) + A * 1.25 * float(sd)), Vector3(0.4, 0.6, 4.4))
+		m.block(cradle, Transform3D(fb, Vector3(bell_at.x, qtop + 0.3, bell_at.y) + F * 1.25 * float(sd)), Vector3(4.4, 0.4, 0.4))
+	await k.step()
+	m.commit(cradle, k.surface("timber", 0.8), "BellCradle")
+	var bell := m.begin()
+	var by := qtop + 0.62
+	var segs := 20
+	for i in BELL_PROFILE.size() - 1:
+		var p0: Array = BELL_PROFILE[i]
+		var p1: Array = BELL_PROFILE[i + 1]
+		for j in segs:
+			var a0 := TAU * float(j) / float(segs)
+			var a1 := TAU * float(j + 1) / float(segs)
+			var v00 := Vector3(bell_at.x + sin(a0) * float(p0[0]), by + float(p0[1]), bell_at.y + cos(a0) * float(p0[0]))
+			var v01 := Vector3(bell_at.x + sin(a1) * float(p0[0]), by + float(p0[1]), bell_at.y + cos(a1) * float(p0[0]))
+			var v10 := Vector3(bell_at.x + sin(a0) * float(p1[0]), by + float(p1[1]), bell_at.y + cos(a0) * float(p1[0]))
+			var v11 := Vector3(bell_at.x + sin(a1) * float(p1[0]), by + float(p1[1]), bell_at.y + cos(a1) * float(p1[0]))
+			_quad_both(bell, v00, v01, v11, v10)
+	var eye := Vector3(bell_at.x, by + 3.62, bell_at.y)
+	for j in 10:
+		var a0 := TAU * float(j) / 10.0
+		var a1 := TAU * float(j + 1) / 10.0
+		m.limb(bell, eye + (F * cos(a0) + Vector3.UP * sin(a0)) * 0.3 + Vector3(0.0, 0.3, 0.0), eye + (F * cos(a1) + Vector3.UP * sin(a1)) * 0.3 + Vector3(0.0, 0.3, 0.0), 0.05)
+	await k.step()
+	m.commit(bell, PoiKit.plain(Color(0.16, 0.17, 0.16), 0.55, 0.55), "ThePatience", true)
+	k.collider_shape(_bell_shape(), Transform3D(Basis.IDENTITY, Vector3(bell_at.x, by, bell_at.y)), "metal")
+	var chains := m.begin()
+	m.limb(chains, eye + Vector3(0.0, 0.6, 0.0), head - Vector3(0.0, 1.1, 0.0), 0.05)
+	# the shot-line from the head down into the Mere, to its weight on the bed
+	var shot := q1 + F2 * 2.2
+	var sb := k.on_ground(shot.x, shot.y).y
+	m.limb(chains, head - Vector3(0.0, 1.0, 0.0) + F * 0.3, Vector3(shot.x, sb + 0.2, shot.y), 0.03)
+	# the hauling chain from the windlass up the near mast
+	var wl := q0 + F2 * 3.5 + A2 * 2.8
+	var wg := qtop
+	m.limb(chains, Vector3(wl.x, wg + 0.9, wl.y), head - Vector3(0.0, 0.8, 0.0) - F * 0.2, 0.04)
+	await k.step()
+	m.commit(chains, PoiKit.plain(IRON, 0.6, 0.6), "BellChains", true)
+	if k.far:
+		return
+	# the glass ports round her shoulder, lit faintly from within
+	var ports := m.begin()
+	for j in 4:
+		var a := TAU * (float(j) + 0.5) / 4.0
+		var pr := 1.47
+		m.ellipsoid(ports, Vector3(bell_at.x + sin(a) * pr, by + 2.4, bell_at.y + cos(a) * pr), Vector3(0.14, 0.14, 0.14))
+	m.commit(ports, PoiKit.plain(Color(0.9, 0.78, 0.45), 0.2, 0.0, Color(1.0, 0.8, 0.45), 0.6), "BellPorts")
+	# the windlass: a drum on its frame, its bars
+	var wind := m.begin()
+	var wc := Vector3(wl.x, wg, wl.y)
+	m.rod(wind, Transform3D(Basis.IDENTITY, wc + Vector3(0.0, 0.55, 0.0)), 0.45, 1.1)
+	for j in 4:
+		var a := TAU * float(j) / 4.0 + 0.3
+		m.limb(wind, wc + Vector3(0.0, 0.95, 0.0), wc + Vector3(sin(a) * 1.5, 0.98, cos(a) * 1.5), 0.05)
+	await k.step()
+	m.commit(wind, k.surface("timber", 0.75), "Windlass")
+	k.collider(Vector3(0.9, 1.1, 0.9), Transform3D(Basis.IDENTITY, wc + Vector3(0.0, 0.55, 0.0)), "wood")
+	# the way down: under the bell's skirt, from the landward side
+	var door_at := bell_at - F2 * 2.3
+	_sites()._door(d, str(site.get("interior", "")), Vector3(door_at.x, qtop + 0.05, door_at.y), atan2(-F2.x, -F2.y))
+	# the company's shed, its salvage: black stone, a cracked bronze bell-lip, barrels
+	var shed := -F2 * 3.0 + A2 * 9.0
+	if not k.roads.is_empty() and k.road_distance(shed) < 5.0:
+		shed = -F2 * 3.0 - A2 * 9.0
+	var walls := m.begin()
+	var sw := 4.0
+	var sd2 := 3.0
+	var sbase := shed
+	var c0 := sbase - F2 * sd2 * 0.5 - A2 * sw * 0.5
+	var c1 := sbase - F2 * sd2 * 0.5 + A2 * sw * 0.5
+	var c2 := sbase + F2 * sd2 * 0.5 + A2 * sw * 0.5
+	var c3 := sbase + F2 * sd2 * 0.5 - A2 * sw * 0.5
+	m.wall(walls, c0, c1, 2.3)
+	m.wall(walls, c1, c2, 2.3)
+	m.wall(walls, c3, c0, 2.3)
+	m.wall(walls, c2, c2 - A2 * 1.2, 2.3)
+	m.wall(walls, c3, c3 + A2 * 1.2, 2.3)
+	await k.step()
+	m.commit(walls, k.surface("planks", 0.6), "SalvorsShed")
+	var sroof := m.begin()
+	var sgy := maxf(maxf(k.on_ground(c0.x, c0.y).y, k.on_ground(c1.x, c1.y).y), maxf(k.on_ground(c2.x, c2.y).y, k.on_ground(c3.x, c3.y).y))
+	var srb := Basis(Vector3.UP, PoiKit.yaw_of(A2)) * Basis(Vector3.FORWARD, 0.16)
+	m.block(sroof, Transform3D(srb, Vector3(sbase.x, sgy + 2.5, sbase.y)), Vector3(sd2 + 0.8, 0.12, sw + 0.8))
+	k.collider(Vector3(sd2 + 0.8, 0.2, sw + 0.8), Transform3D(srb, Vector3(sbase.x, sgy + 2.5, sbase.y)), "stone")
+	await k.step()
+	m.commit(sroof, PoiKit.painted(2, SLATE, 0.5, 0.5), "ShedRoof")
+	var salvage := m.begin()
+	var heap := q0 + F2 * 5.5 - A2 * 3.2
+	for i in 5:
+		var sz := Vector3(k.rng.randf_range(0.5, 1.0), k.rng.randf_range(0.35, 0.7), k.rng.randf_range(0.5, 1.1))
+		var p := heap + k.jitter(1.2)
+		m.block(salvage, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), Vector3(p.x, qtop + sz.y * 0.5, p.y)), sz)
+	await k.step()
+	m.commit(salvage, k.surface("oroth", 0.4), "SalvagedStone")
+	k.collider(Vector3(2.4, 0.7, 2.4), Transform3D(fb, Vector3(heap.x, qtop + 0.35, heap.y)), "stone")
+	var lip := m.begin()
+	var lc := Vector3(heap.x, qtop, heap.y) - A * 2.2 + F * 1.0
+	for j in 9:
+		var a0 := -0.9 + 1.8 * float(j) / 9.0
+		var a1 := -0.9 + 1.8 * float(j + 1) / 9.0
+		m.limb(lip, lc + (F * cos(a0) + A * sin(a0)) * 0.9 + Vector3(0.0, 0.14, 0.0), lc + (F * cos(a1) + A * sin(a1)) * 0.9 + Vector3(0.0, 0.14, 0.0), 0.13)
+	m.commit(lip, PoiKit.plain(Color(0.33, 0.45, 0.36), 0.5, 0.55), "BellLip")
+	for i in 3:
+		var bp := q0 + F2 * (2.5 + 1.0 * float(i)) - A2 * 4.6
+		await k.step()
+		k.place(k.prop("barrel"), Vector3(bp.x, qtop, bp.y), k.rng.randf() * TAU, 1.0, true)
+	var lamp := wl + A2 * 1.8
+	await k.step()
+	k.place(k.prop("lantern_standing"), Vector3(lamp.x, qtop, lamp.y), 0.0, 1.0, false)
+	k.light(Vector3(lamp.x, qtop + 0.9, lamp.y), Color(1.0, 0.76, 0.46), 1.2, 7.0)
+	await _sites()._hook(d, site, Vector3(wl.x, 0.0, wl.y) - F * 2.6 + A * 1.0, qtop)
+	_spot(k, "merryn_windlass", _clear_spot(k, wl - A2 * 1.8 - F2 * 1.2, -A2, 1.0), A2)
+	k.marker("the_quay_steps", Vector3(q1.x, qtop, q1.y) - F * 4.0 + A * 4.0, false, true, 5.0)
+
+
+## The Patience's collision: her outline as a convex hull, from her mouth to her crown.
+static func _bell_shape() -> ConvexPolygonShape3D:
+	var pts := PackedVector3Array()
+	for p in BELL_PROFILE:
+		var pr := float((p as Array)[0])
+		var py := float((p as Array)[1])
+		for j in 12:
+			var a := TAU * float(j) / 12.0
+			pts.append(Vector3(sin(a) * pr, py, cos(a) * pr))
+	var s := ConvexPolygonShape3D.new()
+	s.points = pts
+	return s
+
+
+## The Saltmound's height over its foot `dd` metres from its middle (PoiMasonry.mound's own profile).
+static func _salt_h(dd: float, r: float, h: float, pw: float) -> float:
+	var f := clampf(dd / r, 0.0, 1.0)
+	return h * pow(maxf(1.0 - f * f, 0.0), pw * 0.5)

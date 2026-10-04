@@ -1400,6 +1400,18 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/fathom_shears",
+        "quests": [
+          "core:quest/the_patience",
+          "core:quest/the_undersong"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/fathom_shears"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fern_gully",
         "quests": [],
         "finds": [],
@@ -4691,6 +4703,24 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_charter_scale",
+        "quests": [
+          "core:quest/short_weight"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_cormorant_perches",
+        "quests": [
+          "core:quest/old_tithe"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_crown_drift",
         "quests": [
           "core:quest/the_last_shift"
@@ -4699,6 +4729,15 @@
         "encounters": [
           "core:encounter/the_crown_drift"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_dumb_fair",
+        "quests": [
+          "core:quest/the_rogues_yarn"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4769,6 +4808,15 @@
         "poi": "core:poi/the_kilnway",
         "quests": [
           "core:quest/ring_the_warden_down"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_kite_shore",
+        "quests": [
+          "core:quest/old_tithe"
         ],
         "finds": [],
         "encounters": [],
@@ -4859,6 +4907,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_ropewalk",
+        "quests": [
+          "core:quest/the_rogues_yarn"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_saltgate",
         "quests": [
           "core:quest/the_saltgate"
@@ -4866,6 +4923,18 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_saltgate"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_saltmound",
+        "quests": [
+          "core:quest/chalked_off",
+          "core:quest/short_weight"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_saltmound"
         ],
         "hearthstone": false
       },
@@ -4909,6 +4978,15 @@
         "encounters": [
           "core:encounter/the_sounding"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_sounding_mirror",
+        "quests": [
+          "core:quest/the_undersong"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4973,6 +5051,15 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/the_widows_keels",
+        "quests": [
+          "core:quest/chalked_off"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/the_windthrow",

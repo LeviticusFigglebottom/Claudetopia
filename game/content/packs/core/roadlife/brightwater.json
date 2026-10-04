@@ -107,6 +107,41 @@
         "event": "core:roadevent/fugitive",
         "weight": 1,
         "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/brightwater_split_salt",
+        "weight": 2,
+        "when": "day",
+        "cooldown_h": 14
+      },
+      {
+        "event": "core:roadevent/brightwater_boat_bearers",
+        "weight": 1,
+        "when": "dusk",
+        "biome": [
+          "shore",
+          "fields",
+          "open"
+        ],
+        "cooldown_h": 24
+      },
+      {
+        "event": "core:roadevent/brightwater_kite_down",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 20
+      },
+      {
+        "event": "core:roadevent/brightwater_salt_train",
+        "weight": 2,
+        "when": "night",
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/brightwater_salvor_with_bronze",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 18
       }
     ],
     "caravans": [
@@ -148,17 +183,35 @@
     },
     "sites": [
       {
-        "at": {"place": "core:poi/pennyfold_keep", "offset": [0, 0]},
+        "at": {
+          "place": "core:poi/pennyfold_keep",
+          "offset": [
+            0,
+            0
+          ]
+        },
         "kind": "bend",
         "tell": "crows"
       },
       {
-        "at": {"place": "core:poi/the_false_lantern", "offset": [0, 0]},
+        "at": {
+          "place": "core:poi/the_false_lantern",
+          "offset": [
+            0,
+            0
+          ]
+        },
         "kind": "bend",
         "tell": "felled_tree"
       },
       {
-        "at": {"place": "core:poi/cadbrae_slate_cut", "offset": [0, 0]},
+        "at": {
+          "place": "core:poi/cadbrae_slate_cut",
+          "offset": [
+            0,
+            0
+          ]
+        },
         "kind": "bend",
         "tell": "crows"
       }
@@ -519,5 +572,197 @@
         "delta": 4
       }
     }
+  },
+  {
+    "id": "core:roadevent/brightwater_split_salt",
+    "name": "A split salt-sack and a tithe-clerk",
+    "kind": "broken_cart",
+    "cast": [
+      {
+        "role": "carter",
+        "folk": {
+          "name": "A salt-carter",
+          "tags": [
+            "person"
+          ]
+        },
+        "pose": "Work_Dig",
+        "talk": {
+          "prompt": "Help the carter sweep up the salt",
+          "do": "help",
+          "say": "Quick, quick, before she's got her scale out -- every grain back in the sack and it's a sack, not a spill, and a sack's paid for. -- There. Take a twist for your trouble. You never saw the seal.",
+          "hook": {
+            "marks": 12,
+            "item": "core:item/untaxed_salt",
+            "count": 2,
+            "reputation": {
+              "faction": "core:faction/tallymen",
+              "delta": -3
+            }
+          }
+        }
+      },
+      {
+        "role": "clerk",
+        "folk": {
+          "name": "A Tallymen's tithe-clerk",
+          "tags": [
+            "person",
+            "tallymen"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Help the clerk weigh what spilled",
+          "do": "help",
+          "say": "Thank you. Hold the pan. -- Four stone. Four stone, in an unsealed sack, on a cart from the west shore. That is the Weighmaster's sum exactly; Prudence Gauge at the Charter Scale will want to hear it from somebody who isn't me.",
+          "hook": {
+            "reputation": {
+              "faction": "core:faction/tallymen",
+              "delta": 4
+            },
+            "rumour": "A tithe-clerk weighed four stone of unsealed salt on the shore road and sent word to {place}.",
+            "reveals": "core:poi/the_charter_scale",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/brightwater_boat_bearers",
+    "name": "Mourners carrying a boat to the water",
+    "kind": "pilgrims",
+    "speed": 0.8,
+    "cast": [
+      {
+        "role": "mourner",
+        "folk": {
+          "name": "A Lakefolk mourner",
+          "tags": [
+            "person"
+          ]
+        },
+        "count": [
+          3,
+          4
+        ],
+        "talk": {
+          "prompt": "Walk a while with the mourners",
+          "do": "say",
+          "say": "We're taking old Ansel down to the water. A Lakefolk goes out in his own boat with a lamp in her bow and lets the Mere have them both. Ansel had no boat, so the widows at the Keels lent him the Kettle, God love them, and chalked her off their board for it. -- Walk with us if you like. It's the custom to say his name once at the water.",
+          "hook": {
+            "rumour": "The widows at {place} lend a boat to anyone who goes out to the Mere without one.",
+            "reveals": "core:poi/the_widows_keels",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/brightwater_kite_down",
+    "name": "A kite come down in the verge",
+    "kind": "lost_traveller",
+    "cast": [
+      {
+        "role": "lad",
+        "folk": {
+          "name": "A kite-fisher's lad",
+          "tags": [
+            "person",
+            "child"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Help him untangle the kite",
+          "do": "help",
+          "say": "The line went in a gust and she came down all the way from the shore and into the thorns and if I've holed her Dilly'll skin me. -- Hold that, no, the eyes, hold the eyes -- there. Not a mark on her. Here, have the pike, I can't carry both and the kite's worth more.",
+          "hook": {
+            "item": "core:item/mere_pike",
+            "count": 1,
+            "reveals": "core:poi/the_kite_shore",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/brightwater_salt_train",
+    "name": "A silent salt-train in the dark",
+    "kind": "wanderer",
+    "speed": 1.0,
+    "cast": [
+      {
+        "role": "trader",
+        "folk": {
+          "name": "A hooded salt-runner",
+          "tags": [
+            "person",
+            "smuggler"
+          ]
+        },
+        "talk": {
+          "prompt": "Signal to the salt-runner",
+          "do": "trade",
+          "say": "*(He says nothing at all. He lays a finger on his lips, knocks once on the pack-saddle, and turns back the sailcloth.)*"
+        }
+      },
+      {
+        "role": "guard",
+        "enemy": "core:enemy/free_salter",
+        "talk": {
+          "prompt": "Speak to the Salter",
+          "do": "say",
+          "say": "*(He puts a white finger on your lips, hard. Then he points south-east along the shore, and knocks twice on his own chest: the fair. Tonight. Say nothing.)*",
+          "hook": {
+            "rumour": "Hooded salt-runners walk the shore roads by night to the fair at {place}, and say nothing.",
+            "reveals": "core:poi/the_dumb_fair",
+            "once": true
+          }
+        }
+      }
+    ],
+    "train": {
+      "kind": "packhorse",
+      "goods": "core:loot/smuggler_stash"
+    },
+    "merchant": {
+      "stock": "core:table/stock_dumb_fair",
+      "marks": 60,
+      "buys": [
+        "misc",
+        "ingredient"
+      ]
+    }
+  },
+  {
+    "id": "core:roadevent/brightwater_salvor_with_bronze",
+    "name": "A salvor with a sack of bronze",
+    "kind": "wanderer",
+    "speed": 1.1,
+    "cast": [
+      {
+        "role": "salvor",
+        "folk": {
+          "name": "A Fathom Company salvor",
+          "tags": [
+            "person"
+          ]
+        },
+        "talk": {
+          "prompt": "Talk to the salvor",
+          "do": "say",
+          "say": "Bronze from the Quarter, for the Row, and I'm not to stop till it's weighed. -- You'll have heard. The Patience came up empty three weeks back and the chain rings on its own every hour, and the Company won't send anybody down after the master. His girl sits at the windlass on the west tail and turns it a quarter every hour. Somebody ought to go down. Not me. I've a sack to carry.",
+          "hook": {
+            "rumour": "The Fathom Company's bell came up empty at {place}, and its chain rings by itself every hour.",
+            "reveals": "core:poi/fathom_shears",
+            "once": true
+          }
+        }
+      }
+    ]
   }
 ]
