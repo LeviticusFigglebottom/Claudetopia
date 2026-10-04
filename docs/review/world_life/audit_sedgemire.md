@@ -1,6 +1,6 @@
 # World life audit: Sedgemire
 
-Made by `python3 tools/world/region_audit.py sedgemire` from the installed world (2026-09-30T09:38:35Z) and the content pack; the POI measurements are `docs/review/world_life/probe_sedgemire.json` (tools_gd/poi_probe.gd, headless). docs/WORLD_LIFE.md says how to read and use it.
+Made by `python3 tools/world/region_audit.py sedgemire` from the installed world (2026-10-03T17:07:31Z) and the content pack; the POI measurements are `docs/review/world_life/probe_sedgemire.json` (tools_gd/poi_probe.gd, headless). docs/WORLD_LIFE.md says how to read and use it.
 
 ![map](audit_sedgemire.png)
 
@@ -9,13 +9,13 @@ Made by `python3 tools/world/region_audit.py sedgemire` from the installed world
 | | |
 |---|---|
 | land a body walks (dry, no steeper than 32 deg, 250 m in from the map's edge) | 6.0 km2 |
-| points of interest | 60 (10.1 per km2; 3 not yet in the built world) |
-| land more than 200 m from any place, POI or roadside mark | 0.33 km2 (6%); more than 400 m: 0% |
-| share of land further than 100 / 150 / 200 / 300 / 400 m from anything | 57% / 25% / 6% / 0% / 0% |
+| points of interest | 60 (10.0 per km2; 0 not yet in the built world) |
+| land more than 200 m from any place, POI or roadside mark | 0.32 km2 (5%); more than 400 m: 0% |
+| share of land further than 100 / 150 / 200 / 300 / 400 m from anything | 56% / 25% / 5% / 0% / 0% |
 | largest empty stretch | 0.00 km2 |
 | weak POIs (score <= 3) | 2, and 9 wayside finds (small by design) |
 | strong POIs (score >= 8) | 11 |
-| placement problems | 18, at 15 POIs |
+| placement problems | 14, at 13 POIs |
 
 ## (a) Empty land, largest first
 
@@ -86,9 +86,9 @@ Impact score, points for each: **size** footprint reach (m from the middle to it
 | 8 | Wisp Hollow `wisp_hollow` | hidden_valley | 22 / 25 | 17 | 17 | 7 | 0 | 4 | 2 | 0 | yes | yes |  |  |  |  |
 | 9 | The Peat Hags `peat_hags` | camp | 19 / 22 | 17 | 17 | 10 | 0 | 4 | 2 | 2 | yes | yes |  |  |  |  |
 | 9 | The Stakes at Oulnauve `oulnauve_stakes` | stockade | 22 / 28 | 187 | 187 | 111 | 1 | 4 | 2 | 0 | yes | yes |  |  |  |  |
-| 11 | The Name-Wife's Hollow `name_wifes_hollow` | delve | 30 / 28 | 87 | 87 | 163 | 2 | 5 | 0 | 0 | yes | yes | yes |  |  | unbuilt |
-| 11 | The Saltgate `the_saltgate` | fort | 37 / 37 | 109 | 109 | 90 | 2 | 3 | 0 | 0 | yes | yes | yes |  |  | unbuilt |
-| 12 | The Sounding `the_sounding` | tower | 22 / 34 | 58 | 58 | 61 | 2 | 8 | 2 | 0 | yes | yes | yes |  |  | unbuilt |
+| 11 | The Name-Wife's Hollow `name_wifes_hollow` | delve | 30 / 28 | 87 | 87 | 163 | 2 | 5 | 0 | 0 | yes | yes | yes |  |  |  |
+| 11 | The Saltgate `the_saltgate` | fort | 37 / 37 | 109 | 109 | 90 | 2 | 3 | 0 | 0 | yes | yes | yes |  |  |  |
+| 12 | The Sounding `the_sounding` | tower | 22 / 34 | 58 | 58 | 61 | 2 | 8 | 2 | 0 | yes | yes | yes |  |  |  |
 | 12 | The Unsung Vault `unsung_vault` | delve | 33 / 30 | 82 | 82 | 87 | 2 | 2 | 2 | 0 | yes | yes | yes |  |  |  |
 
 Weak POIs by kind (not wayside): standing_stones 1, camp 1.
@@ -98,7 +98,7 @@ Weak POIs by kind (not wayside): standing_stones 1, camp 1.
 
 `seat:*` are the seat audit's findings over the POI's own pieces (tools_gd/seat_audit.gd: floating over the ground, buried, sunk, standing in a road's carriageway, overlapping another piece, a lamp or light hung from nothing; headless, so multimesh rows are not looked at). `past_pad`: pieces stand beyond the flattened pad, on the skirt or raw ground. `steep_skirt`: the pad's skirt (from its level core to its reach) falls at more than 33 deg along some line: a cut or an embankment. `steep_site`: a POI not yet built stands on ground sloping more than 18 deg on average under its pad. `overlap_pad`: two pads overlap. `road_through`: a road crosses the level core of a place that is not road furniture. `in_water`: its middle is in water.
 
-Counts: past_pad 4, road_through 4, steep_skirt 3, seat:sunk 2, seat:overlap 2, seat:floating 2, seat:buried 1.
+Counts: past_pad 4, steep_skirt 3, seat:sunk 2, seat:overlap 2, seat:floating 2, seat:buried 1.
 
 | POI | problem | n | detail |
 |---|---|---|---|
@@ -106,10 +106,6 @@ Counts: past_pad 4, road_through 4, steep_skirt 3, seat:sunk 2, seat:overlap 2, 
 | `eel_hurdles` | past_pad | 1 | pieces reach 26 m from its middle; its pad is 22 m |
 | `name_wifes_hollow` | past_pad | 1 | pieces reach 30 m from its middle; its pad is 28 m |
 | `unsung_vault` | past_pad | 1 | pieces reach 33 m from its middle; its pad is 30 m |
-| `drowned_bell_shrine` | road_through | 1 | a road passes 2 m from its middle, inside its 18 m level core |
-| `eel_hurdles` | road_through | 1 | a road passes 8 m from its middle, inside its 15 m level core |
-| `stair_of_isse` | road_through | 1 | a road passes 1 m from its middle, inside its 18 m level core |
-| `traders_post` | road_through | 1 | a road passes 0 m from its middle, inside its 15 m level core |
 | `eel_stews` | seat:buried | 1 | drymud DryMud at (-1993, -650): all of it under the ground (top 0.04 m below the lowest ground under it) |
 | `old_crannog` | seat:floating | 2 | door Door at (-2800, -1897): 1.30 m over the ground |
 | `sunken_tower` | seat:floating | 1 | rowboat sedgemire_rowboat_a.glb at (-3544, -973): 0.18 m over the ground |

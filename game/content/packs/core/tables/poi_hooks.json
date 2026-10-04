@@ -2020,6 +2020,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/hask_ropewalk",
+        "quests": [
+          "core:quest/iven_hasks_rope"
+        ],
+        "finds": [
+          "core:item/note_hask_book_of_names"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/hatchmoor_farm",
         "quests": [],
         "finds": [
@@ -3029,6 +3040,7 @@
       {
         "poi": "core:poi/name_wifes_hollow",
         "quests": [
+          "core:quest/the_first_cord",
           "core:quest/what_the_name_wife_took"
         ],
         "finds": [],
@@ -4436,6 +4448,7 @@
       {
         "poi": "core:poi/south_stilts",
         "quests": [
+          "core:quest/the_first_cord",
           "core:quest/what_the_name_wife_took",
           "core:quest/which_account"
         ],
@@ -4568,6 +4581,17 @@
         ],
         "encounters": [
           "core:encounter/sulion"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/sundew_garden",
+        "quests": [],
+        "finds": [
+          "core:item/note_sundew_feeding"
+        ],
+        "encounters": [
+          "core:encounter/sundew_garden"
         ],
         "hearthstone": false
       },
@@ -4722,6 +4746,42 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_flood_bride",
+        "quests": [],
+        "finds": [
+          "core:item/note_weavers_count"
+        ],
+        "encounters": [
+          "core:encounter/the_flood_bride"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_flood_mark",
+        "quests": [
+          "core:quest/the_keel_barrow",
+          "core:quest/the_line_on_the_needle"
+        ],
+        "finds": [
+          "core:item/note_flood_mark_tide_book"
+        ],
+        "encounters": [
+          "core:encounter/the_flood_mark"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_great_dredge",
+        "quests": [
+          "core:quest/the_great_dredge"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_great_dredge"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_grey_end",
         "quests": [],
         "finds": [
@@ -4729,6 +4789,17 @@
         ],
         "encounters": [
           "core:encounter/the_grey_end"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_grey_heronry",
+        "quests": [],
+        "finds": [
+          "core:item/note_heron_readings"
+        ],
+        "encounters": [
+          "core:encounter/the_grey_heronry"
         ],
         "hearthstone": false
       },
@@ -4762,6 +4833,18 @@
         ],
         "encounters": [
           "core:encounter/the_jawbone"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_keel_barrow",
+        "quests": [
+          "core:quest/iven_hasks_rope",
+          "core:quest/the_keel_barrow"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_keel_barrow"
         ],
         "hearthstone": false
       },
@@ -4939,6 +5022,19 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_undertone"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_unwinding",
+        "quests": [
+          "core:quest/the_first_cord"
+        ],
+        "finds": [
+          "core:item/note_unwinding_ribbon"
+        ],
+        "encounters": [
+          "core:encounter/the_unwinding"
         ],
         "hearthstone": false
       },
@@ -5566,6 +5662,17 @@
           "core:item/wayside_winter_herd_fold"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wisp_catchers_rack",
+        "quests": [],
+        "finds": [
+          "core:item/note_wisp_catchers_count"
+        ],
+        "encounters": [
+          "core:encounter/wisp_catchers_rack"
+        ],
         "hearthstone": false
       },
       {

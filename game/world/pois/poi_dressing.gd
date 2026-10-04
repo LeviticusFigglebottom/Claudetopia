@@ -44,6 +44,11 @@ const KINDS := {
 	## the large sites (world/sites, docs/WORLD_LIFE_INTERIORS.md): a way down into a site's inside,
 	## and the fortified places you walk round and climb
 	"delve": true, "fort": true, "stockade": true, "watchtower": true, "castle_ruin": true, "walled_camp": true,
+	## Sedgemire's novel places (each built by its region's own builder, `regions/sedgemire.gd`): a
+	## reed bride married to the flood, a wisp-catcher's rack of jars, a tide-gauge post, a ropewalk,
+	## a grief-maze of reed hedges, a heronry in dead alders, a sundew garden
+	"effigy": true, "wisp_jars": true, "tide_gauge": true, "ropewalk": true, "maze": true, "heronry": true,
+	"bog_garden": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -54,7 +59,8 @@ const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
 		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
 		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
-		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp"]
+		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp",
+		"effigy", "wisp_jars", "tide_gauge", "ropewalk", "maze", "heronry", "bog_garden"]
 
 var poi_id := ""
 var kind := ""
