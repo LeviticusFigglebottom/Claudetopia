@@ -1385,6 +1385,35 @@ def _m_chandlery(n, ink, ac):
     n.stroke([(0.20, 0.92), (0.80, 0.92)], MW * 0.7, ink)
 
 
+def _m_turf_maze(n, ink, ac):
+    # rings of hedge, each broken, round a pole with its ribbons
+    for r, gap in ((0.36, 0.0), (0.26, math.pi), (0.16, 0.0)):
+        n.arc((0.50, 0.58), r, gap + 0.35, gap + math.tau - 0.35, ink, width=MW * 0.7, squash=0.7)
+    n.stroke([(0.50, 0.62), (0.50, 0.08)], MW * 0.8, ink)
+    for x in (0.40, 0.60):
+        n.stroke([(0.50, 0.10), (x, 0.40)], MW * 0.4, ac)
+
+
+def _m_figure_cutting(n, ink, ac):
+    # a slope with a figure cut in it, an arm raised, and its head only pegged out
+    n.stroke([(0.06, 0.90), (0.94, 0.30)], MW * 0.7, ink)
+    body = [(0.40, 0.80), (0.48, 0.52), (0.56, 0.52), (0.66, 0.74)]
+    n.poly(body, ac, alpha=170)
+    n.stroke(body, MW * 0.7, ink, closed=True)
+    n.stroke([(0.56, 0.52), (0.70, 0.36)], MW * 0.6, ink)
+    n.circle((0.52, 0.40), 0.07, ink, width=MW * 0.35, segments=12, jitter=0.02)
+
+
+def _m_rookery(n, ink, ac):
+    # a dead tree with nests in it and a rook over it
+    n.stroke([(0.50, 0.92), (0.50, 0.46)], MW, ink)
+    for x, y in ((0.24, 0.20), (0.40, 0.14), (0.66, 0.16), (0.80, 0.26)):
+        n.stroke([(0.50, 0.50), (x, y)], MW * 0.6, ink)
+    for x, y in ((0.34, 0.30), (0.62, 0.28), (0.50, 0.40)):
+        n.circle((x, y), 0.045, ink, width=MW * 0.4, fill=ink, segments=10)
+    n.stroke([(0.70, 0.08), (0.78, 0.04), (0.86, 0.08)], MW * 0.5, ink)
+
+
 MARKERS = {
     "town": _m_town, "city": _m_city, "village": _m_village, "hamlet": _m_hamlet,
     "camp": _m_camp, "fort": _m_fort, "lodge": _m_lodge, "deep_place": _m_deep_place,
@@ -1402,6 +1431,7 @@ MARKERS = {
     "castle_ruin": _m_castle_ruin, "watchtower": _m_watchtower, "delve": _m_delve,
     "player": _m_player, "reticle": _m_reticle, "default": _m_default,
     "dovecote": _m_dovecote, "scarecrow_moot": _m_scarecrow_moot, "chandlery": _m_chandlery,
+    "turf_maze": _m_turf_maze, "figure_cutting": _m_figure_cutting, "rookery": _m_rookery,
 }
 
 

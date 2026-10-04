@@ -46,7 +46,7 @@ const KINDS := {
 	"delve": true, "fort": true, "stockade": true, "watchtower": true, "castle_ruin": true, "walled_camp": true,
 	## Hearthvale's novel places (world life, novel round): built only by the region's own builders
 	## (`builder` in the def; game/world/pois/regions/hearthvale.gd)
-	"dovecote": true, "scarecrow_moot": true, "chandlery": true,
+	"dovecote": true, "scarecrow_moot": true, "chandlery": true, "turf_maze": true, "figure_cutting": true, "rookery": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -58,7 +58,7 @@ const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"
 		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
 		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
 		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp",
-		"dovecote", "scarecrow_moot", "chandlery"]
+		"dovecote", "scarecrow_moot", "chandlery", "turf_maze", "figure_cutting", "rookery"]
 
 var poi_id := ""
 var kind := ""

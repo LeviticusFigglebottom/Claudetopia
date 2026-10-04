@@ -4051,3 +4051,330 @@ static func wassail_knap(d: PoiDressing) -> void:
 	await _builders().LAND._grass(d, "grass_clump", face * 12.0, 10.0, 24)
 	await _builders().LAND._grass(d, "cow_parsley", -face * 16.0 - side * 10.0, 6.0, 12)
 	_part_props(d)
+
+
+# --- Tamwick Troy ------------------------------------------------------------------------------------
+
+const HEDGE := {"base": "#3f5a26", "accent": "#2f461c", "grout": "#1f2f12", "unit": 0.22}
+const RIBBONS := [Color(0.78, 0.2, 0.16), Color(0.86, 0.72, 0.22), Color(0.25, 0.45, 0.72), Color(0.92, 0.9, 0.84)]
+
+
+## A troy-town: five rings of clipped hawthorn hedge, each broken by one gap, the gaps alternating side
+## to side so the way in goes round every ring before it reaches the heart; the white maypole there
+## with its garland and its naming-ribbons pegged out to the ground; the Troy-stone at the gate with the
+## rule cut in it; the keeper's hut outside, her shears and barrow.
+static func tamwick_troy(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var face := _facing(k)
+	var side := Vector2(face.y, -face.x)
+	var fy := PoiKit.yaw_of(face)
+	var hedge := m.begin()
+	var radii := [3.4, 5.6, 7.8, 10.0, 12.2]
+	var h := 1.55
+	var thick := 0.75
+	for i in radii.size():
+		var r: float = radii[i]
+		# the outer ring opens to the road; each ring in opens on the far side from the last
+		var gap_at := fy + (0.0 if i % 2 == (radii.size() - 1) % 2 else PI)
+		var gap_half := 1.0 / r
+		var n := maxi(int(ceil(TAU * r / 1.4)), 12)
+		for j in n:
+			var a0 := TAU * float(j) / float(n)
+			var a1 := TAU * float(j + 1) / float(n)
+			var am := (a0 + a1) * 0.5
+			if absf(wrapf(am - gap_at, -PI, PI)) < gap_half + PI / float(n):
+				continue
+			var p := Vector2(sin(am), cos(am)) * r
+			var g := k.on_ground(p.x, p.y)
+			var seg := 2.0 * r * sin(PI / float(n)) + 0.08
+			var xf := Transform3D(Basis(Vector3.UP, am + PI * 0.5), g + Vector3(0.0, h * 0.5 - 0.1, 0.0))
+			m.block(hedge, xf, Vector3(seg, h + 0.2, thick))
+			m.block(hedge, Transform3D(xf.basis, g + Vector3(0.0, h + 0.02, 0.0)), Vector3(seg * 0.92, 0.18, thick * 0.8))
+			k.collider(Vector3(seg, h + 0.2, thick), xf, "")
+		await k.step()
+	m.commit(hedge, PoiKit.painted(5, HEDGE, 0.5, 0.9), "TroyHedges", true)
+	# the maypole at the heart, its garland, and the ribbons pegged out round its foot
+	var g0 := k.on_ground(0.0, 0.0)
+	var pole := m.begin()
+	m.rod(pole, Transform3D(Basis.IDENTITY, g0 + Vector3(0.0, 4.5, 0.0)), 0.13, 9.4)
+	k.collider(Vector3(0.3, 9.0, 0.3), Transform3D(Basis.IDENTITY, g0 + Vector3(0.0, 4.5, 0.0)), "wood")
+	m.drum(pole, Transform3D(Basis.IDENTITY, g0 + Vector3(0.0, 8.6, 0.0)), 0.7, 0.14, 0.0, NAN, false, 0.14)
+	m.ellipsoid(pole, g0 + Vector3(0.0, 9.3, 0.0), Vector3(0.22, 0.22, 0.22))
+	await k.step()
+	m.commit(pole, PoiKit.plain(Color(0.9, 0.88, 0.82), 0.6), "Maypole", true)
+	var tapes: Array[SurfaceTool] = [m.begin(), m.begin(), m.begin(), m.begin()]
+	for i in 12:
+		var a := TAU * float(i) / 12.0 + 0.1
+		var top := g0 + Vector3(sin(a) * 0.65, 8.55, cos(a) * 0.65)
+		var foot := k.on_ground(sin(a) * 2.4, cos(a) * 2.4, 0.25)
+		m.limb(tapes[i % 4], top, foot, 0.03)
+		m.block(tapes[i % 4], Transform3D(Basis(Vector3.UP, a), foot + Vector3(0.0, -0.15, 0.0)), Vector3(0.06, 0.4, 0.06))
+	for i in 4:
+		m.commit(tapes[i], PoiKit.plain(RIBBONS[i], 0.8), "Ribbons%d" % i, true)
+	k.touchable("TroyHeart", g0 + Vector3(face.x, 0.0, face.y) * 1.2 + Vector3(0.0, 1.0, 0.0), "Say a name at the heart of the Troy", "core:dialogue/troy_heart", "", false)
+	k.marker("the_heart", k.on_ground(-face.x * 1.6, -face.y * 1.6))
+	# the Troy-stone at the gate, the rule cut in it
+	var gate := face * (12.2 + 2.2) + side * 1.6
+	var stone := m.begin()
+	_sarsen(d, stone, gate, fy, Vector3(0.9, 1.3, 0.4), 0.0, 0.25)
+	await k.step()
+	m.commit(stone, _sarsen_look(k), "TroyStone")
+	k.touchable("TroyStone", k.on_ground(gate.x + face.x * 0.6, gate.y + face.y * 0.6, 0.9), "Read the Troy-stone", "core:dialogue/troy_stone", "", false)
+	k.marker("the_gate", k.on_ground(gate.x + face.x * 1.6 - side.x * 1.2, gate.y + face.y * 1.6 - side.y * 1.2), true)
+	# Maudie's hut outside the rings, her barrow of clippings and her bench facing the gate
+	var hut_c := face * 15.5 - side * 11.0
+	var hut_face := (face * 14.0 - hut_c).normalized()
+	var fabric := FabricMesh.new()
+	await _builders().LAND._house(d, fabric, _builders().LAND._frame(d, hut_c, hut_face, 4.4, 3.6), 4.4, 3.6, 1)
+	await _builders().LAND._commit_fabric(d, fabric)
+	k.marker("home", k.on_ground(hut_c.x + hut_face.x * 3.0, hut_c.y + hut_face.y * 3.0), true)
+	var barrow := k.prop("wheelbarrow")
+	if barrow != "":
+		var bp := face * 14.5 + side * 6.0
+		k.place(barrow, k.on_ground(bp.x, bp.y), fy + 1.2, 1.0, true)
+	var bench := k.prop("bench")
+	if bench != "":
+		var bp := face * 17.5 + side * 3.5
+		k.place(bench, k.on_ground(bp.x, bp.y), fy + PI, 1.0, true)
+	var thorn := k.tree("hawthorn")
+	if thorn != "":
+		for p in [face * 15.0 + side * 13.0, -face * 16.0 - side * 9.0, -face * 15.0 + side * 12.0]:
+			var q: Vector2 = p
+			await k.step()
+			k.place(thorn, k.on_ground(q.x, q.y), k.rng.randf() * TAU, k.rng.randf_range(0.9, 1.15), true)
+	await _builders().LAND._grass(d, "buttercup", face * 16.0, 5.0, 14)
+	_part_props(d)
+
+
+# --- the Unfinished Figure ---------------------------------------------------------------------------
+
+## The figure's strokes, in metres on the down's face: x across, y up the slope. Each is a polyline;
+## `cut` ones are white chalk, the rest pegs and string. The head is cut too once its face is chosen.
+const FIGURE_CUT := [
+	[[-2.2, 6.0], [-3.4, -1.0], [-5.6, -8.0], [5.6, -8.0], [3.4, -1.0], [2.2, 6.0], [-2.2, 6.0]],
+	[[-2.2, 6.0], [-5.0, 4.6], [-7.2, 2.2]],
+	[[0.0, 6.0], [0.0, 7.2]],
+	[[-1.6, -1.6], [1.6, -1.6]],
+]
+const FIGURE_STRING := [
+	[[2.2, 6.0], [4.6, 8.0], [5.4, 11.2]],
+	[[5.4, 11.2], [5.4, 12.4]],
+]
+
+
+## A woman thirty paces tall cut into the down's face over the Tamwick road, a candle in her raised
+## hand: her skirts and her left arm cut to the white chalk, the candle arm and her face still pegs and
+## string (the face cut, with its eyes, once somebody has said what it was); the lifted turf stacked in
+## the cutters' rows, their barrows, spades and tents at her feet, and the gang's fire.
+static func unfinished_figure(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	# she faces down the slope, toward the road: up the slope is up her body
+	var down := k.downhill()
+	if down == Vector2.ZERO:
+		down = -_facing(k)
+	var up := -down
+	var across := Vector2(up.y, -up.x)
+	var origin := up * 2.0
+	var face_cut := GameState.has_flag("figure_face_cut") or GameState.has_flag("figure_face_from_letter")
+	var chalk := m.begin()
+	var strokes: Array = FIGURE_CUT.duplicate()
+	if face_cut:
+		var ring: Array = []
+		for i in 13:
+			var a := TAU * float(i) / 12.0
+			ring.append([sin(a) * 2.4, 9.6 + cos(a) * 2.6])
+		strokes.append(ring)
+		strokes.append([[-0.9, 10.2], [-0.5, 10.2]])
+		strokes.append([[0.5, 10.2], [0.9, 10.2]])
+		strokes.append_array(FIGURE_STRING)
+	for s in strokes:
+		var pts: Array = s
+		for i in pts.size() - 1:
+			var a2 := origin + across * float(pts[i][0]) + up * float(pts[i][1])
+			var b2 := origin + across * float(pts[i + 1][0]) + up * float(pts[i + 1][1])
+			_flat_stroke(d, chalk, a2, b2, 1.3)
+		await k.step()
+	m.commit(chalk, PoiKit.painted(0, {"base": "#f2efe6", "accent": "#d9d3c4", "grout": "#b9b19c", "unit": 0.6}, 0.6, 0.5), "FigureChalk", true)
+	# pegs and string where she is not cut yet
+	var pegs := m.begin()
+	var twine := m.begin()
+	var pegged: Array = [] if face_cut else FIGURE_STRING.duplicate()
+	if not face_cut:
+		var ring: Array = []
+		for i in 13:
+			var a := TAU * float(i) / 12.0
+			ring.append([sin(a) * 2.4, 9.6 + cos(a) * 2.6])
+		pegged.append(ring)
+	for s in pegged:
+		var pts: Array = s
+		var prev := Vector3.ZERO
+		for i in pts.size():
+			var p2 := origin + across * float(pts[i][0]) + up * float(pts[i][1])
+			var g := k.on_ground(p2.x, p2.y)
+			m.block(pegs, Transform3D(Basis.IDENTITY, g + Vector3(0.0, 0.2, 0.0)), Vector3(0.06, 0.55, 0.06))
+			var top := g + Vector3(0.0, 0.42, 0.0)
+			if i > 0:
+				m.limb(twine, prev, top, 0.012)
+			prev = top
+		await k.step()
+	m.commit(pegs, k.surface("timber", 0.6), "Pegs")
+	m.commit(twine, PoiKit.plain(Color(0.85, 0.82, 0.7), 0.9), "Twine")
+	# the lifted turf in stacks along her hem, and two cut-in-progress strips with the turf half off
+	var turf := m.begin()
+	for i in 6:
+		var p := origin + up * -10.2 + across * (float(i) - 2.5) * 2.2
+		var g := k.on_ground(p.x, p.y)
+		for layer in 3 - (i % 2):
+			m.block(turf, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across) + k.rng.randf_range(-0.1, 0.1)), g + Vector3(0.0, 0.12 + float(layer) * 0.22, 0.0)), Vector3(1.1, 0.2, 0.55))
+		k.collider(Vector3(1.1, 0.7, 0.55), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), g + Vector3(0.0, 0.35, 0.0)), "")
+	await k.step()
+	m.commit(turf, _turf(), "TurfStacks")
+	var yard := origin + up * -14.5
+	var barrow := k.prop("wheelbarrow")
+	if barrow != "":
+		for s in [-1.0, 1.0]:
+			var bp := yard + across * float(s) * 4.5
+			k.place(barrow, k.on_ground(bp.x, bp.y), PoiKit.yaw_of(up) + float(s) * 0.4, 1.0, true)
+	var tent := k.prop("tent")
+	if tent != "":
+		for s in [-1.0, 1.0]:
+			var tp := yard + across * float(s) * 10.0 - up * 2.5
+			await k.step()
+			k.place(tent, k.on_ground(tp.x, tp.y), PoiKit.yaw_of(up) + float(s) * 0.3, 1.0, true)
+	var fire := k.prop("campfire")
+	var fire_at := yard - up * 3.0
+	if fire != "":
+		k.place(fire, k.on_ground(fire_at.x, fire_at.y), 0.0, 1.0, false)
+		k.light(k.on_ground(fire_at.x, fire_at.y, 0.6), Color(1.0, 0.65, 0.35), 1.4, 8.0)
+	var spade := k.prop("pitchfork")
+	if spade != "":
+		var sp := yard + across * 1.5
+		k.place(spade, k.on_ground(sp.x, sp.y), PoiKit.yaw_of(across), 1.0, false)
+	k.marker("home", k.on_ground(yard.x - up.x * 1.5 + across.x * 7.0, yard.y - up.y * 1.5 + across.y * 7.0), true)
+	k.marker("the_hem", k.on_ground(origin.x - up.x * 9.0 + across.x * 2.0, origin.y - up.y * 9.0 + across.y * 2.0), true)
+	k.marker("the_turf", k.on_ground(origin.x - up.x * 11.0 - across.x * 6.0, origin.y - up.y * 11.0 - across.y * 6.0))
+	var head_at := origin + up * 9.6
+	k.touchable("TheFace", k.on_ground(head_at.x, head_at.y, 0.6), "Look at where her face should be", "core:dialogue/figure_face", "", false)
+	k.touchable("CutATurf", k.on_ground(yard.x + across.x * 2.5, yard.y + across.y * 2.5, 0.8), "Lend the cutters a hand", "core:dialogue/figure_cutting", "", false)
+	await _builders().LAND._grass(d, "grass_clump", yard - up * 6.0, 7.0, 14)
+
+
+## A flat stroke of cut chalk on the ground from `a` to `b` (local xz), `w` wide, lying on the down's
+## face in short pieces so it follows the ground.
+static func _flat_stroke(d: PoiDressing, st: SurfaceTool, a: Vector2, b: Vector2, w: float) -> void:
+	var k := d.kit
+	var length := a.distance_to(b)
+	if length < 0.05:
+		return
+	var n := maxi(1, int(ceil(length / 1.6)))
+	for i in n:
+		var p0 := a.lerp(b, float(i) / float(n))
+		var p1 := a.lerp(b, float(i + 1) / float(n))
+		var g0 := k.on_ground(p0.x, p0.y, 0.04)
+		var g1 := k.on_ground(p1.x, p1.y, 0.04)
+		var dir := (g1 - g0).normalized()
+		var x := dir.cross(Vector3.UP).normalized()
+		var y := x.cross(dir).normalized()
+		if y.y < 0.0:
+			y = -y
+			x = -x
+		d.masonry.block(st, Transform3D(Basis(x, y, dir), (g0 + g1) * 0.5), Vector3(w, 0.06, g0.distance_to(g1) + w * 0.6))
+
+
+# --- the Witness Elms --------------------------------------------------------------------------------
+
+## A dead elm into `bark` (and its nests into `nests`): a trunk tapering up to `h`, four or five great
+## limbs going up and out, smaller ones off them, a nest at most forks. Returns perches on its limbs.
+static func _dead_elm(d: PoiDressing, bark: SurfaceTool, nests: SurfaceTool, at: Vector2, h: float) -> Array[Vector3]:
+	var k := d.kit
+	var m := d.masonry
+	var g := k.on_ground(at.x, at.y)
+	var perches: Array[Vector3] = []
+	var lean := Vector3(k.rng.randf_range(-0.6, 0.6), 0.0, k.rng.randf_range(-0.6, 0.6))
+	var fork := g + Vector3(0.0, h * 0.42, 0.0) + lean
+	m.limb(bark, g + Vector3(0.0, -0.4, 0.0), fork, 0.62)
+	k.collider(Vector3(1.1, h * 0.42, 1.1), Transform3D(Basis.IDENTITY, g + Vector3(0.0, h * 0.21, 0.0)), "wood")
+	var limbs := 4 + k.rng.randi_range(0, 1)
+	for i in limbs:
+		var a := TAU * float(i) / float(limbs) + k.rng.randf_range(-0.3, 0.3)
+		var out := Vector3(sin(a), 0.0, cos(a))
+		var mid := fork + out * k.rng.randf_range(1.6, 2.8) + Vector3(0.0, h * k.rng.randf_range(0.22, 0.3), 0.0)
+		var tip := mid + out * k.rng.randf_range(1.2, 2.4) + Vector3(0.0, h * k.rng.randf_range(0.2, 0.3), 0.0)
+		m.limb(bark, fork, mid, 0.34)
+		m.limb(bark, mid, tip, 0.18)
+		for j in 2:
+			var b := TAU * k.rng.randf()
+			var twig := mid + Vector3(sin(b), 0.0, cos(b)) * k.rng.randf_range(1.0, 1.8) + Vector3(0.0, k.rng.randf_range(1.0, 2.2), 0.0)
+			m.limb(bark, mid, twig, 0.08)
+			if j == 0:
+				perches.append(twig + Vector3(0.0, 0.1, 0.0))
+		for c in [mid, tip]:
+			var n: Vector3 = c
+			if k.rng.randf() < 0.85:
+				m.ellipsoid(nests, n + Vector3(0.0, 0.25, 0.0), Vector3(0.55, 0.38, 0.55) * k.rng.randf_range(0.8, 1.2))
+		var t2 := (fork + mid) * 0.5 + Vector3(0.0, 0.3, 0.0)
+		m.ellipsoid(nests, t2, Vector3(0.45, 0.32, 0.45))
+		perches.append(tip + Vector3(0.0, 0.18, 0.0))
+	return perches
+
+
+## Three dead elms on the Brow's bare top, black with rooks' nests; the offering stump at their feet,
+## heaped with buttons and bright things, a fallen limb lying where it came down, the rook-wife's hut,
+## and the rooks of the Vale going in and out.
+static func witness_elms(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var face := _facing(k)
+	var side := Vector2(face.y, -face.x)
+	var fy := PoiKit.yaw_of(face)
+	var bark := m.begin()
+	var nests := m.begin()
+	var perches: Array[Vector3] = []
+	var spots: Array[Vector2] = [-face * 4.0 - side * 5.0, -face * 6.5 + side * 4.5, face * 2.0 + side * 0.5]
+	var tall := [19.0, 16.5, 14.0]
+	for i in 3:
+		perches.append_array(_dead_elm(d, bark, nests, spots[i], float(tall[i])))
+		await k.step()
+	m.commit(bark, PoiKit.painted(3, {"base": "#4e4a44", "accent": "#36332e", "grout": "#222019"}, 0.7, 0.8), "DeadElms", true)
+	m.commit(nests, _matte(Color(0.12, 0.1, 0.08)), "Nests", true)
+	# the fallen limb, lying in the grass where the winter brought it down
+	var fallen := m.begin()
+	var f0 := k.on_ground(-face.x * 1.0 + side.x * 8.0, -face.y * 1.0 + side.y * 8.0, 0.3)
+	var f1 := k.on_ground(face.x * 3.5 + side.x * 12.5, face.y * 3.5 + side.y * 12.5, 0.2)
+	m.limb(fallen, f0, f1, 0.32)
+	m.limb(fallen, f0.lerp(f1, 0.5), f0.lerp(f1, 0.5) + Vector3(side.x, 0.0, side.y) * 1.5 + Vector3(0.0, 1.0, 0.0), 0.1)
+	k.collider(Vector3(0.6, 0.6, f0.distance_to(f1)), Transform3D(Basis(Vector3.UP, atan2(f1.x - f0.x, f1.z - f0.z)), (f0 + f1) * 0.5), "wood")
+	await k.step()
+	m.commit(fallen, PoiKit.painted(3, {"base": "#4e4a44", "accent": "#36332e", "grout": "#222019"}, 0.7, 0.8), "FallenLimb")
+	# the offering stump: a sawn elm bole, its top heaped with bright things
+	var stump_at := face * 6.0 - side * 1.5
+	var sg := k.on_ground(stump_at.x, stump_at.y)
+	var stump := m.begin()
+	m.drum(stump, Transform3D(Basis.IDENTITY, sg + Vector3(0.0, -0.2, 0.0)), 0.7, 1.1, 0.0, NAN, true, 0.3)
+	await k.step()
+	m.commit(stump, PoiKit.painted(3, {"base": "#6b5a44", "accent": "#4e4232", "grout": "#2e271d"}, 0.7, 0.8), "OfferingStump")
+	var bright := m.begin()
+	for i in 14:
+		var a := k.rng.randf() * TAU
+		var r := sqrt(k.rng.randf()) * 0.5
+		m.block(bright, Transform3D(Basis(Vector3.UP, a), sg + Vector3(sin(a) * r, 0.92, cos(a) * r)), Vector3(0.06, 0.02, 0.06))
+	m.commit(bright, PoiKit.plain(Color(0.78, 0.62, 0.3), 0.3, 0.9), "BrightThings")
+	k.touchable("OfferingStump", sg + Vector3(face.x, 0.0, face.y) * 0.8 + Vector3(0.0, 0.9, 0.0), "Leave the rooks something bright", "core:dialogue/witness_stump", "", false)
+	k.marker("the_stump", k.on_ground(stump_at.x + face.x * 1.6 + side.x * 1.0, stump_at.y + face.y * 1.6 + side.y * 1.0), true)
+	# Hester Corvey's hut at the edge of the elms' shade
+	var hut_c := face * 12.0 + side * 11.0
+	var hut_face := (Vector2.ZERO - hut_c).normalized()
+	var fabric := FabricMesh.new()
+	await _builders().LAND._house(d, fabric, _builders().LAND._frame(d, hut_c, hut_face, 4.2, 3.4), 4.2, 3.4, 1)
+	await _builders().LAND._commit_fabric(d, fabric)
+	k.marker("home", k.on_ground(hut_c.x + hut_face.x * 2.9, hut_c.y + hut_face.y * 2.9), true)
+	var stool := k.prop("stool")
+	if stool != "":
+		var sp := stump_at + face * 1.4 + side * 1.2
+		k.place(stool, k.on_ground(sp.x, sp.y), fy + PI, 1.0, false)
+	_crows(d, perches, k.on_ground(0.0, 0.0, 18.0), mini(8, perches.size()))
+	await _builders().LAND._grass(d, "grass_clump", face * 9.0, 8.0, 18)
+	await _builders().LAND._grass(d, "meadow_grass", -face * 12.0, 6.0, 10)
+	_part_props(d)

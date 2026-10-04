@@ -4693,6 +4693,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/tamwick_troy",
+        "quests": [],
+        "finds": [
+          "core:item/troy_book"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/tappers_camp",
         "quests": [],
         "finds": [
@@ -5279,6 +5288,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/unfinished_figure",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/unfinished_figure"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/unroofed_hold",
         "quests": [],
         "finds": [
@@ -5649,6 +5667,15 @@
         "quests": [],
         "finds": [
           "core:item/wayside_withy_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/witness_elms",
+        "quests": [],
+        "finds": [
+          "core:item/court_of_rooks"
         ],
         "encounters": [],
         "hearthstone": false

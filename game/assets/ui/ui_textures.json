@@ -1851,6 +1851,27 @@
     48,
     48
    ]
+  },
+  "figure_cutting": {
+   "file": "markers/figure_cutting.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "rookery": {
+   "file": "markers/rookery.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "turf_maze": {
+   "file": "markers/turf_maze.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1992,6 +2013,7 @@
   "dovecote",
   "edge",
   "farmstead",
+  "figure_cutting",
   "fold",
   "fort",
   "giant_bones",
@@ -2012,6 +2034,7 @@
   "quarry",
   "quest_area",
   "reticle",
+  "rookery",
   "ruin_village",
   "ruins",
   "scarecrow_moot",
@@ -2024,6 +2047,7 @@
   "tally_post",
   "tower",
   "town",
+  "turf_maze",
   "village",
   "vista",
   "walled_camp",
