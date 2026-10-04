@@ -16779,3 +16779,66 @@ All four views are inside the 2,000 draw and 1.5 M budget.
 - The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
   what is streamed, so on Low a far corner cell can still go at 700-900 m.
 - Forward+ was not looked at.
+
+
+## Polish, fourth pass: the Windthrow's trunk, every boss room from its door, Briarwold grass a herb, the Pilgrim's Ash lane (polish4, 2026-10-04)
+
+Sheet: `docs/review/sites/boss_rooms_and_windthrow_trunk.jpg` (Compatibility, w4096k): the
+Windthrow's trunk at 13:00, clear (flank and break, the same views as the last sheet), and the boss
+rooms of the Kilnway (lava tube), the Wake Barrow crypt and Hound's Swallet (cave) from their doors,
+as `site_review`'s new `99_boss_door` shot.
+
+**The Windthrow's trunk** (`briarwold.gd` `_bark_look`, `_bark_bole`; new
+`assets/shaders/fallen_bark.gdshader`).
+- Causes: the bark was the oak's picture times one flat tint, even and pale in the sun; the moss was
+  the bark's own picture darkened toward green by vertex colour, so it was the bark's darkness; and
+  the world's ambient under a log at 13:00 is a small part of its sun, so the stubs' shadows on the
+  bole (the "black wedges": each sits under a stub, the shape of its shadow down the curved flank)
+  and the underside were black. The stubs' normals are not inverted (their winding is the bole's).
+- Fix: a shader for the bole, its stubs and the crown's limbs. Vertex colours become data (shade,
+  heartwood, jitter, moss). The bark is darker (tint 0.47) and broken up by noise over the log
+  (reaches of 5 m, blotches of 1 m, grey weathered patches). The moss is the oak's moss picture in
+  its own colour, laid from above, in drifts. Every face takes 0.14 of the sun's light whatever its
+  shadow and facing (the bounce off the ground and the sky; `light()`, Lambert otherwise). The
+  stubs are longer (2.6-5 m).
+- Seen: the bark reads darker and varied; the shadows and the underside dark brown, not black; the
+  break's heartwood pale. **Not right yet:** the moss is too bright a green and striped (the oak's
+  moss picture has strong leaf bands, and at 1.8 m it repeats in bands across the top); it covers
+  nearly all the top. The stubs on the flank seen from below are their broken ends end-on, so they
+  still read as pegs rather than branches. Next: a flat moss colour with the picture's luminance at
+  low contrast and a finer repeat, a moss threshold higher, and stubs angled more along the bole.
+  No render was taken after these were seen (one re-check only).
+- The new shader is not in the export's warm set: run `material_census` so it bakes.
+- Cost: 1253 / 1155 draws, 1.31 / 1.25 M primitives (unchanged).
+
+**Every boss room from its door** (`site_dress.gd` `_arena_light`, `site_plan.gd`, `site_interior.gd`).
+- Cause: a boss's room is lit by four braziers (or lava vents) round the middle of a huge room and a
+  cool fill. On the lava tube's black rock the walls and far side got nothing back from the door
+  (14% lit by the test's reading), and a basalt stack 2 m inside the door hid most of the rest.
+- Fix: an `ArenaLight` over the middle (attenuation 0.6, to the walls and the door) and an
+  `ArenaLightDoor` just inside the door (to the near walls and the faces turned to the player), in
+  the kind's colour, each set by the rock's brightness (`ARENA_GIVE_BACK` 0.06; at 0.12 pale rock
+  read bleached). Nothing stands within 4 m of a boss's doorway (2.6 m elsewhere).
+- Test: `test_every_site_boss_room_is_lit_from_its_door` reads every site's boss room from the
+  player's camera in its doorway as the arrival test reads the first room, 70% lit wanted, every kind
+  (the bandit cave from a stand-in). Without the two lights: the Kilnway 14%, Hum Stone Throat 46%,
+  Hound's Swallet 47%. With them: 89-100%, the Kilnway 97%.
+- Seen: the Kilnway's arena reads in its own red, pillars, boss and far wall; the crypt and the cave
+  read to their far walls. The passage walls behind the door take some of the door light (bright in
+  the crypt's pale stone).
+
+**Briarwold grass a herb** (`world_streamer.gd` `asset_kind`): "briar" matched the region's own name.
+The kind now reads the file's own name past its region's prefix, a word at a time. Of the 20
+Briarwold flora assets the three briar vines are bushes, the rest herbs (new test in
+test_world_streamer). test_ground_cover's "bush" was the bracken, a bush only by the bug: now the
+briar vine. test_ground_cover, test_scatter_lod, test_world_streamer, test_objects_seated_briarwold
+pass (Briarwold findings at baseline).
+
+**The Pilgrim's Ash-Bramcombe lane** (`atlas.json`): its first waypoint [380, 2980] lay 28 m past the
+Wake Barrow track's bend, so the lane hairpinned back beside the track (two partings, no post). Now
+[362, 2954], on the track's bend. test_atlas and test_roads pass; test_signposts fails on those two
+partings until the next build. **After the build:** test_signposts' "every parting has a fingerpost"
+passes; the lane leaves Pilgrim's Ash on the track's line with no out-and-back near (370, 2960)
+(roads.json); the fingerpost at the Wake Barrow fork (~(586, 2881)) still names Bramcombe;
+test_roads' graded/carve tests pass.
+

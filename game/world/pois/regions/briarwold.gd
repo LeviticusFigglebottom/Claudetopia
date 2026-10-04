@@ -270,32 +270,38 @@ static func _bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: float,
 
 
 ## The Greatwood oak's own bark, as the forge painted it for the giant oaks (albedo, normal, ORM),
-## for a bole drawn by _bark_bole: its UVs run the furrows along the log. Its vertex colours darken
-## it and lay the moss on (green on the upper side), so `tint` is the bark's colour as a multiplier.
+## for a bole drawn by _bark_bole: its UVs run the furrows along the log. Drawn by
+## fallen_bark.gdshader, which reads _bark_bole's vertex colours as data (the bark's shade, the
+## heartwood, a jitter, the moss) and breaks the bark's tone up over the log; the moss on top is
+## the oak's moss picture in its own colour. `tint` is the bark's colour as a multiplier.
 const OAK_BARK := "res://assets/models/trees/_species/briarwold_giant_oak/briarwold_giant_oak_bark_%s.png"
+const OAK_MOSS := "res://assets/models/trees/_species/briarwold_giant_oak/briarwold_giant_oak_moss_%s.png"
+const FALLEN_BARK := preload("res://assets/shaders/fallen_bark.gdshader")
 
 
-static func _bark_look(tint := Color(0.64, 0.6, 0.57)) -> BaseMaterial3D:
-	var mat := ORMMaterial3D.new()
-	if ResourceLoader.exists(OAK_BARK % "albedo"):
-		mat.albedo_texture = load(OAK_BARK % "albedo")
-		mat.normal_enabled = true
-		mat.normal_texture = load(OAK_BARK % "normal")
-		mat.normal_scale = 1.4
-		mat.orm_texture = load(OAK_BARK % "orm")
-	else:
-		tint *= Color(0.36, 0.31, 0.25)
-	mat.albedo_color = tint
-	mat.vertex_color_use_as_albedo = true
+static func _bark_look(tint := Color(0.55, 0.5, 0.46)) -> Material:
+	if not ResourceLoader.exists(OAK_BARK % "albedo"):
+		var plain := StandardMaterial3D.new()
+		plain.albedo_color = tint * Color(0.36, 0.31, 0.25)
+		return plain
+	var mat := ShaderMaterial.new()
+	mat.shader = FALLEN_BARK
+	mat.set_shader_parameter("bark_albedo", load(OAK_BARK % "albedo"))
+	mat.set_shader_parameter("bark_normal", load(OAK_BARK % "normal"))
+	mat.set_shader_parameter("bark_orm", load(OAK_BARK % "orm"))
+	if ResourceLoader.exists(OAK_MOSS % "albedo"):
+		mat.set_shader_parameter("moss_albedo", load(OAK_MOSS % "albedo"))
+		mat.set_shader_parameter("moss_normal", load(OAK_MOSS % "normal"))
+	mat.set_shader_parameter("bark_tint", Color(tint.r, tint.g, tint.b))
 	return mat
 
 
-## Wood's colours as multipliers of the bark (vertex colours, _bark_look): the bark, wet and dark
-## where it lies near the ground; moss on its upper side; the pale wood of a break.
-const BARK_TINT := Color(1.0, 1.0, 1.0)
-const BARK_WET := Color(0.66, 0.64, 0.62)
-const BARK_MOSS := Color(0.62, 1.18, 0.34)
-const BARK_HEART := Color(1.6, 1.4, 1.1)
+## _bark_bole's vertex colours (fallen_bark.gdshader reads them as data): r the bark's shade, dry
+## or wet and dark where it lies near the ground; g the heartwood of a break; b a jitter (x 1.1);
+## a the moss on its upper side.
+const BARK_DRY := Color(1.0, 0.0, 0.91, 0.0)
+const BARK_WET := Color(0.7, 0.0, 0.91, 0.0)
+const BARK_HEART := Color(1.0, 1.0, 0.91, 0.0)
 
 
 ## A log like _bole, but barked (UVs for _bark_look, the oak's furrows along it, `tile` m a repeat
@@ -345,10 +351,9 @@ static func _bark_bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: f
 			# moss on the upper side, in drifts; the underside dark and wet
 			var up := (x * cos(ang) + z * sin(ang)).dot(Vector3.UP)
 			var drift := 0.5 * sin(ang * 3.0 + t * 11.0 + phase2) * sin(t * 17.0 - ang * 2.0 + phase)
-			var c := BARK_TINT.lerp(BARK_WET, clampf(-up * 1.4 - 0.2, 0.0, 1.0))
-			c = c.lerp(BARK_MOSS, moss * smoothstep(0.05, 0.55, up + drift * 0.6))
-			c *= rng.randf_range(0.92, 1.05)
-			c.a = 1.0
+			var c := BARK_DRY.lerp(BARK_WET, clampf(-up * 1.4 - 0.2, 0.0, 1.0))
+			c.b = rng.randf_range(0.92, 1.05) / 1.1
+			c.a = clampf(moss * smoothstep(0.05, 0.55, up + drift * 0.6), 0.0, 1.0)
 			crow.append(c)
 		pts.append(row)
 		cols.append(crow)
@@ -403,8 +408,8 @@ static func _bark_bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: f
 		var j1 := (j + 1) % segs
 		var u0 := around * float(j) / float(segs)
 		var u1 := around * float(j + 1) / float(segs)
-		var re0 := [ring_end[j], Vector2(u0, length / vlen), BARK_TINT]
-		var re1 := [ring_end[j1], Vector2(u1, length / vlen), BARK_TINT]
+		var re0 := [ring_end[j], Vector2(u0, length / vlen), BARK_DRY]
+		var re1 := [ring_end[j1], Vector2(u1, length / vlen), BARK_DRY]
 		var m0 := [mid[j], Vector2(u0, mid_v[j]), BARK_HEART]
 		var m1 := [mid[j1], Vector2(u1, mid_v[j1]), BARK_HEART]
 		var sp := [spike, Vector2((u0 + u1) * 0.5, (length + spike_reach) / vlen), BARK_HEART]
@@ -702,7 +707,7 @@ static func windthrow(d: PoiDressing) -> void:
 		if j == 3:
 			_bark_bole(bole, root_at - dir * 1.0, root_at + dir * 11.0, 1.0, 0.45, k.rng, 14, 8, true, 0.6, 1.2, 0.4)
 		else:
-			_stub(bole, root_at, dir, k.rng.randf_range(1.8, 4.0), k.rng.randf_range(0.4, 0.85), k.rng)
+			_stub(bole, root_at, dir, k.rng.randf_range(2.6, 5.0), k.rng.randf_range(0.45, 0.9), k.rng)
 	await k.step()
 	m.commit(bole, _bark_look(), "Bole", true)
 	if k.far:
