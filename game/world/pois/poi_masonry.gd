@@ -115,6 +115,9 @@ func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
 ## A capsule's mesh, made once for each radius and length to the centimetre: a beacon's cage is
 ## forty bars of two sizes, and making each afresh was most of what a tower cost (TRIAGE item 36).
 static var _capsules: Dictionary = {}
+## Under these radii a limb is drawn coarser (`_capsule`).
+const THIN_LIMB_M := 0.075
+const SLENDER_LIMB_M := 0.2
 
 
 static func _capsule(r: float, length: float) -> ArrayMesh:
@@ -124,8 +127,16 @@ static func _capsule(r: float, length: float) -> ArrayMesh:
 	var capsule := CapsuleMesh.new()
 	capsule.radius = float(key.x) / 100.0
 	capsule.height = float(key.y) / 100.0 + capsule.radius * 2.0
-	capsule.radial_segments = 14
-	capsule.rings = 5
+	# a limb no thicker than a thumb's breadth (a taken hart's tines on their poles, hair-roots, a
+	# nest's sticks) on six sides and two rings: the full 14 x 5 was 364 triangles a twig, and
+	# Tinehold's forty-odd tine-tips on their poles, drawn again into each of the sun's cascades,
+	# were 0.28 M primitives of a 1.57 M frame. Six sides on a 6 cm stick are not seen as sides.
+	# An arm's thickness (most of a root plate's roots) takes ten sides and three rings, half the
+	# triangles: the Windthrow's 300-odd root pieces were 0.1 M triangles before the sun's passes.
+	var thin := capsule.radius < THIN_LIMB_M
+	var slender := capsule.radius < SLENDER_LIMB_M
+	capsule.radial_segments = 6 if thin else (10 if slender else 14)
+	capsule.rings = 2 if thin else (3 if slender else 5)
 	var made := unindexed(capsule)
 	if _capsules.size() > 4096:
 		_capsules.clear()
