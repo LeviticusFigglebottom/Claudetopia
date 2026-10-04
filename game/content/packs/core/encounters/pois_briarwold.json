@@ -857,5 +857,19 @@
         "at": "the_tally"
       }
     ]
+  },
+  {
+    "id": "core:encounter/the_thornwell",
+    "place": "core:poi/the_thornwell",
+    "notes": "Thornhounds up out of the well's stair after dark.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/thornhound",
+        "count": 2,
+        "when": "night",
+        "at": "the_stair_head",
+        "spread": 2.5
+      }
+    ]
   }
 ]

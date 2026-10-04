@@ -1556,5 +1556,224 @@
         "next": "end"
       }
     }
+  },
+  {
+    "id": "core:dialogue/edda_layward",
+    "speaker_name": "Edda Layward",
+    "notes": "The Layer at the Thornwell (novel places, Briarwold; large site). Gives core:quest/what_the_builders_planted and hears what is done with the seed-stone.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Edda Layward",
+        "text": "*She does not stop cutting.* — Stand clear of the stack. It moves at night. — Edda. Layward. From the Ring. I lay the Briar on the rim, or I did. Now I cut it here, where it's no business being.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Edda Layward",
+        "text": "The Builders' well. Black stone, no joints, a stair going down. Nobody knew it was under the moss. This spring the ground split and the thorn came up out of it, the Briar's own root, three miles inside the wall. — I cut it back every day. Every morning it's higher than I cut it.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Edda Layward",
+        "text": "Laying. You cut the thorn half through at the foot and bend it over and stake it down, and it grows along the ground instead of up, thick, into a wall. That's what the Briar is: laid thorn, two hundred miles of it. The Builders laid it. We keep it laid. — This I can't lay. It won't bend.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Edda Layward",
+        "text": "Odo and Ferris went down the stair a fortnight back, with lanterns. Ferris's lantern's at the bottom of the stair still, I can see it. — At night, you can hear it. Stone, walking on stone. Slow. Round and round.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Edda Layward",
+        "text": "*The bill-hook goes in and out of the thorn without catching.* — Well?",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What does a Layer do?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's at the bottom?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll go down the well and find what's walking.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_builders_planted"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_builders_planted"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The stone thing at the bottom is down. It was holding this.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_builders_planted",
+                  "the_seed_stone"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Edda Layward",
+        "text": "Mind the stack.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Edda Layward",
+        "text": "*She stops cutting for the first time.* — You would. — Take a light. Take a blade that'll cut thorn. Odo had the tally-board; if it's down there, read it, he wrote down what he found. — Whatever's walking, it's keeping something. Bring me word what.",
+        "choices": [
+          {
+            "text": "I'll go down.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_builders_planted"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Edda Layward",
+        "text": "The stair's inside the ring. The thorn comes down it; go with the grain or it'll have you.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Edda Layward",
+        "text": "*She takes the seed-stone in both gauntlets and the cut thorn in the stack beside her shifts toward it, all of it, like grass in a wind.* — Builders' work. They fed the wall from here. A thousand years, and this is the last of them, and the wall's failing in the south. — *She looks at you.* — Odo's board says don't take the last one unless you know what it's for. Now we know. You brought it up. You say.",
+        "choices": [
+          {
+            "text": "Put it back in the Keeper's hands. Let the well feed the wall, thorn and all.",
+            "next": "q_back",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "set_it_back"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Take it to the Standing Moot. The stones there will know what the Builders meant.",
+            "next": "q_moot",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "to_the_moot"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Lay it in the Layers' Ring, and lay the thorn here down over it, the old way.",
+            "next": "q_ring",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "to_the_ring"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_back": {
+        "speaker": "Edda Layward",
+        "text": "Then the well keeps feeding, and the thorn keeps coming up here, and the wall in the south gets what it's owed. — I'll cut a path round it. The Hollow can learn to live with a hedge in its wood. It's lived with worse.",
+        "next": "hub"
+      },
+      "q_moot": {
+        "speaker": "Edda Layward",
+        "text": "The Moot. *She nods slowly.* — The stones hum when you stand in the middle. Maybe this is what they're humming about. — Carry it careful. It'll pull toward the thorn the whole way.",
+        "next": "hub"
+      },
+      "q_ring": {
+        "speaker": "Edda Layward",
+        "text": "*Something like a smile.* — Laid the old way. Cut half through and bent down and staked. It'll grow along the ground and not up, and the Ring will keep it. — That's not what the Builders meant. It's what we'd mean. Good.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/what_the_builders_planted"
+          }
+        ],
+        "text": "It's stopped growing up. Whatever you did. — It's growing along, now. Like it should."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/thornwell_cairn",
+    "speaker_name": "The layers' cairn",
+    "notes": "The Thornwell's hook (site hook cairn by the well-head): starts core:quest/what_the_builders_planted for whoever has not had it from Edda Layward.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The layers' cairn",
+        "no_talk": true,
+        "text": "A cairn of the Builders' black stone, broken off the well's rim, with a note under the top one in a layer's square hand: ODO AND FERRIS DOWN THE STAIR, 3RD DAY. IF YOU ARE GOING DOWN, GO WITH THE GRAIN OF THE THORN. IF YOU ARE COMING UP, TELL EDDA WHAT IS WALKING. — From the ring of black stone behind it comes, very faintly, the sound of stone set down on stone.",
+        "choices": [
+          {
+            "text": "Go down the well and find out what is walking.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_builders_planted"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_builders_planted"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_builders_planted"
+              }
+            ]
+          },
+          {
+            "text": "Leave the cairn.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The layers' cairn",
+        "text": "The thorn over the well-head creaks in no wind.",
+        "next": "end"
+      }
+    }
   }
 ]

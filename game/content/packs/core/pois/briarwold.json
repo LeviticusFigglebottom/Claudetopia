@@ -1770,7 +1770,11 @@
     "story": "The Woodfolk's post. You tie a letter on the Letter Oak's threads with the name on the outside, and whoever passes going that way takes it on, and nobody reads what is not theirs. Most letters go in a week. Some hang a year. One has hung twenty, gone brown as a leaf, with a hart-and-spear seal on it and a name nobody on the Elderhold road would carry it to: Wystan Tine.",
     "encounter": "nobody keeps it; travellers stop to look for their names on the threads",
     "hook": "There's a letter on the Letter Oak that's hung there twenty years with a Hart-Knight's seal on it, and every carrier on the Elderhold road has read the name and left it.",
-    "wayside": false
+    "wayside": false,
+    "site": {
+      "hook": "core:dialogue/letter_oak_threads",
+      "hook_prompt": "Look for letters going your way"
+    }
   },
   {
     "id": "core:poi/pannage_pound",
@@ -1791,5 +1795,32 @@
     "encounter": "Dunstan Agar at the gate by day, the pigs rooting, and thornhounds over the bank after dark for the pigs",
     "hook": "Dunstan Agar's pannage count at the Lower Wold pound has been one short every morning this week, and he says it is not the pigs who can't count.",
     "wayside": false
+  },
+  {
+    "id": "core:poi/the_thornwell",
+    "name": "The Thornwell",
+    "region": "core:region/briarwold",
+    "kind": "delve",
+    "position": [
+      2596,
+      84
+    ],
+    "radius_m": 30,
+    "pad_radius_m": 38,
+    "pad_shape": "level",
+    "glade_m": 70,
+    "glade_approach_m": 20,
+    "hearthstone": false,
+    "builder": "thornwell",
+    "unique_feature": "a well-head of the Builders' black fused stone in the middle of the Greatwood, a ring fourteen paces across with a stair going down inside it, and out of it the Briar's own root burst up into the air in a crown of thorn arches thicker than a man and higher than the oaks, the only thorn in the Wold three miles from the wall; the Layers' cut-thorn stacked round it, their camp at its edge",
+    "visible_from": [],
+    "story": "The Woodfolk say the Builders grew the Briar to keep the Hush in the south, and nobody has ever asked how a hedge two hundred miles long is fed. The Thornwell answers it. In the spring the ground in the Greatwood's middle split, and the thorn came up out of a ring of the Builders' black stone that nobody knew was under the moss: a well, its stair going down, and the root of the Briar coming up it, three miles inside the wall. The Layers, who lay the thorn on the rim, came and cut it back, and it came up again overnight higher than they had cut it. Something at the bottom of the well is feeding it, or keeping it, and it has started to walk.",
+    "encounter": "thornhounds come up out of the well's stair after dark; inside, the Builders' halls under the Greatwood, thorn in every passage, weavers and thornhounds, a Warden grown in the crown hall, and at the bottom the Well-Keeper, a Builders' stone figure the root has grown through and stood up",
+    "hook": "Edda Layward has camped at the edge of the Thornwell for a month cutting the thorn back, and it comes up higher every night, and she says she has heard stone walking at the bottom of the well.",
+    "site": {
+      "interior": "core:interior/the_thornwell",
+      "hook": "core:dialogue/thornwell_cairn",
+      "hook_prompt": "Read the note under the layers' cairn"
+    }
   }
 ]

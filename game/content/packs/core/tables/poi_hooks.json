@@ -5005,6 +5005,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_thornwell",
+        "quests": [
+          "core:quest/what_the_builders_planted"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_thornwell"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_thousand_post",
         "quests": [],
         "finds": [

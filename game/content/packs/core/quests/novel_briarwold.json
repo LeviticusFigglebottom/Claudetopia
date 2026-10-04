@@ -614,5 +614,137 @@
         ]
       ]
     }
+  },
+  {
+    "id": "core:quest/what_the_builders_planted",
+    "name": "What the Builders Planted",
+    "layer": "side",
+    "giver": "core:npc/edda_layward",
+    "region": "core:region/briarwold",
+    "offer": "Something at the bottom of the Builders' well is keeping the thorn.",
+    "summary": "In the spring the Briar's root burst up out of a well of the Builders' black stone in the middle of the Greatwood, three miles inside the wall. Edda Layward of the Layers' Ring cuts it back every day and it grows higher every night. Two of her crew went down the well and did not come up.",
+    "notes": "The Thornwell (novel places, Briarwold; second large site): Edda Layward at the well-head, or the layers' cairn, starts it; the Well-Keeper (stone thrall, the root through it) is the boss and drops the Builders' seed-stone; the decision is Edda's. Leads out to the Standing Moot or the Layers' Ring by its choice.",
+    "stages": [
+      {
+        "id": "down_the_well",
+        "journal": "Edda Layward cannot cut the Thornwell's thorn back faster than it grows, and something walking at the bottom of the Builders' well is keeping it.\nTwo of her crew, Odo and Ferris, went down the stair inside the black ring a fortnight ago. Odo carried the layers' tally-board; whatever he found, he would have written down.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_thornwell",
+            "count": 1,
+            "text": "Go to the Thornwell in the Greatwood"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/the_well_keeper",
+            "count": 1,
+            "where": "core:interior/the_thornwell",
+            "text": "Find what walks at the bottom of the well"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_thornwell",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_seed_stone",
+        "journal": "The Well-Keeper at the bottom of the Thornwell held the Builders' last seed-stone, and Edda Layward should be the one to hear what it is.\nThe Builders' channels all run to the feeding-hall, where the root goes down. The Keeper was feeding the wall, and the wall is failing in the south.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/builders_seed_stone",
+            "count": 1,
+            "text": "Take the seed-stone from the Well-Keeper"
+          },
+          {
+            "type": "choice",
+            "target": "the_seed_stone",
+            "with": "core:npc/edda_layward",
+            "text": "Bring the seed-stone to Edda Layward at the well-head",
+            "options": [
+              {
+                "id": "set_it_back",
+                "text": "Put it back, and let the well feed the wall.",
+                "effects": [
+                  {
+                    "take_item": "core:item/builders_seed_stone"
+                  },
+                  {
+                    "set_flag": "thornwell_fed"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      4
+                    ]
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              },
+              {
+                "id": "to_the_moot",
+                "text": "Take it to the Standing Moot.",
+                "effects": [
+                  {
+                    "take_item": "core:item/builders_seed_stone"
+                  },
+                  {
+                    "set_flag": "thornwell_to_moot"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      6
+                    ]
+                  },
+                  {
+                    "renown": 10
+                  }
+                ]
+              },
+              {
+                "id": "to_the_ring",
+                "text": "Lay it in the Layers' Ring, and lay the thorn here the old way.",
+                "effects": [
+                  {
+                    "take_item": "core:item/builders_seed_stone"
+                  },
+                  {
+                    "set_flag": "thornwell_laid"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      8
+                    ]
+                  },
+                  {
+                    "morality": 2
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_thornwell",
+          "radius": 70
+        }
+      },
+      {
+        "id": "planted",
+        "journal": "The Builders' last seed-stone has gone where it was given, and the thorn at the Thornwell has stopped climbing.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 120,
+      "renown": 15
+    }
   }
 ]

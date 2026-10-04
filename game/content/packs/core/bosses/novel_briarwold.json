@@ -99,5 +99,68 @@
       "person",
       "boss"
     ]
+  },
+  {
+    "id": "core:boss/the_well_keeper",
+    "extends": "core:enemy/stone_thrall",
+    "name": "The Well-Keeper",
+    "archetype": "boss",
+    "arena": "core:poi/the_thornwell",
+    "region": "core:region/briarwold",
+    "faction": "unquiet",
+    "tint": "#3d3b44",
+    "scale": 2.6,
+    "height": 5.0,
+    "resists": {
+      "pierce": 0.3,
+      "slash": 0.2,
+      "blunt": -0.2,
+      "fire": -0.25
+    },
+    "lore": "A figure of the Builders' black stone, set at the bottom of the Thornwell to keep the feeding of the Briar, and kept still for a thousand years with its seed-stone in its hands. When the root came up the well this spring it went through the figure's chest, and the figure stood up. The Layers say it is not angry. It is doing what it was set to do, which is keep the well, and it does not know who anybody is any more.",
+    "stats": {
+      "hp": 720,
+      "stamina": 220,
+      "poise": 160,
+      "armour": 16,
+      "speed": 2.2
+    },
+    "behaviour": {
+      "engage_range": 3.6,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 50.0,
+      "hyper_armour": 30.0,
+      "aggression": 0.85
+    },
+    "phases": [
+      {
+        "name": "the keeper",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "the root",
+        "hp": 0.5,
+        "aggression": 1.0,
+        "speed": 2.6,
+        "hyper_armour": 36.0,
+        "say": "The root in its chest pulls taut and the whole hall creaks, and thorn comes up out of the channels in the floor all round you, and the figure leans into it like a man leaning into wind."
+      }
+    ],
+    "marks": [
+      200,
+      340
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/builders_seed_stone"
+    ],
+    "tags": [
+      "unquiet",
+      "stone",
+      "boss"
+    ]
   }
 ]

@@ -90,5 +90,18 @@
       "briarwold",
       "beasts"
     ]
+  },
+  {
+    "id": "core:rumour/the_thornwell",
+    "name": "Thorn in the Greatwood",
+    "tone": "strange",
+    "text": "There's thorn in the Greatwood. The Briar's own, three miles inside the wall, come up out of a hole of the Builders' black stone in the spring, and it's higher than the oaks now. The Layers are cutting it. It's winning.",
+    "variants": [
+      "Edda Layward's camped at the Builders' well a month. Says she hears stone walking at the bottom of it."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
   }
 ]

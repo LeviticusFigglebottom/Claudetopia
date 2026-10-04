@@ -312,5 +312,19 @@
     ],
     "description": "A pannage count on a slate by the gate.",
     "reads": "core:book/agars_count"
+  },
+  {
+    "id": "core:item/builders_seed_stone",
+    "name": "The Builders' Seed-Stone",
+    "category": "misc",
+    "weight": 2.0,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A stone the size of two fists, dark green, smooth as an egg and warm to the hand, with fine channels cut in it that all run the same way. The Well-Keeper held it at the bottom of the Thornwell. Thorn shoots grow toward it if you set it down."
   }
 ]

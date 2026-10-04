@@ -125,5 +125,119 @@
         }
       ]
     }
+  },
+  {
+    "id": "core:interior/the_thornwell",
+    "name": "The Thornwell",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_thornwell",
+    "danger": 3,
+    "formed_by": "the Builders",
+    "resident": "thornhounds and weavers among the thorn, a Warden grown in the crown hall, and the Well-Keeper at the bottom: a Builders' stone figure with the Briar's root grown through it, walking",
+    "story": "Halls of the Builders' black stone, square and seamless, going down under the Greatwood: channels cut in their floors that run downhill toward the middle, as if water was meant to go that way and did not; a room of niches with seed-stones in them, dark green, warm to the hand; and at the bottom a round hall where the root of the Briar goes down into the floor and a stone figure stands with the root through its chest, holding the last seed-stone in its hands.",
+    "unique_object": "the feeding-hall at the bottom: the Briar's root going down through a hole in the floor into the dark, and the Builders' channels running into the same hole from every side",
+    "site": {
+      "kind": "ruined_hall",
+      "seed": 1093,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/the_well_keeper",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/thornhound",
+          "core:enemy/weaver"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/warden"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#34333a",
+          "#1f1e24",
+          "#4a4852"
+        ],
+        "lights": [
+          "daylight",
+          "fungus"
+        ],
+        "light_colour": "#9fe08a"
+      },
+      "features": [
+        {
+          "kind": "note",
+          "room": "the_niches",
+          "book": "core:book/the_seed_niches",
+          "name": "a layer's tally-board"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_first_layers",
+          "name": "a Builders' tablet, and a layer's rubbing of it"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "the_stair_foot",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the foot of the well's stair, the thorn coming down it"
+        },
+        {
+          "id": "the_channels",
+          "role": "passage",
+          "size": "small",
+          "note": "channels cut in the floor, running inward"
+        },
+        {
+          "id": "the_root_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "collapsed_shaft",
+          "note": "where the root broke the roof"
+        },
+        {
+          "id": "the_niches",
+          "role": "shrine",
+          "size": "medium",
+          "set_piece": "ossuary",
+          "note": "niches with seed-stones in them"
+        },
+        {
+          "id": "the_rift",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "note": "a rift the root split, bridged with cut thorn by the layers"
+        },
+        {
+          "id": "the_layers_camp",
+          "role": "camp",
+          "size": "medium",
+          "note": "the camp the last layers who went down made, and did not break"
+        },
+        {
+          "id": "the_crown_hall",
+          "role": "hall",
+          "size": "large",
+          "note": "a Warden grown in the thorn"
+        },
+        {
+          "id": "the_feeding_hall",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "the root going down into the floor, the Well-Keeper with the root through it"
+        }
+      ]
+    }
   }
 ]

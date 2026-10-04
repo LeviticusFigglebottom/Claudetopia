@@ -2040,7 +2040,6 @@ static func swainmote(d: PoiDressing) -> void:
 	var m := d.masonry
 	var face := _facing(k)
 	var side := Vector2(-face.y, face.x)
-	var g := k.on_ground(0.0, 0.0).y
 	# the pollard at the ring's closed end
 	var oc := -face * 10.5
 	var og := k.on_ground(oc.x, oc.y).y
@@ -2563,7 +2562,7 @@ static func the_knar(d: PoiDressing) -> void:
 	var bar_c := gc + face * (big_r + 6.0) + side * 9.5
 	var rows: Array = []
 	for i in 6:
-		var bp := bar_c + side * (float(i % 3) * 0.85) + face * (float(i / 3) * 0.9)
+		var bp := bar_c + side * (float(i % 3) * 0.85) + face * (floorf(float(i) / 3.0) * 0.9)
 		rows.append([k.on_ground(bp.x, bp.y), k.rng.randf() * TAU, 1.0])
 	await _row(k, k.prop("barrel"), rows, true)
 	# the gall-strings drying on their racks, the far side from the barrels
@@ -2813,3 +2812,118 @@ static func pannage_pound(d: PoiDressing) -> void:
 	k.marker("home", floor_at, true)
 	k.marker("the_bank", k.on_ground(-face.x * (r - 2.0), -face.y * (r - 2.0)), false)
 	await LAND._grass(d, "bracken", -face * 6.0 - side * 4.0, 5.0, 16)
+
+
+# --- the Thornwell ------------------------------------------------------------------------------------
+
+## The Briar's thorn: near black, green where it is young.
+const THORN := {"base": "#2e3324", "accent": "#1c2016"}
+
+
+## A collision capsule along a limb from `a` to `b` (local).
+static func _limb_collider(k: PoiKit, a: Vector3, b: Vector3, r: float, underfoot := "wood") -> void:
+	var dir := b - a
+	var length := dir.length()
+	if length < 0.1:
+		return
+	var y := dir / length
+	var x := y.cross(Vector3.UP)
+	if x.length() < 0.01:
+		x = Vector3.RIGHT
+	x = x.normalized()
+	var cap := CapsuleShape3D.new()
+	cap.radius = r
+	cap.height = length + r * 2.0
+	k.collider_shape(cap, Transform3D(Basis(x, y, x.cross(y).normalized()), (a + b) * 0.5), underfoot)
+
+
+## The Builders' well in the Greatwood (delve): a ring of their black fused stone fourteen paces across
+## with the stair's black mouth inside it (the site's door), and out of it the Briar's root burst up in
+## a crown of thorn arches higher than the oaks, thorns along them as long as a forearm; the Layers'
+## cut thorn stacked round, Edda Layward's bothy, the layers' cairn by the way in.
+static func thornwell(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var def := ContentDB.get_or_empty(d.poi_id)
+	var site: Dictionary = def.get("site", {})
+	var face := _facing(k)
+	var side := Vector2(-face.y, face.x)
+	var yaw := PoiKit.yaw_of(face)
+	var g := k.on_ground(0.0, 0.0).y
+	# the ring of black stone, its gap toward the road
+	var ring := m.begin()
+	m.drum(ring, Transform3D(Basis(), Vector3(0.0, g - 0.2, 0.0)), 7.0, 1.3, 0.25, yaw, true)
+	await k.step()
+	m.commit(ring, k.surface("oroth", 0.3), "WellRing", true)
+	# the crown: arches of the root from the well's mouth out over the ring and down into the wood
+	var thorn := m.begin()
+	var spikes := m.begin()
+	var feet: Array = []
+	var arches := 8
+	for i in arches:
+		var a := yaw + PI / float(arches) + TAU * float(i) / float(arches) + k.rng.randf_range(-0.12, 0.12)
+		var b := a + k.rng.randf_range(0.45, 0.7)
+		var ra := k.rng.randf_range(2.6, 3.6)
+		var rb := k.rng.randf_range(13.0, 17.0)
+		var pa := k.on_ground(sin(a) * ra, cos(a) * ra, -0.6)
+		var pb := k.on_ground(sin(b) * rb, cos(b) * rb, -0.6)
+		var apex := g + k.rng.randf_range(24.0, 34.0)
+		var ctrl := (pa + pb) * 0.5
+		ctrl.y = 2.0 * apex - (pa.y + pb.y) * 0.5
+		var segs := 16
+		var prev := pa
+		for s in segs:
+			var t := float(s + 1) / float(segs)
+			var p := pa * (1.0 - t) * (1.0 - t) + ctrl * 2.0 * t * (1.0 - t) + pb * t * t
+			var r := lerpf(0.95, 0.65, t) * (1.0 - 0.35 * sin(t * PI))
+			m.limb(thorn, prev, p, r)
+			# thorns along it, standing out from the bark
+			for j in 2:
+				var along := (p - prev).normalized()
+				var out := along.cross(Vector3(sin(float(j) * 2.4 + t * 9.0), 0.4, cos(float(j) * 2.4 + t * 9.0))).normalized()
+				var root := prev.lerp(p, 0.3 + 0.4 * float(j)) + out * r * 0.9
+				m.limb(spikes, root, root + out * k.rng.randf_range(0.5, 0.9) + along * 0.15, 0.055)
+			if s < 2:
+				_limb_collider(k, prev, p, r * 0.9)
+			if s >= segs - 2:
+				_limb_collider(k, prev, p, r * 0.9)
+			prev = p
+		feet.append(pb)
+		await k.step()
+	m.commit(thorn, PoiKit.painted(3, THORN, 0.4), "ThornCrown", true)
+	m.commit(spikes, PoiKit.plain(Color(0.2, 0.19, 0.13), 0.7), "Thorns", true)
+	if k.far:
+		return
+	# the stair's mouth inside the ring, black, and the door at its lip
+	var mouth := m.begin()
+	m.ellipsoid(mouth, Vector3(0.0, g + 0.02, 0.0), Vector3(4.6, 0.05, 4.6))
+	m.commit(mouth, PoiKit.plain(Color(0.015, 0.015, 0.02), 1.0), "WellMouth")
+	var door_at := k.on_ground(face.x * 4.3, face.y * 4.3, 0.05)
+	SITES._door(d, str(site.get("interior", "")), door_at, yaw)
+	k.marker("the_stair_head", k.on_ground(face.x * 9.5, face.y * 9.5), false)
+	k.bounce_light(door_at + Vector3.UP * 1.5, Color(0.7, 0.85, 0.65), 0.7, 7.0)
+	# the Layers' cut thorn, laid in stacks outside the ring
+	var cut := m.begin()
+	for st in 3:
+		var a := yaw + deg_to_rad(70.0 + 55.0 * float(st))
+		var c := Vector2(sin(a), cos(a)) * 11.0
+		var along := Vector2(cos(a), -sin(a))
+		var cg := k.on_ground(c.x, c.y).y
+		for j in 7:
+			var off := Vector3(sin(a), 0.0, cos(a)) * k.rng.randf_range(-0.6, 0.6) + Vector3.UP * (0.25 + float(j % 3) * 0.3)
+			var e1 := Vector3(c.x + along.x * 2.2, cg, c.y + along.y * 2.2) + off
+			var e2 := Vector3(c.x - along.x * 2.2, cg, c.y - along.y * 2.2) + off + Vector3.UP * k.rng.randf_range(-0.1, 0.1)
+			m.limb(cut, e1, e2, k.rng.randf_range(0.12, 0.2))
+		k.collider(Vector3(4.8, 1.2, 1.5), Transform3D(Basis(Vector3.UP, atan2(along.x, along.y)), Vector3(c.x, cg + 0.6, c.y)), "wood")
+	await k.step()
+	m.commit(cut, PoiKit.painted(3, THORN, 0.6), "CutThorn")
+	var stand := side * 12.5 + face * 6.0
+	k.marker("the_cut_thorn", k.on_ground(stand.x, stand.y), true)
+	k.place(k.prop("hammer"), k.on_ground(stand.x + face.x * 1.2, stand.y + face.y * 1.2), 0.6, 1.0, false)
+	# Edda's bothy off to the side, door to the well
+	var hc := side * 17.0 + face * 9.0
+	var floor_at: Vector3 = await _bothy(d, hc, (-hc).normalized())
+	k.marker("home", floor_at, true)
+	await SITES._hook(d, site, Vector3(face.x * 10.5 - side.x * 3.0, 0.0, face.y * 10.5 - side.y * 3.0))
+	await LAND._grass(d, "bracken", -face * 14.0, 6.0, 18)
+	await LAND._grass(d, "briar_vine", -side * 12.0, 5.0, 14)

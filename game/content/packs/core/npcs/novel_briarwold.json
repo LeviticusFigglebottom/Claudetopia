@@ -393,5 +393,67 @@
         "spot": "home"
       }
     ]
+  },
+  {
+    "id": "core:npc/edda_layward",
+    "name": "Edda Layward",
+    "home_place": "core:poi/the_thornwell",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/edda_layward",
+    "bio": "A Layer from the Layers' Ring, who has laid the Briar on the eastern rim with bill-hook and stake for thirty years, and has camped at the Thornwell a month cutting back the thorn that comes up out of the Builders' well in the Greatwood. It comes up higher every night than she cut it. Two of her crew went down the well's stair and did not come up.",
+    "unique_habit": "Strokes the thorn she has cut the way a smith strokes a hot bar, by its grain, and never gets pricked.",
+    "personality": {
+      "traits": [
+        "brave",
+        "cynical",
+        "quiet",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61897,
+      "build": "lean_weathered",
+      "age": 52,
+      "hair": "iron_grey_cropped_under_a_leather_coif",
+      "notes": "layer's leather gauntlets to the elbow scored white with thorn, a bill-hook at her belt, a stake-maul over her shoulder"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_thornwell",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_thornwell",
+        "activity": "work",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/the_thornwell",
+        "activity": "eat",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/the_thornwell",
+        "activity": "work",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_thornwell",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
   }
 ]
