@@ -63,5 +63,70 @@
     "reads": "core:book/smoke_code_cord",
     "tags": ["book", "tolling_order", "cinderlea"],
     "description": "A cord of the Order's grey flax knotted long and short, with a paper tag on it in Pell Hoddy's hand saying what each run of knots means when it goes up in smoke."
+  },
+  {
+    "id": "core:item/ash_silk_skein",
+    "name": "A Skein of Ash-Silk",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 55,
+    "tags": [
+      "cinderlea",
+      "cloth",
+      "trade"
+    ],
+    "description": "A skein of the ash-moths' silk off Hessa Lowe's wheel, the exact grey of the heath, fine as smoke and stronger than it looks. The Order's habits are woven from it; a Tollmere draper would pay well for it and not know what it is."
+  },
+  {
+    "id": "core:item/fading_glass_chip",
+    "name": "A Chip of the Fading-Glass",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 90,
+    "tags": [
+      "cinderlea",
+      "valuable"
+    ],
+    "description": "A flake of black glass that came away from the Fading-Glass under your hand the day it showed you in colour. Your face in it is very small, and very clear."
+  },
+  {
+    "id": "core:item/greyfold_roll_page",
+    "name": "A Page of the Greyfold Roll",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "A leaf of the Order's copy of the Greyfold roll, the names of the Ash Winter's walkers in a novice's careful hand, torn from its stitching and grey with blown ash. The names run from Pell to Rush."
+  },
+  {
+    "id": "core:item/fading_glass_note",
+    "name": "A Note at the Foot of the Glass",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "reads": "core:book/fading_glass_note",
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A scrap of a pilgrim's ration-paper weighted with a stone at the foot of the Fading-Glass, written in pencil, both sides."
+  },
+  {
+    "id": "core:item/moth_wifes_count",
+    "name": "The Moth-Wife's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 0,
+    "reads": "core:book/moth_wifes_count",
+    "tags": [
+      "lore",
+      "note",
+      "no_sale"
+    ],
+    "description": "A slate hung on the end of a cocoon rack, chalked with the nights' counts of moths come down to the lamp."
   }
 ]

@@ -187,5 +187,67 @@
       "renown": 5,
       "morality": 2
     }
+  },
+  {
+    "id": "core:quest/the_lost_page",
+    "name": "The Lost Page",
+    "layer": "side",
+    "giver": "core:npc/brin_callow",
+    "region": "core:region/cinderlea",
+    "summary": "Novice Brin Callow reads the Greyfold names to the wights in the Gentle Fold at dusk. The dry wind took a page of his roll on the road from the Tenth Waystone, and the ones whose names were on it will not lie down.",
+    "notes": "The Gentle Fold's small story (pois/cinderlea.json gentle_fold). The page lies at the Tenth Waystone (QuestItems).",
+    "stages": [
+      {
+        "id": "the_page",
+        "journal": "The wights in the Gentle Fold whose names were on Brin Callow's lost page will not lie down; the dry wind took it on the road by the Tenth Waystone.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/greyfold_roll_page",
+            "count": 1,
+            "where": "core:poi/tenth_waystone",
+            "text": "Find the page of the Greyfold roll by the Tenth Waystone"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/tenth_waystone",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_reading",
+        "journal": "Brin Callow needs the page back in his roll before dusk, so that every wight in the Gentle Fold hears its own name.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/brin_callow",
+            "topic": "q_page",
+            "count": 1,
+            "text": "Give the page to Brin Callow at the Gentle Fold"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/gentle_fold",
+          "radius": 80
+        }
+      },
+      {
+        "id": "read",
+        "journal": "The roll is whole. At dusk Brin Callow reads from Ada Pell to the end, and the Gentle Fold lies still.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 70,
+      "renown": 6,
+      "morality": 2,
+      "rep": [
+        [
+          "core:faction/tolling_order",
+          3
+        ]
+      ]
+    }
   }
 ]

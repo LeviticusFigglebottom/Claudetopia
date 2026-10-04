@@ -128,6 +128,9 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/name_kiln": {"spots": ["odile_bench", "the_screen"], "touch": ["the_screen"], "boxes": 1},
 		"core:poi/smoke_hood": {"spots": ["pell_lever"], "touch": ["the_lever"]},
 		"core:poi/leaving_lines": {"spots": ["corra_basin", "the_lines"], "touch": ["the_basin"], "boxes": 1},
+		"core:poi/silk_vents": {"spots": ["hessa_wheel", "the_racks"], "touch": ["the_lamp"]},
+		"core:poi/fading_glass": {"spots": ["the_step"], "touch": ["the_glass"]},
+		"core:poi/gentle_fold": {"spots": ["brin_stand", "the_fold"], "touch": ["the_stand"]},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)

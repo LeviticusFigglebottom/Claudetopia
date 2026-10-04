@@ -302,5 +302,469 @@
       ]},
       "hand": {"speaker": "The ash-basin", "no_talk": true, "text": "It is warm all the way down, and soft, and it takes the print of your hand at once. When you take your hand out it is grey to the wrist, and for a moment you cannot remember what colour your sleeve was.", "next": "end"}
     }
+  },
+  {
+    "id": "core:dialogue/hessa_lowe",
+    "speaker_name": "Hessa Lowe",
+    "notes": "The moth-wife at the Silk Vents (pois/cinderlea.json silk_vents). Explains the moth-lamp (a PoiTouch, core:dialogue/silk_vents_lamp).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "silk_vents_lamped"
+          }
+        ],
+        "text": "They remember you. Look: three on your shoulder already. Hold still."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hessa Lowe",
+        "text": "*(A grey moth is resting on the back of her hand. She waits until it goes.)* — There. Hessa. I spin. Mind the racks; the threads catch.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hessa Lowe",
+        "text": "Ask, quietly. They don't like a loud voice.",
+        "choices": [
+          {
+            "text": "What are these racks?",
+            "next": "the_racks"
+          },
+          {
+            "text": "What is the lamp on the pole for?",
+            "next": "the_lamp"
+          },
+          {
+            "text": "The Order's grey is made here?",
+            "next": "the_grey"
+          },
+          {
+            "text": "Good dusk, Hessa.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_racks": {
+        "speaker": "Hessa Lowe",
+        "text": "Cocoons. The ash-moths lay over the warm cracks and the grubs climb the threads and spin, and I take the shells when they've flown. Never before. A moth that's spun for you should get to fly. — The old moth-wife took them before. She had more silk and fewer moths.",
+        "next": "hub"
+      },
+      "the_lamp": {
+        "speaker": "Hessa Lowe",
+        "text": "At dusk I light it and they come down to it out of the whole heath, slow, like grey snow, and settle on everything warm. On you, if you stand under it. — Stand under it, one dusk, between the evening bell and full dark, and let them. Whoever does gets a skein. That's the custom. I don't know who began it. Probably the moths.",
+        "effects": [
+          {
+            "set_flag": "hessa_told_lamp"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_grey": {
+        "speaker": "Hessa Lowe",
+        "text": "Every habit, every pilgrim's cloth they give out at the Lines, the blankets in the Gentle Fold. The heath's own colour, so the Hush can't tell you from the ground. — The Sayers buy it too, in Tollmere, and dye it blue. I try not to think about that.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silk_vents_lamp",
+    "speaker_name": "The moth-lamp",
+    "notes": "A PoiTouch at the foot of the Silk Vents' moth-lamp pole (regions/cinderlea.gd silk_vents). Between 19 and 22 o'clock, once, the moths come down and Hessa's custom gives a skein.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "A pole of black timber three times a man's height, a lantern in an iron cage at its head and its cord made off at the foot. Moth-dust lies grey on everything round it.",
+        "choices": [
+          {
+            "text": "Stand under the lamp while the moths come down.",
+            "next": "moths",
+            "conditions": [
+              {
+                "time_between": [
+                  19,
+                  22
+                ]
+              },
+              {
+                "flag_not": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Wait for the moths.",
+            "next": "not_yet",
+            "conditions": [
+              {
+                "not": {
+                  "time_between": [
+                    19,
+                    22
+                  ]
+                }
+              },
+              {
+                "flag_not": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Stand under the lamp again.",
+            "next": "again",
+            "conditions": [
+              {
+                "flag": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "moths": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "They come out of the dusk from every side at once, without a sound, grey on grey, and settle: on the lamp, the pole, the racks, your hair, your hands, your shoulders, until you are standing in a coat of them, breathing very carefully, and every one of them is warm. Then, all together, they go. Hessa Lowe is beside you with a skein of grey silk in her hands. — That's the custom. They've had a look at you. You'll do.",
+        "effects": [
+          {
+            "set_flag": "silk_vents_lamped"
+          },
+          {
+            "give_item": [
+              "core:item/ash_silk_skein",
+              1
+            ]
+          },
+          {
+            "morality": 1
+          }
+        ],
+        "next": "end"
+      },
+      "not_yet": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "The lamp is not lit. The moths come down between the evening bell and full dark; in the day there is nothing here but the racks ticking in the warm air off the cracks.",
+        "next": "end"
+      },
+      "again": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "A few moths come down to you, more than to the racks. They seem to know you. They stay a while and go.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/fading_glass_look",
+    "speaker_name": "The Fading-Glass",
+    "notes": "A PoiTouch at the Fading-Glass (regions/cinderlea.gd fading_glass). What it shows follows your renown; the first time it shows you in colour a flake comes away.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "Black glass, polished to a mirror at the height of a face and dull above it where no sleeve reaches. The heath is in it, grey, and the sky, grey. And you.",
+        "choices": [
+          {
+            "text": "Kneel on the step and look.",
+            "next": "colour",
+            "conditions": [
+              {
+                "renown_min": 60
+              }
+            ]
+          },
+          {
+            "text": "Kneel on the step and look.",
+            "next": "faint",
+            "conditions": [
+              {
+                "renown_min": 20
+              },
+              {
+                "renown_max": 59
+              }
+            ]
+          },
+          {
+            "text": "Kneel on the step and look.",
+            "next": "grey",
+            "conditions": [
+              {
+                "renown_max": 19
+              }
+            ]
+          },
+          {
+            "text": "Polish it with your sleeve, for the next.",
+            "next": "polish"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "colour": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, in colour: the dyes of your clothes, the colour of your eyes, sharper than the heath behind you, as if the glass had been waiting all day for something to be sure of.",
+        "choices": [
+          {
+            "text": "Put your hand to the glass.",
+            "next": "chip",
+            "conditions": [
+              {
+                "flag_not": "fading_glass_chip_taken"
+              }
+            ]
+          },
+          {
+            "text": "Get up.",
+            "next": "end"
+          }
+        ]
+      },
+      "chip": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "It is warm under your palm. When you take your hand away a flake of the glass comes with it, clean-edged, as if the glass had given it. Your face is in it, very small, in colour.",
+        "effects": [
+          {
+            "set_flag": "fading_glass_chip_taken"
+          },
+          {
+            "give_item": [
+              "core:item/fading_glass_chip",
+              1
+            ]
+          }
+        ],
+        "next": "end"
+      },
+      "faint": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, but faint: your outline clear, your colours there and thin, as if seen through ash on the wind. Some people know your name. Not yet enough of them.",
+        "next": "end"
+      },
+      "grey": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, grey. Grey hands, grey face, grey clothes, the same grey as the heath behind you, so that at a glance you cannot tell where you stop. It is only glass. You stay kneeling a moment longer than you meant to.",
+        "next": "end"
+      },
+      "polish": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You rub a patch clear with your sleeve, the way the pilgrims do, so that it will tell the truth to whoever comes next. The sleeve comes away grey.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brin_callow",
+    "speaker_name": "Brin Callow",
+    "notes": "The novice at the Gentle Fold (pois/cinderlea.json gentle_fold). Gives The Lost Page (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_lost_page"
+          }
+        ],
+        "text": "Pell to Rush, every night now, and they lie down at Rush. — I know which one's Tamsin Rush. She's the one that waits for her name and then smiles. I'm not supposed to know that."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_lost_page"
+          }
+        ],
+        "text": "Any luck? I read them what I've got, and they lie down, and get up again at the gap. Every night."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Brin Callow",
+        "text": "*(He is reading a notice-board's worth of nothing under his breath: the strokes on the gate-post.)* — Oh. Sorry. Brin Callow, novice. Don't lean on the hurdle; they don't like it shaken.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Brin Callow",
+        "text": "What is it?",
+        "choices": [
+          {
+            "text": "What is this fold?",
+            "next": "the_fold"
+          },
+          {
+            "text": "What's under the blankets?",
+            "next": "the_blankets"
+          },
+          {
+            "text": "You look worried.",
+            "next": "offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_lost_page"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_lost_page"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I found the page from the roll.",
+            "next": "q_page",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_lost_page",
+                  "the_reading"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Read well, Brin.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_fold": {
+        "speaker": "Brin Callow",
+        "text": "Where the Order keeps the ones that won't lie down. They walk up to Pilgrim's Ash every night and stand at the edge of the lamplight and wave. The Vigil Book says the un-ended are owed what the ended are, so nobody cuts them down. We walk them here. At dusk I read them the Greyfold names, and when they hear their own they lie down.",
+        "next": "hub"
+      },
+      "the_blankets": {
+        "speaker": "Brin Callow",
+        "text": "Them. Lying down, under the Order's grey. In the day they sleep. Most of them. — Don't count them. I count them every morning, and there are more than there were in the spring, and I'd rather you didn't know the number.",
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Brin Callow",
+        "text": "I've lost a page. The dry wind took it out of the satchel on the road up from the Tenth Waystone — the names from Pell to Rush. Without it, the ones from Pell to Rush don't hear theirs. They get up in the middle of the reading and stand at the hurdle waving at me. All night. — It'll be in the ash somewhere by the Tenth. I can't leave them.",
+        "choices": [
+          {
+            "text": "I'll look for the page by the Tenth Waystone.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_lost_page"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Brin Callow",
+        "text": "Thank you. It's one leaf, the Order's paper, my writing. You'll know it: it's very neat. I was proud of it.",
+        "next": "hub"
+      },
+      "q_page": {
+        "speaker": "Brin Callow",
+        "text": "*(He smooths it on his knee, blows the ash off it, and reads the first name aloud before he says anything else.)* — Pell, Ada. — Thank you. Tonight they'll all hear. *(He stitches it back into the roll then and there, with the needle from his collar.)* Stay for the reading, if you like. They don't mind a listener.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/greyfold_roll_page",
+              1
+            ]
+          }
+        ],
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/gentle_fold_stand",
+    "speaker_name": "The reading-stand",
+    "notes": "A PoiTouch at the Gentle Fold's reading-stand (regions/cinderlea.gd gentle_fold). Read the names at dusk, once, and the wights lie down for you.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "A slanted board on a post by the hurdle, worn pale where a book has lain on it every evening, a candle-stub in a niche at its side. Inside the fold the grey blankets lie in rows.",
+        "choices": [
+          {
+            "text": "Read the names to the fold.",
+            "next": "read",
+            "conditions": [
+              {
+                "time_between": [
+                  18,
+                  23
+                ]
+              },
+              {
+                "flag_not": "gentle_fold_read"
+              }
+            ]
+          },
+          {
+            "text": "Read the names to the fold.",
+            "next": "day",
+            "conditions": [
+              {
+                "not": {
+                  "time_between": [
+                    18,
+                    23
+                  ]
+                }
+              },
+              {
+                "flag_not": "gentle_fold_read"
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "read": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "Brin Callow puts the roll on the stand for you without a word. You read. Ada Pell. Bram Pell. The Coulter boy. Under the blankets something shifts at every name, and settles; one hand comes up out of the grey and waves, slowly, and goes down. By the end of the roll the fold is still, and Brin is crying a little, and says it is the candle.",
+        "effects": [
+          {
+            "set_flag": "gentle_fold_read"
+          },
+          {
+            "morality": 3
+          },
+          {
+            "rep": [
+              "core:faction/tolling_order",
+              3
+            ]
+          }
+        ],
+        "next": "end"
+      },
+      "day": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "They are lying still under the blankets in the daylight. The names are read at dusk, when they get up; the candle in the niche is cold.",
+        "next": "end"
+      }
+    }
   }
 ]

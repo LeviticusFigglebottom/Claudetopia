@@ -107,5 +107,126 @@
       {"days": "all", "hour": 12, "place": "core:poi/leaving_lines", "activity": "eat", "spot": "corra_basin"},
       {"days": "all", "hour": 13, "place": "core:poi/leaving_lines", "activity": "idle", "spot": "corra_basin"}
     ]
+  },
+  {
+    "id": "core:npc/hessa_lowe",
+    "name": "Hessa Lowe",
+    "home_place": "core:poi/silk_vents",
+    "dialogue": "core:dialogue/hessa_lowe",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "The moth-wife of the Silk Vents, who spins the ash-moths' silk for the Tolling Order's habits as her mother did and her mother's mother. She sleeps by day and works from dusk, when the moths come down to her lamp, and talks to them while she works, and to nobody else much.",
+    "unique_habit": "Holds very still whenever a moth lands on her, which is often, and finishes her sentence only after it has gone.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "kind",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 8011,
+      "build": "small",
+      "age": 61.0,
+      "feminine": 1.0,
+      "hair": "grey_under_a_netted_veil",
+      "notes": "a veil of fine grey net over her hair and shoulders against the moths, the Order's grey of her own spinning, spindle-calloused fingers, moth-dust on her sleeves like flour"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/silk_vents",
+        "activity": "work",
+        "spot": "hessa_wheel",
+        "notes": "spinning by the lamp"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/silk_vents",
+        "activity": "sleep",
+        "spot": "hessa_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/silk_vents",
+        "activity": "eat",
+        "spot": "hessa_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:poi/silk_vents",
+        "activity": "work",
+        "spot": "hessa_wheel",
+        "notes": "gathering the cocoons off the racks"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/brin_callow",
+    "name": "Brin Callow",
+    "home_place": "core:poi/gentle_fold",
+    "dialogue": "core:dialogue/brin_callow",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "A novice of the Tolling Order, seventeen, sent to the Gentle Fold for his second winter because he reads aloud well and is not easily frightened. He reads the Greyfold names to the wights at dusk until they lie down, and has begun to know some of them by their faces, which the Order told him not to.",
+    "unique_habit": "Reads everything aloud under his breath, notices, labels, the strokes on a waystone, as if practising.",
+    "personality": {
+      "traits": [
+        "brave",
+        "kind",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 8022,
+      "build": "gangly",
+      "age": 17.0,
+      "feminine": 0.0,
+      "hair": "straw_fair_shorn_for_the_order",
+      "notes": "a novice's grey too big for him, rope sandals, the Greyfold roll in an oilcloth satchel across his chest, ink on his lip from licking the pen"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/gentle_fold",
+        "activity": "sleep",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/gentle_fold",
+        "activity": "work",
+        "spot": "brin_stand",
+        "notes": "mending the blankets, walling the fold"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/gentle_fold",
+        "activity": "eat",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/gentle_fold",
+        "activity": "idle",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/gentle_fold",
+        "activity": "pray",
+        "spot": "brin_stand",
+        "notes": "reading the names"
+      }
+    ]
   }
 ]

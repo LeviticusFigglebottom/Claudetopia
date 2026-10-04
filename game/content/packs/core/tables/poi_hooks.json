@@ -1350,6 +1350,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/fading_glass",
+        "quests": [],
+        "finds": [
+          "core:item/fading_glass_note"
+        ],
+        "encounters": [
+          "core:encounter/fading_glass"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fair_day_stone",
         "quests": [],
         "finds": [
@@ -1578,6 +1589,15 @@
         "finds": [
           "core:item/wayside_garrison_shrine"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/gentle_fold",
+        "quests": [
+          "core:quest/the_lost_page"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -4236,6 +4256,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/silk_vents",
+        "quests": [],
+        "finds": [
+          "core:item/moth_wifes_count"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/silked_camp",
         "quests": [
           "core:quest/the_restrung_bow"
@@ -4698,7 +4727,8 @@
       {
         "poi": "core:poi/tenth_waystone",
         "quests": [
-          "core:quest/counts_in_a_strange_hand"
+          "core:quest/counts_in_a_strange_hand",
+          "core:quest/the_lost_page"
         ],
         "finds": [
           "core:item/note_tenth_waystone"

@@ -46,5 +46,44 @@
     "text": "The Builders' cistern under the Ashgrid has been dry since the Ash Winter, every Sayer says so. There's a reedwoman from Isseva at the top of its stair, standing on one leg, who walked two regions because she heard it's full again.",
     "variants": ["The wights that come up out of the Cistern of Isse are wet to the knee. Think about that."],
     "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/silk_vents_moths",
+    "name": "Grey snow at dusk",
+    "tone": "strange",
+    "text": "The Order's grey is moth-silk, did you know? There's a moth-wife out between the Ashgrid and the Undertone road who lights a lamp at dusk and the moths come down to it like snow. Stand under it, they say, and she gives you a skein.",
+    "variants": [
+      "Saw a woman covered head to foot in grey moths last night, standing under a lamp on a pole, perfectly still. She waved, after."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/fading_glass_grey",
+    "name": "Are you grey yet?",
+    "tone": "grim",
+    "text": "On the west heath there's a sheet of black glass the pilgrims kneel at to see if they've started fading. Well known, you show in colour. Forgotten, you show grey. I looked. I'm not telling you what I saw.",
+    "variants": [
+      "Polish the Fading-Glass with your sleeve when you pass. That's the custom. So it tells the next one true."
+    ],
+    "tags": [
+      "cinderlea",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/gentle_fold_reading",
+    "name": "The fold below Pilgrim's Ash",
+    "tone": "warm",
+    "text": "The Order keeps the wights that won't lie down in a fold on the heath below Pilgrim's Ash, and a boy reads them their names every dusk until they do. Some nights you can hear him from the road. Some nights you can hear them settle.",
+    "variants": [
+      "There are more under the blankets in the Gentle Fold this year than last. The novice won't say how many."
+    ],
+    "tags": [
+      "cinderlea",
+      "warm"
+    ]
   }
 ]
