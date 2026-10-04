@@ -3709,6 +3709,16 @@ static func _hull(k: PoiKit, points: PackedVector3Array, underfoot := "stone") -
 	k.collider_shape(cs, Transform3D.IDENTITY, underfoot)
 
 
+## From the place's middle towards the nearest point of the nearest road within `reach` (the way a
+## place faces whoever comes to it), or ZERO where no road is that near. (`road_direction` is the
+## road's own run, not the way to it.)
+static func _toward_road(k: PoiKit, reach: float) -> Vector2:
+	var line := _road_line(k, reach)
+	if line.is_empty() or (line[0] as Vector2).length() < 0.5:
+		return Vector2.ZERO
+	return (line[0] as Vector2).normalized()
+
+
 ## A round collider standing on `at`, `r` across and `h` high.
 static func _round_collider(k: PoiKit, at: Vector3, r: float, h: float, underfoot := "stone") -> void:
 	if k.far:
@@ -4117,7 +4127,7 @@ static func smoke_hood(d: PoiDressing) -> void:
 	m.commit(post, k.surface("timber", 0.7), "LeverPost")
 	if not k.far:
 		# the smoke: puffing up out of the collar in a column, and breathing out under the lip
-		k.puffs(Vector3(0.0, collar_y + 0.6, 0.0), Vector3(0.35, 0.3, 0.35), 3.4, 16, Color(0.5, 0.48, 0.46, 0.42), 3.2, 9.0)
+		k.puffs(Vector3(0.0, collar_y + 0.6, 0.0), Vector3(0.4, 0.3, 0.4), 3.8, 26, Color(0.42, 0.4, 0.39, 0.6), 4.5, 11.0)
 		k.puffs(Vector3(0.0, g + 1.4, 0.0), Vector3(1.4, 0.2, 1.4), 0.5, 8, Color(0.55, 0.52, 0.5, 0.25), 1.8, 4.0)
 		k.light(Vector3(0.0, g + 1.6, 0.0), Color(1.0, 0.45, 0.18), 1.4, 7.0)
 		await PoiDressing.kind_builders().SITES._embers(d, [[across * 4.6, Vector2(2.4, 0.35), 0.3, 0.2, 0.8],
@@ -4258,7 +4268,7 @@ static func leaving_lines(d: PoiDressing) -> void:
 	_lathe(ring, Transform3D(Basis.IDENTITY, Vector3(basin.x, bg, basin.y)),
 			[Vector2(3.0, -0.4), Vector2(3.0, 0.55), Vector2(2.4, 0.6), Vector2(2.35, 0.2)], 24)
 	await k.step()
-	m.commit(ring, PoiKit.painted(0, CARVED, 0.6, 0.6), "Basin", true)
+	m.commit(ring, PoiKit.painted(0, SLAG, 0.6, 0.6), "Basin", true)
 	if not k.far:
 		var rr := 3.0
 		for i in 10:
@@ -4316,7 +4326,7 @@ static func the_fallen_head(d: PoiDressing) -> void:
 	# whichever side is the road's (C x up = F keeps the frame right-handed, so the crown turns with it)
 	var crown := -to_choir
 	var face := Vector2(Vector3(crown.x, 0.0, crown.y).cross(Vector3.UP).x, Vector3(crown.x, 0.0, crown.y).cross(Vector3.UP).z)
-	var road := k.road_direction(220.0)
+	var road := _toward_road(k, 260.0)
 	if road != Vector2.ZERO and face.dot(road) < 0.0:
 		crown = -crown
 		face = -face
@@ -4388,10 +4398,10 @@ static func the_fallen_head(d: PoiDressing) -> void:
 	# the furrow, back towards the Choir: two banks of ash, the broken stone along it
 	var back := to_choir
 	var side := Vector2(back.y, -back.x)
-	for i in 6:
-		var t := 13.0 + 4.6 * float(i)
+	for i in 8:
+		var t := 13.0 + 3.2 * float(i)
 		for s in [-1.0, 1.0]:
-			await _drift(d, back * t + side * (3.4 + 0.3 * float(i)) * float(s), k.rng.randf_range(2.4, 3.0), k.rng.randf_range(0.7, 1.1) * (1.0 - 0.08 * float(i)))
+			await _drift(d, back * t + side * (4.2 + 0.25 * float(i)) * float(s), k.rng.randf_range(3.0, 3.6), k.rng.randf_range(1.3, 1.8) * (1.0 - 0.07 * float(i)))
 	if k.far:
 		return
 	var interior := str(site.get("interior", ""))
@@ -4446,23 +4456,23 @@ static func silk_vents(d: PoiDressing) -> void:
 		var rc := c + across * (float(row) - 1.5) * 3.4
 		var tops: Array = []
 		for i in 3:
-			tops.append(m.post(timber, rc + along * (-3.6 + 3.6 * float(i)), 1.9, 0.14))
+			tops.append(m.post(timber, rc + along * (-3.6 + 3.6 * float(i)), 2.6, 0.16))
 		var rail_y := ((tops[0] as Vector3).y + (tops[2] as Vector3).y) * 0.5 - 0.05
 		_box(timber, Transform3D(Basis(Vector3.UP, yaw), Vector3(rc.x, rail_y, rc.y)), Vector3(7.6, 0.1, 0.1))
 		var n := 24
 		for i in n:
 			var p := rc + along * (-3.5 + 7.0 * (float(i) + 0.5) / float(n))
 			var hang := k.rng.randi_range(3, 5)
-			var fall := 0.14 * float(hang) + 0.1
+			var fall := 0.19 * float(hang) + 0.1
 			_box(threads, Transform3D(Basis.IDENTITY, Vector3(p.x, rail_y - fall * 0.5, p.y)), Vector3(0.008, fall, 0.008))
 			for j in hang:
 				var turn := Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.15, 0.15))
-				_box(cocoons, Transform3D(turn, Vector3(p.x, rail_y - 0.12 - 0.14 * float(j), p.y)), Vector3(0.06, 0.11, 0.06))
+				_box(cocoons, Transform3D(turn, Vector3(p.x, rail_y - 0.15 - 0.19 * float(j), p.y)), Vector3(0.09, 0.16, 0.09))
 		cracks.append([rc + across * 0.2, Vector2(6.0, 0.4), PoiKit.yaw_of(across), 0.2 + 0.2 * float(row), 0.55])
 		await k.step()
 	# the moth-lamp's pole at the rows' head, its arm, the iron cage
 	var pole := c - along * 6.0 + across * 1.0
-	var ptop := m.post(timber, pole, 6.6, 0.22)
+	var ptop := m.post(timber, pole, 9.0, 0.26)
 	var arm_end := ptop + Vector3(along.x, 0.0, along.y) * 1.0 - Vector3(0.0, 0.3, 0.0)
 	m.limb(timber, ptop - Vector3(0.0, 0.4, 0.0), arm_end, 0.06)
 	await k.step()
@@ -4545,7 +4555,7 @@ static func silk_vents(d: PoiDressing) -> void:
 static func fading_glass(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var face := k.road_direction(200.0)
+	var face := _toward_road(k, 260.0)
 	if face == Vector2.ZERO:
 		face = k.downhill()
 	if face == Vector2.ZERO:
@@ -4605,7 +4615,7 @@ static func fading_glass(d: PoiDressing) -> void:
 static func gentle_fold(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
-	var gate := k.road_direction(220.0)
+	var gate := _toward_road(k, 260.0)
 	if gate == Vector2.ZERO:
 		gate = Vector2(0.0, -1.0)
 	gate = gate.normalized()
@@ -4692,7 +4702,7 @@ static func gentle_fold(d: PoiDressing) -> void:
 const CONE_R := 24.0
 const CONE_H := 21.0
 const CONE_POWER := 2.4
-const CINDER := {"base": "#2a2725", "accent": "#3a3532", "grout": "#141211", "unit": 0.45}
+const CINDER := {"base": "#0f0d0c", "accent": "#1b1816", "grout": "#060505", "unit": 0.45}
 
 ## The cone's height over its foot `f` (0 at its middle, 1 at its rim) of the way out.
 static func _cone_y(f: float) -> float:
@@ -4708,7 +4718,7 @@ static func cinderhowe(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
-	var out := k.road_direction(220.0)
+	var out := _toward_road(k, 320.0)
 	if out == Vector2.ZERO:
 		out = k.downhill()
 	if out == Vector2.ZERO:
@@ -4751,7 +4761,7 @@ static func cinderhowe(d: PoiDressing) -> void:
 	m.commit(glass, PoiKit.plain(Color(0.025, 0.025, 0.032), 0.06, 0.3), "GlassRuns", true)
 	if not k.far:
 		var top := Vector3(cc.x, base_y + CONE_H + 0.8, cc.y)
-		k.puffs(top, Vector3(1.6, 0.4, 1.6), 3.6, 18, Color(0.46, 0.43, 0.41, 0.4), 4.0, 10.0)
+		k.puffs(top, Vector3(1.8, 0.4, 1.8), 4.2, 30, Color(0.38, 0.36, 0.35, 0.6), 6.5, 12.0)
 		k.light(top, Color(1.0, 0.4, 0.15), 2.2, 14.0)
 	# the adit at the cone's foot, facing out
 	var foot_f := 0.99
@@ -4783,7 +4793,7 @@ static func cinderhowe(d: PoiDressing) -> void:
 	# the spoil of glass beside the adit
 	var spoil := adit + side * 7.5 + out * 2.0
 	await k.step()
-	m.mound(k.on_ground(spoil.x, spoil.y, -0.2), 4.2, 2.2, PoiKit.plain(Color(0.03, 0.03, 0.04), 0.12, 0.25), "GlassSpoil", true, 1.6, 6, 18, true, 0.12)
+	m.mound(k.on_ground(spoil.x, spoil.y, -0.2), 4.2, 2.2, PoiKit.plain(Color(0.03, 0.03, 0.035), 0.3, 0.0), "GlassSpoil", true, 1.6, 6, 18, true, 0.12)
 	if k.far:
 		return
 	var interior := str(site.get("interior", ""))
