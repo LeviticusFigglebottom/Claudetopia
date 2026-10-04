@@ -46,5 +46,5 @@
   {"id": "core:encounter/letter_cote", "place": "core:poi/letter_cote", "notes": "Nothing that fights: Wenna Cotter's letter to Gosford, that the dove would not take, lies on her table.", "spawns": [], "lies": [{"item": "core:item/letter_to_gosford"}]},
   {"id": "core:encounter/tamwick_troy", "place": "core:poi/tamwick_troy", "notes": "Nothing that fights: the Troy Book lies at the gate.", "spawns": [], "lies": [{"item": "core:item/troy_book"}]},
   {"id": "core:encounter/unfinished_figure", "place": "core:poi/unfinished_figure", "notes": "A bristleback roots in the lifted turf at dusk.", "spawns": [{"enemy": "core:enemy/bristleback", "count": 1, "when": "dusk", "at": "the_turf", "spread": 2.0}]},
-  {"id": "core:encounter/witness_elms", "place": "core:poi/witness_elms", "notes": "Nothing that fights: the rook-wives' oath on its slate at the stump.", "spawns": [], "lies": [{"item": "core:item/court_of_rooks"}]}
+  {"id": "core:encounter/witness_elms", "place": "core:poi/witness_elms", "notes": "Down wolves under the elms at night after the young rooks that fall from the nests; the rook-wives' oath on its slate at the stump.", "spawns": [{"enemy": "core:enemy/down_wolf", "count": 2, "when": "night", "spread": 3.0}], "lies": [{"item": "core:item/court_of_rooks"}]}
 ]

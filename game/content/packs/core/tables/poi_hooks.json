@@ -5677,7 +5677,9 @@
         "finds": [
           "core:item/court_of_rooks"
         ],
-        "encounters": [],
+        "encounters": [
+          "core:encounter/witness_elms"
+        ],
         "hearthstone": false
       },
       {

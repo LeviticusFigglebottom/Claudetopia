@@ -508,7 +508,7 @@ const WHAT_STANDS := {
 	"core:poi/candle_wheel": "person: core:npc/tallis_dipper",
 	"core:poi/tamwick_troy": "person: core:npc/maudie_twelvetrees (and the Troy Book at the gate)",
 	"core:poi/unfinished_figure": "a bristleback in the lifted turf at dusk, and person: core:npc/col_whitcut",
-	"core:poi/witness_elms": "person: core:npc/hester_corvey (and the rook-wives' oath at the stump)",
+	"core:poi/witness_elms": "two down wolves at night, and person: core:npc/hester_corvey",
 	"core:poi/scarecrow_moot": "a hedge-wight asleep in the ranks till it is looked in the face, and person: core:npc/abner_strawe",
 	"core:poi/wassail_knap": "two wassailers in the dead orchard after dark, and person: core:npc/pip_applegarth (the revel is in its inside)",
 	"core:poi/drovers_pound": "three down wolves, two down wolves at night",
