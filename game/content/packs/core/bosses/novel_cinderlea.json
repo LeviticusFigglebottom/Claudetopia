@@ -76,8 +76,8 @@
       "height": 1.86,
       "age": 0.5,
       "parts": {
-        "torso": "plate_torso",
-        "back": "torn_cloak",
+        "torso": "gambeson",
+        "back": "plate_torso",
         "headgear": "helm",
         "hands": "gloves",
         "feet": "boots",
