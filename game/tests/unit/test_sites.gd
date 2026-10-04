@@ -222,10 +222,88 @@ func test_every_site_arrival_sees_its_room_lit() -> void:
 	assert_eq(bad, [], "every site's arrival sees its room lit (%d%% of it or more)" % int(ARRIVAL_COVER * 100.0))
 
 
+## The boss's room, seen from its door as the player comes in to the fight (SiteInterior.boss_view:
+## the third-person camera behind the player standing in the doorway, facing the room's middle),
+## read as the arrival's room is above: of the rays meeting the room past the door, the share lit to
+## ARRIVAL_LIT or more must be BOSS_COVER. The Kilnway's boss room rendered nearly black (HANDOFF
+## §00000): four lava vents round a huge room on black rock, and a cool fill under its roof, left the
+## far side and the walls unlit from the door, and a basalt stack 2 m inside the door hid the rest.
+## SiteDress._arena_light hangs the kind's own light over the arena and another just inside its
+## door, and SitePlan keeps a boss's doorways 4 m clear. Measured 2026-10-04: without the arena's
+## two lights the Kilnway is 14% lit from its door, Hum Stone Throat 46% and Hound's Swallet 47%
+## (the rest 65-100%); with them every site is 89-100% (the Kilnway 97%). A kind no shipped site is
+## built as (the bandit cave) is read from a stand-in.
+const BOSS_COVER := 0.7
+## and the door sees that much of the room at least (the fewest, a mine's square drift: 20 rays)
+const BOSS_RAYS := 12
+
+
+func test_every_site_boss_room_is_lit_from_its_door() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var defs: Array = []
+	var shipped := {}
+	var ids: Array = ContentDB.ids_of("interior").filter(func(id: String) -> bool:
+		return ContentDB.get_def(id).get("site", null) is Dictionary)
+	ids.sort()
+	for id in ids:
+		var def: Dictionary = ContentDB.get_def(id)
+		defs.append([id, def])
+		shipped[str((def["site"] as Dictionary).get("kind", "cave"))] = true
+	# a kind no shipped site is built as yet is read too: the first site's def, built as that kind
+	for k in SiteKinds.KINDS:
+		if not shipped.has(k):
+			var stand_in: Dictionary = (defs[0][1] as Dictionary).duplicate(true)
+			(stand_in["site"] as Dictionary)["kind"] = k
+			defs.append(["%s as %s" % [defs[0][0], k], stand_in])
+	var bad: Array = []
+	var kinds := {}
+	for pair in defs:
+		var id := str(pair[0])
+		var site := SiteInterior.new()
+		site.def_override = pair[1]
+		site.paced_override = 0
+		tree.root.add_child(site)
+		await tree.process_frame
+		await tree.physics_frame
+		var door := site.plan.boss_door()
+		var kind := str(site.plan.spec.get("kind", "?"))
+		var has_boss := site.plan.rooms.any(func(r: Dictionary) -> bool: return r["role"] == "boss")
+		if door.is_empty():
+			# a site written with its rooms may have no boss (the Cistern of Isse)
+			if has_boss:
+				bad.append("%s: a boss's room with no door" % id)
+			else:
+				print("SITE BOSS | %s | %s | no boss's room" % [id, kind])
+			site.queue_free()
+			await tree.process_frame
+			continue
+		kinds[kind] = true
+		var got := view_light(site, site.boss_view(), door[0], "ArenaLight")
+		print("SITE BOSS | %s | %s | %d rays into the arena: lit %.0f%% (%.0f%% without its arena light), given back: quarter %.3f, median %.3f (without %.3f; rock %.2f), %d lights on" % [
+				id, kind, int(got["rays"]), float(got["cover"]) * 100.0, float(got["without"]) * 100.0,
+				float(got["p25"]), float(got["median"]), float(got["median_without"]), float(got["albedo"]), int(got["on"])])
+		if int(got["rays"]) < BOSS_RAYS:
+			bad.append("%s: the boss's door sees only %d rays of its room" % [id, int(got["rays"])])
+		if float(got["cover"]) < BOSS_COVER:
+			bad.append("%s: %.0f%% of the boss's room seen from its door lit" % [id, float(got["cover"]) * 100.0])
+			for l in got["near"]:
+				print("SITE BOSS |   %s" % l)
+		site.queue_free()
+		await tree.process_frame
+	for k in SiteKinds.KINDS:
+		assert_true(kinds.has(k), "a %s's boss room is read (%s)" % [k, str(kinds.keys())])
+	assert_eq(bad, [], "every site's boss room is lit from its door (%d%% of it or more)" % int(BOSS_COVER * 100.0))
+
+
 ## What of the room the arrival sees is lit (see the test above): {"rays", "cover", "without" (the
 ## same without SiteDress._arrival_light), "albedo", "p25", "median", "median_without", "on", "near"}.
 static func arrival_light(site: SiteInterior) -> Dictionary:
-	var av := site.arrival_view()
+	return view_light(site, site.arrival_view(), site.plan.entrance, "ArrivalLight")
+
+
+## What of a room seen from `av` ([eye, forward], SiteInterior.view_from) is lit: the rays meeting it
+## ARRIVAL_PAST_M or more ahead of `feet`, "without" leaving out the light named `own`.
+static func view_light(site: SiteInterior, av: Array, feet: Vector3, own_name: String) -> Dictionary:
 	var eye: Vector3 = av[0]
 	var fwd: Vector3 = av[1]
 	var right := fwd.cross(Vector3.UP).normalized()
@@ -248,7 +326,7 @@ static func arrival_light(site: SiteInterior) -> Dictionary:
 			if hit.is_empty():
 				continue
 			var p := site.to_local(hit["position"])
-			if (p - site.plan.entrance).dot(ahead) < ARRIVAL_PAST_M:
+			if (p - feet).dot(ahead) < ARRIVAL_PAST_M:
 				continue
 			var n := (site.global_transform.basis.inverse() * (hit["normal"] as Vector3)).normalized()
 			var sum := 0.0
@@ -256,7 +334,7 @@ static func arrival_light(site: SiteInterior) -> Dictionary:
 			for l in on:
 				var here := SiteDress.light_at(l, p, n)
 				sum += here
-				own += here if l.name != "ArrivalLight" else 0.0
+				own += here if not str(l.name).begins_with(own_name) else 0.0
 			values.append(sum * albedo)
 			without.append(own * albedo)
 	var share := func(list: Array) -> float:

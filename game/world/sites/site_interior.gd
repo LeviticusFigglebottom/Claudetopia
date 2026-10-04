@@ -140,9 +140,22 @@ func _way_in() -> void:
 ## (0.12 up), pitched 0.18 rad down, cut short where a cast along it meets the rock. Needs the rock
 ## in the physics space.
 func arrival_view() -> Array:
-	var fwd := Vector3(-sin(plan.entrance_yaw), 0.0, -cos(plan.entrance_yaw))
+	return view_from(plan.entrance, Vector3(-sin(plan.entrance_yaw), 0.0, -cos(plan.entrance_yaw)))
+
+
+## What the player standing in the boss's doorway sees, facing the room's middle: [the camera's eye,
+## its forward], as arrival_view. Empty when the site has no boss's room.
+func boss_view() -> Array:
+	var door := plan.boss_door()
+	if door.is_empty():
+		return []
+	return view_from(door[0], door[1])
+
+
+## camera_rig.gd's third-person camera behind feet at `feet` (local) facing `fwd` (horizontal).
+func view_from(feet: Vector3, fwd: Vector3) -> Array:
 	var pitch_fwd := (fwd * cos(0.18) + Vector3.DOWN * sin(0.18)).normalized()
-	var pivot := plan.entrance + Vector3.UP * 1.6
+	var pivot := feet + Vector3.UP * 1.6
 	var right := fwd.cross(Vector3.UP).normalized()
 	var arm := right * 0.4 + Vector3.UP * 0.12 - pitch_fwd * 3.6
 	var k := 1.0

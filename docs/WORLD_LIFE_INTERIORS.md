@@ -277,6 +277,14 @@ there stands in the site: the build's trees in Scathe's yard.
   from the player's camera (`SiteInterior.arrival_view`) and wants 70% of the room seen lit.
   `site_review` renders that camera as `00_arrival`; `--only=00_,01_` renders just the arrival
   and the first room.
+- The boss's room from its door: a ring of braziers (or lava vents) round the middle of a huge
+  room left the Kilnway's arena nearly black from its door, and a basalt stack 2 m inside the door
+  hid the rest. Every boss's room has an `ArenaLight` over its middle and an `ArenaLightDoor` just
+  inside its door, in the kind's colour, broad and soft (attenuation 0.6), set by the rock's
+  brightness (`SiteDress._arena_light`), and nothing is stood within 4 m of a boss's doorway
+  (`SitePlan._spot_clear`). `test_sites` reads every site's boss room from the player's camera in
+  its doorway (`SiteInterior.boss_view`, `SitePlan.boss_door`) and wants 70% of it lit; a kind no
+  shipped site is built as is read from a stand-in. `site_review` renders it as `99_boss_door`.
 - A fort's trees: until the next world build the showcases stand on the ground as the last build
   left it, with its scatter (Scathe's yard has the build's trees in it).
 - A drop's lip is the passage's end in the lower room's wall, with nothing to mark it but the
