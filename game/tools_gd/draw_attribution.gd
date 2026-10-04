@@ -128,6 +128,74 @@ static func measure(world: Node) -> Dictionary:
 		result["by_owner_primitives"][name] = cost.y
 		result["owner_nodes"][name] = nodes.size()
 		accounted += cost
+	# each place in view, piece by piece and then its sun shadow as a whole: "the scenes" is one
+	# owner, and a castle in it is masonry, timber, flora and its shadow, which is the question.
+	# These overlap the scenes' own row, so they are not added to what is accounted for.
+	var parts: Dictionary = {}
+	var part_prims: Dictionary = {}
+	# first each of the scenes standing in the cells that draws much (a place, a landmark, a camp)
+	for scene_v in owners.get("WorldStreamer scenes (landmarks, encounters)", []):
+		var scene := scene_v as Node3D
+		if scene == null or not scene.is_visible_in_tree():
+			continue
+		var tris := 0
+		for g in scene.find_children("*", "GeometryInstance3D", true, false):
+			tris += _triangles_of(g as GeometryInstance3D)
+		if tris < SCENE_MIN_TRIANGLES:
+			continue
+		scene.visible = false
+		var without_scene := await _settled(tree)
+		scene.visible = true
+		var scost := total - without_scene
+		parts["scene %s" % scene.name] = scost.x
+		part_prims["scene %s" % scene.name] = scost.y
+	for poi: Node3D in _places(world):
+		var geo: Array[GeometryInstance3D] = []
+		var by_prefix: Dictionary = {}
+		var stack: Array[Node] = [poi]
+		while not stack.is_empty():
+			var n: Node = stack.pop_back()
+			for c in n.get_children():
+				stack.append(c)
+			if n is GeometryInstance3D and (n as GeometryInstance3D).is_visible_in_tree():
+				geo.append(n)
+				var key := "%s: %s" % [poi.name, prefix_of(n.name)]
+				if not by_prefix.has(key):
+					by_prefix[key] = []
+				(by_prefix[key] as Array).append(n)
+		if geo.is_empty():
+			continue
+		var whole := Vector2i.ZERO
+		for key in by_prefix:
+			var nodes: Array = by_prefix[key]
+			# weighed only where there is something to weigh: a frame a piece is slow under software
+			# rendering, and a mug is a few hundred triangles
+			var tris := 0
+			for n in nodes:
+				tris += _triangles_of(n as GeometryInstance3D)
+			if tris < PART_MIN_TRIANGLES:
+				continue
+			for n in nodes:
+				(n as Node3D).visible = false
+			var without := await _settled(tree)
+			for n in nodes:
+				(n as Node3D).visible = true
+			var cost := total - without
+			if cost.y != 0 or cost.x != 0:
+				parts[key] = cost.x
+				part_prims[key] = cost.y
+		var casts: Array[int] = []
+		for g in geo:
+			casts.append(g.cast_shadow)
+			g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var unshadowed := await _settled(tree)
+		for i in geo.size():
+			geo[i].cast_shadow = casts[i] as GeometryInstance3D.ShadowCastingSetting
+		whole = total - unshadowed
+		parts["%s: (its sun shadow, every piece)" % poi.name] = whole.x
+		part_prims["%s: (its sun shadow, every piece)" % poi.name] = whole.y
+	result["place_parts"] = parts
+	result["place_parts_primitives"] = part_prims
 	# the sun's shadow passes, by turning them off
 	var sun := _sun(world)
 	if sun != null and sun.shadow_enabled:
@@ -159,7 +227,57 @@ static func measure_table(m: Dictionary) -> String:
 	out.append("  %-56s %6d %11d" % ["total", int(m.get("total", 0)), int(m.get("total_primitives", 0))])
 	out.append("  %-56s %6d %11d" % ["of which shadow passes (sun shadows off)",
 			int(m.get("shadow_passes", 0)), int(m.get("shadow_primitives", 0))])
+	var parts: Dictionary = m.get("place_parts", {})
+	if not parts.is_empty():
+		var pp: Dictionary = m.get("place_parts_primitives", {})
+		out.append("the places in the scenes, a piece at a time (with its shadow) and their shadow whole:")
+		var keys: Array = parts.keys()
+		keys.sort_custom(func(a: String, b: String) -> bool: return int(pp.get(a, 0)) > int(pp.get(b, 0)))
+		for key in keys:
+			out.append("  %-56s %6d %11d" % [str(key).left(56), int(parts[key]), int(pp.get(key, 0))])
 	return "\n".join(out)
+
+
+## The points of interest standing in the streamed cells (PoiDressing names each `Poi_<id>`).
+static func _places(world: Node) -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	var streamer: Node = world.get("streamer") if world.get("streamer") != null else null
+	if streamer == null:
+		return out
+	var cam := (Engine.get_main_loop() as SceneTree).root.get_viewport().get_camera_3d()
+	for n in streamer.find_children("Poi_*", "Node3D", true, false):
+		# the ones near enough to be the shot's subject: each costs a frame a piece to weigh
+		if cam == null or (n as Node3D).global_position.distance_to(cam.global_position) < PLACE_REACH_M:
+			out.append(n as Node3D)
+	return out
+
+
+## How near the camera a place is weighed piece by piece (`measure`), and how many triangles a
+## piece needs to be weighed on its own.
+const PLACE_REACH_M := 200.0
+const PART_MIN_TRIANGLES := 3000
+const SCENE_MIN_TRIANGLES := 20000
+
+
+## The triangles a geometry instance draws once (a MultiMesh's for every instance).
+static func _triangles_of(gi: GeometryInstance3D) -> int:
+	var mesh: Mesh = null
+	var count := 1
+	if gi is MeshInstance3D:
+		mesh = (gi as MeshInstance3D).mesh
+	elif gi is MultiMeshInstance3D and (gi as MultiMeshInstance3D).multimesh != null:
+		var mm := (gi as MultiMeshInstance3D).multimesh
+		mesh = mm.mesh
+		count = mm.visible_instance_count if mm.visible_instance_count >= 0 else mm.instance_count
+	if mesh == null:
+		return 0
+	var tris := 0
+	for s in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(s)
+		var idx: Variant = arrays[Mesh.ARRAY_INDEX]
+		var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		tris += int(((idx as PackedInt32Array).size() if idx != null else verts.size()) / 3.0)
+	return tris * count
 
 
 # --- what belongs to whom -------------------------------------------------------------------------

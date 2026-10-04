@@ -94,8 +94,10 @@ var _flora_re := RegEx.new()
 var _shelter_re := RegEx.new()
 var _merged_standing_re := RegEx.new()
 var _poi_kind_cache: Dictionary = {}
-## The boxes of lamps strewn as a MultiMesh (a settlement's lanterns and braziers, `lamp_boxes`), in
-## the world: a light hangs from one, and a headless run cannot read the MultiMesh itself.
+## The boxes of lamps strewn as a MultiMesh (a settlement's lanterns and braziers) or drawn into a
+## merged mesh (a house's door lantern, on the settlement or the Building), each node's
+## `lamp_boxes`, in the world: a light hangs from one, and neither a headless run's MultiMesh nor a
+## town-wide mesh says where its lamps are.
 var _lamp_boxes: Array[AABB] = []
 
 
@@ -184,11 +186,11 @@ func _visit(n: Node, out: Array[Dictionary], anchor: String, rect: Rect2) -> voi
 	if _skipped(n):
 		return
 	var a := _anchor_of(n, anchor)
+	if n is Node3D and n.has_meta("lamp_boxes"):
+		var xf := (n as Node3D).global_transform
+		for b: AABB in n.get_meta("lamp_boxes"):
+			_lamp_boxes.append(xf * b)
 	if n is MultiMeshInstance3D:
-		if n.has_meta("lamp_boxes"):
-			var xf := (n as Node3D).global_transform
-			for b: AABB in n.get_meta("lamp_boxes"):
-				_lamp_boxes.append(xf * b)
 		if not n.has_meta("lod_group") and not headless:
 			_add_multimesh(n as MultiMeshInstance3D, out, a, rect)
 		return
