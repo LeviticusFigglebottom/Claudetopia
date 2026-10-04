@@ -16779,3 +16779,72 @@ All four views are inside the 2,000 draw and 1.5 M budget.
 - The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
   what is streamed, so on Low a far corner cell can still go at 700-900 m.
 - Forward+ was not looked at.
+
+## Cinderlea's novel places: seven new kinds of place, two large sites, five road events (novel-cinderlea, 2026-10-04)
+
+The owner asked for truly novel places, distinct from every ruin, camp, shrine, tower and cave the
+pack already has, and for more large sites and quests. All of it is data plus Cinderlea's own builders
+(`game/world/pois/regions/cinderlea.gd`); no shared builder was changed. The `kind` fields are the
+nearest existing kinds (the tests and the map know a place by them), but each place is built by its
+own builder and is a new kind of place.
+
+**Seven new places** (`pois/cinderlea.json`, people/words/quests/items in new `*/novel_cinderlea.json`):
+- **The Ash Dial** (`the_ash_dial`, -2932 2908): the Builders' sun-dial. A 21 m fused-stone blade leans
+  from a stepped dais at the pole over a ring of thirteen hour-stones notched with bell-counts, one
+  blank. Wenna Thrope reads it for the Order. Press the blank stone between 16 and 18 o'clock
+  (`time_between`) and it sinks, giving the Thirteenth Hour-Plate. Ash-wights stand on the stones by night.
+- **The Name-Kiln** (`name_kiln`, -1740 2204): a beehive kiln on a vent beside a 16 m screen hung with
+  some 1,200 fired name-tiles. Odile Wark fires your name for 25 marks (renown), and the screen
+  answers with your tile. She gives *A Name for the Warden* and closes two other quests.
+- **The Smoke-Speakers' Hood** (`smoke_hood`, -532 2820): the Order's signal gantry, with a hide hood
+  on a counterweighted beam over a roaring vent and a smoke column. Work the lever: "where?" sent to
+  the west, north or south reveals the Ash Dial, the Name-Kiln or the Leaving-Lines. Pell Hoddy gives
+  *The Head That Sings*.
+- **The Leaving-Lines** (`leaving_lines`, -1348 3444): pole-lines hung with pilgrims' faded clothes (the
+  only colour south of Greyfold, one vertex-coloured draw), a heap of shed coats, and a warm ash-basin.
+  Corra Dunn has not gone on for three days. Share an ash-cake with her (or have renown 40) and she
+  turns back, which starts *Something Red*.
+- **The Silk Vents** (`silk_vents`, -1076 2948): moth-silk racks of cocoons over warm cracks, a
+  moth-lamp pole and a spinning-wheel. Stand under the lamp at dusk (19-22) and the moths come down;
+  Hessa Lowe gives a skein of ash-silk.
+- **The Fading-Glass** (`fading_glass`, -2252 2876): a 10 m sheet of black glass the pilgrims kneel at.
+  It shows you grey, faint or in colour by renown, and in colour a chip comes away. A pilgrim's note
+  lies at its foot, and a chorister stands there at dusk.
+- **The Gentle Fold** (`gentle_fold`, -124 2516): a drystone fold where the Order keeps the wights that
+  will not lie down, under grey blankets. Novice Brin Callow reads them the names. Read them yourself
+  at dusk, or find his lost page (*The Lost Page*, at the Tenth Waystone).
+
+**Two new large sites**:
+- **The Fallen Head** (`the_fallen_head`, -732 3276, pad 40): one of the Choir's twelve lost heads, 18 m
+  long on its cheek at the end of the furrow it ploughed. Its mouth is the door. Inside is a crypt
+  (`core:interior/the_fallen_head`, 8 written rooms: the tongue, the palate's sleepers, the eye's
+  daylight, the throat, the voice-box chasm, the hollow). The boss is **Ysmay Corrow** (ash-wight
+  based; a lullaby burst, and the sleepers wake at half). *The Head That Sings*: Pell Hoddy -> Aud Venn
+  at the Head -> the boss and her roll of forty sleepers -> Odile Wark fires 41 tiles -> hang them on
+  the screen or in the Head's mouth.
+- **Cinderhowe** (`cinderhowe`, -2204 1708, pad 44): a 21 m cinder cone with a red crater, a plume and
+  glass runs down its sides, and a timbered adit at its foot. Inside is a mine
+  (`core:interior/cinderhowe_galleries`, 8 written rooms). The boss is **Ser Orvel Glasse**, a knight
+  glassed to the bone (tolling-knight based, weak to blunt). *The Glass Knight*: Joss Fennick -> the
+  heart -> the vow-plate with his grandmother's name -> cut the galleries again or leave the heart.
+
+**Quests for every large site.** Cinderlea's large sites all had one except the Cistern of Isse:
+*The Full Jar* (Ama Reedwright, a new stilt-walker at the Cistern; her spot was added to its
+builder). *A Name for the Warden* leads out of the Kilnway: the Kiln-Warden's toll-token (Hob
+Atherley) is laid in its boss room by QuestItems and carried to the Name-Kiln. Six quests in
+all, every stage opening on its reason in under 170 letters.
+
+**Road events** (`roadlife/cinderlea.json`): a Hush-walker with her brothers behind (fugitive), the
+potter's boy with a basket of names (reveals the Name-Kiln), a Sayer listening to the note through the
+road (reveals the Fallen Head), the Hood's runner (reveals the Hood), and novices hauling a bell to the
+Choir (take a turn on the rope). All use the existing behaviours.
+
+**Checks:** `region_check.py cinderlea --godot --edited cistern_of_isse` PASS. Every place seats clean:
+5-32 draws and 18-84 k triangles each, reaches inside the pads. The targeted tests, 238 then the 15
+re-run after two fixes, are 0 failed: `test_sites_cinderlea` now raises the nine places and walks
+both new insides. GDScript warnings are at the 49 baseline. `softlock_check.py`: 146 quests, 0
+findings. `poi_hooks.py` re-run.
+
+**Needs the next world build:** pads for the nine new POIs (previewed until then), and no glades
+(the heath has no wood). Each is 110-300 m from a road, and none has a track. Tracks to the Fallen
+Head and Cinderhowe would help, as both are reached across open heath.
