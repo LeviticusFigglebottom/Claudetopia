@@ -190,8 +190,18 @@ func test_the_edge_is_a_dissolve_per_plant_that_follows_the_view_range() -> void
 
 const PROP := "res://assets/models/props/hearthvale_milestone_a/hearthvale_milestone_a.glb"
 const CRATE := "res://assets/models/props/briarwold_crate_a/briarwold_crate_a.glb"
-const BUSH := "res://assets/models/flora/briarwold_bracken_a/briarwold_bracken_a.glb"
+const BUSH := "res://assets/models/flora/briarwold_briar_vine_a/briarwold_briar_vine_a.glb"
 const TREE := "res://assets/models/trees/hearthvale_hawthorn_a/hearthvale_hawthorn_a.glb"
+
+
+## The first of a mesh's materials that takes the dissolve (the foliage shader's `lod_fade_out`): a
+## briar's first surface is its stem's.
+func _faded(mesh: Mesh) -> ShaderMaterial:
+	for si in mesh.get_surface_count():
+		var mat := mesh.surface_get_material(si) as ShaderMaterial
+		if mat != null and GroundCover._has_uniform(mat.shader, "lod_fade_out"):
+			return mat
+	return null
 
 
 ## A streamer following an eye, with nothing built yet.
@@ -299,7 +309,7 @@ func test_a_far_cells_bushes_stand_out_to_the_far_reach_and_no_further() -> void
 	var cell := Vector2i(18, 16)     # 512-768 m in x: the far ring
 	_streamer._build_cell(cell, 2, {"instances": {BUSH: _grid(cell, 8.0)}})
 	var g := _group_for(BUSH, cell)
-	assert_true(g is GroundCover.Group, "the far ring's bracken is drawn as ground cover")
+	assert_true(g is GroundCover.Group, "the far ring's briars are drawn as ground cover")
 	if not (g is GroundCover.Group):
 		return
 	var cover := g as GroundCover.Group
@@ -324,8 +334,10 @@ func test_a_far_cells_bushes_stand_out_to_the_far_reach_and_no_further() -> void
 			want += 1
 	assert_gt(want, 0)
 	assert_eq(within, want, "every far-share bush within the reach is held")
-	var band: Variant = (t.mesh.surface_get_material(0) as ShaderMaterial).get_shader_parameter("lod_fade_out")
-	assert_eq(band, GroundCover.band_for(reach), "it dissolves at the far reach")
+	var faded := _faded(t.mesh)
+	assert_true(faded != null, "the bush's foliage takes the dissolve")
+	if faded != null:
+		assert_eq(faded.get_shader_parameter("lod_fade_out"), GroundCover.band_for(reach), "it dissolves at the far reach")
 
 
 func test_a_cell_crossing_into_the_near_ring_keeps_its_far_share() -> void:
@@ -349,10 +361,13 @@ func test_a_cell_crossing_into_the_near_ring_keeps_its_far_share() -> void:
 	b.sort()
 	assert_eq(a, b, "the same bushes past the near reach in either ring")
 	var reach := float(WorldStreamer.VIEW_RANGE["bush"])
-	var m := mid.mesh.surface_get_material(0) as ShaderMaterial
+	var m := _faded(mid.mesh)
+	var n := _faded((near_g.tiers[0] as GroundCover.Tier).mesh)
+	assert_true(m != null and n != null, "the bush's foliage takes the dissolve in both tiers")
+	if m == null or n == null:
+		return
 	assert_eq(m.get_shader_parameter("lod_fade_in"), GroundCover.band_for(reach),
 			"the far share fades in where the near tier fades out")
-	var n := (near_g.tiers[0] as GroundCover.Tier).mesh.surface_get_material(0) as ShaderMaterial
 	assert_eq(n.get_shader_parameter("lod_fade_out"), GroundCover.band_for(reach))
 
 
