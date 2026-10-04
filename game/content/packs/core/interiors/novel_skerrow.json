@@ -1,0 +1,45 @@
+[
+  {"id": "core:interior/corbie_cellars", "name": "The Cellars of Corbie Stack", "scene": "res://world/sites/site_interior.tscn", "kind": "deep_place", "place": "core:poi/corbie_stack", "danger": 3, "formed_by": "builder",
+   "resident": "Annet Blackrent's riders, the reivers of Corbie Stack, their hewers and their store of black-rent, and Annet herself in the rent-hall",
+   "story": "The Rudd cut the Stack's cellars down into the needle for a siege: a stair from the bridge-ledge, a guardroom, a cistern for a year's water, barracks, a smithy, and at the bottom a hall where the clan could sit out anything. The reivers came in by a door they cut at the foot, and now the black-rent of half the lower dales is heaped in the Rudd store and counted in the hall where the Rudd once counted their dead.",
+   "unique_object": "the rent-hall's long table, cut from the rock it stands on, with the black-rent heaped on it in farm-sacks, each sack with a tally-stick through its neck",
+   "site": {"kind": "keep", "seed": 8301, "region": "core:region/skerrow", "size": "large", "boss": "core:boss/annet_blackrent", "boss_adds": 2, "boss_loot": "core:loot/rich_chest",
+    "foes": {"rank": ["core:enemy/clanless_outrider", "core:enemy/clanless_raider"], "archers": ["core:enemy/clanless_outrider"], "heavy": ["core:enemy/clanless_hewer"]},
+    "theme": {"palette": ["#a29d90", "#66625a", "#bcb6a6"], "lights": ["torch", "brazier"]},
+    "features": [
+     {"kind": "prop", "room": "foot_stair", "prop": "rope_coil", "note": "the reivers' rope, the one they first climbed the Stack by, kept coiled at the foot of the stair"},
+     {"kind": "prop", "room": "rent_store", "prop": "sack"},
+     {"kind": "note", "room": "secret", "book": "core:book/corbie_riders_tally", "name": "the riders' tally", "item": "core:item/corbie_riders_tally"}
+    ],
+    "rooms": [
+     {"id": "foot_stair", "role": "entrance", "size": "medium"},
+     {"id": "guard_cellar", "role": "chamber", "size": "medium", "drop": -2.5},
+     {"id": "the_cistern", "role": "chamber", "size": "large", "set_piece": "underground_lake", "note": "the Rudd siege cistern, a year's water"},
+     {"id": "riders_barracks", "role": "camp", "size": "large", "set_piece": "barracks", "drop": -2.0},
+     {"id": "rent_store", "role": "treasure", "size": "medium", "set_piece": "cellar_store"},
+     {"id": "well_shaft", "role": "chamber", "size": "medium", "set_piece": "daylight_shaft", "note": "the shaft up the middle of the needle, the sky at the top of it"},
+     {"id": "smithy", "role": "hall", "size": "large", "set_piece": "forge_hall", "drop": -2.0},
+     {"id": "rent_hall", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
+    ]}},
+  {"id": "core:interior/hag_warren", "name": "The Hag-Warren", "scene": "res://world/sites/site_interior.tscn", "kind": "deep_place", "place": "core:poi/the_unmade_giant", "danger": 3, "formed_by": "water",
+   "resident": "the scree-hags who are building the Unmade Giant, the stone-thralls that carry bone to them, crag-wolves that den in the warm galleries, and Mother Scree in the knotting-hall",
+   "story": "Under the Upper Dales the water has eaten the limestone into a warren of galleries, and the scree-hags have lived in it since before the clans came. They hang their cords in the dry galleries, keep their bones in heaps by kind, and in the hall at the bottom Mother Scree knots, and says over the knots what each bone remembers. Every bone on the Unmade Giant went through her hands first.",
+   "unique_object": "the knotting-hall's heaps of giants' bones sorted by kind, every one tied with a cord that runs to the middle of the hall, where all the cords meet in one knot in Mother Scree's lap",
+   "site": {"kind": "cave", "seed": 8302, "region": "core:region/skerrow", "size": "large", "boss": "core:boss/mother_scree", "boss_adds": 2, "boss_loot": "core:loot/rich_chest",
+    "foes": {"rank": ["core:enemy/scree_hag", "core:enemy/crag_wolf"], "archers": ["core:enemy/scree_hag"], "heavy": ["core:enemy/stone_thrall"]},
+    "theme": {"palette": ["#9a978e", "#5c5a55", "#b6b2a6"], "lights": ["fungus", "torch"]},
+    "features": [
+     {"kind": "prop", "room": "warren_mouth", "prop": "basket", "note": "a hag's bone-basket of plaited heather, dropped in the mouth"},
+     {"kind": "note", "room": "secret", "book": "core:book/bone_wardens_last_count", "name": "a bone-warden's tally-book", "item": "core:item/bone_wardens_last_count"}
+    ],
+    "rooms": [
+     {"id": "warren_mouth", "role": "entrance", "size": "medium"},
+     {"id": "the_drag", "role": "passage", "size": "small", "drop": -2.5, "note": "worn smooth by bones dragged down it"},
+     {"id": "cord_gallery", "role": "chamber", "size": "large", "set_piece": "fungus_grotto", "note": "the hags' cords hung drying from the roof"},
+     {"id": "bone_store", "role": "chamber", "size": "large", "set_piece": "ossuary", "note": "bones heaped by kind, shins with shins"},
+     {"id": "hag_camp", "role": "camp", "size": "large"},
+     {"id": "the_sump", "role": "chamber", "size": "large", "set_piece": "underground_lake", "drop": -2.0},
+     {"id": "thrall_hall", "role": "hall", "size": "large", "set_piece": "daylight_shaft", "note": "where the thralls stand when they are not carrying"},
+     {"id": "knotting_hall", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
+    ]}}
+]

@@ -1,0 +1,1645 @@
+[
+ {
+  "id": "core:dialogue/ottar_ko_ghast",
+  "speaker_name": "Ottar ko-Ghast",
+  "notes": "The Kinchain's smith (pois/skerrow.json the_kinchain). Closes your link for an iron ingot. Gives The Cut Link; takes the hags' cord in The Unmade Giant (quests/novel_skerrow.json).",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "kinchain_my_link"
+     }
+    ],
+    "text": "Your link's on the coil, third ring from the top. I touch it every morning with the rest. You're Ghast now, as far as the chain knows; don't tell Ghastfell."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He does not stop working the bellows.)* Mind the coil, it's warm at the bottom. Every link of that is a child of Ghast, and somebody said its name over it while it was red. You'll want to know why it's hanging off a crag. Everybody does.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "Ask.",
+    "choices": [
+     {
+      "text": "Why hang a chain off a crag?",
+      "next": "the_chain"
+     },
+     {
+      "text": "What is the gap near the top?",
+      "next": "the_gap",
+      "conditions": [
+       {
+        "not": {
+         "quest_active": "core:quest/the_cut_link"
+        }
+       },
+       {
+        "quest_not_done": "core:quest/the_cut_link"
+       }
+      ]
+     },
+     {
+      "text": "Close a link for me. Here is a bar of iron.",
+      "next": "my_link",
+      "conditions": [
+       {
+        "flag_not": "kinchain_my_link"
+       },
+       {
+        "has_item": [
+         "core:item/iron_ingot",
+         1
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Could you close a link for me?",
+      "next": "no_iron",
+      "conditions": [
+       {
+        "flag_not": "kinchain_my_link"
+       },
+       {
+        "has_no_item": "core:item/iron_ingot"
+       }
+      ]
+     },
+     {
+      "text": "Haskel ko-Ghast sent me with a hag's cord.",
+      "next": "q_cord",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_unmade_giant",
+         "the_cord"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "About the hag's cord.",
+      "next": "q_knot",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_unmade_giant",
+         "the_knot"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "I found the cut link at Dunnow.",
+      "next": "q_link",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_cut_link",
+         "the_link"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Keep the hearth hot, Ottar.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_chain": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "The clans hung their bridges on chains in the Chain Years, and Ghast forged a chain for itself as well, to hang its children on. A link at every birth: the clan-smith strikes it and closes it while the name's said, and up it goes. Seven hundred years. When the Moot forgave our blood-debt we stopped forging, a whole generation, for the shame of being forgiven. My master forged nothing for twenty winters. I've been making it up since.",
+    "next": "hub"
+   },
+   "the_gap": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(His hand goes to the chain and stops at the plain ring without his looking.)* Twelve from the top. Somebody sawed his own link out and closed the chain round the hole, so the chain wouldn't fall. Considerate. Ghastfell won't say his name, but I've a guess: Kell, who went clanless. And I hear the Unwritten up at Dunnow kept what they took off the clans, link and all.",
+    "choices": [
+     {
+      "text": "I'll go to Dunnow and look for it.",
+      "next": "gap_taken",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_cut_link"
+       }
+      ]
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "gap_taken": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "The keepers' store, if they kept anything. Bring it here. What's done with it after, we'll see. I've had eleven years to think about it and I haven't.",
+    "next": "hub"
+   },
+   "my_link": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He takes the bar, weighs it, and puts it in the fire.)* Say your name. Again, slower. — *(He draws the iron out, bends it, hammers the scarf shut, and hooks it red onto the bottom of the coil, saying your name to it twice while it hisses.)* There. A Ghast smith's said it over hot iron, and the chain's got it. You're held.",
+    "effects": [
+     {
+      "take_item": [
+       "core:item/iron_ingot",
+       1
+      ]
+     },
+     {
+      "set_flag": "kinchain_my_link"
+     },
+     {
+      "renown": 5
+     }
+    ],
+    "next": "hub"
+   },
+   "no_iron": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "Bring me a bar of iron, any iron, and your name, and I'll close it. I don't take coin for it. A link bought isn't a link.",
+    "next": "hub"
+   },
+   "q_cord": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He takes the cord with the tongs, not his hands, and lays it on the anvil, and it moves.)* That's a hag's knotting. Every hair in the warren. Haskel's right, nothing but a chain-hearth will touch it. — But I'll not do anything with it till I'm told what. That's not my giant.",
+    "next": "hub"
+   },
+   "q_knot": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "The hearth's hot. Do I forge it into a link and close it on the Kinchain, where Ghast iron will hold every knot shut for as long as there's a Ghast? Or do I burn it and let the knots go, and the bones with them?",
+    "choices": [
+     {
+      "text": "Forge it into a link and close it on the Kinchain.",
+      "next": "knot_bound",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_unmade_giant",
+         "bind_it"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Burn it and let the knots go.",
+      "next": "knot_burned",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_unmade_giant",
+         "burn_it"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Let me think.",
+      "next": "hub"
+     }
+    ]
+   },
+   "knot_bound": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He hammers the cord into the iron while it is red, folds it, and closes it on the chain under the gap. The whole chain rings once, top to bottom, and is still.)* Held. It'll not undo while there's a Ghast to say the names on this. That's a long time, I hope.",
+    "next": "end"
+   },
+   "knot_burned": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He lays it in the coals. It hisses, writhes, and the knots go one after another with a sound like knuckles cracking, and then it's ash.)* There. Somewhere up the Dales a lot of bone just lay down. Haskel will be pleased. The Breath can have them now.",
+    "next": "end"
+   },
+   "q_link": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He turns it over and over.)* That's our mark. And that's a K, under the filing. Kell. — So. Do I close it back on the chain where he cut it, and hold him whether he likes it or not? Or do I hang it open on the ring, so the chain remembers he went?",
+    "choices": [
+     {
+      "text": "Close it on the chain again.",
+      "next": "link_closed",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_cut_link",
+         "close_it"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Hang it open on the ring over the gap.",
+      "next": "link_open",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_cut_link",
+         "hang_it_open"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Let me think.",
+      "next": "hub"
+     }
+    ]
+   },
+   "link_closed": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He heats the cut, closes it, and climbs the ladder up the crag to hook it back in its place. The plain ring comes down in his fist.)* There. He's held. He can hate it from wherever he is.",
+    "next": "end"
+   },
+   "link_open": {
+    "speaker": "Ottar ko-Ghast",
+    "text": "*(He climbs the ladder and hangs it from the plain ring by its open end, where it swings.)* There. Now anybody who asks about the gap gets told the truth. He went. He was ours. Both.",
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/kinchain_chain",
+  "speaker_name": "The Kinchain",
+  "notes": "A PoiTouch on the Kinchain's coil (regions/skerrow.gd the_kinchain).",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The Kinchain",
+    "text": "The chain comes down off the jib fourteen metres over your head, links as long as your hand, black at the top and bright at the bottom, and lies in a coil as high as a man. Every link has the Ghast mark struck on it and a name scratched under the mark. The bottom ones are still warm.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Read the names on the newest links.",
+      "next": "names"
+     },
+     {
+      "text": "Look up at the gap near the top.",
+      "next": "gap"
+     },
+     {
+      "text": "Haul on the chain.",
+      "next": "haul"
+     },
+     {
+      "text": "Leave it.",
+      "next": "end"
+     }
+    ]
+   },
+   "names": {
+    "speaker": "The Kinchain",
+    "text": "Brenna. Ossi. Tam. Hild, the same week as Tam. A link with two names on it, twins. One with a name and a line under it and no date, which the Ghast cut for a child who did not live the night. The chain does not leave them off.",
+    "no_talk": true,
+    "next": "look"
+   },
+   "gap": {
+    "speaker": "The Kinchain",
+    "text": "Twelve links from the jib the chain is closed round a gap with a plain ring of new iron, as if something had been sawn out and the hole stitched shut. The ring is the only thing on the chain with no name.",
+    "no_talk": true,
+    "next": "look"
+   },
+   "haul": {
+    "speaker": "The Kinchain",
+    "text": "You lean on it. It does not move for a long moment, and then the whole chain stirs up to the jib and settles with a long iron sound, all the names knocking together, and the jib creaks. Ottar, if he is here, does not look up. Everyone does that once.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/runa_ko_oskel",
+  "speaker_name": "Runa ko-Oskel",
+  "notes": "The Kite-Watch's kite-wife (pois/skerrow.json the_kite_watch). Gives The Unmade Giant.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "quest_done": "core:quest/the_unmade_giant"
+     }
+    ],
+    "text": "No lights on the Dales now. Just Haskel, up a ladder, taking it down. I can see him from the kite. He waves."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Runa ko-Oskel",
+    "text": "Wind's west and steady, good kite weather. — Don't stand on the line. If you want to talk, talk; I can listen and fly at once. I've done both since I was nine.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Runa ko-Oskel",
+    "text": "What?",
+    "choices": [
+     {
+      "text": "What are the kites for?",
+      "next": "the_kites"
+     },
+     {
+      "text": "How do you read the land from a kite?",
+      "next": "reading"
+     },
+     {
+      "text": "You said the night kite showed you something.",
+      "next": "the_lights",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_unmade_giant"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_unmade_giant"
+        }
+       }
+      ]
+     },
+     {
+      "text": "I've been to the thing on the Upper Dales.",
+      "next": "giant_news",
+      "conditions": [
+       {
+        "quest_min_stage": [
+         "core:quest/the_unmade_giant",
+         "the_warren"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Fair wind, Runa.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_kites": {
+    "speaker": "Runa ko-Oskel",
+    "text": "Reivers. Every fold on the west moor can see my hawk. Flown high and steady, all quiet. Flown low and dipping, riders out of the passes. Brought down, run for the walls. At night the black kite goes up with a lantern, and it means the same in light. The Moot pays me in oats and doesn't know what it's paying for. The Oskel know.",
+    "next": "hub"
+   },
+   "reading": {
+    "speaker": "Runa ko-Oskel",
+    "text": "A kite pulls the way the wind goes, and the wind goes the way the land lies. Smoke a mile off bends my line. A crowd of riders behind a ridge, I can't see them, but the crows go up, and the crows put a bump in the wind, and the bump comes down the line into my hands. You learn. Or you don't, and you farm.",
+    "next": "hub"
+   },
+   "the_lights": {
+    "speaker": "Runa ko-Oskel",
+    "text": "This spring the night kite went up and the lantern lit the Upper Dales the way it does, and there was something standing there. Twenty men high. No fire on it, but lights going up and down it, the way lanterns go on a ladder. It's still there. It's taller every month. Haskel ko-Ghast, the bone-warden, went up to count it and he's stayed.",
+    "choices": [
+     {
+      "text": "I'll go and see what it is.",
+      "next": "lights_taken",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_unmade_giant"
+       }
+      ]
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "lights_taken": {
+    "speaker": "Runa ko-Oskel",
+    "text": "East along the Dales from here, past the Ghast side. You'll see it before you're near. Everyone does. That's what bothers me.",
+    "next": "hub"
+   },
+   "giant_news": {
+    "speaker": "Runa ko-Oskel",
+    "text": "*(She lets out a fathom of line while she listens.)* Hags. Building a giant. Course they are. The thralls have been carrying bone up the Dales all year, I've watched them, I thought they were taking it home. Well. It's not my moor. But I'll keep the black kite up.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/kite_watch_windlass",
+  "speaker_name": "The kite windlass",
+  "notes": "A PoiTouch on the Kite-Watch's windlass (regions/skerrow.gd the_kite_watch). Fly a kite and see far: reveals Corbie Stack by day and the Unmade Giant by night (each once).",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The kite windlass",
+    "text": "A drum of black oak on an iron spindle, the hawk-kite's line wound on it thick as a wrist and humming in the wind, and beside it the night kite's drum with its lantern-line. The handle is worn pale by Runa's hands.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Let out line and see what the hawk sees.",
+      "next": "hawk",
+      "conditions": [
+       {
+        "flag_not": "kite_watch_hawk"
+       },
+       {
+        "not": {
+         "time_between": [
+          21,
+          5
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "text": "Send the night kite up with its lantern.",
+      "next": "night",
+      "conditions": [
+       {
+        "flag_not": "kite_watch_night"
+       },
+       {
+        "time_between": [
+         21,
+         5
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Feel the line.",
+      "next": "feel"
+     },
+     {
+      "text": "Leave it.",
+      "next": "end"
+     }
+    ]
+   },
+   "hawk": {
+    "speaker": "The kite windlass",
+    "text": "You let the drum run. The hawk climbs till it is a speck and the line goes taut as a bar, and the land comes down it into your hands: the west moor, the folds, and away north-east a needle of rock standing up out of the high moor with a thread of smoke on its top, where no clan lives. The line kicks once, as if the hawk had seen something there.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "kite_watch_hawk"
+     },
+     {
+      "discover": "core:poi/corbie_stack"
+     }
+    ],
+    "next": "end"
+   },
+   "night": {
+    "speaker": "The kite windlass",
+    "text": "The black kite goes up into the dark with its lantern swinging, and its light sweeps the moor in a long slow arc. East, on the Upper Dales, something stands up into the arc and out of it again: a shape twenty men high, with small lights going up and down it like lanterns on a ladder.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "kite_watch_night"
+     },
+     {
+      "discover": "core:poi/the_unmade_giant"
+     }
+    ],
+    "next": "end"
+   },
+   "feel": {
+    "speaker": "The kite windlass",
+    "text": "You lay a hand on the line. It thrums like a harp-string and pulls, steady, west to east, and under the pull there is a small slow beat: the hawk, a hundred feet up, riding the moor's breath.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/bannoch_the_bee_master",
+  "speaker_name": "Bannoch",
+  "notes": "The Bee-Bole Crag's bee-master (pois/skerrow.json bee_bole_crag). Sells clan honey; the empty top row is the Bone Clan's.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "bee_bole_stolen"
+     }
+    ],
+    "text": "You took comb from a skep without asking. The bees know you now. So do I. Buy, or go."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Bannoch",
+    "text": "*(He hums, lowers the smoker, and lifts his veil an inch.)* Stand still and they'll take you for a stone. Wave your arms and they'll take you for a bear. You want honey. Everybody who walks up here wants honey.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Bannoch",
+    "text": "Well?",
+    "choices": [
+     {
+      "text": "What is this place?",
+      "next": "the_crag"
+     },
+     {
+      "text": "Why is the top row empty?",
+      "next": "top_row"
+     },
+     {
+      "text": "I'll buy honey. Here are fifteen marks.",
+      "next": "buy",
+      "conditions": [
+       {
+        "marks_min": 15
+       }
+      ]
+     },
+     {
+      "text": "I'll buy honey.",
+      "next": "no_coin",
+      "conditions": [
+       {
+        "not": {
+         "marks_min": 15
+        }
+       }
+      ]
+     },
+     {
+      "text": "Hum on, Bannoch.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_crag": {
+    "speaker": "Bannoch",
+    "text": "The bee-boles. A row of boles to a clan, cut in the rock facing south, so the sun warms the skeps and the wind can't reach them. Every clan's guest-honey comes off this crag; the heather's the best on the Skerrow side. And the Moot's rule is the bee-master's of no clan, so no clan's bees get the best of the sun. I gave my name up for it. Bees don't care what you're called.",
+    "next": "hub"
+   },
+   "top_row": {
+    "speaker": "Bannoch",
+    "text": "Cut for the Bone Clan, the eighth, whose verse nobody sings. There's been a skep put in it now and then, by a clan with a spare swarm and a conscience. It's empty in the morning, every time. The swarm goes somewhere else. Bees won't stay with a clan nobody says. — That's my thinking. Nobody else's.",
+    "next": "hub"
+   },
+   "buy": {
+    "speaker": "Bannoch",
+    "text": "*(He goes to a skep in the Rudd row, smokes it, lifts the straw, and cuts comb into a crock without a single bee on his hands.)* Rudd heather. Darkest of the seven. Eat it slow.",
+    "effects": [
+     {
+      "marks": -15
+     },
+     {
+      "give_item": [
+       "core:item/heather_honey",
+       3
+      ]
+     }
+    ],
+    "next": "hub"
+   },
+   "no_coin": {
+    "speaker": "Bannoch",
+    "text": "Fifteen marks a crock, and it's dear because it's guest-honey; you're nobody's guest. Come back with the coin.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/bee_bole_boles",
+  "speaker_name": "The bee-boles",
+  "notes": "A PoiTouch on the Bee-Bole Crag's lowest row (regions/skerrow.gd bee_bole_crag). Take comb without asking (a theft) once; look at the empty top row.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The bee-boles",
+    "text": "Square niches cut into the white rock in rows, each with a straw skep in it like a loaf in an oven, and the air in front of them thick and gold and loud. Each row has a clan-mark cut over it. The top row's mark is a bone, and its niches are swept clean and empty.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Smoke a skep and cut a comb for yourself.",
+      "next": "steal",
+      "conditions": [
+       {
+        "flag_not": "bee_bole_stolen"
+       }
+      ]
+     },
+     {
+      "text": "Look at the empty top row.",
+      "next": "empty"
+     },
+     {
+      "text": "Leave them be.",
+      "next": "end"
+     }
+    ]
+   },
+   "steal": {
+    "speaker": "The bee-boles",
+    "text": "You lift the straw. The bees boil up over your hands and the comb comes away heavy and dripping, and you are stung nine times before you are clear. Somewhere behind you the humming stops. Guest-honey is for guests; the clans remember who steals it.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "bee_bole_stolen"
+     },
+     {
+      "give_item": [
+       "core:item/heather_honey",
+       4
+      ]
+     },
+     {
+      "bounty": {
+       "crime": "theft",
+       "value": 40,
+       "at": "core:poi/bee_bole_crag",
+       "seen_by": "core:npc/bannoch_the_bee_master",
+       "reaction": "report"
+      }
+     }
+    ],
+    "next": "end"
+   },
+   "empty": {
+    "speaker": "The bee-boles",
+    "text": "Eight niches under the bone mark, cut as neatly as any of the others, and swept. In the back of one, somebody has left a little bone token of no clan on a cord, the way you would leave a coin in a well. A single bee walks round it and goes.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/wat_hobb_ko_brindle",
+  "speaker_name": "Wat Hobb ko-Brindle",
+  "notes": "The Scour's husher (pois/skerrow.json the_scour). The sluice (core:dialogue/scour_sluice) is pulled once.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "flag": "scour_sluice_pulled"
+     }
+    ],
+    "text": "Well, it's done, and the hill's still standing. I've been through the fresh scour twice. Lead, a good vein, and Brindle can say what it likes about omens."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Wat Hobb ko-Brindle",
+    "text": "*(He licks a stone, looks at it, and drops it on the left-hand pile.)* Don't step on the piles. Left's nothing, right's lead. You're not from Brindle. Good. Brindle would tell me to go home.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Wat Hobb ko-Brindle",
+    "text": "Ask what you like.",
+    "choices": [
+     {
+      "text": "What is a hush?",
+      "next": "the_hush"
+     },
+     {
+      "text": "Why haven't you pulled the sluice?",
+      "next": "the_tooth"
+     },
+     {
+      "text": "Back to your piles, then.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_hush": {
+    "speaker": "Wat Hobb ko-Brindle",
+    "text": "You dam a beck on the fell top and let the pond fill all winter. Come spring you pull the sluice, and the water goes down the hill all at once and takes the turf and the stones and the hill's skin off it, and there's your vein, bare, shining, for anybody to see. No digging. Just a lot of water in a hurry. My grandfather hushed half this fell.",
+    "next": "hub"
+   },
+   "the_tooth": {
+    "speaker": "Wat Hobb ko-Brindle",
+    "text": "The second hush turned up a tooth. A giant's tooth the size of a cart wheel, standing up in the scour like a gravestone. The elders said the hill was telling me to stop. I said the hill was telling me there was a giant in it. They took the tooth to Kharrow. — The pond's full again. Pull it, and maybe there's lead, and maybe there's the rest of him. I've been sitting here a month. You pull it, if you like. Then it's not me that did.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/scour_sluice",
+  "speaker_name": "The sluice",
+  "notes": "A PoiTouch on the Scour's sluice windlass (regions/skerrow.gd the_scour). Pull it once: the flood scours the fellside and leaves ore and a shard of a giant's tooth.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The sluice",
+    "text": "A gate of oak planks in the dam's throat, held shut by a windlass on a gantry over it. On the far side of it the pond lies black and brimming; on this side the raw gash of the old scour runs away down the fell.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Wind up the sluice and let the pond go.",
+      "next": "pull",
+      "conditions": [
+       {
+        "flag_not": "scour_sluice_pulled"
+       }
+      ]
+     },
+     {
+      "text": "Look down the scour.",
+      "next": "after",
+      "conditions": [
+       {
+        "flag": "scour_sluice_pulled"
+       }
+      ]
+     },
+     {
+      "text": "Leave it shut.",
+      "next": "end",
+      "conditions": [
+       {
+        "flag_not": "scour_sluice_pulled"
+       }
+      ]
+     },
+     {
+      "text": "Leave it.",
+      "next": "end",
+      "conditions": [
+       {
+        "flag": "scour_sluice_pulled"
+       }
+      ]
+     }
+    ]
+   },
+   "pull": {
+    "speaker": "The sluice",
+    "text": "The windlass fights you, then gives, and the gate comes up a foot, two, and the pond goes out under it with a roar like a hall falling down. The flood tears down the fell in a brown wall, stones rolling in it like loaves, and for a long minute you cannot hear yourself. When it is gone there is a new white gash beside the old one, and in it, shining wet, a grey vein of lead, and a long yellow splinter standing up out of the stones.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "scour_sluice_pulled"
+     },
+     {
+      "give_item": [
+       "core:item/silver_ore",
+       3
+      ]
+     },
+     {
+      "give_item": [
+       "core:item/giants_tooth_shard",
+       1
+      ]
+     },
+     {
+      "renown": 2
+     }
+    ],
+    "next": "end"
+   },
+   "after": {
+    "speaker": "The sluice",
+    "text": "The pond is a bowl of black mud with a trickle running out of it. Below, the new scour lies white down the fell beside the old one, picked over, the vein in it bare to the sky. It will be years filling again.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/isbel_ko_rudd",
+  "speaker_name": "Isbel ko-Rudd",
+  "notes": "The Rudd wife at the Black-Rent Pillar (pois/skerrow.json black_rent_pillar). Gives The Black Rent and takes its choice.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "quest_done": "core:quest/the_black_rent"
+     }
+    ],
+    "text": "I'm going home. I only came back for the sack. — You did right by us, whatever you did. Nobody else came."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "*(Her hand tightens on the sack in her lap.)* If you're one of theirs, it's here, and you can climb for it. If you're not, sit down. You're blocking the light.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "Well?",
+    "choices": [
+     {
+      "text": "What is this pillar?",
+      "next": "the_pillar"
+     },
+     {
+      "text": "Why won't you send it up?",
+      "next": "why_not",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_black_rent"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_black_rent"
+        }
+       }
+      ]
+     },
+     {
+      "text": "About the black-rent book.",
+      "next": "q_book",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_black_rent",
+         "the_book"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "I'll leave you be.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_pillar": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "Black-rent. Every farm below the passes pays it, and every one of us says we don't. You put the coin in the basket, haul it up on the rope, tie it off, and go home. In the morning it's empty. And that year nobody burns your hay. Twelve years I've paid it. The Moot says no clan pays black-rent. The Moot lives behind a wall.",
+    "next": "hub"
+   },
+   "why_not": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "My man went up the pass after a heifer in the spring. A heifer. He came back over a pony's back. Twelve years I paid them so that wouldn't happen, and it happened. — I've the rent here. I'm not sending it up till I know who takes it, and where it goes, and who he was, the one that met my man.",
+    "choices": [
+     {
+      "text": "I'll find out who takes it.",
+      "next": "rent_taken",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_black_rent"
+       }
+      ]
+     },
+     {
+      "text": "I can't help you.",
+      "next": "hub"
+     }
+    ]
+   },
+   "rent_taken": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "They come from the north at night, over the moor, not up the road. My man said there's a needle of rock on the high moor the Rudd used to hold, Corbie Stack. He said it like a joke. Go and see if it was one.",
+    "next": "hub"
+   },
+   "q_book": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "*(She turns the pages till she finds her farm, and puts her thumb on the blank.)* Twelve years. And a ham at midwinter, she sent us, I thought it was a neighbour. — And this. Dannan. That's his name, then. — So. What's to be done with it?",
+    "choices": [
+     {
+      "text": "Take it down the dales, so every farm takes back what it paid.",
+      "next": "book_farms",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_black_rent",
+         "back_to_the_farms"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Have it carried to the Moot at Kharrow.",
+      "next": "book_moot",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_black_rent",
+         "to_the_moot"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "I'm keeping it.",
+      "next": "book_kept",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_black_rent",
+         "keep_it"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Let me think.",
+      "next": "hub"
+     }
+    ]
+   },
+   "book_farms": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "Every farm. I'll walk it myself. Hobb's first; they burned Hobb's barn. — And the Stack's store can come down the hill on carts, a sack to a farm, with the Rudd watching. That'll be a sight.",
+    "next": "end"
+   },
+   "book_moot": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "The Moot. Well. Let them read it, every page, out loud in the hall. Let them hear how many of us pay. They'll say we shouldn't have. They'll be right. They can say it to my face.",
+    "next": "end"
+   },
+   "book_kept": {
+    "speaker": "Isbel ko-Rudd",
+    "text": "*(She looks at you a long time.)* So that's what it's worth to you. Every farm under the passes, and what we pay to be left alone. — Go on, then. I know your face now. So will Annet's riders, if any are left.",
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/black_rent_pillar_basket",
+  "speaker_name": "The rent-basket",
+  "notes": "A PoiTouch on the Black-Rent Pillar's rope (regions/skerrow.gd black_rent_pillar). Pay the black-rent (the clanless leave your roads be: roadlife/skerrow.json `unless`), or take what is in the basket (Annet's riders come for you on the road).",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The rent-basket",
+    "text": "A rope runs up the pillar to an iron pulley at its top, black rags tied all the way up it, and the basket hangs at the bottom on its hook, wide as a cartwheel. Tally-sticks are jammed into the cracks of the rock round the rope, one for every farm that has paid, years of them.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Put forty marks of black-rent in the basket and haul it up.",
+      "next": "pay",
+      "conditions": [
+       {
+        "flag_not": "black_rent_paid"
+       },
+       {
+        "marks_min": 40
+       },
+       {
+        "flag_not": "black_rent_robbed"
+       }
+      ]
+     },
+     {
+      "text": "Take what the last farm left in the basket.",
+      "next": "rob",
+      "conditions": [
+       {
+        "flag_not": "black_rent_robbed"
+       },
+       {
+        "flag_not": "black_rent_paid"
+       }
+      ]
+     },
+     {
+      "text": "Look at the tally-sticks.",
+      "next": "sticks"
+     },
+     {
+      "text": "Leave it.",
+      "next": "end"
+     }
+    ]
+   },
+   "pay": {
+    "speaker": "The rent-basket",
+    "text": "You count forty marks into the basket and haul. The pulley shrieks, the basket goes up the pillar into the rags, and you tie off the rope. In the morning it will be empty, and the clanless who ride for the Stack will know your face and let it pass.",
+    "no_talk": true,
+    "effects": [
+     {
+      "marks": -40
+     },
+     {
+      "set_flag": "black_rent_paid"
+     },
+     {
+      "morality": -1
+     }
+    ],
+    "next": "end"
+   },
+   "rob": {
+    "speaker": "The rent-basket",
+    "text": "There are sixty marks in a twist of sacking in the basket's bottom, and a tally-stick with a farm's notch on it. You take the coin. Somewhere up on the high moor somebody will come down for it tonight and find the basket empty, and the farm's notch beside it, and the farm will burn for it unless they find who took it first.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "black_rent_robbed"
+     },
+     {
+      "marks": 60
+     },
+     {
+      "morality": -2
+     }
+    ],
+    "next": "end"
+   },
+   "sticks": {
+    "speaker": "The rent-basket",
+    "text": "Hundreds of tally-sticks, each notched with a farm-mark and a year, the oldest grey and split. Some have a second notch cut across, deep and new: a farm that missed a year. There are not many of those.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/grett_ko_brindle",
+  "speaker_name": "Grett ko-Brindle",
+  "notes": "The Bucket-Line's line-mistress (pois/skerrow.json the_bucket_line). Pays for turns in the treadwheel (core:dialogue/bucket_line_wheel).",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Grett ko-Brindle",
+    "text": "*(She finishes a splice before she looks up.)* If you're walking, the wheel's empty. If you're talking, talk while you walk. Ore doesn't come down the dale on its own.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Grett ko-Brindle",
+    "text": "Well?",
+    "choices": [
+     {
+      "text": "What is the Bucket-Line?",
+      "next": "the_line"
+     },
+     {
+      "text": "Who cut your cable?",
+      "next": "the_cut"
+     },
+     {
+      "text": "Have you iron to sell?",
+      "next": "ore",
+      "conditions": [
+       {
+        "marks_min": 30
+       }
+      ]
+     },
+     {
+      "text": "Good splicing, Grett.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_line": {
+    "speaker": "Grett ko-Brindle",
+    "text": "Ghaleld's ore came down this dale on ponies, a hundredweight a pony, a day a trip. I strung a cable across it on two trestles, hung buckets on it, and built a wheel to walk. Now a body in the wheel sends down in an hour what twenty ponies did in a day. The pony men hate me. The ponies don't.",
+    "next": "hub"
+   },
+   "the_cut": {
+    "speaker": "Grett ko-Brindle",
+    "text": "Reivers, last spring, off the Stack. I wouldn't pay their rent for the cable, so they cut it, and the buckets went in the beck full. I was up to my waist a month splicing. — They haven't been back. I've a crossbow by the wheel and I sleep under it.",
+    "next": "hub"
+   },
+   "ore": {
+    "speaker": "Grett ko-Brindle",
+    "text": "Thirty marks for three bars of Ghaleld red, the best iron in the Heights. Any smith will know it.",
+    "choices": [
+     {
+      "text": "I'll take a load.",
+      "next": "ore_bought",
+      "effects": [
+       {
+        "marks": -30
+       },
+       {
+        "give_item": [
+         "core:item/iron_ingot",
+         3
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "ore_bought": {
+    "speaker": "Grett ko-Brindle",
+    "text": "*(She takes the coin and hands you three bars from a crate by the chute.)* Brindlecrag's smith works my ore into bars for me. Saves your back, and his.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/bucket_line_wheel",
+  "speaker_name": "The treadwheel",
+  "notes": "A PoiTouch on the Bucket-Line's treadwheel (regions/skerrow.gd the_bucket_line). A turn in it pays twelve marks, five turns in all.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The treadwheel",
+    "text": "A wheel of oak as tall as two men, slatted inside like a ladder bent round, in a frame of trestle-timbers. A rope from its axle runs up over the drum that drives the cable. Grett's tally-board hangs on the frame, a notch for every turn walked.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Walk a turn in the wheel.",
+      "next": "walk",
+      "conditions": [
+       {
+        "not": {
+         "counter_min": [
+          "bucket_line_turns",
+          5
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "text": "Walk a turn in the wheel.",
+      "next": "done",
+      "conditions": [
+       {
+        "counter_min": [
+         "bucket_line_turns",
+         5
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Leave it.",
+      "next": "end"
+     }
+    ]
+   },
+   "walk": {
+    "speaker": "The treadwheel",
+    "text": "You step in and walk, and the wheel turns under you, slow, heavy, then easier, and over your head the cable creaks and the buckets go down the line one after another, full and red, and come back empty. By the time the last one has tipped at the chute your legs are shaking. Grett notches the board and puts twelve marks in your hand without a word.",
+    "no_talk": true,
+    "effects": [
+     {
+      "inc_counter": "bucket_line_turns"
+     },
+     {
+      "marks": 12
+     }
+    ],
+    "next": "end"
+   },
+   "done": {
+    "speaker": "The treadwheel",
+    "text": "Grett waves you out of the wheel before you are in it. The ore's all down this week, she says, and she won't pay a walker to turn an empty line.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/mags_ko_skarl",
+  "speaker_name": "Mags ko-Skarl",
+  "notes": "The Skarl coffin-hanger at the Breath-Ledge (pois/skerrow.json the_breath_ledge). Hold the rope for a hanging (once). The Wall Answers' turns are hers.",
+  "start": "greet",
+  "nodes": {
+   "greet": {
+    "speaker": "Mags ko-Skarl",
+    "text": "*(She looks up the face before she looks at you.)* Don't stand under the pegs. The old ones let go when they're ready, and they don't call down first.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Mags ko-Skarl",
+    "text": "What is it?",
+    "choices": [
+     {
+      "text": "Why hang the dead up there?",
+      "next": "the_breath"
+     },
+     {
+      "text": "Can I help with the ropes?",
+      "next": "the_rope",
+      "conditions": [
+       {
+        "flag_not": "breath_ledge_held_rope"
+       }
+      ]
+     },
+     {
+      "text": "The Answering Wall gave back a name: Aldo ko-Skarl.",
+      "next": "q_aldo",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_wall_answers",
+         "the_name"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "I found the token in the fallen boards.",
+      "next": "q_hanging",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_wall_answers",
+         "the_hanging"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Rest easy, Mags.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_breath": {
+    "speaker": "Mags ko-Skarl",
+    "text": "The world's being breathed back in. What's nearest the mouth goes first, the oldest, the highest, the forgotten. So we don't put ours in the ground to wait at the back. We put them up there, as near the sky as a rope will lift them, so they'll be taken early, and kindly, before the rest of us. A coffin that falls, the Breath didn't want yet. We carry the bones home.",
+    "next": "hub"
+   },
+   "the_rope": {
+    "speaker": "Mags ko-Skarl",
+    "text": "There's one waiting, if you've the arms for it. Old Haddo ko-Skarl, ninety-one. Take the rope at the foot while I go up the ladder and guide him; don't let go whatever it does. He's light. They get light.",
+    "choices": [
+     {
+      "text": "Take the rope.",
+      "next": "rope_held",
+      "effects": [
+       {
+        "set_flag": "breath_ledge_held_rope"
+       },
+       {
+        "morality": 2
+       },
+       {
+        "renown": 3
+       },
+       {
+        "rep": [
+         "core:faction/clan_moot",
+         2
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Another day.",
+      "next": "hub"
+     }
+    ]
+   },
+   "rope_held": {
+    "speaker": "Mags ko-Skarl",
+    "text": "*(You haul, she climbs, and the coffin goes up the face in jerks, turning slowly, until she guides it onto two pegs high on the scar and knocks them home. She says his name up the rock three times, loud, and the wind takes it.)* There. Nearer than he ever got in his life. Thank you. The Skarl will hear you held the rope.",
+    "next": "hub"
+   },
+   "q_aldo": {
+    "speaker": "Mags ko-Skarl",
+    "text": "*(She says the name over to herself.)* Aldo. Aldo ko-Skarl. I don't know it. I know every Skarl on that face, I hung half of them. — Unless. A coffin fell last winter, in the big wind. I put the boards in a heap at the foot and didn't look at the token. I didn't want to know who the Breath had sent back. Look, would you? I can't.",
+    "next": "hub"
+   },
+   "q_hanging": {
+    "speaker": "Mags ko-Skarl",
+    "text": "*(She reads it, and sits down on the boards.)* Aldo. I hung him. Nine winters ago, a drover's boy, no kin, fell off the Skarl road in the snow. I hung him myself and I'd forgotten him by spring. And the Breath sent him back, and the wall said his name. — What's right? Tell me.",
+    "choices": [
+     {
+      "text": "Peg a new coffin for him, higher than before.",
+      "next": "aldo_hung",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_wall_answers",
+         "hang_again"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Carry his token home to Skarlow, so they say his name at the fire.",
+      "next": "aldo_home",
+      "effects": [
+       {
+        "quest_choice": [
+         "core:quest/the_wall_answers",
+         "carry_home"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Let me think.",
+      "next": "hub"
+     }
+    ]
+   },
+   "aldo_hung": {
+    "speaker": "Mags ko-Skarl",
+    "text": "Higher. Up by my own peg. Help me with the ladder, and I'll say it loud enough that the Breath can't miss it this time.",
+    "next": "end"
+   },
+   "aldo_home": {
+    "speaker": "Mags ko-Skarl",
+    "text": "Home, then. The fire at Skarlow. They'll say it every night for a year, and then at the turn of every year after. That's more than he had.",
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/breath_ledge_boards",
+  "speaker_name": "The fallen boards",
+  "notes": "A PoiTouch on the heap of fallen coffin-boards at the Breath-Ledge's foot (regions/skerrow.gd the_breath_ledge). Gives Aldo ko-Skarl's token in The Wall Answers.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The fallen boards",
+    "text": "A heap of grey boards at the foot of the face, broken across where they hit the scree, pegs still through some of them. Bones have been carried away from it, carefully. The boards were left.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Search the boards for the coffin's token.",
+      "next": "token",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_wall_answers",
+         "the_fallen"
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Leave them.",
+      "next": "end"
+     }
+    ]
+   },
+   "token": {
+    "speaker": "The fallen boards",
+    "text": "Under the lid-boards, still nailed to a split plank, a disc of giant's bone on a cord, the name cut in it in a Skarl hand and rubbed with soot to show: ALDO KO-SKARL. You work it free of the nail.",
+    "no_talk": true,
+    "effects": [
+     {
+      "give_item": [
+       "core:item/skarl_coffin_token",
+       1
+      ]
+     }
+    ],
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/answering_wall_stone",
+  "speaker_name": "The speaking-stone",
+  "notes": "A PoiTouch on the Answering Wall's speaking-stone (regions/skerrow.gd the_answering_wall). Call your name (once, renown); at dusk, listen: the wall gives back Aldo ko-Skarl and starts The Wall Answers.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The speaking-stone",
+    "text": "A block of limestone with a step worn into its top by a thousand years of children's feet. Across the turf the wall curves round like a cupped hand, white, streaked with ochre names from as high as a ladder reaches down to stains at its foot.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Stand on the step and call your name to the wall.",
+      "next": "call",
+      "conditions": [
+       {
+        "flag_not": "answering_wall_called"
+       }
+      ]
+     },
+     {
+      "text": "Call your name again.",
+      "next": "again",
+      "conditions": [
+       {
+        "flag": "answering_wall_called"
+       }
+      ]
+     },
+     {
+      "text": "Stand still and listen to the wall.",
+      "next": "listen_dusk",
+      "conditions": [
+       {
+        "time_between": [
+         18,
+         22
+        ]
+       },
+       {
+        "quest_not_done": "core:quest/the_wall_answers"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_wall_answers"
+        }
+       }
+      ]
+     },
+     {
+      "text": "Stand still and listen to the wall.",
+      "next": "listen",
+      "conditions": [
+       {
+        "any": [
+         {
+          "not": {
+           "time_between": [
+            18,
+            22
+           ]
+          }
+         },
+         {
+          "quest_done": "core:quest/the_wall_answers"
+         },
+         {
+          "quest_active": "core:quest/the_wall_answers"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "text": "Step down.",
+      "next": "end"
+     }
+    ]
+   },
+   "call": {
+    "speaker": "The speaking-stone",
+    "text": "You call it. The wall takes your name and holds it a moment, and gives it back, clearer than you said it, from every part of the curve at once, so that it seems to be said by a crowd who all know you. It goes on a long time. Being known holds, the clans say.",
+    "no_talk": true,
+    "effects": [
+     {
+      "set_flag": "answering_wall_called"
+     },
+     {
+      "renown": 3
+     }
+    ],
+    "next": "end"
+   },
+   "again": {
+    "speaker": "The speaking-stone",
+    "text": "Your name comes back off the rock, as clear as the first time. The wall does not forget a voice.",
+    "no_talk": true,
+    "next": "end"
+   },
+   "listen_dusk": {
+    "speaker": "The speaking-stone",
+    "text": "The light goes red on the wall and the wind drops. For a long while there is nothing. Then, out of the curve, quiet and clear, the wall says a name nobody here has called: Aldo. Aldo ko-Skarl. Again, fainter. Then not at all. The callers say a name the wall gives back unasked belongs to someone being forgotten too fast. The Skarl hang their dead on the Breath-Ledge, in the east fells.",
+    "no_talk": true,
+    "effects": [
+     {
+      "start_quest": "core:quest/the_wall_answers"
+     }
+    ],
+    "next": "end"
+   },
+   "listen": {
+    "speaker": "The speaking-stone",
+    "text": "The wind moves in the curve of the wall and says nothing you can make out, the sound of a great many people a long way off, all talking at once.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/haskel_ko_ghast",
+  "speaker_name": "Haskel ko-Ghast",
+  "notes": "The bone-warden camped at the Unmade Giant (pois/skerrow.json the_unmade_giant). Talking to him is The Unmade Giant's first stage.",
+  "start": "greet",
+  "greetings": [
+   {
+    "conditions": [
+     {
+      "quest_done": "core:quest/the_unmade_giant"
+     }
+    ],
+    "text": "Wading Giant's left shin, down. Jawbone's back teeth, down. I'm saying each one as I lower it. It takes a while. They've a lot of names."
+   }
+  ],
+  "nodes": {
+   "greet": {
+    "speaker": "Haskel ko-Ghast",
+    "text": "*(He does not take the glass from his eye.)* Forty-four. Forty-four bones I know by name, and the stones between. Yesterday it was forty-three. Do you see her? Top of the ladder, by the shoulder. That's a Brakh's collarbone she's lashing on.",
+    "next": "hub"
+   },
+   "hub": {
+    "speaker": "Haskel ko-Ghast",
+    "text": "*(He lowers the glass.)* You want something.",
+    "choices": [
+     {
+      "text": "What is that thing?",
+      "next": "the_giant"
+     },
+     {
+      "text": "How many bones does it want?",
+      "next": "the_count"
+     },
+     {
+      "text": "Who is building it?",
+      "next": "the_hags"
+     },
+     {
+      "text": "I'll leave you to your count.",
+      "next": "end"
+     }
+    ]
+   },
+   "the_giant": {
+    "speaker": "Haskel ko-Ghast",
+    "text": "A giant. Put back. The scree-hags make thralls, you'll have met thralls: a bone and some rock and a cord and something said over them, and it gets up and carries things. A thrall's a cart-sized thing. This is every bone the thralls have carried up the Dales for forty years, tied into one. The Breath took the giants back and left their weight. She's trying to put the weight back up.",
+    "next": "hub"
+   },
+   "the_count": {
+    "speaker": "Haskel ko-Ghast",
+    "text": "By my tally it's three short of standing. A thigh, a heel and a jaw. The thralls are out looking. When it has them, I think it gets up, and I don't think it's a thrall, and I don't think the hags can tell it where to walk.",
+    "next": "hub"
+   },
+   "the_hags": {
+    "speaker": "Haskel ko-Ghast",
+    "text": "Mother Scree. She knots the cords in the warren under its feet; the mouth's there below the scaffold. Every bone on it went through her hands with a knot. Take her cord and I think the knots come undone. I'm a bone-warden. I count. I don't go in holes with hags.",
+    "next": "hub"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/unmade_giant_cairn",
+  "speaker_name": "The warden's cairn",
+  "notes": "The Unmade Giant's site hook (a cairn with a note by the warren's mouth). Starts The Unmade Giant, which Runa ko-Oskel also gives.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The warden's cairn",
+    "text": "A bone-warden's cairn, the kind the Moot's wardens raise where a bone has been moved, with a note under its top stone in a careful hand: FORTY-FOUR KNOWN. THREE SHORT OF STANDING. THE HAG WHO KNOTS IT IS BELOW. I HAVE WRITTEN TO THE MOOT. THE MOOT HAS ASKED WHOSE LAND IT IS. IF YOU CAN FIGHT, ASK FOR HASKEL AT THE CAMP.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Find out what is being built here.",
+      "next": "taken",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_unmade_giant"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_unmade_giant"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "start_quest": "core:quest/the_unmade_giant"
+       }
+      ]
+     },
+     {
+      "text": "Put the stone back.",
+      "next": "end"
+     }
+    ]
+   },
+   "taken": {
+    "speaker": "The warden's cairn",
+    "text": "You put the stone back on the note. Up on the scaffold, a long way over your head, something stops working and watches you do it.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ },
+ {
+  "id": "core:dialogue/corbie_stack_roll",
+  "speaker_name": "The black-rent roll",
+  "notes": "Corbie Stack's site hook (a notice post at the needle's foot). Starts The Black Rent, which Isbel ko-Rudd also gives.",
+  "start": "look",
+  "nodes": {
+   "look": {
+    "speaker": "The black-rent roll",
+    "text": "A roll of sheepskin nailed to the post, the farms below the passes in a neat Rudd hand, each with its rent and a tick for each year paid: Hobb's, Low Rudd, the Bone Ford carters, Isbel ko-Rudd's, Kharrow Foot (struck out). Under it, nailed on later in another hand, a short list headed BURNED, and under that, newer still: PAID IS PAID. ASK AT THE DOOR.",
+    "no_talk": true,
+    "choices": [
+     {
+      "text": "Go in and find who keeps this roll.",
+      "next": "taken",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_black_rent"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_black_rent"
+        }
+       }
+      ],
+      "effects": [
+       {
+        "start_quest": "core:quest/the_black_rent"
+       }
+      ]
+     },
+     {
+      "text": "Leave it.",
+      "next": "end"
+     }
+    ]
+   },
+   "taken": {
+    "speaker": "The black-rent roll",
+    "text": "The iron-bound door at the needle's foot stands a hand's width open. Somewhere up the rock a crow says something, and a man's voice answers it.",
+    "no_talk": true,
+    "next": "end"
+   }
+  }
+ }
+]
