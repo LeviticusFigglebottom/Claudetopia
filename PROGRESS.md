@@ -16779,3 +16779,92 @@ All four views are inside the 2,000 draw and 1.5 M budget.
 - The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
   what is streamed, so on Low a far corner cell can still go at 700-900 m.
 - Forward+ was not looked at.
+
+## Seven new kinds of place, two large sites and four quests: Hearthvale, the novel round (2026-10-04)
+
+The owner's ask: truly novel places, new kinds the game did not have, and new large ones. Everything is
+in `game/world/pois/regions/hearthvale.gd` (the builders) and the region's own content files.
+
+**New kinds** (shared, minimal: the kind names in `PoiDressing.KINDS`/`KINDS_BUILT`, their reveal and
+landmark heights in `map_screen.gd`/`place_discovery.gd`, and a drawn map marker each in
+`tools/ui/gen_ui_textures.py`; each is built only by its region builder): `dovecote`, `chandlery`,
+`scarecrow_moot`, `turf_maze`, `figure_cutting`, `rookery`.
+
+**The seven places** (each with a person, something to do, a reason to come back and a hook):
+- **The Letter-Cote** (`dovecote`, -955, 2150): an 11 m round cob dovecote under a thatch cone and
+  lantern, doves (the camps' Crows in grey-white) about it. Wenna Cotter keeps the Vale's dove-post
+  and still writes to the four villages struck off the Roll Stone. *Do*: send a dove (3 marks) to a
+  place the cote knows and it is found (`discover`): Wassail Knap, the Moot, the Candle-Wheel, the
+  Figure; one sent to Harewell comes back with a letter from a village that is not there.
+- **The Candle-Wheel** (`chandlery`, -1700, 1460): an oak mast with a turning dipping-wheel the width
+  of a cottage hung with a hundred-odd candle pairs, the steaming tallow vat, drying racks, and the
+  candle-house where a candle burns for every name on the Wardens' Roll. Tallis Dipper sells candles.
+  *Do*: have a candle dipped for a name (5 marks): your own, the four villages, and more names as
+  quests are done (Ebba Crowle, Hob Applegarth, the night shift).
+- **The Scarecrow Moot** (`scarecrow_moot`, 3000, 2500): forty retired scarecrows in ranks on Hound
+  Down's crown, all facing Merrowby, a corn-crowned reeve before them, rooks on their arms. One more
+  than forty: a hedge-wight asleep in the ranks until it is looked in the face (`rises_when`). Quest
+  **The Forty-First** (Abner Strawe; reward his felt hat).
+- **Tamwick Troy** (`turf_maze`, 1520, 1195): a real maze, five rings of clipped hawthorn (colliding)
+  with alternating gaps round a white maypole of naming-ribbons. *Do*: walk it to the heart and say a
+  name there; your own gets you Maudie Twelvetrees' naming ribbon (an amulet).
+- **The Unfinished Figure** (`figure_cutting`, 1996, 1456, `pad_shape: slope`): a chalk woman 30 m tall
+  being cut into the down over the Tamwick road, her face still pegs and string. *Do*: cut turf for
+  the gang (pay), and choose her face (from the Harewell letter, or any face); the builder cuts the
+  face once the flag is set. A bristleback at dusk.
+- **The Witness Elms** (`rookery`, 2960, 2740): three dead elms black with rooks' nests, the offering
+  stump heaped with bright things. *Do*: leave the rooks a coin and they show you a place you have not
+  found (four, each once). Hester Corvey reads them. Down wolves at night.
+- **Wassail Knap** and **the Great Barn** are the two large sites (below).
+
+**Large sites:**
+- **Wassail Knap** (`delve`, 2740, 1915, pad 46): the old Great Press: a long thatched press-house, its
+  press-beam a whole oak run out through the gable between the press-tree's cheeks to the great screw
+  and the hanging stone, the dead orchard (one MultiMesh) round the knap, the Wassail Tree, the bowl,
+  the cold bonfire, Pip Applegarth's hut. Inside, `core:interior/wassail_cellars` (keep, seed 2205,
+  8 written rooms): the pomace cellar, the barrel run, the wassail hall, the vat hall, the press
+  spring, the King's table, and Hob Applegarth, the Wassail King (`core:boss/wassail_king`), at the
+  Mother Vat, who at half health drinks the bowl and raises his wassailers (`core:enemy/wassailer`).
+  Quest **The Last Wassail** (Pip Applegarth, 4 stages): find the Hazelcombe pickers' tally, take the
+  crown off the King, give it back at the Mother Pippin (a choice there: hang it, bury it, or carry it
+  to Tamwick for a new King), tell Pip.
+- **The Great Barn** (`delve`, 3215, 2272, pad 46): the roofless tithe barn by Southgate, seven pairs of
+  oak crucks against the sky, stone gables to the apex, the wagon porch, the rotted ricks and the
+  broken wain; Dunnock Southgate's hut. Inside, `core:interior/great_barn_undercroft` (ruined_hall,
+  seed 2206): the granary under the fallen floor, the flue, the reapers' loft, the drying kiln and its
+  plank walk, the tithe vault, the sheaf hall, and the Kern Mother (`core:boss/kern_mother`), the last
+  sheaf of the last harvest, never carried out, who sheds her chaff at half health and raises
+  sheaf-men (`core:enemy/sheaf_man`, weak to fire). Quest **The Last Sheaf** (4 stages): the reeve's
+  last tally, the Kern Mother and her kern-knot, the knot to Oswen Bellsey at the Brow Long Table (set
+  it at the table's head, plough it into Southgate's furrow, or burn it), Dunnock.
+
+**Quests for the older large sites that had none:**
+- **The Third Hand** (Briarfoot Watch, Ferris Oakden, 3 stages): meet what comes up from the grey at
+  midnight, take Amis Hale's bell from under the tally-board, show Oakden; leads out to the
+  Candle-Wheel, where hers is the Roll candle that keeps going out.
+- **Counted Out** (the Drovers' Pound, Enid Drove, 2 stages): clear the wolves and take the drovers'
+  tally out of the pound to Enid, who counts the last flock out or leaves it counted in.
+- Every Hearthvale large site now has at least one quest.
+
+**Road life** (`roadlife/hearthvale.json`, existing behaviours only): a dove down on the road from
+Harewell (a Fallowfold girl), a farmer carrying his scarecrow up to the Moot, bearers a corner short
+(take a corner: `help`), an invitation to the wassail at night (drink, and the dancers spring; until
+the King is down), and a gossip on a stile who knows a way into the dark (`nearest:delve`).
+
+**Checked:**
+- `region_check.py hearthvale --godot`: PASS; all eight seat-clean. Costs: Letter-Cote 65 draws/41 k,
+  Candle-Wheel 35/62 k, Moot 40/48 k, Wassail Knap 44/255 k, Troy 33/31 k, Figure 23/13 k, Elms
+  38/39 k, Great Barn 35/38 k. Density: weak share 0.091, 15 strong, 115 POIs.
+- `./run.sh test` with test_pois, test_poi_preview, test_sites (and test_sites_hearthvale's two new
+  walks), test_site_interiors_walk, test_road_life, test_objects_seated_hearthvale, test_quests,
+  test_content_db, test_poi_encounters, test_ui_theme, test_poi_kinds, test_map_quests,
+  test_quest_notice, test_books, test_quest_walk and more: 270 + 182 + 37 tests, 0 failed after the fix
+  below.
+- `./run.sh quests --only=the_last_sheaf,the_last_wassail,the_forty_first,the_third_hand,counted_out`:
+  5 of 5, 11 of 11 walks, 0 errors. `softlock_check.py`: 145 quests, 0 findings. `poi_hooks.py` re-run.
+- One finding fixed: The Last Sheaf's choice first stood as a choice point on the open Long Table, and
+  its cold light was "a light hung from nothing" to the seat test; it is Oswen Bellsey's to put now.
+
+**Needs the next world build:** pads for the eight places (the Figure keeps its slope); tracks from the
+roads to Wassail Knap (~200 m to the Hazelcombe road) and the Great Barn (~210 m to the Southgate road),
+and ideally to the Moot and the Elms (~150-200 m); a glade is not needed.

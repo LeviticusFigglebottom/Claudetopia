@@ -3878,20 +3878,20 @@ static func wassail_knap(d: PoiDressing) -> void:
 	for s in [-1.0, 1.0]:
 		var p := cheek_at + face * float(s) * 0.85
 		var pg := k.on_ground(p.x, p.y)
-		_frustum(oak, Transform3D(fb, pg + Vector3(0.0, -0.4, 0.0)), 0.62, 0.62, 0.5, 0.5, 9.4)
-		k.collider(Vector3(0.55, 9.0, 0.55), Transform3D(fb, pg + Vector3(0.0, 4.4, 0.0)), "wood")
-		cheek_tops.append(pg + Vector3(0.0, 9.0, 0.0))
+		_frustum(oak, Transform3D(fb, pg + Vector3(0.0, -0.4, 0.0)), 0.7, 0.7, 0.55, 0.55, 12.6)
+		k.collider(Vector3(0.6, 12.0, 0.6), Transform3D(fb, pg + Vector3(0.0, 6.0, 0.0)), "wood")
+		cheek_tops.append(pg + Vector3(0.0, 12.2, 0.0))
 	var cap := ((cheek_tops[0] + cheek_tops[1]) * 0.5) + Vector3(0.0, 0.2, 0.0)
-	m.block(oak, Transform3D(fb, cap), Vector3(0.5, 0.5, 3.0))
+	m.block(oak, Transform3D(fb, cap), Vector3(0.6, 0.6, 3.4))
 	for s in [-1.0, 1.0]:
 		var foot := cheek_at + face * float(s) * 2.6
-		_timber(d, oak, k.on_ground(foot.x, foot.y, -0.1), cheek_tops[0 if s < 0.0 else 1] + Vector3(0.0, -4.5, 0.0), 0.12)
+		_timber(d, oak, k.on_ground(foot.x, foot.y, -0.1), cheek_tops[0 if s < 0.0 else 1] + Vector3(0.0, -6.0, 0.0), 0.14)
 	# the beam: from inside the gable out to the screw, a whole oak, squared
 	var screw_c := gable + side * 13.5
 	var sg := k.on_ground(screw_c.x, screw_c.y)
 	var b0 := k.on_ground(gable.x - side.x * 3.0, gable.y - side.y * 3.0)
-	b0.y = floor_y + 3.2
-	var b1 := Vector3(screw_c.x, sg.y + 3.0, screw_c.y)
+	b0.y = floor_y + 3.8
+	var b1 := Vector3(screw_c.x, sg.y + 4.6, screw_c.y)
 	var bdir := (b1 - b0).normalized()
 	var bx := bdir.cross(Vector3.UP).normalized()
 	var by := bx.cross(bdir).normalized()
@@ -3905,7 +3905,7 @@ static func wassail_knap(d: PoiDressing) -> void:
 	m.block(oak, Transform3D(fb, peg), Vector3(0.22, 0.22, 2.4))
 	# the screw: a threaded oak post from the stone up through the beam's end, a nut over it, the bars
 	var screw := m.begin()
-	var screw_top := sg.y + 4.0
+	var screw_top := sg.y + 5.6
 	var stone_y := sg.y + 0.35
 	m.rod(screw, Transform3D(Basis.IDENTITY, Vector3(screw_c.x, (stone_y + screw_top) * 0.5, screw_c.y)), 0.3, screw_top - stone_y)
 	var turns := 40
@@ -3914,7 +3914,7 @@ static func wassail_knap(d: PoiDressing) -> void:
 		var a := t * TAU * 6.0
 		var y := lerpf(stone_y + 1.3, screw_top - 0.2, t)
 		m.block(screw, Transform3D(Basis(Vector3.UP, a) * Basis(Vector3.BACK, 0.3), Vector3(screw_c.x + sin(a) * 0.3, y, screw_c.y + cos(a) * 0.3)), Vector3(0.2, 0.08, 0.12))
-	m.block(oak, Transform3D(fb, Vector3(screw_c.x, sg.y + 3.65, screw_c.y)), Vector3(1.1, 0.42, 1.1))
+	m.block(oak, Transform3D(fb, Vector3(screw_c.x, sg.y + 5.2, screw_c.y)), Vector3(1.2, 0.5, 1.2))
 	for s in [0.0, 1.0]:
 		var ba := Basis(Vector3.UP, fy + float(s) * PI * 0.5)
 		m.block(oak, Transform3D(ba, Vector3(screw_c.x, stone_y + 1.85, screw_c.y)), Vector3(0.1, 0.1, 3.0))
@@ -3924,7 +3924,7 @@ static func wassail_knap(d: PoiDressing) -> void:
 	m.commit(oak, k.surface("timber", 0.6), "PressTree", true)
 	# the hanging stone: the weight the screw lifts, hung a hand off the ground
 	var weight := m.begin()
-	m.drum(weight, Transform3D(Basis.IDENTITY, Vector3(screw_c.x, stone_y - 0.15, screw_c.y)), 1.35, 1.25, 0.0, NAN, true, 0.42)
+	m.drum(weight, Transform3D(Basis.IDENTITY, Vector3(screw_c.x, stone_y - 0.15, screw_c.y)), 1.7, 1.5, 0.0, NAN, true, 0.42)
 	await k.step()
 	m.commit(weight, PoiKit.painted(2, {"base": "#a59f8d", "accent": "#857f70", "grout": "#5d584d", "unit": 0.65}, 0.8, 0.8), "HangingStone", true)
 	# the cellar-head: a stone porch on the house's front at its west end, the stair dark inside it
@@ -4176,7 +4176,9 @@ static func unfinished_figure(d: PoiDressing) -> void:
 		down = -_facing(k)
 	var up := -down
 	var across := Vector2(up.y, -up.x)
-	var origin := up * 2.0
+	var origin := up * 3.0
+	# her size: the strokes are written at 1, cut at this (she reads from the Tamwick road)
+	var sz := 1.75
 	var face_cut := GameState.has_flag("figure_face_cut") or GameState.has_flag("figure_face_from_letter")
 	var chalk := m.begin()
 	var strokes: Array = FIGURE_CUT.duplicate()
@@ -4192,9 +4194,9 @@ static func unfinished_figure(d: PoiDressing) -> void:
 	for s in strokes:
 		var pts: Array = s
 		for i in pts.size() - 1:
-			var a2 := origin + across * float(pts[i][0]) + up * float(pts[i][1])
-			var b2 := origin + across * float(pts[i + 1][0]) + up * float(pts[i + 1][1])
-			_flat_stroke(d, chalk, a2, b2, 1.3)
+			var a2 := origin + (across * float(pts[i][0]) + up * float(pts[i][1])) * sz
+			var b2 := origin + (across * float(pts[i + 1][0]) + up * float(pts[i + 1][1])) * sz
+			_flat_stroke(d, chalk, a2, b2, 1.9)
 		await k.step()
 	m.commit(chalk, PoiKit.painted(0, {"base": "#f2efe6", "accent": "#d9d3c4", "grout": "#b9b19c", "unit": 0.6}, 0.6, 0.5), "FigureChalk", true)
 	# pegs and string where she is not cut yet
@@ -4211,7 +4213,7 @@ static func unfinished_figure(d: PoiDressing) -> void:
 		var pts: Array = s
 		var prev := Vector3.ZERO
 		for i in pts.size():
-			var p2 := origin + across * float(pts[i][0]) + up * float(pts[i][1])
+			var p2 := origin + (across * float(pts[i][0]) + up * float(pts[i][1])) * sz
 			var g := k.on_ground(p2.x, p2.y)
 			m.block(pegs, Transform3D(Basis.IDENTITY, g + Vector3(0.0, 0.2, 0.0)), Vector3(0.06, 0.55, 0.06))
 			var top := g + Vector3(0.0, 0.42, 0.0)
@@ -4224,14 +4226,14 @@ static func unfinished_figure(d: PoiDressing) -> void:
 	# the lifted turf in stacks along her hem, and two cut-in-progress strips with the turf half off
 	var turf := m.begin()
 	for i in 6:
-		var p := origin + up * -10.2 + across * (float(i) - 2.5) * 2.2
+		var p := origin + up * (-8.0 * sz - 2.4) + across * (float(i) - 2.5) * 2.4
 		var g := k.on_ground(p.x, p.y)
 		for layer in 3 - (i % 2):
 			m.block(turf, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across) + k.rng.randf_range(-0.1, 0.1)), g + Vector3(0.0, 0.12 + float(layer) * 0.22, 0.0)), Vector3(1.1, 0.2, 0.55))
 		k.collider(Vector3(1.1, 0.7, 0.55), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), g + Vector3(0.0, 0.35, 0.0)), "")
 	await k.step()
 	m.commit(turf, _turf(), "TurfStacks")
-	var yard := origin + up * -14.5
+	var yard := origin + up * (-8.0 * sz - 6.5)
 	var barrow := k.prop("wheelbarrow")
 	if barrow != "":
 		for s in [-1.0, 1.0]:
@@ -4240,7 +4242,7 @@ static func unfinished_figure(d: PoiDressing) -> void:
 	var tent := k.prop("tent")
 	if tent != "":
 		for s in [-1.0, 1.0]:
-			var tp := yard + across * float(s) * 10.0 - up * 2.5
+			var tp := yard + across * float(s) * 11.0 - up * 2.0
 			await k.step()
 			k.place(tent, k.on_ground(tp.x, tp.y), PoiKit.yaw_of(up) + float(s) * 0.3, 1.0, true)
 	var fire := k.prop("campfire")
@@ -4255,7 +4257,7 @@ static func unfinished_figure(d: PoiDressing) -> void:
 	k.marker("home", k.on_ground(yard.x - up.x * 1.5 + across.x * 7.0, yard.y - up.y * 1.5 + across.y * 7.0), true)
 	k.marker("the_hem", k.on_ground(origin.x - up.x * 9.0 + across.x * 2.0, origin.y - up.y * 9.0 + across.y * 2.0), true)
 	k.marker("the_turf", k.on_ground(origin.x - up.x * 11.0 - across.x * 6.0, origin.y - up.y * 11.0 - across.y * 6.0))
-	var head_at := origin + up * 9.6
+	var head_at := origin + up * 9.6 * sz
 	k.touchable("TheFace", k.on_ground(head_at.x, head_at.y, 0.6), "Look at where her face should be", "core:dialogue/figure_face", "", false)
 	k.touchable("CutATurf", k.on_ground(yard.x + across.x * 2.5, yard.y + across.y * 2.5, 0.8), "Lend the cutters a hand", "core:dialogue/figure_cutting", "", false)
 	await _builders().LAND._grass(d, "grass_clump", yard - up * 6.0, 7.0, 14)
