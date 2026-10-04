@@ -105,6 +105,11 @@ func _inside(id: String) -> void:
 	var av := site.arrival_view()
 	shots.append({"label": "%s_00_arrival" % slug, "pos": av[0], "look": (av[0] as Vector3) + (av[1] as Vector3) * 10.0})
 	print("site review: arrival camera %s" % av[0])
+	# and the boss's room as the player comes in to the fight: the same camera in its doorway
+	# (SiteInterior.boss_view; test_sites reads the same view's light)
+	var bv := site.boss_view()
+	if not bv.is_empty():
+		shots.append({"label": "%s_99_boss_door" % slug, "pos": bv[0], "look": (bv[0] as Vector3) + (bv[1] as Vector3) * 10.0})
 	var n := 1
 	for r in plan.rooms:
 		var c: Vector3 = r["centre"]

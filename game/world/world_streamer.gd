@@ -1516,6 +1516,13 @@ static func _transform_within(node: Node3D, root: Node) -> Transform3D:
 
 ## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
 ## models/trees, foliage in models/flora, rocks in models/rocks and everything else in props.
+## Foliage is a bush when a word of its own name (the file's, past its region's prefix) is or starts
+## with a bush's word: `briarwold_briar_vine_a` is a bush, `briarwold_grass_clump_a` is not (the
+## whole path once matched "briar" in "briarwold", and every Briarwold herb stood to 190 m).
+const BUSH_WORDS := ["briar", "juniper", "hawthorn", "bush"]
+const ASSET_REGIONS := ["hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea"]
+
+
 static func asset_kind(asset_path: String) -> String:
 	if asset_path.contains("/trees/"):
 		return "tree"
@@ -1523,9 +1530,13 @@ static func asset_kind(asset_path: String) -> String:
 		return "rock"
 	if asset_path.contains("/props/"):
 		return "prop"
-	for bush in ["briar", "juniper", "hawthorn", "bush"]:
-		if asset_path.contains(bush):
-			return "bush"
+	var words := asset_path.get_file().get_basename().to_lower().split("_", false)
+	if not words.is_empty() and ASSET_REGIONS.has(words[0]):
+		words.remove_at(0)
+	for w in words:
+		for bush in BUSH_WORDS:
+			if w.begins_with(bush):
+				return "bush"
 	return "herb"
 
 

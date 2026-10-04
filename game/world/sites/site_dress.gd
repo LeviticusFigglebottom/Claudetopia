@@ -309,6 +309,8 @@ func _room(r: Dictionary) -> void:
 				await _light_kind(r, str(ls[1]), 1)
 	if role == "entrance":
 		_arrival_light(r)
+	elif role == "boss":
+		_arena_light(r)
 	await _set_piece_dress(r)
 	await _props(r)
 
@@ -339,6 +341,52 @@ func _arrival_light(r: Dictionary) -> void:
 	var l := _lamp(at, colour, clampf(ARRIVAL_GIVE_BACK / maxf(give, 0.01), 0.8, 7.0), reach, 0.06)
 	l.light_specular = 0.1
 	l.name = "ArrivalLight"
+	l.set_meta("keep", true)
+
+
+## How much light the arena's lights give back off the rock, where they reach furthest.
+const ARENA_GIVE_BACK := 0.06
+
+
+## The boss's room, read from its door. Its own lights are a ring of braziers (or of lava vents) at
+## the middle of a huge room: on rock as black as the lava tube's, the Kilnway's arena rendered
+## nearly black from the door, its walls and far side beyond the ring's reach, and its cool fill too
+## weak to give anything back. So the arena's own glow, in the kind's colour (the heat of the lava
+## tube's vents, the braziers' fire in a crypt, a keep or a hall), hangs over its middle, broad and
+## soft (a low attenuation) out to the walls, and a smaller one just inside its door lights the near
+## walls and the faces of what stands in the room on the side the player comes in on. Each is set by
+## the rock's brightness, so the rock it reaches furthest gives back ARENA_GIVE_BACK. (At twice
+## that the arenas of pale rock read bleached and the passage behind the door glared.)
+func _arena_light(r: Dictionary) -> void:
+	var c: Vector3 = r["centre"]
+	var half: Vector3 = r["half"]
+	var high := clampf(half.y * 0.65, 2.6, 5.5)
+	var wall := Vector2(half.x, half.z).length()
+	var door := plan.boss_door()
+	var over := c + Vector3.UP * high
+	var to_door: float = over.distance_to(door[0]) if not door.is_empty() else wall
+	var far := maxf(Vector2(wall, high).length(), to_door)
+	_arena_lamp(over, far, clampf(far + 5.0, 12.0, 30.0), 0.6, "ArenaLight")
+	if door.is_empty():
+		return
+	var d: Vector3 = door[0]
+	var toward: Vector3 = door[1]
+	var across := Vector2(d.x - c.x, d.z - c.z).length()
+	# just inside, over the player's head: what stands past it is lit on the side the player sees
+	var inside := d + toward * clampf(across * 0.18, 2.0, 3.5) + Vector3.UP * clampf(half.y * 0.45, 2.4, 3.6)
+	var near := clampf(across * 0.6, 6.0, 10.0)
+	_arena_lamp(inside, near, near + 3.0, 1.0, "ArenaLightDoor")
+
+
+func _arena_lamp(at: Vector3, far: float, reach: float, att: float, light_name: String) -> void:
+	var colour := Color(str(plan.spec.get("light_colour", "#ffb066")))
+	var give := colour.srgb_to_linear().get_luminance() * site.rock_albedo()
+	var nd := maxf(1.0 - pow(far / reach, 4.0), 0.0)
+	var falloff := nd * nd * pow(maxf(far, 1.0), -att)
+	var l := _lamp(at, colour, clampf(ARENA_GIVE_BACK / maxf(give * falloff, 0.001), 0.5, 10.0), reach, 0.05)
+	l.omni_attenuation = att
+	l.light_specular = 0.1
+	l.name = light_name
 	l.set_meta("keep", true)
 
 

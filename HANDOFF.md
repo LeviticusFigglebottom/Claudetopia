@@ -71,9 +71,12 @@ Landed since the first check:
 Open:
 - door lamps with no drawn lantern;
 - Tinehold's views at 1.52 and 1.85 M primitives;
-- the Kilnway's boss room dark;
-- one fingerpost (Pilgrim's Ash to Bramcombe), with a waypoint to move at the next build;
-- Briarwold grass taken for a bush by `asset_kind` ("briar" in "briarwold").
+- the Kilnway's boss room dark (done 2026-10-04: every boss room lit from its door, test_sites);
+- one fingerpost (Pilgrim's Ash to Bramcombe): the waypoint moved 2026-10-04, test_signposts passes
+  only after the next build;
+- Briarwold grass taken for a bush by `asset_kind` (done 2026-10-04);
+- the Windthrow's trunk in fallen_bark.gdshader (2026-10-04): darker, broken-up bark, shadows dark
+  brown; its moss reads green but too bright and striped, and its stubs end-on (PROGRESS.md).
 
 ## 0000. The sixth coordinating session (2026-10-01, a cloud container)
 
