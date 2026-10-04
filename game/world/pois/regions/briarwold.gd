@@ -352,7 +352,9 @@ static func _bark_bole(st: SurfaceTool, a: Vector3, b: Vector3, ra: float, rb: f
 			crow.append(c)
 		pts.append(row)
 		cols.append(crow)
-	var vlen := tile * 2.0
+	# a repeat along the log half again its repeat round it: the oak's plates are already long in
+	# the texture, and at twice they ran into streaks, a planed board's grain and not a bark
+	var vlen := tile * 1.5
 	for i in rings:
 		for j in segs:
 			var j1 := (j + 1) % segs
@@ -670,9 +672,11 @@ static func windthrow(d: PoiDressing) -> void:
 			var need := g - r * 0.25 + r - line_y
 			tip.y += need / float(t)
 	# the bole in the Greatwood oak's own bark, tapering, bowed, burred, mossed along its top (a
-	# smooth pale bole with peg stubs read from the east as a beam, not a tree)
+	# smooth pale bole with peg stubs read from the east as a beam, not a tree). The bark repeats every
+	# 1.2 m round it: at 2.2 m, seen close and in the sun, its plates were 0.4 m by 1.5 m, smeared
+	# into pale streaks, a weathered plank rather than an oak's furrows.
 	var bole := m.begin()
-	_bark_bole(bole, butt, tip, r0, r1, k.rng, 30, 30, true, 0.8, 2.2, bow, 6)
+	_bark_bole(bole, butt, tip, r0, r1, k.rng, 30, 30, true, 0.8, 1.2, bow, 6)
 	var axis := (tip - butt).normalized()
 	var ax := axis.cross(Vector3.UP).normalized()
 	var az := ax.cross(axis).normalized()
