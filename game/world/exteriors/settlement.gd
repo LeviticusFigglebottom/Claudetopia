@@ -485,6 +485,11 @@ func _build(fabric: FabricMesh, plan: Dictionary) -> void:
 		_window_glows.append_array(made["glows"])
 		if made["lamp"] != Vector3.INF:
 			_door_lamps.append(made["lamp"])
+			# the lantern it burns in (HouseKit.door_lantern), drawn in the joinery: the seat audit
+			# hangs the light from its box (tools_gd/seat_audit.gd `_check_light`)
+			var boxes: Array[AABB] = get_meta("lamp_boxes", [] as Array[AABB])
+			boxes.append(made["lamp_box"])
+			set_meta("lamp_boxes", boxes)
 		# about two chimneys in three are drawing by day: somebody is cooking
 		for top in made["chimneys"]:
 			if standing and not ruined and _lights.randf() < 0.66:
