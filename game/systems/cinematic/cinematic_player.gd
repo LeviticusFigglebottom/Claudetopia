@@ -989,7 +989,7 @@ func _see_ahead() -> void:
 		if path == null or _sights.has(i):
 			continue
 		_sight_tasks[i] = WorkerThreadPool.add_task(func() -> void:
-			out[i] = ShotSight.seen(path, streamer, ground, 0.0, 1.0, aspect, reach), true, "wm_shot_sight")
+			out[i] = ShotSight.seen(path, streamer, ground, 0.0, 1.0, aspect, reach), false, "wm_shot_sight")
 
 
 func _cells_ready() -> bool:

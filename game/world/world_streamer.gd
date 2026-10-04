@@ -126,6 +126,11 @@ var _loaded: Dictionary = {}          # Vector2i -> Node3D
 var _pending: Dictionary = {}         # Vector2i -> int (ring) awaiting parse
 var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to build)
 var _tasks: Dictionary = {}           # Vector2i -> task id
+## Cells wanted whose file read waits for a worker: at most ThreadedLoads.limit() are read at once
+## (the pool's threads less two), so the engine's shader compiles, tasks on the same pool, always
+## have a thread. A film asked for dozens at once, every worker was a cell's read, and the main
+## thread waited on a compile queued behind them (seconds "not responding" after Be named).
+var _read_queue: Array = []
 var _jobs: Dictionary = {}            # Vector2i -> CellRead (what the task runs, kept alive with it)
 ## Cells being built a piece at a time: Vector2i -> {node, ring, data, instances, assets, next, solids}.
 var _building: Dictionary = {}
@@ -255,6 +260,7 @@ func _physics_process(delta: float) -> void:
 	if _region_timer <= 0.0:
 		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
+	_pump_reads()
 	_drain_parsed()
 	if not _to_unload.is_empty():
 		_let_go()
@@ -592,6 +598,34 @@ func _in_world(c: Vector2i) -> bool:
 
 func _request(cell: Vector2i, ring: int) -> void:
 	_pending[cell] = ring
+	if _reads_going() >= ThreadedLoads.limit():
+		if not _read_queue.has(cell):
+			_read_queue.append(cell)
+		return
+	_start_read(cell)
+
+
+## Cell reads still running on the pool.
+func _reads_going() -> int:
+	var n := 0
+	for c in _tasks:
+		if not WorkerThreadPool.is_task_completed(int(_tasks[c])):
+			n += 1
+	return n
+
+
+## Starts the queued reads, the nearest first, while threads are left for anything else.
+func _pump_reads() -> void:
+	while not _read_queue.is_empty() and _reads_going() < ThreadedLoads.limit():
+		var cell: Variant = _nearest(_read_queue)
+		if cell == null:
+			cell = _read_queue[0]
+		_read_queue.erase(cell)
+		if _pending.has(cell) and not _tasks.has(cell):
+			_start_read(cell)
+
+
+func _start_read(cell: Vector2i) -> void:
 	var path := "%s/cells/%d_%d.json" % [GENERATED, cell.x, cell.y]
 	# read by an object of its own into the shared `_parsed`, not by this node's method: a streamer
 	# torn down while a cell is read (the title's, on a click) leaves the read to finish (`_exit_tree`)
@@ -1692,6 +1726,7 @@ func unload_all() -> void:
 	for cell in _building.keys():
 		_abandon(cell)
 	_pending.clear()
+	_read_queue.clear()
 	for cell in _tasks.keys():
 		_finish_task(cell)
 	_parsed.clear()
