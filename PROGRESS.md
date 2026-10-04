@@ -16801,14 +16801,23 @@ as `site_review`'s new `99_boss_door` shot.
   its own colour, laid from above, in drifts. Every face takes 0.14 of the sun's light whatever its
   shadow and facing (the bounce off the ground and the sky; `light()`, Lambert otherwise). The
   stubs are longer (2.6-5 m).
-- Seen: the bark reads darker and varied; the shadows and the underside dark brown, not black; the
-  break's heartwood pale. **Not right yet:** the moss is too bright a green and striped (the oak's
-  moss picture has strong leaf bands, and at 1.8 m it repeats in bands across the top); it covers
-  nearly all the top. The stubs on the flank seen from below are their broken ends end-on, so they
-  still read as pegs rather than branches. Next: a flat moss colour with the picture's luminance at
-  low contrast and a finer repeat, a moss threshold higher, and stubs angled more along the bole.
-  No render was taken after these were seen (one re-check only).
-- The new shader is not in the export's warm set: run `material_census` so it bakes.
+- Seen (first re-check): the bark darker and varied; the shadows and the underside dark brown, not
+  black; the break's heartwood pale. But the moss was a neon green in leaf bands over the whole top
+  (the moss picture's own colour, repeating at 1.8 m), and the stubs, out square to the bole, were
+  seen from below as their broken ends alone: pegs.
+- Second pass: the moss is a flat dull olive (`moss_colour`, near the bark's own brightness) with
+  the picture's brightness over it at low contrast and a 0.6 m repeat, and its threshold raised so
+  it lies in drifts; the stubs leave the bole slanted toward the crown (about 40-50 degrees off the
+  bole, not square to it). Re-check (`docs/review/sites/windthrow_trunk_second_pass.jpg`, the same two views): the moss
+  reads as dark olive drifts over brown bark, no stripes, no neon; the stubs read as slanted broken
+  limbs along the flank with their pale snapped ends, from below as low barked humps. The moss in
+  the bole's own shade is dark olive, not black. Still plain: from directly below the stubs are
+  short, and the flank's top half is in the bole's own shade at 13:00.
+- `fallen_bark.gdshader`, `site_lava_ground.gdshader` and `map_fog.gdshader` were not in the export's
+  warm set (none of the census's runs had drawn them): added to `warm_set.tres` by hand (a
+  ShaderMaterial with the shader: its key is the file alone), and `test_shader_warm` now wants every
+  .gdshader in the game in the set. A headless census run rewrote the whole file (format 4 to 3,
+  Terrain3D's uniforms dropped), so the three were appended to the text instead.
 - Cost: 1253 / 1155 draws, 1.31 / 1.25 M primitives (unchanged).
 
 **Every boss room from its door** (`site_dress.gd` `_arena_light`, `site_plan.gd`, `site_interior.gd`).

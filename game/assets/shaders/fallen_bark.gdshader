@@ -3,8 +3,8 @@ shader_type spatial;
 // its crown's limbs). The Greatwood oak's own bark pictures along the log's UVs, broken up in tone
 // over the log so it does not read as one even, pale plank: darker and lighter reaches a few metres
 // long, blotches over them, grey weathered patches, the wet dark underside. The moss on its top is
-// the moss's own picture and colour in drifts, not the bark's darkened toward green (that went near
-// black in the shade), and the snapped ends are the pale heartwood. Every face also takes a share of
+// a moss colour of its own with the moss picture's grain in it, in drifts, not the bark's darkened
+// toward green (that went near black in the shade), and the snapped ends are the pale heartwood. Every face also takes a share of
 // the sun's light whatever its shadow and its facing (the ground's and the sky's bounce under and
 // round a lying log: the world's ambient is a small part of its sun), so a stub's shadow on the
 // bole and the underside read dark brown, and the moss in the shade green, not black.
@@ -21,9 +21,14 @@ uniform sampler2D moss_normal : hint_normal, filter_linear_mipmap, repeat_enable
 uniform vec3 bark_tint : source_color = vec3(0.47, 0.42, 0.38);
 uniform vec3 lichen_tint : source_color = vec3(0.62, 0.62, 0.56);
 uniform vec3 heart_tint : source_color = vec3(0.72, 0.6, 0.44);
-uniform vec3 moss_tint : source_color = vec3(0.72, 0.78, 0.55);
-// the moss's picture laid from above, metres to a repeat (along the log's UVs it ran into stripes)
-uniform float moss_tile_m = 1.8;
+// the moss's own colour, an old oak's moss: dull, olive, near the bark's own brightness (the sun at
+// noon on a moss as bright as the picture's read neon)
+uniform vec3 moss_colour : source_color = vec3(0.17, 0.2, 0.09);
+// the moss picture's mean brightness (linear): its grain is read relative to it
+uniform float moss_grain_mean = 0.07;
+// the moss's picture laid from above, metres to a repeat (along the log's UVs it ran into stripes;
+// at 1.8 m its bands still read)
+uniform float moss_tile_m = 0.6;
 uniform float normal_depth = 1.4;
 // the share of the sun every face takes whatever its shadow and facing (a lit face takes up to 1)
 uniform float bounce = 0.14;
@@ -66,10 +71,14 @@ void fragment() {
 	vec3 heart = mix(vec3(dot(tex, vec3(0.3, 0.59, 0.11))), tex, 0.4) * heart_tint * 1.6;
 	vec3 wood = mix(bark, heart, COLOR.g);
 	// the moss: in drifts over the top, its edges broken by the noise rather than following the rings
-	float moss = smoothstep(0.42, 0.68, COLOR.a * 0.95 + (n2 - 0.5) * 0.55 + (n1 - 0.5) * 0.35 + (n3 - 0.5) * 0.2);
+	// (a lower threshold laid it over the whole top)
+	float moss = smoothstep(0.56, 0.78, COLOR.a * 0.95 + (n2 - 0.5) * 0.6 + (n1 - 0.5) * 0.4 + (n3 - 0.5) * 0.2);
 	moss *= 1.0 - COLOR.g;
 	vec2 muv = opos.xz / moss_tile_m;
-	vec3 moss_col = texture(moss_albedo, muv).rgb * moss_tint * mix(0.7, 1.15, n3) * mix(0.85, 1.1, n1);
+	// a flat moss green, the picture's brightness over it at low contrast: the picture's own colour
+	// was a bright leaf green in bands, and read as stripes across the top
+	float grain = dot(texture(moss_albedo, muv).rgb, vec3(0.3, 0.59, 0.11)) / moss_grain_mean;
+	vec3 moss_col = moss_colour * mix(0.82, 1.15, clamp(grain * 0.5, 0.0, 1.0)) * mix(0.75, 1.12, n3) * mix(0.88, 1.08, n1);
 	ALBEDO = mix(wood, moss_col, moss);
 	vec4 orm = texture(bark_orm, UV);
 	AO = mix(orm.r, 1.0, moss * 0.8);

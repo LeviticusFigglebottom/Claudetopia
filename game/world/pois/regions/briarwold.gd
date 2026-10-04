@@ -702,12 +702,16 @@ static func windthrow(d: PoiDressing) -> void:
 		var r := lerpf(r0, r1, t)
 		var up_ang := k.rng.randf_range(0.2, 1.0)
 		var side := ax * float(s) * cos(up_ang) + az * sin(up_ang)
-		var dir := (side + axis * k.rng.randf_range(0.1, 0.6)).normalized()
+		var crown_ward := k.rng.randf_range(0.1, 0.6)
+		var dir := (side + axis * crown_ward).normalized()
 		var root_at := at + side * r * 0.9
 		if j == 3:
 			_bark_bole(bole, root_at - dir * 1.0, root_at + dir * 11.0, 1.0, 0.45, k.rng, 14, 8, true, 0.6, 1.2, 0.4)
 		else:
-			_stub(bole, root_at, dir, k.rng.randf_range(2.6, 5.0), k.rng.randf_range(0.45, 0.9), k.rng)
+			# an oak's branches leave its bole at a slant toward the crown: a stub out square to the
+			# bole was seen from below as its broken end alone, a peg (2026-10-04)
+			var slant := (side * 0.8 + axis * (0.75 + crown_ward)).normalized()
+			_stub(bole, root_at, slant, k.rng.randf_range(2.6, 5.0), k.rng.randf_range(0.45, 0.9), k.rng)
 	await k.step()
 	m.commit(bole, _bark_look(), "Bole", true)
 	if k.far:
