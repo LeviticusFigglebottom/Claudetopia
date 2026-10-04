@@ -108,3 +108,36 @@ func test_the_committed_set_holds_one_material_a_key_and_the_code_made_shaders()
 						or v is PlaceholderTexture2DArray or v is PlaceholderCubemap or v is PlaceholderCubemapArray):
 					embedded.append("%s.%s" % [m.get_class(), str(p["name"])])
 	assert_eq(embedded, [] as Array[String], "no picture is carried, only placeholders")
+
+
+## Every shader file the game has is in the committed set, so the export bakes it: a shader first
+## compiled on the player's machine is a freeze the first time it is drawn (the owner's first launch,
+## 2026-10-04). A new .gdshader is added by `./run.sh shader-warm` (or, for one the census's runs do
+## not reach, by hand: a ShaderMaterial with the shader, its key being the file alone).
+func test_every_shader_file_is_in_the_set() -> void:
+	var ws := load(WARM_SET) as ShaderWarmSet
+	if ws == null:
+		fail("%s does not load" % WARM_SET)
+		return
+	var have := {}
+	for m in ws.materials:
+		if m is ShaderMaterial and (m as ShaderMaterial).shader != null:
+			have[(m as ShaderMaterial).shader.resource_path] = true
+	var files: Array[String] = []
+	_shader_files("res://", files)
+	assert_gt(files.size(), 20, "the game's shader files are found (%d)" % files.size())
+	var missing: Array[String] = []
+	for f in files:
+		if not have.has(f):
+			missing.append(f)
+	assert_eq(missing, [] as Array[String], "every .gdshader is in the warm set")
+
+
+func _shader_files(dir: String, out: Array[String]) -> void:
+	for d in DirAccess.get_directories_at(dir):
+		if d.begins_with(".") or d == "addons" or d == "tests":
+			continue
+		_shader_files(dir.path_join(d), out)
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(".gdshader"):
+			out.append(dir.path_join(f))

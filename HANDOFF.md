@@ -75,8 +75,9 @@ Open:
 - one fingerpost (Pilgrim's Ash to Bramcombe): the waypoint moved 2026-10-04, test_signposts passes
   only after the next build;
 - Briarwold grass taken for a bush by `asset_kind` (done 2026-10-04);
-- the Windthrow's trunk in fallen_bark.gdshader (2026-10-04): darker, broken-up bark, shadows dark
-  brown; its moss reads green but too bright and striped, and its stubs end-on (PROGRESS.md).
+- the Windthrow's trunk in fallen_bark.gdshader (done 2026-10-04): darker, broken-up bark, shadows
+  dark brown, the moss in olive drifts, the stubs slanted toward the crown; every .gdshader is now
+  in the warm set, and test_shader_warm holds it so.
 
 ## 0000. The sixth coordinating session (2026-10-01, a cloud container)
 

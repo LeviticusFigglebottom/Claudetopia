@@ -111,6 +111,12 @@ Run it whenever a change could give the game a shader it has not had before:
 
 Then commit the regenerated `warm_set.tres`.
 
+`test_shader_warm.test_every_shader_file_is_in_the_set` fails while any `.gdshader` in the game
+(outside `addons/` and `tests/`) has no material in the set. A shader the census's runs do not reach
+(a place off their path, a screen they do not open) can be added by hand: an `ext_resource` for
+the shader and a `ShaderMaterial` sub-resource with it alone, appended to `materials` and
+`seen_at` (a ShaderMaterial's key is its shader's file; its uniforms do not change what is baked).
+
     ./run.sh shader-warm                 # adds to the set: the title, smoke, flow, fights, journey
     ./run.sh shader-warm --fresh         # starts it again
     ./run.sh shader-warm --only=title    # one part
