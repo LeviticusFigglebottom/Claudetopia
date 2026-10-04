@@ -510,6 +510,7 @@ const WHAT_STANDS := {
 	"core:poi/unfinished_figure": "a bristleback in the lifted turf at dusk, and person: core:npc/col_whitcut",
 	"core:poi/witness_elms": "two down wolves at night, and person: core:npc/hester_corvey",
 	"core:poi/scarecrow_moot": "a hedge-wight asleep in the ranks till it is looked in the face, and person: core:npc/abner_strawe",
+	"core:poi/great_barn": "two sheaf-men out of the ricks at dusk, and person: core:npc/dunnock_southgate (the Kern Mother is in its inside)",
 	"core:poi/wassail_knap": "two wassailers in the dead orchard after dark, and person: core:npc/pip_applegarth (the revel is in its inside)",
 	"core:poi/drovers_pound": "three down wolves, two down wolves at night",
 	"core:poi/lime_bay_kilns": "two bristlebacks at dusk, and person: core:npc/hedda_limeburner, person: core:npc/col_limeburner",

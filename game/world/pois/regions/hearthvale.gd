@@ -4378,3 +4378,182 @@ static func witness_elms(d: PoiDressing) -> void:
 	await _builders().LAND._grass(d, "grass_clump", face * 9.0, 8.0, 18)
 	await _builders().LAND._grass(d, "meadow_grass", -face * 12.0, 6.0, 10)
 	_part_props(d)
+
+
+# --- the Great Barn at Southgate ---------------------------------------------------------------------
+
+const STRAW := {"base": "#b8984e", "accent": "#8f7238", "grout": "#5e4a26", "unit": 0.25}
+
+
+## A cruck blade from `foot` up to `apex` (local), bowed out by `bow` at its knee, into `st`.
+static func _cruck(d: PoiDressing, st: SurfaceTool, foot: Vector3, apex: Vector3, out: Vector3, bow: float, r: float) -> void:
+	var m := d.masonry
+	var knee := foot.lerp(apex, 0.45) + out * bow
+	var shoulder := foot.lerp(apex, 0.78) + out * bow * 0.55
+	m.limb(st, foot, knee, r)
+	m.limb(st, knee, shoulder, r * 0.92)
+	m.limb(st, shoulder, apex, r * 0.85)
+
+
+## The Great Barn: the Vale's tithe barn, forty paces of it, roofless but for its east bays; seven
+## pairs of oak crucks standing against the sky like the ribs of something, the two stone gables to
+## the height of the crucks' apex, the long walls fallen to the sills, the wagon porch on the road
+## side. Inside, the threshing floor and the stone stair-head down to the undercroft; outside, the
+## rotted ricks of the last harvest, the broken wain, and Dunnock Southgate's hut.
+static func great_barn(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var across := _facing(k)
+	var along := Vector2(across.y, -across.x)
+	var ay := PoiKit.yaw_of(along)
+	var c := -across * 3.0
+	var L := 38.0
+	var W := 13.0
+	var apex_h := 12.2
+	var interior := _site_interior(d)
+	var stone := m.begin()
+	# the long walls, fallen to the sills, the front one broken by the porch
+	for s in [-1.0, 1.0]:
+		var a := c + across * float(s) * W * 0.5 - along * L * 0.5
+		var b := c + across * float(s) * W * 0.5 + along * L * 0.5
+		if s > 0.0:
+			m.wall(stone, a, c + across * W * 0.5 - along * 3.6, 2.6, 0.45)
+			m.wall(stone, c + across * W * 0.5 + along * 3.6, b, 2.6, 0.45)
+		else:
+			m.wall(stone, a, b, 3.0, 0.35)
+		await k.step()
+	# the gables: stepped in a course at a time to the apex, a slit high in each
+	var gb := Basis(Vector3.UP, ay)
+	for e in [-1.0, 1.0]:
+		var gc := c + along * float(e) * L * 0.5
+		var g := k.on_ground(gc.x, gc.y)
+		var courses := 13
+		for i in courses:
+			var y := float(i) * 0.98
+			var w := W * clampf(1.0 - maxf(y - 3.2, 0.0) / (apex_h + 0.8 - 3.2), 0.08, 1.0) + 0.4
+			m.block(stone, Transform3D(gb, g + Vector3(0.0, y + 0.49 - 0.3, 0.0)), Vector3(w, 1.0, 0.95))
+		k.collider(Vector3(W + 0.4, 4.0, 0.95), Transform3D(gb, g + Vector3(0.0, 1.7, 0.0)), "stone")
+		k.collider(Vector3(W * 0.6, 4.0, 0.95), Transform3D(gb, g + Vector3(0.0, 5.7, 0.0)), "stone")
+		k.collider(Vector3(W * 0.25, 3.6, 0.95), Transform3D(gb, g + Vector3(0.0, 9.5, 0.0)), "stone")
+	# the wagon porch on the front, its two walls and its stone lintel
+	var porch_c := c + across * (W * 0.5 + 2.6)
+	var pb := Basis(Vector3.UP, PoiKit.yaw_of(across))
+	for s in [-1.0, 1.0]:
+		var pc := porch_c + along * float(s) * 3.4
+		var pg := k.on_ground(pc.x, pc.y)
+		m.block(stone, Transform3D(pb, pg + Vector3(0.0, 2.1, 0.0)), Vector3(0.8, 4.8, 5.4))
+		k.collider(Vector3(0.8, 4.8, 5.4), Transform3D(pb, pg + Vector3(0.0, 2.1, 0.0)), "stone")
+	var pg0 := k.on_ground(porch_c.x, porch_c.y)
+	m.block(stone, Transform3D(pb, pg0 + Vector3(0.0, 4.7, 0.6)), Vector3(7.6, 0.7, 1.0))
+	# the stair-head to the undercroft, against the back wall inside: a stone hood over the dark
+	var sh := c - across * (W * 0.5 - 2.4) - along * 7.0
+	var sg := k.on_ground(sh.x, sh.y)
+	var hb := Basis(Vector3.UP, PoiKit.yaw_of(across))
+	for s in [-1.0, 1.0]:
+		var wc := sg + hb * Vector3(float(s) * 1.35, 1.1, -0.4)
+		m.block(stone, Transform3D(hb, wc), Vector3(0.45, 2.4, 2.6))
+		k.collider(Vector3(0.45, 2.4, 2.6), Transform3D(hb, wc), "stone")
+	m.block(stone, Transform3D(hb, sg + hb * Vector3(0.0, 2.45, -0.4)), Vector3(3.3, 0.35, 3.0))
+	m.block(stone, Transform3D(hb, sg + hb * Vector3(0.0, 1.0, -1.65)), Vector3(2.5, 2.2, 0.3))
+	k.collider(Vector3(3.3, 0.6, 3.0), Transform3D(hb, sg + hb * Vector3(0.0, 2.6, -0.4)), "stone")
+	await k.step()
+	m.commit(stone, k.surface("stone", 0.85), "BarnStone", true)
+	var dark := m.begin()
+	m.block(dark, Transform3D(hb, sg + hb * Vector3(0.0, 0.95, -1.45)), Vector3(2.2, 1.9, 0.08))
+	for i in 3:
+		m.block(dark, Transform3D(hb, sg + hb * Vector3(0.0, -0.05 - float(i) * 0.12, 0.2 - float(i) * 0.45)), Vector3(2.2, 0.06, 0.46))
+	m.commit(dark, PoiKit.plain(Color(0.02, 0.018, 0.016), 1.0), "UndercroftStair")
+	if interior != "":
+		_builders().SITES._door(d, interior, sg + hb * Vector3(0.0, 0.0, -1.1), PoiKit.yaw_of(across) + PI)
+	k.marker("the_door", k.on_ground(sh.x + across.x * 3.0, sh.y + across.y * 3.0), true)
+	# the crucks: seven pairs, two of them broken, their apexes the crows' perches
+	var oak := m.begin()
+	var perches: Array[Vector3] = []
+	for i in 7:
+		var u := -L * 0.5 + 4.0 + float(i) * ((L - 8.0) / 6.0)
+		var mid := c + along * u
+		var apex := k.on_ground(mid.x, mid.y, apex_h)
+		for s in [-1.0, 1.0]:
+			if i == 2 and s > 0.0:
+				continue
+			var fp := mid + across * float(s) * (W * 0.5 - 0.8)
+			var foot := k.on_ground(fp.x, fp.y, -0.3)
+			var out := Vector3(across.x, 0.0, across.y) * float(s)
+			var top := apex if i != 5 else apex.lerp(foot, 0.25)
+			_cruck(d, oak, foot, top, out, 1.1, 0.26)
+			k.collider(Vector3(0.6, 5.0, 0.6), Transform3D(Basis.IDENTITY, foot + Vector3(0.0, 2.5, 0.0) + out * 0.4), "wood")
+		if i != 5:
+			var collar_y := apex_h - 3.6
+			var l := mid - across * 3.6
+			var r := mid + across * 3.6
+			m.limb(oak, k.on_ground(l.x, l.y, collar_y), k.on_ground(r.x, r.y, collar_y), 0.15)
+			perches.append(apex + Vector3(0.0, 0.3, 0.0))
+	# the fallen blade of the third pair, lying across the threshing floor
+	var f0 := c + along * (-L * 0.5 + 4.0 + 2.0 * ((L - 8.0) / 6.0)) + across * 4.0
+	var f1 := f0 - across * 7.5 + along * 2.5
+	m.limb(oak, k.on_ground(f0.x, f0.y, 0.3), k.on_ground(f1.x, f1.y, 0.25), 0.26)
+	k.collider(Vector3(0.55, 0.55, f0.distance_to(f1)), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(f1 - f0)), k.on_ground((f0.x + f1.x) * 0.5, (f0.y + f1.y) * 0.5, 0.3)), "wood")
+	# the ridge and purlins over the east bays, and what thatch is left on them
+	var east0 := L * 0.5 - 4.0 - 2.0 * ((L - 8.0) / 6.0)
+	var east1 := L * 0.5 - 1.0
+	var r0 := k.on_ground(c.x + along.x * east0, c.y + along.y * east0, apex_h + 0.1)
+	var r1 := k.on_ground(c.x + along.x * east1, c.y + along.y * east1, apex_h + 0.1)
+	r1.y = r0.y
+	m.limb(oak, r0, r1, 0.18)
+	await k.step()
+	m.commit(oak, k.surface("timber", 0.7), "Crucks", true)
+	var thatch := m.begin()
+	var a3 := Vector3(along.x, 0.0, along.y)
+	for s in [-1.0, 1.0]:
+		var eave := (r0 + r1) * 0.5 + Vector3(across.x, 0.0, across.y) * float(s) * (W * 0.5 + 0.8)
+		eave.y = r0.y - apex_h + 3.4
+		var ridge := (r0 + r1) * 0.5
+		var dv := (ridge - eave).normalized()
+		var y_ax := dv.cross(a3).normalized()
+		if y_ax.y < 0.0:
+			y_ax = -y_ax
+		var x_ax := y_ax.cross(dv).normalized()
+		m.block(thatch, Transform3D(Basis(x_ax, y_ax, dv), (eave + ridge) * 0.5), Vector3(east1 - east0 + 0.6, 0.4, eave.distance_to(ridge) + 0.3))
+	await k.step()
+	m.commit(thatch, PoiKit.painted(5, THATCH, 0.8, 0.8), "BarnThatch", true)
+	# the tithe-board in the porch
+	var board_at := porch_c + along * 2.9 + across * 0.8
+	var bt := m.begin()
+	m.block(bt, Transform3D(pb * Basis(Vector3.UP, PI * 0.5), k.on_ground(board_at.x, board_at.y, 1.6)), Vector3(1.4, 0.9, 0.06))
+	m.commit(bt, k.surface("planks", 0.7), "TitheBoard")
+	k.touchable("TitheBoard", k.on_ground(board_at.x - along.x * 0.5, board_at.y - along.y * 0.5, 1.4), "Read the tithe-board", "core:dialogue/great_barn_board", "", false)
+	k.marker("the_porch", k.on_ground(porch_c.x + across.x * 3.5, porch_c.y + across.y * 3.5), true)
+	# the last harvest's ricks, rotted where they stood, and the sheaves left on the threshing floor
+	var straw := PoiKit.painted(5, STRAW, 0.8, 0.8)
+	var rick_at: Array[Vector2] = [c - across * (W * 0.5 + 7.0) - along * 9.0, c - across * (W * 0.5 + 8.5) + along * 6.0]
+	for i in rick_at.size():
+		var p: Vector2 = rick_at[i]
+		m.mound(k.on_ground(p.x, p.y, -0.3), 3.4, 4.2, straw, "Rick%d" % i, true, 2.4, 7, 18, true, 0.12)
+		await k.step()
+	k.marker("the_rick", k.on_ground(rick_at[0].x + across.x * 5.0, rick_at[0].y + across.y * 5.0))
+	var sheaves: Array = []
+	for i in 7:
+		var p := c + along * k.rng.randf_range(-12.0, 12.0) + across * k.rng.randf_range(-3.0, 3.0)
+		if p.distance_to(sh) < 4.0 or p.distance_to(f0.lerp(f1, 0.5)) < 4.5:
+			continue
+		sheaves.append([p, k.rng.randf() * TAU])
+	await _row(k, "hay_bale", sheaves, true)
+	var cart := k.prop("cart")
+	if cart != "":
+		var cp := porch_c + across * 7.5 - along * 6.0
+		await k.step()
+		k.place(cart, k.on_ground(cp.x, cp.y), PoiKit.yaw_of(along) + 0.4, 1.0, true, Vector3(0.0, 0.0, 0.18))
+	# Dunnock Southgate's hut by the road side, where he can see the porch
+	var hut_c := c + across * (W * 0.5 + 15.0) + along * 14.0
+	var hut_face := (porch_c - hut_c).normalized()
+	var fabric := FabricMesh.new()
+	await _builders().LAND._house(d, fabric, _builders().LAND._frame(d, hut_c, hut_face, 4.6, 3.6), 4.6, 3.6, 1)
+	await _builders().LAND._commit_fabric(d, fabric)
+	k.marker("home", k.on_ground(hut_c.x + hut_face.x * 3.0, hut_c.y + hut_face.y * 3.0), true)
+	var hs := Vector2(hut_face.y, -hut_face.x)
+	var store := hut_c + hs * 3.0 + hut_face * 0.6
+	_container(d, "southgate_chest", k.on_ground(store.x, store.y), PoiKit.yaw_of(hut_face), "core:loot/common_chest", "Dunnock Southgate's Chest", "chest")
+	_crows(d, perches, k.on_ground(c.x, c.y, 16.0), 5)
+	await _builders().LAND._grass(d, "barley_tuft", c + across * (W * 0.5 + 9.0) - along * 10.0, 7.0, 22)
+	await _builders().LAND._grass(d, "grass_clump", c - across * (W * 0.5 + 4.0), 8.0, 16)
+	_part_props(d)

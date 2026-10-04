@@ -567,7 +567,8 @@
       {
         "poi": "core:poi/brow_long_table",
         "quests": [
-          "core:quest/the_hurdwell_bell"
+          "core:quest/the_hurdwell_bell",
+          "core:quest/the_last_sheaf"
         ],
         "finds": [
           "core:item/long_table_places"
@@ -1750,6 +1751,17 @@
           "core:item/wayside_gossip_stones"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/great_barn",
+        "quests": [
+          "core:quest/the_last_sheaf"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/great_barn"
+        ],
         "hearthstone": false
       },
       {
