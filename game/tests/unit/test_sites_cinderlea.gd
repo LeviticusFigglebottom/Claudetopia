@@ -8,7 +8,8 @@ extends TestCase
 const FakePlayer := preload("res://tests/fakes/fake_player.gd")
 const TestSites := preload("res://tests/unit/test_sites.gd")
 const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse",
-		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep"]
+		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep",
+		"core:interior/the_fallen_head"]
 var player: Node3D
 
 
@@ -95,7 +96,7 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/bell_street": {"spots": ["in_the_bell", "the_street"], "touch": ["the_solid_bell"], "boxes": 1},
 		"core:poi/sunk_plaza": {"spots": ["the_fountain"], "touch": ["the_count"]},
 		"core:poi/anthem_hall": {"spots": ["the_benches", "the_stone"], "touch": ["the_singers_stone"], "boxes": 1},
-		"core:poi/cistern_of_isse": {"spots": ["the_stair_head", "the_well_foot"], "doors": ["Door_cistern_of_isse"], "touch": ["the_well"]},
+		"core:poi/cistern_of_isse": {"spots": ["the_stair_head", "the_well_foot", "ama_well"], "doors": ["Door_cistern_of_isse"], "touch": ["the_well"]},
 		"core:poi/weighhouse": {"spots": ["the_yard", "the_tally_desk"], "touch": ["the_pans"], "boxes": 1},
 		"core:poi/silent_market": {"spots": ["the_fresh_stall", "the_square"], "touch": ["the_fresh_goods"], "boxes": 1},
 		"core:poi/north_gate": {"spots": ["the_gateway", "beyond_the_gate"], "touch": ["the_track"]},
@@ -121,6 +122,12 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/the_undertone": {"spots": ["merrin_camp", "the_forecourt", "the_mouth"], "doors": ["Door_the_undertone"], "touch": ["Hook"]},
 		"core:poi/founders_delf": {"spots": ["clemency_camp", "the_pit", "the_mouth"], "doors": ["Door_founders_delf"], "touch": ["Hook", "the_bell"], "boxes": 1},
 		"core:poi/chalkwatch": {"spots": ["ysolde_fire"], "doors": ["Door_chalkwatch_keep"], "touch": ["Hook"]},
+		"core:poi/the_fallen_head": {"spots": ["aud_camp", "the_mouth"], "doors": ["Door_the_fallen_head"], "touch": ["Hook", "the_cheek"]},
+		# the novel places: the dial, the kiln, the Hood, the lines (and Ama at the Cistern, above)
+		"core:poi/the_ash_dial": {"spots": ["wenna_bell", "the_blank_stone"], "touch": ["the_blank_stone", "the_blade"]},
+		"core:poi/name_kiln": {"spots": ["odile_bench", "the_screen"], "touch": ["the_screen"], "boxes": 1},
+		"core:poi/smoke_hood": {"spots": ["pell_lever"], "touch": ["the_lever"]},
+		"core:poi/leaving_lines": {"spots": ["corra_basin", "the_lines"], "touch": ["the_basin"], "boxes": 1},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)
