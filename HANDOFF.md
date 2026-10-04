@@ -51,6 +51,30 @@ Picked up the sixth session's open lines after it went quiet, and ran the one fu
   - ~3.7 s with no frame drawn on Continue while the world stands up.
 - **Machine:** Godot at `~/godot/Godot_v4.7.2-stable_linux.x86_64`; `~/bin/heavy` is two slots, queued in order.
 
+**2026-10-04: the full check is green on main (71710af4).**
+- flow: new 104, load 36, continue 39;
+- the suite: 2563 tests, 0 failed;
+- all four journeys;
+- fights over seeds 1,2,3: 198 fights, 0 checks failed;
+- the quest walker: 140/140 quests, 368/368 walks.
+
+Landed since the first check:
+- **the world w4096k:** glades open sky, crowns off towns by the builder;
+- **intro films with no mid-film wait:** the film's country is laid before the first picture, `test_film_streaming`;
+- **Continue drawn a layer a frame;**
+- **Oblivion-style quest notices,** held through a film's opening black, and timed on real frame time for the settle;
+- **ground cover and far scatter drawn round the eye** (`ground_cover.gd`), not a cell at a time;
+- **the Kilnway's first room and every site's arrival lit;**
+- **spoil heaps, the Windthrow's trunk, face seeds;**
+- **the Rogue's lane covered.**
+
+Open:
+- door lamps with no drawn lantern;
+- Tinehold's views at 1.52 and 1.85 M primitives;
+- the Kilnway's boss room dark;
+- one fingerpost (Pilgrim's Ash to Bramcombe), with a waypoint to move at the next build;
+- Briarwold grass taken for a bush by `asset_kind` ("briar" in "briarwold").
+
 ## 0000. The sixth coordinating session (2026-10-01, a cloud container)
 
 **The owner's new list is triage 76-80** (`docs/TRIAGE_2026-09-27.md`, seventh round), on main 0c31e016 (safe mode, the Mac release, the perf pass, w4096g all landed).
