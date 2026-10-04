@@ -1343,5 +1343,218 @@
         "next": "end"
       }
     }
+  },
+  {
+    "id": "core:dialogue/dunstan_agar",
+    "speaker_name": "Dunstan Agar",
+    "notes": "The agister at the Pannage Pound (novel places, Briarwold). Gives core:quest/counted_out (the thornhounds at the pound after dark); a merchant of pannage ham.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Dunstan Agar",
+        "text": "*He looks you up and down and his lips move.* — One. — Dunstan Agar, agister. If you've a pig in here you'd best know its ear-mark, and if you haven't, you'll keep your hands off theirs.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Dunstan Agar",
+        "text": "Pannage. From Michaelmas to Martinmas the Wold lets the commoners turn their pigs out to the acorns. So many to a household. I count them in at that gate and I count them out at that gate, every one, and a household that can't show me its pig pays for it. Forty years. Never been out.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Dunstan Agar",
+        "text": "Forty-one in. Thirty-eight this morning. One a night, over the bank in the dark, and nothing left but a smear on the hazel. — Hounds. Bark-hounds out of the Greatwood. They've never come this far west before. Something's moving them.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Dunstan Agar",
+        "text": "*He nods at you, as if you had come out right.* — Well?",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why is the count out?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll sit up at the bank tonight and see what comes over it.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/counted_out"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/counted_out"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The hounds that came over your bank are dead.",
+            "next": "q_done",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/counted_out",
+                  "the_count_right"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Dunstan Agar",
+        "text": "*His lips move as you go.* — One.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Dunstan Agar",
+        "text": "You would. — They come after dark, over the bank on the wood side where the hazel's lowest. Two, by the marks. Kill them and the count comes right, and I'll see you're paid in ham, which is better than marks, whatever the Tallymen say.",
+        "choices": [
+          {
+            "text": "I'll be at the bank after dark.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/counted_out"
+              }
+            ]
+          },
+          {
+            "text": "Not tonight.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Dunstan Agar",
+        "text": "Don't stand in the pound. The pigs'll have your boots.",
+        "next": "hub"
+      },
+      "q_done": {
+        "speaker": "Dunstan Agar",
+        "text": "*He goes to the gate and counts, out loud, slowly, all the way, and when he gets to the end he says the number twice.* — Thirty-eight. And thirty-eight it'll stay. — Here. Off the hook in the chimney. You'll not taste better.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/counted_out"
+          }
+        ],
+        "text": "Thirty-eight every morning since. Right as rain. — One. That's you."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/letter_oak_threads",
+    "speaker_name": "The Letter Oak",
+    "notes": "The touch at the Letter Oak's threads (builder letter_oak): looking for your name, and the twenty-year letter to Wystan Tine, which starts core:quest/the_letter_on_the_oak.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Letter Oak",
+        "no_talk": true,
+        "text": "Letters on every thread, folded small and tied on with a turn of wool: to Ma at Elderhold, to the Rookes at the camp, to Whoever Has My Good Knife. None to you. On the thread nearest the road one letter hangs that is older than the rest, brown as a leaf, sealed with a hart and a spear in green wax: To Wystan Tine, at the Moot Gate, by whoever goes that way.",
+        "choices": [
+          {
+            "text": "Take the old letter on to the Moot Gate.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_letter_on_the_oak"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_letter_on_the_oak"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "give_item": "core:item/vanes_letter"
+              },
+              {
+                "start_quest": "core:quest/the_letter_on_the_oak"
+              }
+            ]
+          },
+          {
+            "text": "Leave the letters to their own.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Letter Oak",
+        "text": "The thread it hung on is left swinging, the only bare one on the oak. Somebody has knotted it, so the next letter can go on.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/casting_dell_stone",
+    "speaker_name": "The dell's stone",
+    "notes": "The touch at the Casting Dell's stone (builder casting_dell): the antler the dell gives, once.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The dell's stone",
+        "no_talk": true,
+        "conditions": [
+          {
+            "not": {
+              "flag": "casting_dell_given"
+            }
+          }
+        ],
+        "else": "given",
+        "text": "A flat grey stone at the head of the dell, and on it, set apart from the hundreds in the bracken, one antler: a twelve-pointer, its burr still dark, laid square on the stone as if somebody had put it there for you. The Warden at the dell's mouth has not moved.",
+        "choices": [
+          {
+            "text": "Take the one the dell gives.",
+            "next": "taken",
+            "effects": [
+              {
+                "set_flag": "casting_dell_given"
+              },
+              {
+                "give_item": "core:item/dell_tine"
+              },
+              {
+                "rep": [
+                  "core:faction/woodfolk",
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The dell's stone",
+        "text": "You break one tine off at the beam, as the custom says, and leave the rest on the stone for the moss. Down at the mouth the Warden's leaves stir in no wind, and settle.",
+        "next": "end"
+      },
+      "given": {
+        "speaker": "The dell's stone",
+        "no_talk": true,
+        "text": "The antler lies on the stone where you left it, one tine short. The dell gives one.",
+        "next": "end"
+      }
+    }
   }
 ]

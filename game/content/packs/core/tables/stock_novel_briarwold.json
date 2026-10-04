@@ -70,5 +70,36 @@
         "chance": 0.35
       }
     ]
+  },
+  {
+    "id": "core:table/stock_pannage",
+    "role": "merchant_stock",
+    "description": "The agister's chimney at the Pannage Pound: acorn ham and what the commoners pay their fines in.",
+    "rows": [
+      {
+        "item": "core:item/acorn_ham",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/bread",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/torch",
+        "count": [
+          2,
+          6
+        ],
+        "restock_hours": 48
+      }
+    ]
   }
 ]

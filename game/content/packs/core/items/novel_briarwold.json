@@ -208,5 +208,109 @@
     ],
     "description": "A hazel stick notched along three sides, with a twist of paper tied round it.",
     "reads": "core:book/gammer_hooles_count"
+  },
+  {
+    "id": "core:item/dell_tine",
+    "name": "The Dell-Given Tine",
+    "category": "armour",
+    "weight": 0.1,
+    "value": 70,
+    "tags": [
+      "amulet",
+      "jewellery",
+      "briarwold"
+    ],
+    "tier": 2,
+    "armour": {
+      "slot": "amulet",
+      "armour": 0,
+      "weight_class": "light",
+      "stability": 0.0
+    },
+    "effects": [
+      {
+        "effect": "core:effect/fortify_vigour",
+        "magnitude": 6,
+        "duration": 0
+      }
+    ],
+    "description": "A single tine off the antler the Casting Dell sets apart on its stone, worn on a thong. The Woodfolk know it on sight and know it was given, not taken: the Mossbridge's Wardens let it by."
+  },
+  {
+    "id": "core:item/vanes_letter",
+    "name": "A Letter Twenty Years on the Oak",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A letter folded small and gone brown as a leaf on the Letter Oak's thread, sealed in green wax with a hart and a spear, addressed in a hard square hand: To Wystan Tine, at the Moot Gate, by whoever goes that way. Nobody has gone that way."
+  },
+  {
+    "id": "core:item/acorn_ham",
+    "name": "Pannage Ham",
+    "category": "consumable",
+    "weight": 0.8,
+    "value": 16,
+    "stack": 10,
+    "tags": [
+      "food"
+    ],
+    "effects": [
+      {
+        "effect": "core:effect/restore_health",
+        "magnitude": 30,
+        "duration": 0
+      },
+      {
+        "effect": "core:effect/fortify_stamina",
+        "magnitude": 8,
+        "duration": 180
+      }
+    ],
+    "description": "A ham off a pig that ran on the Wold's acorns from Michaelmas to Martinmas, smoked over oak in the agister's chimney. The fat is sweet and goes clear when you warm it in your hand."
+  },
+  {
+    "id": "core:item/the_dells_custom",
+    "name": "The Dell's Custom",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A verderer's slip, weighted with a stone.",
+    "reads": "core:book/the_dells_custom"
+  },
+  {
+    "id": "core:item/the_letter_oaks_rule",
+    "name": "The Letter Oak's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A card pinned to the bark box.",
+    "reads": "core:book/the_letter_oaks_rule"
+  },
+  {
+    "id": "core:item/agars_count",
+    "name": "Agar's Count",
+    "category": "book",
+    "weight": 0.1,
+    "value": 2,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A pannage count on a slate by the gate.",
+    "reads": "core:book/agars_count"
   }
 ]

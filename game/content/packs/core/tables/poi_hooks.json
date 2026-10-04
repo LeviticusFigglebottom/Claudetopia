@@ -674,6 +674,18 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/casting_dell",
+        "quests": [],
+        "finds": [
+          "core:item/shed_antler",
+          "core:item/the_dells_custom"
+        ],
+        "encounters": [
+          "core:encounter/casting_dell"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/cathedral_spring",
         "quests": [],
         "finds": [
@@ -2748,6 +2760,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/letter_oak",
+        "quests": [],
+        "finds": [
+          "core:item/the_letter_oaks_rule"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/lichen_stones",
         "quests": [
           "core:quest/where_the_breath_went"
@@ -2951,7 +2972,8 @@
       {
         "poi": "core:poi/moot_gate_stone",
         "quests": [
-          "core:quest/a_gate_is_known"
+          "core:quest/a_gate_is_known",
+          "core:quest/the_letter_on_the_oak"
         ],
         "finds": [
           "core:item/three_days_kneeling"
@@ -3129,6 +3151,15 @@
           "core:quest/thistle"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/noon_owl",
+        "quests": [],
+        "finds": [
+          "core:item/gammer_hooles_count"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -3426,6 +3457,19 @@
         ],
         "encounters": [
           "core:encounter/oulnauve_stakes"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/pannage_pound",
+        "quests": [
+          "core:quest/counted_out"
+        ],
+        "finds": [
+          "core:item/agars_count"
+        ],
+        "encounters": [
+          "core:encounter/pannage_pound"
         ],
         "hearthstone": false
       },
@@ -4214,6 +4258,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/silk_walk",
+        "quests": [
+          "core:quest/the_black_that_keeps"
+        ],
+        "finds": [
+          "core:item/laithes_rule"
+        ],
+        "encounters": [
+          "core:encounter/silk_walk"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/silked_camp",
         "quests": [
           "core:quest/the_restrung_bow"
@@ -4775,6 +4832,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_knar",
+        "quests": [
+          "core:quest/the_black_that_keeps"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_knar"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_last_field",
         "quests": [
           "core:quest/the_grey_on_the_green"
@@ -4923,6 +4991,20 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_swainmote",
+        "quests": [
+          "core:quest/the_hundred_and_twelve",
+          "core:quest/the_twelfth_at_the_mote"
+        ],
+        "finds": [
+          "core:item/the_motes_customs"
+        ],
+        "encounters": [
+          "core:encounter/the_swainmote"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_thousand_post",
         "quests": [],
         "finds": [
@@ -5051,7 +5133,8 @@
       {
         "poi": "core:poi/tinehold",
         "quests": [
-          "core:quest/a_gate_is_known"
+          "core:quest/a_gate_is_known",
+          "core:quest/the_hundred_and_twelve"
         ],
         "finds": [],
         "encounters": [],
@@ -5062,6 +5145,17 @@
         "quests": [],
         "finds": [
           "core:item/note_tinkers_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/told_hives",
+        "quests": [
+          "core:quest/telling_the_bees"
+        ],
+        "finds": [
+          "core:item/mab_ashbys_bee_book"
         ],
         "encounters": [],
         "hearthstone": false

@@ -502,5 +502,117 @@
       "marks": 60,
       "renown": 8
     }
+  },
+  {
+    "id": "core:quest/counted_out",
+    "name": "Counted Out",
+    "layer": "side",
+    "giver": "core:npc/dunstan_agar",
+    "region": "core:region/briarwold",
+    "offer": "Something comes over the bank every night and the count's out by one.",
+    "summary": "Dunstan Agar, agister of the Lower Wold's pannage, has counted the commoners' pigs for forty years and never been out. This autumn something takes one over the bank every night.",
+    "notes": "The Pannage Pound (novel places, Briarwold): two thornhounds at the bank after dark (QuestFoes stands them up at night); Agar pays in ham.",
+    "stages": [
+      {
+        "id": "the_bank_after_dark",
+        "journal": "Dunstan Agar's pannage count is out by one pig every night, and he wants whatever comes over the pound's bank in the dark killed.\nTwo, by the marks on the hazel, on the wood side where the bank is lowest. Bark-hounds out of the Greatwood, he thinks, further west than they have ever come.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:enemy/thornhound",
+            "count": 2,
+            "where": "core:poi/pannage_pound",
+            "radius": 80,
+            "when": "night",
+            "text": "Wait at the pound's bank after dark and kill what comes over it"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/pannage_pound",
+          "radius": 50
+        }
+      },
+      {
+        "id": "the_count_right",
+        "journal": "The thornhounds that came over the pannage bank are dead, and Dunstan Agar will want to count his pigs with you watching.\nThirty-eight, if nothing else has gone. He pays in ham.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/dunstan_agar",
+            "topic": "q_done",
+            "text": "Tell Dunstan Agar his count will come right"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/pannage_pound",
+          "radius": 50
+        }
+      },
+      {
+        "id": "counted",
+        "journal": "Dunstan Agar's pannage count has come right, and stays right.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 40,
+      "renown": 4,
+      "items": [
+        [
+          "core:item/acorn_ham",
+          2
+        ]
+      ],
+      "rep": [
+        [
+          "core:faction/woodfolk",
+          3
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_letter_on_the_oak",
+    "name": "The Letter on the Oak",
+    "layer": "side",
+    "region": "core:region/briarwold",
+    "offer": "A letter twenty years on the Letter Oak, to Wystan Tine.",
+    "summary": "A letter has hung on the Letter Oak by the Elderhold road for twenty years, sealed with a hart and a spear, addressed to Wystan Tine at the Moot Gate. The Woodfolk's custom is that whoever goes that way takes it on.",
+    "notes": "The Letter Oak (novel places, Briarwold): taking the letter off the thread starts it; deliver to Wystan Tine at the Moot Gate Stone (the deliver closes on any talk with him while carrying it, QuestRoutes). The letter is the Marshal's answer to the last knight's (Tinehold's 'The Last Knight Out').",
+    "stages": [
+      {
+        "id": "going_that_way",
+        "journal": "Woodfolk custom says whoever takes a letter off the Letter Oak carries it on, and this one has waited twenty years for Wystan Tine at the Moot Gate.\nThe seal is a hart and a spear in green wax. Wystan Tine kneels at the Moot Gate Stone on the Briar's rim, facing the gate.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/wystan_tine",
+            "item": "core:item/vanes_letter",
+            "text": "Carry the letter to Wystan Tine at the Moot Gate Stone"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/moot_gate_stone",
+          "radius": 50
+        }
+      },
+      {
+        "id": "delivered",
+        "journal": "The Letter Oak's oldest letter has gone the rest of its way, and Wystan Tine has read it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 30,
+      "renown": 6,
+      "rep": [
+        [
+          "core:faction/woodfolk",
+          3
+        ]
+      ]
+    }
   }
 ]

@@ -1716,6 +1716,7 @@
     ],
     "radius_m": 32,
     "pad_radius_m": 42,
+    "pad_shape": "level",
     "glade_m": 76,
     "glade_approach_m": 22,
     "hearthstone": false,
@@ -1730,5 +1731,65 @@
       "hook": "core:dialogue/knar_notice",
       "hook_prompt": "Read the wrights' notice"
     }
+  },
+  {
+    "id": "core:poi/casting_dell",
+    "name": "The Casting Dell",
+    "region": "core:region/briarwold",
+    "kind": "hidden_valley",
+    "position": [
+      3348,
+      -1276
+    ],
+    "pad_radius_m": 24,
+    "glade_m": 40,
+    "hearthstone": false,
+    "builder": "casting_dell",
+    "unique_feature": "a dell in the High Wold where the harts come every spring to cast their antlers, the ground under the bracken white with them, ringed by a palisade of stakes each crowned with the best antler of a year; a Warden stands rooted at the dell's mouth, and on a flat stone at its head one antler lies set apart, the one the dell gives",
+    "visible_from": [],
+    "story": "Nobody knows why the High Wold's harts cast here and nowhere else. The Woodfolk custom is old and short: the dell gives one, and you take the one it gives. The verderers set the year's best on a stake round the rim and leave the rest to the moss. A Warden grew up at the dell's mouth in the knights' time, when the antler-sellers came with sacks, and it has not moved since. It does not mind you looking. It minds you carrying.",
+    "encounter": "a Warden rooted at the dell's mouth, asleep on its feet, that wakes for anybody carrying the dell's loose antlers past it",
+    "hook": "An antler-seller from the Lantern Row went into the Casting Dell with a sack in the spring, and the verderers found the sack.",
+    "wayside": false
+  },
+  {
+    "id": "core:poi/letter_oak",
+    "name": "The Letter Oak",
+    "region": "core:region/briarwold",
+    "kind": "strange_tree",
+    "position": [
+      1964,
+      -900
+    ],
+    "pad_radius_m": 20,
+    "glade_m": 34,
+    "hearthstone": false,
+    "builder": "letter_oak",
+    "unique_feature": "an oak by the Elderhold road with a ring of hazel posts round it strung with thread, and on the threads hundreds of letters folded small and tied on, white and grey and brown with age, turning in the wind; a bark box for new letters at its foot",
+    "visible_from": [],
+    "story": "The Woodfolk's post. You tie a letter on the Letter Oak's threads with the name on the outside, and whoever passes going that way takes it on, and nobody reads what is not theirs. Most letters go in a week. Some hang a year. One has hung twenty, gone brown as a leaf, with a hart-and-spear seal on it and a name nobody on the Elderhold road would carry it to: Wystan Tine.",
+    "encounter": "nobody keeps it; travellers stop to look for their names on the threads",
+    "hook": "There's a letter on the Letter Oak that's hung there twenty years with a Hart-Knight's seal on it, and every carrier on the Elderhold road has read the name and left it.",
+    "wayside": false
+  },
+  {
+    "id": "core:poi/pannage_pound",
+    "name": "The Pannage Pound",
+    "region": "core:region/briarwold",
+    "kind": "fold",
+    "position": [
+      1940,
+      620
+    ],
+    "pad_radius_m": 26,
+    "glade_m": 40,
+    "hearthstone": false,
+    "builder": "pannage_pound",
+    "unique_feature": "the Lower Wold's pannage ground: a ring of turf bank topped with woven hazel round a stand of oaks, the commoners' pigs rooting for acorns inside it, a swill-trough and a scald-tub by the gate, and the agister's tally-post at the gate, notched with every pig counted in and out since the Toll fell",
+    "visible_from": [],
+    "story": "From Michaelmas to Martinmas the Wold lets the commoners turn their pigs out to the acorns, so many pigs to a household, counted in at the gate by the agister and counted out again in the winter, every one, or the household pays. Dunstan Agar has been agister of the Lower Wold forty years and his count has never been out. This autumn it is out by one every night: something comes over the bank in the dark.",
+    "encounter": "Dunstan Agar at the gate by day, the pigs rooting, and thornhounds over the bank after dark for the pigs",
+    "hook": "Dunstan Agar's pannage count at the Lower Wold pound has been one short every morning this week, and he says it is not the pigs who can't count.",
+    "wayside": false
   }
 ]

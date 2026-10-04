@@ -795,5 +795,67 @@
         "spread": 3.0
       }
     ]
+  },
+  {
+    "id": "core:encounter/casting_dell",
+    "place": "core:poi/casting_dell",
+    "notes": "The dell's Warden at its mouth sits, and wakes for anybody carrying the dell's loose antlers (the shed antler lying in the bracken) within its reach; the antler the dell gives (from the stone) is not watched.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/warden",
+        "count": 1,
+        "at": "the_mouth",
+        "sits": true,
+        "wakes_for": {
+          "within_m": 12.0,
+          "carrying": [
+            "core:item/shed_antler"
+          ]
+        }
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/shed_antler",
+        "count": 3,
+        "at": "the_bracken"
+      },
+      {
+        "item": "core:item/the_dells_custom",
+        "at": "the_stone"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/letter_oak",
+    "place": "core:poi/letter_oak",
+    "notes": "No foes. The oak's rule is pinned on the bark box.",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/the_letter_oaks_rule",
+        "at": "the_box"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/pannage_pound",
+    "place": "core:poi/pannage_pound",
+    "notes": "Thornhounds come over the bank after dark for the pigs.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/thornhound",
+        "count": 2,
+        "when": "night",
+        "at": "the_bank",
+        "spread": 2.5
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/agars_count",
+        "at": "the_tally"
+      }
+    ]
   }
 ]

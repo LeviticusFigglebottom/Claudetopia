@@ -323,5 +323,75 @@
         "spot": "home"
       }
     ]
+  },
+  {
+    "id": "core:npc/dunstan_agar",
+    "name": "Dunstan Agar",
+    "home_place": "core:poi/pannage_pound",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/dunstan_agar",
+    "bio": "Agister of the Lower Wold forty years: he counts the commoners' pigs into the pannage at Michaelmas and out again at Martinmas, and every household pays for a pig it cannot show him. His count has never been out. This autumn it is out by one every night.",
+    "unique_habit": "Counts everything out loud under his breath, people included, and nods when the number is right.",
+    "personality": {
+      "traits": [
+        "proud",
+        "greedy",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "feminine": 0.0,
+      "seed": 61889,
+      "build": "broad_heavy",
+      "age": 66,
+      "hair": "grey_stubble_under_a_leather_hood",
+      "notes": "a swineherd's horn on a cord, a long hazel goad notched at the top, mud to the knee and a clean slate on his belt"
+    },
+    "merchant": {
+      "stock": "core:table/stock_pannage",
+      "marks": 120,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/pannage_pound",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/pannage_pound",
+        "activity": "shop",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/pannage_pound",
+        "activity": "eat",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/pannage_pound",
+        "activity": "shop",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/pannage_pound",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
   }
 ]

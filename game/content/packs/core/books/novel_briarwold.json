@@ -40,5 +40,26 @@
     "author": "the Clerk of the Rolls, Tollmere",
     "category": "book",
     "body": "# To Master Sable, at the Works\n\n*Folded small and pushed under a cutter's bedding, the seal broken. It was read many times.*\n\n---\n\nMaster Sable,\n\nThe Circle thanks you for the twenty-sixth barrel and asks for thirty. The Rolls of the Unsaid grow faster than the Rolls of the Said this year, and both want the black. A name struck from the Rolls must be struck in the same ink it was written in, or it is not struck, and the Circle does not do things that are not done.\n\nAs to the tree, the Circle does not hold with the Woodfolk's custom of sparing, which is a custom for those who have no records. When the tree is done, the Circle will find another.\n\nThe Clerk of the Rolls"
+  },
+  {
+    "id": "core:book/the_dells_custom",
+    "title": "The Dell's Custom",
+    "author": "the verderers of the High Wold",
+    "category": "book",
+    "body": "# The Casting Dell\n\n*A slip of birch bark under a stone at the dell's head, the words cut with a knife point.*\n\n---\n\nThe dell gives one. It lies on the stone.\n\nTake the one it gives. Leave the rest to the moss.\n\nThe Warden at the mouth was here before the stakes. It does not mind you looking.\n\n*Underneath, in charcoal, a different hand:* It minds you carrying. Ask Wenlock Hewett's boy, who is walking with a stick now."
+  },
+  {
+    "id": "core:book/the_letter_oaks_rule",
+    "title": "The Letter Oak's Rule",
+    "author": "nobody, and everybody on the Elderhold road",
+    "category": "book",
+    "body": "# The Oak's Rule\n\n*A card in a dozen hands, each line added under the last.*\n\n---\n\nTie it on with the name outside.\n\nIf it is going your way, take it on.\n\nDo not read what is not yours.\n\nIf you cannot take it all the way, tie it on again further along.\n\n*At the bottom, newer:* Somebody take the Tine letter. It's been there since I was a girl. It is going to rot on the thread and then nobody will ever know."
+  },
+  {
+    "id": "core:book/agars_count",
+    "title": "Agar's Count",
+    "author": "Dunstan Agar, agister of the Lower Wold",
+    "category": "book",
+    "body": "# Pannage, the Lower Wold\n\n*Chalk on a slate hung on the tally-post, wiped and written over every morning.*\n\n---\n\nIn at Michaelmas: Ashby 3, Colley 2, Tolly 4, Hewett 2, Pellow's Pale 6 (no right, took them anyway), Rooke 3. Forty-one.\n\nMonday: forty-one. Tuesday: forty. Wednesday: thirty-nine. Thursday: thirty-eight.\n\nNot the pigs. Pigs can count."
   }
 ]
