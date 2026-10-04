@@ -1715,9 +1715,9 @@
       1284
     ],
     "radius_m": 32,
-    "pad_radius_m": 42,
+    "pad_radius_m": 50,
     "pad_shape": "level",
-    "glade_m": 76,
+    "glade_m": 80,
     "glade_approach_m": 22,
     "hearthstone": false,
     "builder": "the_knar",
@@ -1761,8 +1761,8 @@
       1964,
       -900
     ],
-    "pad_radius_m": 20,
-    "glade_m": 34,
+    "pad_radius_m": 30,
+    "glade_m": 46,
     "hearthstone": false,
     "builder": "letter_oak",
     "unique_feature": "an oak by the Elderhold road with a ring of hazel posts round it strung with thread, and on the threads hundreds of letters folded small and tied on, white and grey and brown with age, turning in the wind; a bark box for new letters at its foot",
