@@ -16779,3 +16779,51 @@ All four views are inside the 2,000 draw and 1.5 M budget.
 - The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
   what is streamed, so on Low a far corner cell can still go at 700-900 m.
 - Forward+ was not looked at.
+
+
+## The Briarwold's novel places: seven new kinds of place, two new large sites, quests for them (novel places, 2026-10-04)
+
+The owner's ask: truly novel places, new kinds the game had none of, plus large ones. All in the
+Briarwold's own files (`pois/briarwold.json`, `encounters/pois_briarwold.json`, `roadlife/briarwold.json`,
+new `*/novel_briarwold.json` and `tables/stock_novel_briarwold.json`) and new functions at the foot of
+`world/pois/regions/briarwold.gd` (nothing above them touched: the polish agent's `_bark_bole`, stubs,
+`asset_kind` and the atlas are left alone). No shared builder was changed.
+
+### Seven places of new kinds
+| place | kind (builder) | what it is | what you do there | hook |
+|---|---|---|---|---|
+| **The Told Hives** (2140, 956) | strange_tree (`told_hives`) | a dead oak's bole hung with log hives at every height, each tied with black cloth; skep bench, ladder, the low log | **Telling the Bees**: stand with Linnet Ashby and tell the bees her grandmother is dead (plain, "into the wood", or let her say it); knock on the low log; Linnet sells comb, mead, candles | a swarm on a fingerpost (road event), a rumour, Mab Ashby's bee-book |
+| **The Swainmote** (2836, -644) | market_field (`swainmote`) | the Woodfolk's court of custom: tiers of turf round a pollard with the steward's chair cut in it, the iron dog-gauge, a hound pound | **The Twelfth at the Mote**: sit as the twelfth, hear Hawys Tolly, give the word at the gauge (law the hound, hold the stirrup wide, pay the hart); the mote's notice post (radiant work) | a girl with an empty leash (road event), a rumour, the mote's customs board; the Knar's and Tinehold's quests come back here |
+| **The Silk Walk** (2452, -1940) | mill (`silk_walk`) | a 56 m ropewalk of posts strung with shining weaver silk, the twisting jack under its shed, the top on its sledge | Margery Laithe lays three weaver silk into a silk-laid cord (a ring); she trades rope and silk; gives the Knar's quest line | ropewalkers carrying a line (road event), a rumour, Laithe's rule |
+| **The Noon Owl** (2996, -2004) | strange_tree (`noon_owl`) | a bone-white dead oak with one black hollow (eyes in it), a hurdle ring of log seats, owl-pellets | at noon (11-14) sit with Gammer Hoole: five readings, each finds a place (the Knar, the Hives, the Mote, the Walk, Fern Gully), then the owl's feather (amulet) | listeners at noon (road event), a rumour, her count-stick |
+| **The Casting Dell** (3348, -1276) | hidden_valley (`casting_dell`) | where the harts cast their antlers: a ring of stakes each crowned with an antler, the bracken white with cast antlers, the stone with the one the dell gives | take the antler the dell gives (an amulet); take the loose ones and the Warden at the mouth wakes (`wakes_for`) | a rumour, the verderers' slip |
+| **The Letter Oak** (1964, -900) | strange_tree (`letter_oak`) | an oak ringed with posts and threads hung with hundreds of letters | **The Letter on the Oak**: carry the twenty-year letter (the Marshal's answer to Tinehold's "The Last Knight Out") to Wystan Tine at the Moot Gate Stone | a rumour, the oak's rule card |
+| **The Pannage Pound** (1940, 620) | fold (`pannage_pound`) | a turf bank and woven hazel round the acorn ground, pigs rooting, the agister's notched tally-post | **Counted Out**: kill the thornhounds that come over the bank at night; Dunstan Agar sells pannage ham | a rumour, Agar's count slate |
+
+### Two new large sites
+- **The Knar** (2716, 1284; delve, `the_knar`, pad 50, glade 80): an oak with a gall round its foot as big as a
+  barn, warted and bored, the black weeping out; the oak's crown grey on one side; the gall-wrights' vats steaming
+  with a smoke column over the canopy. Inside (`core:interior/the_knar`, bandit_cave in heartwood browns, 9 rooms,
+  seed 1077): the vat hall, the drying loft, the sap well, the heart shaft, the sleepless camp, the black gallery,
+  and **Master Orrin Sable, Gall-Wright** (human boss, extends the bruiser, long axe) at the well of the black.
+  New foes: gall-cutter, vat-keeper. **The Black That Keeps** (4 stages, Margery Laithe or the wrights' notice):
+  find the Knar, Pell Dunnock's reel and Sable, then the Sayers' Circle's contract goes to the Circle, to the
+  Swainmote (Ambrose Gale hears it), or into the vats.
+- **The Thornwell** (2596, 84; delve, `thornwell`, pad 38, glade 70): a ring of the Builders' black stone in the
+  Greatwood with the Briar's root burst up out of it in a crown of thorn arches 24-34 m high. Inside
+  (`core:interior/the_thornwell`, ruined_hall in the Builders' grey, 8 rooms, seed 1093): the channels, the root
+  hall, the seed niches, the rift, the dead layers' camp, the crown hall and **the Well-Keeper** (a Builders'
+  stone figure with the root through it; extends the stone thrall). **What the Builders Planted** (3 stages,
+  Edda Layward or the layers' cairn): kill the Keeper, then its seed-stone is set back, carried to the Standing
+  Moot, or laid in the Layers' Ring.
+
+### Quests for every large site
+The six older ones already each had theirs. Added: the two above, and **The Hundred and Twelve**, which leads out
+of Tinehold: the mason's roll of the names cut off the chapel lies under its altar (QuestItems, always), and
+Ambrose Gale at the Swainmote takes it from there (said aloud, kept, or sent to Wystan Tine). The Knar's line leads
+out to the Swainmote; the Letter Oak's to the Moot Gate Stone. Every stage opens on its reason line (40-170 letters).
+
+### Road life
+Six new Briarwold events (no new behaviour): a swarm on the fingerpost (`help`), two claims to a windfall (a burner
+and a Company sawyer, help one: custom or coin), a girl with a leash and no hound (to the Mote), a gatherer black to
+the elbow (escort; reveals the Knar), listeners at noon, ropewalkers carrying a line.
