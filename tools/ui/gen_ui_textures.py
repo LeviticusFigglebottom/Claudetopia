@@ -1348,6 +1348,43 @@ def _m_delve(n, ink, ac):
         n.stroke([(0.50 - w, y), (0.50 + w, y)], MW * 0.4, ac)
 
 
+# Hearthvale's novel places (world life, novel round)
+
+def _m_dovecote(n, ink, ac):
+    # a round cote under a conical cap, its rows of holes, and a dove over it
+    body = [(0.28, 0.88), (0.28, 0.44), (0.72, 0.44), (0.72, 0.88)]
+    n.poly(body, ac, alpha=70)
+    n.stroke(body, MW, ink, closed=True)
+    cap = [(0.22, 0.46), (0.50, 0.18), (0.78, 0.46)]
+    n.poly(cap, ac, alpha=120)
+    n.stroke(cap, MW, ink, closed=True)
+    for y in (0.56, 0.68):
+        for x in (0.38, 0.50, 0.62):
+            n.circle((x, y), 0.025, ink, width=MW * 0.4, fill=ink, segments=10)
+    n.stroke([(0.62, 0.12), (0.72, 0.06), (0.80, 0.12), (0.88, 0.06)], MW * 0.6, ink)
+
+
+def _m_scarecrow_moot(n, ink, ac):
+    # three scarecrows on their crosses, hatted, all facing the same way
+    for x, top in ((0.22, 0.40), (0.50, 0.24), (0.78, 0.40)):
+        n.stroke([(x, 0.90), (x, top)], MW * 0.8, ink)
+        n.stroke([(x - 0.12, top + 0.16), (x + 0.12, top + 0.16)], MW * 0.7, ink)
+        n.circle((x, top + 0.02), 0.055, ink, width=MW * 0.5, fill=ac, segments=12)
+        n.stroke([(x - 0.08, top - 0.04), (x + 0.08, top - 0.04)], MW * 0.6, ink)
+    n.stroke([(0.08, 0.90), (0.92, 0.90)], MW * 0.7, ink)
+
+
+def _m_chandlery(n, ink, ac):
+    # a mast with the dipping wheel hung from it, candles on strings under the rim
+    n.stroke([(0.50, 0.92), (0.50, 0.10)], MW, ink)
+    n.arc((0.50, 0.30), 0.34, math.pi, math.tau, ink, width=MW * 0.8, squash=0.32)
+    n.arc((0.50, 0.30), 0.34, 0.0, math.pi, ink, width=MW * 0.6, squash=0.32)
+    for x in (0.22, 0.34, 0.66, 0.78):
+        n.stroke([(x, 0.32), (x, 0.52)], MW * 0.35, ink)
+        n.poly([(x - 0.02, 0.52), (x + 0.02, 0.52), (x + 0.02, 0.64), (x - 0.02, 0.64)], ac, alpha=220)
+    n.stroke([(0.20, 0.92), (0.80, 0.92)], MW * 0.7, ink)
+
+
 MARKERS = {
     "town": _m_town, "city": _m_city, "village": _m_village, "hamlet": _m_hamlet,
     "camp": _m_camp, "fort": _m_fort, "lodge": _m_lodge, "deep_place": _m_deep_place,
@@ -1364,6 +1401,7 @@ MARKERS = {
     "gibbet": _m_gibbet, "stockade": _m_stockade, "walled_camp": _m_walled_camp,
     "castle_ruin": _m_castle_ruin, "watchtower": _m_watchtower, "delve": _m_delve,
     "player": _m_player, "reticle": _m_reticle, "default": _m_default,
+    "dovecote": _m_dovecote, "scarecrow_moot": _m_scarecrow_moot, "chandlery": _m_chandlery,
 }
 
 

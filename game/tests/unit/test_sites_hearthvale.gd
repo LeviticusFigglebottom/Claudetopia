@@ -2,7 +2,8 @@ extends TestCase
 ## Hearthvale's large sites (world life, phases 1 and 2): the Hound's Swallet (a cave under Hound
 ## Down, the Old Hound at the bottom), Knappers' Deep (a flint mine, the Gaffer at the far face), the
 ## throat under the Hum Stone (the Builders' vaults, the Digger-King at the bottom) and the crypt under
-## Wake Barrow (the barrow-wives' halls, Ebba Crowle at the bottom). Each is built,
+## Wake Barrow (the barrow-wives' halls, Ebba Crowle at the bottom) and the cellars under Wassail Knap
+## (the press-masters' vaults, the Wassail King at the Mother Vat; the novel round). Each is built,
 ## stood on, walked on its navigation mesh from the way in to every room, its boss in an arena, and
 ## left by its way out. The walk is test_sites.gd's.
 
@@ -12,6 +13,7 @@ const SWALLET := "core:interior/hounds_swallet"
 const DEEP := "core:interior/knappers_deep"
 const THROAT := "core:interior/hum_stone_throat"
 const WAKE := "core:interior/wake_barrow_crypt"
+const CELLARS := "core:interior/wassail_cellars"
 var player: Node3D
 
 
@@ -45,6 +47,10 @@ func test_the_hum_stones_throat_is_built_walkable_and_left() -> void:
 
 func test_the_crypt_under_wake_barrow_is_built_walkable_and_left() -> void:
 	await _built_walked_and_left(WAKE, "core:boss/barrow_wife", ["the_passage", "the_wake_hall", "the_washing_pool", "the_root", "the_ossuary", "the_hearth", "the_long_wake"])
+
+
+func test_the_cellars_under_wassail_knap_are_built_walkable_and_left() -> void:
+	await _built_walked_and_left(CELLARS, "core:boss/wassail_king", ["the_stair_foot", "the_pomace_cellar", "the_wassail_hall", "the_vat_hall", "the_press_spring", "the_kings_table", "the_mother_vat"])
 
 
 func _built_walked_and_left(interior: String, boss: String, rooms: Array) -> void:

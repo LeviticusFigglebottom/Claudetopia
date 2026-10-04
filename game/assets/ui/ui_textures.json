@@ -1830,6 +1830,27 @@
     48,
     48
    ]
+  },
+  "chandlery": {
+   "file": "markers/chandlery.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "dovecote": {
+   "file": "markers/dovecote.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "scarecrow_moot": {
+   "file": "markers/scarecrow_moot.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1963,10 +1984,12 @@
   "camp",
   "castle_ruin",
   "cave",
+  "chandlery",
   "city",
   "deep_place",
   "default",
   "delve",
+  "dovecote",
   "edge",
   "farmstead",
   "fold",
@@ -1991,6 +2014,7 @@
   "reticle",
   "ruin_village",
   "ruins",
+  "scarecrow_moot",
   "shieling",
   "shrine",
   "standing_stones",

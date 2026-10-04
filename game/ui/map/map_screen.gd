@@ -34,6 +34,7 @@ const REVEAL_M := {
 	"quarry": 600.0, "shieling": 460.0, "vista": 640.0,
 	"cairn": 320.0, "tally_post": 300.0, "grave": 280.0, "gibbet": 360.0, "fold": 340.0, "well": 300.0,
 	"lantern_post": 360.0, "hut": 340.0, "crossroads": 380.0, "peat_cut": 300.0, "beacon": 560.0,
+	"dovecote": 480.0, "scarecrow_moot": 460.0, "chandlery": 480.0,
 }
 const SURVEYED_M := 2100.0
 

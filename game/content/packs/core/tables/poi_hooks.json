@@ -384,7 +384,9 @@
       },
       {
         "poi": "core:poi/bram_wheelhouse",
-        "quests": [],
+        "quests": [
+          "core:quest/counted_out"
+        ],
         "finds": [
           "core:item/enid_droves_count"
         ],
@@ -448,7 +450,9 @@
       },
       {
         "poi": "core:poi/briarfoot_watch",
-        "quests": [],
+        "quests": [
+          "core:quest/the_third_hand"
+        ],
         "finds": [
           "core:item/briarfoot_tally"
         ],
@@ -652,6 +656,15 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/candle_wheel",
+        "quests": [
+          "core:quest/the_third_hand"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/cart_wards_post",
@@ -1110,7 +1123,9 @@
       },
       {
         "poi": "core:poi/drovers_pound",
-        "quests": [],
+        "quests": [
+          "core:quest/counted_out"
+        ],
         "finds": [
           "core:item/drovers_last_tally"
         ],
@@ -2748,6 +2763,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/letter_cote",
+        "quests": [],
+        "finds": [
+          "core:item/letter_to_gosford"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/lichen_stones",
         "quests": [
           "core:quest/where_the_breath_went"
@@ -3005,7 +3029,9 @@
       },
       {
         "poi": "core:poi/mother_pippin",
-        "quests": [],
+        "quests": [
+          "core:quest/the_last_wassail"
+        ],
         "finds": [
           "core:item/scions_and_stocks"
         ],
@@ -4068,6 +4094,17 @@
           "core:item/wayside_scar_cairn"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/scarecrow_moot",
+        "quests": [
+          "core:quest/the_forty_first"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/scarecrow_moot"
+        ],
         "hearthstone": false
       },
       {
@@ -5440,6 +5477,19 @@
           "core:item/note_wash_stones"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/wassail_knap",
+        "quests": [
+          "core:quest/the_last_wassail"
+        ],
+        "finds": [
+          "core:item/press_masters_bar"
+        ],
+        "encounters": [
+          "core:encounter/wassail_knap"
+        ],
         "hearthstone": false
       },
       {
