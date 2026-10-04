@@ -160,15 +160,16 @@
       },
       "theme": {
         "palette": [
-          "#34333a",
-          "#1f1e24",
-          "#4a4852"
+          "#5a5862",
+          "#3c3b43",
+          "#75727e"
         ],
         "lights": [
           "daylight",
+          "brazier",
           "fungus"
         ],
-        "light_colour": "#9fe08a"
+        "light_colour": "#c8e8a0"
       },
       "features": [
         {
