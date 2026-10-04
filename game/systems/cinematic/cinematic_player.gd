@@ -1200,8 +1200,12 @@ func _tick_hold(delta: float) -> void:
 		_enter_step()
 		return
 	# while the black or the last frame covers the screen nothing 3D is seen, and on a slow machine a
-	# frame of it is seconds the country could have been built in: none is drawn until it is in
-	_draw_3d(not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))
+	# frame of it is seconds the country could have been built in: none is drawn until it is in. But
+	# not before the first picture: the whole film's country stands up under that black, and held
+	# back from the GPU it was all uploaded and its pipelines compiled in the first picture's frame,
+	# past Windows' five seconds on the owner's card ("not responding" after Be named). Drawn under
+	# the curtain, the GPU takes it a piece a frame as it comes.
+	_draw_3d(not _revealed_once or not (_overlay.curtain() >= 0.999 or _overlay.is_frozen()))
 	var shot: Dictionary = _shots[_index]
 	var black := bool(shot.get("black", false))
 	var held_ms := Time.get_ticks_msec() - _hold_began_ms
