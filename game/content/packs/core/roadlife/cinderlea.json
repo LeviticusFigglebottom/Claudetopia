@@ -95,6 +95,36 @@
         "event": "core:roadevent/wanderer_merchant",
         "weight": 1,
         "cooldown_h": 36
+      },
+      {
+        "event": "core:roadevent/cinderlea_hush_walker",
+        "weight": 1,
+        "when": "night",
+        "cooldown_h": 20
+      },
+      {
+        "event": "core:roadevent/cinderlea_tile_carrier",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 14
+      },
+      {
+        "event": "core:roadevent/cinderlea_road_listener",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 18
+      },
+      {
+        "event": "core:roadevent/cinderlea_smoke_runner",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 12
+      },
+      {
+        "event": "core:roadevent/cinderlea_bell_sledge",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 20
       }
     ],
     "caravans": [
@@ -508,5 +538,195 @@
       "say": "Put down, then. Twice this month on this stretch. — The Rest pays for that.",
       "marks": 20
     }
+  },
+  {
+    "id": "core:roadevent/cinderlea_hush_walker",
+    "name": "A sleeper walking south",
+    "kind": "fugitive",
+    "notes": "Somebody from the north heath walking south in her sleep, barefoot, eyes open, towards the Hush, which is how it takes the ones it wants; her two brothers following at a distance because you must not wake a Hush-walker suddenly. Tell them where she is and they take her home.",
+    "speed": 1.1,
+    "cast": [
+      {
+        "role": "walker",
+        "folk": {
+          "name": "A woman walking in her sleep",
+          "tags": [
+            "person",
+            "pilgrim"
+          ]
+        },
+        "talk": {
+          "prompt": "Speak to the sleepwalker",
+          "do": "say",
+          "say": "*(Her eyes are open and do not see you.)* — They're saying the names. Mine's next. I have to be there when they say mine."
+        }
+      },
+      {
+        "role": "brother",
+        "folk": {
+          "name": "One of her brothers",
+          "tags": [
+            "person"
+          ]
+        },
+        "count": 2,
+        "talk": {
+          "prompt": "Tell the brothers where she is",
+          "do": "turn_in",
+          "say": "There — thank you. Don't wake them sudden, that's the rule; you walk beside and talk about home till they turn round. Third time this year. — Take this. And if you're going north, have Odile Wark fire her name. It helps.",
+          "hook": {
+            "marks": 18,
+            "rumour": "Her brothers say a name fired at {place} keeps a Hush-walker home.",
+            "reveals": "core:poi/name_kiln",
+            "once": true
+          }
+        }
+      }
+    ],
+    "consequence": {
+      "faction": "",
+      "reputation": 0,
+      "notice": "",
+      "killing_notice": ""
+    }
+  },
+  {
+    "id": "core:roadevent/cinderlea_tile_carrier",
+    "name": "A boy with a basket of names",
+    "kind": "wanderer",
+    "notes": "Odile Wark's apprentice walking the pilgrims' road with a basket of fired name-tiles wrapped in straw, taking the Order's pilgrims' names back up to the kiln; he reads them to you if you ask.",
+    "speed": 1.0,
+    "cast": [
+      {
+        "role": "carrier",
+        "folk": {
+          "name": "A potter's boy with a basket",
+          "tags": [
+            "person"
+          ]
+        },
+        "talk": {
+          "prompt": "Ask what's in the basket",
+          "do": "say",
+          "say": "Names. Fired last week, for the ones the Order walked to the ring this month. Eleven. — I say them as I go, so they've been said on the road too. Ada Rush. Tomas of the Wick. — Odile's kiln's north of Greyfold, by the Greyline. She'll do yours for a coin, if you want it done before.",
+          "hook": {
+            "rumour": "The potter's boy says the Name-Kiln is at {place}.",
+            "reveals": "core:poi/name_kiln",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_road_listener",
+    "name": "A Sayer listening to the road",
+    "kind": "lost_traveller",
+    "notes": "A Sayer of the Circle lying full length on the fused stone of the Builders' road with her ear to it, listening to the note come along the road from the Choir; she asks you to hold her fork still while she counts the beats.",
+    "cast": [
+      {
+        "role": "sayer",
+        "folk": {
+          "name": "A Sayer with her ear to the road",
+          "tags": [
+            "person",
+            "sayer"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Ask the Sayer what she's doing",
+          "do": "help",
+          "say": "Shh. — The Builders' roads carry the note like a string. Hold the fork; there, by the stem, don't touch the tines. — Fourteen beats. It was eleven last month. And there's something else in it now, from the plateau west of the Choir: a tune. A cradle-song, I'd swear it. Write that down for me, would you? My hands are cold.",
+          "hook": {
+            "marks": 10,
+            "rumour": "A Sayer heard a cradle-song in the road, coming from {place}.",
+            "reveals": "core:poi/the_fallen_head",
+            "reputation": {
+              "faction": "core:faction/sayers",
+              "delta": 2
+            },
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_smoke_runner",
+    "name": "The Hood's runner",
+    "kind": "wanderer",
+    "notes": "An Order novice running between the Hood and a chapter-house with a message too long for smoke, counting longs and shorts under her breath to keep the pace.",
+    "speed": 2.4,
+    "cast": [
+      {
+        "role": "runner",
+        "folk": {
+          "name": "An Order novice, running",
+          "tags": [
+            "person",
+            "tolling_order"
+          ]
+        },
+        "talk": {
+          "prompt": "Stop the runner",
+          "do": "say",
+          "say": "*(Without stopping, walking backwards a few paces.)* — Can't — message for Pilgrim's Ash — Brother Pell at the Hood can say yes in smoke but not why. If you want to see the heath talk, go to the Hood. He'll let you lift the hides. — Long-long-long!",
+          "hook": {
+            "rumour": "The Order's runner says the smoke-speakers' Hood is at {place}.",
+            "reveals": "core:poi/smoke_hood",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/cinderlea_bell_sledge",
+    "name": "Novices hauling a bell",
+    "kind": "pilgrims",
+    "notes": "Four novices of the Order hauling a small bronze bell on a sledge south to hang in the Choir's ring, as every novice does once, slowly, in step, the bell muffled in sacking so it does not ring on the way. They ask you to take a turn on the rope.",
+    "speed": 0.7,
+    "cast": [
+      {
+        "role": "novice",
+        "folk": {
+          "name": "A novice on the rope",
+          "tags": [
+            "person",
+            "tolling_order"
+          ]
+        },
+        "count": 3,
+        "talk": {
+          "prompt": "Take a turn on the rope",
+          "do": "help",
+          "say": "Oh — would you? Just to the next bend. — Every novice hauls one bell to the ring and hangs it, and it's never rung; it's to be there when the Choir wants it. Mine's the small one. It's heavier than it looks. Everything here is. — Thank you. I'll say you hauled.",
+          "after": "Two bends more and we're on the plateau.",
+          "hook": {
+            "reputation": {
+              "faction": "core:faction/tolling_order",
+              "delta": 3
+            },
+            "once": true
+          }
+        }
+      },
+      {
+        "role": "knight",
+        "folk": {
+          "name": "A knight walking behind",
+          "tags": [
+            "person",
+            "tolling_order"
+          ]
+        },
+        "talk": {
+          "prompt": "Talk to the knight",
+          "do": "say",
+          "say": "I'm not allowed to help. That's the rule; the novice hauls. I'm allowed to walk behind and say well done. — Well done."
+        }
+      }
+    ]
   }
 ]

@@ -786,7 +786,9 @@
       },
       {
         "poi": "core:poi/cistern_of_isse",
-        "quests": [],
+        "quests": [
+          "core:quest/the_full_jar"
+        ],
         "finds": [
           "core:item/note_cistern_of_isse"
         ],
@@ -2735,6 +2737,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/leaving_lines",
+        "quests": [
+          "core:quest/something_red"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/leech_wifes_stilts",
         "quests": [
           "core:quest/the_old_bitch"
@@ -3024,6 +3035,17 @@
         "encounters": [
           "core:encounter/wayside_mourners_fire"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/name_kiln",
+        "quests": [
+          "core:quest/a_name_for_the_warden",
+          "core:quest/something_red",
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4412,6 +4434,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/smoke_hood",
+        "quests": [
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/snow_shelter",
         "quests": [],
         "finds": [
@@ -4678,6 +4709,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_ash_dial",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_ash_dial"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_bonefield",
         "quests": [
           "core:quest/thirty_two"
@@ -4698,6 +4738,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_crown_drift"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_fallen_head",
+        "quests": [
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_fallen_head"
         ],
         "hearthstone": false
       },
@@ -4768,6 +4819,7 @@
       {
         "poi": "core:poi/the_kilnway",
         "quests": [
+          "core:quest/a_name_for_the_warden",
           "core:quest/ring_the_warden_down"
         ],
         "finds": [],

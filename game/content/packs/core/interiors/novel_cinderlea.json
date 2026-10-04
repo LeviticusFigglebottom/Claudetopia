@@ -1,0 +1,51 @@
+[
+  {
+    "id": "core:interior/the_fallen_head",
+    "name": "The Fallen Head",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_fallen_head",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Ysmay Corrow, who sang forty of Greyfold's walkers to sleep in the head in the Ash Winter and is singing still, and the sleepers in their rows",
+    "story": "The Builders carved the Choir's singers hollow, and a head is a house for a voice: the mouth opens on the tongue's long slope, the palate is a vault, the throat goes down through the neck's stump into the plateau, and at the bottom is the voice-box, a hall where the Builders hung the reeds the colossus sang through. In the Ash Winter Greyfold's walkers came in out of the ash-fall and lay down in rows in the palate and the throat, and Ysmay Corrow sat in the hollow of the head with her back to the skull and sang them to sleep.",
+    "unique_object": "the forty sleepers in rows on the palate's floor, grey under the ash, and on the skull's inside wall a lullaby scratched with a nail",
+    "site": {
+      "kind": "crypt",
+      "seed": 7311,
+      "region": "core:region/cinderlea",
+      "size": "large",
+      "boss": "core:boss/ysmay_corrow",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/oroth_cache",
+      "foes": {
+        "rank": ["core:enemy/ash_wight"],
+        "archers": ["core:enemy/chorister"],
+        "heavy": ["core:enemy/tolling_knight"]
+      },
+      "theme": {
+        "palette": ["#4a4640", "#2c2a26", "#5e5a52"],
+        "lights": ["candles", "brazier"],
+        "light_colour": "#ffd2a0",
+        "fill_colour": "#b8b0a0"
+      },
+      "features": [
+        {"kind": "note", "room": "secret", "book": "core:book/ysmays_lullaby", "item": "core:item/ysmays_lullaby", "name": "a lullaby scratched on a sheet of bronze"},
+        {"kind": "prop", "room": "the_tongue", "prop": "lantern_hand", "note": "Aud Venn's lantern, let down on a cord as far as it would go"},
+        {"kind": "prop", "room": "the_palate", "prop": "bedroll", "note": "a walker's bedroll, grey, the shape still in it"},
+        {"kind": "prop", "room": "the_hollow", "prop": "bell_small", "note": "a child's hand-bell, its clapper wrapped in cloth"}
+      ],
+      "rooms": [
+        {"id": "the_tongue", "role": "entrance", "size": "medium"},
+        {"id": "the_teeth", "role": "passage", "size": "small", "drop": -2.5, "note": "between the back teeth, down"},
+        {"id": "the_palate", "role": "chamber", "size": "large", "set_piece": "ossuary", "note": "the sleepers lying in rows under the vault of the palate"},
+        {"id": "the_eye", "role": "chamber", "size": "medium", "set_piece": "collapsed_shaft", "note": "the inside of an eye, open to the sky"},
+        {"id": "the_throat", "role": "passage", "size": "small", "drop": -4.0, "note": "down through the neck's stump into the plateau"},
+        {"id": "the_rest", "role": "camp", "size": "medium", "note": "where the walkers who could not sleep sat up round a fire"},
+        {"id": "the_voice_box", "role": "hall", "size": "large", "set_piece": "chasm_bridge", "drop": -2.0, "note": "the Builders' reeds, and the knight who came looking"},
+        {"id": "the_hollow", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
+      ]
+    }
+  }
+]

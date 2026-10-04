@@ -1,0 +1,50 @@
+[
+  {
+    "id": "core:rumour/fallen_head_lullaby",
+    "name": "The head on the plateau",
+    "tone": "strange",
+    "text": "The dry wind took the ash off the plateau west of the Choir this spring, and there was a face under it. One of the twelve heads, on its cheek, with its mouth open. It sings at night. A cradle-song, the Order's hearer says, and names between the verses.",
+    "variants": ["Pell Hoddy at the Hood sent 'found' in smoke this spring. Nobody had sent it since the Ash Winter. Nobody remembered what it meant."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/ash_dial_thirteenth",
+    "name": "The thirteenth stone",
+    "tone": "strange",
+    "text": "The Order tells the hours by a Builders' dial on the west heath: a stone blade, and a ring of stones with the strokes cut on them. Thirteen stones. Twelve numbers. The girl who reads it says the blank one opens at its own hour, if you're there with your hand on it.",
+    "variants": ["Out on the west heath a hand-bell rings the hours off a stone blade's shadow. After dark the wights go and stand on the stones."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/name_kiln_screen",
+    "name": "The wind says them",
+    "tone": "warm",
+    "text": "North of Greyfold there's a kiln on a vent that's never gone out, and beside it a screen of a thousand tiles on cords, each with a name on it. The wind knocks them together. Odile Wark will fire yours for a coin. The pilgrims say it's the only thing on the heath the Hush can't take.",
+    "variants": ["If you go south, have Odile Wark fire your name first. Then somebody up here is saying it."],
+    "tags": ["cinderlea", "warm"]
+  },
+  {
+    "id": "core:rumour/leaving_lines_corra",
+    "name": "The woman by the basin",
+    "tone": "grim",
+    "text": "At the Leaving-Lines, past the Undertone, where the pilgrims hang up their colours: there's a Merrowby woman sat by the ash-basin three days with her red coat on the line, not going on and not coming back. Somebody ought to take her some bread.",
+    "variants": ["The only colour south of Greyfold is on the Leaving-Lines, and it's the clothes of the ones who went."],
+    "tags": ["cinderlea", "grim"]
+  },
+  {
+    "id": "core:rumour/smoke_hood_code",
+    "name": "Puffs on the heath",
+    "tone": "strange",
+    "text": "That smoke going up in puffs between Greyfold and Pilgrim's Ash isn't a fire. It's the Order talking. There's a brother at the Hood who drops a hide on a vent and lifts it, long and short. He'll let you work the lever if you ask nicely, and the heath answers.",
+    "variants": ["Three longs at dawn from the Hood, and every house on the heath sends three back. The year one doesn't, they say, you'll know."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/isse_cistern_water",
+    "name": "Water in the cistern",
+    "tone": "strange",
+    "text": "The Builders' cistern under the Ashgrid has been dry since the Ash Winter, every Sayer says so. There's a reedwoman from Isseva at the top of its stair, standing on one leg, who walked two regions because she heard it's full again.",
+    "variants": ["The wights that come up out of the Cistern of Isse are wet to the knee. Think about that."],
+    "tags": ["cinderlea", "strange"]
+  }
+]

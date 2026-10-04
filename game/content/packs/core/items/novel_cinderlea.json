@@ -1,0 +1,67 @@
+[
+  {
+    "id": "core:item/ash_dial_hour_plate",
+    "name": "The Thirteenth Hour-Plate",
+    "category": "misc",
+    "weight": 1.0,
+    "value": 140,
+    "tags": ["builders", "cinderlea", "valuable"],
+    "description": "A plate of the Builders' gilt bronze the size of a hand, from the hollow under the Ash Dial's unnumbered stone. It is cut with thirteen strokes, the last one longer than the others and not finished, as if the cutter had been called away in the middle of it."
+  },
+  {
+    "id": "core:item/sleepers_roll",
+    "name": "Ysmay Corrow's Roll of Sleepers",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "tags": ["quest", "no_sale"],
+    "description": "A strip of pilgrim's grey cloth three yards long, rolled tight, embroidered end to end in black thread with forty names, Greyfold names, each with a little stitched bell after it. The thread of the last name runs off the end of the cloth."
+  },
+  {
+    "id": "core:item/isse_jar_water",
+    "name": "The Water from Isse's Jar",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "tags": ["quest", "no_sale"],
+    "description": "The full jar from the offering-stone at the bottom of the Cistern of Isse, stoppered with a twist of reed. It is cold through the clay. When you hold it still the water inside it still moves, slowly, the way a marsh pool moves when something under it breathes."
+  },
+  {
+    "id": "core:item/kiln_warden_token",
+    "name": "The Kiln-Warden's Toll-Token",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "tags": ["quest", "no_sale"],
+    "description": "A bronze disc from the toll-hall at the bottom of the Kilnway, the token the Order gives a bearer when it sends him down, stamped on one face with the Order's bell and on the other with his name, rubbed nearly smooth by a thumb: HOB ATHERLEY."
+  },
+  {
+    "id": "core:item/madder_red_scarf",
+    "name": "Corra Dunn's Madder Scarf",
+    "category": "misc",
+    "weight": 0.1,
+    "value": 0,
+    "tags": ["quest", "no_sale", "cinderlea", "cloth"],
+    "description": "A dyer's scarf of Vale linen dyed with madder, three dips deep, the reddest thing south of Greyfold. Corra Dunn gave it you at the Leaving-Lines so that something red would go back north, and asked that it be tied to her husband's name at the Name-Kiln."
+  },
+  {
+    "id": "core:item/ysmays_lullaby",
+    "name": "A Lullaby Scratched on Bronze",
+    "category": "book",
+    "weight": 0.4,
+    "value": 20,
+    "reads": "core:book/ysmays_lullaby",
+    "tags": ["book", "cinderlea", "pilgrims"],
+    "description": "A sheet of green bronze from the inside of the Fallen Head's skull, scratched with a nail: a pilgrims' cradle-song in a Greyfold hand, the verses numbered, the last verse begun and not finished."
+  },
+  {
+    "id": "core:item/smoke_code_cord",
+    "name": "A Smoke-Speaker's Code-Cord",
+    "category": "book",
+    "weight": 0.1,
+    "value": 15,
+    "reads": "core:book/smoke_code_cord",
+    "tags": ["book", "tolling_order", "cinderlea"],
+    "description": "A cord of the Order's grey flax knotted long and short, with a paper tag on it in Pell Hoddy's hand saying what each run of knots means when it goes up in smoke."
+  }
+]

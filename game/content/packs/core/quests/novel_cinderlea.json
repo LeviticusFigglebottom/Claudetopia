@@ -1,0 +1,191 @@
+[
+  {
+    "id": "core:quest/the_head_that_sings",
+    "name": "The Head That Sings",
+    "layer": "side",
+    "giver": "core:npc/pell_hoddy",
+    "offer": "Something on the Choir plateau sings at night. I'll look.",
+    "region": "core:region/cinderlea",
+    "summary": "From the top of the Smoke-Speakers' Hood, Brother Pell Hoddy saw the ash slide off something on the Choir plateau, and since then something there sings after dark.",
+    "notes": "Cinderlea's novel-places large site: the_fallen_head (delve, own builder) leads to core:interior/the_fallen_head, boss core:boss/ysmay_corrow, who drops the sleepers' roll. Leads out to the Name-Kiln (Odile Wark). The Order's slate by the mouth starts it too.",
+    "stages": [
+      {
+        "id": "the_slide",
+        "journal": "Pell Hoddy saw the ash slide off something on the Choir plateau, and now it sings at night; the Order has sent its hearer, and he wants to know what she has found. West of the Choir, at the end of a long furrow in the ash, Sister Aud Venn is listening at a mouth.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/the_fallen_head", "count": 1, "text": "Find what the ash uncovered on the Choir plateau"},
+          {"type": "talk", "target": "core:npc/aud_venn", "count": 1, "text": "Speak to Sister Aud Venn at the Fallen Head"}
+        ],
+        "marker": {"place_id": "core:poi/the_fallen_head", "radius": 90}
+      },
+      {
+        "id": "the_hollow",
+        "journal": "Something inside the Fallen Head answered when Aud Venn called down its mouth, a woman's voice, singing names. Go in through the mouth and down the throat, and find who is singing, and what she is keeping there.",
+        "objectives": [
+          {"type": "kill", "target": "core:boss/ysmay_corrow", "count": 1, "where": "core:interior/the_fallen_head", "text": "Find the singer in the hollow of the head"},
+          {"type": "collect", "target": "core:item/sleepers_roll", "count": 1, "text": "Take what she was keeping"}
+        ],
+        "marker": {"place_id": "core:poi/the_fallen_head", "radius": 90}
+      },
+      {
+        "id": "the_names",
+        "journal": "Ysmay Corrow kept a roll of forty names, the Greyfold walkers she sang to sleep, and now there is nobody to say them. The Name-Kiln on the north heath fires names so they are said; Odile Wark keeps it.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/odile_wark", "topic": "q_roll", "count": 1, "text": "Bring the roll of sleepers to Odile Wark at the Name-Kiln"}
+        ],
+        "marker": {"place_id": "core:poi/name_kiln", "radius": 90}
+      },
+      {
+        "id": "the_tiles",
+        "journal": "Odile Wark has fired forty-one tiles from the roll, the last for the singer herself, and before they cool she must know where they are to hang.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_tiles",
+            "text": "Tell Odile Wark where the forty-one tiles should hang",
+            "with": "core:npc/odile_wark",
+            "options": [
+              {"id": "on_the_screen", "text": "Hang them on the screen, where the wind says them every day.", "effects": [{"set_flag": "head_tiles_on_the_screen"}, {"renown": 5}]},
+              {"id": "in_the_mouth", "text": "Carry them back to the Head and hang them in its mouth, so it says them.", "effects": [{"set_flag": "head_tiles_in_the_mouth"}, {"rep": ["core:faction/tolling_order", 8]}, {"morality": 3}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/name_kiln", "radius": 90}
+      },
+      {
+        "id": "named",
+        "journal": "Forty-one names are hanging where they will be said. Aud Venn wiped her slate and went back to Pilgrim's Ash; the Fallen Head is quiet at night now, and the Order has sent nobody else.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 200, "renown": 15, "rep": [["core:faction/tolling_order", 5]]}
+  },
+  {
+    "id": "core:quest/the_full_jar",
+    "name": "The Full Jar",
+    "layer": "side",
+    "giver": "core:npc/ama_reedwright",
+    "offer": "You came all this way and won't go down? I'll go.",
+    "region": "core:region/cinderlea",
+    "summary": "Ama Reedwright walked from Isseva to the Cistern of Isse because a Sayer said there was water in it again. It is not hers to go down; she would like to know what is at the bottom.",
+    "notes": "The Cistern of Isse's quest (a phase-one large site with an inside and no quest). The jar lies on the offering-stone (core:interior/cistern_of_isse, room offering_stone). Ama stands at the well-house (regions/cinderlea.gd cistern_of_isse, marker ama_well).",
+    "stages": [
+      {
+        "id": "the_jar",
+        "journal": "Ama Reedwright walked from Isseva because a Sayer wrote that the dry Cistern of Isse holds water again, but it is not hers to go down. At the bottom, on Isse's offering-stone, a jar is meant to stand full.",
+        "objectives": [
+          {"type": "collect", "target": "core:item/isse_jar_water", "count": 1, "where": "core:interior/cistern_of_isse", "spot": "offering_stone", "text": "Bring up the jar from Isse's offering-stone"}
+        ],
+        "marker": {"place_id": "core:poi/cistern_of_isse", "radius": 80}
+      },
+      {
+        "id": "the_water",
+        "journal": "The jar was full, and the water in it moves when you hold it still. Ama Reedwright is waiting at the top of the stair to see it, and to decide what is done with Isse's water.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_water",
+            "text": "Show Ama Reedwright the jar and decide what is done with it",
+            "with": "core:npc/ama_reedwright",
+            "options": [
+              {"id": "to_isseva", "text": "Let her carry it home to Isseva, to the Reed Council.", "effects": [{"take_item": ["core:item/isse_jar_water", 1]}, {"set_flag": "full_jar_to_isseva"}, {"rep": ["core:faction/reed_council", 10]}]},
+              {"id": "on_the_ash", "text": "Pour it out on the ash at the stair-head, where Isse came up.", "effects": [{"take_item": ["core:item/isse_jar_water", 1]}, {"set_flag": "full_jar_on_the_ash"}, {"morality": 3}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/cistern_of_isse", "radius": 80}
+      },
+      {
+        "id": "poured",
+        "journal": "The water from Isse's jar has gone where it was meant to. Ama Reedwright has tied her stilts on her back again and gone north, and says she will not tell the Sayers.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 140, "renown": 10}
+  },
+  {
+    "id": "core:quest/a_name_for_the_warden",
+    "name": "A Name for the Warden",
+    "layer": "side",
+    "giver": "core:npc/odile_wark",
+    "offer": "I'll fetch the name of the bearer in the Kilnway.",
+    "region": "core:region/cinderlea",
+    "summary": "Odile Wark has a gap on the Name-Kiln's screen where the Order's bearer in the Kilnway should hang. He went down the winter after the Ash Winter, and nobody wrote his name.",
+    "notes": "Leads out of the Kilnway (the showcase's lava tube): the bearer's toll-token lies in its boss room (QuestItems, room boss). Hob Atherley is the Kiln-Warden's name (bosses/sites_showcase.json core:boss/kiln_warden).",
+    "stages": [
+      {
+        "id": "the_token",
+        "journal": "Odile Wark cannot fire a tile for the bearer the Order sent down the Kilnway, because nobody wrote his name. It is stamped on his toll-token, in the toll-hall at the bottom of the tube.",
+        "objectives": [
+          {"type": "collect", "target": "core:item/kiln_warden_token", "count": 1, "where": "core:interior/the_kilnway", "spot": "boss", "text": "Find the bearer's toll-token in the Kilnway's toll-hall"}
+        ],
+        "marker": {"place_id": "core:poi/the_kilnway", "radius": 80}
+      },
+      {
+        "id": "the_firing",
+        "journal": "Odile Wark wants the bearer's token to press into the clay herself: it says HOB ATHERLEY, rubbed nearly smooth by a thumb. She will ask where his tile should hang.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_firing",
+            "text": "Give Odile Wark the token and say where Hob Atherley's tile hangs",
+            "with": "core:npc/odile_wark",
+            "options": [
+              {"id": "on_the_screen", "text": "On the screen, with the Ash Winter's names.", "effects": [{"take_item": ["core:item/kiln_warden_token", 1]}, {"set_flag": "warden_tile_on_the_screen"}, {"renown": 4}]},
+              {"id": "at_the_mouth", "text": "At the Kilnway's mouth, where the pilgrims sleep and hear him.", "effects": [{"take_item": ["core:item/kiln_warden_token", 1]}, {"set_flag": "warden_tile_at_the_mouth"}, {"rep": ["core:faction/tolling_order", 6]}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/name_kiln", "radius": 80}
+      },
+      {
+        "id": "hung",
+        "journal": "Hob Atherley's tile is fired and hung. Odile Wark says his name to it every evening, with the others.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 120, "renown": 8, "morality": 2}
+  },
+  {
+    "id": "core:quest/something_red",
+    "name": "Something Red",
+    "layer": "side",
+    "giver": "core:npc/corra_dunn",
+    "region": "core:region/cinderlea",
+    "summary": "Corra Dunn, a Merrowby dyer who followed her husband south as far as the Leaving-Lines, is going home. His blue coat stays on the lines; she asks that his name be fired at the Name-Kiln with her red scarf tied to it.",
+    "notes": "The Leaving-Lines' small story (pois/cinderlea.json leaving_lines). Started when Corra turns back (a shared ash-cake, or renown enough to be believed); closes at Odile Wark's q_scarf line at the Name-Kiln.",
+    "stages": [
+      {
+        "id": "the_scarf",
+        "journal": "Corra Dunn is going home, but her husband Daff stays on the Leaving-Lines; she asks that Odile Wark fire his name at the Name-Kiln and tie her red scarf to it.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/odile_wark",
+            "topic": "q_scarf",
+            "count": 1,
+            "text": "Take Corra's scarf to Odile Wark at the Name-Kiln"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/name_kiln",
+          "radius": 90
+        }
+      },
+      {
+        "id": "tied",
+        "journal": "Daff Dunn's tile hangs on the Name-Kiln's screen with a red scarf through it, the only red on the north heath, and the wind says his name.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 60,
+      "renown": 5,
+      "morality": 2
+    }
+  }
+]
