@@ -785,6 +785,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/cinderhowe",
+        "quests": [
+          "core:quest/the_glass_knight"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/cistern_of_isse",
         "quests": [
           "core:quest/the_full_jar"

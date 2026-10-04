@@ -128,5 +128,30 @@
       "no_sale"
     ],
     "description": "A slate hung on the end of a cocoon rack, chalked with the nights' counts of moths come down to the lamp."
+  },
+  {
+    "id": "core:item/orvel_vow_plate",
+    "name": "Ser Orvel's Vow-Plate",
+    "category": "misc",
+    "weight": 0.8,
+    "value": 0,
+    "tags": [
+      "quest",
+      "no_sale"
+    ],
+    "description": "The breastplate's vow-plate off the glassed knight, black glass over the Order's bronze, and under the glass, still readable, the vow he made at Pilgrim's Ash and a second name scratched beside his own: Ama Fennick."
+  },
+  {
+    "id": "core:item/obsidian_edge",
+    "name": "A Cinderhowe Edge",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 70,
+    "tags": [
+      "cinderlea",
+      "trade",
+      "valuable"
+    ],
+    "description": "A blade-blank of Cinderhowe's black glass from Joss Fennick's first knapping in the reopened galleries, with an edge you can shave with and a weight you can't feel."
   }
 ]

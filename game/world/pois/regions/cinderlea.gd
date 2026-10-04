@@ -17,8 +17,8 @@ extends RefCounted
 ## and a screen of fired name-tiles), the Smoke-Speakers' Hood (the Order's signal station over a
 ## vent), the Leaving-Lines (where pilgrims hang up their colours), the Silk Vents (a moth-wife's
 ## racks of cocoons over warm cracks), the Fading-Glass (a sheet of black glass pilgrims look into),
-## the Gentle Fold (where the Order keeps the wights that will not lie down) and the Fallen Head (one
-## of the Choir's lost heads, a door in its mouth).
+## the Gentle Fold (where the Order keeps the wights that will not lie down), the Fallen Head (one
+## of the Choir's lost heads, a door in its mouth) and Cinderhowe (a cinder cone over obsidian galleries).
 
 ## The Salt Isles' sailcloth, weathered, and the grey flax of the Order's ropes.
 const SAIL := Color(0.47, 0.43, 0.36)
@@ -4685,3 +4685,130 @@ static func gentle_fold(d: PoiDressing) -> void:
 		k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.7, 0.4), 1.6, 8.0)
 	_settle(d)
 	await _grey_grass(d, 16.0, 26)
+
+
+# --- Cinderhowe -------------------------------------------------------------------------------------------
+
+const CONE_R := 24.0
+const CONE_H := 21.0
+const CONE_POWER := 2.4
+const CINDER := {"base": "#2a2725", "accent": "#3a3532", "grout": "#141211", "unit": 0.45}
+
+## The cone's height over its foot `f` (0 at its middle, 1 at its rim) of the way out.
+static func _cone_y(f: float) -> float:
+	return CONE_H * pow(maxf(1.0 - f * f, 0.0), CONE_POWER * 0.5)
+
+
+## A cone of black cinders twenty metres high, set back from the way the place faces, with its crater
+## a red glow under a rim of slag and the plume going up out of it; ribbons of black glass run down
+## its sides where the Ash Winter's fire came out of them; at its foot, facing out, the timbered adit
+## of the cutters' galleries, the door in its dark, a heap of glass spoil beside it; Joss Fennick's
+## knapping floor, his tent and fire; the cutters' board (the site's hook).
+static func cinderhowe(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var out := k.road_direction(220.0)
+	if out == Vector2.ZERO:
+		out = k.downhill()
+	if out == Vector2.ZERO:
+		out = Vector2(0.0, 1.0)
+	out = out.normalized()
+	var side := Vector2(out.y, -out.x)
+	var cc := -out * 9.0
+	var base_y := k.on_ground(cc.x, cc.y).y - 1.0
+	await k.step()
+	m.mound(Vector3(cc.x, base_y, cc.y), CONE_R, CONE_H, PoiKit.painted(5, CINDER, 0.6, 0.7), "Cone", true, CONE_POWER, 12, 36, true, 0.02)
+	# the crater: a rim of slag round a red floor
+	var rim := m.begin()
+	_lathe(rim, Transform3D(Basis.IDENTITY, Vector3(cc.x, base_y, cc.y)),
+			[Vector2(6.2, _cone_y(6.2 / CONE_R) - 0.2), Vector2(5.0, CONE_H + 1.1), Vector2(4.1, CONE_H + 0.6), Vector2(3.6, CONE_H - 0.6)], 28)
+	await k.step()
+	m.commit(rim, PoiKit.painted(5, SLAG, 0.4, 0.7), "CraterRim", true)
+	var fire := m.begin()
+	_lathe(fire, Transform3D(Basis.IDENTITY, Vector3(cc.x, base_y + CONE_H - 0.7, cc.y)), [Vector2(3.7, 0.0), Vector2(0.0, 0.3)], 18)
+	await k.step()
+	m.commit(fire, PoiKit.plain(Color(0.6, 0.18, 0.06), 0.9, 0.0, Color(1.0, 0.35, 0.1), 2.6), "CraterFire", true)
+	# the glass run down its sides: ribbons lying on the cinders
+	var glass := m.begin()
+	for s in 7:
+		var a := TAU * float(s) / 7.0 + k.rng.randf_range(-0.2, 0.2)
+		var dir := Vector2(sin(a), cos(a))
+		if dir.dot(out) > 0.85:
+			continue
+		var wobble := k.rng.randf_range(-0.3, 0.3)
+		var prev := Vector3.INF
+		for i in 9:
+			var f := 0.22 + 0.075 * float(i)
+			var dd := dir.rotated(wobble * f)
+			var p2 := cc + dd * CONE_R * f
+			var p := Vector3(p2.x, base_y + _cone_y(f) + 0.12, p2.y)
+			if prev != Vector3.INF:
+				var w := lerpf(1.4, 0.6, f) * k.rng.randf_range(0.8, 1.2)
+				_taper(glass, prev, p, Vector3(dd.y, 0.0, -dd.x), w, 0.18, w * 0.85, 0.16)
+			prev = p
+	await k.step()
+	m.commit(glass, PoiKit.plain(Color(0.025, 0.025, 0.032), 0.06, 0.3), "GlassRuns", true)
+	if not k.far:
+		var top := Vector3(cc.x, base_y + CONE_H + 0.8, cc.y)
+		k.puffs(top, Vector3(1.6, 0.4, 1.6), 3.6, 18, Color(0.46, 0.43, 0.41, 0.4), 4.0, 10.0)
+		k.light(top, Color(1.0, 0.4, 0.15), 2.2, 14.0)
+	# the adit at the cone's foot, facing out
+	var foot_f := 0.99
+	var adit := cc + out * CONE_R * foot_f
+	var ag := k.on_ground(adit.x, adit.y).y
+	var ab := Basis(Vector3.UP, PoiKit.yaw_of(out))
+	var timber := m.begin()
+	for s in [-1.0, 1.0]:
+		var p := adit + side * 1.5 * float(s)
+		m.post(timber, p, 3.3, 0.3, Vector3(0.0, 0.0, 0.06 * float(s)))
+	_box(timber, Transform3D(ab, Vector3(adit.x, ag + 3.35, adit.y)), Vector3(4.0, 0.36, 0.42))
+	# a second set further in, and the lagging between
+	var inner := adit - out * 2.4
+	var ig := k.on_ground(inner.x, inner.y).y
+	for s in [-1.0, 1.0]:
+		var p := inner + side * 1.4 * float(s)
+		_box(timber, Transform3D(ab, Vector3(p.x, ig + 1.6, p.y)), Vector3(0.28, 3.3, 0.28))
+	_box(timber, Transform3D(ab, Vector3(inner.x, ig + 3.25, inner.y)), Vector3(3.6, 0.3, 0.36))
+	for i in 5:
+		var p := adit.lerp(inner, (float(i) + 0.5) / 5.0)
+		_box(timber, Transform3D(ab, Vector3(p.x, ig + 3.55, p.y)), Vector3(3.8, 0.12, 0.38))
+	await k.step()
+	m.commit(timber, PoiKit.painted(3, {"base": "#2b2420", "accent": "#1c1815", "grout": "#0e0c0a"}, 0.85), "Adit", true)
+	var dark := m.begin()
+	_box(dark, Transform3D(ab, Vector3(adit.x, ag + 1.55, adit.y) - Vector3(out.x, 0.0, out.y) * 0.35), Vector3(2.7, 3.1, 0.2))
+	k.collider(Vector3(2.7, 3.1, 0.3), Transform3D(ab, Vector3(adit.x, ag + 1.55, adit.y) - Vector3(out.x, 0.0, out.y) * 0.4), "stone")
+	await k.step()
+	m.commit(dark, PoiKit.plain(HOLE, 1.0), "AditDark", true)
+	# the spoil of glass beside the adit
+	var spoil := adit + side * 7.5 + out * 2.0
+	await k.step()
+	m.mound(k.on_ground(spoil.x, spoil.y, -0.2), 4.2, 2.2, PoiKit.plain(Color(0.03, 0.03, 0.04), 0.12, 0.25), "GlassSpoil", true, 1.6, 6, 18, true, 0.12)
+	if k.far:
+		return
+	var interior := str(site.get("interior", ""))
+	var door_at := Vector3(adit.x, ag + 0.05, adit.y) + Vector3(out.x, 0.0, out.y) * 0.2
+	PoiDressing.kind_builders().SITES._door(d, interior, door_at, PoiKit.yaw_of(out))
+	k.marker("the_adit", Vector3(adit.x, ag, adit.y) + Vector3(out.x, 0.0, out.y) * 2.0)
+	k.bounce_light(Vector3(adit.x, ag + 1.8, adit.y), Color(1.0, 0.75, 0.5), 0.8, 6.0)
+	var spoil_top := k.on_ground(spoil.x, spoil.y, 1.2) + Vector3(out.x, 0.0, out.y) * 3.0
+	k.touchable("the_spoil", spoil_top, "Look at the glass spoil", "core:dialogue/cinderhowe_crater", "", false)
+	# Joss's knapping floor: flakes, a hammerstone, his stool; his tent and fire
+	var floor_at := adit + out * 7.0 - side * 6.5
+	var flakes := m.begin()
+	for i in 40:
+		var p := floor_at + k.jitter(1.6)
+		var at := k.on_ground(p.x, p.y, 0.01)
+		_taper(flakes, at, at + Vector3(k.rng.randf_range(-0.1, 0.1), 0.02, k.rng.randf_range(-0.1, 0.1)), Vector3(k.rng.randf(), 0.0, 1.0), 0.08, 0.02, 0.04, 0.01)
+	await k.step()
+	m.commit(flakes, PoiKit.plain(Color(0.03, 0.03, 0.04), 0.1, 0.25), "Flakes")
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(floor_at.x, floor_at.y), PoiKit.yaw_of(-side))
+	await k.step()
+	k.place(k.prop("anvil"), k.on_ground(floor_at.x + side.x * 1.0, floor_at.y + side.y * 1.0), PoiKit.yaw_of(out))
+	k.marker("joss_floor", k.on_ground(floor_at.x - side.x * 0.8, floor_at.y - side.y * 0.8), true)
+	var camp := floor_at + out * 4.0 - side * 3.0
+	await _grey_camp(d, camp, side)
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(adit.x, 0.0, adit.y) + Vector3(out.x, 0.0, out.y) * 4.5 + Vector3(side.x, 0.0, side.y) * 3.2)
+	await _rubble(d, adit + out * 6.0, 12.0, 12, Vector2(0.3, 0.7))
+	await _grey_grass(d, 26.0, 30, out * 10.0)

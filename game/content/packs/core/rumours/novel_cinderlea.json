@@ -85,5 +85,18 @@
       "cinderlea",
       "warm"
     ]
+  },
+  {
+    "id": "core:rumour/cinderhowe_knight",
+    "name": "The knight in the cone",
+    "tone": "strange",
+    "text": "Cinderhowe, the black cone on the north heath with the smoke over it. The cutters left the glass galleries forty years ago because a knight walks them in armour that rings like glass. A knapper's sitting at the foot of it now, waiting for somebody braver than him.",
+    "variants": [
+      "Every blade the Order carried was Cinderhowe glass once. Not since the knight."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
   }
 ]

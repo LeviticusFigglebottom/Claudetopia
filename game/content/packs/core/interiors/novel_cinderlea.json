@@ -47,5 +47,122 @@
         {"id": "the_hollow", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
       ]
     }
+  },
+  {
+    "id": "core:interior/cinderhowe_galleries",
+    "name": "The Glass Galleries",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/cinderhowe",
+    "danger": 3,
+    "formed_by": "builder",
+    "resident": "Ser Orvel Glasse, a knight of the Order who went in after a lost cutter in the Ash Winter's last fire and was glassed to the bone, and the cutters who did not come out",
+    "story": "The pilgrims' galleries into Cinderhowe, cut along the veins of black glass the Ash Winter ran through the hill: the knapping floor inside the adit, a drift down, the vein gallery where the glass shows in the walls like water, the cutters' camp, a chasm the fire opened, the tool-hall, and at the bottom the heart of the cone, still warm, where the glass is still forming.",
+    "unique_object": "in the heart of the cone, a cutter's pick standing in a seam of glass that grew round it, and the knight beside it",
+    "site": {
+      "kind": "mine",
+      "seed": 6121,
+      "region": "core:region/cinderlea",
+      "size": "large",
+      "boss": "core:boss/ser_orvel_glasse",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/oroth_cache",
+      "foes": {
+        "rank": [
+          "core:enemy/ash_wight"
+        ],
+        "archers": [
+          "core:enemy/chorister"
+        ],
+        "heavy": [
+          "core:enemy/tolling_knight"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#2e2c2e",
+          "#1c1a1c",
+          "#45424a"
+        ],
+        "lights": [
+          "lantern",
+          "torch"
+        ],
+        "light_colour": "#ffb070",
+        "fill_colour": "#8a8aa0"
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "adit",
+          "prop": "lantern_hand",
+          "note": "Joss Fennick's grandfather's lamp, still hung on its nail"
+        },
+        {
+          "kind": "prop",
+          "room": "the_cutters_camp",
+          "prop": "bedroll",
+          "note": "a cutter's bedroll, rolled for the morning"
+        },
+        {
+          "kind": "prop",
+          "room": "the_tool_hall",
+          "prop": "anvil",
+          "note": "the cutters' knapping-anvil"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "adit",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "the_knapping_floor",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ore_gallery",
+          "note": "where the cutters split the glass from the vein"
+        },
+        {
+          "id": "the_drift",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "the_vein",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "collapsed_shaft",
+          "note": "the glass vein, open to the crater's light"
+        },
+        {
+          "id": "the_cutters_camp",
+          "role": "camp",
+          "size": "medium"
+        },
+        {
+          "id": "the_chasm",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "chasm_bridge",
+          "drop": -2.5
+        },
+        {
+          "id": "the_tool_hall",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "forge_hall"
+        },
+        {
+          "id": "the_heart",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
+      ]
+    }
   }
 ]

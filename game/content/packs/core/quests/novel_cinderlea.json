@@ -249,5 +249,129 @@
         ]
       ]
     }
+  },
+  {
+    "id": "core:quest/the_glass_knight",
+    "name": "The Glass Knight",
+    "layer": "side",
+    "giver": "core:npc/joss_fennick",
+    "region": "core:region/cinderlea",
+    "summary": "Joss Fennick wants Cinderhowe's galleries back, but a knight of the Order walks them in armour that rings like glass, and has since the Ash Winter's last fire took Joss's grandmother in the heart of the cone.",
+    "notes": "Cinderlea's second novel-places large site: cinderhowe (delve, own builder) leads to core:interior/cinderhowe_galleries, boss core:boss/ser_orvel_glasse, who drops the vow-plate. The cutters' board by the adit starts it too.",
+    "stages": [
+      {
+        "id": "the_heart",
+        "journal": "Joss Fennick cannot go into the Cinderhowe galleries while the glassed knight walks them; go down to the heart of the cone and end his watch.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/ser_orvel_glasse",
+            "count": 1,
+            "where": "core:interior/cinderhowe_galleries",
+            "text": "End the glassed knight's watch in the heart of the cone"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/orvel_vow_plate",
+            "count": 1,
+            "text": "Take the knight's vow-plate"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/cinderhowe",
+          "radius": 90
+        }
+      },
+      {
+        "id": "the_plate",
+        "journal": "There are two names under the glass of the knight's vow-plate, his and Ama Fennick's, Joss's grandmother's; Joss should see it before anyone else does.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/joss_fennick",
+            "topic": "q_plate",
+            "count": 1,
+            "text": "Show Joss Fennick the vow-plate"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/cinderhowe",
+          "radius": 90
+        }
+      },
+      {
+        "id": "the_galleries",
+        "journal": "Joss Fennick knows now what the knight was keeping, and must decide what becomes of the galleries his grandmother cut.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_galleries",
+            "text": "Tell Joss Fennick what becomes of the galleries",
+            "with": "core:npc/joss_fennick",
+            "options": [
+              {
+                "id": "cut_again",
+                "text": "Cut them again. Your grandmother would want the glass worked.",
+                "effects": [
+                  {
+                    "set_flag": "cinderhowe_cut_again"
+                  },
+                  {
+                    "give_item": [
+                      "core:item/obsidian_edge",
+                      1
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "leave_them",
+                "text": "Leave the heart to the two of them. Cut only the outer vein.",
+                "effects": [
+                  {
+                    "set_flag": "cinderhowe_heart_left"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tolling_order",
+                      8
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/cinderhowe",
+          "radius": 90
+        }
+      },
+      {
+        "id": "worked",
+        "journal": "There is a hammerstone ringing at the foot of Cinderhowe again, and the plume over the cone is only smoke.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 190,
+      "renown": 14,
+      "rep": [
+        [
+          "core:faction/tolling_order",
+          4
+        ]
+      ]
+    }
   }
 ]

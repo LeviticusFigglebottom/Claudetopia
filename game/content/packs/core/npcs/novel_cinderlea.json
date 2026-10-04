@@ -228,5 +228,67 @@
         "notes": "reading the names"
       }
     ]
+  },
+  {
+    "id": "core:npc/joss_fennick",
+    "name": "Joss Fennick",
+    "home_place": "core:poi/cinderhowe",
+    "dialogue": "core:dialogue/joss_fennick",
+    "no_radiant": true,
+    "bio": "An obsidian-knapper of Pilgrim's Ash whose grandmother cut the Cinderhowe galleries and did not come out of them in the last fire. He has knapped other men's glass for twenty years, and come back to the foot of the cone with his own tools to sit by the adit and wait for the nerve to go in.",
+    "unique_habit": "Turns a flake of glass over and over in his fingers while he talks, testing its edge on his thumbnail, and never cuts himself.",
+    "personality": {
+      "traits": [
+        "timid",
+        "generous",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 8033,
+      "build": "broad",
+      "age": 45.0,
+      "feminine": 0.0,
+      "hair": "black_cropped_with_glass_dust_in_it",
+      "notes": "a leather knapper's apron and a pad on his left thigh scarred with a thousand cuts, a hide bag of hammerstones, black glass dust in every crease of his hands"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/cinderhowe",
+        "activity": "sleep",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/cinderhowe",
+        "activity": "work",
+        "spot": "joss_floor",
+        "notes": "knapping at the foot of the cone"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/cinderhowe",
+        "activity": "eat",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/cinderhowe",
+        "activity": "work",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/cinderhowe",
+        "activity": "idle",
+        "spot": "joss_floor"
+      }
+    ]
   }
 ]

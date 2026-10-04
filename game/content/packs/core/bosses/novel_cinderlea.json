@@ -54,5 +54,127 @@
     "loot": "core:loot/rich_chest",
     "drops": ["core:item/sleepers_roll"],
     "tags": ["humanoid", "revenant", "undead", "caster", "boss"]
+  },
+  {
+    "id": "core:boss/ser_orvel_glasse",
+    "extends": "core:enemy/tolling_knight",
+    "name": "Ser Orvel Glasse, Glassed to the Bone",
+    "archetype": "boss",
+    "arena": "core:poi/cinderhowe",
+    "region": "core:region/cinderlea",
+    "tint": "#1e1e26",
+    "scale": 1.3,
+    "height": 2.4,
+    "radius": 0.5,
+    "appearance": {
+      "seed": 8044,
+      "culture": "ash_pilgrims",
+      "skin": "porcelain",
+      "hair_colour": "black",
+      "build": 0.7,
+      "feminine": 0.0,
+      "height": 1.86,
+      "age": 0.5,
+      "parts": {
+        "torso": "plate_torso",
+        "back": "torn_cloak",
+        "headgear": "helm",
+        "hands": "gloves",
+        "feet": "boots",
+        "belt": "belt_knife"
+      },
+      "palette": {
+        "primary": "1a1a22",
+        "secondary": "2a2a34",
+        "leather": "16161a",
+        "metal": "30303c",
+        "trim": "8a8aa8"
+      }
+    },
+    "holds": {
+      "model": "weapons/mace_ashen"
+    },
+    "aura": {
+      "rim": "#9aa0d8",
+      "energy": 1.0,
+      "power": 3.0,
+      "pulse": 0.25,
+      "pulse_rate": 0.5,
+      "motes": {
+        "colour": "#ff8a40",
+        "count": 18,
+        "size": 0.03,
+        "rise": 0.4,
+        "spread": 0.5,
+        "height": 2.2,
+        "mix": true
+      },
+      "light": {
+        "colour": "#ff9050",
+        "energy": 0.5,
+        "range": 5.0,
+        "height": 1.6
+      }
+    },
+    "resists": {
+      "slash": 0.4,
+      "pierce": 0.45,
+      "fire": 0.6,
+      "blunt": -0.4,
+      "frost": -0.2
+    },
+    "lore": "A knight of the Tolling Order sent into Cinderhowe in the Ash Winter's last fire to bring out a cutter who had gone after the best vein. He found her, and the fire came up the galleries, and he stood over her with his shield while the glass ran. It set on him. He has been standing in the heart of the cone since, keeping it off someone who has not been there for forty years; glass breaks, and blunt things break it.",
+    "stats": {
+      "hp": 640,
+      "stamina": 200,
+      "poise": 160,
+      "armour": 24,
+      "speed": 3.0
+    },
+    "behaviour": {
+      "engage_range": 2.8,
+      "circle": 0.4,
+      "retreat_threshold": 0.0,
+      "patience": 4.0,
+      "leash": 60.0,
+      "hyper_armour": 34.0,
+      "aggression": 0.75,
+      "strafe_speed": 0.8,
+      "parries": true,
+      "parry_chance": 0.5,
+      "parry_delay": 0.3,
+      "guard_stability": 0.85
+    },
+    "phases": [
+      {
+        "name": "the shield over her",
+        "hp": 1.0,
+        "aggression": 0.7,
+        "say": "He does not come at you; he steps between you and the seam, and his armour rings as he moves, like a glass set down too hard."
+      },
+      {
+        "name": "the glass runs",
+        "hp": 0.5,
+        "aggression": 0.9,
+        "speed": 3.4,
+        "hyper_armour": 40.0,
+        "say": "His armour cracks across the breast and the light of the cone's heart shows through it, red, and the walls begin to tick with heat."
+      }
+    ],
+    "marks": [
+      250,
+      400
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/orvel_vow_plate"
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "knight",
+      "boss"
+    ]
   }
 ]

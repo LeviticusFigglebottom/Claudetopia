@@ -9,7 +9,7 @@ const FakePlayer := preload("res://tests/fakes/fake_player.gd")
 const TestSites := preload("res://tests/unit/test_sites.gd")
 const INSIDES := ["core:interior/turnback_undercroft", "core:interior/anthe_ondr", "core:interior/cistern_of_isse",
 		"core:interior/the_undertone", "core:interior/founders_delf", "core:interior/chalkwatch_keep",
-		"core:interior/the_fallen_head"]
+		"core:interior/the_fallen_head", "core:interior/cinderhowe_galleries"]
 var player: Node3D
 
 
@@ -131,6 +131,7 @@ func test_the_regions_builders_stand_what_their_content_names() -> void:
 		"core:poi/silk_vents": {"spots": ["hessa_wheel", "the_racks"], "touch": ["the_lamp"]},
 		"core:poi/fading_glass": {"spots": ["the_step"], "touch": ["the_glass"]},
 		"core:poi/gentle_fold": {"spots": ["brin_stand", "the_fold"], "touch": ["the_stand"]},
+		"core:poi/cinderhowe": {"spots": ["joss_floor", "the_adit"], "doors": ["Door_cinderhowe_galleries"], "touch": ["Hook", "the_spoil"]},
 	}
 	for id in wants:
 		var def := ContentDB.get_def(id)

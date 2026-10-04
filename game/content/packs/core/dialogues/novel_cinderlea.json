@@ -766,5 +766,262 @@
         "next": "end"
       }
     }
+  },
+  {
+    "id": "core:dialogue/joss_fennick",
+    "speaker_name": "Joss Fennick",
+    "notes": "The knapper at Cinderhowe (pois/cinderlea.json cinderhowe). Gives The Glass Knight (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_glass_knight"
+          },
+          {
+            "flag": "cinderhowe_cut_again"
+          }
+        ],
+        "text": "Listen to that. — That's the vein, ringing when the wedge goes in. She said it sang. It does."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_glass_knight"
+          }
+        ],
+        "text": "I cut the outer vein and leave the heart. I go down to the heart once a month, and sit, and come up. It's warm."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_glass_knight"
+          }
+        ],
+        "text": "Is he still walking? — I can hear him from here, some nights. Like somebody setting down glasses."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Joss Fennick",
+        "text": "*(He is turning a flake of black glass over in his fingers.)* — Mind the flakes, they'll go through a boot. Joss Fennick. I knap. My grandmother cut this hill.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Joss Fennick",
+        "text": "What do you want to know?",
+        "choices": [
+          {
+            "text": "What is this hill?",
+            "next": "the_cone"
+          },
+          {
+            "text": "Who walks the galleries?",
+            "next": "the_knight"
+          },
+          {
+            "text": "Can I help you get the galleries back?",
+            "next": "offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_glass_knight"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_glass_knight"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the knight's vow-plate.",
+            "next": "q_plate",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_plate"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "About the galleries.",
+            "next": "q_choose",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good knapping, Joss.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_cone": {
+        "speaker": "Joss Fennick",
+        "text": "Cinderhowe. A hill, and then the Ash Winter came up through it for a year and it ran glass out of its sides like sap. Best edge on the heath. The cutters went in after the Winter and followed the veins down, and knapped at the foot, here, where I'm sitting. Every blade the Order carried was Cinderhowe glass, once.",
+        "next": "hub"
+      },
+      "the_knight": {
+        "speaker": "Joss Fennick",
+        "text": "A knight of the Order. The fire came back up the galleries one last time, forty years on, and my grandmother was at the heart, and they sent a knight in for her. He came out of the adit once, after, the cutters said. In armour that rang like glass. Looked at them. Walked back in. — Nobody's cut since.",
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Joss Fennick",
+        "text": "I've sat here a month with my tools and not gone past the lamp on the nail. — Go down. To the heart, where it's still warm. End his watch, whatever he's watching. If there's anything of hers, bring it up. I'll owe you the first edge I cut.",
+        "choices": [
+          {
+            "text": "I'll go down into the cone and end the knight's watch.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_glass_knight"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Joss Fennick",
+        "text": "Bring a hammer, if you've one. Glass doesn't mind an edge. It minds a knock.",
+        "next": "hub"
+      },
+      "q_plate": {
+        "speaker": "Joss Fennick",
+        "text": "*(He holds the plate to the light so the names show under the glass, and is quiet a long time.)* — Ama Fennick. He scratched her name next to his. — He wasn't keeping the galleries from us. He was keeping the fire off her. Forty years. — She's still down there, isn't she. In the seam.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/orvel_vow_plate",
+              1
+            ]
+          }
+        ],
+        "next": "q_choose"
+      },
+      "q_choose": {
+        "speaker": "Joss Fennick",
+        "text": "So. Do I cut it again? She'd want the glass worked; she'd say a hill nobody cuts is just a hill. Or do I leave the heart to the two of them, and cut only the outer vein?",
+        "choices": [
+          {
+            "text": "Cut them again. Your grandmother would want the glass worked.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_glass_knight",
+                  "cut_again"
+                ]
+              }
+            ],
+            "next": "q_cut",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave the heart to the two of them. Cut only the outer vein.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_glass_knight",
+                  "leave_them"
+                ]
+              }
+            ],
+            "next": "q_leave",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_cut": {
+        "speaker": "Joss Fennick",
+        "text": "Then I'll cut. — Here. The first edge, as I said. Out of the vein by the lamp, this morning, before you came up. I was that sure.",
+        "next": "hub"
+      },
+      "q_leave": {
+        "speaker": "Joss Fennick",
+        "text": "The outer vein's enough for one knapper. I'll set the plate on the seam where he stood, so the next one knows. — Thank you.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cinderhowe_board",
+    "speaker_name": "The cutters' board",
+    "notes": "Cinderhowe's site hook (a notice post by the adit). Starts The Glass Knight, which Joss Fennick also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The cutters' board",
+        "no_talk": true,
+        "text": "An old board by the adit, the cutters' shifts chalked on it forty years ago and never wiped: names, veins, weights of glass. The last row has one name, Ama Fennick, HEART, and no weight. Under it, new, in a knapper's square hand: THE KNIGHT STILL WALKS. I WANT THE GALLERIES BACK. ASK FOR JOSS AT THE FLOOR.",
+        "choices": [
+          {
+            "text": "Go down to the heart of the cone.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_glass_knight"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_glass_knight"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_glass_knight"
+              }
+            ],
+            "next": "end"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cinderhowe_crater",
+    "speaker_name": "Cinderhowe",
+    "notes": "A PoiTouch on Cinderhowe's spoil of glass (regions/cinderlea.gd cinderhowe). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Cinderhowe",
+        "no_talk": true,
+        "text": "The spoil is all glass: flakes, cores, spalls, broken blanks, black and glossy and sharp, a heap of forty years of other people's mistakes. The cone goes up behind it into its own plume. The ground is warm through your boots, and from somewhere inside the hill, once, comes the sound of a glass set down too hard.",
+        "next": "end"
+      }
+    }
   }
 ]
