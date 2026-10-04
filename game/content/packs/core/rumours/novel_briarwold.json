@@ -1,0 +1,55 @@
+[
+  {
+    "id": "core:rumour/the_told_hives",
+    "name": "The bees are asking",
+    "tone": "warm",
+    "text": "There's a swarm on the Tamwick fingerpost again, hung off the arm like a sack. That's the Ashbys' bees. Old Mab's dead since midsummer and nobody's told them, and the girl goes down every morning with a skep and comes back with nothing.",
+    "variants": [
+      "If you're past the Ashbys' bee-tree, walk slow and don't smell of smoke. The bees aren't told yet. They're short with everybody."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/the_swainmote_short",
+    "name": "The mote is short",
+    "tone": "cold",
+    "text": "The Swainmote's sat eleven for three days with a burner's mastiff in the pound. Ambrose Gale won't say custom without twelve, and nobody goes into the Greatwood's middle any more. They say any stranger who walks into the ring can sit.",
+    "variants": [
+      "A girl from the Unasked Camp's been sleeping by the mote's pound three nights. Her hound took a hart. You know what the stirrup's for."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/the_black_silk",
+    "name": "Black silk",
+    "tone": "cold",
+    "text": "The silk's come in black this autumn, stained through and stinking of galls, and Margery Laithe won't lay it. She says good silk sings on the posts. This doesn't. Two of her gatherers went south to the Knar for Tollmere money and she's not heard from them.",
+    "variants": [
+      "There's smoke over the Greatwood south of the Hollow road that doesn't stop, day or night. That's the Knar. The Sayers' ink-men are boiling the oak."
+    ],
+    "tags": [
+      "briarwold",
+      "trade",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/the_noon_owl_nine",
+    "name": "Nine at noon",
+    "tone": "strange",
+    "text": "Gammer Hoole says the noon owl called nine yesterday. Nine's a place, she says. It called nine the night of the Long Wind and the next morning the Brother was down. If you want it to call for you, go to the white oak at the top of the sun and don't look up.",
+    "variants": [
+      "You hear an owl at noon in the Wold, don't laugh. The Woodfolk don't."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  }
+]

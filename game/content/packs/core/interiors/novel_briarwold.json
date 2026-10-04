@@ -1,0 +1,129 @@
+[
+  {
+    "id": "core:interior/the_knar",
+    "name": "The Knar",
+    "scene": "res://world/sites/site_interior.tscn",
+    "kind": "deep_place",
+    "place": "core:poi/the_knar",
+    "danger": 3,
+    "formed_by": "gall-wrights",
+    "resident": "gall-cutters and vat-keepers who have drunk the black and do not sleep, weavers come down into the bores out of the dying crown, and Master Orrin Sable in the heart of the gall, where the black wells up",
+    "story": "Round bores cut with gall-augers, each a man's height, running down through the gall's flesh, which is brown and close as cork and weeps black where it is cut; vat-halls where the black was boiled with iron; drying lofts where the galls hung on strings; the wrights' camp, where nobody has slept in nine years; and at the bottom the heart of the gall, where the oak's own sap comes up black and the Circle's ink is drawn off it by the barrel.",
+    "unique_object": "the well of the black at the gall's heart: a pool of the oak's sap gone black as a pupil, that takes the light and does not give it back, with a ladle of brass hung over it on a chain",
+    "site": {
+      "kind": "bandit_cave",
+      "seed": 1077,
+      "region": "core:region/briarwold",
+      "size": "large",
+      "boss": "core:boss/orrin_sable",
+      "boss_adds": 2,
+      "boss_loot": "core:loot/rich_chest",
+      "rich_loot": "core:loot/rich_chest",
+      "foes": {
+        "rank": [
+          "core:enemy/gall_cutter",
+          "core:enemy/weaver"
+        ],
+        "archers": [
+          "core:enemy/poacher"
+        ],
+        "heavy": [
+          "core:enemy/vat_keeper"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#6a4f36",
+          "#3d2c1c",
+          "#86684a"
+        ],
+        "lights": [
+          "lantern",
+          "torch",
+          "fungus"
+        ],
+        "light_colour": "#ffb36a"
+      },
+      "features": [
+        {
+          "kind": "prop",
+          "room": "the_split",
+          "prop": "lantern_hand",
+          "note": "the wrights' lamp at the cut, still lit"
+        },
+        {
+          "kind": "note",
+          "room": "the_sleepless",
+          "book": "core:book/sables_day_book",
+          "name": "a gall-wright's day-book"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/the_circles_letter",
+          "name": "a letter under the Circle's seal"
+        }
+      ],
+      "rooms": [
+        {
+          "id": "the_split",
+          "role": "entrance",
+          "size": "medium",
+          "note": "the cut in the gall's side, the wrights' lamp on its hook"
+        },
+        {
+          "id": "the_bores",
+          "role": "passage",
+          "size": "small",
+          "note": "the first bores, a man's height, weeping black"
+        },
+        {
+          "id": "the_vat_hall",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "forge_hall",
+          "note": "where the black is boiled with iron"
+        },
+        {
+          "id": "the_drying_loft",
+          "role": "treasure",
+          "size": "small",
+          "note": "galls hung on strings to dry, and the gatherers' reels"
+        },
+        {
+          "id": "the_sap_well",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake",
+          "note": "a pool of the oak's sap, gone brown"
+        },
+        {
+          "id": "the_heart_shaft",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "daylight_shaft",
+          "note": "the oak's hollow, open to the sky above"
+        },
+        {
+          "id": "the_sleepless",
+          "role": "camp",
+          "size": "large",
+          "note": "the wrights' camp, where nobody sleeps"
+        },
+        {
+          "id": "the_black_gallery",
+          "role": "hall",
+          "size": "large",
+          "note": "the vat-keepers at the last bore"
+        },
+        {
+          "id": "the_heart",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena",
+          "note": "the well of the black at the gall's heart"
+        }
+      ]
+    }
+  }
+]

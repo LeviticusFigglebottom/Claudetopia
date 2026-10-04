@@ -710,5 +710,90 @@
         "spread": 2.5
       }
     ]
+  },
+  {
+    "id": "core:encounter/told_hives",
+    "place": "core:poi/told_hives",
+    "notes": "No foes. Mab Ashby's bee-book lies on the skep bench; Linnet keeps the tree by day.",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/mab_ashbys_bee_book",
+        "at": "the_skeps"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/the_swainmote",
+    "place": "core:poi/the_swainmote",
+    "notes": "No foes in the ring; the mote's customs are cut on a board at the gauge. Thornhounds nose round the pound after dark for the shut-up hound.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/thornhound",
+        "count": 2,
+        "when": "night",
+        "at": "the_pound",
+        "spread": 2.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/the_motes_customs",
+        "at": "the_gauge"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/silk_walk",
+    "place": "core:poi/silk_walk",
+    "notes": "Weavers come down the walk's posts after dark for the silk on them. Margery's rule-board hangs at the jack.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/weaver",
+        "count": 2,
+        "when": "night",
+        "at": "the_top",
+        "spread": 4.0
+      }
+    ],
+    "lies": [
+      {
+        "item": "core:item/laithes_rule",
+        "at": "the_jack"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/noon_owl",
+    "place": "core:poi/noon_owl",
+    "notes": "Nothing hostile comes near the white oak. Gammer Hoole's count-stick lies in the ring.",
+    "spawns": [],
+    "lies": [
+      {
+        "item": "core:item/gammer_hooles_count",
+        "at": "the_ring"
+      }
+    ]
+  },
+  {
+    "id": "core:encounter/the_knar",
+    "place": "core:poi/the_knar",
+    "notes": "Gall-cutters at the vats by day, weavers down out of the grey crown at night.",
+    "spawns": [
+      {
+        "enemy": "core:enemy/gall_cutter",
+        "count": 3,
+        "when": "day",
+        "at": "the_vats",
+        "spread": 3.0
+      },
+      {
+        "enemy": "core:enemy/weaver",
+        "count": 2,
+        "when": "night",
+        "at": "the_vats",
+        "spread": 3.0
+      }
+    ]
   }
 ]

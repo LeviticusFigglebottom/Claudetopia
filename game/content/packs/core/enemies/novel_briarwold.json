@@ -1,0 +1,37 @@
+[
+  {
+    "id": "core:enemy/gall_cutter",
+    "extends": "core:enemy/roadside_bandit",
+    "name": "Gall-Cutter",
+    "tint": "#3b3027",
+    "region": "core:region/briarwold",
+    "lore": "Tollmere labourers and Wold runaways on the Circle's wage, who cut the Knar with augers and hooks and drink the black at the end of every shift so that there need not be an end of every shift. They are black to the elbow. They talk to each other the whole time, very quickly, about nothing.",
+    "marks": [
+      12,
+      30
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person"
+    ]
+  },
+  {
+    "id": "core:enemy/vat_keeper",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Vat-Keeper",
+    "tint": "#2f2924",
+    "region": "core:region/briarwold",
+    "lore": "The wrights who boil the black with iron in the vat-halls, big from lifting the vats and slow from the fumes, who stir with paddles as long as they are and will stir you the same way.",
+    "marks": [
+      22,
+      48
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "brute"
+    ]
+  }
+]

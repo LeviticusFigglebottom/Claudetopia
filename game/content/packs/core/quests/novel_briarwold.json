@@ -1,0 +1,506 @@
+[
+  {
+    "id": "core:quest/telling_the_bees",
+    "name": "Telling the Bees",
+    "layer": "side",
+    "giver": "core:npc/linnet_ashby",
+    "region": "core:region/briarwold",
+    "offer": "The bees have to be told, and I can't say it.",
+    "summary": "Mab Ashby, keeper of the bee-tree, died at midsummer. Custom says the bees are told of a death by the keeper's heir, at the hive, plainly, or they leave. Her granddaughter Linnet has tied the black on the hives and cannot say the words.",
+    "notes": "The Told Hives (novel places, Briarwold): Linnet Ashby at the skep bench; the telling is her dialogue's q_tell, at the low log. Three ways to tell them; the hum says which was heard.",
+    "stages": [
+      {
+        "id": "the_untold",
+        "journal": "Linnet Ashby cannot make herself tell the bees that her grandmother is dead, and the hives will leave the bee-tree unless somebody stands with her to say it.\nMab Ashby's bee-book says the telling is done at the low log, knocking three times first, and that a keeper who cannot say it may have somebody stand with her who can. The bees have hung a swarm on the Tamwick fingerpost twice already. That is them asking.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_untold",
+            "with": "core:npc/linnet_ashby",
+            "text": "Stand with Linnet Ashby at the low log and tell the bees",
+            "options": [
+              {
+                "id": "tell_them_plain",
+                "text": "Say it plain: Mab Ashby is dead, and Linnet keeps them now.",
+                "effects": [
+                  {
+                    "set_flag": "bees_told_plain"
+                  },
+                  {
+                    "give_item": [
+                      "core:item/oak_honeycomb",
+                      2
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      4
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "into_the_wood",
+                "text": "Say it the old way: Mab has gone into the wood.",
+                "effects": [
+                  {
+                    "set_flag": "bees_told_gone"
+                  },
+                  {
+                    "give_item": [
+                      "core:item/oak_honeycomb",
+                      1
+                    ]
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      2
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "stand_by_her",
+                "text": "Stand by her, and let Linnet say it herself.",
+                "effects": [
+                  {
+                    "set_flag": "bees_told_by_linnet"
+                  },
+                  {
+                    "give_item": [
+                      "core:item/oak_honeycomb",
+                      2
+                    ]
+                  },
+                  {
+                    "give_item": "core:item/wold_mead"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      5
+                    ]
+                  },
+                  {
+                    "morality": 2
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/told_hives",
+          "radius": 40
+        }
+      },
+      {
+        "id": "told",
+        "journal": "The bees at the Ashbys' tree have been told, one way or another, and Linnet Ashby keeps them now.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 30,
+      "renown": 4
+    }
+  },
+  {
+    "id": "core:quest/the_twelfth_at_the_mote",
+    "name": "The Twelfth at the Mote",
+    "layer": "side",
+    "giver": "core:npc/ambrose_gale",
+    "region": "core:region/briarwold",
+    "offer": "The mote is one short, and custom says a stranger may sit.",
+    "summary": "The Swainmote, the Woodfolk's court of custom in the Greatwood, has sat three days short of its twelfth with a burner's mastiff in the pound. The hound pulled down a hart, and custom says a hound too broad for the iron stirrup is lawed. A stranger who walks into the ring may make up the number.",
+    "notes": "The Swainmote (novel places, Briarwold): Ambrose Gale in the chair, Hawys Tolly at the pound (her q_plead line closes the first stage). The twelfth's word: law the hound, hold the stirrup wide, or pay the hart's worth.",
+    "stages": [
+      {
+        "id": "the_twelfth",
+        "journal": "The Swainmote is one short of twelve, and custom lets a stranger who walks into the ring sit as the twelfth and hear Gristle's case.\nGristle is a burner's mastiff out of the Unasked Camp who pulled down a hart in the spring. Ambrose Gale says the twelfth hears the girl at the pound first: Hawys Tolly, whose hound he is.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/hawys_tolly",
+            "topic": "q_plead",
+            "text": "Hear Hawys Tolly speak for her hound at the pound"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_swainmote",
+          "radius": 40
+        }
+      },
+      {
+        "id": "the_gauge",
+        "journal": "Hawys Tolly has said what she wants said for Gristle, and Ambrose Gale will put the hound to the gauge on the twelfth's word.\nThe stirrup is rusted outside and worn bright inside, and Gristle is too broad in the chest to go through it. Custom says three claws from each forefoot. The eleven will go with whatever the twelfth says.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_gauge",
+            "with": "core:npc/ambrose_gale",
+            "text": "Give the twelfth's word at the dog-gauge",
+            "options": [
+              {
+                "id": "law_him",
+                "text": "Law him, as custom says.",
+                "effects": [
+                  {
+                    "set_flag": "mote_lawed"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      6
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "hold_it_wide",
+                "text": "Hold the gauge wide where the iron is worn.",
+                "effects": [
+                  {
+                    "set_flag": "mote_wide"
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      -2
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "pay_the_hart",
+                "text": "Pay the hart's worth to the Moot yourself.",
+                "conditions": [
+                  {
+                    "marks_min": 80
+                  }
+                ],
+                "effects": [
+                  {
+                    "set_flag": "mote_paid"
+                  },
+                  {
+                    "marks": -80
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      8
+                    ]
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_swainmote",
+          "radius": 40
+        }
+      },
+      {
+        "id": "heard",
+        "journal": "Custom has been said at the Swainmote, and the twelfth's word is written in the steward's roll.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 40,
+      "renown": 6
+    }
+  },
+  {
+    "id": "core:quest/the_black_that_keeps",
+    "name": "The Black That Keeps",
+    "layer": "side",
+    "giver": "core:npc/margery_laithe",
+    "region": "core:region/briarwold",
+    "offer": "Two of my gatherers went south to the Knar and haven't come back.",
+    "summary": "Margery Laithe lays weaver silk into line on her walk in the Northwold. Two of her gatherers, Pell and Sib Dunnock, went south for a Tollmere wage to cut gall-silk at the Knar, the great oak-gall in the Greatwood that the Sayers' Circle's ink is made from. Only black silk has come back.",
+    "notes": "The Knar (novel places, Briarwold; large site): Margery Laithe at the Silk Walk gives it, or the wrights' notice at the vats starts it. Pell Dunnock's reel lies in the drying loft; Orrin Sable, the Circle's wright, is the boss and drops the contract. The contract goes to the Circle, to the Swainmote (Ambrose Gale hears it), or into the vats.",
+    "stages": [
+      {
+        "id": "two_gone_south",
+        "journal": "Two of Margery Laithe's silk-gatherers went south to the Knar for a Tollmere wage a month ago, and only black-stained silk has come back up the road.\nPell and Sib Dunnock, brother and sister. The Knar is in the Greatwood south of the Hollow road: an oak with a gall at its foot as big as a barn, and smoke standing over it. A Tollmere man called Sable cuts ink out of it for the Sayers.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_knar",
+            "count": 1,
+            "text": "Find the Knar in the Greatwood"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_knar",
+          "radius": 80
+        }
+      },
+      {
+        "id": "into_the_gall",
+        "journal": "The wrights' notice at the Knar says no cutter leaves, and Pell Dunnock's tally-mark is pinned under it with a plea to his sister.\nOrrin Sable has bored the gall like a cheese for the Circle's ink, and his cutters drink the black so as never to sleep. Whatever is left of the Dunnocks is inside. Pell marks his reels: PD, burned in the end.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/pell_dunnocks_reel",
+            "count": 1,
+            "where": "core:interior/the_knar",
+            "spot": "the_drying_loft",
+            "text": "Find Pell Dunnock's reel in the gall's drying loft"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/orrin_sable",
+            "count": 1,
+            "where": "core:interior/the_knar",
+            "text": "Find Master Orrin Sable at the gall's heart"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_knar",
+          "radius": 80
+        }
+      },
+      {
+        "id": "the_contract",
+        "journal": "Orrin Sable carried the Sayers' Circle's contract for the Knar's black, and Margery Laithe should see it with Pell's reel.\nThe contract is written in the black itself: the Knar's ink to the Circle for as long as the tree shall yield. The oak's crown is grey on one side. Whoever holds the contract says what happens to the Knar next.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/circle_ink_contract",
+            "count": 1,
+            "text": "Take the Circle's contract from Sable"
+          },
+          {
+            "type": "choice",
+            "target": "the_contract",
+            "with": "core:npc/margery_laithe",
+            "text": "Bring the reel and the contract to Margery Laithe at the Silk Walk",
+            "options": [
+              {
+                "id": "to_the_circle",
+                "text": "Send the contract back to the Circle, with word of what it cost.",
+                "effects": [
+                  {
+                    "take_item": "core:item/pell_dunnocks_reel"
+                  },
+                  {
+                    "take_item": "core:item/circle_ink_contract"
+                  },
+                  {
+                    "set_flag": "knar_to_circle"
+                  },
+                  {
+                    "marks": 150
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      -4
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "to_the_mote",
+                "text": "Take it to the Swainmote, and let custom say what the Knar can spare.",
+                "effects": [
+                  {
+                    "take_item": "core:item/pell_dunnocks_reel"
+                  },
+                  {
+                    "take_item": "core:item/circle_ink_contract"
+                  },
+                  {
+                    "set_flag": "knar_to_mote"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      6
+                    ]
+                  },
+                  {
+                    "renown": 8
+                  }
+                ]
+              },
+              {
+                "id": "burn_it",
+                "text": "Burn it in the Knar's own vats, and let the bores close.",
+                "effects": [
+                  {
+                    "take_item": "core:item/pell_dunnocks_reel"
+                  },
+                  {
+                    "take_item": "core:item/circle_ink_contract"
+                  },
+                  {
+                    "set_flag": "knar_burned"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      5
+                    ]
+                  },
+                  {
+                    "morality": 3
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/silk_walk",
+          "radius": 50
+        }
+      },
+      {
+        "id": "kept",
+        "journal": "The Knar's contract is settled, and Margery Laithe has hung Pell Dunnock's reel on her walk where the wind can get at it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 120,
+      "renown": 15
+    }
+  },
+  {
+    "id": "core:quest/the_hundred_and_twelve",
+    "name": "The Hundred and Twelve",
+    "layer": "side",
+    "giver": "core:npc/ambrose_gale",
+    "region": "core:region/briarwold",
+    "offer": "The mason who cut the knights' names off Tinehold's chapel would have kept a list.",
+    "summary": "The Unvowed Marshal had the names of a hundred and twelve Hart-Knights cut off their niches in Tinehold's chapel of tines. The mason kept a roll of them under the altar, and the Swainmote's roll witnessed every one of their oaths.",
+    "notes": "Leads out of Tinehold (world life phase 2) to the Swainmote (novel places, Briarwold): the roll lies under the chapel's altar in tinehold_undercroft whether or not the quest is taken; Ambrose Gale starts the quest at its second stage for whoever brings it. Say the names, keep them, or send them to Wystan Tine at the Moot Gate Stone.",
+    "stages": [
+      {
+        "id": "to_the_chapel",
+        "journal": "The mason who cut the knights' names off Tinehold's chapel kept a list, and the Swainmote's roll can say whose oaths they were.\nAmbrose Gale says to look under the altar in the chapel of tines, under Tinehold's keep, where the Unvowed hunt and the Marshal keeps his vigil hall.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/hundred_and_twelve",
+            "count": 1,
+            "where": "core:interior/tinehold_undercroft",
+            "spot": "the_chapel",
+            "text": "Find the mason's roll of names under Tinehold's altar"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/tinehold",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_mote_remembers",
+        "journal": "Ambrose Gale has the Swainmote's own roll open beside the mason's, and every one of the hundred and twelve oaths is in it.\nThe mote can say the names aloud on the turf, and they are custom again whatever the Marshal said; the roll can keep them unsaid; or they can go to Wystan Tine, who knelt at the Moot Gate and is the last who swore.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_mote_remembers",
+            "with": "core:npc/ambrose_gale",
+            "text": "Give the hundred and twelve back to the Swainmote",
+            "options": [
+              {
+                "id": "say_them",
+                "text": "Say them aloud at the mote.",
+                "effects": [
+                  {
+                    "take_item": "core:item/hundred_and_twelve"
+                  },
+                  {
+                    "set_flag": "hundred_said"
+                  },
+                  {
+                    "renown": 10
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      6
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "keep_them",
+                "text": "Keep them in the roll, unsaid.",
+                "effects": [
+                  {
+                    "take_item": "core:item/hundred_and_twelve"
+                  },
+                  {
+                    "set_flag": "hundred_kept"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      3
+                    ]
+                  },
+                  {
+                    "morality": 2
+                  }
+                ]
+              },
+              {
+                "id": "to_wystan",
+                "text": "Send them to Wystan Tine at the Moot Gate Stone.",
+                "effects": [
+                  {
+                    "take_item": "core:item/hundred_and_twelve"
+                  },
+                  {
+                    "set_flag": "hundred_to_wystan"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/woodfolk",
+                      4
+                    ]
+                  },
+                  {
+                    "renown": 6
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_swainmote",
+          "radius": 40
+        }
+      },
+      {
+        "id": "remembered",
+        "journal": "The hundred and twelve are back in the Swainmote's keeping, and the mote remembers what it witnessed.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 60,
+      "renown": 8
+    }
+  }
+]

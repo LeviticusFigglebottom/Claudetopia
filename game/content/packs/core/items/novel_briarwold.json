@@ -1,0 +1,212 @@
+[
+  {
+    "id": "core:item/oak_honeycomb",
+    "name": "Oak Honeycomb",
+    "category": "ingredient",
+    "weight": 0.3,
+    "value": 8,
+    "stack": 30,
+    "tags": [
+      "ingredient",
+      "food"
+    ],
+    "origin": "core:region/briarwold",
+    "alchemy": {
+      "effects": [
+        "core:effect/restore_health",
+        "core:effect/fortify_stamina",
+        "core:effect/fortify_speech",
+        "core:effect/cure_poison"
+      ]
+    },
+    "description": "A slab of comb from the Ashbys' bee-tree, dark as the oak it came out of and tasting of it, of foxglove and smoke. The Moot's candles are made of the wax and nothing else."
+  },
+  {
+    "id": "core:item/wold_mead",
+    "name": "Bee-Tree Mead",
+    "category": "consumable",
+    "weight": 0.5,
+    "value": 14,
+    "stack": 10,
+    "tags": [
+      "food",
+      "drink"
+    ],
+    "effects": [
+      {
+        "effect": "core:effect/restore_stamina",
+        "magnitude": 30,
+        "duration": 0
+      },
+      {
+        "effect": "core:effect/fortify_speech",
+        "magnitude": 5,
+        "duration": 120
+      }
+    ],
+    "description": "Ashby mead, in a stoneware bottle stopped with wax. The Woodfolk drink it at a wake, a hand-fast and a telling, and say it does not know the difference."
+  },
+  {
+    "id": "core:item/ring_silk_laid_cord",
+    "name": "Silk-Laid Cord",
+    "category": "armour",
+    "weight": 0.02,
+    "value": 95,
+    "tags": [
+      "ring",
+      "jewellery",
+      "silk",
+      "briarwold"
+    ],
+    "tier": 2,
+    "armour": {
+      "slot": "ring",
+      "armour": 0,
+      "weight_class": "light",
+      "stability": 0.0
+    },
+    "effects": [
+      {
+        "effect": "core:effect/fortify_stamina",
+        "magnitude": 10,
+        "duration": 0
+      }
+    ],
+    "description": "A finger's ring of weaver silk laid three times three on Margery Laithe's walk, so fine it is mostly shine. A line of it would hold a falling man. The ropewalkers wear one so their hands remember what the work is for."
+  },
+  {
+    "id": "core:item/amulet_noon_owl_feather",
+    "name": "The Noon Owl's Feather",
+    "category": "armour",
+    "weight": 0.02,
+    "value": 120,
+    "tags": [
+      "amulet",
+      "jewellery",
+      "briarwold"
+    ],
+    "tier": 2,
+    "armour": {
+      "slot": "amulet",
+      "armour": 0,
+      "weight_class": "light",
+      "stability": 0.0
+    },
+    "effects": [
+      {
+        "effect": "core:effect/fortify_sneak",
+        "magnitude": 8,
+        "duration": 0
+      }
+    ],
+    "description": "A grey owl's wing-feather on a thong, its edge combed so soft it makes no sound passing through the air. Gammer Hoole gives one to whoever has sat out five noons with her, and says it is not a gift: you have listened, and the owl knows it."
+  },
+  {
+    "id": "core:item/pell_dunnocks_reel",
+    "name": "Pell Dunnock's Reel",
+    "category": "misc",
+    "weight": 0.4,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A silk-gatherer's reel of turned ash with PD burned in its end, half wound with silk that should be white and is black to the core, and stiff, as if it had been dipped in ink and left to dry."
+  },
+  {
+    "id": "core:item/circle_ink_contract",
+    "name": "The Circle's Contract for the Knar",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A contract on vellum under the Sayers' Circle's seal, written in the black itself: the Knar's ink to the Circle at so much the barrel, for the keeping of the Rolls of Names, for as long as the tree shall yield. Somebody, in another hand, has underlined the last four words."
+  },
+  {
+    "id": "core:item/knar_black",
+    "name": "A Phial of the Black",
+    "category": "misc",
+    "weight": 0.2,
+    "value": 85,
+    "stack": 5,
+    "tags": [
+      "briarwold",
+      "trophy",
+      "ink"
+    ],
+    "description": "The Knar's ink, drawn from the well at the gall's heart and stopped with wax. A drop on the thumb will not wash off in a month. A scribe in the Lantern Row would give a great deal for it, and would not ask where it came from, which is the trouble."
+  },
+  {
+    "id": "core:item/hundred_and_twelve",
+    "name": "The Hundred and Twelve",
+    "category": "misc",
+    "weight": 0.3,
+    "value": 0,
+    "stack": 1,
+    "tags": [
+      "quest",
+      "briarwold",
+      "unique"
+    ],
+    "description": "A roll of birch bark from under Tinehold's altar, written close in a mason's square hand: the hundred and twelve names cut off the chapel's niches by the Marshal's order, each with the year its knight took the antlers. The mason has added at the foot: the Swainmote witnessed every one."
+  },
+  {
+    "id": "core:item/mab_ashbys_bee_book",
+    "name": "Mab Ashby's Bee-Book",
+    "category": "book",
+    "weight": 0.2,
+    "value": 6,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A keeper's book of the bee-tree's hives, in pencil, by more than one hand.",
+    "reads": "core:book/mab_ashbys_bee_book"
+  },
+  {
+    "id": "core:item/the_motes_customs",
+    "name": "The Mote's Customs",
+    "category": "book",
+    "weight": 0.1,
+    "value": 4,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A copy of the board by the dog-gauge, rubbed onto oiled paper.",
+    "reads": "core:book/the_motes_customs"
+  },
+  {
+    "id": "core:item/laithes_rule",
+    "name": "Laithe's Rule",
+    "category": "book",
+    "weight": 0.1,
+    "value": 4,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A ropewalker's rule, cut on a board by the jack.",
+    "reads": "core:book/laithes_rule"
+  },
+  {
+    "id": "core:item/gammer_hooles_count",
+    "name": "Gammer Hoole's Count-Stick",
+    "category": "book",
+    "weight": 0.2,
+    "value": 3,
+    "tags": [
+      "lore",
+      "note"
+    ],
+    "description": "A hazel stick notched along three sides, with a twist of paper tied round it.",
+    "reads": "core:book/gammer_hooles_count"
+  }
+]

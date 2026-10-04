@@ -1,0 +1,74 @@
+[
+  {
+    "id": "core:table/stock_bee_tree",
+    "role": "merchant_stock",
+    "description": "The Ashbys' bee-tree: comb, mead and the Moot's candles, and whatever Linnet has taken in trade for them.",
+    "rows": [
+      {
+        "item": "core:item/oak_honeycomb",
+        "count": [
+          4,
+          10
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/wold_mead",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/candle",
+        "count": [
+          6,
+          12
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/bracket_fungus",
+        "count": [
+          0,
+          3
+        ],
+        "restock_hours": 72,
+        "chance": 0.5
+      }
+    ]
+  },
+  {
+    "id": "core:table/stock_silk_walk",
+    "role": "merchant_stock",
+    "description": "Margery Laithe's walk: rope and line, and the silk she has not yet laid.",
+    "rows": [
+      {
+        "item": "core:item/rope",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/weaver_silk",
+        "count": [
+          1,
+          4
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/ring_silk_laid_cord",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 240,
+        "chance": 0.35
+      }
+    ]
+  }
+]
