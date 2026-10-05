@@ -926,7 +926,13 @@
             "text": "Where should the clapper go?",
             "conditions": [
               {
-                "flag": "patience_clapper_to_horn"
+                "quest_done": "core:quest/the_patience"
+              },
+              {
+                "has_item": [
+                  "core:item/undersong_clapper",
+                  1
+                ]
               },
               {
                 "quest_not_done": "core:quest/the_undersong"
