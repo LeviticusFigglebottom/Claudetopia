@@ -1210,6 +1210,20 @@
       ]
      },
      {
+      "text": "You said one of your coffins fell in the winter.",
+      "next": "fell",
+      "conditions": [
+       {
+        "quest_not_done": "core:quest/the_wall_answers"
+       },
+       {
+        "not": {
+         "quest_active": "core:quest/the_wall_answers"
+        }
+       }
+      ]
+     },
+     {
       "text": "The Answering Wall gave back a name: Aldo ko-Skarl.",
       "next": "q_aldo",
       "conditions": [
@@ -1218,6 +1232,21 @@
          "core:quest/the_wall_answers",
          "the_name"
         ]
+       }
+      ]
+     },
+     {
+      "text": "Come with me to the fallen boards. We'll look together.",
+      "next": "q_boards",
+      "conditions": [
+       {
+        "quest_at": [
+         "core:quest/the_wall_answers",
+         "the_fallen"
+        ]
+       },
+       {
+        "has_no_item": "core:item/skarl_coffin_token"
        }
       ]
      },
@@ -1280,9 +1309,46 @@
     "text": "*(You haul, she climbs, and the coffin goes up the face in jerks, turning slowly, until she guides it onto two pegs high on the scar and knocks them home. She says his name up the rock three times, loud, and the wind takes it.)* There. Nearer than he ever got in his life. Thank you. The Skarl will hear you held the rope.",
     "next": "hub"
    },
+   "fell": {
+    "speaker": "Mags ko-Skarl",
+    "text": "In the big wind. I heaped the boards at the foot and never looked at the token; I didn't want to know who the Breath sent back. — And now the callers say the Answering Wall gave a Skarl name back at dusk, a name nobody called. Go and hear it, would you? Then tell me.",
+    "choices": [
+     {
+      "text": "I'll find out whose name it is.",
+      "next": "fell_taken",
+      "effects": [
+       {
+        "start_quest": "core:quest/the_wall_answers"
+       }
+      ]
+     },
+     {
+      "text": "Not now.",
+      "next": "hub"
+     }
+    ]
+   },
+   "fell_taken": {
+    "speaker": "Mags ko-Skarl",
+    "text": "The callers say it was Aldo. Aldo ko-Skarl. I don't know the name. That's what frightens me.",
+    "next": "hub"
+   },
    "q_aldo": {
     "speaker": "Mags ko-Skarl",
     "text": "*(She says the name over to herself.)* Aldo. Aldo ko-Skarl. I don't know it. I know every Skarl on that face, I hung half of them. — Unless. A coffin fell last winter, in the big wind. I put the boards in a heap at the foot and didn't look at the token. I didn't want to know who the Breath had sent back. Look, would you? I can't.",
+    "next": "hub"
+   },
+   "q_boards": {
+    "speaker": "Mags ko-Skarl",
+    "text": "*(She comes, slowly, and kneels by the heap, and lifts the lid-boards one by one until she finds it still nailed to a split plank: a disc of bone on a cord. She works it free and puts it in your hand without reading it.)* You read it. I can't.",
+    "effects": [
+     {
+      "give_item": [
+       "core:item/skarl_coffin_token",
+       1
+      ]
+     }
+    ],
     "next": "hub"
    },
    "q_hanging": {
@@ -1351,6 +1417,9 @@
          "core:quest/the_wall_answers",
          "the_fallen"
         ]
+       },
+       {
+        "has_no_item": "core:item/skarl_coffin_token"
        }
       ]
      },

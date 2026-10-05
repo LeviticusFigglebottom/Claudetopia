@@ -3446,7 +3446,7 @@ static func _ladder(m: PoiMasonry, st: SurfaceTool, foot: Vector3, top: Vector3,
 
 # --- the Kinchain --------------------------------------------------------------------------------------
 
-const KIN_JIB_M := 14.0
+const KIN_JIB_M := 18.0
 
 ## The Kinchain: a crag of the Ghast side with a black oak jib leaning out over its foot, and from the
 ## jib's head the Ghast chain hanging fourteen metres to the ground, where it lies in a coil as high as a
@@ -3458,8 +3458,9 @@ static func the_kinchain(d: PoiDressing) -> void:
 	var out := _facing(k)
 	var side := Vector2(out.y, -out.x)
 	# the crag behind, and a shoulder of it to one side
-	await _crag(d, -out * 9.5, out, 15.0, 0, 1.4)
-	await _crag(d, -out * 12.0 + side * 9.0, out.rotated(-0.5), 10.5, 2, 1.0)
+	await _crag(d, -out * 10.5, out, 20.0, 1, 1.4)
+	await _crag(d, -out * 12.5 + side * 10.0, out.rotated(-0.5), 13.0, 2, 1.0)
+	await _crag(d, -out * 12.5 - side * 10.0, out.rotated(0.5), 11.0, 0, 1.0)
 	# the jib: two raking masts from the turf in front of the face, leaning back to the rock, and a
 	# head-beam run out over the chain's coil, braced; all black oak
 	var oak := m.begin()
@@ -3482,7 +3483,7 @@ static func the_kinchain(d: PoiDressing) -> void:
 	# (bright, with the bars on Ottar's rack: the iron he has not yet closed on anybody)
 	var iron := m.begin()
 	var bright := m.begin()
-	var link := 0.46
+	var link := 0.6
 	var top := head + Vector3.DOWN * 0.3
 	var gap_at := top + Vector3.DOWN * (link * 0.8 * 12.0)
 	_chain(m, iron, top, gap_at + Vector3.UP * link * 0.5, link)
@@ -3492,7 +3493,7 @@ static func the_kinchain(d: PoiDressing) -> void:
 	_chain(m, iron, gap_at - Vector3.UP * link * 0.5, low, link)
 	# the coil: rings of chain laid round and round, each smaller and higher
 	for i in 6:
-		var rr := 1.7 - 0.2 * float(i)
+		var rr := 2.3 - 0.25 * float(i)
 		var y := g0 + 0.12 + 0.24 * float(i)
 		var n := 10
 		var prev := Vector3(coil.x + rr, y, coil.y)
@@ -3501,7 +3502,7 @@ static func the_kinchain(d: PoiDressing) -> void:
 			var p := Vector3(coil.x + cos(a) * rr, y + 0.024 * float(j), coil.y + sin(a) * rr)
 			_chain(m, iron, prev, p, link * 0.9)
 			prev = p
-	k.collider(Vector3(3.4, 1.4, 3.4), Transform3D(Basis.IDENTITY, Vector3(coil.x, g0 + 0.7, coil.y)), "stone")
+	k.collider(Vector3(4.6, 1.4, 4.6), Transform3D(Basis.IDENTITY, Vector3(coil.x, g0 + 0.7, coil.y)), "stone")
 	await k.step()
 	m.commit(iron, PoiKit.plain(IRON, 0.55, 0.6), "Chain", true)
 	# Ottar's rack of bars against the crag foot, in the same bright iron as the ring
@@ -3526,7 +3527,7 @@ static func the_kinchain(d: PoiDressing) -> void:
 	await _prop(d, "tongs", hearth - side * 2.0 + out * 1.6, k.rng.randf() * TAU)
 	await _prop(d, "chopping_block", hearth + side * 2.0 - out * 1.0, 0.0)
 	_spot(d, "ottar_hearth", hearth - side * 1.6 + out * 1.4)
-	k.touchable("the_chain", Vector3(coil.x, g0 + 1.4, coil.y) + Vector3(out.x, 0.0, out.y) * 1.9, "Look at the Kinchain", DIALOGUE + "kinchain_chain", "", false)
+	k.touchable("the_chain", Vector3(coil.x, g0 + 1.4, coil.y) + Vector3(out.x, 0.0, out.y) * 2.6, "Look at the Kinchain", DIALOGUE + "kinchain_chain", "", false)
 	k.marker("the_coil", k.on_ground(coil.x + out.x * 3.0, coil.y + out.y * 3.0))
 
 
@@ -3739,7 +3740,7 @@ static func the_scour(d: PoiDressing) -> void:
 	var turf := m.begin()
 	for s in [-1.0, 1.0]:
 		var c := dam + side * (5.2 * float(s))
-		m.ellipsoid(turf, Vector3(c.x, gd - 0.4, c.y), Vector3(4.6, 2.6, 2.6), fb)
+		m.ellipsoid(turf, Vector3(c.x, gd - 0.6, c.y), Vector3(4.8, 2.2, 3.6), fb)
 	k.collider(Vector3(9.0, 2.2, 3.4), Transform3D(fb, Vector3(dam.x, gd + 1.0, dam.y) + Vector3(side.x, 0.0, side.y) * 5.2), "dirt")
 	k.collider(Vector3(9.0, 2.2, 3.4), Transform3D(fb, Vector3(dam.x, gd + 1.0, dam.y) - Vector3(side.x, 0.0, side.y) * 5.2), "dirt")
 	await k.step()
@@ -3769,29 +3770,25 @@ static func the_scour(d: PoiDressing) -> void:
 	m.limb(oak, drum, Vector3(dam.x, gd + 2.4, dam.y), 0.03)
 	await k.step()
 	m.commit(oak, PoiKit.painted(3, OAK_BLACK, 0.75), "Sluice", true)
-	# the gash: the fell flayed to its bones from the dam's foot down, pale, broken, strewn
-	var gash := m.begin()
+	# the gash: the fell flayed to its bones from the dam's foot down: a long tongue of loose scree and
+	# broken stone where the flood took the turf, widening as it goes, boulders rolled to its edges
 	var pts: Array = []
 	for i in 9:
 		var t := float(i) / 8.0
 		pts.append(dam - up * (2.0 + 32.0 * t) + side * (1.6 * sin(t * 4.0)))
-	for i in pts.size() - 1:
-		var a: Vector2 = pts[i]
-		var b: Vector2 = pts[i + 1]
-		var t := float(i) / float(pts.size() - 1)
-		_track(d, gash, [a, b], lerpf(4.0, 7.5, t))
-	await k.step()
-	_ground_mesh(d, gash, PoiKit.painted(5, GRAVEL, 0.9, 0.8), "TheGash", true)
-	if k.far:
-		return
 	var scree := k.rock("scree")
 	if scree != "":
 		var rows: Array = []
-		for i in 8:
-			var p: Vector2 = (pts[1 + i % 7] as Vector2) + side * k.rng.randf_range(-2.2, 2.2)
-			rows.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.15), k.rng.randf() * TAU, k.rng.randf_range(0.6, 0.9)))
+		for i in 30:
+			var t := float(i) / 29.0
+			var j := mini(int(t * 7.99), 7)
+			var c: Vector2 = (pts[j] as Vector2).lerp(pts[j + 1] as Vector2, t * 8.0 - float(j))
+			var p := c + side * k.rng.randf_range(-1.0, 1.0) * lerpf(1.6, 3.4, t)
+			rows.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.12), k.rng.randf() * TAU, k.rng.randf_range(0.9, 1.3)))
 		await k.step()
-		k.scatter(scree, rows, false)
+		k.scatter(scree, rows, false, true)
+	if k.far:
+		return
 	for i in 6:
 		var p: Vector2 = (pts[2 + i] as Vector2) + side * k.rng.randf_range(-3.0, 3.0)
 		var rock := k.rock("boulder", i % 3)
@@ -4035,8 +4032,8 @@ static func the_bucket_line(d: PoiDressing) -> void:
 
 # --- the Breath-Ledge --------------------------------------------------------------------------------------
 
-const LEDGE_W := 18.0
-const LEDGE_H := 11.0
+const LEDGE_W := 22.0
+const LEDGE_H := 13.0
 
 ## The Breath-Ledge: a pale scar of bedded limestone on the Skarl fells, and on its face the Skarl dead in
 ## their coffins, set on iron pegs as high as the ropes would lift them, the oldest grey as the rock and
@@ -4051,7 +4048,6 @@ static func the_breath_ledge(d: PoiDressing) -> void:
 	var face_at := -out * 7.0
 	# the crag behind, for the hill's own shoulder; the scar in front of it in beds of pale stone, each
 	# bed stepped back and broken along its top
-	await _crag(d, face_at - out * 6.0, out, 15.0, 0, 1.6)
 	var gb := INF
 	for s in [-0.5, -0.25, 0.0, 0.25, 0.5]:
 		var p := face_at + side * LEDGE_W * float(s)
@@ -4107,6 +4103,15 @@ static func the_breath_ledge(d: PoiDressing) -> void:
 	var lf := Vector3(face_at.x, 0.0, face_at.y) + fb * Vector3(-1.8, 0.0, front + 2.2)
 	lf.y = k.on_ground(lf.x, lf.z).y
 	_ladder(m, old, lf, Vector3(face_at.x, gb + 9.4, face_at.y) + fb * Vector3(-1.8, 0.0, _ledge_face(9.4, bed_h) + 0.15), 0.55)
+	# the shear-legs on the scar's top that the coffins are swung out from: two raking legs to an apex
+	# out over the face, a sheave at the head, read against the sky from the fells round
+	var apex := Vector3(face_at.x, beam_y + 5.5, face_at.y) + fb * Vector3(0.0, 0.0, front + 1.4)
+	for s in [-1.0, 1.0]:
+		var lf2 := Vector3(face_at.x, beam_y - 0.4, face_at.y) + fb * Vector3(2.8 * float(s), 0.0, -1.2)
+		m.limb(old, lf2, apex, 0.16)
+	m.rod(old, Transform3D(fb * Basis(Vector3.BACK, PI * 0.5), apex), 0.3, 0.25)
+	m.limb(rope, apex, Vector3(face_at.x, gb + 4.2, face_at.y) + fb * Vector3(0.0, 0.0, front + 1.4), 0.035)
+	m.block(new_wood, Transform3D(fb, Vector3(face_at.x, gb + 3.6, face_at.y) + fb * Vector3(0.0, 0.0, front + 1.4)), Vector3(2.0, 0.5, 0.62))
 	# iron and rope each with a foot on the ground: the pegs' spare rods leant at the scar's foot
 	var spare := Vector3(face_at.x, 0.0, face_at.y) + fb * Vector3(6.0, 0.0, front + 0.9)
 	spare.y = k.on_ground(spare.x, spare.z).y
