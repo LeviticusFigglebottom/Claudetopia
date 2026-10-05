@@ -28,12 +28,12 @@ const PEOPLE := {
 	"core:npc/silas_pask": "core:poi/ness_market",
 	"core:npc/hob_tench": "core:poi/smoke_coppice",
 	# the novel places
-	"core:npc/mab_larrow": "core:poi/the_sounding_mirror",
-	"core:npc/absalom_tarr": "core:poi/the_ropewalk",
+	"core:npc/hamnet_squire": "core:poi/the_long_glass",
+	"core:npc/hepzibah_cole": "core:poi/the_cold_baths",
 	"core:npc/grisel_mew": "core:poi/the_widows_keels",
 	"core:npc/prudence_gauge": "core:poi/the_charter_scale",
 	"core:npc/corbin_vell": "core:poi/the_cormorant_perches",
-	"core:npc/dilly_fane": "core:poi/the_kite_shore",
+	"core:npc/dilly_fane": "core:poi/the_pearl_beds",
 	"core:npc/ysbel_dunnage": "core:poi/the_dumb_fair",
 	"core:npc/obed_marrow": "core:poi/the_saltmound",
 	"core:npc/merryn_lisle": "core:poi/fathom_shears",
@@ -44,12 +44,12 @@ const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_
 ## The novel places and what each builder must stand: its landmark's pieces, the thing to touch, the
 ## spot its person works.
 const NOVEL := {
-	"core:poi/the_sounding_mirror": ["MirrorDish", "FocusHorn", "SpeakingStone", "the_cup", "mab_stone"],
-	"core:poi/the_ropewalk": ["RopewalkPosts", "RopewalkRoof", "Strands", "Jack", "Sledge", "the_jack", "the_sledge", "tarr_jack"],
+	"core:poi/the_long_glass": ["GlassPlatform", "GlassTrestles", "LongGlass", "ClerksHut", "sign_CountChalk", "the_eyepiece", "hamnet_glass"],
+	"core:poi/the_cold_baths": ["MachineStripesRed", "MachineStripesWhite", "MachineRoofs", "MachineWheels", "Capstan", "Towels", "the_machine", "hepzibah_capstan"],
 	"core:poi/the_widows_keels": ["KeelHulls", "Keels", "Stovepipes", "EelRacks", "DrownedBoard", "the_board", "grisel_door"],
 	"core:poi/the_charter_scale": ["ScaleGantry", "ScaleBrass", "LandPan", "WaterPan", "Weights", "WeighBooth", "the_pan", "prudence_ledger"],
 	"core:poi/the_cormorant_perches": ["Perches", "Birds", "ReedShelter", "the_birds", "corbin_creel"],
-	"core:poi/the_kite_shore": ["KiteReels", "Kites", "KiteEyes", "KiteLines", "the_reel", "dilly_reel"],
+	"core:poi/the_pearl_beds": ["ShellMidden", "LooseShells", "StaveRack", "DryingNet", "PearlScale", "the_heap", "dilly_heap"],
 	"core:poi/the_dumb_fair": ["FairPoles", "FairScreens", "SilenceStone", "the_bell", "hushwife_stall"],
 	"core:poi/the_saltmound": ["Saltmound", "SealPole", "BarrowTrestle", "SaltGate", "CharterSeals", "SaltersCut", "obed_gate", "the_boats"],
 	"core:poi/fathom_shears": ["Quay", "SheerLegs", "ThePatience", "BellChains", "Windlass", "SalvorsShed", "merryn_windlass", "the_quay_steps"],

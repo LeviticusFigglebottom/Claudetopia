@@ -4712,9 +4712,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_cold_baths",
+        "quests": [
+          "core:quest/the_aldermans_ring"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_cormorant_perches",
         "quests": [
-          "core:quest/old_tithe"
+          "core:quest/old_tithe",
+          "core:quest/the_aldermans_ring"
         ],
         "finds": [],
         "encounters": [],
@@ -4734,7 +4744,7 @@
       {
         "poi": "core:poi/the_dumb_fair",
         "quests": [
-          "core:quest/the_rogues_yarn"
+          "core:quest/the_unlit_boat"
         ],
         "finds": [],
         "encounters": [],
@@ -4814,15 +4824,6 @@
         "hearthstone": false
       },
       {
-        "poi": "core:poi/the_kite_shore",
-        "quests": [
-          "core:quest/old_tithe"
-        ],
-        "finds": [],
-        "encounters": [],
-        "hearthstone": false
-      },
-      {
         "poi": "core:poi/the_last_field",
         "quests": [
           "core:quest/the_grey_on_the_green"
@@ -4860,11 +4861,21 @@
         "poi": "core:poi/the_listening_post",
         "quests": [
           "core:quest/louder_than_the_toll",
-          "core:quest/the_singing_slate"
+          "core:quest/the_singing_slate",
+          "core:quest/the_undersong"
         ],
         "finds": [
           "core:item/note_listening_post"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_long_glass",
+        "quests": [
+          "core:quest/the_unlit_boat"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -4881,6 +4892,15 @@
         "finds": [
           "core:item/note_the_one_poppy"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_pearl_beds",
+        "quests": [
+          "core:quest/old_tithe"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -4904,15 +4924,6 @@
         "encounters": [
           "core:encounter/wayside_the_priced_gibbet"
         ],
-        "hearthstone": false
-      },
-      {
-        "poi": "core:poi/the_ropewalk",
-        "quests": [
-          "core:quest/the_rogues_yarn"
-        ],
-        "finds": [],
-        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4978,15 +4989,6 @@
         "encounters": [
           "core:encounter/the_sounding"
         ],
-        "hearthstone": false
-      },
-      {
-        "poi": "core:poi/the_sounding_mirror",
-        "quests": [
-          "core:quest/the_undersong"
-        ],
-        "finds": [],
-        "encounters": [],
         "hearthstone": false
       },
       {

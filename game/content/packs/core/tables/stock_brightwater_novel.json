@@ -1,27 +1,67 @@
 [
   {
-    "id": "core:table/stock_ropewalk",
-    "role": "merchant_stock",
-    "description": "Absalom Tarr's coils at the Ropewalk: Charter rope with the red in it, linen for sails, a lantern for the walk after dark, tar in a pot for whoever has a boat.",
-    "rows": [
-      {"item": "core:item/rope", "count": [4, 9], "restock_hours": 24},
-      {"item": "core:item/linen", "count": [2, 5], "restock_hours": 72},
-      {"item": "core:item/lantern", "count": [1, 2], "restock_hours": 72},
-      {"item": "core:item/econ_fish_hooks", "count": [4, 12], "restock_hours": 72}
-    ]
-  },
-  {
     "id": "core:table/stock_dumb_fair",
     "role": "merchant_stock",
     "description": "The Hush-wife's trestle at the Dumb Fair: salt with no seal, rope with no red, picks and hooks, and Hush sayings in waxed jars marked with a closed mouth.",
     "rows": [
-      {"item": "core:item/untaxed_salt", "count": [6, 14], "restock_hours": 24},
-      {"item": "core:item/rope", "count": [2, 5], "restock_hours": 48},
-      {"item": "core:item/lockpick", "count": [3, 8], "restock_hours": 48},
-      {"item": "core:item/tome_hush_frost", "count": [0, 1], "restock_hours": 168, "chance": 0.7},
-      {"item": "core:item/tome_still_tongue", "count": [0, 1], "restock_hours": 168, "chance": 0.5},
-      {"item": "core:item/potion_slow", "count": [1, 3], "restock_hours": 72},
-      {"item": "core:item/potion_night_eye", "count": [1, 2], "restock_hours": 72}
+      {
+        "item": "core:item/untaxed_salt",
+        "count": [
+          6,
+          14
+        ],
+        "restock_hours": 24
+      },
+      {
+        "item": "core:item/rope",
+        "count": [
+          2,
+          5
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/lockpick",
+        "count": [
+          3,
+          8
+        ],
+        "restock_hours": 48
+      },
+      {
+        "item": "core:item/tome_hush_frost",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 168,
+        "chance": 0.7
+      },
+      {
+        "item": "core:item/tome_still_tongue",
+        "count": [
+          0,
+          1
+        ],
+        "restock_hours": 168,
+        "chance": 0.5
+      },
+      {
+        "item": "core:item/potion_slow",
+        "count": [
+          1,
+          3
+        ],
+        "restock_hours": 72
+      },
+      {
+        "item": "core:item/potion_night_eye",
+        "count": [
+          1,
+          2
+        ],
+        "restock_hours": 72
+      }
     ]
   }
 ]

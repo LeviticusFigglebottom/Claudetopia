@@ -805,7 +805,7 @@
   {
     "id": "core:dialogue/emmet_quarle",
     "speaker_name": "Emmet Quarle",
-    "notes": "The Sayers' Circle clerk at the Listening Post (the POI's story: 'a room with a horn, a chair and a clerk who cannot sing'). The Singing Slate is delivered to him; the hand-over at the end of a conversation completes its first stage. Gives Louder Than the Toll (quests/sites_brightwater.json) and takes Carrow's trumpet at its end.",
+    "notes": "The Sayers' Circle clerk at the Listening Post (the POI's story: 'a room with a horn, a chair and a clerk who cannot sing'). The Singing Slate is delivered to him; the hand-over at the end of a conversation completes its first stage. Gives Louder Than the Toll (quests/sites_brightwater.json) and takes Carrow's trumpet at its end. Closes core:quest/the_undersong's q_clapper line and hosts its choice.",
     "start": "greet",
     "greetings": [
       {
@@ -900,6 +900,18 @@
             "next": "holmwatch"
           },
           {
+            "text": "The Undersong's clapper. Merryn Lisle let it come to your horn.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_undersong",
+                  "the_horn"
+                ]
+              }
+            ],
+            "next": "q_clapper"
+          },
+          {
             "text": "I'll leave you to listen.",
             "next": "bye"
           }
@@ -962,6 +974,11 @@
             "set_flag": "holmwatch_silenced"
           }
         ],
+        "next": "hub"
+      },
+      "q_clapper": {
+        "speaker": "Emmet Quarle",
+        "text": "*(He does not reach for it. He lays a brass rod against it, and the rod sings, and he cannot hear it, and he watches it shake.)* -- That's the drowned bell's tongue. The horn takes what is on the water and brings it into this room, and it gives back, too, if you strike something at its mouth. Strike that at the horn and the whole Quarter will hear its bell answered, forty fathom down. -- Or the Circle will pay for it, a great deal, and put it in a case in the Spire with a card. It's your hand it's in.",
         "next": "hub"
       }
     }

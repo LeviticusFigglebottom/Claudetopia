@@ -1,511 +1,5 @@
 [
   {
-    "id": "core:dialogue/mab_larrow",
-    "speaker_name": "Mab Larrow",
-    "notes": "The Quiet Hands' ear at the Sounding Mirror (pois/brightwater.json the_sounding_mirror). Sells what she hears; takes the Undersong's clapper at core:quest/the_undersong's q_clapper line.",
-    "start": "greet",
-    "greetings": [
-      {
-        "conditions": [
-          {
-            "quest_at": [
-              "core:quest/the_undersong",
-              "the_mirror"
-            ]
-          }
-        ],
-        "text": "*(A breath late.)* -- Something in your pack is humming under the note. I can hear it from here. Bring it to the stone."
-      },
-      {
-        "conditions": [
-          {
-            "flag": "undersong_struck"
-          }
-        ],
-        "text": "*(A breath late.)* -- It still answers, you know. Every night at the ninth hour, forty fathom down, very small. I write it down."
-      }
-    ],
-    "nodes": {
-      "greet": {
-        "speaker": "Mab Larrow",
-        "text": "*(She does not open her eyes. A breath late:)* -- Somebody on the Row just priced eels at a mark the dozen. Somebody else laughed. -- You're standing in my sound. Larrow. I listen. Mind the stone.",
-        "next": "hub"
-      },
-      "hub": {
-        "speaker": "Mab Larrow",
-        "text": "*(Her slate-pencil waits.)* Well?",
-        "choices": [
-          {
-            "text": "What is this thing?",
-            "next": "mirror"
-          },
-          {
-            "text": "What do you sell?",
-            "next": "sell"
-          },
-          {
-            "text": "What have you heard lately?",
-            "next": "lately"
-          },
-          {
-            "text": "The Undersong's clapper. Merryn Lisle let it come here.",
-            "conditions": [
-              {
-                "quest_at": [
-                  "core:quest/the_undersong",
-                  "the_mirror"
-                ]
-              }
-            ],
-            "next": "q_clapper"
-          },
-          {
-            "text": "I'll leave you to it.",
-            "next": "bye"
-          }
-        ]
-      },
-      "mirror": {
-        "speaker": "Mab Larrow",
-        "text": "The Builders' ear. They cut it to hear the city they built, and the city's still there, so it still hears. The hollow takes everything said loud enough on the far shore and folds it into the horn, and the tube brings it down to the cup. The Circle sat a listener here until they crowned the Spire and decided they'd rather be heard than hear. -- The Quiet Hands are not so proud.",
-        "next": "hub"
-      },
-      "sell": {
-        "speaker": "Mab Larrow",
-        "text": "A line at a time. What a factor says before the posting, what a Tallyman says after the wine. Not today: today you can listen yourself, for free. Put your ear to the cup and see what the Mere gives you. It gives everyone something. It's rarely what they wanted.",
-        "next": "hub"
-      },
-      "lately": {
-        "speaker": "Mab Larrow",
-        "text": "Salvors on the west tail, swearing at a chain that rings by itself. A Weighmaster on the south shore telling her ledger the salt is light. Knocking from the south-east shore, at night, in no rhythm a person uses. -- And a woman's voice under all of it, very far down, that nobody on the far shore is making. That one I don't sell.",
-        "effects": [
-          {
-            "discover": "core:poi/fathom_shears"
-          }
-        ],
-        "next": "hub"
-      },
-      "q_clapper": {
-        "speaker": "Mab Larrow",
-        "text": "*(Now she opens her eyes. She looks at the bronze for a long time without touching it.)* -- That's the Undersong's tongue. Strike it at the focus and the Mirror will carry it down as well as up; the Quarter will hear it, all forty fathom, and whatever is still down there will know the bell is answered. Or give it to me. The Quiet Hands could use a bell the city cannot hear. -- It's your hand it's in.",
-        "next": "hub"
-      },
-      "bye": {
-        "speaker": "Mab Larrow",
-        "text": "*(Already listening again.)* -- Mind the stone.",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/sounding_mirror_cup",
-    "speaker_name": "The Sounding Mirror",
-    "notes": "The ear-cup on the speaking-stone at the Sounding Mirror (regions/brightwater.gd the_sounding_mirror). Each listen brings a line across the Mere; the first five each find a place (discover).",
-    "start": "listen",
-    "nodes": {
-      "listen": {
-        "speaker": "The Sounding Mirror",
-        "no_talk": true,
-        "text": "You put your ear to the brass. At first nothing; then the whole Mere, folded small: water against stone, gulls, a bell somewhere, and voices, one at a time, as close as your own breath.",
-        "choices": [
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "not": {
-                  "counter_min": [
-                    "mirror_listens",
-                    1
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "mirror_listens"
-              },
-              {
-                "discover": "core:poi/the_saltmound"
-              }
-            ],
-            "next": "one"
-          },
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "mirror_listens",
-                  1
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "mirror_listens",
-                    2
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "mirror_listens"
-              },
-              {
-                "discover": "core:poi/the_dumb_fair"
-              }
-            ],
-            "next": "two"
-          },
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "mirror_listens",
-                  2
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "mirror_listens",
-                    3
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "mirror_listens"
-              },
-              {
-                "discover": "core:poi/the_kite_shore"
-              }
-            ],
-            "next": "three"
-          },
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "mirror_listens",
-                  3
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "mirror_listens",
-                    4
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "mirror_listens"
-              },
-              {
-                "discover": "core:poi/the_widows_keels"
-              }
-            ],
-            "next": "four"
-          },
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "mirror_listens",
-                  4
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "mirror_listens",
-                    5
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "mirror_listens"
-              },
-              {
-                "discover": "core:poi/the_cormorant_perches"
-              }
-            ],
-            "next": "five"
-          },
-          {
-            "text": "Listen.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "mirror_listens",
-                  5
-                ]
-              }
-            ],
-            "next": "under"
-          },
-          {
-            "text": "Take your ear away.",
-            "next": "end"
-          }
-        ]
-      },
-      "one": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(A man, low, in a hurry:)* '...four stone a barge, no more, or the old reeve will see it on his board. Bring it round the back after dark. The King says the gulls can have the front.' *(A door, somewhere, and the voice is gone.)*",
-        "next": "end"
-      },
-      "two": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(No voice at all. Knocking: three, then one, then three, on wood, and somebody laughing without making a sound, which you would not have thought you could hear. Then a hooded lantern being shut.)*",
-        "next": "end"
-      },
-      "three": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(A child, shouting into the wind and very pleased:)* 'Pike on the third! PIKE ON THE THIRD! Mam'd have had that one, she would--' *(and the line goes slack, and so does the voice.)*",
-        "next": "end"
-      },
-      "four": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(A woman, older, reading names slowly, the way you read them when you have read them every evening for years:)* 'The Hope of Sedgehithe. The Two Sisters. The Kettle. The Merry Tally.' *(A pause.)* 'The Merry Tally.'",
-        "next": "end"
-      },
-      "five": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(A whistle through teeth, a bird's croak answering, and a man's voice:)* 'Good girl, Tithe. Over the water and back, and nobody looks at a cormorant.' *(Wings, a lot of them.)*",
-        "next": "end"
-      },
-      "under": {
-        "speaker": "The Sounding Mirror",
-        "text": "*(Under the city's noise, under the water's, so far down you feel it in your teeth more than hear it: one long note, struck and held, and held, and held.)*",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/absalom_tarr",
-    "speaker_name": "Absalom Tarr",
-    "notes": "The rope-master of the Ropewalk (pois/brightwater.json the_ropewalk). Sells rope (stock_ropewalk); gives core:quest/the_rogues_yarn and hosts its choice.",
-    "start": "greet",
-    "greetings": [
-      {
-        "conditions": [
-          {
-            "quest_at": [
-              "core:quest/the_rogues_yarn",
-              "the_laying"
-            ]
-          }
-        ],
-        "text": "*(He stops walking, which you have not seen him do.)* -- You've been to the screens. Well? Who wants my rope with no heart in it?"
-      },
-      {
-        "conditions": [
-          {
-            "flag": "rogues_yarn_kept"
-          }
-        ],
-        "text": "Red in every fathom, as it should be. -- Here, hold this. No, the other end."
-      }
-    ],
-    "nodes": {
-      "greet": {
-        "speaker": "Absalom Tarr",
-        "text": "*(He is walking backwards down the shed toward you, paying hemp out of the bundle at his waist, and does not turn round.)* -- Mind the strands. Tarr. Rope-master. Every rope on the Mere was laid on this walk, and every one the Charter bought has my red in it. Here. *(He hands you a pinch of yarn over his shoulder.)*",
-        "next": "hub"
-      },
-      "hub": {
-        "speaker": "Absalom Tarr",
-        "text": "*(The boy at the jack turns; the strands twist and creep toward the head of the walk.)* Well?",
-        "choices": [
-          {
-            "text": "What's the red yarn for?",
-            "next": "red"
-          },
-          {
-            "text": "Show me what you've laid.",
-            "next": "trade"
-          },
-          {
-            "text": "How does a rope get laid?",
-            "next": "how"
-          },
-          {
-            "text": "You looked worried. What is it?",
-            "conditions": [
-              {
-                "quest_not_done": "core:quest/the_rogues_yarn"
-              },
-              {
-                "not": {
-                  "quest_active": "core:quest/the_rogues_yarn"
-                }
-              }
-            ],
-            "next": "worry"
-          },
-          {
-            "text": "I'll mind the strands.",
-            "next": "bye"
-          }
-        ]
-      },
-      "red": {
-        "speaker": "Absalom Tarr",
-        "text": "The rogue's yarn. One strand of red twisted into the heart of every rope the Charter buys, so if a fathom walks off a Tallymen's barge you can cut it and see the red and know whose it is. Nobody can pick it out without unlaying the whole rope. -- My father put it in, and his. It's the only honest thing about a rope; the rest is just hemp agreeing to hold together.",
-        "next": "hub"
-      },
-      "trade": {
-        "speaker": "Absalom Tarr",
-        "text": "Hemp, twenty paces a coil. Some with red and some without, for anybody who isn't the Charter. -- That's not the same as asking for none. You'll understand when somebody does.",
-        "next": "hub"
-      },
-      "how": {
-        "speaker": "Absalom Tarr",
-        "text": "The boy turns the jack and the strands twist. They want to untwist, so they lay themselves round each other, and the top runs down the walk between them to the sledge, and the sledge creeps up as the rope shortens. Somebody has to walk the top home. -- Turn the jack yourself if you like and walk it down. Any rope a stranger walks home is lucky, and I cut a fathom off it for them.",
-        "next": "hub"
-      },
-      "worry": {
-        "speaker": "Absalom Tarr",
-        "text": "*(He stops walking.)* Sixty fathom. A man in a tarred hood came to the shed in the dark and asked for sixty fathom laid without a yarn of red in it, and paid me in salt, a whole sack, white as a Tallyman's collar and not a seal on it. Salt nobody's paid the tithe on. -- I want to know whose hands it's going into before I lay a yard. They don't come to the shed again; they said I'd be told where to bring it.",
-        "choices": [
-          {
-            "text": "I'll find out who's asking.",
-            "effects": [
-              {
-                "start_quest": "core:quest/the_rogues_yarn"
-              }
-            ],
-            "next": "yes"
-          },
-          {
-            "text": "Not my business.",
-            "next": "hub"
-          }
-        ]
-      },
-      "yes": {
-        "speaker": "Absalom Tarr",
-        "text": "Salt that pays no tithe goes one place: the Dumb Fair, behind the black screens on the south-east shore, by night. Nothing's said aloud there. -- If you have to say anything, say it with your hands.",
-        "next": "hub"
-      },
-      "bye": {
-        "speaker": "Absalom Tarr",
-        "text": "*(Walking backwards again.)* -- Mind the strands.",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/ropewalk_jack",
-    "speaker_name": "The jack",
-    "notes": "The jack-wheel at the Ropewalk's head (regions/brightwater.gd the_ropewalk). Turning it sends the top down the walk; the sledge's touch (ropewalk_sledge) brings it home and cuts a fathom.",
-    "start": "look",
-    "nodes": {
-      "look": {
-        "speaker": "The jack",
-        "no_talk": true,
-        "text": "A wheel the height of your chest on a black frame, three iron hooks on its face with the strands' ends on them, and a crank worn pale by forty years of hands.",
-        "choices": [
-          {
-            "text": "Turn the jack.",
-            "conditions": [
-              {
-                "flag_not": "ropewalk_top_out"
-              }
-            ],
-            "effects": [
-              {
-                "set_flag": "ropewalk_top_out"
-              }
-            ],
-            "next": "turned"
-          },
-          {
-            "text": "Leave it.",
-            "next": "end"
-          }
-        ]
-      },
-      "turned": {
-        "speaker": "The jack",
-        "text": "The crank is heavier than it looks. The hooks spin, the three strands twist, and all down the walk the yarn creaks; at the far end the top begins to run toward you between them. -- Somebody has to walk it home to the sledge.",
-        "next": "end"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/ropewalk_sledge",
-    "speaker_name": "The sledge",
-    "notes": "The weighted sledge at the Ropewalk's foot. With the top out (ropewalk_jack), brings it home and gives a fathom of rope.",
-    "start": "look",
-    "nodes": {
-      "look": {
-        "speaker": "The sledge",
-        "no_talk": true,
-        "text": "A timber sledge weighted with lake stones, the three strands made fast to its post, creeping a hand's width up the walk at every turn of the jack.",
-        "choices": [
-          {
-            "text": "Bring the top home.",
-            "conditions": [
-              {
-                "flag": "ropewalk_top_out"
-              }
-            ],
-            "effects": [
-              {
-                "clear_flag": "ropewalk_top_out"
-              },
-              {
-                "inc_counter": "ropewalk_fathoms"
-              },
-              {
-                "give_item": [
-                  "core:item/rope",
-                  1
-                ]
-              }
-            ],
-            "next": "home"
-          },
-          {
-            "text": "There is nothing to bring home yet.",
-            "conditions": [
-              {
-                "flag_not": "ropewalk_top_out"
-              }
-            ],
-            "next": "idle"
-          },
-          {
-            "text": "Leave it.",
-            "next": "end"
-          }
-        ]
-      },
-      "home": {
-        "speaker": "The sledge",
-        "text": "You walk the top down the shed between the turning strands, and they close up behind it into a rope, hard and round and still warm with the twist. At the sledge Tarr's boy cuts a fathom off the end with one stroke and hands it to you: a red yarn shows in the cut. A rope a stranger walks home is lucky, they say on the walk.",
-        "next": "end"
-      },
-      "idle": {
-        "speaker": "The sledge",
-        "text": "The strands lie slack. Somebody has to turn the jack at the head of the walk before there is a top to bring home.",
-        "next": "end"
-      }
-    }
-  },
-  {
     "id": "core:dialogue/grisel_mew",
     "speaker_name": "Grisel Mew",
     "notes": "The keeper of the drowned-board at the Widows' Keels (pois/brightwater.json the_widows_keels). Sells smoked eel (stock_fishmonger); gives core:quest/chalked_off and hosts its choice.",
@@ -928,7 +422,7 @@
       },
       "tithe": {
         "speaker": "Corbin Vell",
-        "text": "*(He whistles; no croak comes back. He whistles again.)* -- Old Tithe. The first bird I ever raised and the best, and she went over the water at dusk last night with a packet on her leg and she hasn't come home. She always comes home. -- The kite-fishers on the east shingle fly lines in the dusk wind. If she came down anywhere, she came down there. I can't leave the others; they'll go looking for her and I'll lose the lot.",
+        "text": "*(He whistles; no croak comes back. He whistles again.)* -- Old Tithe. The first bird I ever raised and the best, and she went over the water at dusk last night with a packet on her leg and she hasn't come home. She always comes home. -- The pearl-waders at the Wold Water's mouth hang their nets out at dusk. If she came down anywhere, she came down in those. I can't leave the others; they'll go looking for her and I'll lose the lot.",
         "choices": [
           {
             "text": "I'll go and look for her.",
@@ -947,7 +441,7 @@
       },
       "tithe_yes": {
         "speaker": "Corbin Vell",
-        "text": "On the east shingle below the Wold Water's mouth, the girl with the eyes on her kites. -- If anybody's opened that packet, I don't want to know who.",
+        "text": "The Pearl Beds, below the Wold Water's mouth, the girl with the heap. -- If anybody's opened that packet, I don't want to know who.",
         "next": "hub"
       }
     },
@@ -1056,24 +550,24 @@
   {
     "id": "core:dialogue/dilly_fane",
     "speaker_name": "Dilly Fane",
-    "notes": "The kite-fisher at the Kite-Fishers' Shore (pois/brightwater.json the_kite_shore). Closes core:quest/old_tithe's q_tithe line.",
+    "notes": "The pearl-wader at the Pearl Beds (pois/brightwater.json the_pearl_beds). Closes core:quest/old_tithe's q_tithe line.",
     "start": "greet",
     "nodes": {
       "greet": {
         "speaker": "Dilly Fane",
-        "text": "*(Watching the sky over your shoulder.)* East and a bit north, steady, good till noon. -- Fane. Dilly. Those are Mam's kites. I fly them now. Don't stand on the lines.",
+        "text": "*(She holds a shell up to the light, squints into it, and drops it on the heap.)* Empty. -- Fane. Dilly. That's my heap. Don't stand on the open ones, they cut.",
         "next": "hub"
       },
       "hub": {
         "speaker": "Dilly Fane",
-        "text": "*(The third kite dips; she takes in a turn without looking.)* What?",
+        "text": "*(Another shell; the knife; the light.)* What?",
         "choices": [
           {
-            "text": "Why fish with kites?",
+            "text": "How do you find pearls?",
             "next": "why"
           },
           {
-            "text": "Why the eyes?",
+            "text": "Why are the heaps so big?",
             "next": "eyes"
           },
           {
@@ -1081,11 +575,11 @@
             "next": "mam"
           },
           {
-            "text": "Can I have a turn?",
+            "text": "Can I open one?",
             "next": "turn"
           },
           {
-            "text": "Corbin Vell's cormorant. Did one come down in your lines?",
+            "text": "Corbin Vell's cormorant. Did one come down here?",
             "conditions": [
               {
                 "quest_at": [
@@ -1097,194 +591,47 @@
             "next": "q_tithe"
           },
           {
-            "text": "Good wind.",
+            "text": "Good luck.",
             "next": "bye"
           }
         ]
       },
       "why": {
         "speaker": "Dilly Fane",
-        "text": "Because a kite goes further out than a boat you can't afford. The wind comes down out of the wood and out over the Mere and carries the line with it, and the dropper hangs down off the kite into the deep water where the big pike are. You don't need a boat. You need a wind and a reel and hands.",
+        "text": "You wade out with a staff and a glass bucket and look down through the glass till you see a big one standing up in the mud like a hand, and you pull it with the cleft stick. Then you bring it here and open it. One in two hundred's got something. Most of what's got something is grey. -- One in ten of what's got something goes to the Row. That's the tithe.",
         "next": "hub"
       },
       "eyes": {
         "speaker": "Dilly Fane",
-        "text": "Pike look up. They see the eyes on the water and think it's a heron, and they go down deep, right where the bait is. -- That's what Mam says. I think they just like the eyes. I painted the green ones.",
+        "text": "Because nobody's ever moved them. My gran's shells are at the bottom of that one, and her gran's under hers. Mam says if you dig down far enough you'd find the first one anybody opened, and it'd have a pearl in it, because that's why they kept on.",
         "next": "hub"
       },
       "mam": {
         "speaker": "Dilly Fane",
-        "text": "*(Still watching the sky.)* The Undercroft. Debt. Nineteen marks. The Tallymen's man said she can come out when it's paid, and I pay the reel-tax in fish and the rest goes in the jar and the jar's buried and you're not having it. -- Eleven marks in the jar. Eight to go. Good wind, I'll have it by midwinter.",
+        "text": "*(She does not look up from the shell.)* The Undercroft. Debt. Nineteen marks. The Tallymen's man said she can come out when it's paid, and I pay the tithe in pearls and the rest goes in the jar and the jar's buried and you're not having it. -- Eleven marks in the jar. Eight to go. Good mussels, I'll have it by midwinter.",
         "next": "hub"
       },
       "turn": {
         "speaker": "Dilly Fane",
-        "text": "Take the middle reel. Wind when it pulls, let it run when it doesn't, and if you lose Mam's kite I'll put you in the Mere. -- Half of what bites is mine.",
+        "text": "Take one off the big heap, the unopened ones on the near side. Knife in at the hinge, twist, don't cut yourself. -- Half of what's in it's mine.",
         "next": "hub"
       },
       "bye": {
         "speaker": "Dilly Fane",
-        "text": "*(She is already watching the third kite again.)*",
+        "text": "*(The knife; the light; the heap.)*",
         "next": "end"
       },
       "q_tithe": {
         "speaker": "Dilly Fane",
-        "text": "*(For once she looks at you instead of the sky.)* -- In the third line, at dusk, all wings and temper. I cut her out and she bit me twice and now she's asleep in my smock. *(She opens it: a black head, one green eye.)* There's a packet on her leg. I haven't opened it. I'm not stupid. -- Take her home. Tell Corbin he owes me a pike.",
+        "text": "*(For once she looks at you instead of a shell.)* -- In my net, at dusk, all wings and temper. I cut her out and she bit me twice and now she's asleep in my smock. *(She opens it: a black head, one green eye.)* There's a packet on her leg. I haven't opened it. I'm not stupid. -- Take her home. Tell Corbin he owes me a pike.",
         "next": "hub"
-      }
-    }
-  },
-  {
-    "id": "core:dialogue/kite_reel",
-    "speaker_name": "A kite-reel",
-    "notes": "A turn on a reel at the Kite-Fishers' Shore: a pike the first time, a drowned purse the third, after that the Mere's luck.",
-    "start": "look",
-    "nodes": {
-      "look": {
-        "speaker": "A kite-reel",
-        "no_talk": true,
-        "text": "A drum of tarred line on a post, the line running up into the wind to a kite with green staring eyes hanging out over the water, and from the kite the dropper going down into the Mere.",
-        "choices": [
-          {
-            "text": "Wind when it pulls.",
-            "conditions": [
-              {
-                "not": {
-                  "counter_min": [
-                    "kite_turns",
-                    1
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "kite_turns"
-              },
-              {
-                "give_item": [
-                  "core:item/mere_pike",
-                  1
-                ]
-              }
-            ],
-            "next": "pike"
-          },
-          {
-            "text": "Wind when it pulls.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "kite_turns",
-                  1
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "kite_turns",
-                    2
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "kite_turns"
-              }
-            ],
-            "next": "lost"
-          },
-          {
-            "text": "Wind when it pulls.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "kite_turns",
-                  2
-                ]
-              },
-              {
-                "not": {
-                  "counter_min": [
-                    "kite_turns",
-                    3
-                  ]
-                }
-              }
-            ],
-            "effects": [
-              {
-                "inc_counter": "kite_turns"
-              },
-              {
-                "marks": 20
-              }
-            ],
-            "next": "purse"
-          },
-          {
-            "text": "Wind when it pulls.",
-            "conditions": [
-              {
-                "counter_min": [
-                  "kite_turns",
-                  3
-                ]
-              }
-            ],
-            "effects": [
-              {
-                "if": [
-                  {
-                    "random": 0.5
-                  }
-                ],
-                "then": [
-                  {
-                    "give_item": [
-                      "core:item/mere_pike",
-                      1
-                    ]
-                  }
-                ],
-                "else": []
-              }
-            ],
-            "next": "luck"
-          },
-          {
-            "text": "Leave the reel.",
-            "next": "end"
-          }
-        ]
-      },
-      "pike": {
-        "speaker": "A kite-reel",
-        "text": "The line goes hard and the kite dips toward the water as if something had it by the tail. You wind, and wind, and a pike as long as your arm comes up out of the Mere hanging from the dropper, under the kite's green eyes. Dilly unhooks it, takes the head and tail off it for herself, and gives you the middle.",
-        "next": "end"
-      },
-      "lost": {
-        "speaker": "A kite-reel",
-        "text": "Something takes the bait so hard the reel spins out of your hands; then the line goes slack, and the dropper comes up with no hook on it. 'Big one,' says Dilly, not unkindly. 'They're all big ones when they're gone.'",
-        "next": "end"
-      },
-      "purse": {
-        "speaker": "A kite-reel",
-        "text": "The dropper comes up heavy and slow, and on the hook, by its drawstring, a leather purse black with the Mere, Tallymen's coppers in it gone green. Dilly counts it twice. 'Half's mine,' she says, and takes it, and gives you the rest, and puts hers in a pocket for the jar.",
-        "next": "end"
-      },
-      "luck": {
-        "speaker": "A kite-reel",
-        "text": "You wind when it pulls and let it run when it doesn't. The Mere gives what it gives: a pike some days, weed and a bare hook others. Dilly takes her half of whatever it is without looking away from the sky.",
-        "next": "end"
       }
     }
   },
   {
     "id": "core:dialogue/ysbel_dunnage",
     "speaker_name": "Ysbel Dunnage",
-    "notes": "The Hush-wife of the Dumb Fair (pois/brightwater.json the_dumb_fair). Speaks in knocks and chalk. Sells (stock_dumb_fair); closes core:quest/the_rogues_yarn's q_yarn line.",
+    "notes": "The Hush-wife of the Dumb Fair (pois/brightwater.json the_dumb_fair). Speaks in knocks and chalk. Sells (stock_dumb_fair); closes core:quest/the_unlit_boat's q_boat line.",
     "start": "greet",
     "nodes": {
       "greet": {
@@ -1305,16 +652,16 @@
             "next": "why"
           },
           {
-            "text": "*(Mime a rope being laid, and draw a red line on the trestle, and rub it out.)*",
+            "text": "*(Mime a boat rowing with no lantern, and point north to the brow where the Long Glass stands, and raise your eyebrows.)*",
             "conditions": [
               {
                 "quest_at": [
-                  "core:quest/the_rogues_yarn",
-                  "the_asker"
+                  "core:quest/the_unlit_boat",
+                  "the_fair"
                 ]
               }
             ],
-            "next": "q_yarn"
+            "next": "q_boat"
           },
           {
             "text": "*(Knock twice, and go.)*",
@@ -1332,15 +679,15 @@
         "text": "*(She writes on the trestle in chalk, small, and rubs it out as soon as you have read it: NINETEEN YEARS AGO I SAID A PRICE. THE HORN HEARD IT. THE ROW CAME. NOW NOBODY SAYS ANYTHING AND NOBODY COMES. Then she taps the felt-wrapped bell on the stone, which makes no sound at all.)*",
         "next": "hub"
       },
-      "q_yarn": {
-        "speaker": "Ysbel Dunnage",
-        "text": "*(She watches the rope you mime, and the red line rubbed out, and something in her face closes like a lantern being hooded. She chalks: MINE. MOORINGS. A CUT ROPE WITH NO RED IN IT IS NOBODY'S ROPE. Then she points at the line of the rope again, and at you, and raises her eyebrows. Ask her whether Tarr can say no: she knocks twice.)*",
-        "next": "hub"
-      },
       "bye": {
         "speaker": "Ysbel Dunnage",
         "text": "*(Two knocks on the trestle. Her finger on her lips.)*",
         "next": "end"
+      },
+      "q_boat": {
+        "speaker": "Ysbel Dunnage",
+        "text": "*(She watches the boat you row with no lantern, and the brow you point at, and something in her face closes like a lantern being hooded. She chalks on the trestle: MINE. SALT FROM THE MOUND, BY NIGHT, NO LIGHT. THE GLASS CANNOT COUNT WHAT IT CANNOT SEE. Then, smaller: IT CAN NOW. And she knocks twice: no more boats tonight.)*",
+        "next": "hub"
       }
     }
   },
@@ -1653,6 +1000,626 @@
       "taken": {
         "speaker": "The salvors' slate on the windlass",
         "text": "Up the mast, the chain on the block rings once, by itself, though there is no wind: one long note, and the gulls on the quay all turn their heads to the water.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hamnet_squire",
+    "speaker_name": "Hamnet Squire",
+    "notes": "The Glass-Clerk at the Long Glass (pois/brightwater.json the_long_glass). Gives core:quest/the_unlit_boat and hosts its choice.",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_at": [
+              "core:quest/the_unlit_boat",
+              "the_count"
+            ]
+          }
+        ],
+        "text": "*(One eye shut.)* -- You've been to the screens. I saw you go. I see everybody go. Well? Whose is it?"
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_unlit_boat"
+          }
+        ],
+        "text": "Every boat on the Mere has a name in my count now. You'd be surprised how much that settles a man."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hamnet Squire",
+        "text": "*(He takes his eye from the glass, shuts the other one, and looks at you with it.)* -- Four hundred and eleven today. Eel-boats, mostly, and the Fathom Company's barge, and a Sayer in a punt who cannot row. Squire. Glass-Clerk. Mind the steps.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hamnet Squire",
+        "text": "*(He taps a gate of five on his thigh.)* Well?",
+        "choices": [
+          {
+            "text": "What is the Long Glass?",
+            "next": "glass"
+          },
+          {
+            "text": "Who reads your count?",
+            "next": "count"
+          },
+          {
+            "text": "You look like a man with a boat he can't count.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_unlit_boat"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_unlit_boat"
+                }
+              }
+            ],
+            "next": "boat"
+          },
+          {
+            "text": "I'll leave you to count.",
+            "next": "bye"
+          }
+        ]
+      },
+      "glass": {
+        "speaker": "Hamnet Squire",
+        "text": "The Tallymen's eye. Before the Stride had its gate the Mere was taxed by counting it: every boat that crossed was seen from here and entered, and a boat that was counted and didn't pay at the quay was fined on the clerk's word. The gate made it a curiosity. Nobody told me to stop. -- Look through it if you like. A copper. Everybody pays; I'd count you otherwise.",
+        "next": "hub"
+      },
+      "count": {
+        "speaker": "Hamnet Squire",
+        "text": "The Row, every quarter-day, and files it unread. I know they file it unread because I put a line in the middle of the third quarter of 1031 that said HAMNET SQUIRE HAS GONE MAD, and nobody came. -- It's still right. Every boat. That's what a count is for. It doesn't need reading to be right.",
+        "next": "hub"
+      },
+      "boat": {
+        "speaker": "Hamnet Squire",
+        "text": "*(Both eyes shut.)* -- One boat. Every night for two years, from the west shore round the back of the Saltmound to the south-east shore where the black screens are, and back before dawn. No lantern. No name I can read. I count it by the hole it makes in the other lights. A boat I can't name is a boat I can't enter, and a count with a boat in it that isn't entered is a count that's wrong. -- Somebody at the screens will know whose it is. They don't talk there. Find a way.",
+        "choices": [
+          {
+            "text": "I'll find out whose boat it is.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_unlit_boat"
+              }
+            ],
+            "next": "yes"
+          },
+          {
+            "text": "Not tonight.",
+            "next": "hub"
+          }
+        ]
+      },
+      "yes": {
+        "speaker": "Hamnet Squire",
+        "text": "The Dumb Fair. South-east shore, after dark. Say nothing; they mean it. -- And come back and tell me the name. I'll know what to write.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hamnet Squire",
+        "text": "*(His eye is back at the glass.)* -- Four hundred and twelve.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/long_glass_look",
+    "speaker_name": "The Long Glass",
+    "notes": "The eyepiece of the Long Glass (regions/brightwater.gd the_long_glass). By day five sightings, each finding a place; by night two more, by their lights.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Long Glass",
+        "no_talk": true,
+        "text": "You put your eye to the brass. The Mere jumps at you: water so near you could touch it, gulls the size of dogs, and the far shore standing up out of the haze as sharp as a drawing.",
+        "choices": [
+          {
+            "text": "Look west.",
+            "conditions": [
+              {
+                "not": {
+                  "is_night": true
+                }
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/the_saltmound"
+              }
+            ],
+            "next": "west"
+          },
+          {
+            "text": "Look at the city's tail.",
+            "conditions": [
+              {
+                "not": {
+                  "is_night": true
+                }
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/fathom_shears"
+              }
+            ],
+            "next": "tail"
+          },
+          {
+            "text": "Look south-west.",
+            "conditions": [
+              {
+                "not": {
+                  "is_night": true
+                }
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/the_widows_keels"
+              }
+            ],
+            "next": "keels"
+          },
+          {
+            "text": "Look south-east.",
+            "conditions": [
+              {
+                "not": {
+                  "is_night": true
+                }
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/the_cormorant_perches"
+              }
+            ],
+            "next": "perches"
+          },
+          {
+            "text": "Look east.",
+            "conditions": [
+              {
+                "not": {
+                  "is_night": true
+                }
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/the_pearl_beds"
+              }
+            ],
+            "next": "beds"
+          },
+          {
+            "text": "Look for lights in the south-east.",
+            "conditions": [
+              {
+                "is_night": true
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/the_dumb_fair"
+              }
+            ],
+            "next": "fair"
+          },
+          {
+            "text": "Look for lights off the city's tail.",
+            "conditions": [
+              {
+                "is_night": true
+              }
+            ],
+            "effects": [
+              {
+                "discover": "core:poi/fathom_shears"
+              }
+            ],
+            "next": "ports"
+          },
+          {
+            "text": "Take your eye away.",
+            "next": "end"
+          }
+        ]
+      },
+      "west": {
+        "speaker": "The Long Glass",
+        "text": "A white cone on the west shore, as high as a church, gulls on its top like pepper. Round its back, toward the water, a dark mouth shored with timber, and a boat drawn up by it that is not on the salt-reeve's board.",
+        "next": "look"
+      },
+      "tail": {
+        "speaker": "The Long Glass",
+        "text": "Tollmere's west tail, and over it two masts leaning out over the water like a heron's legs, a chain hanging from their head, and under them on the quay a black bell. A woman sits at a windlass and turns it a quarter, and stops, and listens.",
+        "next": "look"
+      },
+      "keels": {
+        "speaker": "The Long Glass",
+        "text": "Three boats upside down on the south-west shingle with smoke coming out of their bottoms, and by the water a board covered in chalk. An old woman stands in front of it with her lips moving.",
+        "next": "look"
+      },
+      "perches": {
+        "speaker": "The Long Glass",
+        "text": "A row of black birds on posts on the south-east shore, every one of them holding its wings out like a coat hung up to dry. As you watch, one of them drops into the water and is gone.",
+        "next": "look"
+      },
+      "beds": {
+        "speaker": "The Long Glass",
+        "text": "White heaps on the east shingle below the Wold Water's mouth, and a girl sitting on one of them holding something up to the light. She looks straight up the glass at you, which she cannot possibly do, and sticks her tongue out.",
+        "next": "look"
+      },
+      "fair": {
+        "speaker": "The Long Glass",
+        "text": "Dark everywhere but one place on the south-east shore: a ring of small hooded lights, very still, inside something black. Nothing moves in it that you can see. Then, between it and the west shore, a gap in the lights on the water where a boat with no lantern is passing.",
+        "next": "look"
+      },
+      "ports": {
+        "speaker": "The Long Glass",
+        "text": "Off Tollmere's west tail, low on the water, four small round lights in a ring, greenish, as if there were a lamp inside a bell. As you watch they go dim, and bright, and dim, like breathing.",
+        "next": "look"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/hepzibah_cole",
+    "speaker_name": "Hepzibah Cole",
+    "notes": "The bath-keeper at the Cold Baths (pois/brightwater.json the_cold_baths). Gives core:quest/the_aldermans_ring and takes the ring at its end.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hepzibah Cole",
+        "text": "*(Twenty-six, twenty-seven -- she rings the bell on its cord, and somewhere a bather comes up gasping.)* -- Twenty-eight. Not bad for an alderman. Cole. Bath-keeper. You'll be wanting the Cold.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hepzibah Cole",
+        "text": "*(One, two...)* Well?",
+        "choices": [
+          {
+            "text": "What is the Cold for?",
+            "next": "cold"
+          },
+          {
+            "text": "Who comes out here?",
+            "next": "who"
+          },
+          {
+            "text": "What's the wager?",
+            "next": "wager"
+          },
+          {
+            "text": "You count every bather. Has the Cold ever kept anything?",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_aldermans_ring"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_aldermans_ring"
+                }
+              }
+            ],
+            "next": "ring"
+          },
+          {
+            "text": "A cormorant brought up a seal-ring cut with J.H.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_aldermans_ring",
+                  "the_return"
+                ]
+              }
+            ],
+            "next": "ring_back"
+          },
+          {
+            "text": "I'll stay dry.",
+            "next": "bye"
+          }
+        ]
+      },
+      "cold": {
+        "speaker": "Hepzibah Cole",
+        "text": "The humours. A guildsman sits on a stool all day adding, and his blood goes thick as a ledger. The Cold thins it. You undress in the machine, I haul you out on the capstan, you go down the steps under the hood where nobody can see you, and you come up purple and fit to argue with the Row. -- That's what the Guild of Bathers says. I say it's cold and they like it.",
+        "next": "hub"
+      },
+      "who": {
+        "speaker": "Hepzibah Cole",
+        "text": "Tallymen. Sayers, the young ones. Factors with something to forget. They talk in the machines, going out and coming back, and they think the boards are thicker than they are. -- I don't repeat any of it. I'm paid not to. Ask me what the Salt Factor said last Tuesday and I'll tell you it was cold.",
+        "next": "hub"
+      },
+      "wager": {
+        "speaker": "Hepzibah Cole",
+        "text": "A mark says you can't stay under for the thirty. Most come up at ten, the brave ones at twenty. The last man who stayed for the thirty came up with a drowned coin in his fist off the bottom, old Charter silver, and was spoken of on the Row for a week. -- Take the Cold from the middle machine. I'll count.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Hepzibah Cole",
+        "text": "*(Three, four...)*",
+        "next": "end"
+      },
+      "ring": {
+        "speaker": "Hepzibah Cole",
+        "text": "*(She stops counting, which she never does.)* -- Alderman Hale's seal-ring. Twelve years ago he stayed for the thirty, the only time he ever did, and came up purple and proud and without it. He's paid me a mark a month since to keep looking. I've raked the bottom under every machine. It's gone along the shore, the Mere moves things. -- Corbin Vell's birds bring up what the Mere moves.",
+        "choices": [
+          {
+            "text": "I'll watch his birds for it.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_aldermans_ring"
+              }
+            ],
+            "next": "hub"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "ring_back": {
+        "speaker": "Hepzibah Cole",
+        "text": "*(She turns it to the light: the scales, J.H.)* -- Twelve years. That's a hundred and forty-four marks he's paid me to look for a thing a bird found in an afternoon. -- I'll take it to him myself. I want to see his face. Here: his reward, and a month of mine.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cold_baths_plunge",
+    "speaker_name": "The Cold",
+    "notes": "Taking the Cold from the middle machine at the Cold Baths: come up at ten, twenty or thirty; the first thirty finds a drowned coin.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Cold",
+        "no_talk": true,
+        "text": "The machine's boards are cold under your hand. Inside, a bench, a hook for your clothes, and at the water end the steps going down under the canvas hood into the Mere, which is green and very clear and looks colder than anything you have ever seen.",
+        "choices": [
+          {
+            "text": "Go down. Come up at ten.",
+            "next": "ten"
+          },
+          {
+            "text": "Go down. Stay for the twenty.",
+            "conditions": [
+              {
+                "flag_not": "cold_baths_twenty"
+              }
+            ],
+            "effects": [
+              {
+                "set_flag": "cold_baths_twenty"
+              },
+              {
+                "renown": 2
+              }
+            ],
+            "next": "twenty"
+          },
+          {
+            "text": "Go down. Stay for the twenty.",
+            "conditions": [
+              {
+                "flag": "cold_baths_twenty"
+              }
+            ],
+            "next": "twenty"
+          },
+          {
+            "text": "Go down. Stay for the thirty.",
+            "conditions": [
+              {
+                "flag_not": "cold_baths_thirty"
+              }
+            ],
+            "effects": [
+              {
+                "set_flag": "cold_baths_thirty"
+              },
+              {
+                "marks": 15
+              },
+              {
+                "renown": 3
+              }
+            ],
+            "next": "thirty"
+          },
+          {
+            "text": "Go down. Stay for the thirty.",
+            "conditions": [
+              {
+                "flag": "cold_baths_thirty"
+              }
+            ],
+            "next": "again"
+          },
+          {
+            "text": "Stay dry.",
+            "next": "end"
+          }
+        ]
+      },
+      "ten": {
+        "speaker": "The Cold",
+        "text": "The cold shuts round you like a door. Somewhere above, very far off, Hepzibah Cole is counting. At ten you come up, and the air is warm as a kitchen. 'Ten,' she says. 'Everybody's ten.'",
+        "next": "end"
+      },
+      "twenty": {
+        "speaker": "The Cold",
+        "text": "At fifteen your chest wants to burst and at eighteen it stops wanting anything. At twenty you come up into the light and Hepzibah Cole rings the bell for you, which she does not do for everybody, and on the next machine a Tallyman stops talking to listen.",
+        "next": "end"
+      },
+      "thirty": {
+        "speaker": "The Cold",
+        "text": "At twenty-five the green goes grey. At twenty-eight your hand, groping on the bottom for something to hold, closes on something round. At thirty you come up with it: a silver mark of the old Charter, black with the Mere, the scales on it worn almost smooth. Hepzibah Cole pays her wager without a word and enters you in her book.",
+        "next": "end"
+      },
+      "again": {
+        "speaker": "The Cold",
+        "text": "You stay down for the thirty again, because you can now. The bottom has nothing else to give you, only cold. Hepzibah rings the bell anyway.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/pearl_beds_shells",
+    "speaker_name": "The shell heap",
+    "notes": "Opening a mussel from Dilly Fane's heap at the Pearl Beds: empty, a seed pearl, then a pearl; after that the Mere's luck.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The shell heap",
+        "no_talk": true,
+        "text": "The near side of the heap is the day's unopened mussels, as long as your hand, black and shut. A knife lies on a flat stone. Dilly Fane watches you without seeming to.",
+        "choices": [
+          {
+            "text": "Open one.",
+            "conditions": [
+              {
+                "not": {
+                  "counter_min": [
+                    "pearl_shells",
+                    1
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "inc_counter": "pearl_shells"
+              }
+            ],
+            "next": "empty"
+          },
+          {
+            "text": "Open one.",
+            "conditions": [
+              {
+                "counter_min": [
+                  "pearl_shells",
+                  1
+                ]
+              },
+              {
+                "not": {
+                  "counter_min": [
+                    "pearl_shells",
+                    2
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "inc_counter": "pearl_shells"
+              },
+              {
+                "give_item": [
+                  "core:item/seed_pearl",
+                  1
+                ]
+              }
+            ],
+            "next": "seed"
+          },
+          {
+            "text": "Open one.",
+            "conditions": [
+              {
+                "counter_min": [
+                  "pearl_shells",
+                  2
+                ]
+              },
+              {
+                "not": {
+                  "counter_min": [
+                    "pearl_shells",
+                    3
+                  ]
+                }
+              }
+            ],
+            "effects": [
+              {
+                "inc_counter": "pearl_shells"
+              },
+              {
+                "give_item": [
+                  "core:item/mere_pearl",
+                  1
+                ]
+              }
+            ],
+            "next": "pearl"
+          },
+          {
+            "text": "Open one.",
+            "conditions": [
+              {
+                "counter_min": [
+                  "pearl_shells",
+                  3
+                ]
+              }
+            ],
+            "effects": [
+              {
+                "if": [
+                  {
+                    "random": 0.3
+                  }
+                ],
+                "then": [
+                  {
+                    "give_item": [
+                      "core:item/seed_pearl",
+                      1
+                    ]
+                  }
+                ],
+                "else": []
+              }
+            ],
+            "next": "luck"
+          },
+          {
+            "text": "Leave the heap.",
+            "next": "end"
+          }
+        ]
+      },
+      "empty": {
+        "speaker": "The shell heap",
+        "text": "Knife in at the hinge, twist: the shell gapes on grey meat and mother-of-pearl and nothing else. Dilly takes it out of your hand and throws it on the heap without looking. 'Empty. They mostly are.'",
+        "next": "end"
+      },
+      "seed": {
+        "speaker": "The shell heap",
+        "text": "In the fold of the meat, a grain of something hard: a seed pearl, grey, no bigger than a lentil. Dilly holds it up to the light and gives it back. 'Yours. Half of a seed's not worth the fight.'",
+        "next": "end"
+      },
+      "pearl": {
+        "speaker": "The shell heap",
+        "text": "The shell is heavy, and when it opens there it is, sitting in the meat as if it had been put there: a pearl as big as a pea, pink-grey, with a light moving in it. Dilly goes very still. Then she takes it, and gives you one of her own from her pocket, smaller, and says, 'Tithe. Mam's. Yours,' and puts the big one away.",
+        "next": "end"
+      },
+      "luck": {
+        "speaker": "The shell heap",
+        "text": "Knife, hinge, twist. Mostly nothing; now and then a seed of grey. Dilly takes her half of whatever there is without looking up from her own.",
         "next": "end"
       }
     }

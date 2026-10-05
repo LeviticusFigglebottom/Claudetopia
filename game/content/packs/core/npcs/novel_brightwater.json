@@ -1,36 +1,100 @@
 [
   {
-    "id": "core:npc/mab_larrow",
-    "name": "Mab Larrow",
-    "home_place": "core:poi/the_sounding_mirror",
-    "dialogue": "core:dialogue/mab_larrow",
+    "id": "core:npc/hamnet_squire",
+    "name": "Hamnet Squire",
+    "home_place": "core:poi/the_long_glass",
+    "dialogue": "core:dialogue/hamnet_squire",
     "no_radiant": true,
-    "faction": "core:faction/quiet_hands",
-    "bio": "The Quiet Hands' ear at the Sounding Mirror for nine years, who sits at the speaking-stone with her eyes shut and a slate on her knee and writes down what the city says across the Mere: a merchant's price before it is posted, a Tallyman's grudge, a Sayer practising. She sells it a line at a time, and has never once been wrong about a voice.",
-    "unique_habit": "Answers a question a breath late, as if it had to come across the water first, and tilts her head toward the cup when anyone else is speaking.",
-    "personality": {"traits": ["quiet", "cynical", "greedy"]},
-    "appearance": {"seed": 8301, "build": "slight", "age": 44.0, "feminine": 1.0, "hair": "black_cropped_with_a_grey_streak", "notes": "a Quiet Hands grey coat with the collar turned up, fingerless gloves, a slate on a cord, one ear reddened from the brass"},
+    "faction": "core:faction/tallymen",
+    "bio": "The last Glass-Clerk of the Long Glass on the north brow, who was never told to stop counting when the Stride got its toll-gate and has counted every boat on the Mere for thirty-four years, by day through the glass and by night by their lights. He keeps the count on a board in chalk, five to a gate, and sends it to the Row every quarter-day, and the Row files it unread.",
+    "unique_habit": "Closes one eye whenever he looks at anything, even you, and taps a gate of five on his thigh when he has finished counting it.",
+    "personality": {
+      "traits": [
+        "proud",
+        "pious",
+        "quiet"
+      ]
+    },
+    "appearance": {
+      "seed": 8301,
+      "build": "tall_stooped",
+      "age": 68.0,
+      "feminine": 0.0,
+      "hair": "white_and_thin_under_a_clerk_hat",
+      "notes": "a Tallyman's black coat gone brown at the elbows, a brass eyeglass on a ribbon, chalk on both cuffs"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_sounding_mirror", "activity": "sleep", "spot": "mab_stone"},
-      {"days": "all", "hour": 7, "place": "core:poi/the_sounding_mirror", "activity": "work", "spot": "mab_stone", "notes": "listening at the cup, writing on her slate"},
-      {"days": "all", "hour": 23, "place": "core:poi/the_sounding_mirror", "activity": "sleep", "spot": "mab_stone"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_long_glass",
+        "activity": "work",
+        "spot": "hamnet_glass",
+        "notes": "counting the boats by their lights"
+      },
+      {
+        "days": "all",
+        "hour": 4,
+        "place": "core:poi/the_long_glass",
+        "activity": "sleep",
+        "spot": "hamnet_glass"
+      },
+      {
+        "days": "all",
+        "hour": 11,
+        "place": "core:poi/the_long_glass",
+        "activity": "work",
+        "spot": "hamnet_glass",
+        "notes": "at the glass, counting"
+      }
     ]
   },
   {
-    "id": "core:npc/absalom_tarr",
-    "name": "Absalom Tarr",
-    "home_place": "core:poi/the_ropewalk",
-    "dialogue": "core:dialogue/absalom_tarr",
+    "id": "core:npc/hepzibah_cole",
+    "name": "Hepzibah Cole",
+    "home_place": "core:poi/the_cold_baths",
+    "dialogue": "core:dialogue/hepzibah_cole",
     "no_radiant": true,
-    "bio": "Rope-master of the Ropewalk on the south shore for forty years, who has laid every rope the Charter has bought since he was twenty and put the red rogue's yarn into the heart of each. He walks backwards all day paying hemp out of the bundle at his waist, and says a man who walks forwards all his life never sees where he has been.",
-    "unique_habit": "Rolls a pinch of hemp between finger and thumb while he talks, and hands you the yarn when he has finished the sentence.",
-    "personality": {"traits": ["proud", "generous", "brave"]},
-    "appearance": {"seed": 8302, "build": "wiry", "age": 63.0, "feminine": 0.0, "hair": "white_tied_back_with_a_tarred_cord", "notes": "a canvas apron black with tar, a bundle of hemp round his waist on a belt, forearms like rope, a red yarn tied round one wrist"},
-    "merchant": {"stock": "core:table/stock_ropewalk", "marks": 80, "buys": ["tool", "ingredient"]},
+    "bio": "Bath-keeper to the Guild of Bathers on the south shingle for twenty-six years, who hauls the machines in and out on the capstan and counts every bather under the Cold out loud. She hears more of the Row's business in her machines than the Listening Post does, and repeats none of it, for a price.",
+    "unique_habit": "Counts out loud under her breath whatever she is doing, and starts again from one if she is interrupted.",
+    "personality": {
+      "traits": [
+        "gossip",
+        "brave",
+        "generous"
+      ]
+    },
+    "appearance": {
+      "seed": 8302,
+      "build": "broad_strong",
+      "age": 57.0,
+      "feminine": 1.0,
+      "hair": "grey_cropped_and_always_wet",
+      "notes": "a striped bathing-gown kilted to the knee, bare red arms, a brass bell on a cord to call the bathers up"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_ropewalk", "activity": "sleep", "spot": "tarr_jack"},
-      {"days": "all", "hour": 6, "place": "core:poi/the_ropewalk", "activity": "work", "spot": "tarr_jack", "notes": "laying rope down the walk"},
-      {"days": "all", "hour": 21, "place": "core:poi/the_ropewalk", "activity": "sleep", "spot": "tarr_jack"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_cold_baths",
+        "activity": "sleep",
+        "spot": "hepzibah_capstan"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_cold_baths",
+        "activity": "work",
+        "spot": "hepzibah_capstan",
+        "notes": "at the capstan, counting the bathers under"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/the_cold_baths",
+        "activity": "sleep",
+        "spot": "hepzibah_capstan"
+      }
     ]
   },
   {
@@ -41,13 +105,52 @@
     "no_radiant": true,
     "bio": "A skipper's widow who has lived under the upturned Hope of Sedgehithe for twenty-two years, smokes eel for Tollmere's tables under the other two keels, and keeps the drowned-board at the water's edge. Her son Wat took the Merry Tally out in the spring and did not come home, and his is the newest name chalked on the board.",
     "unique_habit": "Looks at the water before she answers anything, the way some people look at a clock.",
-    "personality": {"traits": ["kind", "pious", "brave"]},
-    "appearance": {"seed": 8303, "build": "stout", "age": 58.0, "feminine": 1.0, "hair": "grey_under_a_black_shawl", "notes": "a black shawl over a fisher's smock, hands brown with smoke, a chalk stub in her apron pocket"},
-    "merchant": {"stock": "core:table/stock_fishmonger", "marks": 60, "buys": ["consumable", "ingredient"]},
+    "personality": {
+      "traits": [
+        "kind",
+        "pious",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 8303,
+      "build": "stout",
+      "age": 58.0,
+      "feminine": 1.0,
+      "hair": "grey_under_a_black_shawl",
+      "notes": "a black shawl over a fisher's smock, hands brown with smoke, a chalk stub in her apron pocket"
+    },
+    "merchant": {
+      "stock": "core:table/stock_fishmonger",
+      "marks": 60,
+      "buys": [
+        "consumable",
+        "ingredient"
+      ]
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_widows_keels", "activity": "sleep", "spot": "grisel_door"},
-      {"days": "all", "hour": 5, "place": "core:poi/the_widows_keels", "activity": "work", "spot": "grisel_door", "notes": "turning the eels on the racks"},
-      {"days": "all", "hour": 21, "place": "core:poi/the_widows_keels", "activity": "sleep", "spot": "grisel_door"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_widows_keels",
+        "activity": "sleep",
+        "spot": "grisel_door"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_widows_keels",
+        "activity": "work",
+        "spot": "grisel_door",
+        "notes": "turning the eels on the racks"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_widows_keels",
+        "activity": "sleep",
+        "spot": "grisel_door"
+      }
     ]
   },
   {
@@ -59,12 +162,44 @@
     "faction": "core:faction/tallymen",
     "bio": "The last Weighmaster of the Charter Scale, who was apprenticed to it at nine and never left it when the toll moved to the city gate. The Tallymen pay her a weighmaster's half-wage to keep the beam true, which she does, and she weighs whatever the north shore brings her for a copper, and enters it, and the Row has stopped asking what for.",
     "unique_habit": "Weighs everything in her hand before she answers, a cup, a coin, a question, and tells you what it came to.",
-    "personality": {"traits": ["proud", "pious", "kind"]},
-    "appearance": {"seed": 8304, "build": "square_short", "age": 61.0, "feminine": 1.0, "hair": "iron_grey_in_a_tight_bun", "notes": "a Tallyman's black coat gone green at the seams, a brass weighmaster's chain, ink on her right hand and iron-rust on her left"},
+    "personality": {
+      "traits": [
+        "proud",
+        "pious",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 8304,
+      "build": "square_short",
+      "age": 61.0,
+      "feminine": 1.0,
+      "hair": "iron_grey_in_a_tight_bun",
+      "notes": "a Tallyman's black coat gone green at the seams, a brass weighmaster's chain, ink on her right hand and iron-rust on her left"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_charter_scale", "activity": "sleep", "spot": "prudence_ledger"},
-      {"days": "all", "hour": 6, "place": "core:poi/the_charter_scale", "activity": "work", "spot": "prudence_ledger", "notes": "at the ledger, keeping the beam"},
-      {"days": "all", "hour": 21, "place": "core:poi/the_charter_scale", "activity": "sleep", "spot": "prudence_ledger"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_charter_scale",
+        "activity": "sleep",
+        "spot": "prudence_ledger"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_charter_scale",
+        "activity": "work",
+        "spot": "prudence_ledger",
+        "notes": "at the ledger, keeping the beam"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_charter_scale",
+        "activity": "sleep",
+        "spot": "prudence_ledger"
+      }
     ]
   },
   {
@@ -75,29 +210,95 @@
     "no_radiant": true,
     "bio": "A cormorant-fisher on the south-east shore who takes his birds as chicks off the Gull Cliffs and names them after taxes: Tithe, Toll, Pannage, Scutage, Old Excise. They dive for pike off his punt and bring up whatever else the Mere has, and at dusk some of them fly across the water to the city with a little oilskin packet each, which is not something he talks about with a stranger.",
     "unique_habit": "Whistles each bird's name through his teeth in the middle of a sentence and waits for the answering croak before he finishes it.",
-    "personality": {"traits": ["gossip", "greedy", "brave"]},
-    "appearance": {"seed": 8305, "build": "rangy", "age": 39.0, "feminine": 0.0, "hair": "black_and_salt_stiff", "notes": "a leather gauntlet on his left arm scored by beaks, a fish-scaled smock, a copper ring on a thong round his neck like the birds wear"},
+    "personality": {
+      "traits": [
+        "gossip",
+        "greedy",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "seed": 8305,
+      "build": "rangy",
+      "age": 39.0,
+      "feminine": 0.0,
+      "hair": "black_and_salt_stiff",
+      "notes": "a leather gauntlet on his left arm scored by beaks, a fish-scaled smock, a copper ring on a thong round his neck like the birds wear"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_cormorant_perches", "activity": "sleep", "spot": "corbin_creel"},
-      {"days": "all", "hour": 5, "place": "core:poi/the_cormorant_perches", "activity": "work", "spot": "corbin_creel", "notes": "the birds off the punt at dawn, the catch sorted after"},
-      {"days": "all", "hour": 22, "place": "core:poi/the_cormorant_perches", "activity": "sleep", "spot": "corbin_creel"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_cormorant_perches",
+        "activity": "sleep",
+        "spot": "corbin_creel"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_cormorant_perches",
+        "activity": "work",
+        "spot": "corbin_creel",
+        "notes": "the birds off the punt at dawn, the catch sorted after"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/the_cormorant_perches",
+        "activity": "sleep",
+        "spot": "corbin_creel"
+      }
     ]
   },
   {
     "id": "core:npc/dilly_fane",
     "name": "Dilly Fane",
-    "home_place": "core:poi/the_kite_shore",
-    "tags": ["child"],
+    "home_place": "core:poi/the_pearl_beds",
+    "tags": [
+      "child"
+    ],
     "dialogue": "core:dialogue/dilly_fane",
     "no_radiant": true,
-    "bio": "An eleven-year-old kite-fisher on the east shingle who flies her mother's five kites while her mother is in the Undercroft for a debt of nineteen marks. She has the steadiest hands on the shore, pays the reel-tax in fish, and is saving the rest in a jar she has buried somewhere she will not say.",
-    "unique_habit": "Watches the sky over your shoulder the whole time you are talking, and tells you the wind before she tells you anything else.",
-    "personality": {"traits": ["brave", "proud", "gossip"]},
-    "appearance": {"seed": 8306, "build": "child_small", "age": 11.0, "feminine": 1.0, "hair": "brown_wind_tangled_under_a_knitted_cap", "notes": "a fisher-boy's smock too big for her, line-burns across both palms, bare feet in the shingle"},
+    "bio": "An eleven-year-old pearl-wader at the Pearl Beds below the Wold Water's mouth, who opens mussels for her mother while her mother is in the Undercroft for a debt of nineteen marks. She has the sharpest eyes on the shingle, pays the Row its tithe of one pearl in ten, and is saving the rest in a jar she has buried somewhere she will not say.",
+    "unique_habit": "Holds every shell up to the light before she answers you, and tells you what is in it before she tells you anything else.",
+    "personality": {
+      "traits": [
+        "brave",
+        "proud",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 8306,
+      "build": "child_small",
+      "age": 11.0,
+      "feminine": 1.0,
+      "hair": "brown_wind_tangled_under_a_knitted_cap",
+      "notes": "a wader's smock too big for her, knees grey with mud, a cleft stick behind her ear"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_kite_shore", "activity": "sleep", "spot": "dilly_reel"},
-      {"days": "all", "hour": 6, "place": "core:poi/the_kite_shore", "activity": "work", "spot": "dilly_reel", "notes": "minding the reels"},
-      {"days": "all", "hour": 20, "place": "core:poi/the_kite_shore", "activity": "sleep", "spot": "dilly_reel"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_pearl_beds",
+        "activity": "sleep",
+        "spot": "dilly_heap"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_pearl_beds",
+        "activity": "work",
+        "spot": "dilly_heap",
+        "notes": "opening shells on the shingle"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/the_pearl_beds",
+        "activity": "sleep",
+        "spot": "dilly_heap"
+      }
     ]
   },
   {
@@ -108,13 +309,55 @@
     "no_radiant": true,
     "bio": "The Hush-wife who keeps the Dumb Fair, the Free Salters' silent market on the south-east shore. She has not spoken aloud in nineteen years, not since the Listening Post heard her say a price and the Tallymen came, and she runs the fair in fingers, chalk and knocks on the trestle. By day she sleeps behind the screens; by night every trade in the ring goes through her hands.",
     "unique_habit": "Knocks on whatever is nearest instead of saying yes, twice for no, and lays one finger on your lips if you speak too loud.",
-    "personality": {"traits": ["quiet", "greedy", "cruel"]},
-    "appearance": {"seed": 8307, "build": "stout", "age": 52.0, "feminine": 1.0, "hair": "dark_under_a_tarred_hood", "notes": "a hood of black sailcloth, chalk on every finger, a felt-wrapped knocker hung at her belt"},
-    "merchant": {"stock": "core:table/stock_dumb_fair", "marks": 140, "buys": ["misc", "tool", "ingredient", "book"]},
+    "personality": {
+      "traits": [
+        "quiet",
+        "greedy",
+        "cruel"
+      ]
+    },
+    "appearance": {
+      "seed": 8307,
+      "build": "stout",
+      "age": 52.0,
+      "feminine": 1.0,
+      "hair": "dark_under_a_tarred_hood",
+      "notes": "a hood of black sailcloth, chalk on every finger, a felt-wrapped knocker hung at her belt"
+    },
+    "merchant": {
+      "stock": "core:table/stock_dumb_fair",
+      "marks": 140,
+      "buys": [
+        "misc",
+        "tool",
+        "ingredient",
+        "book"
+      ]
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_dumb_fair", "activity": "work", "spot": "hushwife_stall", "notes": "the fair, by lantern"},
-      {"days": "all", "hour": 5, "place": "core:poi/the_dumb_fair", "activity": "sleep", "spot": "hushwife_stall"},
-      {"days": "all", "hour": 19, "place": "core:poi/the_dumb_fair", "activity": "work", "spot": "hushwife_stall", "notes": "the fair, by lantern"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_dumb_fair",
+        "activity": "work",
+        "spot": "hushwife_stall",
+        "notes": "the fair, by lantern"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_dumb_fair",
+        "activity": "sleep",
+        "spot": "hushwife_stall"
+      },
+      {
+        "days": "all",
+        "hour": 19,
+        "place": "core:poi/the_dumb_fair",
+        "activity": "work",
+        "spot": "hushwife_stall",
+        "notes": "the fair, by lantern"
+      }
     ]
   },
   {
@@ -126,12 +369,44 @@
     "faction": "core:faction/tallymen",
     "bio": "The Tallymen's salt-reeve at the Saltmound for thirty years, who keeps the seals on the salt-gate and the tithe-board beside it and has never once found a seal broken. He weighs in every sack that comes over from the Salt Isles and every barge that goes out, and the board agrees with itself to the pound, and the mound is getting smaller.",
     "unique_habit": "Licks a finger and touches it to his tongue every time he passes the salt, and says it is to check it is still salt.",
-    "personality": {"traits": ["humble", "timid", "pious"]},
-    "appearance": {"seed": 8308, "build": "tall_stooped", "age": 66.0, "feminine": 0.0, "hair": "white_wisps_under_a_clerk_hat", "notes": "a Tallyman's black coat white at the hems with salt, a ring of seal-wax keys, cracked lips"},
+    "personality": {
+      "traits": [
+        "humble",
+        "timid",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "seed": 8308,
+      "build": "tall_stooped",
+      "age": 66.0,
+      "feminine": 0.0,
+      "hair": "white_wisps_under_a_clerk_hat",
+      "notes": "a Tallyman's black coat white at the hems with salt, a ring of seal-wax keys, cracked lips"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/the_saltmound", "activity": "sleep", "spot": "obed_gate"},
-      {"days": "all", "hour": 6, "place": "core:poi/the_saltmound", "activity": "work", "spot": "obed_gate", "notes": "keeping the seals and the tithe-board"},
-      {"days": "all", "hour": 20, "place": "core:poi/the_saltmound", "activity": "sleep", "spot": "obed_gate"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/the_saltmound",
+        "activity": "sleep",
+        "spot": "obed_gate"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_saltmound",
+        "activity": "work",
+        "spot": "obed_gate",
+        "notes": "keeping the seals and the tithe-board"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/the_saltmound",
+        "activity": "sleep",
+        "spot": "obed_gate"
+      }
     ]
   },
   {
@@ -142,12 +417,44 @@
     "no_radiant": true,
     "bio": "Master Corwen Lisle's daughter and the Fathom Company's windlass-hand, who has kept the windlass manned for three weeks since the Patience came up empty, turning it a quarter every hour so the chain does not set. She has been down in the bell a hundred times and knows the Drowned Quarter's streets better than Tollmere's, and she is not allowed to go down alone.",
     "unique_habit": "Counts the chain's links under her breath as she talks, and stops talking when it rings.",
-    "personality": {"traits": ["brave", "proud", "kind"]},
-    "appearance": {"seed": 8309, "build": "broad_strong", "age": 27.0, "feminine": 1.0, "hair": "red_plaited_and_tied_under_a_sou_wester", "notes": "a salvor's oilskins over a wool jersey, a lead-weighted belt, hands scarred from the chain, her father's whistle on a cord"},
+    "personality": {
+      "traits": [
+        "brave",
+        "proud",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "seed": 8309,
+      "build": "broad_strong",
+      "age": 27.0,
+      "feminine": 1.0,
+      "hair": "red_plaited_and_tied_under_a_sou_wester",
+      "notes": "a salvor's oilskins over a wool jersey, a lead-weighted belt, hands scarred from the chain, her father's whistle on a cord"
+    },
     "schedule": [
-      {"days": "all", "hour": 0, "place": "core:poi/fathom_shears", "activity": "sleep", "spot": "merryn_windlass"},
-      {"days": "all", "hour": 5, "place": "core:poi/fathom_shears", "activity": "work", "spot": "merryn_windlass", "notes": "at the windlass, turning it a quarter every hour"},
-      {"days": "all", "hour": 22, "place": "core:poi/fathom_shears", "activity": "sleep", "spot": "merryn_windlass"}
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/fathom_shears",
+        "activity": "sleep",
+        "spot": "merryn_windlass"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/fathom_shears",
+        "activity": "work",
+        "spot": "merryn_windlass",
+        "notes": "at the windlass, turning it a quarter every hour"
+      },
+      {
+        "days": "all",
+        "hour": 22,
+        "place": "core:poi/fathom_shears",
+        "activity": "sleep",
+        "spot": "merryn_windlass"
+      }
     ]
   }
 ]

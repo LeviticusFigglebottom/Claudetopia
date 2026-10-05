@@ -139,7 +139,7 @@
     "giver": "core:npc/merryn_lisle",
     "region": "core:region/brightwater",
     "summary": "Three weeks ago the Fathom Company's diving bell, the Patience, went down to the Drowned Quarter with Master Corwen Lisle and four men after the Undersong, the Quarter's great bell, and came up on its chain empty and ringing. His daughter Merryn keeps the windlass and is not allowed down alone.",
-    "notes": "Brightwater's novel-places large site: Fathom Shears (pois/brightwater.json, a delve with its own builder: the sheer-legs, the quay, the Patience on her cradle) and the Drowned Quarter (interiors/novel_brightwater.json, a ruined_hall). Started by Merryn Lisle or by the salvors' slate (core:dialogue/fathom_shears_slate). Corwen Lisle drops the Undersong's clapper; Merryn decides it, and one answer leads out to the Sounding Mirror (core:quest/the_undersong).",
+    "notes": "Brightwater's novel-places large site: Fathom Shears (pois/brightwater.json, a delve with its own builder: the sheer-legs, the quay, the Patience on her cradle) and the Drowned Quarter (interiors/novel_brightwater.json, a ruined_hall). Started by Merryn Lisle or by the salvors' slate (core:dialogue/fathom_shears_slate). Corwen Lisle drops the Undersong's clapper; Merryn decides it, and one answer leads out to the Listening Post (core:quest/the_undersong).",
     "stages": [
       {
         "id": "the_bell",
@@ -199,11 +199,11 @@
                 ]
               },
               {
-                "id": "to_the_mirror",
-                "text": "Carry it to the Sounding Mirror on the north shore's brow, where what is struck is heard across the Mere and under it.",
+                "id": "to_the_horn",
+                "text": "Carry it to the Listening Post's horn, where what is struck is heard across the Mere and under it.",
                 "effects": [
                   {
-                    "set_flag": "patience_clapper_to_mirror"
+                    "set_flag": "patience_clapper_to_horn"
                   },
                   {
                     "start_quest": "core:quest/the_undersong"
@@ -237,39 +237,39 @@
     "layer": "side",
     "giver": "core:npc/merryn_lisle",
     "region": "core:region/brightwater",
-    "summary": "Merryn Lisle let the Undersong's clapper go to the Sounding Mirror, the Builders' listening-dish on the north shore's brow, where what is struck at the focus is heard across the Mere, and under it.",
-    "notes": "Leads out of Fathom Shears (core:quest/the_patience, option to_the_mirror) to the Sounding Mirror (pois/brightwater.json the_sounding_mirror). Mab Larrow's q_clapper line, then her choice.",
+    "summary": "Merryn Lisle let the Undersong's clapper go to the Listening Post on the east shore, where the Circle's horn takes the Toll off the water and gives back whatever is struck at its mouth.",
+    "notes": "Leads out of Fathom Shears (core:quest/the_patience, option to_the_horn) to the Listening Post (pois/brightwater.json the_listening_post): Emmet Quarle's q_clapper line, then his choice.",
     "stages": [
       {
-        "id": "the_mirror",
-        "journal": "Merryn Lisle let the Undersong's clapper go to the Sounding Mirror on the north shore's brow, where whatever is struck at the focus carries across the Mere. Mab Larrow listens there for the Quiet Hands, and will know what it does.",
+        "id": "the_horn",
+        "journal": "Merryn Lisle let the Undersong's clapper go to the Listening Post, whose horn takes the Toll off the water and gives back whatever is struck at its mouth. Emmet Quarle, the Circle's clerk there, will know what it does.",
         "objectives": [
           {
             "type": "talk",
-            "target": "core:npc/mab_larrow",
+            "target": "core:npc/emmet_quarle",
             "topic": "q_clapper",
             "count": 1,
-            "text": "Show Mab Larrow the clapper at the Sounding Mirror"
+            "text": "Show Emmet Quarle the clapper at the Listening Post"
           }
         ],
         "marker": {
-          "place_id": "core:poi/the_sounding_mirror",
+          "place_id": "core:poi/the_listening_post",
           "radius": 70
         }
       },
       {
         "id": "the_stroke",
-        "journal": "Mab Larrow says the Mirror carries both ways: strike the clapper at the focus and the whole Quarter will hear its bell answered, forty fathom down. Or she will buy it for the Quiet Hands, who could use a bell the city cannot hear.",
+        "journal": "Emmet Quarle says the horn carries both ways: strike the clapper at its mouth and the whole Quarter will hear its bell answered, forty fathom down. Or the Circle will buy it, and put it in a case in the Spire.",
         "objectives": [
           {
             "type": "choice",
             "target": "the_stroke",
-            "text": "Decide with Mab Larrow what the clapper does at the Mirror",
-            "with": "core:npc/mab_larrow",
+            "text": "Decide with Emmet Quarle what the clapper does at the horn",
+            "with": "core:npc/emmet_quarle",
             "options": [
               {
                 "id": "strike_it",
-                "text": "Strike it at the focus, once, and let the Quarter hear its bell answered.",
+                "text": "Strike it at the horn's mouth, once, and let the Quarter hear its bell answered.",
                 "effects": [
                   {
                     "take_item": [
@@ -290,7 +290,7 @@
               },
               {
                 "id": "sell_it",
-                "text": "Sell it to her. The Quiet Hands can have a bell nobody hears.",
+                "text": "Let the Circle have it, for the Spire.",
                 "effects": [
                   {
                     "take_item": [
@@ -306,7 +306,7 @@
                   },
                   {
                     "rep": [
-                      "core:faction/quiet_hands",
+                      "core:faction/sayers",
                       6
                     ]
                   }
@@ -316,13 +316,13 @@
           }
         ],
         "marker": {
-          "place_id": "core:poi/the_sounding_mirror",
+          "place_id": "core:poi/the_listening_post",
           "radius": 70
         }
       },
       {
         "id": "rung",
-        "journal": "The Undersong's clapper has done what it was going to do at the Sounding Mirror. Mab Larrow has written it on her slate, and does not sell that line.",
+        "journal": "The Undersong's clapper has done what it was going to do at the Listening Post. Emmet Quarle has written it in the Circle's ledger, under the Toll.",
         "auto": true,
         "objectives": []
       }
@@ -426,24 +426,24 @@
     }
   },
   {
-    "id": "core:quest/the_rogues_yarn",
-    "name": "The Rogue's Yarn",
+    "id": "core:quest/the_unlit_boat",
+    "name": "The Unlit Boat",
     "layer": "side",
-    "giver": "core:npc/absalom_tarr",
+    "giver": "core:npc/hamnet_squire",
     "region": "core:region/brightwater",
-    "summary": "A man in a tarred hood has asked Absalom Tarr, rope-master of the Ropewalk, for sixty fathom of rope laid without the Charter's red rogue's yarn in its heart, and paid him in salt with no seal on it. Absalom wants to know whose hands it is going into.",
-    "notes": "The Ropewalk's story (pois/brightwater.json the_ropewalk), out to the Dumb Fair (the_dumb_fair): Ysbel Dunnage's q_yarn line, then Absalom's choice.",
+    "summary": "Hamnet Squire, the Glass-Clerk at the Long Glass, has counted every boat on the Mere for thirty-four years. For two years one boat has crossed every night from the Saltmound's back to the Dumb Fair without a lantern, and he cannot enter what he cannot name.",
+    "notes": "The Long Glass's story (pois/brightwater.json the_long_glass), out to the Dumb Fair (the_dumb_fair): Ysbel Dunnage's q_boat line, then Hamnet's choice.",
     "stages": [
       {
-        "id": "the_asker",
-        "journal": "Absalom Tarr will not lay sixty fathom without the red rogue's yarn until he knows who it is for, and it was paid for in salt that pays no tithe. That salt is sold at the Dumb Fair, behind the black screens on the south-east shore, by night.",
+        "id": "the_fair",
+        "journal": "Hamnet Squire cannot enter a boat in his count without a name, and one crosses every night from the Saltmound to the black screens on the south-east shore with no light. Somebody at the Dumb Fair knows whose it is, and nobody there speaks.",
         "objectives": [
           {
             "type": "talk",
             "target": "core:npc/ysbel_dunnage",
-            "topic": "q_yarn",
+            "topic": "q_boat",
             "count": 1,
-            "text": "Ask the Hush-wife at the Dumb Fair who wants the rope"
+            "text": "Ask the Hush-wife at the Dumb Fair whose the unlit boat is"
           }
         ],
         "marker": {
@@ -452,48 +452,48 @@
         }
       },
       {
-        "id": "the_laying",
-        "journal": "The rope is for Ysbel Dunnage, the Hush-wife, to moor the Free Salters' boats with, so that a cut mooring can never be traced; she knocked twice when asked whether Absalom could say no. He is at his jack, waiting to hear.",
+        "id": "the_count",
+        "journal": "The unlit boat is the Hush-wife's own, carrying the Charter's salt from the Saltmound to her fair, and now she knows the Glass has seen it. Hamnet Squire is at the Long Glass with his chalk, waiting for a name to write.",
         "objectives": [
           {
             "type": "choice",
-            "target": "the_laying",
-            "text": "Tell Absalom Tarr who wants his rope, and how it should be laid",
-            "with": "core:npc/absalom_tarr",
+            "target": "the_count",
+            "text": "Tell Hamnet Squire whose the unlit boat is",
+            "with": "core:npc/hamnet_squire",
             "options": [
               {
-                "id": "lay_it_plain",
-                "text": "Lay it plain. Nobody refuses the Hush-wife, and her salt is good.",
+                "id": "enter_it",
+                "text": "Give him the name. Let it go in the count and to the Row with the rest.",
                 "effects": [
                   {
-                    "set_flag": "rogues_yarn_left_out"
-                  },
-                  {
-                    "marks": 80
+                    "set_flag": "unlit_boat_entered"
                   },
                   {
                     "rep": [
                       "core:faction/tallymen",
-                      -4
+                      6
                     ]
+                  },
+                  {
+                    "marks": 40
                   }
                 ]
               },
               {
-                "id": "lay_the_red",
-                "text": "Lay the red in it, as his father did. Let her find another walk.",
+                "id": "leave_it_blank",
+                "text": "Tell him it is a boat that does not want counting, and let the column stay blank.",
                 "effects": [
                   {
-                    "set_flag": "rogues_yarn_kept"
+                    "set_flag": "unlit_boat_blank"
                   },
                   {
                     "rep": [
-                      "core:faction/tallymen",
+                      "core:faction/quiet_hands",
                       5
                     ]
                   },
                   {
-                    "morality": 1
+                    "morality": -1
                   }
                 ]
               }
@@ -501,13 +501,13 @@
           }
         ],
         "marker": {
-          "place_id": "core:poi/the_ropewalk",
+          "place_id": "core:poi/the_long_glass",
           "radius": 60
         }
       },
       {
-        "id": "laid",
-        "journal": "Sixty fathom has been laid on the Ropewalk, one way or the other, and Absalom Tarr is walking backwards again.",
+        "id": "counted",
+        "journal": "Hamnet Squire has done with the unlit boat what his count lets him, and gone back to the glass. Four hundred and twelve.",
         "auto": true,
         "objectives": []
       }
@@ -523,29 +523,29 @@
     "layer": "side",
     "giver": "core:npc/corbin_vell",
     "region": "core:region/brightwater",
-    "summary": "Corbin Vell's oldest cormorant, Old Tithe, flew across the Mere at dusk with a packet on her leg and did not come back to her perch. The kite-fishers on the east shingle say a cormorant came down fouled in one of their lines.",
-    "notes": "Joins the Cormorant Perches (pois/brightwater.json the_cormorant_perches) and the Kite-Fishers' Shore (the_kite_shore): Dilly Fane's q_tithe line, then Corbin's choice.",
+    "summary": "Corbin Vell's oldest cormorant, Old Tithe, flew across the Mere at dusk with a packet on her leg and did not come back to her perch. The pearl-waders at the Wold Water's mouth hang their nets out at dusk.",
+    "notes": "Joins the Cormorant Perches (pois/brightwater.json the_cormorant_perches) and the Pearl Beds (the_pearl_beds): Dilly Fane's q_tithe line, then Corbin's choice.",
     "stages": [
       {
         "id": "the_lines",
-        "journal": "Corbin Vell's oldest bird, Old Tithe, did not come back across the water at dusk, and he cannot leave the others. The kite-fishers on the east shingle below the Wold Water's mouth say a cormorant came down fouled in one of their lines.",
+        "journal": "Corbin Vell's oldest bird, Old Tithe, did not come back across the water at dusk, and he cannot leave the others. The pearl-waders below the Wold Water's mouth hang their nets out at dusk; if she came down anywhere, it was in those.",
         "objectives": [
           {
             "type": "talk",
             "target": "core:npc/dilly_fane",
             "topic": "q_tithe",
             "count": 1,
-            "text": "Ask Dilly Fane about the bird in the kite-line"
+            "text": "Ask Dilly Fane at the Pearl Beds about the bird in the net"
           }
         ],
         "marker": {
-          "place_id": "core:poi/the_kite_shore",
+          "place_id": "core:poi/the_pearl_beds",
           "radius": 60
         }
       },
       {
         "id": "home",
-        "journal": "Dilly Fane cut Old Tithe out of the line and kept her warm in her smock, and the oilskin packet on her leg is still sealed. Corbin Vell will want his bird back, and somebody will have to say something about the packet.",
+        "journal": "Dilly Fane cut Old Tithe out of her net and kept her warm in her smock, and the oilskin packet on her leg is still sealed. Corbin Vell will want his bird back, and somebody will have to say something about the packet.",
         "objectives": [
           {
             "type": "choice",
@@ -611,6 +611,60 @@
         [
           "core:item/mere_pike",
           2
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_aldermans_ring",
+    "name": "The Alderman's Ring",
+    "layer": "side",
+    "giver": "core:npc/hepzibah_cole",
+    "region": "core:region/brightwater",
+    "summary": "Twelve years ago Alderman Josiah Hale stayed under the Cold for the thirty at the bathing-machines and came up without his seal-ring, and has paid Hepzibah Cole a mark a month ever since to keep looking for it. The Mere moves things along the bottom; Corbin Vell's cormorants bring up what it moves.",
+    "notes": "Joins the Cold Baths (pois/brightwater.json the_cold_baths) and the Cormorant Perches (the_cormorant_perches): the drowned seal-ring is the first thing a cormorant brings up for whoever watches (core:dialogue/cormorant_watch).",
+    "stages": [
+      {
+        "id": "the_ring",
+        "journal": "Hepzibah Cole has been paid a mark a month for twelve years to find Alderman Hale's seal-ring, lost in the Cold, and the Mere has carried it off along the bottom. Corbin Vell's cormorants dive off the south-east shore and bring up whatever the Mere has moved.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/drowned_seal_ring",
+            "count": 1,
+            "text": "Watch Corbin Vell's birds dive for the alderman's seal-ring"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_cormorant_perches",
+          "radius": 60
+        }
+      },
+      {
+        "id": "the_return",
+        "journal": "A cormorant brought up a Tallyman's seal-ring cut with J.H., black with twelve years of the Mere. Hepzibah Cole will want to see it before she stops being paid to look for it.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/hepzibah_cole",
+            "item": "core:item/drowned_seal_ring",
+            "count": 1,
+            "text": "Bring the seal-ring to Hepzibah Cole at the Cold Baths"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_cold_baths",
+          "radius": 60
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 5,
+      "rep": [
+        [
+          "core:faction/tallymen",
+          3
         ]
       ]
     }

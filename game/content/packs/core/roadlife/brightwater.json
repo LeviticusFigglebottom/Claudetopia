@@ -126,7 +126,7 @@
         "cooldown_h": 24
       },
       {
-        "event": "core:roadevent/brightwater_kite_down",
+        "event": "core:roadevent/brightwater_spilled_shells",
         "weight": 1,
         "when": "day",
         "cooldown_h": 20
@@ -661,14 +661,14 @@
     ]
   },
   {
-    "id": "core:roadevent/brightwater_kite_down",
-    "name": "A kite come down in the verge",
+    "id": "core:roadevent/brightwater_spilled_shells",
+    "name": "A pearl-wader's spilled basket",
     "kind": "lost_traveller",
     "cast": [
       {
         "role": "lad",
         "folk": {
-          "name": "A kite-fisher's lad",
+          "name": "A pearl-wader's lad",
           "tags": [
             "person",
             "child"
@@ -676,13 +676,13 @@
         },
         "pose": "Sit_Idle",
         "talk": {
-          "prompt": "Help him untangle the kite",
+          "prompt": "Help him pick up the shells",
           "do": "help",
-          "say": "The line went in a gust and she came down all the way from the shore and into the thorns and if I've holed her Dilly'll skin me. -- Hold that, no, the eyes, hold the eyes -- there. Not a mark on her. Here, have the pike, I can't carry both and the kite's worth more.",
+          "say": "The strap went and they're everywhere and if I lose one with a pearl in it Dilly'll skin me. -- That one, by your foot, and that -- there. Every one. Here, open that one yourself, it's yours, she won't know.",
           "hook": {
-            "item": "core:item/mere_pike",
+            "item": "core:item/seed_pearl",
             "count": 1,
-            "reveals": "core:poi/the_kite_shore",
+            "reveals": "core:poi/the_pearl_beds",
             "once": true
           }
         }
