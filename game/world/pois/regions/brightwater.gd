@@ -3268,7 +3268,7 @@ static func the_widows_keels(d: PoiDressing) -> void:
 	for row in 7:
 		var words := k.rng.randi_range(2, 4)
 		var x := -1.05
-		for w in words:
+		for _w in words:
 			var wl := k.rng.randf_range(0.18, 0.46)
 			if x + wl > 1.05:
 				break
@@ -3574,7 +3574,7 @@ static func the_kite_shore(d: PoiDressing) -> void:
 			m.ellipsoid(pupils, ec - kb.z * 0.02, Vector3(0.12, 0.13, 0.02), kb)
 		# the tail of bows hanging from its foot
 		var tail := bot
-		for b in 5:
+		for _b in 5:
 			var nxt := tail - Vector3(0.0, 0.55, 0.0) + F * 0.12
 			m.limb(lines, tail, nxt, 0.012)
 			m.block(silk, Transform3D(kb, nxt), Vector3(0.22, 0.05, 0.02))
@@ -3619,7 +3619,6 @@ static func the_dumb_fair(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var F2 := _to_water(k)
-	var A2 := Vector2(F2.y, -F2.x)
 	var into := -F2
 	var r := 9.0
 	var count := 12
@@ -3715,7 +3714,6 @@ static func the_saltmound(d: PoiDressing) -> void:
 	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
 	var F2 := _to_water(k)
 	var A2 := Vector2(F2.y, -F2.x)
-	var F := Vector3(F2.x, 0.0, F2.y)
 	var A := Vector3(A2.x, 0.0, A2.y)
 	var gate_dir := _toward_road(k, 260.0)
 	if gate_dir == Vector2.ZERO or gate_dir.dot(F2) > 0.3:
