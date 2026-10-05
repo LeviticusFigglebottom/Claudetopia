@@ -16868,3 +16868,13 @@ the King is down), and a gossip on a stile who knows a way into the dark (`neare
 **Needs the next world build:** pads for the eight places (the Figure keeps its slope); tracks from the
 roads to Wassail Knap (~200 m to the Hazelcombe road) and the Great Barn (~210 m to the Southgate road),
 and ideally to the Moot and the Elms (~150-200 m); a glade is not needed.
+
+**The look and the last checks (after a container restart):**
+- One batched sheet of all eight, clear at 13:00 (`docs/review/world_life/hearthvale/novel_round.jpg`):
+  every view within budget, at most 1265 draws and 0.99 M primitives (the Witness Elms).
+- From the first sheet: the Unfinished Figure was too small to read from the road, so she is now cut at
+  1.75 times her size (pad 40). The Great Press's tree, screw and stone were raised to 12.6 m.
+- The Scarecrow Moot's eye-height views are hidden by the last build's trees standing on its pad. The
+  next build clears its pad; a `glade_m` may still be wanted for it to be seen from the Southgate road.
+- `region_check --godot` PASS after these changes; `./run.sh test --filter=test_start_`: 47 tests, 0 failed;
+  `./run.sh journey --style=core:style/warrior`: 7 of 7, 0 logged errors.
