@@ -16924,3 +16924,35 @@ The clanless ambush is skipped once the black-rent is paid.
 **Tests touched:**
 - `test_sites_skerrow`: the two new sites added to its SITES table.
 - `test_poi_encounters`: WHAT_STANDS rows for the ten places.
+
+**After the sheet:**
+- The Kinchain: three crags, a taller jib (18 m) and a heavier chain; its pad is now 34 m.
+- The Breath-Ledge: a wider (22 x 13 m) bedded fin with shear-legs on top and coffins on both faces.
+  The first sheet's cameras saw only its back, and a forge cliff stood in front of it, so that cliff
+  is gone.
+- The Scour: its gash is scree, not a pale ground mesh (the patches read as texture errors), and its
+  dam is a ridge of turf, not two domes.
+- The Wall Answers: Mags ko-Skarl now offers the quest and hands over the token, so the walker can
+  reach both.
+
+**Checks:**
+- `region_check.py skerrow --godot` passes. Every place seats clean, at 12-73 draws and 5-136 k
+  triangles; the Unmade Giant is the dearest.
+- Sheet views run 483-1020 draws and 0.46-1.02 M primitives.
+- The targeted tests pass, with GDScript warnings at the 49 baseline:
+  test_pois, test_poi_preview, test_sites, test_site_interiors_walk, test_road_life,
+  test_objects_seated_skerrow, test_quests, test_content_db, test_poi_encounters, test_sites_skerrow,
+  test_quest_notice and test_settlement_people (161 tests). After the last changes, 49 seat and POI
+  tests were run again.
+- Both new insides walk to all 9 rooms.
+- The quest walker passes for the four quests, every branch.
+- `softlock_check.py`: 144 quests, 0 findings. `poi_hooks.py` was re-run.
+- Sheets: `docs/review/world_life/skerrow/novel_places.jpg` (all ten) and `novel_places_recheck.jpg`
+  (the Kinchain, the Scour and the Breath-Ledge before their last change).
+
+**Needs the next world build:**
+- pads for the ten places (previewed until then);
+- no glades (open fell).
+
+Every place is 200-860 m from a road and has no track. Tracks to Corbie Stack and the Unmade Giant
+would help.
