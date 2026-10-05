@@ -3738,9 +3738,10 @@ static func the_scour(d: PoiDressing) -> void:
 	var dam := up * 13.0
 	var gd := k.on_ground(dam.x, dam.y).y
 	var turf := m.begin()
-	for s in [-1.0, 1.0]:
-		var c := dam + side * (5.2 * float(s))
-		m.ellipsoid(turf, Vector3(c.x, gd - 0.6, c.y), Vector3(4.8, 2.2, 3.6), fb)
+	for i in 8:
+		var off := (-8.4 + 2.4 * float(i)) if i < 4 else (1.2 + 2.4 * float(i - 4))
+		var c := dam + side * off
+		m.ellipsoid(turf, Vector3(c.x, gd - 0.9, c.y), Vector3(1.9, 2.6, 3.4), fb)
 	k.collider(Vector3(9.0, 2.2, 3.4), Transform3D(fb, Vector3(dam.x, gd + 1.0, dam.y) + Vector3(side.x, 0.0, side.y) * 5.2), "dirt")
 	k.collider(Vector3(9.0, 2.2, 3.4), Transform3D(fb, Vector3(dam.x, gd + 1.0, dam.y) - Vector3(side.x, 0.0, side.y) * 5.2), "dirt")
 	await k.step()
@@ -4089,6 +4090,19 @@ static func the_breath_ledge(d: PoiDressing) -> void:
 		for s in [-0.7, 0.7]:
 			var p := Vector3(face_at.x, gb + float(sl[1]) - 0.3, face_at.y) + fb * Vector3(float(sl[0]) + float(s), 0.0, _ledge_face(float(sl[1]), bed_h) + 0.2)
 			m.block(iron, Transform3D(fb, p), Vector3(0.08, 0.08, 0.9))
+	# the scar is a fin standing clear of the fell, and the Skarl hang its back face too
+	var fb2 := fb * Basis(Vector3.UP, PI)
+	for i in slots.size():
+		if i % 2 == 1:
+			continue
+		var sl: Array = slots[i]
+		var bed := clampi(int((float(sl[1]) + 0.8) / bed_h), 0, 8)
+		var bz := 1.6 + 0.12 * float(bed)
+		var at := Vector3(face_at.x, gb + float(sl[1]) - 0.6, face_at.y) + fb2 * Vector3(-float(sl[0]) * 0.9, 0.0, bz + 0.36)
+		m.block(old, Transform3D(fb2, at), Vector3(2.0, 0.5, 0.62))
+		m.block(old, Transform3D(fb2, at + Vector3.UP * 0.29), Vector3(2.08, 0.08, 0.7))
+		for s in [-0.7, 0.7]:
+			m.block(iron, Transform3D(fb2, at + Vector3.DOWN * 0.3 + fb2 * Vector3(float(s), 0.0, -0.16)), Vector3(0.08, 0.08, 0.9))
 	# the beam at the top with its ropes down to the foot, and the long ladder
 	var rope := m.begin()
 	var beam_y := gb + LEDGE_H + 0.3
