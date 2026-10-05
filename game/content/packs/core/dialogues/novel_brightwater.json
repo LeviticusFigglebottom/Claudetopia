@@ -23,6 +23,14 @@
           }
         ],
         "text": "*(The chalk is in her apron. There is a clean space on the board.)* -- He'll come home or he won't. Eel?"
+      },
+      {
+        "conditions": [
+          {
+            "flag": "wat_mew_left_drowned"
+          }
+        ],
+        "text": "*(She has gone over his name on the board again; the chalk is very fresh.)* -- The Merry Tally. I say her every evening. Eel?"
       }
     ],
     "nodes": {
@@ -470,7 +478,7 @@
   {
     "id": "core:dialogue/cormorant_watch",
     "speaker_name": "The Cormorant Perches",
-    "notes": "Watching the birds at the Cormorant Perches: the first time, a drowned Tallyman's seal-ring; after, a pike now and then.",
+    "notes": "Watching the birds at the Cormorant Perches: a pike, and now and then a coin. The finds they cannot eat they drop by the perches (the alderman's ring, QuestItems).",
     "start": "look",
     "nodes": {
       "look": {
@@ -491,7 +499,7 @@
               },
               {
                 "give_item": [
-                  "core:item/drowned_seal_ring",
+                  "core:item/mere_pike",
                   1
                 ]
               }
@@ -537,7 +545,7 @@
       },
       "ring": {
         "speaker": "The Cormorant Perches",
-        "text": "It comes up a long way out with something glinting in its beak, swims to the shingle at your feet, and drops it there, looking at you with one green eye as if you had asked for it. A heavy brass ring, a Tallyman's seal on it, black with the Mere. Corbin Vell, from the shelter: 'She likes you. Keep it, she'll sulk otherwise.'",
+        "text": "It comes up a long way out with a pike crosswise in its beak, swims to the shingle at your feet and drops it there, looking at you with one green eye as if you had asked for it. Corbin Vell, from the shelter: 'She likes you. Keep it, she'll sulk otherwise. -- She drops her finds by the perches, the ones she can't eat. Rings, mostly.'",
         "next": "end"
       },
       "later": {
@@ -915,6 +923,28 @@
             "next": "father"
           },
           {
+            "text": "Where should the clapper go?",
+            "conditions": [
+              {
+                "flag": "patience_clapper_to_horn"
+              },
+              {
+                "quest_not_done": "core:quest/the_undersong"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_undersong"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_undersong"
+              }
+            ],
+            "next": "horn"
+          },
+          {
             "text": "I'll let you count.",
             "next": "bye"
           }
@@ -958,6 +988,11 @@
         "speaker": "Merryn Lisle",
         "text": "*(Thirty-three, thirty-four...)*",
         "next": "end"
+      },
+      "horn": {
+        "speaker": "Merryn Lisle",
+        "text": "The Listening Post, on the east shore. Emmet Quarle sits under the Circle's horn and writes down the Toll. What's struck at its mouth goes out over the water, and under it. -- Let the Quarter hear its bell answered. Or let the Circle put it in a case. Not here. I can't have it here.",
+        "next": "hub"
       }
     }
   },

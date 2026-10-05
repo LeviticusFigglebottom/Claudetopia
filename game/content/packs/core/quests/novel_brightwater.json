@@ -621,8 +621,8 @@
     "layer": "side",
     "giver": "core:npc/hepzibah_cole",
     "region": "core:region/brightwater",
-    "summary": "Twelve years ago Alderman Josiah Hale stayed under the Cold for the thirty at the bathing-machines and came up without his seal-ring, and has paid Hepzibah Cole a mark a month ever since to keep looking for it. The Mere moves things along the bottom; Corbin Vell's cormorants bring up what it moves.",
-    "notes": "Joins the Cold Baths (pois/brightwater.json the_cold_baths) and the Cormorant Perches (the_cormorant_perches): the drowned seal-ring is the first thing a cormorant brings up for whoever watches (core:dialogue/cormorant_watch).",
+    "summary": "Twelve years ago Alderman Josiah Hale stayed under the Cold for the thirty at the bathing-machines and came up without his seal-ring, and has paid Hepzibah Cole a mark a month ever since to keep looking for it. The Mere moves things along the bottom; Corbin Vell's cormorants bring up what it moves, and drop what they cannot eat by their perches.",
+    "notes": "Joins the Cold Baths (pois/brightwater.json the_cold_baths) and the Cormorant Perches (the_cormorant_perches): the drowned seal-ring lies by the perches (QuestItems, marker the_perches), among what the birds bring up and cannot eat.",
     "stages": [
       {
         "id": "the_ring",
@@ -632,7 +632,9 @@
             "type": "collect",
             "target": "core:item/drowned_seal_ring",
             "count": 1,
-            "text": "Watch Corbin Vell's birds dive for the alderman's seal-ring"
+            "text": "Find the alderman's seal-ring among the finds the cormorants drop by their perches",
+            "where": "core:poi/the_cormorant_perches",
+            "spot": "the_perches"
           }
         ],
         "marker": {
