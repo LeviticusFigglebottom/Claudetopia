@@ -384,7 +384,9 @@
       },
       {
         "poi": "core:poi/bram_wheelhouse",
-        "quests": [],
+        "quests": [
+          "core:quest/counted_out"
+        ],
         "finds": [
           "core:item/enid_droves_count"
         ],
@@ -448,7 +450,9 @@
       },
       {
         "poi": "core:poi/briarfoot_watch",
-        "quests": [],
+        "quests": [
+          "core:quest/the_third_hand"
+        ],
         "finds": [
           "core:item/briarfoot_tally"
         ],
@@ -563,7 +567,8 @@
       {
         "poi": "core:poi/brow_long_table",
         "quests": [
-          "core:quest/the_hurdwell_bell"
+          "core:quest/the_hurdwell_bell",
+          "core:quest/the_last_sheaf"
         ],
         "finds": [
           "core:item/long_table_places"
@@ -652,6 +657,15 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/candle_wheel",
+        "quests": [
+          "core:quest/the_third_hand"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/cart_wards_post",
@@ -797,8 +811,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/cinderhowe",
+        "quests": [
+          "core:quest/the_glass_knight"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/cistern_of_isse",
-        "quests": [],
+        "quests": [
+          "core:quest/the_full_jar"
+        ],
         "finds": [
           "core:item/note_cistern_of_isse"
         ],
@@ -1122,7 +1147,9 @@
       },
       {
         "poi": "core:poi/drovers_pound",
-        "quests": [],
+        "quests": [
+          "core:quest/counted_out"
+        ],
         "finds": [
           "core:item/drovers_last_tally"
         ],
@@ -1360,6 +1387,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/fading_glass",
+        "quests": [],
+        "finds": [
+          "core:item/fading_glass_note"
+        ],
+        "encounters": [
+          "core:encounter/fading_glass"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fair_day_stone",
         "quests": [],
         "finds": [
@@ -1592,6 +1630,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/gentle_fold",
+        "quests": [
+          "core:quest/the_lost_page"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/ghaleld",
         "quests": [
           "core:quest/iron_for_the_chain"
@@ -1747,6 +1794,17 @@
           "core:item/wayside_gossip_stones"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/great_barn",
+        "quests": [
+          "core:quest/the_last_sheaf"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/great_barn"
+        ],
         "hearthstone": false
       },
       {
@@ -2747,6 +2805,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/leaving_lines",
+        "quests": [
+          "core:quest/something_red"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/leech_wifes_stilts",
         "quests": [
           "core:quest/the_old_bitch"
@@ -2757,6 +2824,15 @@
         "encounters": [
           "core:encounter/leech_wifes_stilts"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/letter_cote",
+        "quests": [],
+        "finds": [
+          "core:item/letter_to_gosford"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -3027,7 +3103,9 @@
       },
       {
         "poi": "core:poi/mother_pippin",
-        "quests": [],
+        "quests": [
+          "core:quest/the_last_wassail"
+        ],
         "finds": [
           "core:item/scions_and_stocks"
         ],
@@ -3046,6 +3124,17 @@
         "encounters": [
           "core:encounter/wayside_mourners_fire"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/name_kiln",
+        "quests": [
+          "core:quest/a_name_for_the_warden",
+          "core:quest/something_red",
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -3463,7 +3552,7 @@
       {
         "poi": "core:poi/pannage_pound",
         "quests": [
-          "core:quest/counted_out"
+          "core:quest/pannage_count"
         ],
         "finds": [
           "core:item/agars_count"
@@ -4115,6 +4204,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/scarecrow_moot",
+        "quests": [
+          "core:quest/the_forty_first"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/scarecrow_moot"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/scathe_fort",
         "quests": [
           "core:quest/the_other_ink",
@@ -4253,6 +4353,15 @@
         "quests": [],
         "finds": [
           "core:item/wayside_silk_gatherers_camp"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/silk_vents",
+        "quests": [],
+        "finds": [
+          "core:item/moth_wifes_count"
         ],
         "encounters": [],
         "hearthstone": false
@@ -4465,6 +4574,15 @@
         "finds": [
           "core:item/note_smoke_coppice"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/smoke_hood",
+        "quests": [
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -4713,6 +4831,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/tamwick_troy",
+        "quests": [],
+        "finds": [
+          "core:item/troy_book"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/tappers_camp",
         "quests": [],
         "finds": [
@@ -4724,13 +4851,23 @@
       {
         "poi": "core:poi/tenth_waystone",
         "quests": [
-          "core:quest/counts_in_a_strange_hand"
+          "core:quest/counts_in_a_strange_hand",
+          "core:quest/the_lost_page"
         ],
         "finds": [
           "core:item/note_tenth_waystone"
         ],
         "encounters": [
           "core:encounter/tenth_waystone"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_ash_dial",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_ash_dial"
         ],
         "hearthstone": false
       },
@@ -4755,6 +4892,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_crown_drift"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_fallen_head",
+        "quests": [
+          "core:quest/the_head_that_sings"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_fallen_head"
         ],
         "hearthstone": false
       },
@@ -4825,6 +4973,7 @@
       {
         "poi": "core:poi/the_kilnway",
         "quests": [
+          "core:quest/a_name_for_the_warden",
           "core:quest/ring_the_warden_down"
         ],
         "finds": [],
@@ -5347,6 +5496,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/unfinished_figure",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/unfinished_figure"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/unroofed_hold",
         "quests": [],
         "finds": [
@@ -5548,6 +5706,19 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/wassail_knap",
+        "quests": [
+          "core:quest/the_last_wassail"
+        ],
+        "finds": [
+          "core:item/press_masters_bar"
+        ],
+        "encounters": [
+          "core:encounter/wassail_knap"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/watch_of_the_gate",
         "quests": [],
         "finds": [
@@ -5706,6 +5877,17 @@
           "core:item/wayside_withy_camp"
         ],
         "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/witness_elms",
+        "quests": [],
+        "finds": [
+          "core:item/court_of_rooks"
+        ],
+        "encounters": [
+          "core:encounter/witness_elms"
+        ],
         "hearthstone": false
       },
       {

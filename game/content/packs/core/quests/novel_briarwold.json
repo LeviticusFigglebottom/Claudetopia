@@ -504,8 +504,8 @@
     }
   },
   {
-    "id": "core:quest/counted_out",
-    "name": "Counted Out",
+    "id": "core:quest/pannage_count",
+    "name": "The Pannage Count",
     "layer": "side",
     "giver": "core:npc/dunstan_agar",
     "region": "core:region/briarwold",

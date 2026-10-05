@@ -1382,11 +1382,11 @@
             "next": "q_offer",
             "conditions": [
               {
-                "quest_not_done": "core:quest/counted_out"
+                "quest_not_done": "core:quest/pannage_count"
               },
               {
                 "not": {
-                  "quest_active": "core:quest/counted_out"
+                  "quest_active": "core:quest/pannage_count"
                 }
               }
             ]
@@ -1397,7 +1397,7 @@
             "conditions": [
               {
                 "quest_at": [
-                  "core:quest/counted_out",
+                  "core:quest/pannage_count",
                   "the_count_right"
                 ]
               }
@@ -1423,7 +1423,7 @@
             "next": "q_accept",
             "effects": [
               {
-                "start_quest": "core:quest/counted_out"
+                "start_quest": "core:quest/pannage_count"
               }
             ]
           },
@@ -1448,7 +1448,7 @@
       {
         "conditions": [
           {
-            "quest_done": "core:quest/counted_out"
+            "quest_done": "core:quest/pannage_count"
           }
         ],
         "text": "Thirty-eight every morning since. Right as rain. — One. That's you."
