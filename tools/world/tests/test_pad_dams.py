@@ -95,6 +95,25 @@ class SyntheticDam(unittest.TestCase):
         self.assertTrue(np.array_equal(H2[core], H[core]), "and the town's level ground is not")
 
 
+    def test_a_pad_on_a_basin_floor_is_not_walled_in(self):
+        """A basin of the country's own is filled no higher than the pad laid on its floor: filled to
+        where it would spill, Wassail Knap's valley stood 17 m over its pad all round (w4096l)."""
+        X, Z = self.g.mesh(np.float64)
+        poi = {"id": "test:poi/knap", "kind": "delve", "position": [0.0, 0.0], "pad_radius_m": 46}
+        r = RD.pad_level_radius(poi)
+        # a closed basin 24 m deep and 300 m across, the pad on its floor a little over the lowest of it
+        H = (90.0 - 24.0 * np.clip(1.0 - (X ** 2 + Z ** 2) / 150.0 ** 2, 0, 1)).astype(np.float32)
+        core = X ** 2 + Z ** 2 <= r * r
+        level = 70.0
+        H = np.where(core, level, H).astype(np.float32)
+        H2, report = RD.drain_pad_dams(self.g, H.copy(), [poi])
+        self.assertTrue(report, "the basin touches the pad's skirt")
+        raised = H2 > H + 1e-3
+        self.assertTrue(bool(raised.any()), "the basin's floor round the pad is filled")
+        self.assertLessEqual(float(H2[raised].max()), level + 1e-3, "the fill stands over the pad")
+        self.assertTrue(np.array_equal(H2[core], H[core]))
+
+
 class BuiltFernhold(unittest.TestCase):
     """The pit as the last world build left it, and what the drain makes of it (at 8 m texels)."""
 
