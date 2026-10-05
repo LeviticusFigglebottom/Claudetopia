@@ -4673,6 +4673,10 @@ static func hask_ropewalk(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var along := k.grain()
+	# A track that comes to the walk comes to its side. Laid along the track (the grain is the road's
+	# own line when one ends here), the walk's foot and its sledge stood on the track's end (w4096l).
+	if k.road_direction() != Vector2.ZERO:
+		along = Vector2(along.y, -along.x)
 	var side := Vector2(along.y, -along.x)
 	var ab := Basis(Vector3.UP, PoiKit.yaw_of(along))
 	var walk := 27.0

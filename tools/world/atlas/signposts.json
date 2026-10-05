@@ -115,12 +115,12 @@
   },
   {
    "at": [
-    -2369.5,
-    1970.8
+    -2347.5,
+    1991.4
    ],
    "junction": [
-    -2365.4,
-    1965.1
+    -2342.2,
+    1986.8
    ],
    "roads": [
     "core:road/cinderhowe_west_walk",
@@ -130,21 +130,21 @@
     {
      "place": "core:place/west_walk",
      "name": "The West Walk",
-     "metres": 215,
+     "metres": 180,
      "miles": "¼",
      "road": "core:road/cinderhowe_west_walk"
     },
     {
      "place": "core:poi/cinderhowe",
      "name": "Cinderhowe",
-     "metres": 276,
+     "metres": 292,
      "miles": "¼",
      "road": "core:road/cinderhowe_west_walk"
     },
     {
      "place": "core:poi/strand_beacon",
      "name": "The Strand Beacon",
-     "metres": 1826,
+     "metres": 1858,
      "miles": "1¼",
      "road": "core:road/west_walk_strand_beacon"
     }
@@ -2134,7 +2134,7 @@
     {
      "place": "core:place/grandfather_hollow",
      "name": "Grandfather Hollow",
-     "metres": 1026,
+     "metres": 1014,
      "miles": "¾",
      "road": "core:road/the_knar_grandfather_hollow"
     },
@@ -2558,14 +2558,14 @@
   },
   {
    "at": [
-    -35.0,
-    -263.7
+    -36.0,
+    -263.6
    ],
    "entry": [
-    -35.6,
-    -268.2
+    -36.6,
+    -268.1
    ],
-   "yaw": -81.8,
+   "yaw": -82.5,
    "road": "core:road/fathom_shears_tollmere",
    "place": "core:place/tollmere",
    "name": "Tollmere"
