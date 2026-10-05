@@ -16827,3 +16827,13 @@ out to the Swainmote; the Letter Oak's to the Moot Gate Stone. Every stage opens
 Six new Briarwold events (no new behaviour): a swarm on the fingerpost (`help`), two claims to a windfall (a burner
 and a Company sawyer, help one: custom or coin), a girl with a leash and no hound (to the Mote), a gatherer black to
 the elbow (escort; reveals the Knar), listeners at noon, ropewalkers carrying a line.
+
+### Checks
+- `region_check.py briarwold --godot`: PASS. Each new place seats clean; cost per place 7-38 draws and 12-113 k triangles (the Thornwell's crown the most); the Knar's and the Letter Oak's pads were widened (50, 30) to hold their oaks' crowns.
+- Tests (`test_pois, test_poi_preview, test_sites, test_site_interiors_walk, test_road_life, test_objects_seated_briarwold, test_quests, test_content_db`, plus enemy dress, boss fights, quest items, kill places, waymarks, settlement people, boss arena): 233 run. The one failure, the Thornwell's arrival room lit at 66%, was fixed with a paler Builders' stone and braziers (96%); test_sites passed again after that.
+- Quest walker: all 8 new quests walk every branch. `softlock_check.py`: 147 quests, 0 findings. `poi_hooks.py --check`: current.
+- Sheet: the batched `poi_sheet.py` run got 9 of 36 views (told_hives and the_swainmote: 1087-1783 draws, 0.81-1.17 M primitives) before it was stopped. The box was loaded and it was taking 15-20 min a view. The preview leaves the Greatwood's canopy standing round each pad, so the eye-height views are near black. `docs/review/world_life/briarwold/novel_places_partial.jpg`. **Reshoot all nine after the next world build lays their glades** (`--weather clear --time 16.5`).
+
+### For the next build
+- Pads and glades for the nine new places (`pad_radius_m`, `glade_m` in their defs; the Knar and the Thornwell have `pad_shape: level`).
+- Tracks from the road to the Knar (210 m off the Tamwick-Hollow road), the Thornwell (165 m), the Silk Walk (160 m), the Casting Dell (215 m) and the Pannage Pound (250 m).
