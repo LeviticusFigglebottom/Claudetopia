@@ -5008,7 +5008,6 @@ static func the_grey_heronry(d: PoiDressing) -> void:
 	var k := d.kit
 	var m := d.masonry
 	var look := k.grain()
-	var side := Vector2(look.y, -look.x)
 	var water_y := k.on_ground(0.0, 0.0).y
 	if not k.far:
 		water_y = black_water(d, Vector2.ZERO, 11.0, 1.6, "HeronPool", 30)
@@ -5279,25 +5278,25 @@ static func the_great_dredge(d: PoiDressing) -> void:
 	var bl := 15.0
 	var bw := 8.0
 	var bb := fb * Basis(Vector3.FORWARD, 0.035)
-	var hull := m.begin()
+	var hull_st := m.begin()
 	var hull_c := Vector3(bc.x, bg - 0.35 + hull_h * 0.5, bc.y)
-	m.block(hull, Transform3D(bb, hull_c), Vector3(bw, hull_h, bl))
+	m.block(hull_st, Transform3D(bb, hull_c), Vector3(bw, hull_h, bl))
 	k.collider(Vector3(bw, hull_h, bl), Transform3D(bb, hull_c), "wood")
 	var deck_y := bg - 0.35 + hull_h
 	# her strakes, a little proud of the sides, and her rubbing-strake
 	for s in [-1.0, 1.0]:
 		for j in 3:
-			m.block(hull, Transform3D(bb, hull_c + bb * Vector3(float(s) * (bw * 0.5 + 0.04), -0.7 + float(j) * 0.7, 0.0)), Vector3(0.08, 0.16, bl * 0.98))
-		m.block(hull, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(float(s) * (bw * 0.5 - 0.1), 0.0, 0.0)), Vector3(0.2, 0.4, bl))
+			m.block(hull_st, Transform3D(bb, hull_c + bb * Vector3(float(s) * (bw * 0.5 + 0.04), -0.7 + float(j) * 0.7, 0.0)), Vector3(0.08, 0.16, bl * 0.98))
+		m.block(hull_st, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(float(s) * (bw * 0.5 - 0.1), 0.0, 0.0)), Vector3(0.2, 0.4, bl))
 	for s in [-1.0, 1.0]:
-		m.block(hull, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(0.0, 0.0, float(s) * (bl * 0.5 - 0.1))), Vector3(bw, 0.4, 0.2))
+		m.block(hull_st, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(0.0, 0.0, float(s) * (bl * 0.5 - 0.1))), Vector3(bw, 0.4, 0.2))
 	# the deck's planks and a ramp of planks down off her landward end
 	var ramp_a := bc - face * (bl * 0.5) + side * 2.6
 	var ramp_b := ramp_a - face * 4.2
 	var rg := k.on_ground(ramp_b.x, ramp_b.y).y
-	m.steps(hull, ramp_b, face, rg, 7, (deck_y - rg) / 7.0, 4.2 / 7.0, 1.4, 0.2)
+	m.steps(hull_st, ramp_b, face, rg, 7, (deck_y - rg) / 7.0, 4.2 / 7.0, 1.4, 0.2)
 	await k.step()
-	m.commit(hull, k.surface("planks", 0.85), "Barge", true)
+	m.commit(hull_st, k.surface("planks", 0.85), "Barge", true)
 	# the ballast of stone heaped in her seaward half
 	var ballast := m.begin()
 	for i in 14:
@@ -5492,15 +5491,15 @@ static func the_keel_barrow(d: PoiDressing) -> void:
 		var base2 := sea * (16.2 * float(e))
 		var bgy := k.on_ground(base2.x, base2.y).y
 		var h := 7.2 if float(e) > 0.0 else 6.2
-		var prev := Vector3(base2.x, bgy - 0.4, base2.y)
+		var stem_prev := Vector3(base2.x, bgy - 0.4, base2.y)
 		var pts: Array = []
 		for j in 9:
 			var t := float(j + 1) / 9.0
 			var curl := pow(t, 3.0)
 			var p := Vector3(base2.x, bgy, base2.y) + fx * float(e) * (t * 1.4 - curl * 2.0) + Vector3.UP * (h * sin(t * PI * 0.5) - curl * 1.2)
-			m.limb(oak, prev, p, 0.42 - t * 0.18)
+			m.limb(oak, stem_prev, p, 0.42 - t * 0.18)
 			pts.append(p)
-			prev = p
+			stem_prev = p
 		var tip: Vector3 = pts[pts.size() - 1]
 		m.ellipsoid(oak, tip + Vector3.UP * 0.15 - fx * float(e) * 0.2, Vector3(0.38, 0.3, 0.55), Basis(Vector3.UP, PoiKit.yaw_of(-sea * float(e))))
 		m.limb(oak, tip - fx * float(e) * 0.5, tip - fx * float(e) * 1.1 - Vector3.UP * 0.1, 0.1)
