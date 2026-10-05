@@ -3797,7 +3797,7 @@ static func the_scour(d: PoiDressing) -> void:
 		var rock := k.rock("boulder", i % 3)
 		if rock != "":
 			await k.step()
-			k.place(rock, k.on_ground(p.x, p.y, -0.4), k.rng.randf() * TAU, k.rng.randf_range(0.35, 0.6), true)
+			k.place(rock, k.on_ground(p.x, p.y, -0.1), k.rng.randf() * TAU, k.rng.randf_range(0.45, 0.7), true)
 	# the sorting-floor beside the gash's foot: ore in heaps, a sieve on its frame, the tent
 	var floor_at: Vector2 = (pts[7] as Vector2) + side * 7.0
 	var ore := m.begin()

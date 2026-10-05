@@ -16851,3 +16851,76 @@ passes; the lane leaves Pilgrim's Ash on the track's line with no out-and-back n
 (roads.json); the fingerpost at the Wake Barrow fork (~(586, 2881)) still names Bramcombe;
 test_roads' graded/carve tests pass.
 
+
+## Skerrow's novel places: eight new kinds of place, two large sites, four quests, six road events (novel-skerrow, 2026-10-05)
+
+The owner asked for places unlike any ruin, camp, shrine, tower or cave already in the pack, and for
+more large sites and quests. All of it is data plus Skerrow's own builders in
+`game/world/pois/regions/skerrow.gd` (section "the novel places"). No shared builder was changed. A
+`kind` is the nearest existing kind, and each place is built by its own builder. People, words, quests,
+items, books, bosses, interiors and rumours are in new `*/novel_skerrow.json` files.
+
+**Eight new places** (`pois/skerrow.json`):
+- **The Kinchain** (`the_kinchain`, -2164 -3140): a crag with a black-oak jib and the Ghast birth-chain
+  hanging 14 m from it into a man-high coil, with a plain ring closing a gap twelve links down. Ottar
+  ko-Ghast closes a link with your name on it for a bar of iron (renown). He gives *The Cut Link*.
+- **The Kite-Watch** (`the_kite_watch`, -3164 -2700): two hide kites 25-30 m up on lines from windlasses
+  (the Oskel reiver-watch), a streamer pole and a turf hut. Work the windlass: by day the hawk reveals
+  Corbie Stack, and by night (21-5) the lantern-kite reveals the Unmade Giant. Runa ko-Oskel gives
+  *The Unmade Giant*.
+- **The Bee-Bole Crag** (`bee_bole_crag`, 2972 -2908): a white limestone face cut in eight rows of
+  niches with straw skeps, each row with its clan's daub, and bees drifting in front. The top row,
+  the Bone Clan's, is empty. Buy guest-honey from Bannoch, or smoke a skep and steal it (theft, seen by
+  him).
+- **The Scour** (`the_scour`, -1372 -3308, `pad_shape: slope`): a lead-miners' hush. A turf dam holds a
+  black pond, with an oak sluice and windlass, above a raw gravel gash down the fell and a sorting-floor
+  below. Pull the sluice once for ore and a shard of giant's tooth. Wat Hobb ko-Brindle is the husher.
+- **The Black-Rent Pillar** (`black_rent_pillar`, 980 -1820): a 9 m limestone pillar with black rags and
+  spikes, a pulley and the rent-basket. Pay 40 marks of black-rent and the clanless ambush leaves your
+  roads be (`unless black_rent_paid`). Or rob the basket, and *Annet's riders* hunt you on the road.
+  Isbel ko-Rudd gives *The Black Rent*.
+- **The Bucket-Line** (`the_bucket_line`, -1020 -2884): an ore ropeway across the dale, with two 10 m
+  trestles, a cable and buckets both ways, a treadwheel, a chute and an ore heap. Walk the wheel for
+  12 marks (five turns), or buy Ghaleld iron from Grett ko-Brindle.
+- **The Breath-Ledge** (`the_breath_ledge`, 3476 -2852): the Skarl hang their dead in coffins on iron
+  pegs high on a bedded limestone scar, nearest the Breath. There is a ladder, ropes from a beam, a new
+  coffin on trestles and the fallen boards. Hold the rope for Mags ko-Skarl's hanging (once).
+- **The Answering Wall** (`the_answering_wall`, 1084 -2668): a curved crag round a turf bowl, a
+  speaking-stone, ochre-daubed name-stones and callers' cairns. Call your name (renown). Listen at dusk
+  (18-22) and the wall gives back a name nobody called, which starts *The Wall Answers*.
+
+**Two large sites:**
+- **Corbie Stack** (`corbie_stack`, 636 -3324, pad 40): a 30 m needle of bedded limestone with a
+  stone-slate reivers' hold on top, smoke and a black rag. Its chain bridge is drawn up and hangs down
+  the side from a gantry arm, beside a lower crag with steps and empty rings. An iron-bound door at the
+  foot leads to `core:interior/corbie_cellars` (keep, 8 written rooms: cistern, barracks, rent-store,
+  well-shaft, smithy, rent-hall). The boss is **Annet Blackrent**, who drops the black-rent book.
+  *The Black Rent*: Isbel → the Stack → Annet → the book back to Isbel. You choose to return the rents,
+  give the book to the Moot, or keep it.
+- **The Unmade Giant** (`the_unmade_giant`, -1772 -3012, pad 40): a 20 m giant being built of lashed
+  boulders and bones in a scaffold cage. It has one arm, half its ribs, and its skull half-way up a
+  gin-pole, with the hags' lanterns lit by night. The warren mouth below leads to
+  `core:interior/hag_warren` (cave, 8 rooms: the drag, cord gallery, bone store, sump, thrall hall,
+  knotting-hall). The boss is **Mother Scree**, who drops her binding-cord. *The Unmade Giant*: Runa →
+  Haskel ko-Ghast at his camp → Mother Scree → the cord to Ottar at the Kinchain → bind it in the chain
+  or burn it.
+
+**Quests** (`quests/novel_skerrow.json`): *The Black Rent* and *The Unmade Giant* (above). *The Cut
+Link* leads out of Dunnow: the cut Ghast link lies in Dunnow's store (QuestItems, room `store`), and you
+take it back to the Kinchain. *The Wall Answers* goes from the Answering Wall to the Breath-Ledge: the
+token is in the fallen boards, then you choose. Every stage opens on a reason line of 170 letters or
+fewer. Every Skerrow large site on main already had a quest.
+
+**Road events** (`roadlife/skerrow.json`), all on the existing behaviours:
+- a kite-boy with a fallen kite (help, reveals the Kite-Watch);
+- Skarl bearers walking a coffin up (reveals the Breath-Ledge);
+- a polite rent-rider (reveals the Pillar);
+- bee-keepers carrying skeps to the heather at dusk (honey, reveals the Crag);
+- two prospectors who want a witness (clan_moot +2, reveals the Scour);
+- *Annet's riders*, an ambush only after you rob the basket.
+
+The clanless ambush is skipped once the black-rent is paid.
+
+**Tests touched:**
+- `test_sites_skerrow`: the two new sites added to its SITES table.
+- `test_poi_encounters`: WHAT_STANDS rows for the ten places.
