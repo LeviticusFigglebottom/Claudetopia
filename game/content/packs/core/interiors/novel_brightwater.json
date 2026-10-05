@@ -19,37 +19,169 @@
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "rich_loot": "core:loot/smuggler_stash",
-      "foes": {"rank": ["core:enemy/free_salter"], "archers": ["core:enemy/smuggler_sayer"], "heavy": ["core:enemy/salt_porter"]},
-      "theme": {"palette": ["#d6d2c6", "#a8a395", "#ece9e0"], "brightness": 1.0},
+      "foes": {
+        "rank": [
+          "core:enemy/free_salter"
+        ],
+        "archers": [
+          "core:enemy/smuggler_sayer"
+        ],
+        "heavy": [
+          "core:enemy/salt_porter"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#d6d2c6",
+          "#a8a395",
+          "#ece9e0"
+        ],
+        "brightness": 1.0
+      },
       "rooms": [
-        {"id": "the_cut", "role": "entrance", "size": "medium"},
-        {"id": "brine_pool", "role": "chamber", "size": "large", "set_piece": "underground_lake"},
-        {"id": "the_narrows", "role": "passage", "size": "small", "drop": -2.5},
-        {"id": "salters_camp", "role": "camp", "size": "large"},
-        {"id": "air_hall", "role": "chamber", "size": "medium", "set_piece": "daylight_shaft"},
-        {"id": "hushed_run", "role": "passage", "size": "small", "drop": -2.5},
-        {"id": "counting_floor", "role": "hall", "size": "large", "set_piece": "chasm_bridge"},
-        {"id": "boss", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
+        {
+          "id": "the_cut",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "brine_pool",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "underground_lake"
+        },
+        {
+          "id": "the_narrows",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "salters_camp",
+          "role": "camp",
+          "size": "large"
+        },
+        {
+          "id": "air_hall",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "daylight_shaft"
+        },
+        {
+          "id": "hushed_run",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "counting_floor",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
       ],
       "encounters": [
-        {"room": "the_cut", "enemy": "core:enemy/free_salter", "count": 2, "role": "guard"},
-        {"room": "brine_pool", "enemy": "core:enemy/gutter_drake", "count": 4, "role": "guard"},
-        {"room": "the_narrows", "enemy": "core:enemy/free_salter", "count": 1, "role": "ambush"},
-        {"room": "salters_camp", "enemy": "core:enemy/free_salter", "count": 3, "role": "sleeper"},
-        {"room": "salters_camp", "enemy": "core:enemy/salt_porter", "count": 1, "role": "guard"},
-        {"room": "air_hall", "enemy": "core:enemy/free_salter", "count": 2, "role": "guard"},
-        {"room": "hushed_run", "enemy": "core:enemy/smuggler_sayer", "count": 1, "role": "guard"},
-        {"room": "counting_floor", "enemy": "core:enemy/salt_porter", "count": 1, "role": "guard"},
-        {"room": "counting_floor", "enemy": "core:enemy/free_salter", "count": 3, "role": "guard"}
+        {
+          "room": "the_cut",
+          "enemy": "core:enemy/free_salter",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "brine_pool",
+          "enemy": "core:enemy/gutter_drake",
+          "count": 4,
+          "role": "guard"
+        },
+        {
+          "room": "the_narrows",
+          "enemy": "core:enemy/free_salter",
+          "count": 1,
+          "role": "ambush"
+        },
+        {
+          "room": "salters_camp",
+          "enemy": "core:enemy/free_salter",
+          "count": 3,
+          "role": "sleeper"
+        },
+        {
+          "room": "salters_camp",
+          "enemy": "core:enemy/salt_porter",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "air_hall",
+          "enemy": "core:enemy/free_salter",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "hushed_run",
+          "enemy": "core:enemy/smuggler_sayer",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "counting_floor",
+          "enemy": "core:enemy/salt_porter",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "counting_floor",
+          "enemy": "core:enemy/free_salter",
+          "count": 3,
+          "role": "guard"
+        }
       ],
       "features": [
-        {"kind": "prop", "room": "the_cut", "prop": "sack"},
-        {"kind": "prop", "room": "brine_pool", "prop": "barrel"},
-        {"kind": "prop", "room": "salters_camp", "prop": "sack"},
-        {"kind": "prop", "room": "salters_camp", "prop": "crate"},
-        {"kind": "note", "room": "salters_camp", "book": "core:book/salters_pay_board", "name": "the Salters' pay-board", "item": "core:item/salters_pay_board"},
-        {"kind": "prop", "room": "counting_floor", "prop": "sack"},
-        {"kind": "note", "room": "secret", "book": "core:book/salt_kings_compliments", "name": "a letter sealed with salt", "item": "core:item/salt_kings_compliments"}
+        {
+          "kind": "prop",
+          "room": "the_cut",
+          "prop": "sack"
+        },
+        {
+          "kind": "prop",
+          "room": "brine_pool",
+          "prop": "barrel"
+        },
+        {
+          "kind": "prop",
+          "room": "salters_camp",
+          "prop": "sack"
+        },
+        {
+          "kind": "prop",
+          "room": "salters_camp",
+          "prop": "crate"
+        },
+        {
+          "kind": "note",
+          "room": "salters_camp",
+          "book": "core:book/salters_pay_board",
+          "name": "the Salters' pay-board",
+          "item": "core:item/salters_pay_board"
+        },
+        {
+          "kind": "prop",
+          "room": "counting_floor",
+          "prop": "sack"
+        },
+        {
+          "kind": "note",
+          "room": "secret",
+          "book": "core:book/salt_kings_compliments",
+          "name": "a letter sealed with salt",
+          "item": "core:item/salt_kings_compliments"
+        }
       ]
     }
   },
@@ -62,7 +194,7 @@
     "danger": 3,
     "formed_by": "builder",
     "resident": "the Patience's lost crew, holding their breath and walking slowly; drakes in the dry vaults; the Company's chainman in the Singing Gallery with the bell-chain round his arms; and Corwen Lisle in the bell-hall, striking the Undersong",
-    "story": "Forty fathom under the Mere west of Tollmere, the Builders' streets still stand, dry, the water stopped at their doors like a held breath. The Patience sets down on the Bell Street; from it the way goes down past a flooded nave where the Quarter's own water got in, the salvors' camp where they slept between dives, a hall of niches with the Quarter's dead in them, and the Singing Stair to the gallery and the bell-hall, where the Undersong hangs and Corwen Lisle strikes it every hour with its own tongue.",
+    "story": "Forty fathom under the Mere west of Tollmere, the Builders' streets still stand, dry, the water stopped at their doors like a held breath. The Patience sets down on the Bell Street; from it the way goes down past a galleried nave where the Quarter's water stands at the door, the salvors' camp where they slept between dives, a hall of niches with the Quarter's dead in them, and the Singing Stair to the gallery and the bell-hall, where the Undersong hangs and Corwen Lisle strikes it every hour with its own tongue.",
     "unique_object": "the Undersong, the Quarter's great bell, hanging in its black frame at the bottom of the Singing Stair with its tongue out of it, still ringing",
     "site": {
       "kind": "ruined_hall",
@@ -73,34 +205,158 @@
       "boss_adds": 2,
       "boss_loot": "core:loot/rich_chest",
       "rich_loot": "core:loot/rich_chest",
-      "foes": {"rank": ["core:enemy/held_salvor", "core:enemy/gutter_drake"], "archers": ["core:enemy/held_salvor"], "heavy": ["core:enemy/drowned_chainman"]},
-      "theme": {"palette": ["#6a726d", "#474e4a", "#869089"], "lights": ["lantern", "brazier"], "light_colour": "#b8e0d0", "wet": true},
+      "foes": {
+        "rank": [
+          "core:enemy/held_salvor",
+          "core:enemy/gutter_drake"
+        ],
+        "archers": [
+          "core:enemy/held_salvor"
+        ],
+        "heavy": [
+          "core:enemy/drowned_chainman"
+        ]
+      },
+      "theme": {
+        "palette": [
+          "#6a726d",
+          "#474e4a",
+          "#869089"
+        ],
+        "lights": [
+          "lantern",
+          "brazier"
+        ],
+        "light_colour": "#b8e0d0"
+      },
       "rooms": [
-        {"id": "bell_street", "role": "entrance", "size": "medium"},
-        {"id": "flooded_nave", "role": "chamber", "size": "large", "set_piece": "underground_lake"},
-        {"id": "the_stair_down", "role": "passage", "size": "small", "drop": -3.0},
-        {"id": "salvors_camp", "role": "camp", "size": "medium"},
-        {"id": "niche_hall", "role": "chamber", "size": "medium", "set_piece": "ossuary"},
-        {"id": "chain_walk", "role": "passage", "size": "small", "drop": -2.5},
-        {"id": "singing_gallery", "role": "hall", "size": "large", "set_piece": "chasm_bridge"},
-        {"id": "boss", "role": "boss", "size": "huge", "set_piece": "boss_arena"}
+        {
+          "id": "bell_street",
+          "role": "entrance",
+          "size": "medium"
+        },
+        {
+          "id": "flooded_nave",
+          "role": "chamber",
+          "size": "large",
+          "set_piece": "ledge"
+        },
+        {
+          "id": "the_stair_down",
+          "role": "passage",
+          "size": "small",
+          "drop": -3.0
+        },
+        {
+          "id": "salvors_camp",
+          "role": "camp",
+          "size": "medium"
+        },
+        {
+          "id": "niche_hall",
+          "role": "chamber",
+          "size": "medium",
+          "set_piece": "ossuary"
+        },
+        {
+          "id": "chain_walk",
+          "role": "passage",
+          "size": "small",
+          "drop": -2.5
+        },
+        {
+          "id": "singing_gallery",
+          "role": "hall",
+          "size": "large",
+          "set_piece": "chasm_bridge"
+        },
+        {
+          "id": "boss",
+          "role": "boss",
+          "size": "huge",
+          "set_piece": "boss_arena"
+        }
       ],
       "encounters": [
-        {"room": "bell_street", "enemy": "core:enemy/held_salvor", "count": 2, "role": "guard"},
-        {"room": "flooded_nave", "enemy": "core:enemy/held_salvor", "count": 3, "role": "guard"},
-        {"room": "the_stair_down", "enemy": "core:enemy/held_salvor", "count": 1, "role": "ambush"},
-        {"room": "salvors_camp", "enemy": "core:enemy/held_salvor", "count": 2, "role": "sleeper"},
-        {"room": "niche_hall", "enemy": "core:enemy/gutter_drake", "count": 4, "role": "guard"},
-        {"room": "chain_walk", "enemy": "core:enemy/held_salvor", "count": 1, "role": "ambush"},
-        {"room": "singing_gallery", "enemy": "core:enemy/drowned_chainman", "count": 1, "role": "guard"},
-        {"room": "singing_gallery", "enemy": "core:enemy/held_salvor", "count": 3, "role": "guard"}
+        {
+          "room": "bell_street",
+          "enemy": "core:enemy/held_salvor",
+          "count": 2,
+          "role": "guard"
+        },
+        {
+          "room": "flooded_nave",
+          "enemy": "core:enemy/held_salvor",
+          "count": 3,
+          "role": "guard"
+        },
+        {
+          "room": "the_stair_down",
+          "enemy": "core:enemy/held_salvor",
+          "count": 1,
+          "role": "ambush"
+        },
+        {
+          "room": "salvors_camp",
+          "enemy": "core:enemy/held_salvor",
+          "count": 2,
+          "role": "sleeper"
+        },
+        {
+          "room": "niche_hall",
+          "enemy": "core:enemy/gutter_drake",
+          "count": 4,
+          "role": "guard"
+        },
+        {
+          "room": "chain_walk",
+          "enemy": "core:enemy/held_salvor",
+          "count": 1,
+          "role": "ambush"
+        },
+        {
+          "room": "singing_gallery",
+          "enemy": "core:enemy/drowned_chainman",
+          "count": 1,
+          "role": "guard"
+        },
+        {
+          "room": "singing_gallery",
+          "enemy": "core:enemy/held_salvor",
+          "count": 3,
+          "role": "guard"
+        }
       ],
       "features": [
-        {"kind": "note", "room": "flooded_nave", "book": "core:book/quarter_street_plate", "name": "a street-plate of black stone", "item": "core:item/quarter_street_plate"},
-        {"kind": "prop", "room": "salvors_camp", "prop": "rope_coil"},
-        {"kind": "prop", "room": "salvors_camp", "prop": "barrel"},
-        {"kind": "note", "room": "salvors_camp", "book": "core:book/patience_dive_log", "name": "the Patience's dive-log", "item": "core:item/patience_dive_log"},
-        {"kind": "prop", "room": "singing_gallery", "prop": "rope_coil"}
+        {
+          "kind": "note",
+          "room": "flooded_nave",
+          "book": "core:book/quarter_street_plate",
+          "name": "a street-plate of black stone",
+          "item": "core:item/quarter_street_plate"
+        },
+        {
+          "kind": "prop",
+          "room": "salvors_camp",
+          "prop": "rope_coil"
+        },
+        {
+          "kind": "prop",
+          "room": "salvors_camp",
+          "prop": "barrel"
+        },
+        {
+          "kind": "note",
+          "room": "salvors_camp",
+          "book": "core:book/patience_dive_log",
+          "name": "the Patience's dive-log",
+          "item": "core:item/patience_dive_log"
+        },
+        {
+          "kind": "prop",
+          "room": "singing_gallery",
+          "prop": "rope_coil"
+        }
       ]
     }
   }
