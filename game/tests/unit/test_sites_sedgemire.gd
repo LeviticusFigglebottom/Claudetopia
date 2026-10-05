@@ -1,8 +1,9 @@
 extends TestCase
 ## Sedgemire's large sites (docs/WORLD_LIFE_INTERIORS.md), walked the way test_sites.gd walks the
 ## showcases: the Unsung Vault under the carr, the Name-Wife's Hollow under the South Scarp, the
-## Sounding's undercroft under the Flood-Callers' platform, and the Saltgate's culverts under the
-## Guild's keep. Each is entered through a door, stood in, every room reached on its navigation mesh
+## Sounding's undercroft under the Flood-Callers' platform, the Saltgate's culverts under the
+## Guild's keep, the Great Dredge's workings down its shaft and the Keel-Barrow's hold. Each is
+## entered through a door, stood in, every room reached on its navigation mesh
 ## from the way in, its foes and its boss's arena there, and left through the way out. Its quest's
 ## boss and its outside's door are the pack's own.
 
@@ -14,6 +15,8 @@ const SITES := {
 	"core:interior/name_wifes_hollow": ["core:poi/name_wifes_hollow", "core:boss/the_name_wife", "core:quest/what_the_name_wife_took"],
 	"core:interior/the_sounding_undercroft": ["core:poi/the_sounding", "core:boss/ama_lissa_the_sounder", "core:quest/the_sounding"],
 	"core:interior/saltgate_culverts": ["core:poi/the_saltgate", "core:boss/old_mudmouth", "core:quest/the_saltgate"],
+	"core:interior/the_great_dredge_workings": ["core:poi/the_great_dredge", "core:boss/brannoc_tull", "core:quest/the_great_dredge"],
+	"core:interior/the_keel_barrow_hold": ["core:poi/the_keel_barrow", "core:boss/the_keel_king", "core:quest/the_keel_barrow"],
 }
 var player: Node3D
 

@@ -17236,3 +17236,44 @@ packhorse and a trader (the Dumb Fair), a salvor with a sack of bronze (Fathom S
 Every place is outside the atlas's Mere polygon (the first shore spots were inside it and the atlas check
 failed two of them), at least 50 m from every other pad, on ground under 10 degrees. `visible_from` is left
 empty on all nine until the next build can test the sightlines.
+
+## Sedgemire's novel places: seven new kinds and two large sites (novel-sedgemire, 2026-10-05)
+
+New kinds (`PoiDressing.KINDS`/`KINDS_BUILT`, built only by `regions/sedgemire.gd`), each with a person,
+a touch, a note lying there, a rumour and a road event or a quest that sends you there:
+- **The Flood-Bride** (`effigy`, -2708,-188): a 10.5 m reed bride at a black mere, arms over the water,
+  indigo veil; last spring's slumped grey beside her. Touch: a knot and five marks lifts the fog
+  (`weather` clear). Orrin Vasse; the drowned stand before her at night.
+- **The Wisp-Catcher's Rack** (`wisp_jars`, -2388,-820): forty glowing jars on a bog-oak frame. Ferrit
+  Oache sells the Wisp-Jar (an oil-less green light); wild wisps visit at night; free a jar (Hearth).
+- **The Flood-Mark** (`tide_gauge`, -3404,-484): a 15 m Builders' needle with the flood-line and a
+  notched gauge. Hesk Vaurel, Tide-Watcher, gives the Keel-Barrow and reads the Dredge's plate.
+- **Hask's Ropewalk** (`ropewalk`, -2364,492): a 55 m walk, wheel, trestles, sledge, named ropes.
+  Corra Hask sells rope; the wheel walks a name into a rope for you.
+- **The Unwinding** (`maze`, -2428,1252): a five-ring reed-hedge maze (walkable, colliders) to a grief
+  pool. Edda Moye; ends the First Cord.
+- **The Grey Heronry** (`heronry`, -3076,-1628): nine dead alders, nests, herons. Pell Oduin reads a
+  flight for five marks and each reading discovers the next new place.
+- **The Sundew Garden** (`bog_garden`, -1892,-324): peat beds, giant sundews, fly-tower; the Mother
+  Sundew turns an eel liver into her dew (new ingredient). Nelle Saye sells dew.
+
+Large sites (both `delve`, `pad_shape: level`, own builders and doors):
+- **The Great Dredge** (-3124,-164): a beached barge, treadwheel, 19 m sheer-legs and bucket-chain over a
+  shaft; inside a `mine` (the Builders' street) with Brannoc Tull. Quest *None Up* (Wenna Corley), and out
+  of it *The Line on the Needle* to the Flood-Mark.
+- **The Keel-Barrow** (-3460,932): a turf barrow with a ship's gull-headed stem and stern, oars on the
+  ridge, a chain sail, a salt-white door; inside a `crypt` with Hrothe Tidecaller. Quest *The Keel-Barrow*
+  (Hesk Vaurel), and out of it *For Iven Hask, When He Comes Home* to the ropewalk.
+- From the old Name-Wife's Hollow: *The First Cord* (Iffo Nauve) to the Unwinding's middle.
+
+Road events (roadlife/sedgemire.json): the bride-weavers' withies, a loose wisp, the Guild's surveyors
+vs a stake-puller (a choice), a drowned man asking the way (escort), a ropewalker measuring the
+causeway, a man with one boot. Existing behaviours only.
+
+Checks: region_check --godot PASS (all nine seat clean, 13-29 draws, 5-209 k tris); targeted tests
+(test_pois, test_poi_preview, test_sites*, test_site_interiors_walk, test_road_life,
+test_objects_seated_sedgemire, test_quests, test_content_db, test_poi_encounters, test_poi_steps) pass;
+quest walker 6/6 quests, 17/17 walks; softlock_check clean. Sheet:
+docs/review/world_life/sedgemire/novel_places.jpg (all views within budget; the Heronry 1.44 M, over
+the aim). **Next build:** pads for all nine; `glade_m` for the Unwinding and the Heronry (they stand in
+wood); tracks to the Ropewalk (147 m), the Unwinding (248 m), the Dredge (181 m) and the Barrow (216 m).

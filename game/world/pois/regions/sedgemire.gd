@@ -4176,3 +4176,1443 @@ static func broken_stilts(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(stones, k.surface("stone", 0.9), "Rim")
 	await reeds(d, 7.4, 12.0, 40, [])
+
+
+# === The novel places (2026-10-04) ===================================================================
+## Seven places of kinds the game had not had, and two large sites: a reed bride married to the flood,
+## a wisp-catcher's rack of jars, a tide-gauge on a Builders' needle, a ropewalk, a grief-maze of reed
+## hedges, a heronry in dead alders and a sundew garden; the Great Dredge over its shaft and the
+## Keel-Barrow with a ship's stem and stern standing out of its turf.
+
+## Fresh reed bound in bundles, and last spring's gone grey on the water.
+const BRIDE_REED := {"base": "#a3894e", "accent": "#7b6538", "grout": "#4a3c20", "unit": 0.18}
+const BRIDE_GREY := {"base": "#7a786c", "accent": "#5e5c52", "grout": "#38372f", "unit": 0.18}
+## The cold green of a wisp in a jar.
+const WISP_GLOW := Color(0.55, 1.0, 0.78)
+## Reed-hedge for the maze: cut reed packed in hurdles, its tops trimmed.
+const HEDGE := {"base": "#76703f", "accent": "#5a552e", "grout": "#2f2c18", "unit": 0.14}
+const PEAT := {"base": "#2e2620", "accent": "#221c17", "grout": "#14100c", "unit": 0.3}
+const SUNDEW_RED := Color(0.62, 0.12, 0.1)
+const PITCHER := Color(0.36, 0.42, 0.16)
+const IRON_RUST := Color(0.3, 0.17, 0.1)
+const HERON_GREY := Color(0.58, 0.6, 0.6)
+const BLACK_OAK := {"base": "#2a2520", "accent": "#1a1613", "grout": "#0e0c0a", "unit": 0.3}
+const SALT_WHITE := Color(0.82, 0.8, 0.74)
+const TURF := {"base": "#4f5a34", "accent": "#3c4628", "grout": "#262c18", "unit": 0.5}
+
+
+## The direction (local xz) among eight in which the point `out` metres along it lies furthest from any
+## road: the way a place turns its back on the causeway.
+static func _away_from_road(k: PoiKit, out: float) -> Vector2:
+	var best := -1.0
+	var dir := k.grain()
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		var u := Vector2(sin(a), cos(a))
+		var rd := k.road_distance(u * out)
+		if rd > best + 0.5:
+			best = rd
+			dir = u
+	return dir
+
+
+# --- The Flood-Bride ------------------------------------------------------------------------------
+
+## A bride of bound reed into `reed`, standing with her feet at `foot` (local), facing `face`, `h` tall,
+## her arms held out before her over the water; `tip` turns the whole figure about her feet (last
+## spring's, slumped into the mere). `broken` leaves out that share of her bundles. Returns {head,
+## crown (Vector3, the top of her head), hem (Array of Vector3 round her hem), basis}.
+static func reed_bride(d: PoiDressing, reed: SurfaceTool, foot: Vector3, face: Vector2, h: float,
+		tip := Basis.IDENTITY, broken := 0.0) -> Dictionary:
+	var k := d.kit
+	var m := d.masonry
+	var b := tip * Basis(Vector3.UP, PoiKit.yaw_of(face))
+	var s := h / 10.5
+	var waist_y := 4.4 * s
+	var hem_r := 2.5 * s
+	var waist_r := 0.75 * s
+	var n := 22
+	var hem: Array = []
+	# the skirt: bundles from the hem up to the waist, a bell of bound reed
+	for i in n:
+		var a := TAU * float(i) / float(n)
+		var lo := foot + b * Vector3(sin(a) * hem_r, 0.12, cos(a) * hem_r)
+		var hi := foot + b * Vector3(sin(a) * waist_r, waist_y, cos(a) * waist_r)
+		hem.append(lo)
+		if broken > 0.0 and k.rng.randf() < broken:
+			m.limb(reed, lo, lo.lerp(hi, 0.4), 0.2 * s)
+			continue
+		m.limb(reed, lo, hi, 0.23 * s)
+	# the hoops of withy that hold the skirt out
+	for hy in [0.9, 2.1, 3.3]:
+		var t := float(hy) * s / waist_y
+		var rr := lerpf(hem_r, waist_r, t) + 0.12 * s
+		for i in n:
+			if broken > 0.0 and k.rng.randf() < broken:
+				continue
+			var a0 := TAU * float(i) / float(n)
+			var a1 := TAU * float(i + 1) / float(n)
+			m.limb(reed, foot + b * Vector3(sin(a0) * rr, float(hy) * s, cos(a0) * rr), foot + b * Vector3(sin(a1) * rr, float(hy) * s, cos(a1) * rr), 0.07 * s)
+	# her body, her shoulders and her neck, her head and the crown of reed spikes on it
+	var chest := foot + b * Vector3(0.0, 6.5 * s, 0.0)
+	m.limb(reed, foot + b * Vector3(0.0, waist_y - 0.3 * s, 0.0), chest, 0.72 * s)
+	m.ellipsoid(reed, foot + b * Vector3(0.0, 6.85 * s, 0.05 * s), Vector3(1.15, 0.45, 0.62) * s, b)
+	m.limb(reed, foot + b * Vector3(0.0, 7.1 * s, 0.0), foot + b * Vector3(0.0, 7.85 * s, 0.1 * s), 0.26 * s)
+	var head := foot + b * Vector3(0.0, 8.45 * s, 0.18 * s)
+	m.ellipsoid(reed, head, Vector3(0.55, 0.72, 0.55) * s, b)
+	for i in 9:
+		var a := TAU * float(i) / 9.0
+		var c0 := head + b * Vector3(sin(a) * 0.38 * s, 0.45 * s, cos(a) * 0.38 * s)
+		m.limb(reed, c0, c0 + b * Vector3(sin(a) * 0.32 * s, 1.0 * s, cos(a) * 0.32 * s), 0.06 * s)
+	# her arms out before her, a little raised, the hands splayed into the reed's loose ends
+	var hands: Array = []
+	for sx in [-1.0, 1.0]:
+		var sh := foot + b * Vector3(float(sx) * 1.0 * s, 6.85 * s, 0.0)
+		var el := foot + b * Vector3(float(sx) * 1.55 * s, 6.35 * s, 1.5 * s)
+		var hd := foot + b * Vector3(float(sx) * 1.25 * s, 6.7 * s, 3.0 * s)
+		m.limb(reed, sh, el, 0.24 * s)
+		m.limb(reed, el, hd, 0.2 * s)
+		for f in 4:
+			var spread := (float(f) - 1.5) * 0.22
+			m.limb(reed, hd, hd + b * Vector3(float(sx) * spread * s, (-0.2 + float(f) * 0.08) * s, 0.75 * s), 0.05 * s)
+		hands.append(hd)
+	return {"head": head, "crown": head + b * Vector3(0.0, 1.45 * s, 0.0), "hem": hem, "basis": b, "hands": hands}
+
+
+## The Flood-Bride: this spring's bride of reed at the edge of a black mere with her arms out over it,
+## an indigo veil from her crown to the ground behind her and her hem knotted thick with cords; last
+## spring's slumped grey into the water beside her; on the bank the weavers' withy frame where next
+## spring's is begun, their lean-to and reed, and the old weaver's stilt-house. Spots: home, the_frame,
+## the_hem; the drowned stand at the_guests.
+static func the_flood_bride(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	# the mere on the side away from the causeway, so the road sees her from behind, veil and all
+	var face := _away_from_road(k, 12.0)
+	var side := Vector2(face.y, -face.x)
+	var mere_c := face * 9.5
+	var water_y := k.on_ground(mere_c.x, mere_c.y).y
+	if not k.far:
+		water_y = black_water(d, mere_c, 7.5, 1.8, "Mere")
+	# this spring's bride, her feet at the mere's edge
+	var foot2 := face * 2.6
+	var foot := k.on_ground(foot2.x, foot2.y)
+	var reed := m.begin()
+	var bride: Dictionary = reed_bride(d, reed, foot, face, 10.5)
+	var bb: Basis = bride["basis"]
+	k.collider(Vector3(3.6, 4.2, 3.6), Transform3D(bb, foot + Vector3(0.0, 2.1, 0.0)), "wood")
+	k.collider(Vector3(1.6, 4.2, 1.2), Transform3D(bb, foot + Vector3(0.0, 6.3, 0.0)), "wood")
+	await k.step()
+	m.commit(reed, PoiKit.painted(5, BRIDE_REED, 0.55), "Bride", true)
+	# her veil, from the back of her crown down to the ground behind her, streaming a little
+	var head: Vector3 = bride["head"]
+	var veil_top := head + Vector3(-face.x, 0.0, -face.y) * 0.55 + Vector3.UP * 0.35
+	var back_g := k.on_ground(foot2.x - face.x * 3.2, foot2.y - face.y * 3.2).y
+	m.sheet(veil_top, PoiKit.yaw_of(-face), 1.5, veil_top.y - back_g + 0.04, PoiKit.plain(INDIGO, 0.9), "BrideVeil", 2.2, true, 3, 8)
+	if k.far:
+		return
+	# the knots in her hem, a ring of cords and rags tied at the foot of every bundle
+	var cord := m.begin()
+	var knots := m.begin()
+	for p in bride["hem"]:
+		var q: Vector3 = p
+		for j in 3:
+			var kp := q + Vector3(k.rng.randf_range(-0.2, 0.2), float(j) * k.rng.randf_range(0.18, 0.3), k.rng.randf_range(-0.2, 0.2))
+			m.block(knots, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), kp), Vector3(0.12, 0.1, 0.12))
+		m.block(cord, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), q + Vector3(0.0, 0.5, 0.0)), Vector3(0.03, 0.9, 0.03))
+	await k.step()
+	m.commit(knots, PoiKit.plain(INDIGO, 0.85), "HemKnots")
+	m.commit(cord, PoiKit.plain(RUSH, 0.95), "HemCords")
+	# last spring's bride, fallen forward and sideways into the mere, grey, half her bundles gone
+	var old2 := face * 3.4 + side * 6.2
+	var old_foot := k.on_ground(old2.x, old2.y)
+	var tip_axis := Vector3(face.y, 0.0, -face.x).rotated(Vector3.UP, 0.5)
+	var grey := m.begin()
+	reed_bride(d, grey, old_foot + Vector3.DOWN * 0.3, face.rotated(0.4), 9.6, Basis(tip_axis, 1.05), 0.35)
+	var lie := Vector3(face.x, 0.0, face.y).rotated(Vector3.UP, 0.9).normalized()
+	k.collider(Vector3(2.4, 1.6, 6.5), Transform3D(Basis(Vector3.UP, atan2(lie.x, lie.z)), old_foot + lie * 3.0 + Vector3.UP * 0.6), "wood")
+	await k.step()
+	m.commit(grey, PoiKit.painted(5, BRIDE_GREY, 0.85), "OldBride")
+	# the weavers' frame on the bank: next spring's bride begun, withies bent up into a bell
+	var frame_c := -face * 7.5 - side * 5.0
+	var withy := m.begin()
+	var apex := k.on_ground(frame_c.x, frame_c.y, 5.6)
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		var gp := frame_c + Vector2(sin(a), cos(a)) * 2.2
+		var g3 := k.on_ground(gp.x, gp.y)
+		var mid := g3.lerp(apex, 0.55) + Vector3(sin(a), 0.0, cos(a)) * 0.35
+		m.limb(withy, g3 + Vector3.DOWN * 0.1, mid, 0.06)
+		m.limb(withy, mid, apex, 0.05)
+	for hy in [1.2, 2.6]:
+		var rr := 2.2 * (1.0 - float(hy) / 5.6) + 0.35
+		var y := k.on_ground(frame_c.x, frame_c.y).y + float(hy)
+		for i in 12:
+			var a0 := TAU * float(i) / 12.0
+			var a1 := TAU * float(i + 1) / 12.0
+			m.limb(withy, Vector3(frame_c.x + sin(a0) * rr, y, frame_c.y + cos(a0) * rr), Vector3(frame_c.x + sin(a1) * rr, y, frame_c.y + cos(a1) * rr), 0.045)
+	k.collider(Vector3(3.2, 2.0, 3.2), Transform3D(Basis.IDENTITY, k.on_ground(frame_c.x, frame_c.y, 1.0)), "wood")
+	# their lean-to beside it: two posts, a reed roof sloped to the ground, and cut reed in bundles
+	var lt := frame_c - side * 4.2
+	var lt_b := Basis(Vector3.UP, PoiKit.yaw_of(face))
+	for sx in [-1.0, 1.0]:
+		m.post(withy, lt + side * 1.4 * float(sx) + face * 0.9, 2.2, 0.14)
+	var roof_c := k.on_ground(lt.x, lt.y, 1.25)
+	await k.step()
+	m.commit(withy, k.surface("timber", 0.75), "WeaversFrame")
+	var thatch := m.begin()
+	m.block(thatch, Transform3D(lt_b * Basis(Vector3.RIGHT, -0.62), roof_c), Vector3(3.4, 0.2, 2.9))
+	k.collider(Vector3(3.4, 0.2, 2.9), Transform3D(lt_b * Basis(Vector3.RIGHT, -0.62), roof_c), "wood")
+	for i in 7:
+		var bp := lt + side * (float(i) * 0.42 - 1.3) - face * 0.2
+		var g := k.on_ground(bp.x, bp.y).y
+		m.limb(thatch, Vector3(bp.x, g + 0.2, bp.y) - Vector3(face.x, 0.0, face.y) * 1.0, Vector3(bp.x, g + 0.2 + float(i % 2) * 0.05, bp.y) + Vector3(face.x, 0.0, face.y) * 1.0, 0.18)
+	await k.step()
+	m.commit(thatch, PoiKit.painted(5, THATCH, 0.6), "WeaversReed")
+	var basket := k.prop("basket")
+	if basket != "":
+		var xfs: Array = []
+		for i in 3:
+			var q := lt + side * (1.9 + float(i) * 0.55) + face * 0.6
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y), k.rng.randf() * TAU, 1.0))
+		await k.step()
+		k.scatter(basket, xfs, false, false, true)
+	var stool := k.prop("stool")
+	if stool != "":
+		var sp := frame_c + face * 2.9
+		await k.step()
+		k.place(stool, k.on_ground(sp.x, sp.y), PoiKit.yaw_of(-face), 1.0, true)
+	k.marker("the_frame", k.on_ground(frame_c.x + face.x * 3.4, frame_c.y + face.y * 3.4), true)
+	# the old weaver's stilt-house further up the bank, its porch toward the bride
+	var hc := -face * 13.0 + side * 6.0
+	var house: Dictionary = await stilt_house(d, hc, (foot2 - hc).normalized(), 3.6, 3.2, 1.0, "Weaver")
+	k.marker("home", house["inside"], true, true, 1.4)
+	# two poles lit along the bank path, the way the brides are walked out
+	var poles := m.begin()
+	for i in 2:
+		var pp := -face * (2.0 + float(i) * 5.0) - side * 2.8
+		lantern_pole(d, poles, pp, face, true, 2.7)
+	await k.step()
+	m.commit(poles, k.surface("timber", 0.85), "BridePoles")
+	# where she is tied a knot, on the bank side of her hem, and where the weaver stands to watch her
+	var hem_at := foot - Vector3(face.x, 0.0, face.y) * 2.7 + Vector3.UP * 0.4
+	k.touchable("BrideHem", hem_at, "Tie a knot into the Bride's hem", "core:dialogue/flood_bride_hem", "", false)
+	k.marker("the_hem", k.on_ground(foot2.x - face.x * 4.2 + side.x * 1.6, foot2.y - face.y * 4.2 + side.y * 1.6), true)
+	k.marker("the_guests", Vector3(mere_c.x - face.x * 3.0, water_y - 0.07, mere_c.y - face.y * 3.0))
+	await reeds(d, 10.0, 21.0, 70, [[mere_c, 8.0], [frame_c, 3.5], [lt, 3.0], [hc, 4.5], [old2 + face * 2.0, 5.0], [-face * 4.5, 3.0]])
+
+
+# --- The Wisp-Catcher's Rack --------------------------------------------------------------------------
+
+## A gallows-frame of bog-oak twelve paces long hung with jars, each a wisp burning cold green in it, and
+## more full jars set along the ground under it waiting to be hung; the catcher's stilt-hut, his nets
+## leaned on it, his bench of empty jars. Spots: home, the_rack, the_shelf.
+static func wisp_catchers_rack(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var face := k.grain()
+	var side := Vector2(face.y, -face.x)
+	var rc := face * 3.0
+	var half := 6.0
+	var top := 5.2
+	var timber := m.begin()
+	var jars := m.begin()
+	var g0 := k.on_ground(rc.x, rc.y).y
+	var apexes: Array = []
+	for s in [-1.0, 1.0]:
+		var ec := rc + side * half * float(s)
+		var apex := Vector3(ec.x, g0 + top, ec.y)
+		apexes.append(apex)
+		for f in [-1.0, 1.0]:
+			var fp := ec + face * 1.6 * float(f)
+			var fg := k.on_ground(fp.x, fp.y)
+			m.limb(timber, fg + Vector3.DOWN * 0.3, apex, 0.14)
+			k.collider(Vector3(0.28, top, 0.28), Transform3D(Basis.IDENTITY, (fg + apex) * 0.5), "wood")
+		# a brace across the A at shoulder height
+		var by := g0 + 2.2
+		m.limb(timber, Vector3(ec.x + face.x * 0.95, by, ec.y + face.y * 0.95), Vector3(ec.x - face.x * 0.95, by, ec.y - face.y * 0.95), 0.07)
+	var a0: Vector3 = apexes[0]
+	var a1: Vector3 = apexes[1]
+	m.limb(timber, a0 + Vector3.UP * 0.1, a1 + Vector3.UP * 0.1, 0.13)
+	# the ridge sags under forty jars: three props under it, wedged
+	for i in 3:
+		var pp := rc + side * (float(i) - 1.0) * 3.0
+		var pg := k.on_ground(pp.x, pp.y)
+		m.limb(timber, pg + Vector3.DOWN * 0.2, Vector3(pp.x, g0 + top, pp.y), 0.1)
+		k.collider(Vector3(0.2, top, 0.2), Transform3D(Basis.IDENTITY, Vector3(pp.x, (pg.y + g0 + top) * 0.5, pp.y)), "wood")
+	# two lower bars either side of the ridge, on the legs at four metres
+	var bar_y := g0 + 3.9
+	var bars: Array = []
+	for f in [-1.0, 1.0]:
+		var off := Vector3(face.x, 0.0, face.y) * (1.6 * (1.0 - 3.9 / top)) * float(f)
+		var ba := Vector3(a0.x, bar_y, a0.z) + off
+		var bz := Vector3(a1.x, bar_y, a1.z) + off
+		m.limb(timber, ba, bz, 0.08)
+		bars.append([ba, bz])
+	bars.append([a0, a1])
+	# the jars on their cords: forty-odd, each hung its own length, glowing
+	var glow_spots: Array = []
+	for bi in bars.size():
+		var pair: Array = bars[bi]
+		var pa: Vector3 = pair[0]
+		var pz: Vector3 = pair[1]
+		var count := 15 if bi < 2 else 13
+		for i in count:
+			var t := (float(i) + 0.5 + k.rng.randf_range(-0.2, 0.2)) / float(count)
+			var hang := pa.lerp(pz, t)
+			var l := k.rng.randf_range(0.6, 1.9) + (0.9 if bi == 2 else 0.0)
+			var jy := hang.y - l
+			m.block(timber, Transform3D(Basis.IDENTITY, Vector3(hang.x, (hang.y + jy) * 0.5, hang.z)), Vector3(0.02, l, 0.02))
+			var jar_xf := Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), Vector3(hang.x, jy - 0.14, hang.z))
+			m.rod(jars, jar_xf, 0.11, 0.28)
+			m.block(timber, Transform3D(Basis.IDENTITY, Vector3(hang.x, jy + 0.02, hang.z)), Vector3(0.12, 0.05, 0.12))
+			if i == 2 or i == count - 3:
+				glow_spots.append(Vector3(hang.x, jy - 0.14, hang.z))
+	# the full jars waiting along the ground under the rack, stoppered, in a row its whole length
+	for i in 14:
+		var t := (float(i) + 0.5) / 14.0
+		var gp := rc + side * lerpf(-half + 0.6, half - 0.6, t) + face * k.rng.randf_range(-0.5, 0.5)
+		var gg := k.on_ground(gp.x, gp.y)
+		m.rod(jars, Transform3D(Basis.IDENTITY, gg + Vector3.UP * 0.14), 0.11, 0.28)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.8), "Rack", true)
+	m.commit(jars, PoiKit.plain(Color(0.4, 0.75, 0.6), 0.15, 0.0, WISP_GLOW, 2.4), "WispJars", true)
+	for gs in glow_spots.slice(0, 4):
+		k.light(gs, Color(0.6, 1.0, 0.8), 1.3, 8.0)
+	if k.far:
+		return
+	k.marker("the_rack", k.on_ground(rc.x + side.x * (half + 1.5), rc.y + side.y * (half + 1.5)), true)
+	k.touchable("Jars", k.on_ground(rc.x - face.x * 2.2, rc.y - face.y * 2.2, 0.6), "Look into the jars", "core:dialogue/wisp_rack_jars", "", false)
+	# the catcher's hut behind it, its porch toward the rack
+	var hc := -face * 6.5 - side * 3.5
+	var house: Dictionary = await stilt_house(d, hc, (rc - hc).normalized(), 3.4, 3.0, 1.2, "Catcher")
+	k.marker("home", house["inside"], true, true, 1.4)
+	var hf: Vector3 = house["foot"]
+	# his nets: long poles with a hoop at the head, leaned on the hut's side
+	var nets := m.begin()
+	var hb: Basis = house["basis"]
+	for i in 3:
+		var foot := Vector3(hf.x, 0.0, hf.z) + hb * Vector3(2.4 + float(i) * 0.45, 0.0, -0.6)
+		var fg := k.on_ground(foot.x, foot.z)
+		var tip := fg + hb * Vector3(-0.35, 3.1, -1.3)
+		m.limb(nets, fg + Vector3.DOWN * 0.05, tip, 0.035)
+		for j in 8:
+			var b0 := TAU * float(j) / 8.0
+			var b1 := TAU * float(j + 1) / 8.0
+			m.limb(nets, tip + hb * Vector3(sin(b0) * 0.35, 0.3 + cos(b0) * 0.35, 0.0), tip + hb * Vector3(sin(b1) * 0.35, 0.3 + cos(b1) * 0.35, 0.0), 0.02)
+	# his bench of empty jars, clean, stoppers beside them
+	var bench_c := rc - face * 2.6 - side * 3.2
+	var bench_b := Basis(Vector3.UP, PoiKit.yaw_of(face))
+	var bg := k.on_ground(bench_c.x, bench_c.y).y
+	m.block(nets, Transform3D(bench_b, Vector3(bench_c.x, bg + 0.62, bench_c.y)), Vector3(2.0, 0.08, 0.5))
+	k.collider(Vector3(2.0, 0.66, 0.5), Transform3D(bench_b, Vector3(bench_c.x, bg + 0.33, bench_c.y)), "wood")
+	for s in [-1.0, 1.0]:
+		var lp := bench_c + side * 0.85 * float(s)
+		m.post(nets, lp, 0.6, 0.1)
+	await k.step()
+	m.commit(nets, k.surface("timber", 0.85), "Nets")
+	var empty := m.begin()
+	for i in 9:
+		var jp := Vector3(bench_c.x, bg + 0.66 + 0.13, bench_c.y) + bench_b * Vector3(float(i) * 0.21 - 0.84, 0.0, k.rng.randf_range(-0.1, 0.1))
+		m.rod(empty, Transform3D(Basis.IDENTITY, jp), 0.09, 0.24)
+	await k.step()
+	m.commit(empty, PoiKit.plain(Color(0.62, 0.72, 0.7), 0.08), "EmptyJars")
+	k.marker("the_shelf", k.on_ground(bench_c.x + face.x * 0.9, bench_c.y + face.y * 0.9), true)
+	await reeds(d, 9.0, 19.0, 60, [[rc, 7.5], [hc, 4.5], [bench_c, 2.0]])
+
+
+# --- The Flood-Mark --------------------------------------------------------------------------------
+
+## A needle of the Builders' black stone four storeys tall on a stepped plinth at the water's edge, cut
+## round near its top with one line (a band of salt-white where the line holds the spray), and lashed
+## up its seaward face a white timber gauge notched for every spring tide, every notch far below the
+## line; iron bands, a ladder up its side to a little railed seat, a pennant at its head, the float-well
+## at its foot; the tide-watcher's stilt-hut on the bank. Spots: home, the_gauge, the_bench; the
+## sallowjaw lies at the_step.
+static func the_flood_mark(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var sea := k.water_direction(90.0)
+	if sea == Vector2.ZERO:
+		sea = k.grain()
+	var side := Vector2(sea.y, -sea.x)
+	var basis := Basis(Vector3.UP, PoiKit.yaw_of(sea))
+	var nc := sea * 3.0
+	var g := k.on_ground(nc.x, nc.y).y
+	var oroth := m.begin()
+	# the plinth: two steps of fused stone, the needle stood on the upper
+	var ply := g
+	for st_i in 2:
+		var w := 5.6 - float(st_i) * 1.6
+		var h := 0.75
+		var xf := Transform3D(basis, Vector3(nc.x, ply - 0.3 + (h + 0.3) * 0.5, nc.y))
+		m.block(oroth, xf, Vector3(w, h + 0.3, w))
+		k.collider(Vector3(w, h + 0.3, w), xf, "stone")
+		ply += h
+	# the needle: four drums of square stone, each a little narrower, to fifteen metres
+	var y := ply
+	var widths := [1.7, 1.5, 1.32, 1.15]
+	var heights := [4.2, 4.0, 3.8, 3.2]
+	for i in 4:
+		var w: float = widths[i]
+		var h: float = heights[i]
+		var xf := Transform3D(basis * Basis(Vector3.UP, float(i) * 0.04), Vector3(nc.x, y + h * 0.5, nc.y))
+		m.block(oroth, xf, Vector3(w, h, w))
+		k.collider(Vector3(w, h, w), xf, "stone")
+		y += h
+	var needle_top := y
+	# its cap, a pyramid in two courses
+	m.block(oroth, Transform3D(basis, Vector3(nc.x, y + 0.2, nc.y)), Vector3(0.9, 0.4, 0.9))
+	m.block(oroth, Transform3D(basis, Vector3(nc.x, y + 0.55, nc.y)), Vector3(0.45, 0.3, 0.45))
+	await k.step()
+	m.commit(oroth, k.surface("oroth", 0.7), "Needle", true)
+	# the Builders' line, near the top: a band of salt-crust the spray has filled
+	var line := m.begin()
+	var line_y := ply + 12.6
+	m.block(line, Transform3D(basis, Vector3(nc.x, line_y, nc.y)), Vector3(1.38, 0.18, 1.38))
+	# and at the foot, the same white crust where the spring tides wet the plinth: one mesh, grounded
+	for q in 4:
+		var bq := basis.rotated(Vector3.UP, PI * 0.5 * float(q))
+		m.block(line, Transform3D(bq, Vector3(nc.x, g + 0.08, nc.y) + bq * Vector3(0.0, 0.0, 2.75)), Vector3(5.4, 0.16, 0.14))
+	await k.step()
+	m.commit(line, PoiKit.plain(SALT_WHITE, 0.95), "FloodLine", true)
+	# the gauge: a white plank up the seaward face, notched, bound to the needle with iron
+	var gauge := m.begin()
+	var notch := m.begin()
+	var gface := Vector3(sea.x, 0.0, sea.y) * 0.9
+	var gauge_h := 10.0
+	m.block(gauge, Transform3D(basis, Vector3(nc.x, ply + gauge_h * 0.5, nc.y) + gface), Vector3(0.38, gauge_h, 0.1))
+	for i in int(gauge_h / 0.25):
+		var ny := ply + 0.06 + float(i) * 0.25
+		var long := i % 4 == 0
+		m.block(notch, Transform3D(basis, Vector3(nc.x, ny, nc.y) + gface + Vector3(sea.x, 0.0, sea.y) * 0.055), Vector3(0.3 if long else 0.14, 0.035, 0.02))
+	# the tides kept since the watchers began: short red notches clustered low, climbing a little
+	for i in 26:
+		var ny := ply + 0.9 + float(i) * 0.035 + k.rng.randf_range(0.0, 0.12)
+		m.block(notch, Transform3D(basis, Vector3(nc.x, ny, nc.y) + gface + basis * Vector3(0.12, 0.0, 0.06)), Vector3(0.12, 0.025, 0.02))
+	await k.step()
+	m.commit(gauge, PoiKit.plain(Color(0.86, 0.85, 0.8), 0.8), "Gauge", true)
+	m.commit(notch, PoiKit.plain(Color(0.25, 0.06, 0.05), 0.8), "GaugeNotches")
+	if k.far:
+		return
+	# iron bands round the needle every two metres, holding the gauge to it
+	var iron := m.begin()
+	for i in 5:
+		var by := ply + 1.2 + float(i) * 2.0
+		var w: float = widths[mini(int((by - ply) / 4.0), 3)] + 0.06
+		for q in 4:
+			var bq := basis.rotated(Vector3.UP, PI * 0.5 * float(q))
+			m.block(iron, Transform3D(bq, Vector3(nc.x, by, nc.y) + bq * Vector3(0.0, 0.0, w * 0.5)), Vector3(w + 0.06, 0.08, 0.03))
+	await k.step()
+	m.commit(iron, PoiKit.plain(IRON_RUST, 0.8, 0.3), "Bands")
+	# the ladder up its landward side to a little railed seat at nine metres, and the pennant pole
+	var timber := m.begin()
+	var lside := -Vector3(sea.x, 0.0, sea.y)
+	var lx := Vector3(side.x, 0.0, side.y)
+	var seat_y := ply + 9.0
+	for s in [-1.0, 1.0]:
+		var foot := Vector3(nc.x, ply - 0.05, nc.y) + lside * 1.0 + lx * 0.28 * float(s)
+		m.block(timber, Transform3D(basis, foot + Vector3.UP * (seat_y - ply) * 0.5), Vector3(0.07, seat_y - ply, 0.07))
+	for i in int((seat_y - ply) / 0.32):
+		var ry := ply + 0.3 + float(i) * 0.32
+		m.block(timber, Transform3D(basis, Vector3(nc.x, ry, nc.y) + lside * 1.0), Vector3(0.6, 0.04, 0.05))
+	var seat_c := Vector3(nc.x, seat_y, nc.y) + lside * 1.45
+	m.block(timber, Transform3D(basis, seat_c), Vector3(1.5, 0.1, 1.2))
+	k.collider(Vector3(1.5, 0.1, 1.2), Transform3D(basis, seat_c), "wood")
+	for s in [-1.0, 1.0]:
+		m.block(timber, Transform3D(basis, seat_c + lx * 0.72 * float(s) + Vector3.UP * 0.45), Vector3(0.05, 0.9, 1.2))
+	m.block(timber, Transform3D(basis, seat_c + lside * 0.58 + Vector3.UP * 0.85), Vector3(1.5, 0.05, 0.05))
+	var pen_foot := Vector3(nc.x, needle_top + 0.65, nc.y)
+	m.block(timber, Transform3D(basis, pen_foot + Vector3.UP * 1.1), Vector3(0.07, 2.2, 0.07))
+	# the float-well at the plinth's seaward foot: a box of planks, its float's rod up beside the gauge
+	var fw := nc + sea * 3.7
+	var fg := k.on_ground(fw.x, fw.y).y
+	for q in 4:
+		var bq := basis.rotated(Vector3.UP, PI * 0.5 * float(q))
+		m.block(timber, Transform3D(bq, Vector3(fw.x, fg + 0.35, fw.y) + bq * Vector3(0.0, 0.0, 0.65)), Vector3(1.4, 0.7, 0.08))
+	k.collider(Vector3(1.4, 0.7, 1.4), Transform3D(basis, Vector3(fw.x, fg + 0.35, fw.y)), "wood")
+	m.block(timber, Transform3D(basis, Vector3(fw.x, fg + 1.9, fw.y)), Vector3(0.06, 3.0, 0.06))
+	m.block(timber, Transform3D(basis, Vector3(fw.x, fg + 3.4, fw.y) - Vector3(sea.x, 0.0, sea.y) * 0.7), Vector3(0.05, 0.05, 1.45))
+	# the watcher's bench at the needle's foot, facing the gauge
+	var bench_c := nc + sea * 2.0 + side * 3.2
+	var bench_b := Basis(Vector3.UP, PoiKit.yaw_of(-side))
+	var bg := k.on_ground(bench_c.x, bench_c.y).y
+	m.block(timber, Transform3D(bench_b, Vector3(bench_c.x, bg + 0.45, bench_c.y)), Vector3(1.6, 0.08, 0.42))
+	k.collider(Vector3(1.6, 0.5, 0.42), Transform3D(bench_b, Vector3(bench_c.x, bg + 0.25, bench_c.y)), "wood")
+	for s in [-1.0, 1.0]:
+		m.post(timber, bench_c + sea * 0.7 * float(s), 0.45, 0.1)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.8), "GaugeTimber")
+	m.sheet(pen_foot + Vector3.UP * 2.1, PoiKit.yaw_of(side), 0.5, 1.3, PoiKit.plain(INDIGO, 0.9), "Pennant", 0.4, true, 2, 3)
+	if not k.is_water(fw.x, fw.y):
+		black_water(d, nc + sea * 7.5, 4.6, 1.4, "TideWater")
+	var lamp := k.prop("lantern_standing")
+	if lamp != "":
+		var lp := bench_c - sea * 1.1
+		await k.step()
+		k.place(lamp, k.on_ground(lp.x, lp.y), 0.0, 1.0, false)
+		k.light(k.on_ground(lp.x, lp.y, 0.7), Color(1.0, 0.74, 0.42), 1.3, 8.0)
+	k.marker("the_gauge", k.on_ground(nc.x + side.x * 2.4 + sea.x * 0.5, nc.y + side.y * 2.4 + sea.y * 0.5), true)
+	k.marker("the_bench", k.on_ground(bench_c.x - side.x * 0.6, bench_c.y - side.y * 0.6), true)
+	k.marker("the_step", k.on_ground(nc.x + sea.x * 5.5 - side.x * 2.5, nc.y + sea.y * 5.5 - side.y * 2.5))
+	k.touchable("Gauge", Vector3(nc.x, ply + 1.2, nc.y) + gface + Vector3(sea.x, 0.0, sea.y) * 0.4, "Read the marks on the gauge", "core:dialogue/flood_mark_gauge", "", false)
+	# the watcher's hut on the bank behind, its door toward the needle
+	var hc := -sea * 9.0 + side * 4.5
+	var house: Dictionary = await stilt_house(d, hc, (nc - hc).normalized(), 3.4, 3.0, 1.1, "Watcher")
+	k.marker("home", house["inside"], true, true, 1.4)
+	await reeds(d, 8.0, 18.0, 55, [[nc, 4.5], [nc + sea * 7.5, 5.5], [hc, 4.5], [bench_c, 2.0]])
+
+
+# --- Hask's Ropewalk -------------------------------------------------------------------------------
+
+## A ropewalk sixty paces long: at its head the great wheel under a reed lean-to and the whirl-board it
+## turns, down its length a file of T-headed trestles carrying three strands, at its foot the weighted
+## sledge; lines of eel-skin and reed drying beside it; coils of rope, the tar-pot, and the rack of named
+## ropes waiting for their buyers. Spots: home, the_wheel, the_sledge, the_rack.
+static func hask_ropewalk(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var along := k.grain()
+	var side := Vector2(along.y, -along.x)
+	var ab := Basis(Vector3.UP, PoiKit.yaw_of(along))
+	var walk := 27.0
+	var head := -along * walk
+	var foot2 := along * (walk - 2.0)
+	var timber := m.begin()
+	# the wheel at the head: a rim on spokes, its axle along the walk, on two posts
+	var wc2 := head - along * 1.2
+	var wg := k.on_ground(wc2.x, wc2.y).y
+	var wr := 1.25
+	var wc := Vector3(wc2.x, wg + wr + 0.35, wc2.y)
+	var ax := Vector3(along.x, 0.0, along.y)
+	var lx := Vector3(side.x, 0.0, side.y)
+	for rim in [-0.12, 0.12]:
+		for i in 18:
+			var a0 := TAU * float(i) / 18.0
+			var a1 := TAU * float(i + 1) / 18.0
+			m.limb(timber, wc + ax * float(rim) + lx * sin(a0) * wr + Vector3.UP * cos(a0) * wr,
+					wc + ax * float(rim) + lx * sin(a1) * wr + Vector3.UP * cos(a1) * wr, 0.05)
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		m.limb(timber, wc, wc + lx * sin(a) * wr + Vector3.UP * cos(a) * wr, 0.04)
+	m.limb(timber, wc - ax * 0.35, wc + ax * 0.35, 0.08)
+	for s in [-1.0, 1.0]:
+		m.post(timber, wc2 + along * 0.4 * float(s), wr + 0.35, 0.14)
+	# the handle on the rim, and the whirl-board in front of the wheel with its three hooks
+	m.limb(timber, wc + lx * wr, wc + lx * wr - ax * 0.45, 0.04)
+	var wb := head + along * 0.4
+	var wbg := k.on_ground(wb.x, wb.y).y
+	var wb_xf := Transform3D(ab, Vector3(wb.x, wbg + 0.7, wb.y))
+	m.block(timber, wb_xf, Vector3(1.3, 1.4, 0.14))
+	k.collider(Vector3(1.3, 1.4, 0.14), wb_xf, "wood")
+	k.collider(Vector3(0.5, wr * 2.0 + 0.4, 1.0), Transform3D(ab, wc - Vector3.UP * 0.1), "wood")
+	# the lean-to over the head: four posts and a pitched roof of reed
+	var thatch := m.begin()
+	var lt_c := head - along * 0.6
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			m.post(timber, lt_c + side * 2.2 * float(sx) + along * 1.9 * float(sz), 2.6, 0.14)
+	var lt_y := k.on_ground(lt_c.x, lt_c.y).y + 2.6
+	for s in [-1.0, 1.0]:
+		var rc := Vector3(lt_c.x, lt_y + 0.45, lt_c.y) + lx * 1.25 * float(s)
+		m.block(thatch, Transform3D(ab * Basis(Vector3.FORWARD, -0.38 * float(s)), rc), Vector3(2.8, 0.2, 4.6))
+	# down the walk: the trestles every four metres, each a post and a crossbar pegged for the strands
+	var strands_y := 1.05
+	var n_tr := int((walk * 2.0 - 4.0) / 4.0)
+	var tops: Array = []
+	for i in n_tr + 1:
+		var t := float(i) / float(n_tr)
+		var p := head.lerp(foot2, t) + along * 1.5
+		var tg := m.post(timber, p, strands_y + 0.08, 0.12)
+		m.block(timber, Transform3D(ab, tg), Vector3(1.0, 0.08, 0.1))
+		tops.append(tg)
+	# the three strands, laid over the pegs from the whirl-board's hooks to the sledge
+	var strands := m.begin()
+	var sl := foot2 + along * 1.2
+	var sled_g := k.on_ground(sl.x, sl.y).y
+	for s in [-0.3, 0.0, 0.3]:
+		var a3 := Vector3(wb.x, wbg + 1.05, wb.y) + lx * float(s) + ax * 0.1
+		var prev := a3
+		for tp in tops:
+			var q: Vector3 = tp
+			var cur := q + lx * float(s) + Vector3.UP * 0.06
+			m.limb(strands, prev, cur, 0.028)
+			prev = cur
+		m.limb(strands, prev, Vector3(sl.x, sled_g + 0.95, sl.y) + lx * float(s), 0.028)
+	# the sledge at the foot: two runners, a deck, the post the strands lay round, and stones on it
+	var sled_xf := Transform3D(ab, Vector3(sl.x, sled_g + 0.42, sl.y))
+	m.block(timber, sled_xf, Vector3(1.4, 0.12, 2.2))
+	k.collider(Vector3(1.4, 0.5, 2.2), Transform3D(ab, Vector3(sl.x, sled_g + 0.25, sl.y)), "wood")
+	for s in [-1.0, 1.0]:
+		m.block(timber, Transform3D(ab, Vector3(sl.x, sled_g + 0.17, sl.y) + lx * 0.6 * float(s)), Vector3(0.14, 0.34, 2.5))
+	m.block(timber, Transform3D(ab, Vector3(sl.x, sled_g + 0.85, sl.y) - ax * 0.7), Vector3(0.18, 0.9, 0.18))
+	var stones := m.begin()
+	for i in 6:
+		m.ellipsoid(stones, Vector3(sl.x, sled_g + 0.62, sl.y) + ax * k.rng.randf_range(-0.1, 0.8) + lx * k.rng.randf_range(-0.45, 0.45),
+				Vector3(0.32, 0.2, 0.28) * k.rng.randf_range(0.8, 1.2), Basis(Vector3.UP, k.rng.randf() * TAU))
+	await k.step()
+	m.commit(stones, k.surface("stone", 0.85), "SledgeStones")
+	# the drying lines beside the walk: posts every six metres, eel-skins and reed hanks on them
+	var dry_off := side * 4.2
+	var n_dry := 6
+	for i in n_dry:
+		var t := float(i) / float(n_dry - 1)
+		var pa := head.lerp(foot2, 0.15 + t * 0.55) + dry_off
+		var pt := m.post(timber, pa, 2.0, 0.1)
+		if i < n_dry - 1:
+			var pb := head.lerp(foot2, 0.15 + (t + 1.0 / float(n_dry - 1)) * 0.55) + dry_off
+			var pbt := Vector3(pb.x, k.on_ground(pb.x, pb.y).y + 2.0, pb.y)
+			m.limb(timber, pt - Vector3.UP * 0.08, pbt - Vector3.UP * 0.08, 0.015)
+			for j in 5:
+				var q := pt.lerp(pbt, (float(j) + 0.5) / 5.0) - Vector3.UP * 0.08
+				var l := k.rng.randf_range(0.7, 1.2)
+				m.block(timber, Transform3D(ab, q - Vector3.UP * l * 0.5), Vector3(0.12, l, 0.015))
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.8), "Ropewalk", true)
+	m.commit(strands, PoiKit.plain(Color(0.66, 0.6, 0.44), 0.9), "Strands", true)
+	m.commit(thatch, PoiKit.painted(5, THATCH, 0.6), "WheelRoof", true)
+	if k.far:
+		return
+	k.touchable("Wheel", wc + lx * (wr + 0.3) - Vector3.UP * 0.8, "Turn the wheel", "core:dialogue/ropewalk_wheel", "", false)
+	k.marker("the_wheel", k.on_ground(wc2.x + side.x * 1.9, wc2.y + side.y * 1.9), true)
+	k.marker("the_sledge", k.on_ground(sl.x - side.x * 1.6, sl.y - side.y * 1.6), true)
+	# the rack of named ropes at the head: a bar on two posts, each rope a hank with a rag on it
+	var rack := m.begin()
+	var rags := m.begin()
+	var rk := head + side * 4.5 + along * 2.0
+	var rk_top: Array = []
+	for s in [-1.0, 1.0]:
+		rk_top.append(m.post(rack, rk + along * 1.6 * float(s), 2.1, 0.12))
+	var r0: Vector3 = rk_top[0]
+	var r1: Vector3 = rk_top[1]
+	m.limb(rack, r0 - Vector3.UP * 0.1, r1 - Vector3.UP * 0.1, 0.05)
+	for i in 8:
+		var q := r0.lerp(r1, (float(i) + 0.5) / 8.0) - Vector3.UP * 0.1
+		var l := 1.5
+		m.limb(rack, q, q - Vector3.UP * l + lx * 0.05, 0.07)
+		m.block(rags, Transform3D(ab, q - Vector3.UP * 0.25), Vector3(0.16, 0.22, 0.16))
+	# a folded bolt of rag-cloth on the ground under it, to tie the next
+	var rkg := k.on_ground(rk.x, rk.y)
+	m.block(rags, Transform3D(ab, rkg + Vector3.UP * 0.1 + lx * 0.5), Vector3(0.5, 0.2, 0.35))
+	await k.step()
+	m.commit(rack, k.surface("timber", 0.8), "NameRopes")
+	m.commit(rags, PoiKit.plain(INDIGO, 0.9), "NameRags")
+	k.marker("the_rack", k.on_ground(rk.x + side.x * 1.4, rk.y + side.y * 1.4), true)
+	# coils of finished rope by the head, and the tar-pot on its fire
+	var coil := k.prop("rope_coil")
+	if coil != "":
+		var xfs: Array = []
+		for i in 5:
+			var q := head - side * (2.8 + float(i % 3) * 0.6) + along * (1.0 + floorf(float(i) / 3.0) * 0.7)
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y), k.rng.randf() * TAU, 1.0))
+		await k.step()
+		k.scatter(coil, xfs, false, false, true)
+	var fire_p := head - side * 3.4 + along * 4.6
+	var fire := k.prop("campfire")
+	if fire != "":
+		await k.step()
+		k.place(fire, k.on_ground(fire_p.x, fire_p.y), 0.0, 0.8, false)
+		k.light(k.on_ground(fire_p.x, fire_p.y, 0.5), Color(1.0, 0.6, 0.3), 1.6, 9.0)
+	var pot := k.prop("cooking_pot")
+	if pot != "":
+		await k.step()
+		k.place(pot, k.on_ground(fire_p.x, fire_p.y, 0.18), 0.0, 1.0, false)
+	k.puffs(k.on_ground(fire_p.x, fire_p.y, 0.8), Vector3(0.3, 0.2, 0.3), 0.6, 6, Color(0.2, 0.18, 0.16, 0.4), 0.9, 5.0)
+	# the walker's house at the head
+	var hc := head - side * 7.5 - along * 1.5
+	var house: Dictionary = await stilt_house(d, hc, side, 3.6, 3.2, 0.9, "Hask")
+	k.marker("home", house["inside"], true, true, 1.4)
+	var keep: Array = [[hc, 4.5], [rk, 3.0], [fire_p, 2.5], [head - along * 1.0, 4.0]]
+	for i in 15:
+		keep.append([head.lerp(foot2 + along * 2.0, float(i) / 14.0) + side * 1.2, 5.6])
+	await reeds(d, 9.0, 24.0, 50, keep)
+
+
+# --- The Unwinding --------------------------------------------------------------------------------
+
+## The rings of the Unwinding: their radii, and for each the bearing (radians from the gate's) of its
+## opening; a ring's opening sits a little round from the one outside it, and a wall across the way
+## between them stands just short of it, so the path goes all the way round each time.
+const MAZE_RINGS := [3.6, 6.6, 9.6, 12.6, 15.6]
+const MAZE_HEDGE_H := 1.9
+const MAZE_OPEN_M := 2.2
+
+
+## Each ring's opening (bearing, radians), the outer one at `gate` and each ring in set round from the
+## one outside it by both openings' half-widths and room for the wall between them (2 m of arc).
+static func _maze_openings(gate: float) -> Array:
+	var nr := MAZE_RINGS.size()
+	var out: Array = []
+	out.resize(nr)
+	out[nr - 1] = gate
+	for ri in range(nr - 2, -1, -1):
+		var r_in: float = MAZE_RINGS[ri]
+		var r_out: float = MAZE_RINGS[ri + 1]
+		var step := MAZE_OPEN_M * 0.5 / r_in + MAZE_OPEN_M * 0.5 / r_out + 2.0 / ((r_in + r_out) * 0.5)
+		out[ri] = float(out[ri + 1]) - step
+	return out
+
+
+## A round maze of reed hedges, its one path winding round five times to a black pool at the middle
+## with a flat stone beside it, a pole over the pool crowned with a wheel of reed and hung with the
+## walkers' ribbons; two posts at its gate hung with knotted cords, and the keeper's stilt-hut. Spots:
+## home, the_gate, the_hedges; the wisp hangs at the_pool.
+static func the_unwinding(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var gate_dir := k.grain()
+	var g0 := PoiKit.yaw_of(gate_dir)
+	var hedge := m.begin()
+	var tops := m.begin()
+	var nr := MAZE_RINGS.size()
+	var opens := _maze_openings(g0)
+	for ri in nr:
+		var r: float = MAZE_RINGS[ri]
+		# the outer ring opens at the gate; each ring in opens a little further round
+		var open_a: float = opens[ri]
+		var half_open := (MAZE_OPEN_M * 0.5) / r
+		var segs := maxi(int(TAU * r / 1.7), 10)
+		for i in segs:
+			var a0 := TAU * float(i) / float(segs)
+			var a1 := TAU * float(i + 1) / float(segs)
+			var mid := (a0 + a1) * 0.5
+			if absf(wrapf(mid - open_a, -PI, PI)) < half_open + (a1 - a0) * 0.5:
+				continue
+			var pa := Vector2(sin(a0), cos(a0)) * r
+			var pb := Vector2(sin(a1), cos(a1)) * r
+			var c := (pa + pb) * 0.5
+			var gy := k.on_ground(c.x, c.y).y
+			var xf := Transform3D(Basis(Vector3.UP, mid + PI * 0.5), Vector3(c.x, gy + MAZE_HEDGE_H * 0.5 - 0.1, c.y))
+			var seg_len := pa.distance_to(pb) + 0.12
+			m.block(hedge, xf, Vector3(seg_len, MAZE_HEDGE_H + 0.2, 0.6))
+			k.collider(Vector3(seg_len, MAZE_HEDGE_H + 0.2, 0.6), xf, "wood")
+			# the ragged tops, where the reed is trimmed but never level
+			m.block(tops, Transform3D(Basis(Vector3.UP, mid + PI * 0.5), Vector3(c.x, gy + MAZE_HEDGE_H + k.rng.randf_range(0.0, 0.12), c.y)), Vector3(seg_len * 0.95, 0.22, 0.72))
+		# the wall across the way outside this ring, just short of where the next ring out opens:
+		# the path round goes the long way
+		if ri < nr - 1:
+			var r_next: float = MAZE_RINGS[ri + 1]
+			var outer_open: float = opens[ri + 1]
+			# halfway between the outer opening's near edge and this ring's opening's far edge
+			var wa := ((outer_open - MAZE_OPEN_M * 0.5 / r_next) + (open_a + half_open)) * 0.5
+			var w0 := Vector2(sin(wa), cos(wa)) * (r + 0.25)
+			var w1 := Vector2(sin(wa), cos(wa)) * (r_next - 0.25)
+			var wc := (w0 + w1) * 0.5
+			var wy := k.on_ground(wc.x, wc.y).y
+			var wxf := Transform3D(Basis(Vector3.UP, wa), Vector3(wc.x, wy + MAZE_HEDGE_H * 0.5 - 0.1, wc.y))
+			m.block(hedge, wxf, Vector3(0.6, MAZE_HEDGE_H + 0.2, w0.distance_to(w1)))
+			k.collider(Vector3(0.6, MAZE_HEDGE_H + 0.2, w0.distance_to(w1)), wxf, "wood")
+	await k.step()
+	m.commit(hedge, PoiKit.painted(5, HEDGE, 0.6), "Hedges", true)
+	m.commit(tops, PoiKit.painted(5, THATCH, 0.7), "HedgeTops", true)
+	# the pole over the middle, crowned with its wheel of reed: what the maze is seen by from the road
+	var pole := m.begin()
+	var pc := Vector2(0.0, -1.3)
+	var pg := k.on_ground(pc.x, pc.y).y
+	var ptop := Vector3(pc.x, pg + 7.4, pc.y)
+	m.limb(pole, Vector3(pc.x, pg - 0.3, pc.y), ptop, 0.13)
+	k.collider(Vector3(0.26, 7.4, 0.26), Transform3D(Basis.IDENTITY, Vector3(pc.x, pg + 3.7, pc.y)), "wood")
+	for i in 12:
+		var a0 := TAU * float(i) / 12.0
+		var a1 := TAU * float(i + 1) / 12.0
+		m.limb(pole, ptop + Vector3(sin(a0), -0.4, cos(a0)) * Vector3(0.95, 1.0, 0.95), ptop + Vector3(sin(a1), -0.4, cos(a1)) * Vector3(0.95, 1.0, 0.95), 0.1)
+		m.limb(pole, ptop + Vector3.UP * 0.1, ptop + Vector3(sin(a0) * 0.95, -0.4, cos(a0) * 0.95), 0.04)
+	await k.step()
+	m.commit(pole, k.surface("timber", 0.8), "MiddlePole", true)
+	# the walkers' ribbons tied all down it, and round its foot where the short ones tied theirs
+	var ribbons := m.begin()
+	for i in 34:
+		var y := pg + 0.3 + k.rng.randf() * 6.6
+		var a := k.rng.randf() * TAU
+		var at := Vector3(pc.x + sin(a) * 0.15, y, pc.y + cos(a) * 0.15)
+		var l := k.rng.randf_range(0.5, 1.4)
+		var lb := minf(l, y - pg - 0.02)
+		m.block(ribbons, Transform3D(Basis(Vector3.UP, a), at - Vector3.UP * lb * 0.5 + Vector3(sin(a), 0.0, cos(a)) * 0.05), Vector3(0.09, lb, 0.01))
+	for i in 10:
+		var a := TAU * float(i) / 10.0
+		m.block(ribbons, Transform3D(Basis(Vector3.UP, a), Vector3(pc.x + sin(a) * 0.22, pg + 0.25, pc.y + cos(a) * 0.22)), Vector3(0.1, 0.5, 0.02))
+	await k.step()
+	m.commit(ribbons, PoiKit.plain(INDIGO.lightened(0.15), 0.9), "Ribbons", true)
+	if k.far:
+		return
+	# the black pool at the middle and the flat grey stone beside it, where it is said
+	var pool_c := Vector2(0.0, 1.0)
+	var py := black_water(d, pool_c, 1.7, 1.2, "MiddlePool", 18)
+	var stone := m.begin()
+	var sc := Vector2(1.6, -0.6)
+	var sg := k.on_ground(sc.x, sc.y)
+	m.ellipsoid(stone, sg + Vector3.UP * 0.12, Vector3(0.75, 0.22, 0.55), Basis(Vector3.UP, 0.6))
+	rim_stones(d, stone, pool_c, 1.85, 12, 0.32)
+	await k.step()
+	m.commit(stone, k.surface("stone", 0.9), "GriefStone")
+	k.touchable("GriefStone", sg + Vector3.UP * 0.4, "Lay it down at the water", "core:dialogue/unwinding_stone", "", false)
+	k.marker("the_pool", Vector3(pool_c.x, py, pool_c.y))
+	# the gate: two tall posts and a lintel at the outer ring's opening, hung with knotted cords
+	var gate := m.begin()
+	var r_out: float = MAZE_RINGS[nr - 1]
+	var gp := gate_dir * (r_out + 0.2)
+	var gside := Vector2(gate_dir.y, -gate_dir.x)
+	var gtops: Array = []
+	for s in [-1.0, 1.0]:
+		gtops.append(m.post(gate, gp + gside * (MAZE_OPEN_M * 0.5 + 0.25) * float(s), 3.0, 0.2))
+	var gt0: Vector3 = gtops[0]
+	var gt1: Vector3 = gtops[1]
+	m.block(gate, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(gate_dir)), (gt0 + gt1) * 0.5 + Vector3.UP * 0.1), Vector3(MAZE_OPEN_M + 1.1, 0.22, 0.24))
+	var cord_pts: Array = []
+	for i in 9:
+		cord_pts.append(gt0.lerp(gt1, (float(i) + 0.5) / 9.0))
+	var knots := m.begin()
+	cords(d, gate, knots, cord_pts, Vector2(0.4, 1.1))
+	await k.step()
+	m.commit(gate, k.surface("timber", 0.8), "Gate", true)
+	m.commit(knots, PoiKit.plain(RUSH, 0.95), "GateKnots")
+	k.marker("the_gate", k.on_ground(gp.x + gate_dir.x * 2.2 + gside.x * 2.0, gp.y + gate_dir.y * 2.2 + gside.y * 2.0), true)
+	k.marker("the_hedges", k.on_ground(-gate_dir.x * (r_out + 1.6), -gate_dir.y * (r_out + 1.6)), true)
+	# the keeper's hut outside, beside the gate, and her rakes leaned on it
+	var hc := gate_dir * (r_out + 5.5) - gside * 6.5
+	var house: Dictionary = await stilt_house(d, hc, gside, 3.2, 3.0, 0.8, "Keeper")
+	k.marker("home", house["inside"], true, true, 1.4)
+	var lamp_poles := m.begin()
+	lantern_pole(d, lamp_poles, gp + gside * 2.4 + gate_dir * 1.4, gate_dir, true, 2.6)
+	await k.step()
+	m.commit(lamp_poles, k.surface("timber", 0.85), "GateLamp")
+	await reeds(d, r_out + 2.0, r_out + 10.0, 60, [[hc, 4.5], [gp + gate_dir * 3.0, 3.5]])
+
+
+# --- The Grey Heronry --------------------------------------------------------------------------------
+
+## A heron standing at `at` (its feet, local), facing `dir`, into `st`: legs, a grey body, the neck in
+## its S, the head and the dagger of the bill. About 1.1 m tall. Twelve-sided limbs: a flock is cheap.
+static func heron(d: PoiDressing, st: SurfaceTool, at: Vector3, dir: Vector2, hunch := 0.0) -> void:
+	var m := d.masonry
+	var f := Vector3(dir.x, 0.0, dir.y).normalized()
+	var body := at + Vector3.UP * 0.62
+	for s in [-1.0, 1.0]:
+		var hip := body + Vector3(f.z, 0.0, -f.x) * 0.06 * float(s)
+		m.limb(st, at + Vector3(f.z, 0.0, -f.x) * 0.05 * float(s), hip, 0.018)
+	m.ellipsoid(st, body + Vector3.UP * 0.08, Vector3(0.16, 0.17, 0.33), Basis(Vector3.UP, atan2(f.x, f.z)) * Basis(Vector3.RIGHT, -0.35))
+	var neck0 := body + f * 0.22 + Vector3.UP * 0.18
+	var neck1 := neck0 + f * (0.04 + hunch * 0.05) + Vector3.UP * (0.32 - hunch * 0.18)
+	var head := neck1 + f * 0.08 + Vector3.UP * 0.04
+	m.limb(st, neck0, neck1, 0.035)
+	m.limb(st, neck1, head, 0.03)
+	m.ellipsoid(st, head, Vector3(0.05, 0.05, 0.08), Basis(Vector3.UP, atan2(f.x, f.z)))
+	m.limb(st, head + f * 0.05, head + f * 0.22 - Vector3.UP * 0.02, 0.012)
+
+
+## Nine dead alders drowned to the knee in a black pool, their crowns heaped with the herons' stick nests,
+## whitewashed with their droppings and a heron on every nest; more herons wading at the pool's edge; on
+## the bank the heron-reader's hide on short stilts, its slate by the door, and a pile of shed plumes.
+## Spots: home, the_hide_bench; the sallowjaws lie at the_pool.
+static func the_grey_heronry(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var look := k.grain()
+	var side := Vector2(look.y, -look.x)
+	var water_y := k.on_ground(0.0, 0.0).y
+	if not k.far:
+		water_y = black_water(d, Vector2.ZERO, 11.0, 1.6, "HeronPool", 30)
+	var trunks := m.begin()
+	var nests := m.begin()
+	var wash := m.begin()
+	var birds := m.begin()
+	var spots := k.ring(6, 6.2, Vector2.ZERO, 0.25) + k.ring(3, 2.4, Vector2.ZERO, 0.4)
+	var nest_tops: Array = []
+	for i in spots.size():
+		var at: Vector2 = spots[i]
+		var h := k.rng.randf_range(9.0, 13.0)
+		var tips: Array = dead_tree(d, trunks, at, h, k.jitter(1.0), 5)
+		var g := k.on_ground(at.x, at.y).y
+		# the droppings: white streaks down the trunk under the crown
+		for j in 3:
+			var a := k.rng.randf() * TAU
+			var y0 := g + h * k.rng.randf_range(0.25, 0.45)
+			m.block(wash, Transform3D(Basis(Vector3.UP, a), Vector3(at.x + sin(a) * h * 0.05, y0, at.y + cos(a) * h * 0.05)), Vector3(0.12, h * 0.22, 0.04))
+		# the nests, in the forks of the crown: a heap of sticks, flat on top
+		var made := 0
+		for t in tips.size():
+			if t % 2 == 1 or made >= 4:
+				continue
+			var tp: Vector3 = tips[t]
+			if tp.y < g + h * 0.5:
+				continue
+			var nc := tp.lerp(Vector3(at.x, tp.y, at.y), 0.35)
+			m.ellipsoid(nests, nc, Vector3(0.75, 0.3, 0.7), Basis(Vector3.UP, k.rng.randf() * TAU))
+			for q in 6:
+				var a := k.rng.randf() * TAU
+				m.limb(nests, nc + Vector3(sin(a) * 0.5, 0.1, cos(a) * 0.5), nc + Vector3(sin(a) * 1.0, k.rng.randf_range(-0.1, 0.25), cos(a) * 1.0), 0.03)
+			m.block(wash, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU), nc - Vector3.UP * 0.4), Vector3(0.7, 0.25, 0.08))
+			nest_tops.append(nc + Vector3.UP * 0.28)
+			made += 1
+	for i in nest_tops.size():
+		if i % 4 == 3:
+			continue
+		var nt: Vector3 = nest_tops[i]
+		heron(d, birds, nt, Vector2(sin(float(i) * 2.3), cos(float(i) * 2.3)), k.rng.randf())
+	await k.step()
+	m.commit(trunks, PoiKit.painted(3, BONE_WOOD, 0.85), "DeadAlders", true)
+	m.commit(nests, k.surface("timber", 0.95), "NestHeaps", true)
+	m.commit(wash, PoiKit.plain(Color(0.88, 0.88, 0.84), 0.95), "NestWhitewash", true)
+	if k.far:
+		m.commit(birds, PoiKit.plain(HERON_GREY, 0.85), "NestBirds", true)
+		return
+	# herons wading at the pool's edge, and one on the bank by the hide
+	for i in 7:
+		var a := TAU * float(i) / 7.0 + k.rng.randf_range(-0.3, 0.3)
+		var p := Vector2(sin(a), cos(a)) * k.rng.randf_range(9.5, 11.5)
+		heron(d, birds, k.on_ground(p.x, p.y), Vector2(-sin(a), -cos(a)).rotated(k.rng.randf_range(-1.0, 1.0)), k.rng.randf())
+	await k.step()
+	m.commit(birds, PoiKit.plain(HERON_GREY, 0.85), "NestBirds", true)
+	# the reader's hide on the bank, its door toward the trees
+	var hc := -look * 15.5
+	var house: Dictionary = await stilt_house(d, hc, look, 3.0, 2.6, 0.8, "Hide")
+	k.marker("home", house["inside"], true, true, 1.3)
+	var hf: Vector3 = house["foot"]
+	var hb: Basis = house["basis"]
+	# the bench at the hide's foot facing the pool, the slate on its post, and the shed plumes
+	var timber := m.begin()
+	var bench := Vector3(hf.x, 0.0, hf.z) + hb * Vector3(2.0, 0.0, 0.4)
+	var bg := k.on_ground(bench.x, bench.z).y
+	m.block(timber, Transform3D(hb, Vector3(bench.x, bg + 0.45, bench.z)), Vector3(1.6, 0.08, 0.4))
+	k.collider(Vector3(1.6, 0.5, 0.4), Transform3D(hb, Vector3(bench.x, bg + 0.25, bench.z)), "wood")
+	for s in [-1.0, 1.0]:
+		var lp := bench + hb * Vector3(0.7 * float(s), 0.0, 0.0)
+		m.post(timber, Vector2(lp.x, lp.z), 0.45, 0.1)
+	var slate_p := Vector3(hf.x, 0.0, hf.z) + hb * Vector3(-1.6, 0.0, 0.2)
+	var slate_top := m.post(timber, Vector2(slate_p.x, slate_p.z), 1.3, 0.1)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.85), "HideBench")
+	var slate := m.begin()
+	m.block(slate, Transform3D(hb, slate_top + Vector3.UP * 0.25 + hb * Vector3(0.0, 0.0, 0.07)), Vector3(0.7, 0.5, 0.04))
+	await k.step()
+	m.commit(slate, PoiKit.plain(Color(0.16, 0.17, 0.18), 0.9), "Slate")
+	k.touchable("Slate", slate_top + hb * Vector3(0.0, 0.0, 0.4), "Read the slate by the hide", "core:dialogue/heronry_slate", "", false)
+	var plumes := m.begin()
+	var pp := Vector3(hf.x, 0.0, hf.z) + hb * Vector3(3.4, 0.0, 1.6)
+	for i in 30:
+		var q := Vector2(pp.x, pp.z) + k.jitter(0.5)
+		m.block(plumes, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.3, 0.3)), k.on_ground(q.x, q.y, 0.04 + float(i) * 0.004)), Vector3(0.05, 0.015, 0.36))
+	await k.step()
+	m.commit(plumes, PoiKit.plain(Color(0.7, 0.72, 0.72), 0.9), "Plumes")
+	k.marker("the_hide_bench", k.on_ground(bench.x + hb.z.x * 0.8, bench.z + hb.z.z * 0.8), true)
+	k.marker("the_pool", Vector3(look.x * 7.0, water_y - 0.07, look.y * 7.0))
+	await reeds(d, 11.5, 22.0, 70, [[hc, 4.5], [Vector2(pp.x, pp.z), 2.0]])
+
+
+# --- The Sundew Garden ---------------------------------------------------------------------------------
+
+## A sundew rosette at local `c` on `y`, `r` across: leaves out from the middle, each with its dew; into
+## `leaves` and `dew` (blocks: a garden of them is thousands).
+static func sundew(d: PoiDressing, leaves: SurfaceTool, dew: SurfaceTool, c: Vector2, y: float, r: float, count := 12) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var mid := Vector3(c.x, y, c.y)
+	for i in count:
+		var a := TAU * float(i) / float(count) + k.rng.randf_range(-0.15, 0.15)
+		var out := Vector3(sin(a), 0.0, cos(a))
+		var tip := mid + out * r + Vector3.UP * r * k.rng.randf_range(0.12, 0.4)
+		m.limb(leaves, mid + Vector3.UP * 0.03, tip, maxf(r * 0.06, 0.03))
+		for j in 3:
+			var t := 0.55 + float(j) * 0.2
+			var q := mid.lerp(tip, t) + Vector3.UP * r * 0.06
+			m.block(dew, Transform3D(Basis(Vector3.UP, a), q), Vector3(0.05, 0.05, 0.05) * maxf(r, 0.6))
+
+
+## Raised peat beds in rows under withy hoops, planted with sundews broad as a cartwheel and knee-high
+## pitchers; the fly-tower, a pole with a wicker cage of eel-heads smoking with flies; the Mother Sundew
+## in her sunken tub by the herb-wife's hut, a boot on its rim; her drying rack and her jars. Spots:
+## home, the_beds, the_tub; the wisps come to the_tower.
+static func sundew_garden(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var along := k.grain()
+	var side := Vector2(along.y, -along.x)
+	var ab := Basis(Vector3.UP, PoiKit.yaw_of(along))
+	var timber := m.begin()
+	# the fly-tower first: what the garden is known by from the causeway
+	var tw := side * 6.5 + along * 4.5
+	var tg := k.on_ground(tw.x, tw.y).y
+	var ttop := Vector3(tw.x, tg + 7.0, tw.y)
+	m.limb(timber, Vector3(tw.x, tg - 0.3, tw.y), ttop, 0.12)
+	k.collider(Vector3(0.24, 7.0, 0.24), Transform3D(Basis.IDENTITY, Vector3(tw.x, tg + 3.5, tw.y)), "wood")
+	var cage_c := ttop - Vector3.UP * 0.2
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		m.limb(timber, cage_c + Vector3(sin(a) * 0.6, -0.7, cos(a) * 0.6), cage_c + Vector3(sin(a) * 0.45, 0.6, cos(a) * 0.45), 0.03)
+	for hy in [-0.7, 0.0, 0.6]:
+		var rr := 0.6 if float(hy) < 0.3 else 0.45
+		for i in 8:
+			var a0 := TAU * float(i) / 8.0
+			var a1 := TAU * float(i + 1) / 8.0
+			m.limb(timber, cage_c + Vector3(sin(a0) * rr, float(hy), cos(a0) * rr), cage_c + Vector3(sin(a1) * rr, float(hy), cos(a1) * rr), 0.025)
+	# the beds: four of black peat in plank kerbs, in rows along the garden
+	var peat := m.begin()
+	var beds: Array = []
+	for bi in 4:
+		var bc := side * (float(bi) - 1.5) * 2.6 - along * 1.5
+		beds.append(bc)
+		var by := k.on_ground(bc.x, bc.y).y
+		var xf := Transform3D(ab, Vector3(bc.x, by + 0.2, bc.y))
+		m.block(peat, xf, Vector3(1.5, 0.7, 7.0))
+		k.collider(Vector3(1.6, 0.6, 7.1), Transform3D(ab, Vector3(bc.x, by + 0.25, bc.y)), "dirt")
+		for s in [-1.0, 1.0]:
+			m.block(timber, Transform3D(ab, Vector3(bc.x, by + 0.3, bc.y) + ab * Vector3(0.78 * float(s), 0.0, 0.0)), Vector3(0.06, 0.65, 7.1))
+			m.block(timber, Transform3D(ab, Vector3(bc.x, by + 0.3, bc.y) + ab * Vector3(0.0, 0.0, 3.55 * float(s))), Vector3(1.6, 0.65, 0.06))
+		# the withy hoops over it, for the fly-nets
+		for h in 4:
+			var hz := -3.0 + float(h) * 2.0
+			var prev := Vector3.ZERO
+			for j in 7:
+				var a := PI * float(j) / 6.0
+				var p := Vector3(bc.x, by + 0.55, bc.y) + ab * Vector3(cos(a) * 0.8, sin(a) * 0.9, hz)
+				if j > 0:
+					m.limb(timber, prev, p, 0.025)
+				prev = p
+	await k.step()
+	m.commit(peat, PoiKit.painted(5, PEAT, 0.8), "PeatBeds")
+	m.commit(timber, k.surface("timber", 0.8), "GardenTimber", true)
+	k.puffs(cage_c, Vector3(0.9, 0.9, 0.9), 0.15, 40, Color(0.05, 0.05, 0.04, 0.85), 0.08, 2.5)
+	if k.far:
+		return
+	k.marker("the_tower", k.on_ground(tw.x + along.x * 2.0, tw.y + along.y * 2.0))
+	# the sundews and the pitchers in the beds
+	var leaves := m.begin()
+	var dew := m.begin()
+	var pitchers := m.begin()
+	for bi in beds.size():
+		var bc: Vector2 = beds[bi]
+		var top := k.on_ground(bc.x, bc.y).y + 0.56
+		for j in 4:
+			var z := -2.6 + float(j) * 1.75
+			var c := bc + along * z + side * k.rng.randf_range(-0.2, 0.2)
+			if (j + bi) % 3 == 2:
+				# a clump of pitchers, each a tube with its lid
+				for q in 3:
+					var pc := c + k.jitter(0.3)
+					var ph := k.rng.randf_range(0.5, 0.95)
+					var pxf := Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.12, 0.12)), Vector3(pc.x, top + ph * 0.5, pc.y))
+					m.rod(pitchers, pxf, 0.09, ph)
+					m.block(pitchers, Transform3D(Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, 0.5), Vector3(pc.x, top + ph + 0.06, pc.y)), Vector3(0.2, 0.02, 0.16))
+			else:
+				sundew(d, leaves, dew, c, top, k.rng.randf_range(0.45, 0.7), 11)
+	# the Mother Sundew in her tub by the hut, broad as a boat
+	var tub2 := -along * 7.5 + side * 2.0
+	var tug := k.on_ground(tub2.x, tub2.y).y
+	var tub := m.begin()
+	m.drum(tub, Transform3D(Basis.IDENTITY, Vector3(tub2.x, tug - 0.2, tub2.y)), 1.7, 0.95, 0.0, NAN, true, 0.3)
+	await k.step()
+	m.commit(tub, k.surface("planks", 0.85), "MotherTub")
+	var tub_peat := m.begin()
+	m.block(tub_peat, Transform3D(Basis.IDENTITY, Vector3(tub2.x, tug + 0.4, tub2.y)), Vector3(2.7, 0.5, 2.7))
+	await k.step()
+	m.commit(tub_peat, PoiKit.painted(5, PEAT, 0.8), "MotherPeat")
+	sundew(d, leaves, dew, tub2, tug + 0.68, 1.7, 16)
+	await k.step()
+	m.commit(leaves, PoiKit.plain(SUNDEW_RED, 0.55), "SundewLeaves")
+	m.commit(dew, PoiKit.plain(Color(0.95, 0.75, 0.75), 0.05, 0.0, Color(0.9, 0.5, 0.45), 0.25), "SundewDew")
+	m.commit(pitchers, PoiKit.plain(PITCHER, 0.5), "Pitchers")
+	var boots := k.prop("boots")
+	if boots != "":
+		var bp := tub2 + side * 1.65
+		await k.step()
+		k.place(boots, Vector3(bp.x, tug + 0.75, bp.y), PoiKit.yaw_of(side) + 0.4, 0.9, false)
+	k.touchable("MotherSundew", Vector3(tub2.x, tug + 1.0, tub2.y) - Vector3(side.x, 0.0, side.y) * 1.9, "Feed the Mother Sundew", "core:dialogue/mother_sundew", "", false)
+	k.marker("the_tub", k.on_ground(tub2.x - side.x * 2.6, tub2.y - side.y * 2.6), true)
+	k.marker("the_beds", k.on_ground(along.x * 2.6, along.y * 2.6), true)
+	# the herb-wife's hut, its porch on the tub; her drying rack and the bench with her jars
+	var hc := -along * 9.5 - side * 4.5
+	var house: Dictionary = await stilt_house(d, hc, side, 3.4, 3.0, 1.1, "HerbWife")
+	k.marker("home", house["inside"], true, true, 1.4)
+	var rack := m.begin()
+	var rk := along * 5.5 - side * 6.0
+	var rt: Array = []
+	for s in [-1.0, 1.0]:
+		rt.append(m.post(rack, rk + along * 1.3 * float(s), 1.9, 0.1))
+	var rt0: Vector3 = rt[0]
+	var rt1: Vector3 = rt[1]
+	m.limb(rack, rt0 - Vector3.UP * 0.1, rt1 - Vector3.UP * 0.1, 0.03)
+	for i in 7:
+		var q := rt0.lerp(rt1, (float(i) + 0.5) / 7.0) - Vector3.UP * 0.1
+		m.limb(rack, q, q - Vector3.UP * 0.55, 0.06)
+	var table := k.prop("table_trestle")
+	var tp := rk + side * 2.4
+	await k.step()
+	m.commit(rack, k.surface("timber", 0.85), "DryingRack")
+	if table != "":
+		await k.step()
+		k.place(table, k.on_ground(tp.x, tp.y), PoiKit.yaw_of(along), 1.0, true)
+		var jar := k.prop("jar")
+		if jar != "":
+			var xfs: Array = []
+			for i in 4:
+				var q := tp + along * (float(i) * 0.3 - 0.45)
+				xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y, 0.78), k.rng.randf() * TAU, 0.8))
+			await k.step()
+			k.scatter(jar, xfs, false, false, true)
+	await reeds(d, 10.0, 20.0, 50, [[hc, 4.5], [tw, 2.0], [rk, 2.5], [tub2, 3.0]])
+
+
+# --- The Great Dredge ----------------------------------------------------------------------------------
+
+## A Tollmere dredging-crane beached on its barge at the channel's edge: the treadwheel on the deck, a
+## pair of sheer-legs leaning out from the barge's landward end nineteen metres over the shaft the Guild
+## cut, its bucket-chain hanging from their head down into the shaft; the timber head-frame over the
+## shaft's mouth with its ladder-head, the door down at the curb; spoil heaps of black peat; the crew's
+## cold camp and the tally-board (the site's hook). Spots: home, the_tally, the_fire; the drowned crew
+## stand their shift at the_shaft_head.
+static func the_great_dredge(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var def := ContentDB.get_or_empty(d.poi_id)
+	var site: Dictionary = def.get("site", {})
+	var face := k.water_direction(70.0)
+	if face == Vector2.ZERO:
+		face = k.grain()
+	var side := Vector2(face.y, -face.x)
+	var fb := Basis(Vector3.UP, PoiKit.yaw_of(face))
+	var fx := Vector3(face.x, 0.0, face.y)
+	var sx := Vector3(side.x, 0.0, side.y)
+	# the barge, beached and listing a little, toward the water
+	var bc := face * 8.5
+	var bg := k.on_ground(bc.x, bc.y).y
+	var hull_h := 2.3
+	var bl := 15.0
+	var bw := 8.0
+	var bb := fb * Basis(Vector3.FORWARD, 0.035)
+	var hull := m.begin()
+	var hull_c := Vector3(bc.x, bg - 0.35 + hull_h * 0.5, bc.y)
+	m.block(hull, Transform3D(bb, hull_c), Vector3(bw, hull_h, bl))
+	k.collider(Vector3(bw, hull_h, bl), Transform3D(bb, hull_c), "wood")
+	var deck_y := bg - 0.35 + hull_h
+	# her strakes, a little proud of the sides, and her rubbing-strake
+	for s in [-1.0, 1.0]:
+		for j in 3:
+			m.block(hull, Transform3D(bb, hull_c + bb * Vector3(float(s) * (bw * 0.5 + 0.04), -0.7 + float(j) * 0.7, 0.0)), Vector3(0.08, 0.16, bl * 0.98))
+		m.block(hull, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(float(s) * (bw * 0.5 - 0.1), 0.0, 0.0)), Vector3(0.2, 0.4, bl))
+	for s in [-1.0, 1.0]:
+		m.block(hull, Transform3D(bb, Vector3(bc.x, deck_y + 0.2, bc.y) + bb * Vector3(0.0, 0.0, float(s) * (bl * 0.5 - 0.1))), Vector3(bw, 0.4, 0.2))
+	# the deck's planks and a ramp of planks down off her landward end
+	var ramp_a := bc - face * (bl * 0.5) + side * 2.6
+	var ramp_b := ramp_a - face * 4.2
+	var rg := k.on_ground(ramp_b.x, ramp_b.y).y
+	m.steps(hull, ramp_b, face, rg, 7, (deck_y - rg) / 7.0, 4.2 / 7.0, 1.4, 0.2)
+	await k.step()
+	m.commit(hull, k.surface("planks", 0.85), "Barge", true)
+	# the ballast of stone heaped in her seaward half
+	var ballast := m.begin()
+	for i in 14:
+		var p := bc + face * k.rng.randf_range(2.0, 6.5) + side * k.rng.randf_range(-3.0, 3.0)
+		m.ellipsoid(ballast, Vector3(p.x, deck_y + 0.25, p.y), Vector3(0.6, 0.35, 0.5) * k.rng.randf_range(0.8, 1.3), Basis(Vector3.UP, k.rng.randf() * TAU))
+	await k.step()
+	m.commit(ballast, k.surface("stone", 0.9), "Ballast")
+	# the treadwheel on the deck, its axle across the barge, on two trestles
+	var oak := m.begin()
+	var wc2 := bc - face * 1.0
+	var wr := 3.4
+	var wc := Vector3(wc2.x, deck_y + wr + 0.5, wc2.y)
+	for rim in [-0.8, 0.8]:
+		var rc := wc + sx * float(rim)
+		for i in 22:
+			var a0 := TAU * float(i) / 22.0
+			var a1 := TAU * float(i + 1) / 22.0
+			m.limb(oak, rc + fx * sin(a0) * wr + Vector3.UP * cos(a0) * wr, rc + fx * sin(a1) * wr + Vector3.UP * cos(a1) * wr, 0.11)
+		for i in 8:
+			var a := TAU * float(i) / 8.0
+			m.limb(oak, rc, rc + fx * sin(a) * wr + Vector3.UP * cos(a) * wr, 0.08)
+	for i in 22:
+		var a := TAU * (float(i) + 0.5) / 22.0
+		var p := wc + fx * sin(a) * (wr - 0.08) + Vector3.UP * cos(a) * (wr - 0.08)
+		m.block(oak, Transform3D(fb * Basis(Vector3.RIGHT, -a), p), Vector3(1.7, 0.06, 0.3))
+	m.limb(oak, wc - sx * 1.5, wc + sx * 1.5, 0.16)
+	for s in [-1.0, 1.0]:
+		var tc := wc2 + side * 1.35 * float(s)
+		for f in [-1.0, 1.0]:
+			var tf := Vector3(tc.x, deck_y, tc.y) + fx * 1.4 * float(f)
+			m.limb(oak, tf, Vector3(tc.x, wc.y, tc.y), 0.12)
+	k.collider(Vector3(2.0, wr * 2.0, wr * 2.0), Transform3D(fb, wc), "wood")
+	# the sheer-legs: two great legs from the barge's landward corners leaning out over the shaft
+	var shaft := -face * 8.0
+	var sg := k.on_ground(shaft.x, shaft.y).y
+	var head := Vector3(shaft.x, sg + 19.0, shaft.y)
+	var feet: Array = []
+	for s in [-1.0, 1.0]:
+		var fp := bc - face * (bl * 0.5 - 0.8) + side * 3.0 * float(s)
+		var foot := Vector3(fp.x, deck_y, fp.y)
+		feet.append(foot)
+		m.limb(oak, foot, head + sx * 0.3 * float(s), 0.24)
+		k.collider(Vector3(0.5, 0.5, 0.5), Transform3D(Basis.IDENTITY, foot + Vector3.UP * 0.25), "wood")
+		# a cross-tie between the legs, and the backstays to her seaward end
+		var stay := Vector3(bc.x, deck_y + 0.4, bc.y) + fx * (bl * 0.5 - 0.6) + sx * 2.8 * float(s)
+		m.limb(oak, head, stay, 0.05)
+	var f0: Vector3 = feet[0]
+	var f1: Vector3 = feet[1]
+	m.limb(oak, f0.lerp(head, 0.35), f1.lerp(head, 0.35), 0.1)
+	m.limb(oak, f0.lerp(head, 0.7), f1.lerp(head, 0.7), 0.08)
+	# the block at the head, and the hauling rope from it to the wheel's axle
+	m.ellipsoid(oak, head - Vector3.UP * 0.4, Vector3(0.45, 0.6, 0.45))
+	m.limb(oak, head - Vector3.UP * 0.7, wc, 0.04)
+	await k.step()
+	m.commit(oak, PoiKit.painted(3, BLACK_OAK, 0.8), "Crane", true)
+	# the bucket-chain, two runs down from the head into the shaft, a bucket every two metres
+	var chain := m.begin()
+	var chain_foot := sg - 1.5
+	for s in [-0.45, 0.45]:
+		var top := head - Vector3.UP * 0.9 + fx * float(s)
+		var bot := Vector3(top.x, chain_foot, top.z)
+		var links := int((top.y - bot.y) / 0.32)
+		for i in links:
+			var y := top.y - float(i) * 0.32
+			m.block(chain, Transform3D(Basis(Vector3.UP, float(i % 2) * PI * 0.5), Vector3(top.x, y, top.z)), Vector3(0.12, 0.3, 0.04))
+			if i % 7 == 3:
+				m.block(chain, Transform3D(fb, Vector3(top.x, y, top.z) + fx * float(s) * 0.5), Vector3(0.7, 0.55, 0.6))
+	# the shaft's mouth: a curb of timber round a square of black, the head-frame over it
+	var curb := m.begin()
+	var sb := fb
+	var pit := 4.2
+	for q in 4:
+		var bq := sb.rotated(Vector3.UP, PI * 0.5 * float(q))
+		var cxf := Transform3D(bq, Vector3(shaft.x, sg + 0.4, shaft.y) + bq * Vector3(0.0, 0.0, pit * 0.5 + 0.2))
+		m.block(curb, cxf, Vector3(pit + 0.8, 0.8, 0.4))
+		k.collider(Vector3(pit + 0.8, 0.8, 0.4), cxf, "wood")
+	for sxi in [-1.0, 1.0]:
+		for szi in [-1.0, 1.0]:
+			var pp := shaft + side * (pit * 0.5 + 0.2) * float(sxi) + face * (pit * 0.5 + 0.2) * float(szi)
+			m.post(curb, pp, 4.2, 0.22)
+	for q in 4:
+		var bq := sb.rotated(Vector3.UP, PI * 0.5 * float(q))
+		m.block(curb, Transform3D(bq, Vector3(shaft.x, sg + 4.1, shaft.y) + bq * Vector3(0.0, 0.0, pit * 0.5 + 0.2)), Vector3(pit + 0.7, 0.24, 0.24))
+	# the ladder's head standing up out of the dark at the landward side
+	for s in [-1.0, 1.0]:
+		var lp := Vector3(shaft.x, sg + 0.5, shaft.y) - fx * (pit * 0.5 - 0.35) + sx * 0.3 * float(s)
+		m.block(curb, Transform3D(fb, lp), Vector3(0.07, 2.2, 0.07))
+	for i in 4:
+		m.block(curb, Transform3D(fb, Vector3(shaft.x, sg - 0.2 + float(i) * 0.35, shaft.y) - fx * (pit * 0.5 - 0.35)), Vector3(0.6, 0.04, 0.05))
+	await k.step()
+	m.commit(chain, PoiKit.plain(IRON_RUST, 0.75, 0.35), "BucketChain", true)
+	m.commit(curb, k.surface("timber", 0.8), "HeadFrame", true)
+	var dark := m.begin()
+	m.block(dark, Transform3D(sb, Vector3(shaft.x, sg + 0.03, shaft.y)), Vector3(pit, 0.06, pit))
+	await k.step()
+	m.commit(dark, PoiKit.plain(Color(0.015, 0.013, 0.012), 1.0), "ShaftMouth")
+	# spoil heaps of black peat either side of the shaft, the buckets' tippings
+	for s in [-1.0, 1.0]:
+		var hp := shaft - face * 4.0 + side * 8.5 * float(s)
+		var hg := k.on_ground(hp.x, hp.y)
+		m.mound(hg + Vector3.DOWN * 0.15, 4.2, 2.4, PoiKit.painted(5, PEAT, 0.85), "Spoil%d" % int(s + 1.0), true, 1.5, 6, 18)
+	if k.far:
+		return
+	# the door down, at the curb's landward side where the ladder comes up
+	var door_at := Vector3(shaft.x, sg, shaft.y) - fx * (pit * 0.5 + 0.9)
+	PoiDressing.kind_builders().SITES._door(d, str(site.get("interior", "")), door_at, PoiKit.yaw_of(-face))
+	k.light(Vector3(shaft.x, sg + 3.6, shaft.y) - fx * (pit * 0.5 + 0.2) + sx * 1.2, Color(1.0, 0.72, 0.42), 1.4, 8.0)
+	var lamp := k.prop("lantern_hanging")
+	if lamp != "":
+		await k.step()
+		k.place(lamp, Vector3(shaft.x, sg + 3.85, shaft.y) - fx * (pit * 0.5 + 0.2) + sx * 1.2 - Vector3.UP * 0.5, PoiKit.yaw_of(face), 1.0, false)
+	k.marker("the_shaft_head", k.on_ground(shaft.x - face.x * 4.5 + side.x * 3.5, shaft.y - face.y * 4.5 + side.y * 3.5))
+	# the crew's camp behind the shaft: two tents, a cold fire, the cook's table and the tally-board
+	var camp := shaft - face * 9.0
+	var tent := k.prop("tent")
+	if tent != "":
+		for s in [-1.0, 1.0]:
+			var tp := camp + side * 4.2 * float(s) - face * 1.5
+			await k.step()
+			k.place(tent, k.on_ground(tp.x, tp.y), PoiKit.yaw_of(face), 1.0, true)
+	var fire := k.prop("campfire")
+	if fire != "":
+		await k.step()
+		k.place(fire, k.on_ground(camp.x, camp.y), 0.0, 0.9, false)
+	var table := k.prop("table_trestle")
+	if table != "":
+		var tp := camp + face * 2.6 + side * 1.4
+		await k.step()
+		k.place(table, k.on_ground(tp.x, tp.y), PoiKit.yaw_of(side), 1.0, true)
+	var barrel := k.prop("barrel")
+	if barrel != "":
+		var xfs: Array = []
+		for i in 4:
+			var q := camp - side * (2.0 + float(i % 2) * 0.8) + face * (2.2 + floorf(float(i) / 2.0) * 0.8)
+			xfs.append(PoiKit.transform_at(k.on_ground(q.x, q.y), k.rng.randf() * TAU, 1.0))
+		await k.step()
+		k.scatter(barrel, xfs, true, false, true)
+	k.marker("home", k.on_ground(camp.x + side.x * 4.2 - face.x * 0.2, camp.y + side.y * 4.2 - face.y * 0.2), true)
+	k.marker("the_fire", k.on_ground(camp.x + face.x * 1.4, camp.y + face.y * 1.4), true)
+	var tally := shaft - face * (pit * 0.5 + 3.2) - side * 3.0
+	k.marker("the_tally", k.on_ground(tally.x - face.x * 1.2, tally.y - face.y * 1.2), true)
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(tally.x, 0.0, tally.y))
+	# the Guild's banner on a pole by the ramp
+	var pole := m.begin()
+	var bp := ramp_b - side * 2.0
+	var ptop := m.post(pole, bp, 5.0, 0.12)
+	m.block(pole, Transform3D(fb, ptop - Vector3.UP * 0.1 + sx * 0.45), Vector3(0.9, 0.06, 0.06))
+	await k.step()
+	m.commit(pole, k.surface("timber", 0.85), "GuildPole")
+	m.sheet(ptop - Vector3.UP * 0.12 + sx * 0.8, PoiKit.yaw_of(face), 0.8, 1.5, PoiKit.plain(Color(0.42, 0.12, 0.1), 0.85), "GuildBanner", 0.08, true, 2, 3)
+	await reeds(d, 14.0, 30.0, 70, [[bc, 10.0], [shaft, 7.0], [camp, 7.0], [shaft + side * 8.5, 5.0], [shaft - side * 8.5, 5.0]])
+
+
+# --- The Keel-Barrow -----------------------------------------------------------------------------------
+
+## A turf barrow on the flats' last dry ground with a Salt Isles ship's stem and stern standing out of
+## its ends, each a black oak post curling over into a gull's head; her grey clinker strakes showing
+## where the turf has slumped; her oars stood in the turf along her ridge; the stump of her mast with a
+## sail of rusted chain hung from its yard; the door of salt-white boards in her side in a cutting of
+## drystone; the mooring-rope from a ring in her stem out across the flats to a stake (the site's hook).
+## Spots: the_side (the drowned muster there after dark).
+static func the_keel_barrow(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var def := ContentDB.get_or_empty(d.poi_id)
+	var site: Dictionary = def.get("site", {})
+	var sea := k.water_direction(220.0)
+	if sea == Vector2.ZERO:
+		sea = Vector2(-1.0, 0.0)
+	var side := Vector2(sea.y, -sea.x)
+	# the door on the side the road comes from
+	if k.road_distance(side * 20.0) > k.road_distance(-side * 20.0):
+		side = -side
+	var sb := Basis(Vector3.UP, PoiKit.yaw_of(sea))
+	var sx := Vector3(side.x, 0.0, side.y)
+	var fx := Vector3(sea.x, 0.0, sea.y)
+	var g0 := k.on_ground(0.0, 0.0).y
+	# the barrow: a long mound of turf, five domes run together along her line
+	var turf_mat := PoiKit.painted(5, TURF, 0.8)
+	var crest := g0
+	for i in 5:
+		var t := float(i) - 2.0
+		var c2 := sea * t * 5.6
+		var hump := 3.4 - absf(t) * 0.35
+		var r := 7.4 - absf(t) * 0.5
+		var cg := k.on_ground(c2.x, c2.y)
+		m.mound(cg + Vector3.DOWN * 0.2, r, hump, turf_mat, "Barrow%d" % i, true, 1.3, 7, 22, true, 0.08)
+		crest = maxf(crest, cg.y + hump - 0.2)
+	var oak := m.begin()
+	# the stem and the stern: tall posts out of either end, curling over into gulls' heads
+	for e in [1.0, -1.0]:
+		var base2 := sea * (16.2 * float(e))
+		var bgy := k.on_ground(base2.x, base2.y).y
+		var h := 7.2 if float(e) > 0.0 else 6.2
+		var prev := Vector3(base2.x, bgy - 0.4, base2.y)
+		var pts: Array = []
+		for j in 9:
+			var t := float(j + 1) / 9.0
+			var curl := pow(t, 3.0)
+			var p := Vector3(base2.x, bgy, base2.y) + fx * float(e) * (t * 1.4 - curl * 2.0) + Vector3.UP * (h * sin(t * PI * 0.5) - curl * 1.2)
+			m.limb(oak, prev, p, 0.42 - t * 0.18)
+			pts.append(p)
+			prev = p
+		var tip: Vector3 = pts[pts.size() - 1]
+		m.ellipsoid(oak, tip + Vector3.UP * 0.15 - fx * float(e) * 0.2, Vector3(0.38, 0.3, 0.55), Basis(Vector3.UP, PoiKit.yaw_of(-sea * float(e))))
+		m.limb(oak, tip - fx * float(e) * 0.5, tip - fx * float(e) * 1.1 - Vector3.UP * 0.1, 0.1)
+		k.collider(Vector3(1.0, h, 1.0), Transform3D(sb, Vector3(base2.x, bgy + h * 0.5, base2.y) + fx * float(e) * 0.4), "wood")
+		# a short run of her keel and garboards showing where the turf ends
+		m.block(oak, Transform3D(sb, Vector3(base2.x, bgy + 0.3, base2.y) - fx * float(e) * 1.2), Vector3(0.6, 0.9, 2.6))
+	# the ring-bolt in the stem, for the mooring-rope
+	var stem2 := sea * 16.2
+	var stem_g := k.on_ground(stem2.x, stem2.y).y
+	var ring := Vector3(stem2.x, stem_g + 1.6, stem2.y) + fx * 0.75
+	for i in 8:
+		var a0 := TAU * float(i) / 8.0
+		var a1 := TAU * float(i + 1) / 8.0
+		m.limb(oak, ring + sx * sin(a0) * 0.18 + Vector3.UP * cos(a0) * 0.18, ring + sx * sin(a1) * 0.18 + Vector3.UP * cos(a1) * 0.18, 0.03)
+	# the stump of her mast amidships, and its yard
+	var mast_foot := Vector3(0.0, crest - 0.3, 0.0)
+	var mast_top := mast_foot + Vector3.UP * 7.0
+	m.limb(oak, mast_foot, mast_top, 0.32)
+	var yard_y := mast_top.y - 0.6
+	m.limb(oak, Vector3(0.0, yard_y, 0.0) - sx * 3.6, Vector3(0.0, yard_y, 0.0) + sx * 3.6, 0.14)
+	k.collider(Vector3(0.64, 7.0, 0.64), Transform3D(Basis.IDENTITY, mast_foot + Vector3.UP * 3.5), "wood")
+	# the crew's oars stood upright in the turf along her ridge, blades to the sky
+	for s in [-1.0, 1.0]:
+		for i in 6:
+			var t := (float(i) - 2.5) * 3.6
+			var op := sea * t + side * 2.6 * float(s)
+			var oy := crest - 0.6 - absf(t) * 0.09 - 0.5
+			var lean := Vector3(side.x * float(s), 0.0, side.y * float(s)) * 0.12
+			var o0 := Vector3(op.x, oy, op.y)
+			var o1 := o0 + (Vector3.UP + lean).normalized() * 3.6
+			m.limb(oak, o0, o1, 0.06)
+			m.block(oak, Transform3D(sb * Basis(Vector3.FORWARD, lean.length() * float(s)), o1 + Vector3.UP * 0.35), Vector3(0.05, 0.9, 0.24))
+	await k.step()
+	m.commit(oak, PoiKit.painted(3, BLACK_OAK, 0.8), "KeelOak", true)
+	# the sail of chain from the yard down to the turf
+	var chain := m.begin()
+	for c in 7:
+		var cx := (float(c) - 3.0) * 1.05
+		var top := Vector3(0.0, yard_y - 0.1, 0.0) + sx * cx
+		var bot_y := crest - 0.45 - absf(cx) * 0.18
+		var n := int((top.y - bot_y) / 0.3)
+		for i in n:
+			var y := top.y - float(i) * 0.3
+			m.block(chain, Transform3D(sb * Basis(Vector3.UP, float(i % 2) * PI * 0.5), Vector3(top.x, y, top.z)), Vector3(0.11, 0.28, 0.035))
+	for r in 3:
+		var y := yard_y - 1.5 - float(r) * 1.4
+		m.limb(chain, Vector3(0.0, y, 0.0) - sx * 3.2, Vector3(0.0, y, 0.0) + sx * 3.2, 0.03)
+	await k.step()
+	m.commit(chain, PoiKit.plain(IRON_RUST, 0.75, 0.35), "ChainSail", true)
+	if k.far:
+		return
+	# her grey strakes where the turf has slumped off her flanks
+	var strakes := m.begin()
+	for s in [-1.0, 1.0]:
+		for patch in 2:
+			var pz := (float(patch) - 0.5) * 11.0 + k.rng.randf_range(-1.5, 1.5)
+			for j in 3:
+				var off := 5.0 + float(j) * 0.85
+				var py := g0 + 2.1 - float(j) * 0.75
+				var p := sea * pz + side * off * float(s)
+				m.block(strakes, Transform3D(sb * Basis(Vector3.FORWARD, -0.55 * float(s)), Vector3(p.x, py, p.y)), Vector3(0.1, 0.42, 4.2 - float(j) * 0.6))
+	await k.step()
+	m.commit(strakes, PoiKit.painted(3, BONE_WOOD, 0.85), "Strakes")
+	# the door in her side: a cutting of drystone into the barrow's flank, black jambs, white boards
+	var door_c := side * 5.6
+	var dg := k.on_ground(door_c.x, door_c.y).y
+	var db := Basis(Vector3.UP, PoiKit.yaw_of(side))
+	var stone := m.begin()
+	for s in [-1.0, 1.0]:
+		for j in 3:
+			var wp := door_c + side * (0.6 + float(j) * 1.2) + sea * 1.6 * float(s)
+			var wh := 2.6 - float(j) * 0.75
+			var wxf := Transform3D(db, Vector3(wp.x, dg + wh * 0.5 - 0.1, wp.y))
+			m.block(stone, wxf, Vector3(0.7, wh, 1.3))
+			k.collider(Vector3(0.7, wh, 1.3), wxf, "stone")
+	await k.step()
+	m.commit(stone, k.surface("stone", 0.85), "Cutting")
+	var frame := m.begin()
+	for s in [-1.0, 1.0]:
+		var jp := door_c + sea * 0.85 * float(s)
+		var jxf := Transform3D(db, Vector3(jp.x, dg + 1.3, jp.y))
+		m.block(frame, jxf, Vector3(0.35, 2.8, 0.45))
+		k.collider(Vector3(0.35, 2.8, 0.45), jxf, "wood")
+	m.block(frame, Transform3D(db, Vector3(door_c.x, dg + 2.8, door_c.y)), Vector3(2.3, 0.4, 0.5))
+	await k.step()
+	m.commit(frame, PoiKit.painted(3, BLACK_OAK, 0.8), "DoorFrame")
+	var boards := m.begin()
+	for i in 5:
+		var bp := door_c + sea * (float(i) - 2.0) * 0.27 - side * 0.12
+		m.block(boards, Transform3D(db, Vector3(bp.x, dg + 1.15, bp.y)), Vector3(0.25, 2.3, 0.07))
+	await k.step()
+	m.commit(boards, PoiKit.plain(SALT_WHITE, 0.85), "SaltBoards")
+	PoiDressing.kind_builders().SITES._door(d, str(site.get("interior", "")), Vector3(door_c.x, dg, door_c.y) + sx * 0.35, PoiKit.yaw_of(side))
+	k.marker("the_side", k.on_ground(door_c.x + side.x * 7.0 + sea.x * 6.0, door_c.y + side.y * 7.0 + sea.y * 6.0))
+	# burial lanterns either side of the cutting, lit by somebody
+	var poles := m.begin()
+	for s in [-1.0, 1.0]:
+		lantern_pole(d, poles, door_c + side * 4.2 + sea * 2.4 * float(s), -side, true, 2.4)
+	# the mooring-rope from the ring out across the flats, to a stake, and the stake's notice
+	var stake2 := stem2 + sea * 15.0 + side * 2.0
+	var stake_top := m.post(poles, stake2, 1.2, 0.18)
+	var prev := ring
+	for i in 12:
+		var t := float(i + 1) / 12.0
+		var q2 := Vector2(ring.x, ring.z).lerp(Vector2(stake_top.x, stake_top.z), t)
+		var y := lerpf(ring.y, stake_top.y - 0.1, t)
+		var sag := sin(t * PI) * 0.9
+		var qy := maxf(y - sag, k.on_ground(q2.x, q2.y).y + 0.06)
+		var q := Vector3(q2.x, qy, q2.y)
+		m.limb(poles, prev, q, 0.035)
+		prev = q
+	await k.step()
+	m.commit(poles, k.surface("timber", 0.85), "MooringRope")
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(stake2.x, 0.0, stake2.y) - sx * 2.2 - fx * 2.0)
+	await reeds(d, 12.0, 28.0, 50, [[stem2 + sea * 8.0, 8.0], [door_c + side * 5.0, 6.0], [Vector2.ZERO, 11.0], [-stem2, 4.0]])

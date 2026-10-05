@@ -47,6 +47,11 @@ const KINDS := {
 	## Hearthvale's novel places (world life, novel round): built only by the region's own builders
 	## (`builder` in the def; game/world/pois/regions/hearthvale.gd)
 	"dovecote": true, "scarecrow_moot": true, "chandlery": true, "turf_maze": true, "figure_cutting": true, "rookery": true,
+	## Sedgemire's novel places (each built by its region's own builder, `regions/sedgemire.gd`): a
+	## reed bride married to the flood, a wisp-catcher's rack of jars, a tide-gauge post, a ropewalk,
+	## a grief-maze of reed hedges, a heronry in dead alders, a sundew garden
+	"effigy": true, "wisp_jars": true, "tide_gauge": true, "ropewalk": true, "maze": true, "heronry": true,
+	"bog_garden": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -58,7 +63,8 @@ const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"
 		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
 		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
 		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp",
-		"dovecote", "scarecrow_moot", "chandlery", "turf_maze", "figure_cutting", "rookery"]
+		"dovecote", "scarecrow_moot", "chandlery", "turf_maze", "figure_cutting", "rookery",
+		"effigy", "wisp_jars", "tide_gauge", "ropewalk", "maze", "heronry", "bog_garden"]
 
 var poi_id := ""
 var kind := ""
