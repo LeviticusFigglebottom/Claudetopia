@@ -16893,7 +16893,7 @@ Wall), and Brightwater already had a listening horn (the Listening Post).
   Quarter forty fathom down, dry, the water held at its doors; the Bell Street, the flooded nave, the
   salvors' camp, the niche hall, the Singing Gallery, and **Corwen Lisle, Master of the Patience**, striking
   the Undersong with its own clapper. New foes: held salvor, drowned chainman. **The Patience Came Up Empty**
-  (Merryn Lisle or the salvors' slate; 3 stages).
+  (Merryn Lisle or the salvors' slate; 3 stages): ride the bell down, put Corwen Lisle to rest, tell Merryn; she leaves the clapper with you.
 
 ### Quests
 Seven new: Short Weight, The Patience Came Up Empty, **The Undersong** (leads out of Fathom Shears to Emmet

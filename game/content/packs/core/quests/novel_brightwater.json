@@ -139,7 +139,7 @@
     "giver": "core:npc/merryn_lisle",
     "region": "core:region/brightwater",
     "summary": "Three weeks ago the Fathom Company's diving bell, the Patience, went down to the Drowned Quarter with Master Corwen Lisle and four men after the Undersong, the Quarter's great bell, and came up on its chain empty and ringing. His daughter Merryn keeps the windlass and is not allowed down alone.",
-    "notes": "Brightwater's novel-places large site: Fathom Shears (pois/brightwater.json, a delve with its own builder: the sheer-legs, the quay, the Patience on her cradle) and the Drowned Quarter (interiors/novel_brightwater.json, a ruined_hall). Started by Merryn Lisle or by the salvors' slate (core:dialogue/fathom_shears_slate). Corwen Lisle drops the Undersong's clapper; Merryn decides it, and one answer leads out to the Listening Post (core:quest/the_undersong).",
+    "notes": "Brightwater's novel-places large site: Fathom Shears (pois/brightwater.json, a delve with its own builder: the sheer-legs, the quay, the Patience on her cradle) and the Drowned Quarter (interiors/novel_brightwater.json, a ruined_hall). Started by Merryn Lisle or by the salvors' slate (core:dialogue/fathom_shears_slate). Corwen Lisle drops the Undersong's clapper; Merryn hears of him, and leaves the clapper with you for core:quest/the_undersong (out to the Listening Post).",
     "stages": [
       {
         "id": "the_bell",
@@ -172,45 +172,14 @@
       },
       {
         "id": "the_clapper",
-        "journal": "Corwen Lisle was striking the Undersong with its own clapper when you found him, and would not stop until he was made to. Merryn Lisle is at the windlass, and it is hers to say what becomes of the bronze that cost her father.",
+        "journal": "Corwen Lisle was striking the Undersong with its own clapper when you found him, and would not stop until he was made to. Merryn Lisle is at the windlass, waiting to hear what became of her father.",
         "objectives": [
           {
-            "type": "choice",
-            "target": "the_clapper",
-            "text": "Bring Merryn Lisle the clapper and tell her about her father",
-            "with": "core:npc/merryn_lisle",
-            "options": [
-              {
-                "id": "hang_it",
-                "text": "Hang it on the shears, where the chain rings against it, so the Quarter knows the Company is still here.",
-                "effects": [
-                  {
-                    "take_item": [
-                      "core:item/undersong_clapper",
-                      1
-                    ]
-                  },
-                  {
-                    "set_flag": "patience_clapper_hung"
-                  },
-                  {
-                    "renown": 5
-                  }
-                ]
-              },
-              {
-                "id": "to_the_horn",
-                "text": "Carry it to the Listening Post's horn, where what is struck is heard across the Mere and under it.",
-                "effects": [
-                  {
-                    "set_flag": "patience_clapper_to_horn"
-                  },
-                  {
-                    "start_quest": "core:quest/the_undersong"
-                  }
-                ]
-              }
-            ]
+            "type": "talk",
+            "target": "core:npc/merryn_lisle",
+            "topic": "q_father",
+            "count": 1,
+            "text": "Tell Merryn Lisle what became of her father"
           }
         ],
         "marker": {
@@ -238,7 +207,7 @@
     "giver": "core:npc/merryn_lisle",
     "region": "core:region/brightwater",
     "summary": "Merryn Lisle let the Undersong's clapper go to the Listening Post on the east shore, where the Circle's horn takes the Toll off the water and gives back whatever is struck at its mouth.",
-    "notes": "Leads out of Fathom Shears (core:quest/the_patience, option to_the_horn) to the Listening Post (pois/brightwater.json the_listening_post): Emmet Quarle's q_clapper line, then his choice.",
+    "notes": "Leads out of Fathom Shears (after core:quest/the_patience Merryn Lisle offers it) to the Listening Post (pois/brightwater.json the_listening_post): Emmet Quarle's q_clapper line, then his choice.",
     "stages": [
       {
         "id": "the_horn",
@@ -330,7 +299,13 @@
     "rewards": {
       "marks": 80,
       "renown": 6
-    }
+    },
+    "requires": [
+      {
+        "quest_done": "core:quest/the_patience"
+      }
+    ],
+    "offer": "I'll take the clapper to the Listening Post."
   },
   {
     "id": "core:quest/chalked_off",

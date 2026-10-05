@@ -873,6 +873,14 @@
       {
         "conditions": [
           {
+            "quest_done": "core:quest/the_patience"
+          }
+        ],
+        "text": "The chain doesn't ring by itself any more. I keep listening for it anyway. -- The Patience goes down Tuesdays. You're welcome in her."
+      },
+      {
+        "conditions": [
+          {
             "quest_at": [
               "core:quest/the_patience",
               "the_clapper"
@@ -880,14 +888,6 @@
           }
         ],
         "text": "*(She stops counting the links. She has seen what is in your hand.)* -- That's the Undersong's tongue. -- Where's my father?"
-      },
-      {
-        "conditions": [
-          {
-            "quest_done": "core:quest/the_patience"
-          }
-        ],
-        "text": "The chain doesn't ring by itself any more. I keep listening for it anyway. -- The Patience goes down Tuesdays. You're welcome in her."
       }
     ],
     "nodes": {
@@ -900,6 +900,18 @@
         "speaker": "Merryn Lisle",
         "text": "*(She turns the windlass a quarter. The chain groans up the mast.)* Well?",
         "choices": [
+          {
+            "text": "I found your father in the bell-hall.",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_patience",
+                  "the_clapper"
+                ]
+              }
+            ],
+            "next": "q_father"
+          },
           {
             "text": "What is down there?",
             "next": "quarter"
@@ -923,16 +935,10 @@
             "next": "father"
           },
           {
-            "text": "Where should the clapper go?",
+            "text": "What should become of the clapper?",
             "conditions": [
               {
                 "quest_done": "core:quest/the_patience"
-              },
-              {
-                "has_item": [
-                  "core:item/undersong_clapper",
-                  1
-                ]
               },
               {
                 "quest_not_done": "core:quest/the_undersong"
@@ -998,6 +1004,11 @@
       "horn": {
         "speaker": "Merryn Lisle",
         "text": "The Listening Post, on the east shore. Emmet Quarle sits under the Circle's horn and writes down the Toll. What's struck at its mouth goes out over the water, and under it. -- Let the Quarter hear its bell answered. Or let the Circle put it in a case. Not here. I can't have it here.",
+        "next": "hub"
+      },
+      "q_father": {
+        "speaker": "Merryn Lisle",
+        "text": "*(She listens to all of it without turning the windlass once.)* -- He took its tongue out and it rang anyway, and he tried to strike it quiet. That's him. That's exactly him. -- Thank you. The chain's stopped. *(She does not take the clapper.)* Keep that. I can't have it here, it'll ring in my sleep. Ask me where it should go when you're ready.",
         "next": "hub"
       }
     }
