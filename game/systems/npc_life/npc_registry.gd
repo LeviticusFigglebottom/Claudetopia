@@ -801,12 +801,14 @@ func spawn(npc_id: String, slice: WorldPace.Slice = null) -> Node:
 	if parent == null:
 		node.free()
 		return null
+	# theirs before it enters the tree: anything its entering sets off that asks for them again
+	# finds them stood up, rather than standing up a second of them nobody keeps
+	spawned[npc_id] = node
 	parent.add_child(node)
 	if node is Node3D:
 		(node as Node3D).global_position = spawn_position(npc_id)
 	if node.has_method("apply_state"):
 		node.call("apply_state", state(npc_id))
-	spawned[npc_id] = node
 	npc_spawned.emit(npc_id, node)
 	if is_travelling(npc_id):
 		steer_traveller(npc_id)
@@ -990,6 +992,8 @@ func despawn(npc_id: String) -> void:
 
 
 func despawn_all() -> void:
+	# nobody still queued to stand up comes in after everybody has been sent away
+	_to_spawn.clear()
 	for id in spawned.keys():
 		despawn(id)
 
