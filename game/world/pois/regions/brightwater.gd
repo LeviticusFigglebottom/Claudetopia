@@ -3077,7 +3077,7 @@ static func the_charter_scale(d: PoiDressing) -> void:
 	k.collider(Vector3(5.2, 0.5, 5.2), Transform3D(Basis(Vector3.UP, yaw_f), Vector3(land_pan.x, lp_top - 0.25, land_pan.y)), "wood")
 	var chain_l := m.begin()
 	for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
-		var corner := Vector3(land_pan.x, lp_top + 0.15, land_pan.y) + F * 2.4 * c.x + A * 2.4 * c.y
+		var corner: Vector3 = Vector3(land_pan.x, lp_top + 0.15, land_pan.y) + F * 2.4 * c.x + A * 2.4 * c.y
 		m.limb(chain_l, land_end - Vector3(0.0, 0.3, 0.0), corner, 0.035)
 	await k.step()
 	m.commit(pans, k.surface("planks", 0.7), "LandPan", true)
@@ -3089,9 +3089,9 @@ static func the_charter_scale(d: PoiDressing) -> void:
 	var up := m.begin()
 	_scale_pan(m, up, water_pan, yaw_f, wp_top, 4.6)
 	for c in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
-		var corner := Vector3(water_pan.x, wp_top + 0.15, water_pan.y) + F * 2.1 * c.x + A * 2.1 * c.y
+		var corner: Vector3 = Vector3(water_pan.x, wp_top + 0.15, water_pan.y) + F * 2.1 * c.x + A * 2.1 * c.y
 		m.limb(up, water_end - Vector3(0.0, 0.3, 0.0), corner, 0.035)
-		var leg := water_pan + F2 * 1.6 * c.x + A2 * 1.6 * c.y
+		var leg: Vector2 = water_pan + F2 * 1.6 * c.x + A2 * 1.6 * c.y
 		m.post(up, leg, wp_top - 0.27 - k.on_ground(leg.x, leg.y).y, 0.2)
 	await k.step()
 	m.commit(up, k.surface("planks", 0.75), "WaterPan", true)
