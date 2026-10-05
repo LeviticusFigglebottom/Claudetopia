@@ -1,0 +1,102 @@
+[
+  {
+    "id": "core:rumour/fallen_head_lullaby",
+    "name": "The head on the plateau",
+    "tone": "strange",
+    "text": "The dry wind took the ash off the plateau west of the Choir this spring, and there was a face under it. One of the twelve heads, on its cheek, with its mouth open. It sings at night. A cradle-song, the Order's hearer says, and names between the verses.",
+    "variants": ["Pell Hoddy at the Hood sent 'found' in smoke this spring. Nobody had sent it since the Ash Winter. Nobody remembered what it meant."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/ash_dial_thirteenth",
+    "name": "The thirteenth stone",
+    "tone": "strange",
+    "text": "The Order tells the hours by a Builders' dial on the west heath: a stone blade, and a ring of stones with the strokes cut on them. Thirteen stones. Twelve numbers. The girl who reads it says the blank one opens at its own hour, if you're there with your hand on it.",
+    "variants": ["Out on the west heath a hand-bell rings the hours off a stone blade's shadow. After dark the wights go and stand on the stones."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/name_kiln_screen",
+    "name": "The wind says them",
+    "tone": "warm",
+    "text": "North of Greyfold there's a kiln on a vent that's never gone out, and beside it a screen of a thousand tiles on cords, each with a name on it. The wind knocks them together. Odile Wark will fire yours for a coin. The pilgrims say it's the only thing on the heath the Hush can't take.",
+    "variants": ["If you go south, have Odile Wark fire your name first. Then somebody up here is saying it."],
+    "tags": ["cinderlea", "warm"]
+  },
+  {
+    "id": "core:rumour/leaving_lines_corra",
+    "name": "The woman by the basin",
+    "tone": "grim",
+    "text": "At the Leaving-Lines, past the Undertone, where the pilgrims hang up their colours: there's a Merrowby woman sat by the ash-basin three days with her red coat on the line, not going on and not coming back. Somebody ought to take her some bread.",
+    "variants": ["The only colour south of Greyfold is on the Leaving-Lines, and it's the clothes of the ones who went."],
+    "tags": ["cinderlea", "grim"]
+  },
+  {
+    "id": "core:rumour/smoke_hood_code",
+    "name": "Puffs on the heath",
+    "tone": "strange",
+    "text": "That smoke going up in puffs between Greyfold and Pilgrim's Ash isn't a fire. It's the Order talking. There's a brother at the Hood who drops a hide on a vent and lifts it, long and short. He'll let you work the lever if you ask nicely, and the heath answers.",
+    "variants": ["Three longs at dawn from the Hood, and every house on the heath sends three back. The year one doesn't, they say, you'll know."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/isse_cistern_water",
+    "name": "Water in the cistern",
+    "tone": "strange",
+    "text": "The Builders' cistern under the Ashgrid has been dry since the Ash Winter, every Sayer says so. There's a reedwoman from Isseva at the top of its stair, standing on one leg, who walked two regions because she heard it's full again.",
+    "variants": ["The wights that come up out of the Cistern of Isse are wet to the knee. Think about that."],
+    "tags": ["cinderlea", "strange"]
+  },
+  {
+    "id": "core:rumour/silk_vents_moths",
+    "name": "Grey snow at dusk",
+    "tone": "strange",
+    "text": "The Order's grey is moth-silk, did you know? There's a moth-wife out between the Ashgrid and the Undertone road who lights a lamp at dusk and the moths come down to it like snow. Stand under it, they say, and she gives you a skein.",
+    "variants": [
+      "Saw a woman covered head to foot in grey moths last night, standing under a lamp on a pole, perfectly still. She waved, after."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/fading_glass_grey",
+    "name": "Are you grey yet?",
+    "tone": "grim",
+    "text": "On the west heath there's a sheet of black glass the pilgrims kneel at to see if they've started fading. Well known, you show in colour. Forgotten, you show grey. I looked. I'm not telling you what I saw.",
+    "variants": [
+      "Polish the Fading-Glass with your sleeve when you pass. That's the custom. So it tells the next one true."
+    ],
+    "tags": [
+      "cinderlea",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/gentle_fold_reading",
+    "name": "The fold below Pilgrim's Ash",
+    "tone": "warm",
+    "text": "The Order keeps the wights that won't lie down in a fold on the heath below Pilgrim's Ash, and a boy reads them their names every dusk until they do. Some nights you can hear him from the road. Some nights you can hear them settle.",
+    "variants": [
+      "There are more under the blankets in the Gentle Fold this year than last. The novice won't say how many."
+    ],
+    "tags": [
+      "cinderlea",
+      "warm"
+    ]
+  },
+  {
+    "id": "core:rumour/cinderhowe_knight",
+    "name": "The knight in the cone",
+    "tone": "strange",
+    "text": "Cinderhowe, the black cone on the north heath with the smoke over it. The cutters left the glass galleries forty years ago because a knight walks them in armour that rings like glass. A knapper's sitting at the foot of it now, waiting for somebody braver than him.",
+    "variants": [
+      "Every blade the Order carried was Cinderhowe glass once. Not since the knight."
+    ],
+    "tags": [
+      "cinderlea",
+      "strange"
+    ]
+  }
+]
