@@ -580,6 +580,17 @@ const WHAT_STANDS := {
 	"core:poi/old_kharrows_rest": "nobody: none",
 	"core:poi/skarl_drove_well": "nobody: none",
 	"core:poi/unroping_post": "nobody: none",
+	# Skerrow's novel places (2026-10-04)
+	"core:poi/the_kinchain": "person: core:npc/ottar_ko_ghast",
+	"core:poi/the_kite_watch": "person: core:npc/runa_ko_oskel",
+	"core:poi/bee_bole_crag": "person: core:npc/bannoch_the_bee_master",
+	"core:poi/the_scour": "two scree-hags over the gash after dark, and person: core:npc/wat_hobb_ko_brindle",
+	"core:poi/black_rent_pillar": "person: core:npc/isbel_ko_rudd",
+	"core:poi/the_bucket_line": "person: core:npc/grett_ko_brindle",
+	"core:poi/the_breath_ledge": "two crag-wolves at the fallen boards after dark, and person: core:npc/mags_ko_skarl",
+	"core:poi/the_answering_wall": "a scree-hag over the wall at dusk",
+	"core:poi/corbie_stack": "two of Annet's riders on the bridge-crag by day; Annet and the rest are inside (core:interior/corbie_cellars)",
+	"core:poi/the_unmade_giant": "two scree-hags on the scaffold and a stone-thrall after dark; Mother Scree is inside (core:interior/hag_warren), and person: core:npc/haskel_ko_ghast",
 	# Brightwater's large places (world life phase 2)
 	"core:poi/the_crown_drift": "two brass-takers at the shaft head at night and a drift-hewer at midnight; the takers, the nine and Gideon Spall are inside (core:interior/the_crown_drift), and person: core:npc/abel_rowse",
 	"core:poi/the_struck_barrow": "two resurrection men at the portal at night, two of the struck at the Needle's foot at dusk; the bailiff and the Receiver are inside (core:interior/the_struck_barrow)",

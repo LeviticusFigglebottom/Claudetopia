@@ -165,6 +165,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/bee_bole_crag",
+        "quests": [],
+        "finds": [
+          "core:item/note_bee_bole_swarms"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/bell_counters_hut",
         "quests": [
           "core:quest/counts_in_a_strange_hand"
@@ -261,6 +270,15 @@
         "finds": [
           "core:item/note_black_keep"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/black_rent_pillar",
+        "quests": [
+          "core:quest/the_black_rent"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -946,6 +964,17 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/corbie_stack",
+        "quests": [
+          "core:quest/the_black_rent"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/corbie_stack"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/counting_fold",
         "quests": [],
         "finds": [
@@ -1270,6 +1299,7 @@
       {
         "poi": "core:poi/dunnow",
         "quests": [
+          "core:quest/the_cut_link",
           "core:quest/the_long_tally"
         ],
         "finds": [],
@@ -4863,6 +4893,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_answering_wall",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_answering_wall"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_ash_dial",
         "quests": [],
         "finds": [],
@@ -4882,6 +4921,26 @@
         "encounters": [
           "core:encounter/the_bonefield"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_breath_ledge",
+        "quests": [
+          "core:quest/the_wall_answers"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_breath_ledge"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_bucket_line",
+        "quests": [],
+        "finds": [
+          "core:item/note_bucket_line_board"
+        ],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -4977,6 +5036,29 @@
           "core:quest/ring_the_warden_down"
         ],
         "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_kinchain",
+        "quests": [
+          "core:quest/the_cut_link",
+          "core:quest/the_unmade_giant"
+        ],
+        "finds": [
+          "core:item/note_kinchain_count"
+        ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_kite_watch",
+        "quests": [
+          "core:quest/the_unmade_giant"
+        ],
+        "finds": [
+          "core:item/note_kite_watch_lines"
+        ],
         "encounters": [],
         "hearthstone": false
       },
@@ -5096,6 +5178,15 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_scour",
+        "quests": [],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_scour"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_sentinels",
         "quests": [],
         "finds": [
@@ -5181,6 +5272,17 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_undertone"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_unmade_giant",
+        "quests": [
+          "core:quest/the_unmade_giant"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_unmade_giant"
         ],
         "hearthstone": false
       },
