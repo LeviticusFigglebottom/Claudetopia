@@ -198,7 +198,7 @@
     "unique_object": "the Undersong, the Quarter's great bell, hanging in its black frame at the bottom of the Singing Stair with its tongue out of it, still ringing",
     "site": {
       "kind": "ruined_hall",
-      "seed": 6907,
+      "seed": 6919,
       "region": "core:region/brightwater",
       "size": "large",
       "boss": "core:boss/corwen_lisle",
@@ -238,14 +238,13 @@
         {
           "id": "flooded_nave",
           "role": "chamber",
-          "size": "large",
-          "set_piece": "ledge"
+          "size": "large"
         },
         {
           "id": "the_stair_down",
           "role": "passage",
           "size": "small",
-          "drop": -3.0
+          "drop": -2.5
         },
         {
           "id": "salvors_camp",
