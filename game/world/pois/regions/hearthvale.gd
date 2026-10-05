@@ -4093,7 +4093,7 @@ static func tamwick_troy(d: PoiDressing) -> void:
 			var xf := Transform3D(Basis(Vector3.UP, am + PI * 0.5), g + Vector3(0.0, h * 0.5 - 0.1, 0.0))
 			m.block(hedge, xf, Vector3(seg, h + 0.2, thick))
 			m.block(hedge, Transform3D(xf.basis, g + Vector3(0.0, h + 0.02, 0.0)), Vector3(seg * 0.92, 0.18, thick * 0.8))
-			k.collider(Vector3(seg, h + 0.2, thick), xf, "")
+			k.collider(Vector3(seg, h + 0.2, thick), xf, "dirt")
 		await k.step()
 	m.commit(hedge, PoiKit.painted(5, HEDGE, 0.5, 0.9), "TroyHedges", true)
 	# the maypole at the heart, its garland, and the ribbons pegged out round its foot
@@ -4232,7 +4232,7 @@ static func unfinished_figure(d: PoiDressing) -> void:
 		var g := k.on_ground(p.x, p.y)
 		for layer in 3 - (i % 2):
 			m.block(turf, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across) + k.rng.randf_range(-0.1, 0.1)), g + Vector3(0.0, 0.12 + float(layer) * 0.22, 0.0)), Vector3(1.1, 0.2, 0.55))
-		k.collider(Vector3(1.1, 0.7, 0.55), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), g + Vector3(0.0, 0.35, 0.0)), "")
+		k.collider(Vector3(1.1, 0.7, 0.55), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(across)), g + Vector3(0.0, 0.35, 0.0)), "dirt")
 	await k.step()
 	m.commit(turf, _turf(), "TurfStacks")
 	var yard := origin + up * (-8.0 * sz - 6.5)
