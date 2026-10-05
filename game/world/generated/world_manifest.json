@@ -39,18 +39,18 @@
    "reeds"
   ]
  },
- "built_at": "2026-10-03T17:07:31Z",
- "build_seconds": 2049.8,
+ "built_at": "2026-10-05T08:28:01Z",
+ "build_seconds": 2165.1,
  "height_range": [
   -24.24,
   784.13
  ],
- "water_fraction": 0.168,
+ "water_fraction": 0.1679,
  "rivers": 14,
- "roads": 137,
- "pois": 601,
- "scatter_instances": 5749556,
- "encounters": 517,
+ "roads": 156,
+ "pois": 655,
+ "scatter_instances": 5721122,
+ "encounters": 524,
  "texture_slots": [
   "vale_grass",
   "chalk",
@@ -77,7 +77,7 @@
   "talus"
  ],
  "only": "all",
- "pad_fingerprint": "3a0d0acd",
+ "pad_fingerprint": "f740fa8c",
  "recipes": [],
  "start": {
   "pos": [
@@ -152,6 +152,6 @@
    "greatwood",
    "high_wold"
   ],
-  "crc": "c84fd947"
+  "crc": "cdd84d04"
  }
 }
