@@ -1627,5 +1627,200 @@
       "hook": "core:dialogue/charter_delf_notice",
       "hook_prompt": "Read the Company's notices"
     }
+  },
+  {
+    "id": "core:poi/told_hives",
+    "name": "The Told Hives",
+    "region": "core:region/briarwold",
+    "kind": "strange_tree",
+    "position": [
+      2140,
+      956
+    ],
+    "pad_radius_m": 24,
+    "glade_m": 40,
+    "hearthstone": false,
+    "builder": "told_hives",
+    "unique_feature": "a dead oak standing silver-grey in a clearing of foxglove, thirteen metres of bole with no crown, girdled at every height with log hives lashed to it and more hung on ropes from its broken limbs, every hive tied round with a band of black cloth; a skep bench under a bark roof at its foot, a ladder up the bole, and the bees heard before the clearing is seen",
+    "visible_from": [],
+    "story": "Six generations of Ashbys have kept the bee-tree, and the Moot's candles and the Hollow's mead come out of it. Mab Ashby died at midsummer. Woodfolk custom is that the bees are told of a death by the keeper's heir, plainly, at the hive, or they take it ill and leave. Her granddaughter Linnet has tied the black on every hive, which is the first half of the custom, and has not said the words, which is the second, because once they are said to the bees it is so.",
+    "encounter": "Linnet Ashby keeps the tree by day, and the untold bees hang their swarms on whatever stands near: a fingerpost, a gate, once a sleeping burner",
+    "hook": "The bees at the Ashbys' tree have hung a swarm in the Tamwick road's fingerpost two days running, and Linnet Ashby walks down every morning with an empty skep and walks back with it empty.",
+    "wayside": false
+  },
+  {
+    "id": "core:poi/the_swainmote",
+    "name": "The Swainmote",
+    "region": "core:region/briarwold",
+    "kind": "market_field",
+    "position": [
+      2836,
+      -644
+    ],
+    "pad_radius_m": 28,
+    "glade_m": 46,
+    "hearthstone": false,
+    "builder": "swainmote",
+    "unique_feature": "the Woodfolk's court of custom in a ring of the Greatwood: tiers of turf benches edged with split oak rising round a pollard oak as broad as a cottage, the steward's chair cut into its bole, before the chair the dog-gauge, an iron stirrup on an oak post that a hound must pass through, and a wattle pound for the hounds waiting to be measured",
+    "visible_from": [],
+    "story": "The Woodfolk have no law, they say, only custom, and custom does not need saying until two people say it differently. Then twelve sit on the turf at the Swainmote and the steward says it aloud from the chair in the pollard, and what is said there is custom again. The Hart-Knights sat on its benches once and the verderers measured every hound in the Wold at its gauge: a hound too big to go through the stirrup could pull down a hart, and had three claws of each forefoot taken, and was called lawed. The mote has sat short of twelve since the knights went east, and the gauge has rusted. It still sits.",
+    "encounter": "Ambrose Gale, the mote's steward, keeps the chair by day; a girl, Hawys Tolly, waits at the pound where her hound is shut up to be measured",
+    "hook": "The Swainmote has sat three days short of its twelfth, with a hound in the pound and a girl at its gate, and the steward says custom lets a stranger who walks into the ring make up the number."
+  },
+  {
+    "id": "core:poi/silk_walk",
+    "name": "The Silk Walk",
+    "region": "core:region/briarwold",
+    "kind": "mill",
+    "position": [
+      2452,
+      -1940
+    ],
+    "pad_radius_m": 34,
+    "glade_m": 50,
+    "hearthstone": false,
+    "builder": "silk_walk",
+    "unique_feature": "a ropewalk ruled dead straight for sixty paces through the Northwold's oaks: posts with crossed heads every few strides carrying strands of weaver silk that shine like wet glass, the twisting jack with its wheel and hooks at the head under a bark shed, and halfway down the top on its sledge, where Margery Laithe lays silk into a line that will hold a falling man",
+    "visible_from": [],
+    "story": "The silk-gatherers take weaver silk out of the Northwold's crowns with poles and smoke, and it comes to the Silk Walk in hanks. Margery Laithe lays it into line: three strands twisted one way into yarn, three yarns the other way into a strand, three strands into a line no thicker than a finger that the Hollow hangs its rope walks from and Weaverdeep its bridges. She has walked her walk backward with silk round her waist for forty years and can tell good silk by the sound it makes in the wind. This autumn the hanks have come in stained black and smelling of oak-galls, and two of her gatherers have not come in at all.",
+    "encounter": "Margery Laithe walks the walk by day; weavers come down after dark to the silk on the posts, which is theirs, they think",
+    "hook": "Margery Laithe has stopped laying line. She says the silk coming in is black with something, and the two Dunnocks she sent south for clean silk have been gone a month."
+  },
+  {
+    "id": "core:poi/noon_owl",
+    "name": "The Noon Owl",
+    "region": "core:region/briarwold",
+    "kind": "strange_tree",
+    "position": [
+      2996,
+      -2004
+    ],
+    "pad_radius_m": 22,
+    "glade_m": 38,
+    "hearthstone": false,
+    "builder": "noon_owl",
+    "unique_feature": "a dead oak bleached white as bone with its top gone, and in its bole, high up, one round hollow as big as a cartwheel, black inside; under it a ring of hazel hurdles where the Woodfolk sit still at noon, the ground in the ring white with owl-pellets and grey feathers, and the old woman who counts",
+    "visible_from": [],
+    "story": "The Briarwold hears an owl at noon. Visitors take it for a joke; the Woodfolk do not laugh at it. It lives in the white oak in the Northwold and calls once a day, at the top of the sun, the wrong hour, and the Woodfolk say it is the owl that saw the Hush go south behind the Briar and has called the hour wrong ever since. Gammer Hoole sits in the ring under it at noon and counts the calls, and says the owl calls where lost things are. Once a day, she says, it is right.",
+    "encounter": "Gammer Hoole sits in the hurdle ring from morning till the afternoon; nothing comes near the white oak, not even the weavers",
+    "hook": "Gammer Hoole at the white oak says the noon owl called nine times yesterday, which it has not done since the Long Wind, and that nine is a place nobody has found."
+  },
+  {
+    "id": "core:poi/the_knar",
+    "name": "The Knar",
+    "region": "core:region/briarwold",
+    "kind": "delve",
+    "position": [
+      2716,
+      1284
+    ],
+    "radius_m": 32,
+    "pad_radius_m": 50,
+    "pad_shape": "level",
+    "glade_m": 80,
+    "glade_approach_m": 22,
+    "hearthstone": false,
+    "builder": "the_knar",
+    "unique_feature": "an oak of the Greatwood with a gall grown round its foot as big as a barn: a swollen brown mass twenty paces across and higher than a house, warted and split, bored with round holes like a cheese where the gall-wrights have cut into it, black sap weeping out of the holes; the wrights' vats steaming over their fires round its skirts and their smoke standing over the canopy; the oak above it half dead, its crown grey on one side; a door cut into the gall's split leads down into the galleries they have bored",
+    "visible_from": [],
+    "story": "Ink is made of oak-galls, iron and rain, and the best ink in the world is made of the Briarwold's. The Knar is the gall of all galls: an oak in the Greatwood that grew a burr round its own foot the size of a barn, and whose black does not fade, ever, not in water, not in fire. The Sayers' Circle in Tollmere writes its Rolls of Names in it, so that a name once written is kept. Nine years ago Master Orrin Sable came from Tollmere with the Circle's contract and bored the Knar like a cheese. His cutters drink the black, so that they need not sleep. Custom says you take from a living tree what it can spare. The oak's crown has gone grey on one side.",
+    "encounter": "gall-cutters at the vats by day, a weaver or two come down out of the grey crown at night; inside, cutters and vat-keepers in the bored galleries, weavers in the dark, and Master Orrin Sable in the gall's heart, where the black wells up",
+    "hook": "Two of Margery Laithe's silk-gatherers went south to the Knar for a Tollmere wage, and the smoke over the Greatwood there has not stopped since.",
+    "site": {
+      "interior": "core:interior/the_knar",
+      "hook": "core:dialogue/knar_notice",
+      "hook_prompt": "Read the wrights' notice"
+    }
+  },
+  {
+    "id": "core:poi/casting_dell",
+    "name": "The Casting Dell",
+    "region": "core:region/briarwold",
+    "kind": "hidden_valley",
+    "position": [
+      3348,
+      -1276
+    ],
+    "pad_radius_m": 24,
+    "glade_m": 40,
+    "hearthstone": false,
+    "builder": "casting_dell",
+    "unique_feature": "a dell in the High Wold where the harts come every spring to cast their antlers, the ground under the bracken white with them, ringed by a palisade of stakes each crowned with the best antler of a year; a Warden stands rooted at the dell's mouth, and on a flat stone at its head one antler lies set apart, the one the dell gives",
+    "visible_from": [],
+    "story": "Nobody knows why the High Wold's harts cast here and nowhere else. The Woodfolk custom is old and short: the dell gives one, and you take the one it gives. The verderers set the year's best on a stake round the rim and leave the rest to the moss. A Warden grew up at the dell's mouth in the knights' time, when the antler-sellers came with sacks, and it has not moved since. It does not mind you looking. It minds you carrying.",
+    "encounter": "a Warden rooted at the dell's mouth, asleep on its feet, that wakes for anybody carrying the dell's loose antlers past it",
+    "hook": "An antler-seller from the Lantern Row went into the Casting Dell with a sack in the spring, and the verderers found the sack.",
+    "wayside": false
+  },
+  {
+    "id": "core:poi/letter_oak",
+    "name": "The Letter Oak",
+    "region": "core:region/briarwold",
+    "kind": "strange_tree",
+    "position": [
+      1964,
+      -900
+    ],
+    "pad_radius_m": 30,
+    "glade_m": 46,
+    "hearthstone": false,
+    "builder": "letter_oak",
+    "unique_feature": "an oak by the Elderhold road with a ring of hazel posts round it strung with thread, and on the threads hundreds of letters folded small and tied on, white and grey and brown with age, turning in the wind; a bark box for new letters at its foot",
+    "visible_from": [],
+    "story": "The Woodfolk's post. You tie a letter on the Letter Oak's threads with the name on the outside, and whoever passes going that way takes it on, and nobody reads what is not theirs. Most letters go in a week. Some hang a year. One has hung twenty, gone brown as a leaf, with a hart-and-spear seal on it and a name nobody on the Elderhold road would carry it to: Wystan Tine.",
+    "encounter": "nobody keeps it; travellers stop to look for their names on the threads",
+    "hook": "There's a letter on the Letter Oak that's hung there twenty years with a Hart-Knight's seal on it, and every carrier on the Elderhold road has read the name and left it.",
+    "wayside": false,
+    "site": {
+      "hook": "core:dialogue/letter_oak_threads",
+      "hook_prompt": "Look for letters going your way"
+    }
+  },
+  {
+    "id": "core:poi/pannage_pound",
+    "name": "The Pannage Pound",
+    "region": "core:region/briarwold",
+    "kind": "fold",
+    "position": [
+      1940,
+      620
+    ],
+    "pad_radius_m": 26,
+    "glade_m": 40,
+    "hearthstone": false,
+    "builder": "pannage_pound",
+    "unique_feature": "the Lower Wold's pannage ground: a ring of turf bank topped with woven hazel round a stand of oaks, the commoners' pigs rooting for acorns inside it, a swill-trough and a scald-tub by the gate, and the agister's tally-post at the gate, notched with every pig counted in and out since the Toll fell",
+    "visible_from": [],
+    "story": "From Michaelmas to Martinmas the Wold lets the commoners turn their pigs out to the acorns, so many pigs to a household, counted in at the gate by the agister and counted out again in the winter, every one, or the household pays. Dunstan Agar has been agister of the Lower Wold forty years and his count has never been out. This autumn it is out by one every night: something comes over the bank in the dark.",
+    "encounter": "Dunstan Agar at the gate by day, the pigs rooting, and thornhounds over the bank after dark for the pigs",
+    "hook": "Dunstan Agar's pannage count at the Lower Wold pound has been one short every morning this week, and he says it is not the pigs who can't count.",
+    "wayside": false
+  },
+  {
+    "id": "core:poi/the_thornwell",
+    "name": "The Thornwell",
+    "region": "core:region/briarwold",
+    "kind": "delve",
+    "position": [
+      2596,
+      84
+    ],
+    "radius_m": 30,
+    "pad_radius_m": 38,
+    "pad_shape": "level",
+    "glade_m": 70,
+    "glade_approach_m": 20,
+    "hearthstone": false,
+    "builder": "thornwell",
+    "unique_feature": "a well-head of the Builders' black fused stone in the middle of the Greatwood, a ring fourteen paces across with a stair going down inside it, and out of it the Briar's own root burst up into the air in a crown of thorn arches thicker than a man and higher than the oaks, the only thorn in the Wold three miles from the wall; the Layers' cut-thorn stacked round it, their camp at its edge",
+    "visible_from": [],
+    "story": "The Woodfolk say the Builders grew the Briar to keep the Hush in the south, and nobody has ever asked how a hedge two hundred miles long is fed. The Thornwell answers it. In the spring the ground in the Greatwood's middle split, and the thorn came up out of a ring of the Builders' black stone that nobody knew was under the moss: a well, its stair going down, and the root of the Briar coming up it, three miles inside the wall. The Layers, who lay the thorn on the rim, came and cut it back, and it came up again overnight higher than they had cut it. Something at the bottom of the well is feeding it, or keeping it, and it has started to walk.",
+    "encounter": "thornhounds come up out of the well's stair after dark; inside, the Builders' halls under the Greatwood, thorn in every passage, weavers and thornhounds, a Warden grown in the crown hall, and at the bottom the Well-Keeper, a Builders' stone figure the root has grown through and stood up",
+    "hook": "Edda Layward has camped at the edge of the Thornwell for a month cutting the thorn back, and it comes up higher every night, and she says she has heard stone walking at the bottom of the well.",
+    "site": {
+      "interior": "core:interior/the_thornwell",
+      "hook": "core:dialogue/thornwell_cairn",
+      "hook_prompt": "Read the note under the layers' cairn"
+    }
   }
 ]
