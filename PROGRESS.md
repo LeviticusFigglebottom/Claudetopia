@@ -16851,3 +16851,65 @@ passes; the lane leaves Pilgrim's Ash on the track's line with no out-and-back n
 (roads.json); the fingerpost at the Wake Barrow fork (~(586, 2881)) still names Bramcombe;
 test_roads' graded/carve tests pass.
 
+
+
+## Brightwater's novel places: seven new kinds of place, two new large sites, seven quests (novel places, 2026-10-05)
+
+The owner's ask: truly novel places of kinds the game had none of, plus two large ones. All in Brightwater's
+own files (`pois/brightwater.json`, `encounters/pois_brightwater.json`, `roadlife/brightwater.json`, the new
+`*/novel_brightwater.json`, `tables/stock_brightwater_novel.json`) and new functions at the foot of
+`world/pois/regions/brightwater.gd`. No shared builder was changed. Each place keeps an existing `kind` label
+(the map, the audit and the tests read it) and is built entirely by its own builder.
+
+A ropewalk, fishing kites and a Builders' listening-dish were built first and then replaced: the Briarwold's
+round has a ropewalk (the Silk Walk), Skerrow's has kites (the Kite Watch) and an echo-crag (the Answering
+Wall), and Brightwater already had a listening horn (the Listening Post).
+
+### Seven places of new kinds
+| place | kind (builder) | what it is | what you do there | hook |
+|---|---|---|---|---|
+| **The Long Glass** (300, -1476) | vista (`the_long_glass`) | the Tallymen's 8 m brass telescope on a trunnion between black A-frames on the north brow, a platform, the Glass-Clerk's hut and his count-board | look through it: five daytime sightings, each finding a place, and two by night by their lights (the Dumb Fair, the Patience's ports); **The Unlit Boat** | a rumour; Hamnet Squire |
+| **The Cold Baths** (394, 622) | hut (`the_cold_baths`) | five red-and-white bathing-machines on wheels on the south shingle, a capstan, towel-rails | take the Cold: come up at ten, twenty or thirty (renown; the first thirty finds a drowned silver mark); **The Alderman's Ring** | a rumour |
+| **The Widows' Keels** (-924, 270) | hut (`the_widows_keels`) | three lake-boats turned keel-up for houses, stovepipes through their bottoms, eel-racks, the drowned-board chalked with lost boats | read the board; buy smoked eel; **Chalked Off** | a rumour; the boat-bearers road event; the Long Glass |
+| **The Charter Scale** (-274, 668) | tally_post (`the_charter_scale`) | a beam-balance that weighed boats: two A-frames 12 m high, a 16 m beam on a brass pivot, one pan grounded under iron weights, one swung up, the Weighmaster's booth | a weighing puzzle (bring the beam true: 4 + 6 + 13 = 23; the Weighmaster's drop); **Short Weight** | a rumour; the split salt-sack road event |
+| **The Cormorant Perches** (808, 550) | camp (`the_cormorant_perches`) | two staggered rows of T-perches at the water, a cormorant on each holding its wings out to dry, a reed shelter | watch the birds dive (a drowned Tallyman's seal-ring, then pike); **Old Tithe**, **The Alderman's Ring** | a rumour; the Long Glass |
+| **The Pearl Beds** (1462, -306) | camp (`the_pearl_beds`) | middens of opened mussel shells taller than the waders, a rack of 4 m wading-staves, nets, the pearl-tithe scale | open a shell from Dilly Fane's heap (empty, a seed pearl, a pearl, then luck); **Old Tithe** | a rumour; the spilled-shells road event |
+| **The Dumb Fair** (1190, 334) | camp (`the_dumb_fair`) | a ring of tall black poles hung with tarred sailcloth screens, hooded lanterns, trestles round a felt-wrapped bell | the silent smugglers' market: the Hush-wife trades in knocks (unsealed salt, Hush sayings, picks); ring the bell by night; **The Unlit Boat** | a rumour; the salt-train road event; Corbin Vell |
+
+### Two new large sites
+- **The Saltmound** (-1384, -532; delve, `the_saltmound`, pad 40): a cone of grey-white salt 16 m high,
+  the Charter's tithe of the Salt Isles' trade, with a barrow-trestle up its flank, the seal-pole on its top, a
+  lime-washed salt-gate with brass-bound doors under red Charter wax, the salt-reeve's sentry box; round the
+  back the Free Salters' timbered cut, their boats and sacks. Inside (`core:interior/the_saltmound`,
+  bandit_cave in salt white, seed 5811, 8 rooms + boss): the cut, the brine pool, the Salters' camp, the air
+  hall, the counting floor, and **Hesketh Vane, the Salt-King** (extends the smuggler-sayer; a crown of salt
+  crystals, an eel-leister). New foes: Free Salter, Salt Porter. **Short Weight** (Prudence Gauge or the
+  tithe-board; 4 stages): the barges weigh four stone light, Obed Marrow's seals are whole, the cut, the King,
+  then the ledger goes to the Row or into the Mere.
+- **Fathom Shears** (-330, -200, Tollmere's west tail; delve, `fathom_shears`, pad 36): two ship's masts
+  20 m high leaning out over a quay of Builders' stone, the diving bell the Patience on her cradle under the
+  head, a shot-line into the Mere, the windlass, the salvors' shed and salvage. Inside
+  (`core:interior/the_drowned_quarter`, ruined_hall in wet dark grey, seed 6907, 8 rooms + boss): the Drowned
+  Quarter forty fathom down, dry, the water held at its doors; the Bell Street, the flooded nave, the
+  salvors' camp, the niche hall, the Singing Gallery, and **Corwen Lisle, Master of the Patience**, striking
+  the Undersong with its own clapper. New foes: held salvor, drowned chainman. **The Patience Came Up Empty**
+  (Merryn Lisle or the salvors' slate; 3 stages).
+
+### Quests
+Seven new: Short Weight, The Patience Came Up Empty, **The Undersong** (leads out of Fathom Shears to Emmet
+Quarle's horn at the Listening Post: strike the clapper there or let the Circle have it), **Chalked Off**
+(Grisel Mew; the Merry Tally's name-board lies in the Saltmound's camp, so it leads into and out of the
+large site), **The Unlit Boat** (the Long Glass to the Dumb Fair), **Old Tithe** (the Perches to the Pearl
+Beds), **The Alderman's Ring** (the Cold Baths to the Perches). The Crown Drift, the Struck Barrow and
+Holmwatch kept their one quest each. Every stage opens on its reason line.
+
+### Road life
+Five new events, no new behaviour: a split salt-sack between a carter and a tithe-clerk (help one: coin
+and unsealed salt, or the Row's thanks and the Charter Scale), mourners carrying a boat to the water (the
+Widows' Keels), a pearl-wader's spilled basket (the Pearl Beds), a silent salt-train by night with a
+packhorse and a trader (the Dumb Fair), a salvor with a sack of bronze (Fathom Shears).
+
+### Placement
+Every place is outside the atlas's Mere polygon (the first shore spots were inside it and the atlas check
+failed two of them), at least 50 m from every other pad, on ground under 10 degrees. `visible_from` is left
+empty on all nine until the next build can test the sightlines.
