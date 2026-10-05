@@ -17277,3 +17277,81 @@ quest walker 6/6 quests, 17/17 walks; softlock_check clean. Sheet:
 docs/review/world_life/sedgemire/novel_places.jpg (all views within budget; the Heronry 1.44 M, over
 the aim). **Next build:** pads for all nine; `glade_m` for the Unwinding and the Heronry (they stand in
 wood); tracks to the Ropewalk (147 m), the Unwinding (248 m), the Dredge (181 m) and the Barrow (216 m).
+
+## The world w4096l: the novel round's 54 places on their pads, nineteen tracks, glades, and no pad in a pit (w4096l, 2026-10-05)
+
+Built with `./run.sh world` (MEM_GB=7, 2165 s), re-imported, committed as w4096k was (the runtime set
+only). It does every "for the next build" list of the six novel-round sections.
+
+**Pads.** All 54 new places (Hearthvale 8, Briarwold 9, Cinderlea 9, Skerrow 10, Brightwater 9,
+Sedgemire 9) at their defs' `pad_radius_m` and `pad_shape`. No tree's trunk stands inside a new pad
+but five on a rim (within 0.5 m of the edge). Fathom Shears moved 10 m nearer its water, to (-333,-210):
+its quay runs from the shingle to the water's edge, 37-39 m north of the old middle, and reached 44 m
+past a 36 m pad.
+
+**Glades** (`glade_m`, 1047 trees from 17 places; w4096k 235 from 3): the Briarwold's nine (the Knar
+131, Silk Walk 77, Swainmote 74, Told Hives 71, Thornwell 69, Noon Owl 50, Letter Oak 44, Casting Dell
+40, Pannage Pound 35), and new ones for the Scarecrow Moot (44 m, 70 trees), the Witness Elms (40, 38),
+the Grey Heronry (44, 63), the Unwinding (46, 38) and the Wisp-Catcher's Rack (30, the 6 that stood on
+it). The Letter-Cote and the Candle-Wheel stand among Hearthvale's hedgerow trees and have none.
+
+**Tracks** (atlas, 105 roads; built 156). Each runs from a place to the nearer settlement end of its
+nearest road, turning onto it on the w4096k line; none ends at a POI another road ends at (a second
+road there moves the first's dead end into the place's middle). Own way, past the shared trunk:
+Wassail Knap-Hazelcombe 227 m, the Great Barn-Rookdown 185, the Scarecrow Moot-Rookdown 263, the
+Witness Elms-Rookdown 145, the Knar-Grandfather Hollow 191, the Thornwell-Hazelwick 189, the Silk
+Walk-Ormhold 145, the Casting Dell-Rookhold 331, the Pannage Pound-Hazelwick 240, the Fallen
+Head-Last Camp 132, Cinderhowe-West Walk 299, Corbie Stack-Fallen Hand 317, the Unmade Giant-Ghastfell
+801 (it zigzags 120 m down off its plateau), the Saltmound-Gullhithe 91, Fathom Shears-Tollmere 297,
+the Great Dredge-Oulea 162, the Keel-Barrow-Saeva 193, Hask's Ropewalk-Nauvissa 125, the
+Unwinding-Nauvissa 201: 4.5 km. Routed first on heights-only 4096 builds (6 min each; their roads
+are the full build's): four tracks that cut across country after their turning got via points along
+their trunk every 100 m; the Knar's was held to the Wold Road's hairpin past the Oiled Stone (it cut
+through the shrine); Cinderhowe's turns further north, clear of the Bell Wood Stone. signposts.json is
+made from those roads before the build, so the build stands the posts it checks: 66 fingerposts (185
+arms), 89 town stones, `--check` matches. The Pilgrim's Ash fingerpost waypoint [362, 2954] took.
+
+**The pad-dam fill walled pads in** (fixed, `roads.drain_pad_dams`). A closed hollow touching a pad's
+skirt was filled to where it would spill; where the pad lay on the floor of a basin of the country's own,
+the basin was filled to its rim round the pad and the pad stood in a pit: Wassail Knap 17 m down in ten
+hectares of flat fill (seen on the first sheet), the Letter-Cote 6 m. The same stood in the older world
+at the Clanless Camp (27 m), the Thornmarch (21), Stray Thorn (15, 13 ha), Ghastfoot (17), Briar's End,
+the Watch of the Gate and others. A hollow the pad's own middle lies in is now filled no higher than the
+pad; a hollow beside a pad (Fernhold's) as before. Two heights-only builds with and without: the land
+changes round 24 such places only, every change a lowering of the fill.
+
+**Builders fixed by the checks:** Hask's Ropewalk lays its walk across a road that ends at it (the grain
+was the new track's own line and the sledge stood on it); the Tamwick Troy's hedges and the Unfinished
+Figure's turf stacks say "dirt" underfoot; a cave mouth's capstone the hill already closes over is left
+out (the Rafters' Locker's two lay 99% and 165% inside its bank; newly in the seat test's sample).
+
+**Checks on the final world:**
+- `region_check.py <region> --godot --edited <its novel places>`: PASS for all six; 54 of 54 seat clean,
+  5-73 draws and 5-209 k triangles a place.
+- `./run.sh test --filter=test_signposts,test_pois,test_poi_,test_objects_seated,test_sites,
+  test_landmarks_seated,test_roads,test_tracks,test_world,test_settlement,test_pad_layout,test_wayside,
+  test_town_stone,test_ruins_off_the_road,test_road_`: 306 tests, 1 failed (objects_seated_skerrow,
+  fence_gap 5018 over 4285), 0 script errors, warnings at the 49 baseline. The test seats every eighth
+  place of the built list, and 54 new places moved the sample: at w4096k's sample places (SEAT_PLACES_FROM)
+  the first w4096l build (before the dam fix) counted 4084, under the baseline. The line-work's variants are drawn afresh by every build (the
+  pieces of a wall run differ in every cell even where the ground is the same), so Skerrow's baseline is
+  re-measured at the new sample: fence_gap 5018, buried 3 (was 7; on_road, overlap, sunk, fence_lone 0).
+- Python: tools/world/tests 333 passed, 1 skipped (the three that build a world left out);
+  test_capture_plan and test_relative_plan 34 passed with the capture plans remade on w4096l.
+- One region_check probe (Cinderlea, before the restart) hung in Godot's shutdown after writing its
+  probe: the main thread waiting on a worker-pool condition with every worker idle. The same check ran
+  clean twice after. Not chased.
+
+**Sheets** (`poi_sheet.py --built --weather clear --time 16.5`, combined by hand):
+- `docs/review/world_life/w4096l_large_sites.jpg`: the twelve large sites, four views each. Wassail Knap
+  stands on its valley floor (the first sheet had it in the 17 m pit). Every view within the budget but
+  the Thornwell's third, 1661 draws and **1.55 M primitives, over the 1.5 M budget** (its first two 1.36
+  and 1.35 M, over the aim; the Knar's 1.24 and 1.13 M over the aim): the Greatwood behind an open glade.
+  Not chased here. The tracks read as worn strips to the Fallen Head, Cinderhowe and the Unmade Giant;
+  under the Greatwood and in the Sedgemire wet they hardly show.
+- `docs/review/world_life/w4096l_briarwold_novel.jpg`: the Briarwold's nine, a view from the road's side
+  and one from above each (the full four-view run was taking 15-35 min a view in the Greatwood). The
+  glades are open from above, but at 16:30 the eye-level views of the Told Hives, the Swainmote and the
+  Silk Walk are still near black: the camera stands 1.5 radii out, at the glade's edge under the crowns,
+  and the low sun leaves the glade floor in the wood's shadow. The Noon Owl, the Casting Dell, the
+  Letter Oak, the Pannage Pound and the Thornwell read; the Knar's first view has a trunk at its right.
