@@ -1480,6 +1480,18 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/fathom_shears",
+        "quests": [
+          "core:quest/the_patience",
+          "core:quest/the_undersong"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/fathom_shears"
+        ],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/fern_gully",
         "quests": [],
         "finds": [],
@@ -4944,6 +4956,34 @@
         "hearthstone": false
       },
       {
+        "poi": "core:poi/the_charter_scale",
+        "quests": [
+          "core:quest/short_weight"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_cold_baths",
+        "quests": [
+          "core:quest/the_aldermans_ring"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_cormorant_perches",
+        "quests": [
+          "core:quest/old_tithe",
+          "core:quest/the_aldermans_ring"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
         "poi": "core:poi/the_crown_drift",
         "quests": [
           "core:quest/the_last_shift"
@@ -4952,6 +4992,15 @@
         "encounters": [
           "core:encounter/the_crown_drift"
         ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_dumb_fair",
+        "quests": [
+          "core:quest/the_unlit_boat"
+        ],
+        "finds": [],
+        "encounters": [],
         "hearthstone": false
       },
       {
@@ -5111,11 +5160,21 @@
         "poi": "core:poi/the_listening_post",
         "quests": [
           "core:quest/louder_than_the_toll",
-          "core:quest/the_singing_slate"
+          "core:quest/the_singing_slate",
+          "core:quest/the_undersong"
         ],
         "finds": [
           "core:item/note_listening_post"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_long_glass",
+        "quests": [
+          "core:quest/the_unlit_boat"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -5132,6 +5191,15 @@
         "finds": [
           "core:item/note_the_one_poppy"
         ],
+        "encounters": [],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_pearl_beds",
+        "quests": [
+          "core:quest/old_tithe"
+        ],
+        "finds": [],
         "encounters": [],
         "hearthstone": false
       },
@@ -5165,6 +5233,18 @@
         "finds": [],
         "encounters": [
           "core:encounter/the_saltgate"
+        ],
+        "hearthstone": false
+      },
+      {
+        "poi": "core:poi/the_saltmound",
+        "quests": [
+          "core:quest/chalked_off",
+          "core:quest/short_weight"
+        ],
+        "finds": [],
+        "encounters": [
+          "core:encounter/the_saltmound"
         ],
         "hearthstone": false
       },
@@ -5317,6 +5397,15 @@
         "finds": [],
         "encounters": [],
         "hearthstone": true
+      },
+      {
+        "poi": "core:poi/the_widows_keels",
+        "quests": [
+          "core:quest/chalked_off"
+        ],
+        "finds": [],
+        "encounters": [],
+        "hearthstone": false
       },
       {
         "poi": "core:poi/the_windthrow",

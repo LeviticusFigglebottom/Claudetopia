@@ -1,0 +1,649 @@
+[
+  {
+    "id": "core:quest/short_weight",
+    "name": "Short Weight",
+    "layer": "side",
+    "giver": "core:npc/prudence_gauge",
+    "region": "core:region/brightwater",
+    "summary": "Every salt barge out of the Saltmound comes down to the Charter Scale four stone lighter than the salt-reeve's tithe-board says it left, and the seals on the salt-gate have never been broken. Prudence Gauge, the Weighmaster, wants somebody who can count to go and see.",
+    "notes": "Brightwater's novel-places large site: the Saltmound (pois/brightwater.json, a delve with its own builder: the salt cone, the sealed gate, the Free Salters' cut) and its galleries (interiors/novel_brightwater.json, a bandit_cave). Started by Prudence Gauge at the Charter Scale or by the tithe-board at the salt-gate (core:dialogue/saltmound_tithe_board). Hesketh Vane drops the ledger; Prudence decides it.",
+    "stages": [
+      {
+        "id": "the_mound",
+        "journal": "Prudence Gauge wants to know why every salt barge comes down to her pan four stone light when the Saltmound's seals were never broken. The salt-reeve, Obed Marrow, keeps the sealed gate and the tithe-board on the west shore, and he cannot lie.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/the_saltmound",
+            "count": 1,
+            "text": "Go to the Saltmound on the west shore"
+          },
+          {
+            "type": "talk",
+            "target": "core:npc/obed_marrow",
+            "topic": "q_short",
+            "count": 1,
+            "text": "Tell Obed Marrow at the salt-gate what the Scale says"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_saltmound",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_cut",
+        "journal": "Obed Marrow's seals are whole, but round the back of the mound, toward the water, somebody has cut a timbered way into the salt. Whoever is carrying the Charter's salt out four stone at a time is inside it, and calls himself the Salt-King.",
+        "objectives": [
+          {
+            "type": "kill",
+            "target": "core:boss/hesketh_vane",
+            "count": 1,
+            "where": "core:interior/the_saltmound",
+            "text": "Find the Salt-King in the heart of the mound"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/free_salters_ledger",
+            "count": 1,
+            "text": "Take the Free Salters' ledger"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_saltmound",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_ledger",
+        "journal": "The Salt-King's ledger names every sack the Free Salters took and every hand on the shore that carried one, Gullhithe boatmen and widows' sons among them. Prudence Gauge will weigh it at the Scale, and somebody has to say where it goes.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_ledger",
+            "text": "Give Prudence Gauge the ledger and say what is done with it",
+            "with": "core:npc/prudence_gauge",
+            "options": [
+              {
+                "id": "to_the_row",
+                "text": "Send it to the Row. The Charter's salt is the Charter's, and the Tallymen should know who took it.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/free_salters_ledger",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "short_weight_to_the_row"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      10
+                    ]
+                  },
+                  {
+                    "marks": 60
+                  }
+                ]
+              },
+              {
+                "id": "into_the_mere",
+                "text": "Put it in the Mere. The Salt-King is dead; the boatmen in it only carried sacks for him.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/free_salters_ledger",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "short_weight_drowned"
+                  },
+                  {
+                    "morality": 3
+                  },
+                  {
+                    "rep": [
+                      "core:faction/quiet_hands",
+                      5
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_charter_scale",
+          "radius": 70
+        }
+      },
+      {
+        "id": "weighed",
+        "journal": "The ledger has gone where it was sent. Prudence Gauge has entered the whole business in her own book under SHORT WEIGHT, ACCOUNTED FOR, and the salt barges come down to her pan true to the pound.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 180,
+      "renown": 12
+    }
+  },
+  {
+    "id": "core:quest/the_patience",
+    "name": "The Patience Came Up Empty",
+    "layer": "side",
+    "giver": "core:npc/merryn_lisle",
+    "region": "core:region/brightwater",
+    "summary": "Three weeks ago the Fathom Company's diving bell, the Patience, went down to the Drowned Quarter with Master Corwen Lisle and four men after the Undersong, the Quarter's great bell, and came up on its chain empty and ringing. His daughter Merryn keeps the windlass and is not allowed down alone.",
+    "notes": "Brightwater's novel-places large site: Fathom Shears (pois/brightwater.json, a delve with its own builder: the sheer-legs, the quay, the Patience on her cradle) and the Drowned Quarter (interiors/novel_brightwater.json, a ruined_hall). Started by Merryn Lisle or by the salvors' slate (core:dialogue/fathom_shears_slate). Corwen Lisle drops the Undersong's clapper; Merryn hears of him, and leaves the clapper with you for core:quest/the_undersong (out to the Listening Post).",
+    "stages": [
+      {
+        "id": "the_bell",
+        "journal": "Merryn Lisle needs someone who is not Company to ride the Patience down to the Drowned Quarter and find her father, Corwen Lisle, who went down after the Undersong with four men. The bell-hall is at the bottom of the Singing Stair.",
+        "objectives": [
+          {
+            "type": "reach",
+            "target": "core:poi/fathom_shears",
+            "count": 1,
+            "text": "Go to Fathom Shears on Tollmere's west tail"
+          },
+          {
+            "type": "kill",
+            "target": "core:boss/corwen_lisle",
+            "count": 1,
+            "where": "core:interior/the_drowned_quarter",
+            "text": "Find Corwen Lisle in the Undersong's bell-hall"
+          },
+          {
+            "type": "collect",
+            "target": "core:item/undersong_clapper",
+            "count": 1,
+            "text": "Take the Undersong's clapper"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/fathom_shears",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_clapper",
+        "journal": "Corwen Lisle was striking the Undersong with its own clapper when you found him, and would not stop until he was made to. Merryn Lisle is at the windlass, waiting to hear what became of her father.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/merryn_lisle",
+            "topic": "q_father",
+            "count": 1,
+            "text": "Tell Merryn Lisle what became of her father"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/fathom_shears",
+          "radius": 70
+        }
+      },
+      {
+        "id": "surfaced",
+        "journal": "Corwen Lisle's whistle hangs on the windlass. Merryn Lisle has taken the Company's licence in her own name, and the Patience goes down again on Tuesdays.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 200,
+      "renown": 15,
+      "morality": 2
+    }
+  },
+  {
+    "id": "core:quest/the_undersong",
+    "name": "The Undersong",
+    "layer": "side",
+    "giver": "core:npc/merryn_lisle",
+    "region": "core:region/brightwater",
+    "summary": "Merryn Lisle let the Undersong's clapper go to the Listening Post on the east shore, where the Circle's horn takes the Toll off the water and gives back whatever is struck at its mouth.",
+    "notes": "Leads out of Fathom Shears (after core:quest/the_patience Merryn Lisle offers it) to the Listening Post (pois/brightwater.json the_listening_post): Emmet Quarle's q_clapper line, then his choice.",
+    "stages": [
+      {
+        "id": "the_horn",
+        "journal": "Merryn Lisle let the Undersong's clapper go to the Listening Post, whose horn takes the Toll off the water and gives back whatever is struck at its mouth. Emmet Quarle, the Circle's clerk there, will know what it does.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/emmet_quarle",
+            "topic": "q_clapper",
+            "count": 1,
+            "text": "Show Emmet Quarle the clapper at the Listening Post"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_listening_post",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_stroke",
+        "journal": "Emmet Quarle says the horn carries both ways: strike the clapper at its mouth and the whole Quarter will hear its bell answered, forty fathom down. Or the Circle will buy it, and put it in a case in the Spire.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_stroke",
+            "text": "Decide with Emmet Quarle what the clapper does at the horn",
+            "with": "core:npc/emmet_quarle",
+            "options": [
+              {
+                "id": "strike_it",
+                "text": "Strike it at the horn's mouth, once, and let the Quarter hear its bell answered.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/undersong_clapper",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "undersong_struck"
+                  },
+                  {
+                    "renown": 6
+                  },
+                  {
+                    "morality": 2
+                  }
+                ]
+              },
+              {
+                "id": "sell_it",
+                "text": "Let the Circle have it, for the Spire.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/undersong_clapper",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "undersong_sold"
+                  },
+                  {
+                    "marks": 150
+                  },
+                  {
+                    "rep": [
+                      "core:faction/sayers",
+                      6
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_listening_post",
+          "radius": 70
+        }
+      },
+      {
+        "id": "rung",
+        "journal": "The Undersong's clapper has done what it was going to do at the Listening Post. Emmet Quarle has written it in the Circle's ledger, under the Toll.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 80,
+      "renown": 6
+    },
+    "requires": [
+      {
+        "quest_done": "core:quest/the_patience"
+      }
+    ],
+    "offer": "I'll take the clapper to the Listening Post."
+  },
+  {
+    "id": "core:quest/chalked_off",
+    "name": "Chalked Off",
+    "layer": "side",
+    "giver": "core:npc/grisel_mew",
+    "region": "core:region/brightwater",
+    "summary": "Grisel Mew's son Wat took the Merry Tally out in the spring and did not come home, and she chalked the boat on the drowned-board at the Widows' Keels. Now she has heard the Merry Tally was seen tied up at the Saltmound's back, where the Free Salters tie up.",
+    "notes": "The Widows' Keels' story (pois/brightwater.json the_widows_keels), leading into the Saltmound: the Merry Tally's name-board lies in the Free Salters' camp (core:interior/the_saltmound, room salters_camp; QuestItems). Grisel's choice at the end.",
+    "stages": [
+      {
+        "id": "the_name_board",
+        "journal": "Grisel Mew has heard her son's boat, the Merry Tally, was seen tied up behind the Saltmound where the Free Salters come and go. If the boat is in their cut, her name-board will be with their gear.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/merry_tally_board",
+            "count": 1,
+            "where": "core:interior/the_saltmound",
+            "spot": "salters_camp",
+            "text": "Find the Merry Tally's name-board in the Saltmound"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_saltmound",
+          "radius": 70
+        }
+      },
+      {
+        "id": "the_chalk",
+        "journal": "The Merry Tally's name-board was in the Salters' camp, and Wat Mew's mark is on their pay-board beside it: he is alive, and he is one of them. Grisel Mew is at the drowned-board with her chalk, waiting to hear.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_chalk",
+            "text": "Give Grisel Mew the name-board and tell her what became of Wat",
+            "with": "core:npc/grisel_mew",
+            "options": [
+              {
+                "id": "rub_it_out",
+                "text": "Tell her the truth: Wat is alive, and carries salt for the Free Salters.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/merry_tally_board",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "wat_mew_alive_told"
+                  },
+                  {
+                    "morality": 2
+                  }
+                ]
+              },
+              {
+                "id": "let_it_stand",
+                "text": "Tell her the boat was broken up in the cut, and let his name stand on the board.",
+                "effects": [
+                  {
+                    "take_item": [
+                      "core:item/merry_tally_board",
+                      1
+                    ]
+                  },
+                  {
+                    "set_flag": "wat_mew_left_drowned"
+                  },
+                  {
+                    "morality": -1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_widows_keels",
+          "radius": 70
+        }
+      },
+      {
+        "id": "chalked",
+        "journal": "Grisel Mew has done what she does with the drowned-board, and gone back to the racks, and the water.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 6
+    }
+  },
+  {
+    "id": "core:quest/the_unlit_boat",
+    "name": "The Unlit Boat",
+    "layer": "side",
+    "giver": "core:npc/hamnet_squire",
+    "region": "core:region/brightwater",
+    "summary": "Hamnet Squire, the Glass-Clerk at the Long Glass, has counted every boat on the Mere for thirty-four years. For two years one boat has crossed every night from the Saltmound's back to the Dumb Fair without a lantern, and he cannot enter what he cannot name.",
+    "notes": "The Long Glass's story (pois/brightwater.json the_long_glass), out to the Dumb Fair (the_dumb_fair): Ysbel Dunnage's q_boat line, then Hamnet's choice.",
+    "stages": [
+      {
+        "id": "the_fair",
+        "journal": "Hamnet Squire cannot enter a boat in his count without a name, and one crosses every night from the Saltmound to the black screens on the south-east shore with no light. Somebody at the Dumb Fair knows whose it is, and nobody there speaks.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/ysbel_dunnage",
+            "topic": "q_boat",
+            "count": 1,
+            "text": "Ask the Hush-wife at the Dumb Fair whose the unlit boat is"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_dumb_fair",
+          "radius": 60
+        }
+      },
+      {
+        "id": "the_count",
+        "journal": "The unlit boat is the Hush-wife's own, carrying the Charter's salt from the Saltmound to her fair, and now she knows the Glass has seen it. Hamnet Squire is at the Long Glass with his chalk, waiting for a name to write.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_count",
+            "text": "Tell Hamnet Squire whose the unlit boat is",
+            "with": "core:npc/hamnet_squire",
+            "options": [
+              {
+                "id": "enter_it",
+                "text": "Give him the name. Let it go in the count and to the Row with the rest.",
+                "effects": [
+                  {
+                    "set_flag": "unlit_boat_entered"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      6
+                    ]
+                  },
+                  {
+                    "marks": 40
+                  }
+                ]
+              },
+              {
+                "id": "leave_it_blank",
+                "text": "Tell him it is a boat that does not want counting, and let the column stay blank.",
+                "effects": [
+                  {
+                    "set_flag": "unlit_boat_blank"
+                  },
+                  {
+                    "rep": [
+                      "core:faction/quiet_hands",
+                      5
+                    ]
+                  },
+                  {
+                    "morality": -1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_long_glass",
+          "radius": 60
+        }
+      },
+      {
+        "id": "counted",
+        "journal": "Hamnet Squire has done with the unlit boat what his count lets him, and gone back to the glass. Four hundred and twelve.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 70,
+      "renown": 5
+    }
+  },
+  {
+    "id": "core:quest/old_tithe",
+    "name": "Old Tithe",
+    "layer": "side",
+    "giver": "core:npc/corbin_vell",
+    "region": "core:region/brightwater",
+    "summary": "Corbin Vell's oldest cormorant, Old Tithe, flew across the Mere at dusk with a packet on her leg and did not come back to her perch. The pearl-waders at the Wold Water's mouth hang their nets out at dusk.",
+    "notes": "Joins the Cormorant Perches (pois/brightwater.json the_cormorant_perches) and the Pearl Beds (the_pearl_beds): Dilly Fane's q_tithe line, then Corbin's choice.",
+    "stages": [
+      {
+        "id": "the_lines",
+        "journal": "Corbin Vell's oldest bird, Old Tithe, did not come back across the water at dusk, and he cannot leave the others. The pearl-waders below the Wold Water's mouth hang their nets out at dusk; if she came down anywhere, it was in those.",
+        "objectives": [
+          {
+            "type": "talk",
+            "target": "core:npc/dilly_fane",
+            "topic": "q_tithe",
+            "count": 1,
+            "text": "Ask Dilly Fane at the Pearl Beds about the bird in the net"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_pearl_beds",
+          "radius": 60
+        }
+      },
+      {
+        "id": "home",
+        "journal": "Dilly Fane cut Old Tithe out of her net and kept her warm in her smock, and the oilskin packet on her leg is still sealed. Corbin Vell will want his bird back, and somebody will have to say something about the packet.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "home",
+            "text": "Bring Old Tithe home to Corbin Vell",
+            "with": "core:npc/corbin_vell",
+            "options": [
+              {
+                "id": "unopened",
+                "text": "Give him the bird and the packet, unopened, and ask nothing.",
+                "effects": [
+                  {
+                    "set_flag": "old_tithe_packet_kept"
+                  },
+                  {
+                    "marks": 30
+                  },
+                  {
+                    "rep": [
+                      "core:faction/quiet_hands",
+                      3
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "no_more",
+                "text": "Give him the bird, and keep the packet until he swears she flies for fish and nothing else.",
+                "effects": [
+                  {
+                    "set_flag": "old_tithe_no_more_packets"
+                  },
+                  {
+                    "morality": 1
+                  },
+                  {
+                    "rep": [
+                      "core:faction/tallymen",
+                      3
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_cormorant_perches",
+          "radius": 60
+        }
+      },
+      {
+        "id": "perched",
+        "journal": "Old Tithe is back on her perch with her wings held out to dry, and Corbin Vell has whistled her name four times today for no reason at all.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {
+      "marks": 50,
+      "renown": 4,
+      "items": [
+        [
+          "core:item/mere_pike",
+          2
+        ]
+      ]
+    }
+  },
+  {
+    "id": "core:quest/the_aldermans_ring",
+    "name": "The Alderman's Ring",
+    "layer": "side",
+    "giver": "core:npc/hepzibah_cole",
+    "region": "core:region/brightwater",
+    "summary": "Twelve years ago Alderman Josiah Hale stayed under the Cold for the thirty at the bathing-machines and came up without his seal-ring, and has paid Hepzibah Cole a mark a month ever since to keep looking for it. The Mere moves things along the bottom; Corbin Vell's cormorants bring up what it moves, and drop what they cannot eat by their perches.",
+    "notes": "Joins the Cold Baths (pois/brightwater.json the_cold_baths) and the Cormorant Perches (the_cormorant_perches): the drowned seal-ring lies by the perches (QuestItems, marker the_perches), among what the birds bring up and cannot eat.",
+    "stages": [
+      {
+        "id": "the_ring",
+        "journal": "Hepzibah Cole has been paid a mark a month for twelve years to find Alderman Hale's seal-ring, lost in the Cold, and the Mere has carried it off along the bottom. Corbin Vell's cormorants dive off the south-east shore and bring up whatever the Mere has moved.",
+        "objectives": [
+          {
+            "type": "collect",
+            "target": "core:item/drowned_seal_ring",
+            "count": 1,
+            "text": "Find the alderman's seal-ring among the finds the cormorants drop by their perches",
+            "where": "core:poi/the_cormorant_perches",
+            "spot": "the_perches"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_cormorant_perches",
+          "radius": 60
+        }
+      },
+      {
+        "id": "the_return",
+        "journal": "A cormorant brought up a Tallyman's seal-ring cut with J.H., black with twelve years of the Mere. Hepzibah Cole will want to see it before she stops being paid to look for it.",
+        "objectives": [
+          {
+            "type": "deliver",
+            "target": "core:npc/hepzibah_cole",
+            "item": "core:item/drowned_seal_ring",
+            "count": 1,
+            "text": "Bring the seal-ring to Hepzibah Cole at the Cold Baths"
+          }
+        ],
+        "marker": {
+          "place_id": "core:poi/the_cold_baths",
+          "radius": 60
+        }
+      }
+    ],
+    "rewards": {
+      "marks": 90,
+      "renown": 5,
+      "rep": [
+        [
+          "core:faction/tallymen",
+          3
+        ]
+      ]
+    }
+  }
+]
