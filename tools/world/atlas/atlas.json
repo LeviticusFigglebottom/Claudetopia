@@ -12866,6 +12866,327 @@
     ]
    ],
    "kind": "track"
+  },
+  {
+   "from": "core:poi/wassail_knap",
+   "to": "core:place/hazelcombe",
+   "via": [
+    [
+     2591,
+     1726
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/great_barn",
+   "to": "core:place/rookdown",
+   "via": [
+    [
+     3401,
+     2365
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/scarecrow_moot",
+   "to": "core:place/rookdown",
+   "via": [
+    [
+     3192,
+     2606
+    ],
+    [
+     3188,
+     2658
+    ],
+    [
+     3145,
+     2744
+    ],
+    [
+     3092,
+     2837
+    ],
+    [
+     3052,
+     2924
+    ],
+    [
+     2998,
+     3002
+    ],
+    [
+     2915,
+     3070
+    ],
+    [
+     2863,
+     3149
+    ],
+    [
+     2825,
+     3236
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/witness_elms",
+   "to": "core:place/rookdown",
+   "via": [
+    [
+     3103,
+     2807
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_knar",
+   "to": "core:place/grandfather_hollow",
+   "via": [
+    [
+     2519,
+     1213
+    ],
+    [
+     2544,
+     1114
+    ],
+    [
+     2541,
+     1018
+    ],
+    [
+     2516,
+     915
+    ],
+    [
+     2445,
+     878
+    ],
+    [
+     2399,
+     833
+    ],
+    [
+     2430,
+     760
+    ],
+    [
+     2522,
+     723
+    ],
+    [
+     2579,
+     658
+    ],
+    [
+     2639,
+     589
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_thornwell",
+   "to": "core:place/hazelwick",
+   "via": [
+    [
+     2498,
+     220
+    ],
+    [
+     2395,
+     226
+    ],
+    [
+     2301,
+     227
+    ],
+    [
+     2280,
+     328
+    ],
+    [
+     2193,
+     361
+    ],
+    [
+     2098,
+     374
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/silk_walk",
+   "to": "core:place/ormhold",
+   "via": [
+    [
+     2496,
+     -1783
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/casting_dell",
+   "to": "core:place/rookhold",
+   "via": [
+    [
+     3172,
+     -1153
+    ],
+    [
+     3223,
+     -1061
+    ],
+    [
+     3279,
+     -984
+    ],
+    [
+     3310,
+     -882
+    ],
+    [
+     3385,
+     -831
+    ],
+    [
+     3376,
+     -748
+    ],
+    [
+     3394,
+     -740
+    ],
+    [
+     3480,
+     -746
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/pannage_pound",
+   "to": "core:place/hazelwick",
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_fallen_head",
+   "to": "core:place/last_camp",
+   "via": [
+    [
+     -840,
+     3388
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/cinderhowe",
+   "to": "core:place/west_walk",
+   "via": [
+    [
+     -2362,
+     1967
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/corbie_stack",
+   "to": "core:place/fallen_hand",
+   "via": [
+    [
+     743,
+     -3144
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_unmade_giant",
+   "to": "core:place/ghastfell",
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_saltmound",
+   "to": "core:place/gullhithe",
+   "via": [
+    [
+     -1500,
+     -532
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/fathom_shears",
+   "to": "core:place/tollmere",
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_great_dredge",
+   "to": "core:place/oulea",
+   "via": [
+    [
+     -3044,
+     -326
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_keel_barrow",
+   "to": "core:place/saeva",
+   "via": [
+    [
+     -3556,
+     738
+    ],
+    [
+     -3459,
+     689
+    ],
+    [
+     -3375,
+     651
+    ],
+    [
+     -3288,
+     588
+    ],
+    [
+     -3220,
+     520
+    ],
+    [
+     -3150,
+     456
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/hask_ropewalk",
+   "to": "core:place/nauvissa",
+   "via": [
+    [
+     -2468,
+     596
+    ]
+   ],
+   "kind": "track"
+  },
+  {
+   "from": "core:poi/the_unwinding",
+   "to": "core:place/nauvissa",
+   "kind": "track"
   }
  ],
  "start": {
