@@ -3953,14 +3953,16 @@ static func wassail_knap(d: PoiDressing) -> void:
 	k.marker("the_door", k.on_ground(ch.x + face.x * 3.5, ch.y + face.y * 3.5), true)
 	# the cellar grates along the front, where the singing comes up
 	var grates := m.begin()
+	var pits := m.begin()
 	for gi in 2:
 		var gp := hc + face * (hd * 0.5 + 0.9) + side * (1.0 + float(gi) * 3.6)
 		var gg := k.on_ground(gp.x, gp.y, 0.03)
-		m.block(dark, Transform3D(fb, gg + Vector3(0.0, -0.005, 0.0)), Vector3(1.1, 0.02, 0.7))
+		m.block(pits, Transform3D(fb, gg + Vector3(0.0, -0.005, 0.0)), Vector3(1.1, 0.02, 0.7))
 		for b in 5:
 			m.block(grates, Transform3D(fb, gg + fb * Vector3(-0.45 + float(b) * 0.225, 0.02, 0.0)), Vector3(0.05, 0.05, 0.78))
 	await k.step()
 	m.commit(grates, PoiKit.plain(IRON, 0.6, 0.4), "Grates")
+	m.commit(pits, PoiKit.plain(Color(0.02, 0.018, 0.016), 1.0), "GratePits")
 	var grate_at := hc + face * (hd * 0.5 + 1.6) + side * 1.0
 	k.touchable("CellarGrate", k.on_ground(grate_at.x, grate_at.y, 0.5), "Listen at the cellar grate", "core:dialogue/wassail_grate", "", false)
 	# the forecourt: the Wassail Tree, the sticks against it, the bowl on its trestle, the cold fire

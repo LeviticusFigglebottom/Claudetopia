@@ -2237,16 +2237,18 @@ static func silk_walk(d: PoiDressing) -> void:
 		m.limb(wheel, wheel_c + Vector3(along.x, 0.0, along.y) * 0.12, wheel_c + Vector3(along.x, 0.0, along.y) * 0.12 + spoke, 0.03)
 	m.limb(wheel, wheel_c - Vector3(along.x, 0.0, along.y) * 0.1 + jb * Vector3(0.55, 0.0, 0.0), wheel_c - Vector3(along.x, 0.0, along.y) * 0.1 + jb * Vector3(0.55, -0.35, 0.0), 0.03)
 	var hooks := m.begin()
+	var lead := m.begin()
 	for off in lanes:
 		var hk := wheel_c + Vector3(along.x, 0.0, along.y) * 0.3 + Vector3(face.x, 0.0, face.y) * float(off) * 0.6 + Vector3.UP * 0.3
 		m.limb(hooks, hk - Vector3(along.x, 0.0, along.y) * 0.18, hk, 0.02)
 		# the strand from the hook to the first post's head
 		var first: Vector3 = heads[0]
-		m.limb(silk, hk, first + Vector3(face.x, 0.0, face.y) * float(off), 0.012)
+		m.limb(lead, hk, first + Vector3(face.x, 0.0, face.y) * float(off), 0.012)
 	await k.step()
 	m.commit(frame, k.surface("timber", 0.5), "JackFrame")
 	m.commit(wheel, k.surface("timber", 0.4), "JackWheel")
 	m.commit(hooks, PoiKit.plain(RUSTED, 0.6, 0.6), "JackHooks")
+	m.commit(lead, PoiKit.plain(SILK, 0.18, 0.35, Color(0.55, 0.55, 0.6), 0.25), "JackStrands")
 	k.collider(Vector3(1.9, 1.6, 0.6), Transform3D(jb, jack_c + Vector3.UP * 0.8), "wood")
 	k.touchable("TurnJack", wheel_c + Vector3(along.x, 0.0, along.y) * -0.5, "Turn the jack", "core:dialogue/silk_walk_jack", "", false)
 	var jstand := Vector2(jack_c.x, jack_c.z) - along * 1.2 + face * 1.0
