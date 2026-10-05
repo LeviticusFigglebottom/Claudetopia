@@ -30,11 +30,7 @@
   "sunk": 2.0
  },
  "skerrow": {
-  "buried": 7.0,
-  "fence_gap": 4285.0,
-  "fence_lone": 1.0,
-  "on_road": 3.0,
-  "overlap": 6.0,
-  "sunk": 2.0
+  "buried": 3,
+  "fence_gap": 5018
  }
 }
