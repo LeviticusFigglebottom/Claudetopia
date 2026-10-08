@@ -17355,3 +17355,40 @@ out (the Rafters' Locker's two lay 99% and 165% inside its bank; newly in the se
   Silk Walk are still near black: the camera stands 1.5 radii out, at the glade's edge under the crowns,
   and the low sun leaves the glade floor in the wood's shadow. The Noon Owl, the Casting Dell, the
   Letter Oak, the Pannage Pound and the Thornwell read; the Knar's first view has a trunk at its right.
+
+## The intro films drawn at the window's size, with a film's own picture on High (cinematics, 2026-10-08)
+
+The owner's report (2026-10-02, 60f60903, RX 9070 XT, High): "the intro cinematics are at very low
+resolution". **Measured, the films are not drawn small.** Every frame of the opening is drawn into the
+window's own pixels at the preset's render scale: 1920x1080 in a 1920x1080 window and 2560x1440 in a
+2560x1440 window, before and after (`CinematicPlayer.render_report()`, now in the log once a shot and
+beside every captured frame). No SubViewport, no FSR, no lowered preset, and the streaming and
+Terrain3D's clipmap already followed the film's camera in the owner's build. What read as low
+resolution was the game's settings, which are tuned for a body five metres from what it looks at, seen
+from 100-700 m through a narrow lens: trees as impostor pictures from 70-150 m, meshes on their coarse
+levels at 4 px of error, the sun's shadows stopping at 260 m, short of nearly every subject, 2x MSAA
+on roof lines and masts, and the water's mirror finding the far shore to a tenth of a 30-60 m stride, so
+the shore came back from the Mere as stepped rectangles.
+
+- `Graphics.FILM`: on High and Painted a film is drawn with 4x MSAA (FXAA off), the meshes' and trees'
+  detail twice as far (2.5x on Painted) and the sun's shadows to 700 m (1000 m), each knob raised and
+  never lowered; the render scale is never touched. Low, Medium and a Custom drawn below the window keep
+  their own settings, so the iGPU path (Medium's FSR at 0.77, the filmed title) is as it was. Given back
+  in `_restore_globals`.
+- The water's mirror halves its shore crossing six times rather than twice (painted_water.gdshader).
+- Capture plans: `"film_ab": true` shoots each moment with and without the film's picture;
+  `"wait_frames"`/`"lod_frames"` cap the waits (a wide shot is seconds a frame on llvmpipe); the
+  cinematic.json is written as it goes.
+- Test: `test_cinematic_player.test_every_frame_of_a_film_is_drawn_at_the_window_size_round_its_own_camera`
+  replays the opening on High and Medium and checks every frame: the window's size times the render
+  scale, the film's camera, streaming and clipmap round it, 4x edges and the doubled detail on High,
+  the settings untouched on Medium, all given back. `test_cinematic_player`, `test_graphics_settings`,
+  `test_film_streaming`: 31 passed; warnings 49 (baseline). One run under two captures failed the
+  "first words are the name" wait (20 s of wall clock); it passed on the re-run.
+- Sheet: `docs/review/cinematic/opening_before_after.jpg`, four moments (the Mere, the Hand, Merrowby,
+  the Toll) at 1920x1080, before and after, each with a 1:1 crop. On Compatibility the difference is
+  small; the shadow reach and MSAA show on Forward+.
+- Still poor in the shots, not fixed here: the Mere's reflection still shows blocks near the island; the
+  Toll's bell is a soft texture close up; the Hand's rock pieces read low-poly at 30 m. Note for the
+  title: on a High machine whose live title misses its 40 ms budget, the title now falls back to the
+  1280x720 Theora film filmed on llvmpipe, which will look soft on a 1440p screen.
