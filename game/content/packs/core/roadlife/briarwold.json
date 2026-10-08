@@ -131,6 +131,55 @@
         "weight": 1,
         "when": "day",
         "cooldown_h": 18
+      },
+      {
+        "event": "core:roadevent/briarwold_swarm_on_the_post",
+        "weight": 2,
+        "when": "day",
+        "biome": [
+          "woods",
+          "fields",
+          "open"
+        ],
+        "cooldown_h": 20
+      },
+      {
+        "event": "core:roadevent/briarwold_windfall_claims",
+        "weight": 1,
+        "when": "day",
+        "biome": [
+          "woods"
+        ],
+        "cooldown_h": 30
+      },
+      {
+        "event": "core:roadevent/briarwold_hound_to_the_mote",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 24
+      },
+      {
+        "event": "core:roadevent/briarwold_black_to_the_elbow",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 30
+      },
+      {
+        "event": "core:roadevent/briarwold_noon_listeners",
+        "weight": 2,
+        "when": "day",
+        "biome": [
+          "woods",
+          "upland",
+          "open"
+        ],
+        "cooldown_h": 24
+      },
+      {
+        "event": "core:roadevent/briarwold_line_carriers",
+        "weight": 1,
+        "when": "day",
+        "cooldown_h": 30
       }
     ],
     "caravans": [
@@ -736,6 +785,221 @@
           "say": "Up to the Windthrow with bread for Jory Rooke. He's sat at the pit a month with his uncle's mark and his own axe. — The Brother's ours by the verderer's mark. Nobody'll cut it. You'll see the plate from the Hollow road, stood up over the oaks like a door.",
           "hook": {
             "reveals": "core:poi/the_windthrow",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_swarm_on_the_post",
+    "name": "A swarm on the fingerpost",
+    "kind": "lost_traveller",
+    "cast": [
+      {
+        "role": "keeper",
+        "folk": {
+          "name": "A girl with an empty skep",
+          "tags": [
+            "woodfolk"
+          ],
+          "appearance": {
+            "age": 15
+          }
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Help her take the swarm",
+          "do": "help",
+          "say": "They've hung it on the post again. Gran's bees. They won't come down for me. — Hold the skep under, there, and give the arm one knock. One. — *The swarm drops into the skep like a wet coat, and she has the cloth over it before it knows.* — Thank you. They'll go home now, till they don't. Come up to the bee-tree off the Tamwick road. I'll give you comb.",
+          "hook": {
+            "item": "core:item/oak_honeycomb",
+            "count": 1,
+            "reveals": "core:poi/told_hives",
+            "once": true
+          }
+        }
+      }
+    ],
+    "unless": [
+      {
+        "quest_done": "core:quest/telling_the_bees"
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_windfall_claims",
+    "name": "Two claims to a windfall",
+    "kind": "broken_cart",
+    "cast": [
+      {
+        "role": "burner",
+        "folk": {
+          "name": "A burner with a mark-stick",
+          "tags": [
+            "woodfolk"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Take the burner's side",
+          "do": "help",
+          "say": "It's down, and it's dead, and the verderer's been and marked it. That's custom: what falls is the wood's, and then the burners'. — He wants it for planks for Tollmere. Planks. — You'll stand with custom? Then he can go. Thank you. Take this; the clamp's good this year.",
+          "hook": {
+            "item": "core:item/ash_wood",
+            "count": 3,
+            "reputation": {
+              "faction": "core:faction/woodfolk",
+              "delta": 3
+            }
+          }
+        }
+      },
+      {
+        "role": "sawyer",
+        "folk": {
+          "name": "A Company sawyer",
+          "tags": [
+            "tallymen"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Take the sawyer's side",
+          "do": "help",
+          "say": "Twelve marks a plank in the Lantern Row, oak this old. And he wants to burn it. — Custom. Custom's what you call it when you've nobody to sell to. — You'll back me? Here, for your trouble. Don't tell the verderer.",
+          "hook": {
+            "marks": 40,
+            "reputation": {
+              "faction": "core:faction/woodfolk",
+              "delta": -3
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_hound_to_the_mote",
+    "name": "A girl with a leash and no hound",
+    "kind": "pilgrims",
+    "speed": 1.1,
+    "cast": [
+      {
+        "role": "girl",
+        "folk": {
+          "name": "A burner's girl with an empty leash",
+          "tags": [
+            "woodfolk"
+          ],
+          "appearance": {
+            "age": 13
+          }
+        },
+        "talk": {
+          "prompt": "Ask about the leash",
+          "do": "say",
+          "say": "They took him to the Swainmote. My cousin's mastiff. He got a hart in the spring and the verderers say he's to go through the stirrup. — I'm taking Hawys bread. She's sat by the pound three days. The mote's short of twelve and won't sit. — It's in the Greatwood's middle, off the Rookhold road. You'd sit, wouldn't you? Anybody can.",
+          "hook": {
+            "reveals": "core:poi/the_swainmote",
+            "once": true
+          }
+        }
+      }
+    ],
+    "unless": [
+      {
+        "quest_done": "core:quest/the_twelfth_at_the_mote"
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_black_to_the_elbow",
+    "name": "A gatherer black to the elbow",
+    "kind": "lost_traveller",
+    "cast": [
+      {
+        "role": "gatherer",
+        "folk": {
+          "name": "A silk-gatherer black to the elbow",
+          "tags": [
+            "woodfolk"
+          ]
+        },
+        "pose": "Cower",
+        "talk": {
+          "prompt": "Ask what happened to her",
+          "do": "escort",
+          "say": "*Her hands are black to the elbow and she will not stop rubbing them on her skirt.* — I got out. Pell didn't. The gall. The Knar. Sable's men drink the black and they don't sleep and they don't let you sleep. — Take me to {place}. Please. Somewhere with a door. I'll tell Margery after. I'll tell her after.",
+          "thanks": "A door. — *She sits down against it.* — Sib. I'm Sib Dunnock. If you go south, the Knar's in the Greatwood, by the Hollow road. Look for the smoke. Pell's reel will be in the loft. He marks them.",
+          "hook": {
+            "reveals": "core:poi/the_knar",
+            "rumour": "The smoke over the Greatwood is the Knar, where the Sayers' wrights boil the oak for ink. A gatherer came out of it black to the elbow.",
+            "once": true,
+            "reputation": {
+              "faction": "core:faction/woodfolk",
+              "delta": 3
+            }
+          }
+        }
+      }
+    ],
+    "unless": [
+      {
+        "quest_done": "core:quest/the_black_that_keeps"
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_noon_listeners",
+    "name": "Listeners at noon",
+    "kind": "lost_traveller",
+    "cast": [
+      {
+        "role": "listener",
+        "folk": {
+          "name": "A woodman sitting very still",
+          "tags": [
+            "woodfolk"
+          ]
+        },
+        "pose": "Sit_Idle",
+        "talk": {
+          "prompt": "Ask what he is waiting for",
+          "do": "say",
+          "say": "*He holds up one hand, and does not look at you, and does not look up. A long while passes. Somewhere north an owl calls, once, in the full light of day.* — One. Nothing lost. — *He gets up and brushes off his knees.* — Gammer Hoole at the white oak counts them properly. North, by Ormhold. She'd count for you, if you sat at noon.",
+          "hook": {
+            "reveals": "core:poi/noon_owl",
+            "once": true
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "core:roadevent/briarwold_line_carriers",
+    "name": "Ropewalkers carrying a line",
+    "kind": "pilgrims",
+    "speed": 0.9,
+    "cast": [
+      {
+        "role": "carrier",
+        "folk": {
+          "name": "A ropewalker under a coil",
+          "tags": [
+            "woodfolk"
+          ]
+        },
+        "count": [
+          3,
+          4
+        ],
+        "talk": {
+          "prompt": "Ask about the line",
+          "do": "say",
+          "say": "Sixty fathom of silk line for the Grandfather's north walk. Margery Laithe laid it, the last good silk she had. — Don't touch it. You'll put your hand's grease on it, and it'll remember. — Her walk's up by the Skarl road, in the Northwold. She's stopped laying. The silk's gone black.",
+          "hook": {
+            "reveals": "core:poi/silk_walk",
             "once": true
           }
         }

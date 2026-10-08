@@ -1,0 +1,125 @@
+[
+  {
+    "id": "core:boss/hesketh_vane",
+    "extends": "core:enemy/smuggler_sayer",
+    "name": "Hesketh Vane, the Salt-King",
+    "archetype": "boss",
+    "arena": "core:poi/the_saltmound",
+    "region": "core:region/brightwater",
+    "tint": "#c9c4b4",
+    "scale": 1.24,
+    "height": 2.2,
+    "radius": 0.42,
+    "appearance": {
+      "seed": 8314,
+      "culture": "lakefolk",
+      "skin": "fair",
+      "hair_colour": "salt_pepper",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.8,
+      "age": 0.55,
+      "scar": "cheek",
+      "parts": {
+        "torso": "coat",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "back": "cloak",
+        "belt": "sash",
+        "headgear": "crude_crown",
+        "hair": "long_loose",
+        "beard": "short_beard"
+      },
+      "palette": {
+        "primary": "d8d4c6",
+        "secondary": "8f897a",
+        "leather": "4a3d2c",
+        "metal": "c8c2b0",
+        "trim": "ece8dc"
+      },
+      "jewellery": [
+        {"kind": "ring", "on": "hands", "metal": "silver"},
+        {"kind": "pendant", "on": "neck", "metal": "silver"}
+      ]
+    },
+    "holds": {"model": "weapons/leister_iron", "tags": ["two_handed"]},
+    "resists": {"frost": 0.3, "silence": 0.4, "fire": -0.2, "slash": -0.1},
+    "lore": "Hesketh Vane was a Tallymen's clerk at the salt-gate who saw that a Tallyman looks at a seal and not at a mountain, and went round the back with a spade. Six years of tunnels later he holds court in the Saltmound's heart on a throne of the Charter's own sacks, with a crown of salt crystals grown on a wire and a Hushed sayer's tricks he bought at the Dumb Fair, and the Free Salters call him King because he pays. He is courteous to everyone and generous to his people and he will not give back a grain.",
+    "stats": {"hp": 440, "stamina": 180, "poise": 85, "armour": 5, "speed": 3.4, "will": 36},
+    "behaviour": {"engage_range": 6.0, "retreat_threshold": 0.0, "patience": 3.2, "leash": 40.0, "hyper_armour": 13.0, "aggression": 0.78},
+    "phases": [
+      {"name": "the audience", "hp": 1.0, "aggression": 0.72},
+      {"name": "the tithe", "hp": 0.5, "aggression": 0.95, "speed": 3.9, "hyper_armour": 18.0, "say": "He rises off his throne of sacks and Hushes the hall: the salt walls drink every sound, and in the silence the Salters close in without a footfall."}
+    ],
+    "marks": [220, 380],
+    "loot": "core:loot/rich_chest",
+    "drops": ["core:item/free_salters_ledger"],
+    "tags": ["humanoid", "person", "caster", "boss", "smuggler"]
+  },
+  {
+    "id": "core:boss/corwen_lisle",
+    "extends": "core:enemy/hedge_wight",
+    "name": "Corwen Lisle, Master of the Patience",
+    "archetype": "boss",
+    "arena": "core:poi/fathom_shears",
+    "region": "core:region/brightwater",
+    "tint": "#46645a",
+    "scale": 1.3,
+    "height": 2.35,
+    "radius": 0.45,
+    "appearance": {
+      "seed": 8315,
+      "culture": "lakefolk",
+      "skin": "wheat",
+      "hair_colour": "ginger",
+      "build": 0.85,
+      "feminine": 0.0,
+      "height": 1.86,
+      "age": 0.62,
+      "parts": {
+        "torso": "coat",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "belt": "belt_satchel",
+        "headgear": "sou_wester",
+        "hair": "short",
+        "beard": "full_beard"
+      },
+      "palette": {
+        "primary": "2f4a43",
+        "secondary": "1f2b28",
+        "leather": "2e2a24",
+        "metal": "5f8a6c",
+        "trim": "c9b06a"
+      },
+      "jewellery": [
+        {"kind": "pendant", "on": "neck", "metal": "bronze"}
+      ]
+    },
+    "holds": {"model": "weapons/clapper_bronze", "tags": ["two_handed"]},
+    "carry": [
+      {
+        "model": "props/hearthvale_lantern_hand_a",
+        "at": "Hips",
+        "pos": [0.19, 0.74, 0.07],
+        "scale": 1.1,
+        "light": {"colour": "#9fe0c8", "energy": 1.0, "range": 6.0, "pos": [0.0, 0.11, 0.0]},
+        "flame": {"size": 0.016, "pos": [0.0, 0.1, 0.0], "colour": "#c8f0e0"}
+      }
+    ],
+    "resists": {"blunt": 0.2, "pierce": 0.25, "frost": 0.4, "fire": -0.3},
+    "lore": "Corwen Lisle wanted the Undersong for twenty years and took its tongue out with his own hands, and it rang anyway. His men went down the Singing Stair to the sound holding their breath and did not come back, and he has been striking the great bell with its own clapper ever since, every hour, to make it stop, which is what rings the Patience's chain at the top of forty fathom. He knows exactly what he is doing. He cannot stop doing it until somebody takes the clapper out of his hands.",
+    "stats": {"hp": 540, "stamina": 210, "poise": 115, "armour": 8, "speed": 2.6},
+    "behaviour": {"engage_range": 2.8, "retreat_threshold": 0.0, "patience": 3.4, "leash": 40.0, "hyper_armour": 17.0, "aggression": 0.8},
+    "phases": [
+      {"name": "the hour", "hp": 1.0, "aggression": 0.72},
+      {"name": "the undersong", "hp": 0.5, "aggression": 0.95, "speed": 3.0, "hyper_armour": 22.0, "say": "He turns from the bell and strikes it once behind him without looking; the note goes through the floor, and down the gallery the held men let out their breath all at once."}
+    ],
+    "marks": [230, 390],
+    "loot": "core:loot/rich_chest",
+    "drops": ["core:item/undersong_clapper"],
+    "tags": ["undead", "revenant", "humanoid", "boss"]
+  }
+]

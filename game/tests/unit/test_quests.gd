@@ -208,6 +208,9 @@ func test_reach_objectives_use_the_position_provider() -> void:
 	]
 	log_node.register_runtime(def)
 	log_node.position_provider = player
+	# a reach is also met by the place being found already: a test before this one (a Hearthvale
+	# site's) may have found Merrowby, and the quest then ended as it began
+	GameState.discovered_places.erase(MERROWBY)
 	var pos: Array = ContentDB.get_or_empty(MERROWBY)["position"]
 	player.pos = Vector3(float(pos[0]) + 500.0, 0.0, float(pos[1]))
 	log_node.start("core:quest/_test_reach")

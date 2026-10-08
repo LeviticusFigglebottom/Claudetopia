@@ -44,6 +44,14 @@ const KINDS := {
 	## the large sites (world/sites, docs/WORLD_LIFE_INTERIORS.md): a way down into a site's inside,
 	## and the fortified places you walk round and climb
 	"delve": true, "fort": true, "stockade": true, "watchtower": true, "castle_ruin": true, "walled_camp": true,
+	## Hearthvale's novel places (world life, novel round): built only by the region's own builders
+	## (`builder` in the def; game/world/pois/regions/hearthvale.gd)
+	"dovecote": true, "scarecrow_moot": true, "chandlery": true, "turf_maze": true, "figure_cutting": true, "rookery": true,
+	## Sedgemire's novel places (each built by its region's own builder, `regions/sedgemire.gd`): a
+	## reed bride married to the flood, a wisp-catcher's rack of jars, a tide-gauge post, a ropewalk,
+	## a grief-maze of reed hedges, a heronry in dead alders, a sundew garden
+	"effigy": true, "wisp_jars": true, "tide_gauge": true, "ropewalk": true, "maze": true, "heronry": true,
+	"bog_garden": true,
 }
 
 ## The kinds a builder exists for. `KINDS` above is the whole list the design names; the
@@ -54,7 +62,9 @@ const KINDS_BUILT := ["camp", "shrine", "hearth", "tower", "bridge", "waterfall"
 		"giant_bones", "strange_tree", "wreck", "hidden_valley", "standing_stones", "strange",
 		"cave", "farmstead", "mill", "waystone", "market_field", "quarry", "shieling", "vista",
 		"cairn", "tally_post", "grave", "gibbet", "fold", "well", "lantern_post", "hut", "crossroads", "peat_cut",
-		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp"]
+		"beacon", "delve", "fort", "stockade", "watchtower", "castle_ruin", "walled_camp",
+		"dovecote", "scarecrow_moot", "chandlery", "turf_maze", "figure_cutting", "rookery",
+		"effigy", "wisp_jars", "tide_gauge", "ropewalk", "maze", "heronry", "bog_garden"]
 
 var poi_id := ""
 var kind := ""
@@ -432,6 +442,11 @@ const WATER_NODES := ["Pool", "TidePool", "Basin", "Stream", "Spring", "TroughWa
 ## A body set down is a capsule this wide and tall.
 const ARRIVAL_RADIUS_M := 0.35
 const ARRIVAL_HEIGHT_M := 1.8
+## The highest over the ground a body is set down on what the dressing laid to be stood on: a
+## bank's brow, a bridge's deck, a step. A barrow's crown or a cave's hill is a floor too, but
+## the road sets you down beside the mound, not on top of it (the travel set-down test holds
+## every place to 1.6 m over the land).
+const ARRIVAL_OVER_GROUND_M := 1.4
 
 var _arrival := Vector3.INF
 
@@ -505,6 +520,8 @@ func arrival() -> Vector3:
 			var a := first + TAU * float(k) / float(steps)
 			var p := Vector2(sin(a), cos(a)) * r
 			var at := _stand_at(p, floors)
+			if at.y - kit.on_ground(p.x, p.y).y > ARRIVAL_OVER_GROUND_M:
+				continue
 			if _open(at, solids, wet) and _clear_of_floors(at, floors):
 				_arrival = at
 				return _arrival

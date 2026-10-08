@@ -1,0 +1,183 @@
+[
+  {
+    "id": "core:enemy/free_salter",
+    "extends": "core:enemy/cutpurse",
+    "name": "Free Salter",
+    "faction": "bandits",
+    "tint": "#8a8678",
+    "region": "core:region/brightwater",
+    "lore": "A Gullhithe boatman, a Sedgehithe widow's son or a Tollmere debtor who carries the Charter's salt out of the Saltmound's heart four stone at a time for the Salt-King, and is paid in it. White to the elbows, cracked at the lips, and very quick with a gutting knife; a Salter who is caught goes to the Undercroft, so a Salter does not get caught.",
+    "appearance": {
+      "seed": 8310,
+      "culture": "lakefolk",
+      "parts": {
+        "torso": "shirt",
+        "legs": "trousers",
+        "feet": "boots",
+        "back": "hood",
+        "belt": "belt_knife",
+        "hair": "hood_friendly"
+      },
+      "palette": {
+        "primary": "b8b4a6",
+        "secondary": "6e6a5c",
+        "leather": "4a3d2c",
+        "metal": "8a8a8a"
+      },
+      "skin": "wheat",
+      "hair_colour": "dark_brown",
+      "build": 0.6,
+      "feminine": 0.0,
+      "height": 1.75
+    },
+    "marks": [
+      5,
+      20
+    ],
+    "tags": [
+      "bandit",
+      "outlaw",
+      "humanoid",
+      "person",
+      "smuggler"
+    ]
+  },
+  {
+    "id": "core:enemy/salt_porter",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Salt Porter",
+    "faction": "bandits",
+    "tint": "#9a958a",
+    "region": "core:region/brightwater",
+    "lore": "The Salt-King's carriers of the heavy sacks and his doormen, chosen for their backs: a porter carries eight stone up the cut at a run, and swings a salt-rake at anybody who asks him what is in the sack.",
+    "stats": {
+      "hp": 175,
+      "stamina": 120,
+      "poise": 80,
+      "armour": 6,
+      "speed": 2.6
+    },
+    "marks": [
+      18,
+      44
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "brute",
+      "smuggler"
+    ],
+    "appearance": {
+      "seed": 8313,
+      "culture": "lakefolk",
+      "parts": {
+        "torso": "apron",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "back": "hood",
+        "hair": "cropped"
+      },
+      "palette": {
+        "primary": "c4c0b2",
+        "secondary": "7a7464",
+        "leather": "4a3d2c",
+        "metal": "8a8a8a"
+      },
+      "skin": "tan",
+      "hair_colour": "black",
+      "build": 0.95,
+      "feminine": 0.0,
+      "height": 1.84
+    }
+  },
+  {
+    "id": "core:enemy/held_salvor",
+    "extends": "core:enemy/ash_wight",
+    "name": "Held Salvor",
+    "tint": "#4f6a62",
+    "region": "core:region/brightwater",
+    "lore": "One of the Fathom Company's men who took the tongue out of the Undersong with Corwen Lisle and heard it ring anyway. He has been holding his breath ever since, walking slowly down the Quarter's dry streets with his cheeks full and his eyes wide, and he does not mean you harm; he means you to hold yours too.",
+    "appearance": {
+      "seed": 8311,
+      "culture": "lakefolk",
+      "parts": {
+        "torso": "coat",
+        "legs": "trousers",
+        "feet": "boots",
+        "headgear": "sou_wester",
+        "hair": "short"
+      },
+      "palette": {
+        "primary": "3d4f4a",
+        "secondary": "2c3632",
+        "leather": "2e2a24",
+        "metal": "6f8a7c"
+      },
+      "skin": "olive",
+      "hair_colour": "grey",
+      "build": 0.7,
+      "feminine": 0.0,
+      "height": 1.78
+    },
+    "marks": [
+      3,
+      10
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "swarm"
+    ]
+  },
+  {
+    "id": "core:enemy/drowned_chainman",
+    "extends": "core:enemy/held_salvor",
+    "name": "Drowned Chainman",
+    "tint": "#425a54",
+    "region": "core:region/brightwater",
+    "lore": "The Company's chainman, who went down to fetch the master back up and stayed holding the bell's chain in the dark of the Singing Gallery, forty fathom of it wound round his arms. He swings it.",
+    "stats": {
+      "hp": 185,
+      "stamina": 120,
+      "poise": 85,
+      "armour": 7,
+      "speed": 2.4
+    },
+    "marks": [
+      16,
+      40
+    ],
+    "tags": [
+      "undead",
+      "revenant",
+      "humanoid",
+      "brute"
+    ],
+    "appearance": {
+      "seed": 8312,
+      "culture": "lakefolk",
+      "parts": {
+        "torso": "gambeson",
+        "legs": "trousers",
+        "feet": "boots",
+        "hands": "gloves",
+        "headgear": "sou_wester",
+        "hair": "shaven"
+      },
+      "palette": {
+        "primary": "34433f",
+        "secondary": "232b28",
+        "leather": "2a241e",
+        "metal": "5c6d64"
+      },
+      "skin": "olive",
+      "hair_colour": "black",
+      "build": 0.95,
+      "feminine": 0.0,
+      "height": 1.86
+    }
+  }
+]

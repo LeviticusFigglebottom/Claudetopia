@@ -130,6 +130,8 @@ func show_quest(title: String, rows: Array, was_done: Callable = Callable()) -> 
 			var ink := _wall.own(create_tween())
 			(r["node"] as Control).modulate = Color(0.30, 0.24, 0.19, 0.0)
 			ink.tween_property(r["node"], "modulate", Color(1, 1, 1, 1), 0.6).set_trans(Tween.TRANS_CUBIC)
+			if Time.get_ticks_msec() < _glow_until_ms:
+				_glow_row(r)
 		_rows_box.move_child(r["node"] as Node, order)
 		order += 1
 		(r["text"] as Label).text = str(row.get("text", ""))
@@ -184,11 +186,40 @@ func _make_row() -> Dictionary:
 
 ## A stage moved on: the quest's name glows and settles, so the eye goes to the new rows as they
 ## ink in (the HUD calls this with its notice under the compass).
+## The objective rows open now, and any that ink in within ROW_GLOW_S, glow gold and settle too:
+## the new objective is the one the eye is sent to.
 func announce() -> void:
 	_announced_ms = Time.get_ticks_msec()
+	_glow_until_ms = _announced_ms + int(ROW_GLOW_S * 1000.0)
 	_title.modulate = Color(1.35, 1.1, 0.55)
 	var tw := _wall.own(create_tween())
 	tw.tween_property(_title, "modulate", Color(1, 1, 1, 1), 1.8).set_trans(Tween.TRANS_SINE)
+	for key in _rows:
+		var r: Dictionary = _rows[key]
+		if int(r.get("done_at", -1)) < 0:
+			_glow_row(r)
+
+
+const ROW_GLOW := Color(1.4, 1.15, 0.55)
+const ROW_GLOW_S := 3.0
+var _glow_until_ms := -1
+
+
+func _glow_row(r: Dictionary) -> void:
+	var text := r["text"] as Label
+	text.modulate = ROW_GLOW
+	var tw := _wall.own(create_tween())
+	tw.tween_interval(0.8)
+	tw.tween_property(text, "modulate", Color(1, 1, 1, 1), 2.2).set_trans(Tween.TRANS_SINE)
+
+
+## Whether an open row is glowing now (for the tests).
+func rows_glowing() -> bool:
+	for key in _rows:
+		var r: Dictionary = _rows[key]
+		if int(r.get("done_at", -1)) < 0 and (r["text"] as Label).modulate.r > 1.05:
+			return true
+	return false
 
 
 ## When the last announce was, on the wall clock (-1 never): for the tests.

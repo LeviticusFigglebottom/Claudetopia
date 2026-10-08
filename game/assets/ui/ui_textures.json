@@ -1830,6 +1830,48 @@
     48,
     48
    ]
+  },
+  "chandlery": {
+   "file": "markers/chandlery.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "dovecote": {
+   "file": "markers/dovecote.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "scarecrow_moot": {
+   "file": "markers/scarecrow_moot.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "figure_cutting": {
+   "file": "markers/figure_cutting.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "rookery": {
+   "file": "markers/rookery.png",
+   "size": [
+    48,
+    48
+   ]
+  },
+  "turf_maze": {
+   "file": "markers/turf_maze.png",
+   "size": [
+    48,
+    48
+   ]
   }
  },
  "variants": {
@@ -1963,12 +2005,15 @@
   "camp",
   "castle_ruin",
   "cave",
+  "chandlery",
   "city",
   "deep_place",
   "default",
   "delve",
+  "dovecote",
   "edge",
   "farmstead",
+  "figure_cutting",
   "fold",
   "fort",
   "giant_bones",
@@ -1989,8 +2034,10 @@
   "quarry",
   "quest_area",
   "reticle",
+  "rookery",
   "ruin_village",
   "ruins",
+  "scarecrow_moot",
   "shieling",
   "shrine",
   "standing_stones",
@@ -2000,6 +2047,7 @@
   "tally_post",
   "tower",
   "town",
+  "turf_maze",
   "village",
   "vista",
   "walled_camp",

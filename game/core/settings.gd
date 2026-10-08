@@ -18,7 +18,7 @@ const DEFAULTS := {
 	"graphics": Graphics.DEFAULTS,
 	"audio": {"master": 0.9, "music": 0.7, "sfx": 0.9, "ambience": 0.8, "ui": 0.8, "voice": 1.0},
 	"controls": {"mouse_sensitivity": 0.25, "gamepad_sensitivity": 2.6, "invert_y": false, "camera_side": 1, "vibration": true, "toggle_sprint": false, "sprint_tap_rolls": true},
-	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true, "blood": true, "pickup_glint": true},
+	"gameplay": {"day_length_minutes": 48.0, "subtitles": true, "difficulty": 1, "hud_opacity": 1.0, "show_hints": true, "compass": true, "hints_learned": [], "play_opening": true, "blood": true, "pickup_glint": true, "quest_notice_time": 1.0},
 	# camera_shake scales the camera's kick when a blow lands (0 is none); hit_pause is the few
 	# frames a landed blow holds the picture still; head_bob is how much of the head's own motion the
 	# first-person view takes (0 only a slow average of it)

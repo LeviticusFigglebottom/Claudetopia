@@ -27,9 +27,33 @@ const PEOPLE := {
 	"core:npc/bryony_kettle": "core:poi/ness_market",
 	"core:npc/silas_pask": "core:poi/ness_market",
 	"core:npc/hob_tench": "core:poi/smoke_coppice",
+	# the novel places
+	"core:npc/hamnet_squire": "core:poi/the_long_glass",
+	"core:npc/hepzibah_cole": "core:poi/the_cold_baths",
+	"core:npc/grisel_mew": "core:poi/the_widows_keels",
+	"core:npc/prudence_gauge": "core:poi/the_charter_scale",
+	"core:npc/corbin_vell": "core:poi/the_cormorant_perches",
+	"core:npc/dilly_fane": "core:poi/the_pearl_beds",
+	"core:npc/ysbel_dunnage": "core:poi/the_dumb_fair",
+	"core:npc/obed_marrow": "core:poi/the_saltmound",
+	"core:npc/merryn_lisle": "core:poi/fathom_shears",
 }
 const INSIDES := ["core:interior/pennyfold_undercroft", "core:interior/the_hush_hole", "core:interior/gull_holm_cellars",
-		"core:interior/the_crown_drift", "core:interior/the_struck_barrow", "core:interior/holmwatch_undercroft"]
+		"core:interior/the_crown_drift", "core:interior/the_struck_barrow", "core:interior/holmwatch_undercroft",
+		"core:interior/the_saltmound", "core:interior/the_drowned_quarter"]
+## The novel places and what each builder must stand: its landmark's pieces, the thing to touch, the
+## spot its person works.
+const NOVEL := {
+	"core:poi/the_long_glass": ["GlassPlatform", "GlassTrestles", "LongGlass", "ClerksHut", "sign_CountChalk", "the_eyepiece", "hamnet_glass"],
+	"core:poi/the_cold_baths": ["MachineStripesRed", "MachineStripesWhite", "MachineRoofs", "MachineWheels", "Capstan", "Towels", "the_machine", "hepzibah_capstan"],
+	"core:poi/the_widows_keels": ["KeelHulls", "Keels", "Stovepipes", "EelRacks", "DrownedBoard", "the_board", "grisel_door"],
+	"core:poi/the_charter_scale": ["ScaleGantry", "ScaleBrass", "LandPan", "WaterPan", "Weights", "WeighBooth", "the_pan", "prudence_ledger"],
+	"core:poi/the_cormorant_perches": ["Perches", "Birds", "ReedShelter", "the_birds", "corbin_creel"],
+	"core:poi/the_pearl_beds": ["ShellMidden", "LooseShells", "StaveRack", "DryingNet", "PearlScale", "the_heap", "dilly_heap"],
+	"core:poi/the_dumb_fair": ["FairPoles", "FairScreens", "SilenceStone", "the_bell", "hushwife_stall"],
+	"core:poi/the_saltmound": ["Saltmound", "SealPole", "BarrowTrestle", "SaltGate", "CharterSeals", "SaltersCut", "obed_gate", "the_boats"],
+	"core:poi/fathom_shears": ["Quay", "SheerLegs", "ThePatience", "BellChains", "Windlass", "SalvorsShed", "merryn_windlass", "the_quay_steps"],
+}
 
 var host: Node3D
 var provider: TerrainProvider = null
@@ -210,6 +234,27 @@ func test_the_places_stand_what_their_defs_promise() -> void:
 	var cut: PoiDressing = await _dress("core:poi/cadbrae_slate_cut")
 	for what in ["BlackCourse", "SlateStacks", "the_splitting_bench", "the_humming_slate", "the_face"]:
 		assert_true(cut.find_child(what, true, false) != null, "the Cadbrae Slate Cut has %s" % what)
+
+
+func test_the_novel_places_stand_what_their_defs_promise() -> void:
+	if provider == null:
+		return
+	for pid in NOVEL:
+		var d: PoiDressing = await _dress(str(pid))
+		for what in NOVEL[pid]:
+			assert_true(d.find_child(str(what), true, false) != null, "%s has %s" % [pid, what])
+		d.queue_free()
+	# the two large ones: a hook to start the quest and a way in, and each its landmark tall enough
+	# to be seen across the Mere
+	for pid in ["core:poi/the_saltmound", "core:poi/fathom_shears"]:
+		var d: PoiDressing = await _dress(pid)
+		var hook := d.find_child("Hook", true, false) as PoiTouch
+		assert_true(hook != null and ContentDB.has(hook.dialogue_id), "%s has its hook" % pid)
+		assert_eq(d.find_children("*", "Door", true, false).size(), 1, "%s has its way in" % pid)
+		var mark := d.find_child("Saltmound" if pid.ends_with("saltmound") else "SheerLegs", true, false) as MeshInstance3D
+		if mark != null:
+			assert_gt(mark.get_aabb().size.y, 14.0, "%s stands tall enough to be seen across the Mere" % pid)
+		d.queue_free()
 
 
 func test_the_insides_are_built_walkable_and_left() -> void:

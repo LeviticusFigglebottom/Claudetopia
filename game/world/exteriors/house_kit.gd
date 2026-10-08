@@ -253,7 +253,11 @@ static func build(fabric: FabricMesh, at: Transform3D, spec: Dictionary, rng: Ra
 	out["door"] = at * Vector3(door_x, lift, -d * 0.5)
 	_porch(fabric, front, str(style.get("porch", "")), timber, roof_tint, lift)
 	if home:
-		out["lamp"] = at * Vector3(door_x, lift + 2.3, -d * 0.5 - 0.6)
+		# beside the door, on the side away from a trade's sign, clear of the frame and any hood
+		var lx := door_x + (-LANTERN_ASIDE_M if door_x < 0.0 else LANTERN_ASIDE_M)
+		var lantern := door_lantern(fabric, at * Transform3D(Basis(Vector3.UP, PI), Vector3(lx, lift, -d * 0.5)))
+		out["lamp"] = lantern["flame"]
+		out["lamp_box"] = lantern["box"]
 
 	# windows on every side: every bay of the front and back, a window or two in each gable
 	for s in range(storeys):
@@ -416,6 +420,43 @@ static func _stilts(fabric: FabricMesh, at: Transform3D, w: float, d: float, lif
 					Vector3(0.2, lift + 0.4, 0.2), timber["lintel"])
 	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, lift - 0.08, 0.0)),
 			Vector3(w + 0.4, 0.16, d + 0.4), timber["frame"])
+
+
+## How far to the side of the door's middle its lantern hangs: past the frame (0.67), the lintel
+## (0.85) and a hood's eaves (0.92), and short of the next bay's shutters.
+const LANTERN_ASIDE_M := 1.0
+## The lantern's flame, in its own frame (`door_lantern`): the door light stands here.
+const LANTERN_FLAME := Vector3(0.0, 2.3, 0.33)
+## Everything `door_lantern` draws, bracket and lantern, in its own frame.
+const LANTERN_BOX := AABB(Vector3(-0.1, 2.15, 0.0), Vector3(0.2, 0.45, 0.42))
+
+
+## A door's lamp, drawn: an iron plate on the wall, an arm out from it on a brace, and a lantern on
+## a hook at the arm's end -- an iron cap, foot and corner posts round four panes that glow after
+## dark as a lit window's do (joinery.gdshader). It goes into the fabric's joinery, so a town's or a
+## building's lanterns cost no draw of their own and throw no shadow, like the rest of the joinery.
+## `at`: origin on the wall's face at the door's foot, +z out of the wall. Returns its `flame`
+## (where the door light goes) and the `box` of all of it (what the seat audit hangs that light
+## from), both in the fabric's space.
+static func door_lantern(fabric: FabricMesh, at: Transform3D) -> Dictionary:
+	var iron := Color(0.12, 0.11, 0.1)
+	var c := LANTERN_FLAME + Vector3(0.0, 0.015, 0.0)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 2.5, 0.015)), Vector3(0.09, 0.2, 0.03), iron)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 2.565, 0.2)), Vector3(0.035, 0.035, 0.4), iron)
+	fabric.box("joinery", at * Transform3D(Basis(Vector3.RIGHT, -0.669), Vector3(0.0, 2.455, 0.14)),
+			Vector3(0.025, 0.025, 0.31), iron)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, 2.52, c.z)), Vector3(0.015, 0.08, 0.015), iron)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, c.y + 0.145, c.z)), Vector3(0.17, 0.04, 0.17), iron)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, c.y + 0.18, c.z)), Vector3(0.08, 0.03, 0.08), iron)
+	fabric.box("joinery", at * Transform3D(Basis(), Vector3(0.0, c.y - 0.145, c.z)), Vector3(0.16, 0.035, 0.16), iron)
+	for sx_v in [-1.0, 1.0]:
+		for sz_v in [-1.0, 1.0]:
+			fabric.box("joinery", at * Transform3D(Basis(), c + Vector3(float(sx_v) * 0.065, 0.0, float(sz_v) * 0.065)),
+					Vector3(0.02, 0.26, 0.02), iron)
+	for k in 4:
+		fabric.pane("joinery", at * Transform3D(Basis(), c) * Transform3D(Basis(Vector3.UP, float(k) * PI * 0.5),
+				Vector3(0.0, 0.0, 0.06)), Vector3(0.12, 0.25, 0.008), 0.9)
+	return {"flame": at * LANTERN_FLAME, "box": at * LANTERN_BOX}
 
 
 ## An iron-dark bracket out from the wall, and what hangs from it: a painted board on two chains,

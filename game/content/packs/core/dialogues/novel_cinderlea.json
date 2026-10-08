@@ -1,0 +1,1027 @@
+[
+  {
+    "id": "core:dialogue/odile_wark",
+    "speaker_name": "Odile Wark",
+    "notes": "The keeper of the Name-Kiln (pois/cinderlea.json name_kiln). Fires your name for 25 marks. Gives A Name for the Warden; takes the sleepers' roll in The Head That Sings (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_done": "core:quest/the_head_that_sings"}, {"flag": "head_tiles_on_the_screen"}], "text": "Forty-one more on the screen. The wind's learning them. Listen at the north end, by the kiln: Ada Pell, Bram Pell. It says them better than I do."},
+      {"conditions": [{"flag": "name_kiln_my_tile"}], "text": "Yours is on the third bar from the top, by the kiln end. It clinks against a Merrowby carter's. I'd not have chosen him for you, but he's quiet."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Odile Wark", "text": "Mind the cords, they tangle. — You've a name. Everyone who comes up this path has a name, and most of them want it said by somebody after. Sit if you like. The kiln's drawing.", "next": "hub"},
+      "hub": {
+        "speaker": "Odile Wark",
+        "text": "Ask, then.",
+        "choices": [
+          {"text": "What is this place?", "next": "the_kiln"},
+          {"text": "Whose names are on the screen?", "next": "the_names"},
+          {"text": "Fire my name. Here are twenty-five marks.", "next": "fire_mine", "conditions": [{"flag_not": "name_kiln_my_tile"}, {"marks_min": 25}]},
+          {"text": "Would you fire my name?", "next": "no_coin", "conditions": [{"flag_not": "name_kiln_my_tile"}, {"not": {"marks_min": 25}}]},
+          {"text": "You said there was a name you couldn't spell.", "next": "warden_offer", "conditions": [{"quest_not_done": "core:quest/a_name_for_the_warden"}, {"not": {"quest_active": "core:quest/a_name_for_the_warden"}}]},
+          {"text": "I have the bearer's token from the Kilnway.", "next": "q_token", "conditions": [{"quest_at": ["core:quest/a_name_for_the_warden", "the_firing"]}]},
+          {"text": "I have a roll of names from the Fallen Head.", "next": "q_roll", "conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_names"]}]},
+          {"text": "About the forty-one tiles.", "next": "q_tiles", "conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_tiles"]}]},
+          {"text": "Corra Dunn asked me to bring you this scarf.", "next": "q_scarf", "conditions": [{"quest_at": ["core:quest/something_red", "the_scarf"]}]},
+          {"text": "Keep the kiln warm, Odile.", "next": "end"}
+        ]
+      },
+      "the_kiln": {"speaker": "Odile Wark", "text": "My great-grandmother's mother walked south with Greyfold in the Ash Winter and turned back at the ring, the only one of her street. She couldn't bear that nobody would say them. So she built a kiln on a vent where the fire never wants feeding, and pressed their names in clay, and hung them where the wind would knock them together. — It's been lit since. The Hush takes what nobody says. This says them.", "next": "hub"},
+      "the_names": {"speaker": "Odile Wark", "text": "Greyfold's, on the old bars at the kiln end; you can't read them now, the wind's had them smooth. Then pilgrims, every one the Order walked to the ring that would give me a name. Then whoever asks. A Sayer paid for a whole row of Circle clerks that were unsaid in Tollmere. Coll Brisket paid for three of his diggers before he knew they were dead, so they'd be there whichever. — I break a tile if I spell it wrong. I've broken a lot of tiles.", "next": "hub"},
+      "fire_mine": {"speaker": "Odile Wark", "text": "*(She takes the coin without looking at it, rolls a slab of clay flat on her knee, and holds the stylus over it.)* — Say it. Slowly. — *(She presses it in letter by letter, saying each one back, and lays it on the board with eleven others.)* There. It'll fire tonight and hang tomorrow. Whatever happens to you down there, somebody up here will have said it.", "effects": [{"marks": -25}, {"set_flag": "name_kiln_my_tile"}, {"renown": 3}], "next": "hub"},
+      "no_coin": {"speaker": "Odile Wark", "text": "Twenty-five marks. It's the clay and the fire and the cord, and the rest goes to the Order for the bread they bring me. I fire the dead for nothing. You're not dead. Come back.", "next": "hub"},
+      "warden_offer": {"speaker": "Odile Wark", "text": "There's a gap on the second bar. The winter after the Ash Winter the Order sent a bearer down the Kilnway with a bell, to keep anything warm from coming up, and he never came back up, and they never wrote his name, because a bearer's name goes on his toll-token and the token goes down with him. — It'll be in the toll-hall at the bottom of the tube. They say he's still down there with it. Fetch me the name.", "choices": [
+        {"text": "I'll go down the Kilnway and bring you his name.", "effects": [{"start_quest": "core:quest/a_name_for_the_warden"}], "next": "warden_taken"},
+        {"text": "Not now.", "next": "hub"}
+      ]},
+      "warden_taken": {"speaker": "Odile Wark", "text": "Mind the heat. It's west, past the West Walk, a black mouth breathing on the heath. — Bring me the token itself; I want to press it in, not copy it.", "next": "hub"},
+      "q_token": {"speaker": "Odile Wark", "text": "*(She holds the token to the kiln-mouth to read it.)* Hob Atherley. Hob. — I'll press the token in, so it's his own hand that made the letters. Where's it to hang? With the Ash Winter's on the screen? Or at the Kilnway's mouth, on a nail, where the pilgrims who sleep there can hear him ringing and know who it is?", "choices": [
+        {"text": "On the screen, with the Ash Winter's names.", "effects": [{"quest_choice": ["core:quest/a_name_for_the_warden", "on_the_screen"]}], "next": "q_token_screen"},
+        {"text": "At the Kilnway's mouth, where the pilgrims sleep.", "effects": [{"quest_choice": ["core:quest/a_name_for_the_warden", "at_the_mouth"]}], "next": "q_token_mouth"},
+        {"text": "Let me think.", "next": "hub"}
+      ]},
+      "q_token_screen": {"speaker": "Odile Wark", "text": "Second bar, in the gap. He'll be next to a Greyfold cooper. They'll have things to say about heat.", "next": "hub"},
+      "q_token_mouth": {"speaker": "Odile Wark", "text": "I'll walk it over myself when the Order's cart goes west. A tile on a nail by a cairn. — It's a better place. He can hear it there.", "next": "hub"},
+      "q_roll": {"speaker": "Odile Wark", "text": "*(She unrolls the grey cloth across her knees, and then across the bench, and it goes on.)* — Forty. Greyfold names, my great-grandmother's mother's street, half of them; she'll have walked with these. — And stitched so neat. Whoever did this loved every one. Who did?", "effects": [{"take_item": ["core:item/sleepers_roll", 1]}], "next": "q_roll_2"},
+      "q_roll_2": {"speaker": "Odile Wark", "text": "Ysmay Corrow. She's not on it. — Then she's forty-one. *(She is already rolling clay.)* It'll take the night. Forty-one tiles, and I'll not spell one wrong. — Where are they to hang? On the screen? Or back in the Head's mouth, on cords, so that when the wind goes in it comes out saying them?", "choices": [
+        {"text": "Hang them on the screen, where the wind says them every day.", "effects": [{"quest_choice": ["core:quest/the_head_that_sings", "on_the_screen"]}], "next": "q_tiles_screen", "conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_tiles"]}]},
+        {"text": "Carry them back and hang them in the Head's mouth, so it says them.", "effects": [{"quest_choice": ["core:quest/the_head_that_sings", "in_the_mouth"]}], "next": "q_tiles_mouth", "conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_tiles"]}]},
+        {"text": "Let me think.", "next": "hub"}
+      ]},
+      "q_tiles": {"speaker": "Odile Wark", "text": "Forty-one, cooling. Where are they to hang?", "choices": [
+        {"text": "Hang them on the screen, where the wind says them every day.", "effects": [{"quest_choice": ["core:quest/the_head_that_sings", "on_the_screen"]}], "next": "q_tiles_screen"},
+        {"text": "Carry them back and hang them in the Head's mouth, so it says them.", "effects": [{"quest_choice": ["core:quest/the_head_that_sings", "in_the_mouth"]}], "next": "q_tiles_mouth"},
+        {"text": "Let me think.", "next": "hub"}
+      ]},
+      "q_scarf": {"speaker": "Odile Wark", "text": "*(She turns the scarf over in the kiln-light.)* Madder. Three dips. That's a Merrowby dyer. — Daff Dunn. *(She presses it into the clay as she says it, and again.)* I'll tie the red through the hole in his tile, so when the wind takes it the red goes too. — She's gone home? Good. That's what the screen is for, if you ask me. So the ones up here can go home.", "effects": [{"take_item": ["core:item/madder_red_scarf", 1]}], "next": "hub"},
+      "q_tiles_screen": {"speaker": "Odile Wark", "text": "At the kiln end, next to their own street. I'll put hers at the top, over them, where she'd want to be.", "next": "hub"},
+      "q_tiles_mouth": {"speaker": "Odile Wark", "text": "Then I'll send them with the Order's sister, Aud Venn; she's the one listening. The Head was made to sing. Let it sing those.", "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/name_kiln_screen",
+    "speaker_name": "The Name-Screen",
+    "notes": "A PoiTouch at the Name-Kiln's screen (regions/cinderlea.gd name_kiln). Lore; says your own tile when it hangs.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The Name-Screen", "no_talk": true, "text": "Tiles the size of a palm, red-brown, black-flecked from the vent's fire, each on its own cord, thousands of them, knocking together in the dry wind with a sound like a shingle beach drawing back. Each is pressed with a name in a careful hand. Wil Ostler. Mother Gant. The Coulter boy. Under the oldest bars the ash is red with broken tiles: the ones spelt wrong.", "choices": [
+        {"text": "Look for your own.", "next": "mine", "conditions": [{"flag": "name_kiln_my_tile"}]},
+        {"text": "Leave them to the wind.", "next": "end"}
+      ]},
+      "mine": {"speaker": "The Name-Screen", "no_talk": true, "text": "Third bar from the top, at the kiln end, still paler than the rest. Your name, pressed letter by letter, knocking against a Merrowby carter's. It is a strange thing to hear your name said by the wind, and you stand there longer than you meant to.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/pell_hoddy",
+    "speaker_name": "Pell Hoddy",
+    "notes": "The smoke-speaker at the Hood (pois/cinderlea.json smoke_hood). Gives The Head That Sings (quests/novel_cinderlea.json) and his code-cord.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_done": "core:quest/the_head_that_sings"}], "text": "I sent short-long-short again this morning. Found. Pilgrim's Ash sent back long-long-long. All's well. First time I've believed it."},
+      {"conditions": [{"quest_active": "core:quest/the_head_that_sings"}], "text": "It sang again last night. I watched the plateau from the top till dawn. — Have you been?"}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Pell Hoddy", "text": "Long, long, short — sorry. Counting. Don't stand under the hood, it drips. — Pell Hoddy. I speak for the Order, in smoke, which means I say very little and the whole heath reads it.", "next": "hub"},
+      "hub": {
+        "speaker": "Pell Hoddy",
+        "text": "What can I say for you?",
+        "choices": [
+          {"text": "How does the Hood speak?", "next": "the_hood"},
+          {"text": "What can you see from the top?", "next": "the_top"},
+          {"text": "Could I have a copy of the code?", "next": "the_cord", "conditions": [{"flag_not": "pell_gave_cord"}]},
+          {"text": "You look like a man with something on his mind.", "next": "the_offer", "conditions": [{"quest_not_done": "core:quest/the_head_that_sings"}, {"not": {"quest_active": "core:quest/the_head_that_sings"}}]},
+          {"text": "Long, long, long, Pell.", "next": "end"}
+        ]
+      },
+      "the_hood": {"speaker": "Pell Hoddy", "text": "The vent comes up under the gantry, steady as breathing. Drop the hides on it and the smoke backs up under them; lift and it goes up in a puff. Lift and hold, that's a long. Every chapter-house reads it and answers with wet straw on its own fire. — Three longs at dawn: all's well. Every house answers three longs. The year a house stops answering, you know.", "next": "hub"},
+      "the_top": {"speaker": "Pell Hoddy", "text": "Everything. The Choir, the plateau, the Ashgrid, Greyfold's tables, every scavenger's cookfire and who's sitting at it. — This spring, the night the dry wind blew from the north, I saw the ash go off something on the plateau west of the ring, like a sheet off a bed. In the morning there was a long furrow there and something at the end of it. And at night it sings.", "next": "hub"},
+      "the_cord": {"speaker": "Pell Hoddy", "text": "Here. I knot them for novices; they never learn them. Take the lever if you like, while I watch; ask a question of the heath, and see who answers.", "effects": [{"give_item": ["core:item/smoke_code_cord", 1]}, {"set_flag": "pell_gave_cord"}], "next": "hub"},
+      "the_offer": {"speaker": "Pell Hoddy", "text": "I sent found. Nobody knew what it meant. I had to walk to Pilgrim's Ash and say it with my mouth. They sent their hearer, Sister Aud Venn, and she's been out there since, and she sends nothing. — I can't leave the lever. Somebody has to send dawn. Would you go and see what she's found? West of the Choir, at the end of the furrow. You can't miss it. It has a face.", "choices": [
+        {"text": "I'll go and see what sings on the plateau.", "effects": [{"start_quest": "core:quest/the_head_that_sings"}, {"discover": "core:poi/the_fallen_head"}], "next": "taken"},
+        {"text": "Not now.", "next": "hub"}
+      ]},
+      "taken": {"speaker": "Pell Hoddy", "text": "Thank you. — If it's a voice, be civil to it. The Order says that about everything out here and it's usually right.", "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/smoke_hood_lever",
+    "speaker_name": "The Hood's lever",
+    "notes": "A PoiTouch on the Hood's lever (regions/cinderlea.gd smoke_hood). Send a question in smoke; the heath's answers reveal places (each once).",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The Hood's lever", "no_talk": true, "text": "A beam of black oak as long as two men, pivoted on the gantry's leg, the hides' rope over its far end and a basket of stones on its near end for a counterweight. The vent roars under the hood. Pell Hoddy's code is cut into the leg in long and short notches.", "choices": [
+        {"text": "Send long-short-short: where? (ask the west heath)", "next": "west", "conditions": [{"flag_not": "hood_asked_west"}]},
+        {"text": "Send long-short-short: where? (ask the north heath)", "next": "north", "conditions": [{"flag_not": "hood_asked_north"}]},
+        {"text": "Send long-short-short: where? (ask the south, towards the Choir)", "next": "south", "conditions": [{"flag_not": "hood_asked_south"}]},
+        {"text": "Send long-long-long: all is well.", "next": "well"},
+        {"text": "Leave the lever.", "next": "end"}
+      ]},
+      "west": {"speaker": "The Hood's lever", "no_talk": true, "text": "You drop the hides and lift them, and the smoke goes up long, short, short. Far out on the west heath, a minute later, a thread of white stands up beside something that throws a long shadow, and rings faintly: a hand-bell, counting.", "effects": [{"set_flag": "hood_asked_west"}, {"discover": "core:poi/the_ash_dial"}], "next": "end"},
+      "north": {"speaker": "The Hood's lever", "no_talk": true, "text": "Long, short, short. To the north, past Greyfold, a puff of red-brown smoke goes up, as if somebody had thrown a broken pot on a fire: a kiln answering in its own colour.", "effects": [{"set_flag": "hood_asked_north"}, {"discover": "core:poi/name_kiln"}], "next": "end"},
+      "south": {"speaker": "The Hood's lever", "no_talk": true, "text": "Long, short, short. Towards the Choir nobody answers in smoke. But past the Undertone the wind shifts something on the heath, and for a moment you see colour there, red and saffron and blue, flapping on lines.", "effects": [{"set_flag": "hood_asked_south"}, {"discover": "core:poi/leaving_lines"}], "next": "end"},
+      "well": {"speaker": "The Hood's lever", "no_talk": true, "text": "Long, long, long. One by one across the heath the houses answer, three longs each, white threads standing up out of the grey: Pilgrim's Ash, the West Walk, the Last Camp. You count them. They are all still there.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/wenna_thrope",
+    "speaker_name": "Wenna Thrope",
+    "notes": "The Order's dial-reader at the Ash Dial (pois/cinderlea.json the_ash_dial). Tells you the thirteenth stone's hour.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "ash_dial_opened"}], "text": "You were there at the hour. I rang thirteen for you. Nobody on the heath knew what it meant, and I don't care."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Wenna Thrope", "text": "*(She looks at the shadow before she looks at you.)* Nine strokes and a bit. — Don't stand in the shadow, you'll make me ring wrong. Wenna Thrope. I read the dial for the Order.", "next": "hub"},
+      "hub": {
+        "speaker": "Wenna Thrope",
+        "text": "Go on.",
+        "choices": [
+          {"text": "How does the dial work?", "next": "the_dial"},
+          {"text": "Why does one stone have no number?", "next": "the_blank"},
+          {"text": "When does the shadow reach the blank stone?", "next": "the_hour", "conditions": [{"flag": "wenna_told_blank"}]},
+          {"text": "What happens here at night?", "next": "the_night"},
+          {"text": "I'll let you ring.", "next": "end"}
+        ]
+      },
+      "the_dial": {"speaker": "Wenna Thrope", "text": "The blade's the hand; it points at the sky's pole, the old reader said, so the shadow goes round the same every day of the year. Where the shadow lies, that's the hour, and the stone tells you how many strokes. Twelve stones with strokes. I ring the strokes on this and the heath counts. — There are no clocks south of Greyfold. A clock is a thing that keeps going when nobody's looking, and the Order doesn't trust that.", "next": "hub"},
+      "the_blank": {"speaker": "Wenna Thrope", "text": "Thirteen stones. Twelve numbers. The old reader said the thirteenth is the hour the Choir's heads came off, and the Builders cut a stone for it after, and left it blank, because what would you ring? — I think it opens. I've seen the joint. It's cut to sink. But only at its hour, with the shadow on it, the way the Builders did everything.", "effects": [{"set_flag": "wenna_told_blank"}], "next": "hub"},
+      "the_hour": {"speaker": "Wenna Thrope", "text": "Late afternoon. Between the sixteenth and the eighteenth hour, by Vale count, the shadow's on it. I'm here every day and I've never pressed it. — It's not mine to. I'm the reader. If you want to, be here then, and put your hand on it while the shadow's there.", "next": "hub"},
+      "the_night": {"speaker": "Wenna Thrope", "text": "No shadow at night, so I sleep. And they come: wights out of the ash, one to a stone, standing on them with their hands at their sides, as if they were waiting to be counted. I don't ring for them. I don't know what number they'd want.", "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/ash_dial_blank_stone",
+    "speaker_name": "The blank stone",
+    "notes": "A PoiTouch on the Ash Dial's thirteenth stone (regions/cinderlea.gd the_ash_dial). Between 16 and 18 o'clock, once, it sinks and gives the hour-plate.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The blank stone", "no_talk": true, "text": "The thirteenth hour-stone, darker than the others and smooth on its face where they are notched. There is a fine joint all round its top, too true to be a crack.", "choices": [
+        {"text": "Press the stone while the shadow lies on it.", "next": "opens", "conditions": [{"time_between": [16, 18]}, {"flag_not": "ash_dial_opened"}]},
+        {"text": "Press the stone.", "next": "shut", "conditions": [{"not": {"time_between": [16, 18]}}, {"flag_not": "ash_dial_opened"}]},
+        {"text": "Look into the hollow.", "next": "empty", "conditions": [{"flag": "ash_dial_opened"}]},
+        {"text": "Leave it.", "next": "end"}
+      ]},
+      "opens": {"speaker": "The blank stone", "no_talk": true, "text": "The blade's shadow lies across the stone like a bar. You put your hand flat on it, in the shadow, and the stone goes down under your palm, a hand's depth, smooth as a drawer, and stops. In the hollow under its lip there is a plate of gilt bronze cut with thirteen strokes, the last one unfinished, and a little Builders' coin, as if left for whoever came at the right time.", "effects": [{"set_flag": "ash_dial_opened"}, {"give_item": ["core:item/ash_dial_hour_plate", 1]}, {"marks": 40}, {"renown": 3}], "next": "end"},
+      "shut": {"speaker": "The blank stone", "no_talk": true, "text": "You lean on it. It does not move; the joint does not so much as grit. The blade's shadow is lying on another stone, notched with its strokes, a long way round the ring.", "next": "end"},
+      "empty": {"speaker": "The blank stone", "no_talk": true, "text": "The stone stays sunk, a hand's depth, the hollow under its lip empty. When the shadow comes round to it, the dark in the hollow and the dark of the shadow are the same dark.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/ash_dial_blade",
+    "speaker_name": "The dial's blade",
+    "notes": "A PoiTouch at the foot of the Ash Dial's blade. Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The dial's blade", "no_talk": true, "text": "Up the blade's edge, from the dais to as high as you can reach, a line of the Builders' square letters, and a Sayer's chalk under them, rubbed and re-chalked by many hands: THE SHADOW IS THE SINGING THAT IS NOT HEARD. COUNT IT. — Under the chalk, somebody has added in the Order's hand: we do.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/aud_venn",
+    "speaker_name": "Aud Venn",
+    "notes": "The Order's hearer at the Fallen Head (pois/cinderlea.json the_fallen_head). The first stage of The Head That Sings closes on speaking to her.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_done": "core:quest/the_head_that_sings"}, {"flag": "head_tiles_in_the_mouth"}], "text": "Listen. — When the wind goes in, it comes out saying them. Ada Pell, Bram Pell. I've wiped my slate. There's nothing left to write that the head isn't saying."},
+      {"conditions": [{"quest_done": "core:quest/the_head_that_sings"}], "text": "It's quiet at night now. I sleep at night. I'd forgotten how."},
+      {"conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_hollow"]}], "text": "Still singing. Go carefully in the throat; it goes down further than a head should."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Aud Venn", "text": "*(She does not look up from the slate, and her hand keeps moving.)* — Sit. Not on the lip; it's listening. Sister Aud Venn. I'm the Order's hearer. I come when the heath says something.", "next": "hub"},
+      "hub": {
+        "speaker": "Aud Venn",
+        "text": "Ask quietly.",
+        "choices": [
+          {"text": "What is this?", "next": "the_head"},
+          {"text": "What does it sing?", "next": "the_song"},
+          {"text": "Pell Hoddy sent me.", "next": "pell", "conditions": [{"quest_at": ["core:quest/the_head_that_sings", "the_slide"]}]},
+          {"text": "I found the singer.", "next": "after", "conditions": [{"quest_min_stage": ["core:quest/the_head_that_sings", "the_names"]}]},
+          {"text": "I'll leave you to listen.", "next": "end"}
+        ]
+      },
+      "the_head": {"speaker": "Aud Venn", "text": "One of the twelve. The Choir's. In a thousand years nobody has found one, and we have all walked past it, under a yard of ash. It rolled. You can see the furrow from the Choir if you know to look. — The Builders made them hollow: a head is a house for a voice. The mouth goes in, and down. I let my lantern down on a cord as far as it would go and the cord ran out.", "next": "hub"},
+      "the_song": {"speaker": "Aud Venn", "text": "A cradle-song, after dark, a woman's voice, the same verses every night. And names between the verses. Forty of them, round and round. Ada Pell, Bram Pell, the Coulter boy. Greyfold names. — The Order will read my slate and say: the Hush has got into the head, seal it. I don't think it's the Hush. I think it's someone who never stopped.", "next": "hub"},
+      "pell": {"speaker": "Aud Venn", "text": "Of course he did. He'd send the whole heath if it would go. — Then listen: I called down the mouth, the first night. Just: is anyone there. And the singing stopped, for the first time, and a voice said, very close, hush, you'll wake them. Then it went on. — I'm a hearer. I'm not a knight. Will you go in and find her?", "effects": [{"rumour": ["core:rumour/fallen_head_lullaby", 0.5]}], "next": "hub"},
+      "after": {"speaker": "Aud Venn", "text": "Ysmay Corrow. She's not in her own song; I listened every night and never heard it. — The roll should go to the Name-Kiln. Odile Wark fires names so they're said. These have been said by one woman for a hundred and seventy years. Somebody else should take a turn.", "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/fallen_head_slate",
+    "speaker_name": "The Order's slate",
+    "notes": "The Fallen Head's site hook (a notice post by the mouth). Starts The Head That Sings, which Pell Hoddy also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The Order's slate", "no_talk": true, "text": "A slate on a post by the lip, in the Order's chalk, wiped and written over many times; today's is short. NIGHT 31. SINGING FROM DUSK. THE NAMES AGAIN, ALL FORTY. WHEN I CALLED: HUSH, YOU'LL WAKE THEM. — Under it, in larger letters for whoever passes: IF YOU ARE ARMED AND KIND, SPEAK TO ME. A.V.", "choices": [
+        {"text": "Go and find who is singing in the head.", "conditions": [{"quest_not_done": "core:quest/the_head_that_sings"}, {"not": {"quest_active": "core:quest/the_head_that_sings"}}], "effects": [{"start_quest": "core:quest/the_head_that_sings"}], "next": "end"},
+        {"text": "Leave it.", "next": "end"}
+      ]}
+    }
+  },
+  {
+    "id": "core:dialogue/fallen_head_face",
+    "speaker_name": "The Fallen Head",
+    "notes": "A PoiTouch at the Fallen Head's cheek (regions/cinderlea.gd the_fallen_head). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The Fallen Head", "no_talk": true, "text": "Its cheek is as high as a house, and warm from the sun though there is no sun. The Builders carved the lids open. The stone of the eye is worn smooth where, a long time ago, before it fell, rain ran out of it. Down at the break of the neck the stone is clean and pale, a break nobody has seen in a thousand years, and it is not a break: it is cut, straight across, as if with one stroke.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/ama_reedwright",
+    "speaker_name": "Ama Reedwright",
+    "notes": "A reedwoman of Isseva at the Cistern of Isse (pois/cinderlea.json cistern_of_isse; spot ama_well in regions/cinderlea.gd). Gives The Full Jar (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"quest_done": "core:quest/the_full_jar"}, {"flag": "full_jar_on_the_ash"}], "text": "Look at the stair-head. — Green. A thumb's breadth of it, in the ash, where you poured. I'm going to sit and watch it a while before I go."},
+      {"conditions": [{"quest_done": "core:quest/the_full_jar"}], "text": "It's packed in reed, in my gourd's place. I'll walk it home slow. It will want to be carried slow."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Ama Reedwright", "text": "*(She is standing on one leg at the top of the stair, looking down it.)* — Hear it? Water. All the way down. The Sayers wrote it dry. I'm Ama, from Isseva. I walked.", "next": "hub"},
+      "hub": {
+        "speaker": "Ama Reedwright",
+        "text": "Ask.",
+        "choices": [
+          {"text": "You walked from Isseva?", "next": "walked"},
+          {"text": "Why not go down yourself?", "next": "not_mine"},
+          {"text": "Is there something I can bring up?", "next": "offer", "conditions": [{"quest_not_done": "core:quest/the_full_jar"}, {"not": {"quest_active": "core:quest/the_full_jar"}}]},
+          {"text": "I have the jar from the offering-stone.", "next": "q_jar", "conditions": [{"quest_at": ["core:quest/the_full_jar", "the_water"]}]},
+          {"text": "Safe walking, Ama.", "next": "end"}
+        ]
+      },
+      "walked": {"speaker": "Ama Reedwright", "text": "On stilts to the edge of the ash, and on my feet after, which I don't like; the ground is too near. A Sayer came to the Council with a page saying the Cistern of Isse had water in it again. Isse walked up this stair out of the marsh, the songs say, the first of us. If there's water, something might be walking up it again.", "next": "hub"},
+      "not_mine": {"speaker": "Ama Reedwright", "text": "It's hers. The reedfolk don't go down Isse's stair; we wait at the top for what comes up. That's the custom, and I've walked too far to break it on the last step. — And there's something in the water at the bottom that rings. The wights come up the stair wet to the knee.", "next": "hub"},
+      "offer": {"speaker": "Ama Reedwright", "text": "The Builders left an offering to Isse at the bottom: a stone, and a jar on it. Every Sayer who wrote of it says the jar is dry. — Bring it up. Only the jar. If it's full, I'll know, and if it's dry, I'll know that, and walk home.", "choices": [
+        {"text": "I'll go down and bring up Isse's jar.", "effects": [{"start_quest": "core:quest/the_full_jar"}], "next": "taken"},
+        {"text": "Not now.", "next": "hub"}
+      ]},
+      "taken": {"speaker": "Ama Reedwright", "text": "Carry it upright. Don't drink from it. — I'll be here, on one leg, probably.", "next": "hub"},
+      "q_jar": {"speaker": "Ama Reedwright", "text": "*(She takes the jar in both hands and holds it to her ear before she looks in it.)* — Full. Moving. — The Council will want it, to keep in the reed-house with the others of hers, and they'll keep it a thousand years. Or you could pour it out here, on the ash, where she came up. She came up to go somewhere. — You carried it. You choose.", "choices": [
+        {"text": "Carry it home to Isseva, to the Reed Council.", "effects": [{"quest_choice": ["core:quest/the_full_jar", "to_isseva"]}], "next": "q_home"},
+        {"text": "Pour it out on the ash at the stair-head.", "effects": [{"quest_choice": ["core:quest/the_full_jar", "on_the_ash"]}], "next": "q_pour"},
+        {"text": "Let me think.", "next": "hub"}
+      ]},
+      "q_home": {"speaker": "Ama Reedwright", "text": "Then it goes home with me, slow. The Council will sing over it. They'll sing your name too, if you give it; they're fond of a name.", "next": "hub"},
+      "q_pour": {"speaker": "Ama Reedwright", "text": "*(She pours it herself, slowly, onto the grey at the top of the stair, and it does not soak in; it runs, a thread of it, south, the way she was going.)* — There. She has somewhere to be.", "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/corra_dunn",
+    "speaker_name": "Corra Dunn",
+    "notes": "A pilgrim at the Leaving-Lines (pois/cinderlea.json leaving_lines) who has not gone on. Share an ash-cake with her, or be known enough to be listened to, and she turns back; she gives you her madder scarf.",
+    "start": "greet",
+    "greetings": [
+      {"conditions": [{"flag": "corra_turned_back"}], "text": "I'm still here. I'm going at first light — north. I've told the basin. — Do you want the coat? No. I'll wear it home."}
+    ],
+    "nodes": {
+      "greet": {"speaker": "Corra Dunn", "text": "*(She is sitting by the warm ash-basin, rubbing a pinch of ash between her fingers.)* — That would take a blue. A good slate blue, two dips. — Sorry. I'm Corra. I'm a dyer. I'm going south. I've been going south for three days.", "next": "hub"},
+      "hub": {
+        "speaker": "Corra Dunn",
+        "text": "You can sit. Everyone sits a bit, here.",
+        "choices": [
+          {"text": "What is this place?", "next": "the_lines"},
+          {"text": "Why are you going south?", "next": "why"},
+          {"text": "Share an ash-cake with her.", "next": "cake", "conditions": [{"flag_not": "corra_turned_back"}, {"has_item": "core:item/ash_cake"}, {"flag": "corra_told_why"}]},
+          {"text": "Tell her who you are, and what you've seen come back out of the Hush.", "next": "known", "conditions": [{"flag_not": "corra_turned_back"}, {"renown_min": 40}, {"flag": "corra_told_why"}]},
+          {"text": "I'll leave you to decide.", "next": "end"}
+        ]
+      },
+      "the_lines": {"speaker": "Corra Dunn", "text": "The Leaving-Lines. You hang up your colours and roll in the basin, and you go on grey, so the Hush has nothing to take that's yours. — Look at them. Madder, weld, woad. I know every dye on those lines. That saffron's a Tollmere silk, it cost somebody a year. That blue's mine, from Merrowby. Not this year's. His.", "next": "hub"},
+      "why": {"speaker": "Corra Dunn", "text": "My husband walked in the spring. Didn't say. I found his blue coat on the line when I got here, I'd know my own woad anywhere. — So I hung mine up next to it. And then I couldn't get in the basin. Three days. I keep thinking about who'd dye for Merrowby.", "effects": [{"set_flag": "corra_told_why"}], "next": "hub"},
+      "cake": {"speaker": "Corra Dunn", "text": "*(She takes half, and eats it, slowly, and looks at the other half for a long time.)* — It tastes of nothing. The Order says that's a mercy. — It's the first thing I've eaten in three days. That's what's been wrong with me. You can't decide a thing like this hungry. *(She stands up.)* I'm going home. Somebody should dye for Merrowby. — Here. Take this north. Something red ought to go back. — And would you ask Odile Wark at the kiln to fire his name, Daff Dunn, and tie this to it? Then he has a colour.", "effects": [{"take_item": ["core:item/ash_cake", 1]}, {"set_flag": "corra_turned_back"}, {"give_item": ["core:item/madder_red_scarf", 1]}, {"morality": 3}, {"start_quest": "core:quest/something_red"}], "next": "hub"},
+      "known": {"speaker": "Corra Dunn", "text": "*(She listens to all of it, with the ash going still in her fingers.)* — And you came back. And they say your name in Merrowby; I've heard it. — Then a person can. *(She stands up.)* I'm going home. Somebody should dye for Merrowby. — Here. Take this north for me. Something red ought to go back. — And would you ask Odile Wark at the kiln to fire his name, Daff Dunn, and tie this to it? Then he has a colour.", "effects": [{"set_flag": "corra_turned_back"}, {"give_item": ["core:item/madder_red_scarf", 1]}, {"morality": 2}, {"start_quest": "core:quest/something_red"}], "next": "hub"}
+    }
+  },
+  {
+    "id": "core:dialogue/leaving_lines_basin",
+    "speaker_name": "The ash-basin",
+    "notes": "A PoiTouch at the Leaving-Lines' warm ash-basin (regions/cinderlea.gd leaving_lines). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {"speaker": "The ash-basin", "no_talk": true, "text": "A ring of fused stone round a hollow of fine grey ash, warm as bread from the vent under it. It is pressed with the shapes of bodies, many, lying every way, the newest on top. A pilgrim's grey cloth lies folded on the rim, for whoever needs it.", "choices": [
+        {"text": "Put your hand in the ash.", "next": "hand"},
+        {"text": "Leave it.", "next": "end"}
+      ]},
+      "hand": {"speaker": "The ash-basin", "no_talk": true, "text": "It is warm all the way down, and soft, and it takes the print of your hand at once. When you take your hand out it is grey to the wrist, and for a moment you cannot remember what colour your sleeve was.", "next": "end"}
+    }
+  },
+  {
+    "id": "core:dialogue/hessa_lowe",
+    "speaker_name": "Hessa Lowe",
+    "notes": "The moth-wife at the Silk Vents (pois/cinderlea.json silk_vents). Explains the moth-lamp (a PoiTouch, core:dialogue/silk_vents_lamp).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "silk_vents_lamped"
+          }
+        ],
+        "text": "They remember you. Look: three on your shoulder already. Hold still."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Hessa Lowe",
+        "text": "*(A grey moth is resting on the back of her hand. She waits until it goes.)* — There. Hessa. I spin. Mind the racks; the threads catch.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hessa Lowe",
+        "text": "Ask, quietly. They don't like a loud voice.",
+        "choices": [
+          {
+            "text": "What are these racks?",
+            "next": "the_racks"
+          },
+          {
+            "text": "What is the lamp on the pole for?",
+            "next": "the_lamp"
+          },
+          {
+            "text": "The Order's grey is made here?",
+            "next": "the_grey"
+          },
+          {
+            "text": "Good dusk, Hessa.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_racks": {
+        "speaker": "Hessa Lowe",
+        "text": "Cocoons. The ash-moths lay over the warm cracks and the grubs climb the threads and spin, and I take the shells when they've flown. Never before. A moth that's spun for you should get to fly. — The old moth-wife took them before. She had more silk and fewer moths.",
+        "next": "hub"
+      },
+      "the_lamp": {
+        "speaker": "Hessa Lowe",
+        "text": "At dusk I light it and they come down to it out of the whole heath, slow, like grey snow, and settle on everything warm. On you, if you stand under it. — Stand under it, one dusk, between the evening bell and full dark, and let them. Whoever does gets a skein. That's the custom. I don't know who began it. Probably the moths.",
+        "effects": [
+          {
+            "set_flag": "hessa_told_lamp"
+          }
+        ],
+        "next": "hub"
+      },
+      "the_grey": {
+        "speaker": "Hessa Lowe",
+        "text": "Every habit, every pilgrim's cloth they give out at the Lines, the blankets in the Gentle Fold. The heath's own colour, so the Hush can't tell you from the ground. — The Sayers buy it too, in Tollmere, and dye it blue. I try not to think about that.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/silk_vents_lamp",
+    "speaker_name": "The moth-lamp",
+    "notes": "A PoiTouch at the foot of the Silk Vents' moth-lamp pole (regions/cinderlea.gd silk_vents). Between 19 and 22 o'clock, once, the moths come down and Hessa's custom gives a skein.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "A pole of black timber three times a man's height, a lantern in an iron cage at its head and its cord made off at the foot. Moth-dust lies grey on everything round it.",
+        "choices": [
+          {
+            "text": "Stand under the lamp while the moths come down.",
+            "next": "moths",
+            "conditions": [
+              {
+                "time_between": [
+                  19,
+                  22
+                ]
+              },
+              {
+                "flag_not": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Wait for the moths.",
+            "next": "not_yet",
+            "conditions": [
+              {
+                "not": {
+                  "time_between": [
+                    19,
+                    22
+                  ]
+                }
+              },
+              {
+                "flag_not": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Stand under the lamp again.",
+            "next": "again",
+            "conditions": [
+              {
+                "flag": "silk_vents_lamped"
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "moths": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "They come out of the dusk from every side at once, without a sound, grey on grey, and settle: on the lamp, the pole, the racks, your hair, your hands, your shoulders, until you are standing in a coat of them, breathing very carefully, and every one of them is warm. Then, all together, they go. Hessa Lowe is beside you with a skein of grey silk in her hands. — That's the custom. They've had a look at you. You'll do.",
+        "effects": [
+          {
+            "set_flag": "silk_vents_lamped"
+          },
+          {
+            "give_item": [
+              "core:item/ash_silk_skein",
+              1
+            ]
+          },
+          {
+            "morality": 1
+          }
+        ],
+        "next": "end"
+      },
+      "not_yet": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "The lamp is not lit. The moths come down between the evening bell and full dark; in the day there is nothing here but the racks ticking in the warm air off the cracks.",
+        "next": "end"
+      },
+      "again": {
+        "speaker": "The moth-lamp",
+        "no_talk": true,
+        "text": "A few moths come down to you, more than to the racks. They seem to know you. They stay a while and go.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/fading_glass_look",
+    "speaker_name": "The Fading-Glass",
+    "notes": "A PoiTouch at the Fading-Glass (regions/cinderlea.gd fading_glass). What it shows follows your renown; the first time it shows you in colour a flake comes away.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "Black glass, polished to a mirror at the height of a face and dull above it where no sleeve reaches. The heath is in it, grey, and the sky, grey. And you.",
+        "choices": [
+          {
+            "text": "Kneel on the step and look.",
+            "next": "colour",
+            "conditions": [
+              {
+                "renown_min": 60
+              }
+            ]
+          },
+          {
+            "text": "Kneel on the step and look.",
+            "next": "faint",
+            "conditions": [
+              {
+                "renown_min": 20
+              },
+              {
+                "renown_max": 59
+              }
+            ]
+          },
+          {
+            "text": "Kneel on the step and look.",
+            "next": "grey",
+            "conditions": [
+              {
+                "renown_max": 19
+              }
+            ]
+          },
+          {
+            "text": "Polish it with your sleeve, for the next.",
+            "next": "polish"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "colour": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, in colour: the dyes of your clothes, the colour of your eyes, sharper than the heath behind you, as if the glass had been waiting all day for something to be sure of.",
+        "choices": [
+          {
+            "text": "Put your hand to the glass.",
+            "next": "chip",
+            "conditions": [
+              {
+                "flag_not": "fading_glass_chip_taken"
+              }
+            ]
+          },
+          {
+            "text": "Get up.",
+            "next": "end"
+          }
+        ]
+      },
+      "chip": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "It is warm under your palm. When you take your hand away a flake of the glass comes with it, clean-edged, as if the glass had given it. Your face is in it, very small, in colour.",
+        "effects": [
+          {
+            "set_flag": "fading_glass_chip_taken"
+          },
+          {
+            "give_item": [
+              "core:item/fading_glass_chip",
+              1
+            ]
+          }
+        ],
+        "next": "end"
+      },
+      "faint": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, but faint: your outline clear, your colours there and thin, as if seen through ash on the wind. Some people know your name. Not yet enough of them.",
+        "next": "end"
+      },
+      "grey": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You, grey. Grey hands, grey face, grey clothes, the same grey as the heath behind you, so that at a glance you cannot tell where you stop. It is only glass. You stay kneeling a moment longer than you meant to.",
+        "next": "end"
+      },
+      "polish": {
+        "speaker": "The Fading-Glass",
+        "no_talk": true,
+        "text": "You rub a patch clear with your sleeve, the way the pilgrims do, so that it will tell the truth to whoever comes next. The sleeve comes away grey.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/brin_callow",
+    "speaker_name": "Brin Callow",
+    "notes": "The novice at the Gentle Fold (pois/cinderlea.json gentle_fold). Gives The Lost Page (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_lost_page"
+          }
+        ],
+        "text": "Pell to Rush, every night now, and they lie down at Rush. — I know which one's Tamsin Rush. She's the one that waits for her name and then smiles. I'm not supposed to know that."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_lost_page"
+          }
+        ],
+        "text": "Any luck? I read them what I've got, and they lie down, and get up again at the gap. Every night."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Brin Callow",
+        "text": "*(He is reading a notice-board's worth of nothing under his breath: the strokes on the gate-post.)* — Oh. Sorry. Brin Callow, novice. Don't lean on the hurdle; they don't like it shaken.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Brin Callow",
+        "text": "What is it?",
+        "choices": [
+          {
+            "text": "What is this fold?",
+            "next": "the_fold"
+          },
+          {
+            "text": "What's under the blankets?",
+            "next": "the_blankets"
+          },
+          {
+            "text": "You look worried.",
+            "next": "offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_lost_page"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_lost_page"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I found the page from the roll.",
+            "next": "q_page",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_lost_page",
+                  "the_reading"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Read well, Brin.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_fold": {
+        "speaker": "Brin Callow",
+        "text": "Where the Order keeps the ones that won't lie down. They walk up to Pilgrim's Ash every night and stand at the edge of the lamplight and wave. The Vigil Book says the un-ended are owed what the ended are, so nobody cuts them down. We walk them here. At dusk I read them the Greyfold names, and when they hear their own they lie down.",
+        "next": "hub"
+      },
+      "the_blankets": {
+        "speaker": "Brin Callow",
+        "text": "Them. Lying down, under the Order's grey. In the day they sleep. Most of them. — Don't count them. I count them every morning, and there are more than there were in the spring, and I'd rather you didn't know the number.",
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Brin Callow",
+        "text": "I've lost a page. The dry wind took it out of the satchel on the road up from the Tenth Waystone — the names from Pell to Rush. Without it, the ones from Pell to Rush don't hear theirs. They get up in the middle of the reading and stand at the hurdle waving at me. All night. — It'll be in the ash somewhere by the Tenth. I can't leave them.",
+        "choices": [
+          {
+            "text": "I'll look for the page by the Tenth Waystone.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_lost_page"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Brin Callow",
+        "text": "Thank you. It's one leaf, the Order's paper, my writing. You'll know it: it's very neat. I was proud of it.",
+        "next": "hub"
+      },
+      "q_page": {
+        "speaker": "Brin Callow",
+        "text": "*(He smooths it on his knee, blows the ash off it, and reads the first name aloud before he says anything else.)* — Pell, Ada. — Thank you. Tonight they'll all hear. *(He stitches it back into the roll then and there, with the needle from his collar.)* Stay for the reading, if you like. They don't mind a listener.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/greyfold_roll_page",
+              1
+            ]
+          }
+        ],
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/gentle_fold_stand",
+    "speaker_name": "The reading-stand",
+    "notes": "A PoiTouch at the Gentle Fold's reading-stand (regions/cinderlea.gd gentle_fold). Read the names at dusk, once, and the wights lie down for you.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "A slanted board on a post by the hurdle, worn pale where a book has lain on it every evening, a candle-stub in a niche at its side. Inside the fold the grey blankets lie in rows.",
+        "choices": [
+          {
+            "text": "Read the names to the fold.",
+            "next": "read",
+            "conditions": [
+              {
+                "time_between": [
+                  18,
+                  23
+                ]
+              },
+              {
+                "flag_not": "gentle_fold_read"
+              }
+            ]
+          },
+          {
+            "text": "Read the names to the fold.",
+            "next": "day",
+            "conditions": [
+              {
+                "not": {
+                  "time_between": [
+                    18,
+                    23
+                  ]
+                }
+              },
+              {
+                "flag_not": "gentle_fold_read"
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "read": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "Brin Callow puts the roll on the stand for you without a word. You read. Ada Pell. Bram Pell. The Coulter boy. Under the blankets something shifts at every name, and settles; one hand comes up out of the grey and waves, slowly, and goes down. By the end of the roll the fold is still, and Brin is crying a little, and says it is the candle.",
+        "effects": [
+          {
+            "set_flag": "gentle_fold_read"
+          },
+          {
+            "morality": 3
+          },
+          {
+            "rep": [
+              "core:faction/tolling_order",
+              3
+            ]
+          }
+        ],
+        "next": "end"
+      },
+      "day": {
+        "speaker": "The reading-stand",
+        "no_talk": true,
+        "text": "They are lying still under the blankets in the daylight. The names are read at dusk, when they get up; the candle in the niche is cold.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/joss_fennick",
+    "speaker_name": "Joss Fennick",
+    "notes": "The knapper at Cinderhowe (pois/cinderlea.json cinderhowe). Gives The Glass Knight (quests/novel_cinderlea.json).",
+    "start": "greet",
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_glass_knight"
+          },
+          {
+            "flag": "cinderhowe_cut_again"
+          }
+        ],
+        "text": "Listen to that. — That's the vein, ringing when the wedge goes in. She said it sang. It does."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_glass_knight"
+          }
+        ],
+        "text": "I cut the outer vein and leave the heart. I go down to the heart once a month, and sit, and come up. It's warm."
+      },
+      {
+        "conditions": [
+          {
+            "quest_active": "core:quest/the_glass_knight"
+          }
+        ],
+        "text": "Is he still walking? — I can hear him from here, some nights. Like somebody setting down glasses."
+      }
+    ],
+    "nodes": {
+      "greet": {
+        "speaker": "Joss Fennick",
+        "text": "*(He is turning a flake of black glass over in his fingers.)* — Mind the flakes, they'll go through a boot. Joss Fennick. I knap. My grandmother cut this hill.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Joss Fennick",
+        "text": "What do you want to know?",
+        "choices": [
+          {
+            "text": "What is this hill?",
+            "next": "the_cone"
+          },
+          {
+            "text": "Who walks the galleries?",
+            "next": "the_knight"
+          },
+          {
+            "text": "Can I help you get the galleries back?",
+            "next": "offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_glass_knight"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_glass_knight"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I have the knight's vow-plate.",
+            "next": "q_plate",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_plate"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "About the galleries.",
+            "next": "q_choose",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Good knapping, Joss.",
+            "next": "end"
+          }
+        ]
+      },
+      "the_cone": {
+        "speaker": "Joss Fennick",
+        "text": "Cinderhowe. A hill, and then the Ash Winter came up through it for a year and it ran glass out of its sides like sap. Best edge on the heath. The cutters went in after the Winter and followed the veins down, and knapped at the foot, here, where I'm sitting. Every blade the Order carried was Cinderhowe glass, once.",
+        "next": "hub"
+      },
+      "the_knight": {
+        "speaker": "Joss Fennick",
+        "text": "A knight of the Order. The fire came back up the galleries one last time, forty years on, and my grandmother was at the heart, and they sent a knight in for her. He came out of the adit once, after, the cutters said. In armour that rang like glass. Looked at them. Walked back in. — Nobody's cut since.",
+        "next": "hub"
+      },
+      "offer": {
+        "speaker": "Joss Fennick",
+        "text": "I've sat here a month with my tools and not gone past the lamp on the nail. — Go down. To the heart, where it's still warm. End his watch, whatever he's watching. If there's anything of hers, bring it up. I'll owe you the first edge I cut.",
+        "choices": [
+          {
+            "text": "I'll go down into the cone and end the knight's watch.",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_glass_knight"
+              }
+            ],
+            "next": "taken"
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "Joss Fennick",
+        "text": "Bring a hammer, if you've one. Glass doesn't mind an edge. It minds a knock.",
+        "next": "hub"
+      },
+      "q_plate": {
+        "speaker": "Joss Fennick",
+        "text": "*(He holds the plate to the light so the names show under the glass, and is quiet a long time.)* — Ama Fennick. He scratched her name next to his. — He wasn't keeping the galleries from us. He was keeping the fire off her. Forty years. — She's still down there, isn't she. In the seam.",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/orvel_vow_plate",
+              1
+            ]
+          }
+        ],
+        "next": "q_choose"
+      },
+      "q_choose": {
+        "speaker": "Joss Fennick",
+        "text": "So. Do I cut it again? She'd want the glass worked; she'd say a hill nobody cuts is just a hill. Or do I leave the heart to the two of them, and cut only the outer vein?",
+        "choices": [
+          {
+            "text": "Cut them again. Your grandmother would want the glass worked.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_glass_knight",
+                  "cut_again"
+                ]
+              }
+            ],
+            "next": "q_cut",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave the heart to the two of them. Cut only the outer vein.",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_glass_knight",
+                  "leave_them"
+                ]
+              }
+            ],
+            "next": "q_leave",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_glass_knight",
+                  "the_galleries"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_cut": {
+        "speaker": "Joss Fennick",
+        "text": "Then I'll cut. — Here. The first edge, as I said. Out of the vein by the lamp, this morning, before you came up. I was that sure.",
+        "next": "hub"
+      },
+      "q_leave": {
+        "speaker": "Joss Fennick",
+        "text": "The outer vein's enough for one knapper. I'll set the plate on the seam where he stood, so the next one knows. — Thank you.",
+        "next": "hub"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cinderhowe_board",
+    "speaker_name": "The cutters' board",
+    "notes": "Cinderhowe's site hook (a notice post by the adit). Starts The Glass Knight, which Joss Fennick also gives.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The cutters' board",
+        "no_talk": true,
+        "text": "An old board by the adit, the cutters' shifts chalked on it forty years ago and never wiped: names, veins, weights of glass. The last row has one name, Ama Fennick, HEART, and no weight. Under it, new, in a knapper's square hand: THE KNIGHT STILL WALKS. I WANT THE GALLERIES BACK. ASK FOR JOSS AT THE FLOOR.",
+        "choices": [
+          {
+            "text": "Go down to the heart of the cone.",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_glass_knight"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_glass_knight"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_glass_knight"
+              }
+            ],
+            "next": "end"
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/cinderhowe_crater",
+    "speaker_name": "Cinderhowe",
+    "notes": "A PoiTouch on Cinderhowe's spoil of glass (regions/cinderlea.gd cinderhowe). Lore.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "Cinderhowe",
+        "no_talk": true,
+        "text": "The spoil is all glass: flakes, cores, spalls, broken blanks, black and glossy and sharp, a heap of forty years of other people's mistakes. The cone goes up behind it into its own plume. The ground is warm through your boots, and from somewhere inside the hill, once, comes the sound of a glass set down too hard.",
+        "next": "end"
+      }
+    }
+  }
+]

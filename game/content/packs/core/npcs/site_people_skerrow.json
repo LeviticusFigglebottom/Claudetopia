@@ -9,14 +9,13 @@
     "unique_habit": "Counts in fives on her fingers while anyone talks, a notch for each thing said, and closes her fist on the fifth.",
     "personality": {
       "traits": [
-        "stubborn",
         "proud",
-        "sharp",
-        "lonely"
+        "cynical",
+        "quiet"
       ]
     },
     "appearance": {
-      "seed": 9311,
+      "seed": 9411,
       "build": "stooped_thin",
       "age": 81.0,
       "feminine": 1.0,
@@ -58,14 +57,13 @@
     "unique_habit": "Taps any iron she passes with a fingernail and listens to it, and tells you, unasked, whether it will hold.",
     "personality": {
       "traits": [
-        "blunt",
+        "cynical",
         "proud",
-        "brave",
-        "stubborn"
+        "brave"
       ]
     },
     "appearance": {
-      "seed": 9312,
+      "seed": 9412,
       "build": "strong_short",
       "age": 52.0,
       "feminine": 1.0,
@@ -107,14 +105,13 @@
     "unique_habit": "Mouths the law along with anybody saying it back, a word behind them, as if checking it for wear.",
     "personality": {
       "traits": [
-        "patient",
-        "formal",
-        "dry",
-        "watchful"
+        "proud",
+        "cynical",
+        "quiet"
       ]
     },
     "appearance": {
-      "seed": 9313,
+      "seed": 9413,
       "build": "broad_upright",
       "age": 47.0,
       "feminine": 0.0,

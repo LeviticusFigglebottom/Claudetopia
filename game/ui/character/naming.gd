@@ -1718,7 +1718,7 @@ func _begin_game() -> void:
 	_begin.disabled = true
 	UI.fade_to_black(0.5, loading_line())
 	await get_tree().create_timer(0.55).timeout
-	get_tree().change_scene_to_file(world_scene)
+	await UI.change_scene_when_read(world_scene)
 
 
 ## Used by the review harness to show the screen part-way through being filled in.

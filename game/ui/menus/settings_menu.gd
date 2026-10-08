@@ -18,7 +18,7 @@ const GRAPHICS_GROUPS := [
 	["The picture", ["render_scale", "upscaler", "msaa", "fxaa", "taa", "anisotropic", "ground_textures", "distant_ground"]],
 	["Pacing", ["vsync", "fps_cap"]],
 	["Shadows", ["shadows", "shadow_atlas", "shadow_cascades", "shadow_distance", "shadow_filter"]],
-	["The country", ["scatter_density", "grass_instancer", "view_range", "lod_bias", "view_distance", "occlusion", "water_quality", "water_reflections", "wildlife"]],
+	["The country", ["scatter_density", "view_range", "lod_bias", "view_distance", "occlusion", "water_quality", "water_reflections", "wildlife"]],
 	["Light and air", ["fog", "volumetric_fog", "ssao", "ao_quality", "ssil", "sdfgi", "glow", "night_lights"]],
 	["The look", ["title_vista", "title_live", "color_grade", "vignette", "film_grain"]],
 	["Starting safely", ["full_terrain"]],
@@ -398,6 +398,8 @@ func _build_gameplay() -> void:
 	_check("gameplay", "blood", "Blood", "on a blow that lands on flesh")
 	_check("gameplay", "pickup_glint", "Things on the ground glint", "a soft glint now and then, so a dropped blade can be seen")
 	_slider("gameplay", "hud_opacity", "How loud the HUD is", 0.2, 1.0, 0.05, "%")
+	_option("gameplay", "quest_notice_time", "Quest news stays up", ["Shorter", "Ordinary", "Longer", "Longest"],
+			"a quest taken, moved on or finished, under the compass", [0.75, 1.0, 1.5, 2.0])
 
 
 func _build_accessibility() -> void:

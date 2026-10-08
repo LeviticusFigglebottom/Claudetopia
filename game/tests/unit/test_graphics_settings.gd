@@ -537,7 +537,10 @@ func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
 	Settings.data["graphics"]["ground_textures"] = 0
 	assert_eq(World.assets_resource(), World.ASSETS_RESOURCE, "Standard reads the Standard list")
 	Settings.data["graphics"]["ground_textures"] = was
-	assert_eq(int(Graphics.DEFAULTS["grass_instancer"]), 0, "the instancer trial is off unless chosen")
+	assert_false(Graphics.DEFAULTS.has("grass_instancer"), "the instancer trial is no setting: only a run's argument turns it on")
+	Settings.data["graphics"]["grass_instancer"] = 1
+	assert_eq(GrassInstancer.mode(), 0, "and a settings file that still says it is on does not")
+	(Settings.data["graphics"] as Dictionary).erase("grass_instancer")
 	GrassInstancer.active = false
 	assert_false(GrassInstancer.takes(GrassInstancer.REGION, "res://assets/models/flora/x/x.glb"),
 			"off, the streamer keeps every row")

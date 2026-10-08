@@ -85,6 +85,10 @@ var _assets_requested := false
 ## setting meanwhile waits for the next world, as the settings screen says.
 var _assets_path := ""
 var _holding_3d := false
+## The step the world is on as it stands up, in the startup trace's words ("terrain: waiting for the
+## region reads"), kept whether or not the trace is written: the loading caption's watch says it
+## when a load has stopped moving (UI.loading_wait).
+var standing := ""
 
 
 static func terrain() -> TerrainProvider:
@@ -194,6 +198,9 @@ func _ready() -> void:
 		_pois = PoiPreview.apply(_pois, provider)
 	_trace("streamer step begins")
 	_setup_streamer()
+	# small things raised in the cells cast no sun shadow (world/shadow_trim.gd)
+	if ShadowTrim.enabled and not get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.connect(_on_node_added)
 	if not await _mark("streamer"):
 		return
 	_trace("horizon step begins")
@@ -257,6 +264,11 @@ func tear_down() -> void:
 	if streamer != null and is_instance_valid(streamer):
 		streamer.enabled = false
 		streamer.also_cells = {}
+	# the water's workers read the ground through the provider: done before it lets Terrain3D go
+	if water != null and is_instance_valid(water):
+		water.finish_tasks()
+	if is_inside_tree() and get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.disconnect(_on_node_added)
 	# Terrain3D keeps its camera: set_camera(null) crashes Terrain3D 1.0.2 (a segfault in the
 	# library, here on the title's teardown). The camera is the world's own and goes with it.
 	if terrain_node != null and is_instance_valid(terrain_node) and provider != null:
@@ -300,6 +312,7 @@ func _mark(step: String) -> bool:
 
 ## A line in the startup trace (StartupTrace), which costs nothing once the game has started.
 func _trace(what: String) -> void:
+	standing = what
 	if StartupTrace.active:
 		StartupTrace.step("world%s: %s" % [" (title)" if vista else "", what])
 
@@ -374,6 +387,41 @@ func _setup_fallback() -> void:
 	fallback = null
 
 
+## The world's first frames under the loading fade, a layer a frame (`warm_layers`), drawn behind the
+## caption before the fade lifts (UI, after its wait for the country): the frame that drew everything
+## at once for the first time was the first frame after the lift, 3.7 s on this box's software
+## renderer with the caption's last frame on the screen all of it (the flow's Continue). A film warms
+## its own first picture under its curtain (CinematicPlayer); the title its own (TitleVista).
+## Nobody sees these frames (the fade is opaque), so they are drawn at WARM_SCALE of the 3D
+## resolution: what they are for is every shader's first use and every mesh's upload, which do not
+## depend on how many pixels are filled, and on the software renderer a frame of this world at full
+## size is seconds of filling. Returns once every layer is shown; at once where nothing was held.
+func warm_in() -> void:
+	if vista or not stand_up_in_steps or not is_inside_tree() or _warmed_in:
+		return
+	_warmed_in = true
+	var vp := get_viewport()
+	var scale_was := vp.scaling_3d_scale
+	vp.scaling_3d_scale = minf(scale_was, WARM_SCALE)
+	# the last step shows every layer, and its frame too is drawn before the fade begins to lift
+	for step in WARM_LAYERS.size() + 1:
+		warm_layers(step)
+		_hold_3d(false)
+		await _frame()
+		if not is_inside_tree():
+			break
+	warm_layers(WARM_LAYERS.size())
+	if is_instance_valid(vp):
+		vp.scaling_3d_scale = scale_was
+
+
+## The 3D resolution the frames under the fade are drawn at (`warm_in`): Godot's least.
+const WARM_SCALE := 0.25
+
+
+var _warmed_in := false
+
+
 ## The `step`th frame of drawing a place for the first time: the ground and the sky, with the layers
 ## after WARM_LAYERS[step - 1] hidden. True once every layer is shown (and from then on). Whoever
 ## warms a place hides nothing for good: a large step shows every layer.
@@ -439,7 +487,13 @@ func _setup_terrain3d() -> void:
 	# the build's own texel (2 m at 4096): a preview world imported at its 8 m and drawn at 2 m
 	# would be a quarter of the world in its north-west corner
 	terrain_node.set("vertex_spacing", float(provider.manifest.get("spacing_m", 2.0)) if provider != null else 2.0)
-	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+	# the land's sun shadow is cast by ShadowGround (world/shadow_ground.gd), a coarse caster round
+	# the camera, not by Terrain3D's clipmap drawn again into every cascade
+	var shadow_ground := ShadowGround.enabled() and provider != null and provider.has_runtime_maps()
+	terrain_node.set("cast_shadows", GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if shadow_ground
+			else GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+	if shadow_ground:
+		add_child(ShadowGround.new(provider))
 	# The clipmap has to cover the whole world, not a circle around the camera. At 7 LODs and
 	# 2 m spacing it reached about 6 km, so from any hill the terrain stopped in a dead straight
 	# line with a visible corner -- a flat shelf across the distance with the land cut off
@@ -620,20 +674,44 @@ static func prepare_high_textures(assets: Resource, host: Node = null) -> int:
 			jobs.images.append(img)
 	if jobs.images.is_empty():
 		return 0
-	const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
-	var gpu_was: Variant = ProjectSettings.get_setting(GPU_COMPRESS, true)
-	ProjectSettings.set_setting(GPU_COMPRESS, false)
+	_gpu_compress_off(true)
 	var task := WorkerThreadPool.add_group_task(jobs.run, jobs.images.size(),
 			maxi(ThreadedLoads.pool_size() - 2, 1), true, "wm_high_textures")
-	while host != null and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
-		await host.get_tree().process_frame
+	var stepped := host != null
+	while stepped and is_instance_valid(host) and host.is_inside_tree() and not WorkerThreadPool.is_group_task_completed(task):
+		await (Engine.get_main_loop() as SceneTree).process_frame
+	if stepped and not (is_instance_valid(host) and host.is_inside_tree()) and not WorkerThreadPool.is_group_task_completed(task):
+		# the world went while its textures were compressed (the title's, on a click): the jobs are
+		# left to finish on their own and never waited for here, as the region reads are
+		ThreadedLoads.after_task(task, true, jobs, _gpu_compress_off.bind(false))
+		return 0
 	WorkerThreadPool.wait_for_group_task_completion(task)
-	ProjectSettings.set_setting(GPU_COMPRESS, gpu_was)
+	_gpu_compress_off(false)
 	for k in jobs.slots.size():
 		var slot: Array = jobs.slots[k]
 		(slot[0] as Resource).set(str(slot[1]), ImageTexture.create_from_image(jobs.images[k]))
 	jobs.images.clear()
 	return jobs.slots.size()
+
+
+const GPU_COMPRESS := "rendering/textures/vram_compression/compress_with_gpu"
+## How many worlds' High textures are being compressed now, and Godot's GPU compressor setting from
+## before the first: it stays off until the last is done (a title's world left mid-compress finishes
+## after the game's world has begun its own).
+static var _compressing := 0
+static var _gpu_was: Variant = true
+
+
+static func _gpu_compress_off(on: bool) -> void:
+	if on:
+		if _compressing == 0:
+			_gpu_was = ProjectSettings.get_setting(GPU_COMPRESS, true)
+			ProjectSettings.set_setting(GPU_COMPRESS, false)
+		_compressing += 1
+		return
+	_compressing = maxi(_compressing - 1, 0)
+	if _compressing == 0:
+		ProjectSettings.set_setting(GPU_COMPRESS, _gpu_was)
 
 
 ## The decoding, scaling and compressing `prepare_high_textures` hands to worker threads, an image a
@@ -894,6 +972,14 @@ func _setup_horizon() -> void:
 		await horizon.build_from_in_steps(self)
 	else:
 		horizon.build_from(self)
+
+
+## A geometry node entering the tree is weighed for its shadow a frame later (ShadowTrim).
+func _on_node_added(node: Node) -> void:
+	if node is GeometryInstance3D and streamer != null:
+		# by id: a node freed before the frame ends (a place let go as it rises) cannot be passed as a
+		# Node to the deferred call, which fails before the method can see it is gone
+		ShadowTrim.consider_ids.call_deferred(node.get_instance_id(), streamer.get_instance_id())
 
 
 func _setup_streamer() -> void:

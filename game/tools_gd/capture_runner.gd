@@ -852,6 +852,15 @@ func _settle_hud() -> void:
 	hud.call("_rebuild_markers")
 	hud.set("_idle", 0.0)
 	(hud as CanvasItem).modulate.a = 1.0
+	# `"hud": {"quest_notice": true}`: the followed quest's notice up at full ink for the exposure
+	if bool(_hud_spec.get("quest_notice", false)) and hud.has_method("announce_quest"):
+		var quests := get_tree().get_first_node_in_group("quest_log")
+		var followed := str(quests.call("tracked_quest")) if quests != null else ""
+		var notice: Object = hud.call("quest_notice")
+		notice.get("queue").call("clear")
+		hud.call("announce_quest", followed)
+		notice.call("advance", 1.0)
+		Log.info("Capture", "the quest notice shows: %s" % str(hud.call("quest_notice_shown")))
 	for i in 4:
 		await get_tree().process_frame
 	if hud.has_method("compass_marker_labels"):

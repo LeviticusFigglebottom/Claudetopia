@@ -67,3 +67,30 @@ func test_landmark_collision_shapes_sit_where_the_col_scene_puts_them() -> void:
 	streamer.free()
 	DirAccess.remove_absolute(path)
 	await _tree().process_frame
+
+
+## Every Briarwold flora asset's kind, by its own name: only the briars are bushes. The region's
+## own name holds "briar", and once every herb of it (grass, fern, moss, foxglove) was taken for a
+## bush, drawn to the bushes' 190 m and kept 30% in the far ring (HANDOFF §00000).
+func test_every_briarwold_flora_asset_is_the_kind_its_own_name_says() -> void:
+	var dir := "res://assets/models/flora"
+	var seen := 0
+	var bushes: Array = []
+	for name in DirAccess.get_directories_at(dir):
+		if not name.begins_with("briarwold_"):
+			continue
+		var path := "%s/%s/%s.glb" % [dir, name, name]
+		var kind := WorldStreamer.asset_kind(path)
+		seen += 1
+		if kind == "bush":
+			bushes.append(name)
+		else:
+			assert_eq(kind, "herb", "%s is a herb" % name)
+		assert_eq(kind == "bush", name.begins_with("briarwold_briar_"), "%s: %s" % [name, kind])
+	assert_gt(seen, 10, "the Briarwold flora is found (%d)" % seen)
+	assert_eq(bushes.size(), 3, "the three briar vines are the bushes (%s)" % str(bushes))
+	# the other regions' bushes still are, and a herb with no bush word is not
+	assert_eq(WorldStreamer.asset_kind("res://assets/models/flora/skerrow_juniper_a/skerrow_juniper_a.glb"), "bush")
+	assert_eq(WorldStreamer.asset_kind("res://assets/models/flora/hearthvale_hawthorn_bush_a/hearthvale_hawthorn_bush_a.glb"), "bush")
+	assert_eq(WorldStreamer.asset_kind("res://assets/models/flora/briarwold_grass_clump_a/briarwold_grass_clump_a.glb"), "herb")
+	assert_eq(WorldStreamer.asset_kind("res://assets/models/trees/briarwold_giant_oak_a/briarwold_giant_oak_a.glb"), "tree")

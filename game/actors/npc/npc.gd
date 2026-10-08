@@ -173,10 +173,25 @@ var pace_slice: WorldPace.Slice = null
 
 func _dress_paced(m: Node) -> void:
 	_model.visible = false
+	_dressing[get_instance_id()] = true
 	await m.apply_appearance(appearance_of(), pace_slice)
+	_dressing.erase(get_instance_id())
 	if is_instance_valid(_model):
 		_model.visible = true
 	pace_slice = null
+
+
+## Who is being dressed a few parts a frame (`_dress_paced`), by instance id: a person freed halfway
+## never comes back to say they are done, so the count is of those still here.
+static var _dressing: Dictionary = {}
+
+
+## How many people are still being dressed: a film waits for none before its first picture.
+static func dressing_count() -> int:
+	for id: int in _dressing.keys():
+		if not is_instance_id_valid(id):
+			_dressing.erase(id)
+	return _dressing.size()
 
 
 func _build_placeholder() -> void:

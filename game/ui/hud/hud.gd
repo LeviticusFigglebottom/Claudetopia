@@ -28,8 +28,6 @@ const IDLE_ALPHA := 0.35
 const REGION_CARD_SECONDS := 4.2
 const SUBTITLE_SECONDS := 4.0
 const STATUS_DEFAULT_SECONDS := 12.0
-## How long a new objective's line stays under the compass before it goes back to the journal.
-const OBJECTIVE_SECONDS := 7.0
 ## A region's card waits while a cinematic plays and for this long (wall clock) after it hands
 ## over, so the first frame of control belongs to the place, the person at the fire and the
 ## objective's line, and the card comes after the line has gone.
@@ -86,16 +84,10 @@ var _subtitle: Label
 ## the Warden's first words were still half-inked on the first frame of control.
 var _wall := WallTweens.new()
 var _subtitle_tween: Tween = null
-## The line under the compass that says what to do next when it changes.
-var _objective: Label
-var _objective_tween: Tween
-## Over the objective line when a quest moves: "NEW OBJECTIVE · MAIN QUEST" in the quest's colour;
-## under it, the stage's first journal line, which says why (triage, fourth playtest: "going onto
-## next stage of quest without clear direction why").
-var _notice_head: Label
-var _notice_why: Label
-## Quests started this moment: their first stage is a new quest, not a new objective.
-var _started_ms: Dictionary = {}
+## The quest notice under the compass (QuestNotice): a quest taken, moved on or finished, said
+## large with why, held long enough to read, several in turn, none spent under a conversation or a
+## film (the owner: "the bit that pops up is small and disappears").
+var _notice: QuestNotice
 
 var _lock_target: Node3D = null
 var _boss_id := ""
@@ -196,29 +188,12 @@ func _build() -> void:
 	_compass.offset_bottom = 70.0
 	add_child(_compass)
 
-	# what to do next, under the compass, for a few seconds whenever it changes
-	_objective = UiKit.label("", "Small", HORIZONTAL_ALIGNMENT_CENTER)
-	_objective.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	_objective.anchor_left = 0.5
-	_objective.anchor_right = 0.5
-	_objective.offset_left = -300.0
-	_objective.offset_right = 300.0
-	_objective.offset_top = 90.0
-	_objective.offset_bottom = 116.0
-	_objective.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.6))
-	_objective.add_theme_constant_override("shadow_offset_x", 1)
-	_objective.add_theme_constant_override("shadow_offset_y", 1)
-	_objective.modulate.a = 0.0
-	_objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_objective)
-	_notice_head = _notice_label("Tiny", 72.0, 90.0, 300.0)
-	_notice_head.name = "NoticeHead"
-	_notice_why = _notice_label("Small", 116.0, 160.0, 260.0)
-	_notice_why.name = "NoticeWhy"
-	_notice_why.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_notice_why.max_lines_visible = 2
-	_notice_why.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_notice_why.add_theme_color_override("font_color", Color(0.93, 0.9, 0.82, 0.92))
+	# the quest notice under the compass: a quest taken, moved on or finished, its objective and why
+	_notice = QuestNotice.new()
+	_notice.name = "QuestNotice"
+	add_child(_notice)
+	_notice.notice_shown.connect(_on_notice_shown)
+	_announce_opening_quest.call_deferred()
 
 	# the tracked quest, top left: the compass has the top middle and the toasts the top right
 	_tracker = QuestTracker.new()
@@ -858,11 +833,10 @@ func _on_tracked_changed(_quest_id: String) -> void:
 
 func _on_quest_ended(quest_id: String, outcome: String) -> void:
 	_waymarks_at_ms = -1000000
-	if _notice_head == null or quest_id == "" or str(_quest_def(quest_id).get("layer", "")) == "radiant" and outcome == "failed":
+	if _notice == null or quest_id == "" or str(_quest_def(quest_id).get("layer", "")) == "radiant" and outcome == "failed":
 		return
-	var name_of := str(_quest_def(quest_id).get("name", ""))
-	if name_of != "":
-		show_quest_notice(quest_id, "Quest complete", name_of)
+	if str(_quest_def(quest_id).get("name", "")) != "":
+		_push_notice(quest_id, "failed" if outcome == "failed" else "complete", "")
 
 
 ## Where the player is, for the waymarks: the body's feet, else the camera; INF with neither.
@@ -990,6 +964,7 @@ func _process(delta: float) -> void:
 	_update_idle_fade(delta)
 	_update_held_card()
 	_update_cycle_notice(delta)
+	_update_notice_room(delta)
 
 
 ## The strip shows where the player LOOKS: the view's heading, not the body's. It always read the
@@ -1292,52 +1267,80 @@ func _update_held_card() -> void:
 		show_region_card(str(c[0]), str(c[1]), str(c[2]))
 
 
-## A quest started or moved on: its next thing to do goes under the compass for a few seconds, so
-## the player learns it from the screen and not from the journal, and the smudge on the strip
-## above it says which way. Nothing is shown for a stage with nothing left to do.
-func _on_quest_moved(quest_id: String, stage: Variant = null) -> void:
+## A quest started or moved on: the notice under the compass says so, large, with the objective and
+## why (the stage's first journal line), so the player learns it from the screen and not from the
+## journal, and the smudge on the strip above it says which way. Nothing is shown for a stage with
+## nothing left to do.
+func _on_quest_moved(quest_id: String, _stage: Variant = null, kind := "updated") -> void:
 	# the tracker's rows now, not at its next look
 	_waymarks_at_ms = -1000000
-	var line := objective_line(quest_id)
-	if line.is_empty():
+	var text := objective_text(quest_id)
+	if text.is_empty():
 		return
-	# the stage a quest starts at is the quest's news, not a new objective
-	var started: Dictionary = _started_ms.get(quest_id, {})
-	var is_new := not started.is_empty() and Time.get_ticks_msec() - int(started["ms"]) < 1500 \
-			and (stage == null or int(stage) == int(started["stage"]))
-	show_quest_notice(quest_id, "New quest" if is_new else "New objective", line, stage_reason(quest_id))
-	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
-			else get_tree().get_first_node_in_group("quest_log")
-	if _tracker != null and log_node != null and log_node.has_method("tracked_quest") \
-			and str(log_node.call("tracked_quest")) == quest_id:
-		_tracker.announce()
+	_push_notice(quest_id, kind, text, stage_reason(quest_id))
 
 
+## A quest taken: "Quest started". Its first stage's own change follows at once and takes this
+## one's place in the queue, still saying "Quest started" (QuestNoticeQueue).
 func _on_quest_started(quest_id: String) -> void:
+	_on_quest_moved(quest_id, null, "started")
+
+
+## A new game's first quest is begun before the HUD stands (under the opening), so its "Quest started"
+## was told to nobody: the HUD tells it as it comes up, while the game is still new (a quest may be
+## begun past its first stage, as the Naming is at the wake). A load or a Continue is not new, and says nothing.
+func _announce_opening_quest() -> void:
+	if not (GameState.has_flag("new_game") or GameState.has_flag(Openings.STYLE_START)):
+		return
+	var log_node := get_tree().get_first_node_in_group("quest_log")
+	if log_node == null or not log_node.has_method("tracked_quest"):
+		return
+	var quest_id := str(log_node.call("tracked_quest"))
+	if quest_id == "":
+		return
+	if _notice != null and _notice.has_quest(quest_id):
+		return
+	announce_quest(quest_id, "started")
+
+
+## Says the quest's stage as it stands on the notice again (a capture, a probe): "Journal updated".
+func announce_quest(quest_id: String, kind := "updated") -> void:
+	_on_quest_moved(quest_id, null, kind)
+
+
+func _push_notice(quest_id: String, kind: String, objective: String, why := "") -> void:
+	if _notice == null:
+		return
+	var def := _quest_def(quest_id)
+	_notice.push({"quest": quest_id, "kind": kind, "name": str(def.get("name", "")),
+			"objective": objective, "why": why, "tier": QuestCues.tier_of(quest_id, def)})
+
+
+## A notice has come up: the tracker's quest glows with its new rows, and the strip's pins with it,
+## when it is the quest followed; the whole HUD wakes so it is not read through the idle fade.
+func _on_notice_shown(note: Dictionary) -> void:
+	_idle = 0.0
+	var quest_id := str(note.get("quest", ""))
 	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
 			else get_tree().get_first_node_in_group("quest_log")
-	var at := int(log_node.call("stage_of", quest_id)) if log_node != null and log_node.has_method("stage_of") else 0
-	_started_ms[quest_id] = {"ms": Time.get_ticks_msec(), "stage": at}
-	_on_quest_moved(quest_id)
+	if quest_id == "" or log_node == null or not log_node.has_method("tracked_quest") \
+			or str(log_node.call("tracked_quest")) != quest_id:
+		return
+	if _tracker != null:
+		_tracker.announce()
+	if _compass != null:
+		_compass.glow_pins()
 
 
-## A label of the notice under the compass, `half` either side of the middle.
-func _notice_label(variation: String, top: float, bottom: float, half: float) -> Label:
-	var l := UiKit.label("", variation, HORIZONTAL_ALIGNMENT_CENTER)
-	l.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	l.anchor_left = 0.5
-	l.anchor_right = 0.5
-	l.offset_left = -half
-	l.offset_right = half
-	l.offset_top = top
-	l.offset_bottom = bottom
-	l.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.7))
-	l.add_theme_constant_override("shadow_offset_x", 1)
-	l.add_theme_constant_override("shadow_offset_y", 1)
-	l.modulate.a = 0.0
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(l)
-	return l
+## While a plate wider than the room beside the tracker is up (a large UI), the tracker steps back
+## under it, and comes back when it goes.
+func _update_notice_room(delta: float) -> void:
+	if _notice == null or _tracker == null:
+		return
+	var under := _notice.over_tracker and not _notice.shown().is_empty()
+	var want := 0.12 if under else 1.0
+	if under or _tracker.modulate.a < 1.0:
+		_tracker.modulate.a = move_toward(_tracker.modulate.a, want, delta * 3.0)
 
 
 ## Why the quest's current stage is asked of you: the first line of its journal (the stage's
@@ -1348,17 +1351,31 @@ func stage_reason(quest_id: String) -> String:
 	if log_node == null or not log_node.has_method("stage_def") or not log_node.has_method("journal_of"):
 		return ""
 	var stage: Dictionary = log_node.call("stage_def", quest_id, int(log_node.call("stage_of", quest_id)))
-	return QuestCues.first_line(str(log_node.call("journal_of", stage)))
+	var line := QuestCues.first_line(str(log_node.call("journal_of", stage)))
+	# the journal's tokens ({player}, {key:...}) as the journal writes them
+	var ctx: Variant = log_node.get("ctx")
+	if line.find("{") >= 0 and ctx is Object and (ctx as Object).has_method("substitute"):
+		line = str((ctx as Object).call("substitute", line))
+	return line
 
 
-## The notice under the compass: a head ("NEW OBJECTIVE · SIDE QUEST", in the quest's colour),
-## the objective line, and why.
+## The notice for a quest: `head` "New quest" / "Quest started", "New objective" / "Journal
+## updated", "Quest complete" or "Quest failed"; `line` the objective (a "Name: " before it is
+## taken off: the plate says the name on its own line), and why.
 func show_quest_notice(quest_id: String, head: String, line: String, why := "") -> void:
-	var tier := QuestCues.tier_of(quest_id, _quest_def(quest_id))
-	_notice_head.text = ("%s  ·  %s" % [head, QuestCues.tier_word(tier)]).to_upper()
-	_notice_head.add_theme_color_override("font_color", QuestCues.tier_colour(tier))
-	_notice_why.text = why
-	show_objective(line, OBJECTIVE_SECONDS + (2.0 if why != "" else 0.0), true)
+	var kind := "updated"
+	match head.to_lower():
+		"new quest", "quest started":
+			kind = "started"
+		"quest complete":
+			kind = "complete"
+		"quest failed":
+			kind = "failed"
+	var name_of := str(_quest_def(quest_id).get("name", ""))
+	var text := line.trim_prefix(name_of + ": ") if name_of != "" else line
+	if kind in ["complete", "failed"] and text == name_of:
+		text = ""
+	_push_notice(quest_id, kind, text, why)
 
 
 func _quest_def(quest_id: String) -> Dictionary:
@@ -1367,17 +1384,38 @@ func _quest_def(quest_id: String) -> Dictionary:
 	return ContentDB.get_or_empty(quest_id)
 
 
-## What the notice shows now, while it is up: {head, line, why}; {} when it is not.
+## What the notice shows now, while it is up: {head, line ("Name: objective"), why, name,
+## objective, kind, quest, hint}; {} when none is.
 func quest_notice_shown() -> Dictionary:
-	var fading_in := _objective_tween != null and _objective_tween.is_valid() and _objective_tween.is_running()
-	if _objective == null or _objective.text == "" or (_objective.modulate.a <= 0.05 and not fading_in):
+	if _notice == null:
 		return {}
-	return {"head": _notice_head.text, "line": _objective.text, "why": _notice_why.text}
+	var n := _notice.shown()
+	if n.is_empty():
+		return {}
+	var line := str(n["objective"])
+	if str(n["name"]) != "":
+		line = str(n["name"]) if line == "" else "%s: %s" % [str(n["name"]), line]
+	n["line"] = line
+	return n
+
+
+## The quest notice itself (QuestNotice), for the tests and the probes.
+func quest_notice() -> QuestNotice:
+	return _notice
 
 
 ## "The Naming: Speak to the Warden at her fire" -- the quest's name and its first objective not
 ## yet done, or "" when there is none.
 func objective_line(quest_id: String) -> String:
+	var text := objective_text(quest_id)
+	if text.is_empty():
+		return ""
+	var name_of := str(_quest_def(quest_id).get("name", ""))
+	return text if name_of.is_empty() else "%s: %s" % [name_of, text]
+
+
+## The quest's first objective not yet done (not optional, not veiled), or "".
+func objective_text(quest_id: String) -> String:
 	var log_node := _quest_log if _quest_log != null and is_instance_valid(_quest_log) \
 			else get_tree().get_first_node_in_group("quest_log")
 	if log_node == null or not log_node.has_method("objectives_of"):
@@ -1386,37 +1424,22 @@ func objective_line(quest_id: String) -> String:
 		var obj: Dictionary = o
 		if bool(obj.get("done", false)) or bool(obj.get("optional", false)) or bool(obj.get("veiled", false)):
 			continue
-		var name_of := str(_quest_def(quest_id).get("name", ""))
-		var text := str(obj.get("text", ""))
-		return text if name_of.is_empty() else "%s: %s" % [name_of, text]
+		return str(obj.get("text", ""))
 	return ""
 
 
-func show_objective(text: String, seconds := OBJECTIVE_SECONDS, with_notice := false) -> void:
-	_objective.text = text
-	if not with_notice:
-		_notice_head.text = ""
-		_notice_why.text = ""
-	if _objective_tween != null and _objective_tween.is_valid():
-		_objective_tween.kill()
-	for l: Label in [_objective, _notice_head, _notice_why]:
-		l.modulate = Color(1, 1, 1, 0.0)
-	_objective_tween = create_tween()
-	_objective_tween.set_parallel(true)
-	for l: Label in [_objective, _notice_head, _notice_why]:
-		_objective_tween.tween_property(l, "modulate:a", 1.0, 0.5)
-	_objective_tween.set_parallel(false)
-	_objective_tween.tween_interval(seconds)
-	_objective_tween.set_parallel(true)
-	for l: Label in [_objective, _notice_head, _notice_why]:
-		_objective_tween.tween_property(l, "modulate:a", 0.0, 1.2)
+## A line of its own on the notice plate (no quest), held by its words like any notice.
+func show_objective(text: String, _seconds := 0.0, _with_notice := false) -> void:
+	if _notice != null:
+		_notice.push({"quest": "", "kind": "plain", "name": "", "objective": text, "why": "", "tier": ""})
 	# the whole HUD is woken, so the line is not read through the idle fade
 	_idle = 0.0
 
 
-## The objective line as it stands, and whether it is on the screen: for the tests and the probe.
+## The objective line as it stands ("Name: objective") while the notice is up, else "": for the
+## tests and the probe.
 func objective_shown() -> String:
-	return _objective.text if _objective != null and _objective.modulate.a > 0.05 else ""
+	return str(quest_notice_shown().get("line", ""))
 
 
 ## Whether the tracked quest's pin, or its smudge once you are within its radius, is on the part of

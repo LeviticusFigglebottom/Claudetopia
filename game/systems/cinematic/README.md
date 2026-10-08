@@ -43,10 +43,20 @@ at four skip points. If you borrow something new, save it, restore it, and add i
 `_state()`.
 
 What a shot sees is streamed, not only where it stands: `ShotSight` walks its view over the ground
-at nine moments to a kilometre, and the streamer is asked for every cell it sees (`also_cells`), full
-detail within 320 m. A shot is shown once the cells its first 30% sees are standing; the rest, and
-the next shot's opening, come while it plays, built a piece a frame (WorldStreamer's budget) and in
-a hurry while the curtain or the last frame holds. The title's vista does the same.
+at nine moments to a kilometre, full detail within 320 m. A film asks for the whole of its country as
+it begins (`_plan_film`): every cell every shot sees, the near and far rings round its camera's path,
+and the rings and towns round every point a shot opens on or looks at, kept until the hand-over is
+over. Its first picture waits under the black for all of the near part, and for everybody living
+there to be stood up and dressed (then up to 3 s more for the far ring), because places, towns and
+people are pieces of tens of milliseconds and none is built while the pictures are watched
+(`watched()`: the streamer's places, WorldDoors' towns and NpcRegistry's people all ask it). From the
+first picture on, nothing waits on the country: a cut holds its still a few frames without hurrying
+the streamer, never goes to black and never shows the hold line, and a shot whose country is somehow
+not in is shown after `MID_HOLD_CAP_SECONDS` with what there is. The shots' weather is the picture's,
+not the game's: `Atmosphere.quiet` keeps `weather_changed` (and with it the whole roster's
+`simulate_all`) from being told at every cut. `test_film_streaming.gd` plays each style's film as a
+new game with the streaming paced and fails on any wait or caption after the first picture; the CPU
+probe's `FILM|` lines measure it (tools_gd/cpu_probe.gd). The title's vista streams the same way.
 
 The tree is never paused: the villages the camera passes go on with their day. The streamer
 follows the camera with `report_regions` off, because a region change seeds rumours, moves the

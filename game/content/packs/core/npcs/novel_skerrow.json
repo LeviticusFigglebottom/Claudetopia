@@ -1,0 +1,153 @@
+[
+  {
+    "id": "core:npc/ottar_ko_ghast",
+    "name": "Ottar ko-Ghast",
+    "home_place": "core:poi/the_kinchain",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/ottar_ko_ghast",
+    "no_radiant": true,
+    "bio": "Clan Ghast's chain-smith, who keeps the open hearth under the Kinchain and closes a link on the chain for every Ghast child born, and for anyone else who brings him iron and a name. He was apprenticed to the last smith of the shame years, who forged nothing for twenty winters, and he has made up for it: he has closed more links than any smith since the Chain Years, and he can find any of them by touch.",
+    "unique_habit": "Runs a link of the chain through his fingers while he talks, as if counting beads, and stops at the gap near the top every time without looking.",
+    "personality": {"traits": ["proud", "quiet", "brave", "kind"]},
+    "appearance": {"seed": 8263, "build": "broad", "age": 54.0, "feminine": 0.0, "hair": "grey_beard_singed_short_at_the_front", "notes": "a leather apron scorched through at the knees, forearms speckled with old burns, a Ghast bone token on a cord of chain-links"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_kinchain", "activity": "sleep", "spot": "ottar_hearth"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_kinchain", "activity": "work", "spot": "ottar_hearth", "notes": "at the hearth under the chain"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_kinchain", "activity": "eat", "spot": "ottar_hearth"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_kinchain", "activity": "work", "spot": "ottar_hearth"},
+      {"days": "all", "hour": 21, "place": "core:poi/the_kinchain", "activity": "idle", "spot": "ottar_hearth"}
+    ]
+  },
+  {
+    "id": "core:npc/runa_ko_oskel",
+    "name": "Runa ko-Oskel",
+    "home_place": "core:poi/the_kite_watch",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/runa_ko_oskel",
+    "no_radiant": true,
+    "bio": "The Oskel kite-wife, who has flown the reiver-kites over the west moor since she was nine. She sleeps in the watch-hut with one hand on the windlass, and knows the moor's wind better than its people. She talks about the land the way it looks from a hundred feet up, and gets impatient with anyone who can only see it from the ground.",
+    "unique_habit": "Glances up at her lines every few words, and answers a question about anything by first saying where the wind is.",
+    "personality": {"traits": ["brave", "proud", "gossip", "cynical"]},
+    "appearance": {"seed": 8264, "build": "wiry", "age": 38.0, "feminine": 1.0, "hair": "black_cropped_short_against_the_wind", "notes": "leather mittens worn through at the palms from the kite-lines, an Oskel sea-blue hood, a bone whistle for calling the hawk-kite down"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_kite_watch", "activity": "sleep", "spot": "runa_windlass"},
+      {"days": "all", "hour": 5, "place": "core:poi/the_kite_watch", "activity": "work", "spot": "runa_windlass", "notes": "flying the hawk-kite, reading the lines"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_kite_watch", "activity": "eat", "spot": "runa_windlass"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_kite_watch", "activity": "work", "spot": "runa_windlass"},
+      {"days": "all", "hour": 21, "place": "core:poi/the_kite_watch", "activity": "work", "spot": "runa_windlass", "notes": "the night kite and its lantern"}
+    ]
+  },
+  {
+    "id": "core:npc/bannoch_the_bee_master",
+    "name": "Bannoch",
+    "home_place": "core:poi/bee_bole_crag",
+    "dialogue": "core:dialogue/bannoch_the_bee_master",
+    "no_radiant": true,
+    "bio": "The bee-master of the Bee-Bole Crag, who by the Moot's rule belongs to no clan, so that no clan's bees are favoured over another's. He was a Rudd foundling, and gave up his clan-name at twenty to take the crag. He keeps seven rows of skeps for seven clans, sells their guest-honey to anyone, and is stung so often he no longer notices.",
+    "unique_habit": "Hums under his breath all the time, a low steady note, and stops only when a bee lands on him, which is often.",
+    "personality": {"traits": ["kind", "humble", "quiet", "pious"]},
+    "appearance": {"seed": 8265, "build": "stout", "age": 61.0, "feminine": 0.0, "hair": "white_and_thin_under_a_veiled_straw_hat", "notes": "a veil of grey gauze pinned up over a straw hat, a smoker of tin and leather hung at the belt, honey on everything he owns"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/bee_bole_crag", "activity": "sleep", "spot": "bannoch_hut"},
+      {"days": "all", "hour": 6, "place": "core:poi/bee_bole_crag", "activity": "work", "spot": "bannoch_boles", "notes": "at the boles with his smoker"},
+      {"days": "all", "hour": 12, "place": "core:poi/bee_bole_crag", "activity": "eat", "spot": "bannoch_hut"},
+      {"days": "all", "hour": 13, "place": "core:poi/bee_bole_crag", "activity": "work", "spot": "bannoch_boles"},
+      {"days": "all", "hour": 20, "place": "core:poi/bee_bole_crag", "activity": "idle", "spot": "bannoch_hut"}
+    ]
+  },
+  {
+    "id": "core:npc/wat_hobb_ko_brindle",
+    "name": "Wat Hobb ko-Brindle",
+    "home_place": "core:poi/the_scour",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/wat_hobb_ko_brindle",
+    "no_radiant": true,
+    "bio": "A Brindle lead-husher, the last in the clan who knows the trade: where to dam a beck, how long to let a pond fill, and how to read a vein in the raw stone a flood leaves. His second hush turned up a giant's tooth, and Brindle's elders took it for the hill telling him to stop. He has filled the dam again and been sitting by the sluice for a month, arguing with himself.",
+    "unique_habit": "Picks up a stone whenever he sits down, turns it over, licks it to see the colour, and puts it in one of two piles.",
+    "personality": {"traits": ["greedy", "timid", "gossip", "cynical"]},
+    "appearance": {"seed": 8266, "build": "lean", "age": 44.0, "feminine": 0.0, "hair": "ginger_and_long_tied_back_with_wire", "notes": "lead-grey to the elbows, a hushing-pick and a sieve on his back, a Brindle bone token chipped at one edge"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_scour", "activity": "sleep", "spot": "wat_sluice"},
+      {"days": "all", "hour": 7, "place": "core:poi/the_scour", "activity": "work", "spot": "wat_sluice", "notes": "sitting by the sluice, deciding"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_scour", "activity": "eat", "spot": "wat_sluice"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_scour", "activity": "work", "spot": "wat_sluice"},
+      {"days": "all", "hour": 20, "place": "core:poi/the_scour", "activity": "idle", "spot": "wat_sluice"}
+    ]
+  },
+  {
+    "id": "core:npc/isbel_ko_rudd",
+    "name": "Isbel ko-Rudd",
+    "home_place": "core:poi/black_rent_pillar",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/isbel_ko_rudd",
+    "no_radiant": true,
+    "bio": "A Rudd farm-wife from the lower dale who has paid her farm's black-rent up the Pillar for twelve years, every autumn, and never told the Moot. This year her husband went up the pass after a stolen heifer and came back over a pony's back, and she walked to the Pillar with the rent in a sack and sat down, and has not sent it up.",
+    "unique_habit": "Keeps one hand on the rent-sack at all times, even asleep, and counts the coins in it through the cloth with her fingers.",
+    "personality": {"traits": ["brave", "proud", "cynical", "quiet"]},
+    "appearance": {"seed": 8267, "build": "sturdy", "age": 46.0, "feminine": 1.0, "hair": "brown_going_grey_in_a_rudd_wrapped_plait", "notes": "a Rudd rust-red shawl over a farm smock, a heavy sack of coin in her lap, a mourning band of black wool on her arm"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/black_rent_pillar", "activity": "sleep", "spot": "isbel_seat"},
+      {"days": "all", "hour": 6, "place": "core:poi/black_rent_pillar", "activity": "work", "spot": "isbel_seat", "notes": "sitting by the Pillar with the rent"},
+      {"days": "all", "hour": 12, "place": "core:poi/black_rent_pillar", "activity": "eat", "spot": "isbel_seat"},
+      {"days": "all", "hour": 13, "place": "core:poi/black_rent_pillar", "activity": "work", "spot": "isbel_seat"},
+      {"days": "all", "hour": 21, "place": "core:poi/black_rent_pillar", "activity": "idle", "spot": "isbel_seat"}
+    ]
+  },
+  {
+    "id": "core:npc/grett_ko_brindle",
+    "name": "Grett ko-Brindle",
+    "home_place": "core:poi/the_bucket_line",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/grett_ko_brindle",
+    "no_radiant": true,
+    "bio": "The line-mistress of the Bucket-Line, a Brindle rope-maker who strung a cable across the dale and put Ghaleld's ore ponies out of work. She built the treadwheel to her own stride and pays any walker who will take a turn in it. The reivers cut her cable last spring and she spliced it in the beck up to her waist; she has kept a crossbow at the wheel since.",
+    "unique_habit": "Twists a short end of rope into a splice while she talks, undoes it, and starts again.",
+    "personality": {"traits": ["proud", "greedy", "brave", "gossip"]},
+    "appearance": {"seed": 8268, "build": "tall_raw_boned", "age": 41.0, "feminine": 1.0, "hair": "red_brown_under_a_leather_cap", "notes": "rope-burned palms, a marlinspike through her belt, ore-dust in every crease, a Brindle bone token sewn to her cap"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_bucket_line", "activity": "sleep", "spot": "grett_wheel"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_bucket_line", "activity": "work", "spot": "grett_wheel", "notes": "minding the wheel and the buckets"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_bucket_line", "activity": "eat", "spot": "grett_wheel"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_bucket_line", "activity": "work", "spot": "grett_wheel"},
+      {"days": "all", "hour": 20, "place": "core:poi/the_bucket_line", "activity": "idle", "spot": "grett_wheel"}
+    ]
+  },
+  {
+    "id": "core:npc/mags_ko_skarl",
+    "name": "Mags ko-Skarl",
+    "home_place": "core:poi/the_breath_ledge",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/mags_ko_skarl",
+    "no_radiant": true,
+    "bio": "The Skarl coffin-hanger, who lifts the clan's dead up the face of the Breath-Ledge on ropes and pegs them as high as the rock allows. She learned it from her mother and hung her mother; she hung her husband two winters ago. She keeps a peg near the top empty for herself and has told her daughter which rope to use.",
+    "unique_habit": "Looks up the face before she answers anything, as if the dead might want a say.",
+    "personality": {"traits": ["pious", "brave", "quiet", "kind"]},
+    "appearance": {"seed": 8269, "build": "lean_and_strong", "age": 57.0, "feminine": 1.0, "hair": "grey_braided_and_pinned_up_out_of_the_ropes", "notes": "climbing ropes over both shoulders, an iron peg-hammer at her belt, a Skarl slate-blue cloak patched at the elbows"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_breath_ledge", "activity": "sleep", "spot": "mags_rope"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_breath_ledge", "activity": "work", "spot": "mags_rope", "notes": "at the foot of the ledge, with the ropes"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_breath_ledge", "activity": "eat", "spot": "mags_rope"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_breath_ledge", "activity": "work", "spot": "mags_rope"},
+      {"days": "all", "hour": 20, "place": "core:poi/the_breath_ledge", "activity": "idle", "spot": "mags_rope"}
+    ]
+  },
+  {
+    "id": "core:npc/haskel_ko_ghast",
+    "name": "Haskel ko-Ghast",
+    "home_place": "core:poi/the_unmade_giant",
+    "faction": "core:faction/clan_moot",
+    "dialogue": "core:dialogue/haskel_ko_ghast",
+    "no_radiant": true,
+    "bio": "A bone-warden of the Moot, one of the few whose work is to know where every giant's bone in Skerrow lies and who has moved it. He followed a trail of missing bones up the Upper Dales and found them standing up, and has made camp a bowshot off with a tally-board, counting. He has counted every bone on the Unmade Giant twice, and the hags have added four since.",
+    "unique_habit": "Names the bone he means every time, by its giant and its place, as if introducing someone: the Wading Giant's left shin, the Jawbone's own jaw.",
+    "personality": {"traits": ["proud", "timid", "gossip", "pious"]},
+    "appearance": {"seed": 8270, "build": "slight", "age": 49.0, "feminine": 0.0, "hair": "fair_and_thinning_tied_with_a_bone_bead", "notes": "a bone-warden's white sash over a Ghast coat, a tally-board on a strap, chalk and a spyglass of horn"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_unmade_giant", "activity": "sleep", "spot": "haskel_camp"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_unmade_giant", "activity": "work", "spot": "haskel_camp", "notes": "counting the bones from his camp"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_unmade_giant", "activity": "eat", "spot": "haskel_camp"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_unmade_giant", "activity": "work", "spot": "haskel_camp"},
+      {"days": "all", "hour": 20, "place": "core:poi/the_unmade_giant", "activity": "idle", "spot": "haskel_camp"}
+    ]
+  }
+]

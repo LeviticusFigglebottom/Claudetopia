@@ -1,0 +1,107 @@
+[
+  {
+    "id": "core:rumour/the_told_hives",
+    "name": "The bees are asking",
+    "tone": "warm",
+    "text": "There's a swarm on the Tamwick fingerpost again, hung off the arm like a sack. That's the Ashbys' bees. Old Mab's dead since midsummer and nobody's told them, and the girl goes down every morning with a skep and comes back with nothing.",
+    "variants": [
+      "If you're past the Ashbys' bee-tree, walk slow and don't smell of smoke. The bees aren't told yet. They're short with everybody."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/the_swainmote_short",
+    "name": "The mote is short",
+    "tone": "cold",
+    "text": "The Swainmote's sat eleven for three days with a burner's mastiff in the pound. Ambrose Gale won't say custom without twelve, and nobody goes into the Greatwood's middle any more. They say any stranger who walks into the ring can sit.",
+    "variants": [
+      "A girl from the Unasked Camp's been sleeping by the mote's pound three nights. Her hound took a hart. You know what the stirrup's for."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/the_black_silk",
+    "name": "Black silk",
+    "tone": "cold",
+    "text": "The silk's come in black this autumn, stained through and stinking of galls, and Margery Laithe won't lay it. She says good silk sings on the posts. This doesn't. Two of her gatherers went south to the Knar for Tollmere money and she's not heard from them.",
+    "variants": [
+      "There's smoke over the Greatwood south of the Hollow road that doesn't stop, day or night. That's the Knar. The Sayers' ink-men are boiling the oak."
+    ],
+    "tags": [
+      "briarwold",
+      "trade",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/the_noon_owl_nine",
+    "name": "Nine at noon",
+    "tone": "strange",
+    "text": "Gammer Hoole says the noon owl called nine yesterday. Nine's a place, she says. It called nine the night of the Long Wind and the next morning the Brother was down. If you want it to call for you, go to the white oak at the top of the sun and don't look up.",
+    "variants": [
+      "You hear an owl at noon in the Wold, don't laugh. The Woodfolk don't."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/the_casting_dell",
+    "name": "The dell gives one",
+    "tone": "cold",
+    "text": "There's a dell in the High Wold where every hart in the Wold drops its antlers, and the ground's white with them. Take the one on the stone and you're welcome. Take one out of the bracken and the Warden at the mouth wakes up. A Lantern Row man went in with a sack. They found the sack.",
+    "variants": [
+      "Want an antler? Go to the Casting Dell and take the one it gives you. Only that one."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/the_tine_letter",
+    "name": "The Tine letter",
+    "tone": "warm",
+    "text": "Twenty years that letter's hung on the Letter Oak, with a knight's seal on it, for Wystan Tine. Everybody's read the name. Nobody's taken it. They say he's kneeling at the Moot Gate now. Somebody ought to.",
+    "variants": [
+      "If you're going east from Elderhold, look on the Letter Oak for anything going your way. That's custom."
+    ],
+    "tags": [
+      "briarwold",
+      "custom"
+    ]
+  },
+  {
+    "id": "core:rumour/agars_count",
+    "name": "One short",
+    "tone": "cold",
+    "text": "Dunstan Agar's count at the pannage is one pig short every morning. Forty years and never out. He says it's bark-hounds out of the Greatwood, further west than they've ever been, and that something must be moving them.",
+    "variants": [
+      "Agar's counting his pigs twice now. And you."
+    ],
+    "tags": [
+      "briarwold",
+      "beasts"
+    ]
+  },
+  {
+    "id": "core:rumour/the_thornwell",
+    "name": "Thorn in the Greatwood",
+    "tone": "strange",
+    "text": "There's thorn in the Greatwood. The Briar's own, three miles inside the wall, come up out of a hole of the Builders' black stone in the spring, and it's higher than the oaks now. The Layers are cutting it. It's winning.",
+    "variants": [
+      "Edda Layward's camped at the Builders' well a month. Says she hears stone walking at the bottom of it."
+    ],
+    "tags": [
+      "briarwold",
+      "strange"
+    ]
+  }
+]

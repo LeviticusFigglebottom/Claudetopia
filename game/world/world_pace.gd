@@ -118,11 +118,15 @@ static var pieces: Dictionary = {}
 ## This frame's paced pieces, name -> ms (the CPU probe reads it at the end of the frame).
 static var frame_pieces: Dictionary = {}
 static var _pieces_frame := -1
+## Every paced piece built so far, of any kind: the loading caption's watch reads a load whose count
+## still goes up as moving (UI.LOADING_QUIET_S).
+static var built := 0
 
 
 static func count(what: String, us: int) -> void:
 	if what.is_empty():
 		return
+	built += 1
 	var ms := us / 1000.0
 	if _pieces_frame != Engine.get_process_frames():
 		_pieces_frame = Engine.get_process_frames()

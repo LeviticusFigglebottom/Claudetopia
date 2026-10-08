@@ -13,6 +13,12 @@ extends RefCounted
 ## Here: Turnback Keep (the ruin's own walls, and Elsbet Ash's fire outside its gate), the Salt
 ## Landing (a Salt Isles boat hauled up on the heath), the Bell-Rope Walk (the Order's ropewalk on
 ## the cliff-top) and the Rooftop Shaft (a scavengers' headframe over a hole into a buried hall).
+## At the end, the novel places: the Ash Dial (a Builders' sun-dial), the Name-Kiln (a kiln on a vent
+## and a screen of fired name-tiles), the Smoke-Speakers' Hood (the Order's signal station over a
+## vent), the Leaving-Lines (where pilgrims hang up their colours), the Silk Vents (a moth-wife's
+## racks of cocoons over warm cracks), the Fading-Glass (a sheet of black glass pilgrims look into),
+## the Gentle Fold (where the Order keeps the wights that will not lie down), the Fallen Head (one
+## of the Choir's lost heads, a door in its mouth) and Cinderhowe (a cinder cone over obsidian galleries).
 
 ## The Salt Isles' sailcloth, weathered, and the grey flax of the Order's ropes.
 const SAIL := Color(0.47, 0.43, 0.36)
@@ -918,12 +924,15 @@ static func _footprints(d: PoiDressing, a: Vector2, b: Vector2, stop := 1.0) -> 
 
 
 ## The Builders' broken stone lying about: lumps of fused masonry, half in the ash.
-static func _rubble(d: PoiDressing, centre: Vector2, reach: float, count: int, size := Vector2(0.25, 0.6)) -> void:
+## `keep` and `keep_r`: a spot the lumps keep off (where a place's foes gather), drawn for all the
+## same so the rest lie where they would.
+static func _rubble(d: PoiDressing, centre: Vector2, reach: float, count: int, size := Vector2(0.25, 0.6),
+		keep := Vector2.INF, keep_r := 0.0) -> void:
 	var k := d.kit
 	var lumps: Array = []
 	for i in count:
 		var p := centre + Vector2(k.rng.randf_range(-reach, reach), k.rng.randf_range(-reach, reach))
-		if not _off_road(k, p):
+		if not _off_road(k, p) or (keep != Vector2.INF and p.distance_to(keep) < keep_r):
 			continue
 		lumps.append(PoiKit.transform_at(k.on_ground(p.x, p.y, -0.1), k.rng.randf_range(0.0, TAU),
 				k.rng.randf_range(size.x, size.y), Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))))
@@ -1456,6 +1465,9 @@ static func cistern_of_isse(d: PoiDressing) -> void:
 	k.marker("the_well_foot", Vector3(foot.x, g + 0.1, foot.y))
 	k.touchable("the_well", Vector3(c.x, top + 0.6, c.y) + Vector3(face.x, 0.0, face.y) * (well.y + 0.3),
 			"Listen down the stair", "core:dialogue/cistern_of_isse_listen", "", false)
+	# where Ama Reedwright stands, on one leg, at the stair-house's side, looking down the well
+	var ama := c + side * (half + 2.0) + face * 1.5
+	k.marker("ama_well", k.on_ground(ama.x, ama.y), true)
 	await _drift(d, c - face * (half + 2.0) + side * 2.0, 3.0, 1.2)
 	await _rubble(d, c, 12.0, 14)
 	await _grey_grass(d, 16.0, 30, c)
@@ -1655,13 +1667,15 @@ static func silent_market(d: PoiDressing) -> void:
 	k.marker("the_fresh_stall", Vector3(fat.x, fg + 0.05, fat.y) + Vector3(ff.x, 0.0, ff.y) * 0.1)
 	k.touchable("the_fresh_goods", Vector3(fat.x, fg + 0.3, fat.y) + Vector3(ff.x, 0.0, ff.y) * 0.8, "Look at the goods on the stall",
 			"core:dialogue/silent_market_stall", "", false)
-	k.marker("the_square", k.on_ground(axis.x * 4.0, axis.y * 4.0))
+	# off the cross's steps by more than the ring PoiEncounters spreads the square's wights round
+	k.marker("the_square", k.on_ground(axis.x * 6.0, axis.y * 6.0))
 	await _cache(d, k.on_ground(-axis.x * 11.5 + side.x * 8.0, -axis.y * 11.5 + side.y * 8.0), PoiKit.yaw_of(axis), "chest",
 			"core:loot/oroth_cache", "stallholders_box")
 	for i in 5:
 		var p := Vector2(k.rng.randf_range(-12.0, 12.0), k.rng.randf_range(-9.0, 9.0))
 		await _drift(d, axis * p.x + side * p.y * 1.4, k.rng.randf_range(1.4, 2.6), k.rng.randf_range(0.4, 0.9), false)
-	await _rubble(d, Vector2.ZERO, 16.0, 18)
+	# the square's wights stand 3 m round its marker: no rubble there
+	await _rubble(d, Vector2.ZERO, 16.0, 18, Vector2(0.25, 0.6), axis * 6.0, 5.0)
 	await _grey_grass(d, 20.0, 40)
 
 
@@ -1963,6 +1977,9 @@ static func hesk_morn(d: PoiDressing) -> void:
 
 # --- Ashcombe -----------------------------------------------------------------------------------------
 
+## How far out from a door its hearth's wights gather (m).
+const HEARTH_OUT_M := 4.0
+
 ## A hamlet emptied in the Ash Winter, standing as it was left: four houses of the grey country
 ## along the West Walk, their doors shut, ash grey on their roofs, garden walls round plots of grey
 ## stalks, a well on the green with its bucket down, a dead ash over the last house -- and smoke
@@ -2025,13 +2042,20 @@ static func ashcombe(d: PoiDressing) -> void:
 				"core:dialogue/ashcombe_chimney", "", false)
 		await _cache(d, k.on_ground(at.x + face.y * 3.6, at.y - face.x * 3.6), PoiKit.yaw_of(face), "barrel",
 				"core:loot/pilgrims_bundle", "hearth_barrel")
+	# the hearths' wights stand out in the street before the doors, where the ring PoiEncounters
+	# spreads them round (3 m) reaches neither the house behind nor the one across the way
 	for i in mini(doors.size(), 4):
 		var dd: Array = doors[i]
-		k.marker("hearth_%d" % i, k.on_ground((dd[0] as Vector2).x, (dd[0] as Vector2).y))
+		var out_front: Vector2 = (dd[0] as Vector2) + (dd[1] as Vector2) * HEARTH_OUT_M
+		k.marker("hearth_%d" % i, k.on_ground(out_front.x, out_front.y))
 	k.marker("the_green", k.on_ground(green.x, green.y))
 
 
 # --- the Ash-Winter Carts -----------------------------------------------------------------------------
+
+## Where the two columns of carts stand across the yard, by their own origin (`side` metres): each
+## cart reaches 4.0 m one way and 1.2 m the other, so the lane between them is 8.3 m wide.
+const CART_COLUMNS := [-5.4, 8.1]
 
 ## A carters' waystation on the old Ash Road, roofless since the Ash Winter: its long range down one
 ## side of a walled yard, a gate onto the road, and the yard full of the grain carts that came in
@@ -2078,14 +2102,17 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	m.commit(stone, k.surface("stone", 0.7), "Range", true)
 	if k.far:
 		return
-	# the carts in two rows, their beds heaped with sacks gone grey and hard
+	# the carts in three rows either side of a lane up the middle from the gate, as they were drawn
+	# in, their beds heaped with sacks gone grey and hard. A cart lies long across the yard (its
+	# local x, -4.0 to 1.2 m, is `side`); the lane is kept wide enough that the wights PoiEncounters
+	# spreads 3 m round the cart beds' marker stand in it, not in a cart.
 	var sacks := m.begin()
 	var cart := k.prop("cart")
-	for row in 2:
-		for i in 3:
-			var at := yard + side * (-6.0 + 6.0 * float(i)) + into * (-2.4 + 4.0 * float(row)) + k.jitter(0.3)
+	for row in 3:
+		for i in 2:
+			var at: Vector2 = yard + side * float(CART_COLUMNS[i]) + into * (-3.4 + 3.4 * float(row)) + k.jitter(0.3)
 			var yaw := PoiKit.yaw_of(into) + k.rng.randf_range(-0.15, 0.15)
-			if row == 1 and i == 2:
+			if row == 2 and i == 0:
 				yaw += 0.6           # the one whose horse was led off, shafts down
 			await k.step()
 			k.place(cart, k.on_ground(at.x, at.y), yaw)
@@ -2095,7 +2122,7 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	await k.step()
 	m.commit(sacks, PoiKit.plain(Color(0.45, 0.43, 0.4), 0.98), "GreySacks")
 	# the trough by the gate, the carter's peg-board in the range's doorway
-	var trough := gate + side * 3.4 + into * 1.4
+	var trough := gate - side * 3.4 + into * 1.4
 	await k.step()
 	k.place(k.prop("trough") if k.prop("trough") != "" else k.prop("crate"), k.on_ground(trough.x, trough.y), PoiKit.yaw_of(side))
 	var book_at := r0 + (r1 - r0) * 0.47 + into * 0.6
@@ -2105,7 +2132,8 @@ static func ashwinter_carts(d: PoiDressing) -> void:
 	k.marker("the_cart_beds", k.on_ground(yard.x, yard.y))
 	await _cache(d, k.on_ground(r1.x - side.x * 2.0 + into.x * 2.5, r1.y - side.y * 2.0 + into.y * 2.5), PoiKit.yaw_of(-into),
 			"chest", "core:loot/pilgrims_bundle", "carters_chest")
-	await _drift(d, yard + side * 8.0 + into * 5.0, 2.2, 0.8)
+	# the ash drifted up against the outside of the yard's wall, clear of the carts inside it
+	await _drift(d, yard + side * 12.6 + into * 3.0, 2.2, 0.8)
 	await _grey_grass(d, 14.0, 40, yard)
 
 
@@ -3637,3 +3665,1160 @@ static func chalkwatch(d: PoiDressing) -> void:
 	if not _off_road(k, fire, 2.0):
 		fire = gate_dir * (radius + 9.0) - Vector2(gate_dir.y, -gate_dir.x) * 7.0
 	await _gate_fire(d, fire, gate_dir, "ysolde_fire")
+
+
+# --- the novel places: shared pieces --------------------------------------------------------------------
+
+## A quad drawn from both sides, its faces flat (a hide, a hung coat, a blade's face): `a b c dd` in
+## order round its edge.
+static func _quad2(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, dd: Vector3) -> void:
+	_two_sided(st, [a, b, c, a, c, dd])
+
+
+## A tapering four-sided bar from `a` to `b`: `w0` x `t0` across at `a`, `w1` x `t1` at `b`, its width
+## along `wide` (made square to the bar). Flat-faced, both sides drawn. Returns its eight corners, for a
+## hull to collide with.
+static func _taper(st: SurfaceTool, a: Vector3, b: Vector3, wide: Vector3, w0: float, t0: float, w1: float,
+		t1: float) -> PackedVector3Array:
+	var along := (b - a).normalized()
+	var x := (wide - along * wide.dot(along)).normalized()
+	var z := along.cross(x).normalized()
+	var c := PackedVector3Array()
+	for e in [[a, w0, t0], [b, w1, t1]]:
+		var p: Vector3 = e[0]
+		var w: float = e[1]
+		var t: float = e[2]
+		c.append(p - x * w * 0.5 - z * t * 0.5)
+		c.append(p + x * w * 0.5 - z * t * 0.5)
+		c.append(p + x * w * 0.5 + z * t * 0.5)
+		c.append(p - x * w * 0.5 + z * t * 0.5)
+	for i in 4:
+		var j := (i + 1) % 4
+		_quad2(st, c[i], c[j], c[j + 4], c[i + 4])
+	_quad2(st, c[0], c[1], c[2], c[3])
+	_quad2(st, c[4], c[5], c[6], c[7])
+	return c
+
+
+## A collider that is the hull of `points` (local).
+static func _hull(k: PoiKit, points: PackedVector3Array, underfoot := "stone") -> void:
+	if k.far:
+		return
+	var cs := ConvexPolygonShape3D.new()
+	cs.points = points
+	k.collider_shape(cs, Transform3D.IDENTITY, underfoot)
+
+
+## From the place's middle towards the nearest point of the nearest road within `reach` (the way a
+## place faces whoever comes to it), or ZERO where no road is that near. (`road_direction` is the
+## road's own run, not the way to it.)
+static func _toward_road(k: PoiKit, reach: float) -> Vector2:
+	var line := _road_line(k, reach)
+	if line.is_empty() or (line[0] as Vector2).length() < 0.5:
+		return Vector2.ZERO
+	return (line[0] as Vector2).normalized()
+
+
+## A round collider standing on `at`, `r` across and `h` high.
+static func _round_collider(k: PoiKit, at: Vector3, r: float, h: float, underfoot := "stone") -> void:
+	if k.far:
+		return
+	var cs := CylinderShape3D.new()
+	cs.radius = r
+	cs.height = h
+	k.collider_shape(cs, Transform3D(Basis.IDENTITY, at + Vector3(0.0, h * 0.5, 0.0)), underfoot)
+
+
+## A material that takes its colour from the vertices: many cloths of many colours in one draw (each
+## cloth drawn from both sides by `_quad2`).
+static func _dyed() -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.95
+	return mat
+
+
+## A camp of the Order's grey: a tent, a fire in a ring of stones, a stool, its fire a light. Returns the
+## fire (local).
+static func _grey_camp(d: PoiDressing, at: Vector2, facing: Vector2) -> Vector2:
+	var k := d.kit
+	if k.far:
+		return at
+	var side := Vector2(facing.y, -facing.x)
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(at.x, at.y), PoiKit.yaw_of(facing))
+	var fire := at + facing * 3.6 + side * 0.6
+	await k.step()
+	k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), k.rng.randf_range(0.0, TAU), 0.9)
+	var stones: Array = []
+	for p in k.ring(8, 0.85, fire, 0.1):
+		var pp: Vector2 = p
+		stones.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.09, 0.13)))
+	await k.step()
+	k.scatter(k.rock("boulder"), stones)
+	k.light(k.on_ground(fire.x, fire.y, 0.9), Color(1.0, 0.7, 0.4), 1.9, 9.0)
+	k.puffs(k.on_ground(fire.x, fire.y, 0.7), Vector3(0.15, 0.1, 0.15), 0.6, 6, Color(0.55, 0.55, 0.55, 0.28), 1.0, 5.0)
+	var seat := fire + side * 1.8
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(seat.x, seat.y), PoiKit.yaw_of(fire - seat))
+	return fire
+
+
+# --- the Ash Dial -----------------------------------------------------------------------------------------
+
+const DIAL_NORTH := Vector2(0.0, -1.0)
+const DIAL_STONES := 13
+const DIAL_BLANK := 11
+const DIAL_RING_M := 14.5
+const GILT := Color(0.6, 0.48, 0.24)
+
+## The Builders' sun-dial on the west heath: a stepped round dais of fused stone, and out of its south
+## side a blade twenty metres long leaning up at the sky's pole, a column of the same stone under its
+## middle; round it, on a ring, thirteen hour-stones facing in, each cut on its face with the strokes of
+## its hour, one of them darker and smooth (the thirteenth: it sinks at its hour, a PoiTouch with the
+## hour in its dialogue). A gilt line runs north across the dais. Wenna Thrope's camp is on the south-east,
+## out of the shadow, with her hand-bell hung on a frame and her tally-board.
+static func the_ash_dial(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var g := k.on_ground(0.0, 0.0).y
+	var stone := m.begin()
+	# the dais: three rounds, each a step up, lathed whole
+	# a step's tread runs in to the next step's riser
+	var lathe_prof: Array = [Vector2(7.4, -0.6), Vector2(7.4, 0.5), Vector2(6.1, 0.5), Vector2(6.1, 0.95),
+			Vector2(4.8, 0.95), Vector2(4.8, 1.4), Vector2(0.0, 1.4)]
+	_lathe(stone, Transform3D(Basis.IDENTITY, Vector3(0.0, g, 0.0)), lathe_prof, 32)
+	var top := g + 1.4
+	_round_collider(k, Vector3(0.0, g - 0.6, 0.0), 7.4, 1.1)
+	_round_collider(k, Vector3(0.0, g + 0.5, 0.0), 6.1, 0.45)
+	_round_collider(k, Vector3(0.0, g + 0.95, 0.0), 4.8, 0.45)
+	# the blade: from the dais's south rim, up towards the pole at the dial's angle
+	var lean := deg_to_rad(36.0)
+	var base := Vector3(-DIAL_NORTH.x, 0.0, -DIAL_NORTH.y) * 3.4 + Vector3(0.0, top - 0.2, 0.0)
+	var up := Vector3(DIAL_NORTH.x * cos(lean), sin(lean), DIAL_NORTH.y * cos(lean))
+	var tip := base + up * 21.0
+	var across := Vector3(DIAL_NORTH.y, 0.0, -DIAL_NORTH.x)
+	var blade := _taper(stone, base - up * 1.2, tip, Vector3.UP, 2.6, 0.8, 0.7, 0.3)
+	_hull(k, blade)
+	# its column, under the middle of it, square and stepped at the foot
+	var mid := base + up * 9.5
+	var col_foot := Vector3(mid.x, g, mid.z)
+	var col_top := mid - up * 0.4
+	_box(stone, Transform3D(Basis.IDENTITY, (col_foot + col_top) * 0.5), Vector3(1.3, col_top.y - col_foot.y + 0.4, 1.3))
+	_box(stone, Transform3D(Basis.IDENTITY, col_foot + Vector3(0.0, 0.35, 0.0)), Vector3(2.0, 0.7, 2.0))
+	k.collider(Vector3(1.3, col_top.y - col_foot.y, 1.3), Transform3D(Basis.IDENTITY, (col_foot + col_top) * 0.5), "stone")
+	# the hour-stones, each facing the middle, the strokes cut on its face
+	var strokes := m.begin()
+	var blank := m.begin()
+	var blank_at := Vector3.ZERO
+	var n := 0
+	for i in DIAL_STONES:
+		var th := deg_to_rad(-100.0 + 200.0 * float(i) / float(DIAL_STONES - 1))
+		var dir := Vector2(sin(th), -cos(th))
+		var at := dir * DIAL_RING_M
+		var h := 1.3 + 0.35 * sin(float(i) * 1.7) + (0.3 if i == DIAL_BLANK else 0.0)
+		var xf := _slab(d, stone if i != DIAL_BLANK else blank, at, -dir, h, 1.35, 0.55, 0.0, 0.4)
+		if i == DIAL_BLANK:
+			blank_at = xf.origin + Vector3(0.0, (h - 0.4) * 0.5 + 0.2, 0.0)
+			continue
+		n += 1
+		# the strokes, a groove a stroke, in two rows past six
+		var face_c := xf.origin + xf.basis * Vector3(0.0, 0.0, 0.29)
+		for s in n:
+			var row := 0 if s < 6 else 1
+			var col := s % 6
+			var off := xf.basis * Vector3(-0.5 + 0.2 * float(col), 0.25 - 0.45 * float(row), 0.0)
+			_box(strokes, Transform3D(xf.basis, face_c + off), Vector3(0.07, 0.36, 0.03))
+	await k.step()
+	m.commit(stone, PoiKit.painted(0, CARVED, 0.55, 0.55), "Dial", true)
+	await k.step()
+	m.commit(strokes, PoiKit.plain(Color(0.08, 0.075, 0.07), 0.95), "Strokes", true)
+	await k.step()
+	m.commit(blank, PoiKit.painted(0, SLAG, 0.2, 0.3), "BlankStone", true)
+	# the gilt meridian across the dais, and the gilt on the blade's foot
+	var gilt := m.begin()
+	_box(gilt, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(DIAL_NORTH)), Vector3(0.0, top + 0.02, 0.0) + Vector3(DIAL_NORTH.x, 0.0, DIAL_NORTH.y) * 1.2),
+			Vector3(0.22, 0.04, 6.8))
+	_box(gilt, Transform3D(Basis.IDENTITY, Vector3(0.0, top + 0.03, 0.0)), Vector3(0.7, 0.05, 0.7))
+	await k.step()
+	m.commit(gilt, PoiKit.plain(GILT, 0.45, 0.7), "Gilt")
+	# ash drifted against the blade's column and the dais's north side
+	await _drift(d, DIAL_NORTH * 9.2 + Vector2(2.2, 0.0), 2.8, 0.9)
+	await _drift(d, DIAL_NORTH * 7.6 + Vector2(-2.5, 0.0), 2.6, 0.7)
+	if k.far:
+		return
+	# the thirteenth stone's touch, and the blade's line of letters
+	k.touchable("the_blank_stone", blank_at, "Press the blank hour-stone", "core:dialogue/ash_dial_blank_stone", "", false)
+	k.marker("the_blank_stone", k.on_ground(blank_at.x * 0.9, blank_at.z * 0.9))
+	var foot := Vector3(base.x, top, base.z) + across * 1.0
+	k.touchable("the_blade", foot + Vector3(0.0, 1.2, 0.0), "Read the line cut up the blade", "core:dialogue/ash_dial_blade", "", false)
+	# Wenna's camp, south-east and out of the shadow, her bell on its frame
+	var camp := Vector2(10.5, 9.5)
+	var fire: Vector2 = await _grey_camp(d, camp, (-camp).normalized())
+	var timber := m.begin()
+	var bell_at := camp + Vector2(-3.4, -2.6)
+	var hang := m.frame(timber, bell_at, PoiKit.yaw_of(-camp), 1.3, 2.0, 0.14)
+	var board := bell_at + Vector2(2.2, -0.6)
+	var board_top := m.post(timber, board, 1.6, 0.12)
+	_box(timber, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(-camp)), board_top - Vector3(0.0, 0.45, 0.0)), Vector3(0.7, 0.55, 0.05))
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.7), "BellFrame")
+	var chalk := m.begin()
+	_box(chalk, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(-camp)), board_top - Vector3(0.0, 0.45, 0.0) + Vector3(-camp.normalized().x, 0.0, -camp.normalized().y) * 0.03),
+			Vector3(0.6, 0.45, 0.01))
+	await k.step()
+	m.commit(chalk, PoiKit.plain(Color(0.2, 0.2, 0.21), 0.9), "TallyBoard")
+	await k.step()
+	k.place(k.prop("bell_small"), hang - Vector3(0.0, 0.32, 0.0), 0.0, 1.0, false)
+	k.marker("wenna_bell", k.on_ground(bell_at.x + 0.6, bell_at.y + 1.4), true)
+	k.marker("the_fire", k.on_ground(fire.x, fire.y))
+	await _rubble(d, Vector2.ZERO, 20.0, 14, Vector2(0.3, 0.7), Vector2.ZERO, 9.0)
+	await _grey_grass(d, 20.0, 40)
+
+
+# --- the Name-Kiln ----------------------------------------------------------------------------------------
+
+const KILN_BRICK := {"base": "#5b3a2c", "accent": "#463026", "grout": "#22160f", "unit": 0.3}
+const TILE_NEW := {"base": "#7d4430", "accent": "#5f3325", "grout": "#2f1a12", "unit": 0.22}
+const TILE_OLD := {"base": "#8e8172", "accent": "#6e655a", "grout": "#3a342e", "unit": 0.22}
+const SCREEN_LEN_M := 16.0
+const SCREEN_H_M := 5.4
+const SCREEN_RAILS := [4.9, 4.05, 3.2, 2.35, 1.5]
+
+## A potters' kiln on a vent on the north heath: a beehive of brick over the vent, its mouth red, its
+## smoke going up from a short stack; beside it the Name-Screen, a frame of black timber sixteen metres
+## long and five high with five rails, each hung end to end with clay tiles on cords, thousands of
+## them, the kiln end grey and smooth with age, the far end new and red; under the oldest bars the
+## broken ones, spelt wrong. Odile Wark's bench and tent by the kiln, her clay pit, a barrel of water.
+static func name_kiln(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var lie := _lie(k)
+	var along: Vector2 = lie[1]
+	var across := Vector2(-along.y, along.x)
+	# the screen runs along the grain, the kiln at its west end, off whatever road is near
+	var sc := across * 2.0
+	if not _off_road(k, sc + along * 9.0, 2.0) or not _off_road(k, sc - along * 9.0, 2.0):
+		sc = -across * 2.0
+	var kiln := sc - along * (SCREEN_LEN_M * 0.5 + 4.5) - across * 1.5
+	var gk := k.on_ground(kiln.x, kiln.y).y
+	# the vent's crust under the kiln, and the kiln on it
+	await k.step()
+	m.mound(Vector3(kiln.x, gk - 0.25, kiln.y), 4.2, 0.6, PoiKit.painted(5, SLAG, 0.4, 0.7), "VentCrust", true, 1.2, 5, 18)
+	var brick := m.begin()
+	var dome := [Vector2(2.9, -0.4), Vector2(2.95, 0.5), Vector2(2.75, 1.5), Vector2(2.3, 2.45), Vector2(1.5, 3.15),
+			Vector2(0.7, 3.5), Vector2(0.55, 3.55)]
+	_lathe(brick, Transform3D(Basis.IDENTITY, Vector3(kiln.x, gk + 0.2, kiln.y)), dome, 22)
+	m.drum(brick, Transform3D(Basis.IDENTITY, Vector3(kiln.x, gk + 3.6, kiln.y)), 0.55, 1.5, 0.0, NAN, false, 0.3)
+	_round_collider(k, Vector3(kiln.x, gk, kiln.y), 2.9, 3.4)
+	# its mouth, towards the bench: an arch of brick, the fire behind
+	var to_bench := (sc - kiln).normalized().rotated(0.6)
+	var mouth := kiln + to_bench * 2.75
+	_arch(d, brick, mouth, to_bench, 1.1, 0.7, 0.5, 0.8, 0.35, 7)
+	await k.step()
+	m.commit(brick, PoiKit.painted(2, KILN_BRICK, 0.8), "Kiln", true)
+	var glow := m.begin()
+	_box(glow, Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(to_bench)), Vector3(mouth.x, gk + 0.55, mouth.y) - Vector3(to_bench.x, 0.0, to_bench.y) * 0.25),
+			Vector3(1.1, 1.0, 0.1))
+	await k.step()
+	m.commit(glow, PoiKit.plain(Color(0.9, 0.36, 0.12), 0.9, 0.0, Color(1.0, 0.42, 0.14), 2.2), "KilnFire")
+	if not k.far:
+		k.light(Vector3(mouth.x, gk + 0.8, mouth.y) + Vector3(to_bench.x, 0.0, to_bench.y) * 0.6, Color(1.0, 0.5, 0.22), 1.8, 8.0)
+		k.puffs(Vector3(kiln.x, gk + 5.3, kiln.y), Vector3(0.3, 0.2, 0.3), 2.2, 10, Color(0.42, 0.38, 0.36, 0.32), 2.4, 7.0)
+		await PoiDressing.kind_builders().SITES._embers(d, [[kiln + to_bench.rotated(1.2) * 3.6, Vector2(2.2, 0.35), 0.4, 0.3, 0.8],
+				[kiln - to_bench * 3.8, Vector2(1.8, 0.3), 1.9, 0.6, 0.7]])
+	# the screen: posts, a head-beam, five rails
+	var timber := m.begin()
+	var posts := 5
+	var a0 := sc - along * SCREEN_LEN_M * 0.5
+	var heads: Array = []
+	for i in posts:
+		var p := a0 + along * SCREEN_LEN_M * float(i) / float(posts - 1)
+		heads.append(m.post(timber, p, SCREEN_H_M, 0.24))
+		# a raking stay to windward of each
+		var foot := p - across * 1.6
+		m.limb(timber, k.on_ground(foot.x, foot.y, -0.1), k.on_ground(p.x, p.y, SCREEN_H_M * 0.62), 0.07)
+	var gs := k.on_ground(sc.x, sc.y).y
+	var yaw := PoiKit.yaw_of(along) + PI * 0.5
+	_box(timber, Transform3D(Basis(Vector3.UP, yaw), Vector3(sc.x, gs + SCREEN_H_M + 0.12, sc.y)), Vector3(SCREEN_LEN_M + 0.6, 0.26, 0.3))
+	for r in SCREEN_RAILS:
+		_box(timber, Transform3D(Basis(Vector3.UP, yaw), Vector3(sc.x, gs + float(r), sc.y)), Vector3(SCREEN_LEN_M, 0.12, 0.12))
+	await k.step()
+	m.commit(timber, PoiKit.painted(3, {"base": "#231f1c", "accent": "#171412", "grout": "#0c0a09"}, 0.8), "Screen", true)
+	k.collider(Vector3(SCREEN_LEN_M, SCREEN_H_M - 0.6, 0.35), Transform3D(Basis(Vector3.UP, yaw), Vector3(sc.x, gs + (SCREEN_H_M + 0.6) * 0.5, sc.y)), "wood")
+	# the tiles on their cords: the kiln end old and grey, the far end new
+	var old := m.begin()
+	var fresh := m.begin()
+	var cords := m.begin()
+	var tb := Basis(Vector3.UP, yaw)
+	for r in SCREEN_RAILS:
+		var count := int(SCREEN_LEN_M / 0.24)
+		for i in count:
+			var t := (float(i) + 0.5) / float(count)
+			var p := a0 + along * SCREEN_LEN_M * t + across * k.rng.randf_range(-0.03, 0.03)
+			var tiles := k.rng.randi_range(2, 3)
+			var top_y := gs + float(r) - 0.06
+			var fall := 0.12 + 0.19 * float(tiles)
+			_box(cords, Transform3D(tb, Vector3(p.x, top_y - fall * 0.5, p.y)), Vector3(0.012, fall, 0.012))
+			var st := old if t < 0.3 + k.rng.randf_range(-0.08, 0.08) else fresh
+			for j in tiles:
+				var ty := top_y - 0.2 - 0.19 * float(j)
+				var turn := Basis(Vector3.UP, yaw + k.rng.randf_range(-0.5, 0.5)) * Basis(Vector3.BACK, k.rng.randf_range(-0.1, 0.1))
+				_box(st, Transform3D(turn, Vector3(p.x, ty, p.y)), Vector3(0.12, 0.16, 0.022))
+		await k.step()
+	# the broken ones, spelt wrong, red in the ash under the oldest bars
+	for i in 70:
+		var t := k.rng.randf_range(0.0, 0.45)
+		var p := a0 + along * SCREEN_LEN_M * t + across * k.rng.randf_range(-1.6, 1.6)
+		var turn := Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.3, 0.3))
+		_box(fresh, Transform3D(turn, k.on_ground(p.x, p.y, 0.01)), Vector3(0.09, 0.022, 0.07) * k.rng.randf_range(0.7, 1.3))
+	await k.step()
+	m.commit(old, PoiKit.painted(0, TILE_OLD, 0.7, 0.8), "OldTiles", true)
+	await k.step()
+	m.commit(fresh, PoiKit.painted(0, TILE_NEW, 0.5, 0.8), "Tiles", true)
+	await k.step()
+	m.commit(cords, PoiKit.plain(Color(0.36, 0.33, 0.28), 0.95), "Cords")
+	if k.far:
+		return
+	# Odile's bench, between the kiln and the screen; her tent behind it; the clay pit and the water
+	var bench := kiln + to_bench * 5.8
+	await k.step()
+	k.place(k.prop("table_trestle"), k.on_ground(bench.x, bench.y), PoiKit.yaw_of(to_bench))
+	var unfired := m.begin()
+	var bb := Basis(Vector3.UP, PoiKit.yaw_of(to_bench))
+	for i in 6:
+		_box(unfired, Transform3D(bb, k.on_ground(bench.x, bench.y, 0.82) + bb * Vector3(-0.5 + 0.2 * float(i), 0.0, 0.05)), Vector3(0.12, 0.022, 0.16))
+	await k.step()
+	m.commit(unfired, PoiKit.plain(Color(0.42, 0.36, 0.3), 0.9), "Unfired")
+	var stool := bench + to_bench * 1.0
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(stool.x, stool.y), PoiKit.yaw_of(-to_bench))
+	k.marker("odile_bench", k.on_ground(stool.x + to_bench.x * 0.6, stool.y + to_bench.y * 0.6), true)
+	var tent := bench + to_bench.rotated(-1.4) * 5.0
+	await k.step()
+	k.place(k.prop("tent"), k.on_ground(tent.x, tent.y), PoiKit.yaw_of(bench - tent))
+	var pit := bench + to_bench.rotated(1.5) * 4.2
+	await k.step()
+	m.mound(k.on_ground(pit.x, pit.y, -0.15), 1.5, 0.45, PoiKit.painted(5, CLAY, 0.8), "ClayHeap", true, 1.4, 4, 12)
+	await k.step()
+	k.place(k.prop("barrel"), k.on_ground(pit.x + 1.6, pit.y + 0.6), 0.3)
+	await k.step()
+	k.place(k.prop("bucket"), k.on_ground(pit.x + 0.9, pit.y - 1.2), 0.9, 1.0, false)
+	await _cache(d, k.on_ground(tent.x + to_bench.x * 1.8, tent.y + to_bench.y * 1.8, 0.0), PoiKit.yaw_of(to_bench), "crate", "core:loot/pockets_common", "kiln_crate")
+	var mid := sc + across * 1.2
+	k.touchable("the_screen", k.on_ground(mid.x, mid.y, 1.6), "Read the names on the tiles", "core:dialogue/name_kiln_screen", "", false)
+	k.marker("the_screen", k.on_ground(mid.x + across.x, mid.y + across.y))
+	_settle(d)
+	await _grey_grass(d, 18.0, 32)
+
+
+# --- the Smoke-Speakers' Hood -----------------------------------------------------------------------------
+
+const HIDE := {"base": "#5b4a39", "accent": "#43372b", "grout": "#261e17", "unit": 0.9}
+const HOOD_TOP_M := 10.5
+
+## The Order's signal station over the biggest vent between Pilgrim's Ash and Greyfold: a gantry of four
+## black timbers leaning in to a platform ten metres up, braced, a ladder up one leg; a beam on the
+## platform pivoted across it, one end over the vent with the hide hood hanging from it on ropes, the
+## other out past the gantry's leg with a basket of stones for a counterweight and the lever's rope
+## hanging from it to the ground; under it all the vent, a black crusted cone breathing, and its smoke
+## going up out of the hood's collar in a column the whole heath reads. Pell Hoddy's lean-to of hides by
+## the lever, his stack of spare hides, the code cut into the lever-leg.
+static func smoke_hood(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var g := k.on_ground(0.0, 0.0).y
+	var lie := _lie(k)
+	var along: Vector2 = (lie[1] as Vector2)
+	var across := Vector2(-along.y, along.x)
+	# the vent
+	await k.step()
+	m.mound(Vector3(0.0, g - 0.2, 0.0), 4.0, 1.3, PoiKit.painted(5, SLAG, 0.4, 0.7), "VentCone", true, 1.1, 6, 20, true)
+	var hole := m.begin()
+	_lathe(hole, Transform3D(Basis.IDENTITY, Vector3(0.0, g + 1.02, 0.0)), [Vector2(1.0, 0.0), Vector2(0.0, 0.05)], 14)
+	await k.step()
+	m.commit(hole, PoiKit.plain(Color(0.25, 0.1, 0.05), 1.0, 0.0, Color(0.9, 0.3, 0.08), 1.4), "VentThroat")
+	# the gantry
+	var timber := m.begin()
+	var half := 3.6
+	var top_half := 1.9
+	var top_y := g + HOOD_TOP_M
+	var legs: Array = []
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var foot := along * half * float(sx) + across * half * float(sz)
+			var head := Vector3(0.0, top_y, 0.0) + Vector3(along.x, 0.0, along.y) * top_half * float(sx) + Vector3(across.x, 0.0, across.y) * top_half * float(sz)
+			var fg := k.on_ground(foot.x, foot.y, -0.3)
+			m.limb(timber, fg, head, 0.2)
+			k.collider(Vector3(0.5, 2.4, 0.5), Transform3D(Basis.IDENTITY, fg + Vector3(0.0, 1.2, 0.0)), "wood")
+			legs.append([fg, head])
+	# braces: a ring of rails at two heights, and a cross on each side
+	for lvl in [0.38, 0.72]:
+		for i in 4:
+			var a: Array = legs[[0, 1, 3, 2][i]]
+			var b: Array = legs[[1, 3, 2, 0][i]]
+			var pa := (a[0] as Vector3).lerp(a[1] as Vector3, float(lvl))
+			var pb := (b[0] as Vector3).lerp(b[1] as Vector3, float(lvl))
+			m.limb(timber, pa, pb, 0.1)
+	for i in 4:
+		var a: Array = legs[[0, 1, 3, 2][i]]
+		var b: Array = legs[[1, 3, 2, 0][i]]
+		m.limb(timber, (a[0] as Vector3).lerp(a[1] as Vector3, 0.08), (b[0] as Vector3).lerp(b[1] as Vector3, 0.38), 0.07)
+	# the platform, and the beam across it on its pivot
+	var deck := Basis(Vector3.UP, PoiKit.yaw_of(along))
+	for i in 7:
+		var off := -top_half + (top_half * 2.0) * (float(i) + 0.5) / 7.0
+		_box(timber, Transform3D(deck, Vector3(0.0, top_y + 0.1, 0.0) + Vector3(across.x, 0.0, across.y) * off), Vector3(0.24, 0.08, top_half * 2.2))
+	var beam_a := Vector3(0.0, top_y + 1.3, 0.0) - Vector3(along.x, 0.0, along.y) * 1.2
+	var beam_b := Vector3(0.0, top_y + 1.0, 0.0) + Vector3(along.x, 0.0, along.y) * 7.6
+	m.limb(timber, beam_a, beam_b, 0.17)
+	m.limb(timber, Vector3(0.0, top_y + 0.1, 0.0), Vector3(0.0, top_y + 1.2, 0.0) + Vector3(along.x, 0.0, along.y) * 0.4, 0.14)
+	# the ladder up the near leg
+	var ladder: Array = legs[2]
+	var lf: Vector3 = ladder[0]
+	var lh: Vector3 = ladder[1]
+	var side3 := Vector3(across.x, 0.0, across.y) * 0.32
+	m.limb(timber, lf + side3 - Vector3(along.x, 0.0, along.y) * 0.3, lh + side3, 0.05)
+	m.limb(timber, lf - side3 - Vector3(along.x, 0.0, along.y) * 0.3, lh - side3, 0.05)
+	for i in 16:
+		var p := (lf - Vector3(along.x, 0.0, along.y) * 0.3).lerp(lh, (float(i) + 0.5) / 16.0)
+		m.limb(timber, p + side3, p - side3, 0.035)
+	await k.step()
+	m.commit(timber, PoiKit.painted(3, {"base": "#2a2420", "accent": "#1c1815", "grout": "#0e0c0a"}, 0.85), "Gantry", true)
+	# the hood: a cone of stitched hides, its lip three metres over the vent, its collar at the top
+	var hide := m.begin()
+	var lip_y := g + 4.0
+	var cone := [Vector2(3.1, 0.0), Vector2(2.7, 0.9), Vector2(1.9, 2.1), Vector2(1.0, 3.2), Vector2(0.62, 3.8)]
+	_lathe(hide, Transform3D(Basis.IDENTITY, Vector3(0.0, lip_y, 0.0)), cone, 18)
+	_lathe(hide, Transform3D(Basis.IDENTITY, Vector3(0.0, lip_y, 0.0)), cone, 18, true)
+	# the stitching: seams of lighter thong down the cone
+	await k.step()
+	m.commit(hide, PoiKit.painted(0, HIDE, 0.8), "Hood", true)
+	var thong := m.begin()
+	for i in 9:
+		var a := TAU * float(i) / 9.0
+		var dir := Vector3(sin(a), 0.0, cos(a))
+		m.limb(thong, Vector3(0.0, lip_y, 0.0) + dir * 3.12, Vector3(0.0, lip_y + 3.8, 0.0) + dir * 0.66, 0.03)
+	var collar_y := lip_y + 3.8
+	m.drum(thong, Transform3D(Basis.IDENTITY, Vector3(0.0, collar_y - 0.1, 0.0)), 0.7, 0.6, 0.0, NAN, false, 0.3)
+	# the ropes: hood to beam, lever rope down from the far end, the counterweight basket
+	var hood_hang := Vector3(0.0, collar_y + 0.5, 0.0)
+	var over := beam_a.lerp(beam_b, 0.14)
+	for i in 3:
+		var a := TAU * float(i) / 3.0
+		m.limb(thong, Vector3(0.0, collar_y, 0.0) + Vector3(sin(a), 0.0, cos(a)) * 0.68, over, 0.025)
+	m.limb(thong, hood_hang, over, 0.03)
+	var far_end := beam_b
+	var lever_foot := Vector2(far_end.x, far_end.z) + across * 0.2
+	var lever_g := k.on_ground(lever_foot.x, lever_foot.y).y
+	m.limb(thong, far_end, Vector3(lever_foot.x, lever_g + 1.4, lever_foot.y), 0.03)
+	await k.step()
+	m.commit(thong, PoiKit.plain(Color(0.44, 0.38, 0.3), 0.9), "Ropes", true)
+	var basket := m.begin()
+	m.ellipsoid(basket, far_end + Vector3(0.0, -0.9, 0.0), Vector3(0.6, 0.55, 0.6))
+	m.limb(basket, far_end, far_end + Vector3(0.0, -0.5, 0.0), 0.04)
+	await k.step()
+	m.commit(basket, PoiKit.painted(3, {"base": "#4a3e2e", "accent": "#36302a", "grout": "#1c1814"}, 0.8), "Counterweight", true)
+	# the lever-post the rope is made off to, with the code cut down it
+	var post := m.begin()
+	var ptop := m.post(post, lever_foot - across * 0.6, 1.6, 0.22)
+	m.limb(post, Vector3(lever_foot.x, lever_g + 1.4, lever_foot.y), ptop - Vector3(0.0, 0.2, 0.0), 0.04)
+	await k.step()
+	m.commit(post, k.surface("timber", 0.7), "LeverPost")
+	if not k.far:
+		# the smoke: puffing up out of the collar in a column, and breathing out under the lip
+		k.puffs(Vector3(0.0, collar_y + 0.6, 0.0), Vector3(0.4, 0.3, 0.4), 3.8, 26, Color(0.42, 0.4, 0.39, 0.6), 4.5, 11.0)
+		k.puffs(Vector3(0.0, g + 1.4, 0.0), Vector3(1.4, 0.2, 1.4), 0.5, 8, Color(0.55, 0.52, 0.5, 0.25), 1.8, 4.0)
+		k.light(Vector3(0.0, g + 1.6, 0.0), Color(1.0, 0.45, 0.18), 1.4, 7.0)
+		await PoiDressing.kind_builders().SITES._embers(d, [[across * 4.6, Vector2(2.4, 0.35), 0.3, 0.2, 0.8],
+				[-across * 4.4 + along * 1.5, Vector2(1.9, 0.3), 2.2, 0.7, 0.7], [-along * 4.8, Vector2(1.6, 0.3), 1.2, 0.4, 0.6]])
+	if k.far:
+		return
+	k.touchable("the_lever", Vector3(lever_foot.x, lever_g + 1.1, lever_foot.y), "Work the Hood's lever", "core:dialogue/smoke_hood_lever", "", false)
+	var pell := lever_foot + across * 1.4 + along * 0.6
+	k.marker("pell_lever", k.on_ground(pell.x, pell.y), true)
+	# Pell's lean-to of hides beside the lever, his bedroll, the stack of spare hides
+	var lean := lever_foot + across * 5.2 - along * 0.5
+	var lt := m.begin()
+	var lb := Basis(Vector3.UP, PoiKit.yaw_of(-across))
+	var back_top := k.on_ground(lean.x, lean.y, 2.0) - Vector3(across.x, 0.0, across.y) * 1.0
+	var back_l := back_top + lb * Vector3(-1.6, 0.0, 0.0)
+	var back_r := back_top + lb * Vector3(1.6, 0.0, 0.0)
+	var front_l := k.on_ground(lean.x, lean.y, 0.05) + Vector3(across.x, 0.0, across.y) * 1.2 + lb * Vector3(-1.6, 0.0, 0.0)
+	var front_r := k.on_ground(lean.x, lean.y, 0.05) + Vector3(across.x, 0.0, across.y) * 1.2 + lb * Vector3(1.6, 0.0, 0.0)
+	_quad2(lt, back_l, back_r, front_r, front_l)
+	var poles := m.begin()
+	for s in [-1.0, 1.0]:
+		var top := back_top + lb * Vector3(1.6 * float(s), 0.0, 0.0)
+		m.limb(poles, Vector3(top.x, k.on_ground(top.x, top.z).y - 0.2, top.z), top + Vector3(0.0, 0.1, 0.0), 0.06)
+	await k.step()
+	m.commit(lt, PoiKit.painted(0, HIDE, 0.8), "LeanTo")
+	await k.step()
+	m.commit(poles, k.surface("timber", 0.7), "LeanPoles")
+	await k.step()
+	k.place(k.prop("bedroll"), k.on_ground(lean.x, lean.y), PoiKit.yaw_of(along))
+	var stack := lean + along * 2.8
+	var hides := m.begin()
+	for i in 5:
+		_box(hides, Transform3D(Basis(Vector3.UP, k.rng.randf_range(-0.2, 0.2) + PoiKit.yaw_of(along)), k.on_ground(stack.x, stack.y, 0.06 + 0.11 * float(i))),
+				Vector3(1.3, 0.1, 0.9))
+	await k.step()
+	m.commit(hides, PoiKit.painted(0, HIDE, 0.8), "SpareHides")
+	k.collider(Vector3(1.3, 0.6, 0.9), Transform3D(Basis(Vector3.UP, PoiKit.yaw_of(along)), k.on_ground(stack.x, stack.y, 0.3)), "wood")
+	await k.step()
+	k.place(k.prop("barrel"), k.on_ground(stack.x - along.x * 1.6, stack.y - along.y * 1.6), 0.2)
+	await k.step()
+	k.place(k.prop("cooking_pot"), k.on_ground(lean.x - along.x * 1.8 + across.x, lean.y - along.y * 1.8 + across.y), 0.4)
+	_settle(d)
+	await _rubble(d, Vector2.ZERO, 16.0, 10, Vector2(0.3, 0.6), Vector2.ZERO, 7.0)
+	await _grey_grass(d, 18.0, 30)
+
+
+# --- the Leaving-Lines ------------------------------------------------------------------------------------
+
+## The colours of the ones who went on: faded madder, weld, woad, a Tollmere saffron, an undyed cream,
+## and the Order's grey for the cloths left folded.
+const FADED := [Color(0.55, 0.2, 0.16), Color(0.66, 0.52, 0.22), Color(0.26, 0.36, 0.5), Color(0.62, 0.42, 0.18),
+		Color(0.7, 0.66, 0.56), Color(0.32, 0.42, 0.28), Color(0.46, 0.28, 0.36), Color(0.5, 0.48, 0.44)]
+
+## Lines strung zig-zag between tall poles across the heath, hung end to end with pilgrims' coats,
+## shawls and shirts in every faded colour, the only colour south of Greyfold; one coat brighter than
+## the rest (Corra Dunn's, three days up); under the lines the heap of shed coats; the warm ash-basin,
+## a ring of fused stone round a hollow of grey ash over a vent, pressed with the shapes of bodies; a
+## row of boots left at its rim. Corra sits by the basin; a grey tent for whoever needs it.
+static func leaving_lines(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var lie := _lie(k)
+	var along: Vector2 = lie[1]
+	var across := Vector2(-along.y, along.x)
+	var off := across * 3.0
+	if not _off_road(k, off, 6.0):
+		off = -across * 3.0
+	# the poles: three lines of four, each line a zig-zag
+	var timber := m.begin()
+	var cloth := m.begin()
+	var line := m.begin()
+	var lines := 3
+	var red_done := false
+	for ln in lines:
+		var row := off + across * (float(ln) - 1.0) * 6.5
+		var tops: Array = []
+		for i in 4:
+			var p := row + along * (-13.5 + 9.0 * float(i)) + across * (1.2 if i % 2 == 0 else -1.2) + k.jitter(0.4)
+			var h := k.rng.randf_range(5.0, 6.0)
+			var lean := Vector3(k.rng.randf_range(-0.04, 0.04), 0.0, k.rng.randf_range(-0.04, 0.04))
+			tops.append(m.post(timber, p, h, 0.16, lean) - Vector3(0.0, 0.25, 0.0))
+		for i in 3:
+			var a: Vector3 = tops[i]
+			var b: Vector3 = tops[i + 1]
+			var span := a.distance_to(b)
+			var segs := 8
+			var sag := span * 0.07
+			var pts: Array = []
+			for s in segs + 1:
+				var t := float(s) / float(segs)
+				pts.append(a.lerp(b, t) - Vector3(0.0, sag * 4.0 * t * (1.0 - t), 0.0))
+			for s in segs:
+				m.limb(line, pts[s], pts[s + 1], 0.018)
+			# the clothes on it, a pace apart, each hanging from the line
+			var x := 0.5
+			while x < span - 0.5:
+				var t := x / span
+				var at: Vector3 = a.lerp(b, t) - Vector3(0.0, sag * 4.0 * t * (1.0 - t), 0.0)
+				var w := k.rng.randf_range(0.45, 1.0)
+				var l := k.rng.randf_range(0.6, 1.5)
+				var col: Color = FADED[k.rng.randi() % FADED.size()]
+				if not red_done and ln == 1 and i == 1:
+					col = Color(0.72, 0.12, 0.1)
+					w = 1.2
+					l = 1.5
+					red_done = true
+				col = col.lerp(Color(0.45, 0.44, 0.42), k.rng.randf_range(0.0, 0.35))
+				var dirv := (b - a).normalized()
+				var flat := Vector3(dirv.x, 0.0, dirv.z).normalized()
+				var outv := flat.cross(Vector3.UP).normalized() * k.rng.randf_range(-0.25, 0.25)
+				var p0 := at - flat * w * 0.5
+				var p1 := at + flat * w * 0.5
+				var mid_l := Vector3(0.0, -l * 0.55, 0.0) + outv * 0.5
+				var bot := Vector3(0.0, -l, 0.0) + outv
+				cloth.set_color(col)
+				_quad2(cloth, p0, p1, p1 + mid_l + flat * 0.04, p0 + mid_l - flat * 0.04)
+				cloth.set_color(col.darkened(0.12))
+				_quad2(cloth, p0 + mid_l - flat * 0.04, p1 + mid_l + flat * 0.04, p1 + bot + flat * k.rng.randf_range(-0.1, 0.1), p0 + bot)
+				x += w + k.rng.randf_range(0.15, 0.6)
+		await k.step()
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.8), "Poles", true)
+	await k.step()
+	m.commit(line, PoiKit.plain(Color(0.3, 0.28, 0.25), 0.9), "Lines", true)
+	await k.step()
+	m.commit(cloth, _dyed(), "Colours", true)
+	# the heap of shed coats under the middle line
+	var heap := off + along * 2.5 - across * 2.0
+	await k.step()
+	m.mound(k.on_ground(heap.x, heap.y, -0.1), 1.8, 0.75, PoiKit.painted(5, {"base": "#5c4038", "accent": "#3e4a58", "grout": "#2a2622", "unit": 0.35}, 0.8),
+			"ShedCoats", true, 1.3, 5, 14)
+	# the ash-basin, beyond the lines
+	var basin := off + across * 13.0 + along * 2.0
+	if not _off_road(k, basin, 4.0):
+		basin = off - across * 13.0 + along * 2.0
+	var bg := k.on_ground(basin.x, basin.y).y
+	var ring := m.begin()
+	_lathe(ring, Transform3D(Basis.IDENTITY, Vector3(basin.x, bg, basin.y)),
+			[Vector2(3.0, -0.4), Vector2(3.0, 0.55), Vector2(2.4, 0.6), Vector2(2.35, 0.2)], 24)
+	await k.step()
+	m.commit(ring, PoiKit.painted(0, SLAG, 0.6, 0.6), "Basin", true)
+	if not k.far:
+		var rr := 3.0
+		for i in 10:
+			var a := TAU * float(i) / 10.0
+			k.collider(Vector3(1.9, 0.6, 0.6), Transform3D(Basis(Vector3.UP, a), Vector3(basin.x, bg + 0.3, basin.y) + Vector3(sin(a), 0.0, cos(a)) * (rr - 0.3)), "stone")
+	await k.step()
+	m.mound(Vector3(basin.x, bg + 0.05, basin.y), 2.4, 0.3, PoiKit.painted(5, {"base": "#9c978d", "accent": "#86817a", "grout": "#5e5a54", "unit": 0.3}, 0.9),
+			"WarmAsh", true, 1.6, 4, 18)
+	if k.far:
+		return
+	k.puffs(Vector3(basin.x, bg + 0.5, basin.y), Vector3(1.6, 0.1, 1.6), 0.35, 6, Color(0.62, 0.6, 0.56, 0.18), 1.6, 5.0)
+	k.touchable("the_basin", Vector3(basin.x, bg + 0.8, basin.y), "Look into the ash-basin", "core:dialogue/leaving_lines_basin", "", false)
+	var to_lines := (heap - basin).normalized()
+	var corra := basin + to_lines * 3.9 + Vector2(to_lines.y, -to_lines.x) * 1.5
+	k.marker("corra_basin", k.on_ground(corra.x, corra.y), true)
+	await k.step()
+	k.place(k.prop("sack"), k.on_ground(corra.x + to_lines.y * 1.1, corra.y - to_lines.x * 1.1), 0.5)
+	# the boots left at the rim, in pairs, toes south
+	var south := Vector2(0.0, 1.0)
+	for i in 4:
+		var p := basin - to_lines * 3.6 + Vector2(to_lines.y, -to_lines.x) * (-1.8 + 1.2 * float(i))
+		await k.step()
+		k.place(k.prop("boots"), k.on_ground(p.x, p.y), PoiKit.yaw_of(south) + k.rng.randf_range(-0.2, 0.2), 1.0, false)
+	var tent := off - across * 12.0 - along * 6.0
+	if _off_road(k, tent, 2.0):
+		await k.step()
+		k.place(k.prop("tent"), k.on_ground(tent.x, tent.y), PoiKit.yaw_of(across))
+	await _cache(d, k.on_ground(heap.x + along.x * 2.2, heap.y + along.y * 2.2), PoiKit.yaw_of(along), "basket", "core:loot/pockets_common", "the_heap")
+	k.marker("the_lines", k.on_ground(off.x, off.y))
+	_settle(d)
+	await _grey_grass(d, 18.0, 30)
+
+
+# --- the Fallen Head --------------------------------------------------------------------------------------
+
+const HEAD_HALF := Vector3(9.0, 5.8, 7.0)     # along the crown, up (ear to ear), out of the face
+const HEAD_RISE := 5.2                        # its middle over the ground
+
+## One of the Choir's lost heads, lying on its right cheek on the plateau at the end of the furrow it
+## ploughed rolling from the ring: an egg of the Builders' carved stone eighteen metres from chin to
+## crown and eleven high, half a metre of it sunk; its features on the side that faces out: the brow, the
+## two eyes stacked one over the other (it lies on its cheek) with their lids carved open, the nose, and
+## the mouth, a slit the height of three men between thick lips, black, the door in at its foot, the ash
+## drifted up against the lower lip for a ramp. Its hair in braids over the crown, the upper ear on top.
+## The neck's stump at the chin end, cut clean and pale. Behind it the furrow back towards the Choir: two
+## banks of ash and the stone it broke. Aud Venn's camp beside the mouth, her slate (the site's hook),
+## her lantern let down on a cord.
+
+static func the_fallen_head(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var to_choir := _to_choir(k)
+	# the crown points away from the Choir, the cut neck back along the furrow; the face looks out to
+	# whichever side is the road's (C x up = F keeps the frame right-handed, so the crown turns with it)
+	var crown := -to_choir
+	var face := Vector2(Vector3(crown.x, 0.0, crown.y).cross(Vector3.UP).x, Vector3(crown.x, 0.0, crown.y).cross(Vector3.UP).z)
+	var road := _toward_road(k, 260.0)
+	if road != Vector2.ZERO and face.dot(road) < 0.0:
+		crown = -crown
+		face = -face
+	var C := Vector3(crown.x, 0.0, crown.y).normalized()
+	var F := Vector3(face.x, 0.0, face.y).normalized()
+	var hb := Basis(C, Vector3.UP, F)
+	var g := k.on_ground(0.0, 0.0).y
+	var o := Vector3(0.0, g + HEAD_RISE, 0.0)
+	var stone := m.begin()
+	m.ellipsoid(stone, o, HEAD_HALF, hb)
+	# the upper ear, on top; the brow; the nose; the lips round the mouth
+	m.ellipsoid(stone, o + hb * Vector3(-0.6, HEAD_HALF.y - 0.15, -0.8), Vector3(2.1, 0.55, 1.3), hb)
+	var face_at := func(x: float, y: float, out: float) -> Vector3:
+		var s := 1.0 - pow(x / HEAD_HALF.x, 2.0) - pow(y / HEAD_HALF.y, 2.0)
+		return o + hb * Vector3(x, y, HEAD_HALF.z * sqrt(maxf(s, 0.0)) + out)
+	m.limb(stone, face_at.call(2.6, -3.0, 0.25), face_at.call(2.6, 3.0, 0.25), 0.6)
+	m.ellipsoid(stone, face_at.call(-0.4, 0.0, 0.5), Vector3(2.0, 0.9, 1.15), hb)
+	var mouth_x := -4.0
+	for lx in [-2.9, -5.1]:
+		m.limb(stone, face_at.call(float(lx), -2.9, 0.15), face_at.call(float(lx), 2.9, 0.15), 0.62)
+	# the chin, and the cheek's hollow under the eye
+	m.ellipsoid(stone, face_at.call(-6.6, 0.0, -0.4), Vector3(1.4, 2.2, 1.0), hb)
+	# the neck's stump, cut straight across at the chin end
+	var neck_at := o + hb * Vector3(-HEAD_HALF.x + 1.2, -1.2, -1.6)
+	_lathe(stone, _frame_up(neck_at, -C), [Vector2(4.2, -1.5), Vector2(4.0, 1.4)], 22)
+	# the braids over the crown, from the brow back over the top to the nape
+	for j in 5:
+		var yb := -3.6 + 1.8 * float(j)
+		var s := sqrt(maxf(1.0 - pow(yb / HEAD_HALF.y, 2.0), 0.05))
+		var prev := Vector3.INF
+		for i in 10:
+			var a := deg_to_rad(40.0 + 16.0 * float(i))
+			var p := o + hb * Vector3(cos(a) * HEAD_HALF.x * s * 1.02, yb, sin(a) * HEAD_HALF.z * s * 1.02)
+			if prev != Vector3.INF:
+				m.limb(stone, prev, p, 0.42)
+			prev = p
+	await k.step()
+	m.commit(stone, PoiKit.painted(0, CARVED, 0.6, 0.55), "TheHead", true)
+	var hull := PackedVector3Array()
+	for i in 10:
+		for j in 6:
+			var a := TAU * float(i) / 10.0
+			var b := PI * (float(j) + 0.5) / 6.0 - PI * 0.5
+			hull.append(o + hb * Vector3(cos(a) * cos(b) * HEAD_HALF.x, sin(b) * HEAD_HALF.y, sin(a) * cos(b) * HEAD_HALF.z) * 0.97)
+	_hull(k, hull)
+	# the cut face of the neck, pale, never weathered
+	var cut := m.begin()
+	_lathe(cut, _frame_up(neck_at - C * 1.4, -C), [Vector2(4.05, 0.0), Vector2(0.0, 0.02)], 22)
+	await k.step()
+	m.commit(cut, PoiKit.painted(0, {"base": "#8a857c", "accent": "#77726a", "grout": "#4a4640", "unit": 1.6}, 0.3, 0.4), "NeckCut", true)
+	# the dark: the eyes' sockets with the carved balls in them, and the mouth
+	var dark := m.begin()
+	var eyes := m.begin()
+	for ey in [-2.2, 2.2]:
+		m.ellipsoid(dark, face_at.call(1.4, float(ey), -0.35), Vector3(0.95, 1.35, 0.6), hb)
+		m.ellipsoid(eyes, face_at.call(1.35, float(ey), -0.3), Vector3(0.55, 0.85, 0.42), hb)
+	m.ellipsoid(dark, face_at.call(mouth_x, 0.0, -0.25), Vector3(0.95, 2.85, 0.7), hb)
+	await k.step()
+	m.commit(dark, PoiKit.plain(HOLE, 1.0), "Hollows", true)
+	await k.step()
+	m.commit(eyes, PoiKit.painted(0, {"base": "#6a655d", "accent": "#5a554e", "grout": "#33302c", "unit": 1.2}, 0.4), "Eyes", true)
+	# the door, at the foot of the mouth, the ash drifted up to the lower lip for a ramp
+	var mouth_foot: Vector3 = face_at.call(mouth_x, -2.4, 0.0)
+	var door_ground := Vector2(mouth_foot.x, mouth_foot.z) + face * 0.6
+	var lip_y := mouth_foot.y
+	var ramp := door_ground + face * 0.5
+	await k.step()
+	m.mound(k.on_ground(ramp.x, ramp.y, -0.2), 9.0, lip_y - k.on_ground(ramp.x, ramp.y).y + 0.25, _ground(k, ramp), "AshRamp", true, 4.0, 7, 20, true, 0.05)
+	# the furrow, back towards the Choir: two banks of ash, the broken stone along it
+	var back := to_choir
+	var side := Vector2(back.y, -back.x)
+	for i in 8:
+		var t := 13.0 + 3.2 * float(i)
+		for s in [-1.0, 1.0]:
+			await _drift(d, back * t + side * (4.2 + 0.25 * float(i)) * float(s), k.rng.randf_range(3.0, 3.6), k.rng.randf_range(1.3, 1.8) * (1.0 - 0.07 * float(i)))
+	if k.far:
+		return
+	var interior := str(site.get("interior", ""))
+	var door_at := Vector3(door_ground.x, lip_y + 0.05, door_ground.y)
+	PoiDressing.kind_builders().SITES._door(d, interior, door_at, PoiKit.yaw_of(face))
+	k.marker("the_mouth", door_at + F * 1.6, false, true, 3.0)
+	k.bounce_light(door_at + F * 0.5 + Vector3(0.0, 1.4, 0.0), Color(1.0, 0.8, 0.55), 0.9, 6.0)
+	k.touchable("the_cheek", face_at.call(4.5, -3.6, 0.6), "Lay a hand on the Head", "core:dialogue/fallen_head_face", "", false)
+	# broken stone along the furrow
+	await _rubble(d, back * 24.0, 12.0, 16, Vector2(0.4, 1.1))
+	# Aud Venn's camp on the face's side, clear of the ramp
+	var camp := face * 15.0 + crown * 6.0
+	if not _off_road(k, camp, 2.0):
+		camp = face * 15.0 - crown * 4.0
+	var fire: Vector2 = await _grey_camp(d, camp, (Vector2(door_ground.x, door_ground.y) - camp).normalized())
+	k.marker("aud_camp", k.on_ground(fire.x + face.x * 1.5, fire.y + face.y * 1.5), true)
+	# her lantern let down into the mouth on a cord from a stake
+	var stake := door_ground + face * 1.8 + crown * 1.9
+	var cord := m.begin()
+	var st_top := m.post(cord, stake, 0.9, 0.07)
+	m.limb(cord, st_top, door_at + Vector3(0.0, 0.3, 0.0) - F * 0.8, 0.015)
+	await k.step()
+	m.commit(cord, PoiKit.plain(Color(0.4, 0.36, 0.3), 0.9), "LanternCord")
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(door_ground.x, 0.0, door_ground.y) + F * 7.0 + C * 3.0)
+	await _grey_grass(d, 22.0, 34)
+
+
+# --- the Silk Vents ---------------------------------------------------------------------------------------
+
+const COCOON := {"base": "#a8a398", "accent": "#8e897f", "grout": "#5c5850", "unit": 0.1}
+const WOOL_GREY := {"base": "#6c6a64", "accent": "#5a5852", "grout": "#3a3934", "unit": 0.3}
+
+## The moth-wife's racks over the warm cracks: four rows of black trestles, each rail hung end to end
+## with threads of pale grey cocoons, the cracks glowing a little under them; at the rows' head a pole
+## three times a man's height with the moth-lamp in its cage on an arm, the moths always about it; to
+## one side Hessa Lowe's awning of grey canvas over her spinning-wheel and stool, a basket of shells.
+static func silk_vents(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var lie := _lie(k)
+	var along: Vector2 = lie[1]
+	var across := Vector2(-along.y, along.x)
+	var c := across * 3.0
+	if not _off_road(k, c, 6.0):
+		c = -across * 3.0
+	var timber := m.begin()
+	var cocoons := m.begin()
+	var threads := m.begin()
+	var yaw := PoiKit.yaw_of(along) + PI * 0.5
+	var cracks: Array = []
+	for row in 4:
+		var rc := c + across * (float(row) - 1.5) * 3.4
+		var tops: Array = []
+		for i in 3:
+			tops.append(m.post(timber, rc + along * (-3.6 + 3.6 * float(i)), 2.6, 0.16))
+		var rail_y := ((tops[0] as Vector3).y + (tops[2] as Vector3).y) * 0.5 - 0.05
+		_box(timber, Transform3D(Basis(Vector3.UP, yaw), Vector3(rc.x, rail_y, rc.y)), Vector3(7.6, 0.1, 0.1))
+		var n := 24
+		for i in n:
+			var p := rc + along * (-3.5 + 7.0 * (float(i) + 0.5) / float(n))
+			var hang := k.rng.randi_range(3, 5)
+			var fall := 0.19 * float(hang) + 0.1
+			_box(threads, Transform3D(Basis.IDENTITY, Vector3(p.x, rail_y - fall * 0.5, p.y)), Vector3(0.008, fall, 0.008))
+			for j in hang:
+				var turn := Basis(Vector3.UP, k.rng.randf() * TAU) * Basis(Vector3.RIGHT, k.rng.randf_range(-0.15, 0.15))
+				_box(cocoons, Transform3D(turn, Vector3(p.x, rail_y - 0.15 - 0.19 * float(j), p.y)), Vector3(0.09, 0.16, 0.09))
+		cracks.append([rc + across * 0.2, Vector2(6.0, 0.4), PoiKit.yaw_of(across), 0.2 + 0.2 * float(row), 0.55])
+		await k.step()
+	# the moth-lamp's pole at the rows' head, its arm, the iron cage
+	var pole := c - along * 6.0 + across * 1.0
+	var ptop := m.post(timber, pole, 9.0, 0.26)
+	var arm_end := ptop + Vector3(along.x, 0.0, along.y) * 1.0 - Vector3(0.0, 0.3, 0.0)
+	m.limb(timber, ptop - Vector3(0.0, 0.4, 0.0), arm_end, 0.06)
+	await k.step()
+	m.commit(timber, k.surface("timber", 0.8), "Racks", true)
+	await k.step()
+	m.commit(cocoons, PoiKit.painted(0, COCOON, 0.4, 0.6), "Cocoons", true)
+	await k.step()
+	m.commit(threads, PoiKit.plain(Color(0.6, 0.58, 0.54), 0.9), "Threads")
+	var cage := m.begin()
+	var lamp := arm_end - Vector3(0.0, 0.55, 0.0)
+	for i in 6:
+		var a := TAU * float(i) / 6.0
+		m.limb(cage, lamp + Vector3(sin(a) * 0.22, -0.3, cos(a) * 0.22), lamp + Vector3(sin(a) * 0.14, 0.3, cos(a) * 0.14), 0.015)
+	m.limb(cage, arm_end, lamp + Vector3(0.0, 0.3, 0.0), 0.012)
+	await k.step()
+	m.commit(cage, PoiKit.plain(Color(0.12, 0.11, 0.1), 0.6, 0.5), "LampCage", true)
+	var flame := m.begin()
+	m.ellipsoid(flame, lamp, Vector3(0.1, 0.16, 0.1))
+	await k.step()
+	m.commit(flame, PoiKit.plain(Color(1.0, 0.8, 0.5), 0.9, 0.0, Color(1.0, 0.72, 0.4), 2.0), "LampFlame", true)
+	if k.far:
+		return
+	k.light(lamp, Color(1.0, 0.74, 0.45), 1.6, 9.0)
+	# the moths: a slow grey drift round the lamp, and over the racks
+	k.puffs(lamp - Vector3(0.0, 1.0, 0.0), Vector3(1.4, 1.0, 1.4), 0.2, 26, Color(0.7, 0.68, 0.62, 0.5), 0.12, 6.0)
+	k.puffs(k.on_ground(c.x, c.y, 1.6), Vector3(5.0, 0.6, 6.0), 0.1, 30, Color(0.68, 0.66, 0.6, 0.45), 0.1, 7.0)
+	await PoiDressing.kind_builders().SITES._embers(d, cracks)
+	k.touchable("the_lamp", k.on_ground(pole.x, pole.y, 1.2), "Stand under the moth-lamp", "core:dialogue/silk_vents_lamp", "", false)
+	# Hessa's awning, her wheel and stool, the basket of shells
+	var aw := c + across * 9.5 - along * 2.0
+	if not _off_road(k, aw, 2.0):
+		aw = c - across * 9.5 - along * 2.0
+	var canvas := m.begin()
+	var poles := m.begin()
+	var corners: Array = []
+	for s in [[-1.0, -1.0, 2.3], [1.0, -1.0, 2.3], [1.0, 1.0, 1.7], [-1.0, 1.0, 1.7]]:
+		var p := aw + along * 1.8 * float(s[0]) + across * 1.5 * float(s[1])
+		corners.append(m.post(poles, p, float(s[2]), 0.09))
+	_quad2(canvas, corners[0], corners[1], corners[2], corners[3])
+	await k.step()
+	m.commit(canvas, PoiKit.painted(6, WOOL_GREY, 0.6), "Awning")
+	# the wheel: a ring on a stand, its spokes, the treadle
+	var wheel := aw + along * 0.4
+	var wg := k.on_ground(wheel.x, wheel.y).y
+	var hub := Vector3(wheel.x, wg + 0.85, wheel.y)
+	var ax := Vector3(along.x, 0.0, along.y)
+	var up := Vector3.UP
+	var acr := Vector3(across.x, 0.0, across.y)
+	for i in 12:
+		var a0 := TAU * float(i) / 12.0
+		var a1 := TAU * float(i + 1) / 12.0
+		m.limb(poles, hub + (up * cos(a0) + acr * sin(a0)) * 0.5, hub + (up * cos(a1) + acr * sin(a1)) * 0.5, 0.03)
+		if i % 2 == 0:
+			m.limb(poles, hub, hub + (up * cos(a0) + acr * sin(a0)) * 0.48, 0.015)
+	for s in [-1.0, 1.0]:
+		m.limb(poles, hub + ax * 0.08 * float(s), Vector3(wheel.x, wg, wheel.y) + ax * 0.08 * float(s) + acr * 0.3 * float(s), 0.03)
+	m.limb(poles, Vector3(wheel.x, wg + 0.35, wheel.y) - acr * 0.5, Vector3(wheel.x, wg + 0.35, wheel.y) + acr * 0.7, 0.05)
+	await k.step()
+	m.commit(poles, k.surface("timber", 0.7), "Wheel")
+	k.collider(Vector3(0.3, 1.4, 1.2), Transform3D(Basis(Vector3.UP, yaw), Vector3(wheel.x, wg + 0.7, wheel.y)), "wood")
+	var seat := wheel - along * 0.9
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(seat.x, seat.y), PoiKit.yaw_of(along))
+	k.marker("hessa_wheel", k.on_ground(seat.x - along.x * 0.6, seat.y - along.y * 0.6), true)
+	await k.step()
+	k.place(k.prop("basket"), k.on_ground(aw.x - along.x * 1.2 + across.x * 0.9, aw.y - along.y * 1.2 + across.y * 0.9), 0.3, 1.0, false)
+	await k.step()
+	k.place(k.prop("bedroll"), k.on_ground(aw.x + along.x * 1.2 - across.x * 0.6, aw.y + along.y * 1.2 - across.y * 0.6), PoiKit.yaw_of(across))
+	k.marker("the_racks", k.on_ground(c.x, c.y))
+	_settle(d)
+	await _grey_grass(d, 18.0, 28)
+
+
+# --- the Fading-Glass -------------------------------------------------------------------------------------
+
+## A sheet of black glass nine metres high out of the heath, leaning back a little from the way it faces
+## (the road's side), thick at its foot and thin at its ragged top, polished to a mirror at a face's
+## height; flakes and shards of it round its foot; a kneeling-step of the Builders' stone before it
+## worn hollow; a ring of pilgrims' stones; ash drifted on its lee.
+static func fading_glass(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var face := _toward_road(k, 260.0)
+	if face == Vector2.ZERO:
+		face = k.downhill()
+	if face == Vector2.ZERO:
+		face = Vector2(0.0, 1.0)
+	face = face.normalized()
+	var across := Vector2(face.y, -face.x)
+	var g := k.on_ground(0.0, 0.0).y
+	var F := Vector3(face.x, 0.0, face.y)
+	var A := Vector3(across.x, 0.0, across.y)
+	var up := (Vector3.UP - F * 0.14).normalized()
+	var glass := m.begin()
+	var sheet := _taper(glass, Vector3(0.0, g - 0.8, 0.0), Vector3(0.0, g - 0.8, 0.0) + up * 10.0, A, 6.2, 1.3, 3.0, 0.5)
+	_hull(k, sheet)
+	# a second, lesser blade split off it at one side, and a broken crest
+	var side := A * 3.6 - F * 0.4
+	var sh2 := _taper(glass, Vector3(side.x, g - 0.6, side.z), Vector3(side.x, g - 0.6, side.z) + (up + A * 0.25).normalized() * 5.2, A, 1.6, 0.7, 0.5, 0.25)
+	_hull(k, sh2)
+	for i in 14:
+		var p := k.jitter(5.5) + face * 1.5
+		if p.length() < 2.5:
+			p = p.normalized() * 2.8
+		var at := k.on_ground(p.x, p.y, -0.05)
+		var dir := Vector3(k.rng.randf_range(-0.4, 0.4), 1.0, k.rng.randf_range(-0.4, 0.4)).normalized()
+		_taper(glass, at, at + dir * k.rng.randf_range(0.3, 0.9), Vector3(k.rng.randf(), 0.0, k.rng.randf()) + Vector3(0.1, 0.0, 0.0), 0.4, 0.15, 0.08, 0.04)
+	await k.step()
+	m.commit(glass, PoiKit.plain(Color(0.025, 0.025, 0.032), 0.05, 0.35), "TheGlass", true)
+	# the kneeling-step, worn hollow, and the ring of pilgrims' stones
+	var stone := m.begin()
+	var step_at := face * 1.9
+	var sb := Basis(Vector3.UP, PoiKit.yaw_of(face))
+	_box(stone, Transform3D(sb, k.on_ground(step_at.x, step_at.y, 0.1)), Vector3(2.2, 0.45, 0.9))
+	k.collider(Vector3(2.2, 0.45, 0.9), Transform3D(sb, k.on_ground(step_at.x, step_at.y, 0.1)), "stone")
+	await k.step()
+	m.commit(stone, PoiKit.painted(0, CARVED, 0.8, 0.5), "KneelingStep")
+	await _drift(d, -face * 4.0 + across * 1.5, 3.2, 1.0)
+	if k.far:
+		return
+	var ring: Array = []
+	for p in k.ring(16, 8.5, face * 2.0, 0.12):
+		var pp: Vector2 = p
+		if _off_road(k, pp):
+			ring.append(PoiKit.transform_at(k.on_ground(pp.x, pp.y), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.18, 0.3)))
+	await k.step()
+	k.scatter(k.rock("boulder"), ring)
+	k.bounce_light(k.on_ground(face.x * 3.0, face.y * 3.0, 1.8), Color(0.85, 0.85, 0.9), 0.6, 7.0)
+	k.touchable("the_glass", k.on_ground(step_at.x, step_at.y, 1.4) - F * 0.6, "Look into the Fading-Glass", "core:dialogue/fading_glass_look", "", false)
+	k.marker("the_step", k.on_ground(step_at.x + face.x * 1.2, step_at.y + face.y * 1.2))
+	await _grey_grass(d, 16.0, 26)
+
+
+# --- the Gentle Fold --------------------------------------------------------------------------------------
+
+## A round fold of black drystone on the heath below Pilgrim's Ash, its gate shut with a hurdle; inside,
+## in rows, grey blankets over the shapes of the wights that will not lie down anywhere else; by the
+## gate the reading-stand with a candle in its niche, a pole with the Order's grey pennant and a
+## hand-bell on its arm, and the novice's tent.
+static func gentle_fold(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var gate := _toward_road(k, 260.0)
+	if gate == Vector2.ZERO:
+		gate = Vector2(0.0, -1.0)
+	gate = gate.normalized()
+	var across := Vector2(gate.y, -gate.x)
+	var r := 8.5
+	var wall := m.begin()
+	var segs := 18
+	var gap := 0.26
+	for i in segs:
+		var a0 := TAU * float(i) / float(segs)
+		var a1 := TAU * float(i + 1) / float(segs)
+		var mid := (a0 + a1) * 0.5
+		var dir := Vector2(sin(mid), cos(mid))
+		if dir.dot(gate) > cos(gap * 1.6):
+			continue
+		var p0 := Vector2(sin(a0), cos(a0)) * r
+		var p1 := Vector2(sin(a1), cos(a1)) * r
+		_wall(d, wall, p0, p1, 1.35, 0.15 if i % 5 == 2 else 0.0)
+	await k.step()
+	m.commit(wall, k.surface("stone", 0.7), "FoldWall", true)
+	# the hurdle across the gate
+	var hurdle := m.begin()
+	var gp := gate * r
+	var hb := Basis(Vector3.UP, PoiKit.yaw_of(gate))
+	var gw := 2.0 * r * sin(gap * 1.6) + 0.4
+	for s in [-1.0, 1.0]:
+		m.post(hurdle, gp + across * gw * 0.5 * float(s), 1.3, 0.1)
+	for y in [0.35, 0.75, 1.1]:
+		_box(hurdle, Transform3D(hb, k.on_ground(gp.x, gp.y, float(y))), Vector3(gw, 0.08, 0.06))
+	for i in 7:
+		var p := gp + across * (-gw * 0.5 + gw * (float(i) + 0.5) / 7.0)
+		_box(hurdle, Transform3D(hb, k.on_ground(p.x, p.y, 0.7)), Vector3(0.05, 1.2, 0.05))
+	k.collider(Vector3(gw, 1.3, 0.2), Transform3D(hb, k.on_ground(gp.x, gp.y, 0.65)), "wood")
+	# the pennant pole and its bell, outside the gate
+	var pole := gp + gate * 3.0 + across * 2.6
+	var top := m.post(hurdle, pole, 5.2, 0.14)
+	var arm := top - Vector3(0.0, 0.5, 0.0) + Vector3(across.x, 0.0, across.y) * 0.7
+	m.limb(hurdle, top - Vector3(0.0, 0.5, 0.0), arm, 0.04)
+	# the reading-stand by the gate
+	var stand := gp + gate * 1.8 - across * 2.2
+	var stop := m.post(hurdle, stand, 1.05, 0.12)
+	_box(hurdle, Transform3D(hb * Basis(Vector3.RIGHT, -0.5), stop + Vector3(0.0, 0.08, 0.0)), Vector3(0.6, 0.04, 0.45))
+	await k.step()
+	m.commit(hurdle, k.surface("timber", 0.7), "Hurdle", true)
+	var pennant := m.begin()
+	var flag_top := top - Vector3(0.0, 0.15, 0.0)
+	var out := Vector3(across.x, 0.0, across.y)
+	_quad2(pennant, flag_top, flag_top + out * 1.6 + Vector3(0.0, -0.25, 0.0), flag_top + out * 1.5 + Vector3(0.0, -0.6, 0.0), flag_top + Vector3(0.0, -0.9, 0.0))
+	# the blankets: the shapes lying in rows under the Order's grey
+	for row in 3:
+		for i in 5:
+			var p := -gate * (4.5 - 2.4 * float(row)) + across * (-4.4 + 2.2 * float(i)) + k.jitter(0.2)
+			if p.length() > r - 1.4:
+				continue
+			var b := Basis(Vector3.UP, PoiKit.yaw_of(gate) + k.rng.randf_range(-0.2, 0.2))
+			m.ellipsoid(pennant, k.on_ground(p.x, p.y, 0.05), Vector3(0.42, 0.24, 0.95), b)
+	await k.step()
+	m.commit(pennant, PoiKit.painted(6, WOOL_GREY, 0.7), "Blankets", true)
+	if k.far:
+		return
+	await k.step()
+	k.place(k.prop("bell_small"), arm - Vector3(0.0, 0.3, 0.0), 0.0, 1.0, false)
+	await k.step()
+	k.place(k.prop("candle_stub"), stop + Vector3(0.0, 0.12, 0.0) + Vector3(across.x, 0.0, across.y) * 0.25, 0.0, 1.0, false)
+	k.touchable("the_stand", stop + Vector3(0.0, 0.2, 0.0), "Read from the stand", "core:dialogue/gentle_fold_stand", "", false)
+	var brin := stand + gate * 1.0
+	k.marker("brin_stand", k.on_ground(brin.x, brin.y), true)
+	k.marker("the_fold", k.on_ground(0.0, 0.0))
+	var tent := gp + gate * 6.0 - across * 6.0
+	if _off_road(k, tent, 2.0):
+		await k.step()
+		k.place(k.prop("tent"), k.on_ground(tent.x, tent.y), PoiKit.yaw_of(-gate))
+	var fire := tent + across * 3.0
+	if _off_road(k, fire, 1.0):
+		await k.step()
+		k.place(k.prop("campfire"), k.on_ground(fire.x, fire.y), 0.0, 0.85)
+		k.light(k.on_ground(fire.x, fire.y, 0.8), Color(1.0, 0.7, 0.4), 1.6, 8.0)
+	_settle(d)
+	await _grey_grass(d, 16.0, 26)
+
+
+# --- Cinderhowe -------------------------------------------------------------------------------------------
+
+const CONE_R := 24.0
+const CONE_H := 21.0
+const CONE_POWER := 2.4
+const CINDER := {"base": "#0f0d0c", "accent": "#1b1816", "grout": "#060505", "unit": 0.45}
+
+## The cone's height over its foot `f` (0 at its middle, 1 at its rim) of the way out.
+static func _cone_y(f: float) -> float:
+	return CONE_H * pow(maxf(1.0 - f * f, 0.0), CONE_POWER * 0.5)
+
+
+## A cone of black cinders twenty metres high, set back from the way the place faces, with its crater
+## a red glow under a rim of slag and the plume going up out of it; ribbons of black glass run down
+## its sides where the Ash Winter's fire came out of them; at its foot, facing out, the timbered adit
+## of the cutters' galleries, the door in its dark, a heap of glass spoil beside it; Joss Fennick's
+## knapping floor, his tent and fire; the cutters' board (the site's hook).
+static func cinderhowe(d: PoiDressing) -> void:
+	var k := d.kit
+	var m := d.masonry
+	var site: Dictionary = ContentDB.get_or_empty(d.poi_id).get("site", {})
+	var out := _toward_road(k, 320.0)
+	if out == Vector2.ZERO:
+		out = k.downhill()
+	if out == Vector2.ZERO:
+		out = Vector2(0.0, 1.0)
+	out = out.normalized()
+	var side := Vector2(out.y, -out.x)
+	var cc := -out * 9.0
+	var base_y := k.on_ground(cc.x, cc.y).y - 1.0
+	await k.step()
+	m.mound(Vector3(cc.x, base_y, cc.y), CONE_R, CONE_H, PoiKit.painted(5, CINDER, 0.6, 0.7), "Cone", true, CONE_POWER, 12, 36, true, 0.02)
+	# the crater: a rim of slag round a red floor
+	var rim := m.begin()
+	_lathe(rim, Transform3D(Basis.IDENTITY, Vector3(cc.x, base_y, cc.y)),
+			[Vector2(6.2, _cone_y(6.2 / CONE_R) - 0.2), Vector2(5.0, CONE_H + 1.1), Vector2(4.1, CONE_H + 0.6), Vector2(3.6, CONE_H - 0.6)], 28)
+	await k.step()
+	m.commit(rim, PoiKit.painted(5, SLAG, 0.4, 0.7), "CraterRim", true)
+	var fire := m.begin()
+	_lathe(fire, Transform3D(Basis.IDENTITY, Vector3(cc.x, base_y + CONE_H - 0.7, cc.y)), [Vector2(3.7, 0.0), Vector2(0.0, 0.3)], 18)
+	await k.step()
+	m.commit(fire, PoiKit.plain(Color(0.6, 0.18, 0.06), 0.9, 0.0, Color(1.0, 0.35, 0.1), 2.6), "CraterFire", true)
+	# the glass run down its sides: ribbons lying on the cinders
+	var glass := m.begin()
+	for s in 7:
+		var a := TAU * float(s) / 7.0 + k.rng.randf_range(-0.2, 0.2)
+		var dir := Vector2(sin(a), cos(a))
+		if dir.dot(out) > 0.85:
+			continue
+		var wobble := k.rng.randf_range(-0.3, 0.3)
+		var prev := Vector3.INF
+		for i in 9:
+			var f := 0.22 + 0.075 * float(i)
+			var dd := dir.rotated(wobble * f)
+			var p2 := cc + dd * CONE_R * f
+			var p := Vector3(p2.x, base_y + _cone_y(f) + 0.12, p2.y)
+			if prev != Vector3.INF:
+				var w := lerpf(1.4, 0.6, f) * k.rng.randf_range(0.8, 1.2)
+				_taper(glass, prev, p, Vector3(dd.y, 0.0, -dd.x), w, 0.18, w * 0.85, 0.16)
+			prev = p
+	await k.step()
+	m.commit(glass, PoiKit.plain(Color(0.025, 0.025, 0.032), 0.06, 0.3), "GlassRuns", true)
+	if not k.far:
+		var top := Vector3(cc.x, base_y + CONE_H + 0.8, cc.y)
+		k.puffs(top, Vector3(1.8, 0.4, 1.8), 4.2, 30, Color(0.38, 0.36, 0.35, 0.6), 6.5, 12.0)
+		k.light(top, Color(1.0, 0.4, 0.15), 2.2, 14.0)
+	# the adit at the cone's foot, facing out
+	var foot_f := 0.99
+	var adit := cc + out * CONE_R * foot_f
+	var ag := k.on_ground(adit.x, adit.y).y
+	var ab := Basis(Vector3.UP, PoiKit.yaw_of(out))
+	var timber := m.begin()
+	for s in [-1.0, 1.0]:
+		var p := adit + side * 1.5 * float(s)
+		m.post(timber, p, 3.3, 0.3, Vector3(0.0, 0.0, 0.06 * float(s)))
+	_box(timber, Transform3D(ab, Vector3(adit.x, ag + 3.35, adit.y)), Vector3(4.0, 0.36, 0.42))
+	# a second set further in, and the lagging between
+	var inner := adit - out * 2.4
+	var ig := k.on_ground(inner.x, inner.y).y
+	for s in [-1.0, 1.0]:
+		var p := inner + side * 1.4 * float(s)
+		_box(timber, Transform3D(ab, Vector3(p.x, ig + 1.6, p.y)), Vector3(0.28, 3.3, 0.28))
+	_box(timber, Transform3D(ab, Vector3(inner.x, ig + 3.25, inner.y)), Vector3(3.6, 0.3, 0.36))
+	for i in 5:
+		var p := adit.lerp(inner, (float(i) + 0.5) / 5.0)
+		_box(timber, Transform3D(ab, Vector3(p.x, ig + 3.55, p.y)), Vector3(3.8, 0.12, 0.38))
+	await k.step()
+	m.commit(timber, PoiKit.painted(3, {"base": "#2b2420", "accent": "#1c1815", "grout": "#0e0c0a"}, 0.85), "Adit", true)
+	var dark := m.begin()
+	_box(dark, Transform3D(ab, Vector3(adit.x, ag + 1.55, adit.y) - Vector3(out.x, 0.0, out.y) * 0.35), Vector3(2.7, 3.1, 0.2))
+	k.collider(Vector3(2.7, 3.1, 0.3), Transform3D(ab, Vector3(adit.x, ag + 1.55, adit.y) - Vector3(out.x, 0.0, out.y) * 0.4), "stone")
+	await k.step()
+	m.commit(dark, PoiKit.plain(HOLE, 1.0), "AditDark", true)
+	# the spoil of glass beside the adit
+	var spoil := adit + side * 7.5 + out * 2.0
+	await k.step()
+	m.mound(k.on_ground(spoil.x, spoil.y, -0.2), 4.2, 2.2, PoiKit.plain(Color(0.03, 0.03, 0.035), 0.3, 0.0), "GlassSpoil", true, 1.6, 6, 18, true, 0.12)
+	if k.far:
+		return
+	var interior := str(site.get("interior", ""))
+	var door_at := Vector3(adit.x, ag + 0.05, adit.y) + Vector3(out.x, 0.0, out.y) * 0.2
+	PoiDressing.kind_builders().SITES._door(d, interior, door_at, PoiKit.yaw_of(out))
+	k.marker("the_adit", Vector3(adit.x, ag, adit.y) + Vector3(out.x, 0.0, out.y) * 2.0)
+	k.bounce_light(Vector3(adit.x, ag + 1.8, adit.y), Color(1.0, 0.75, 0.5), 0.8, 6.0)
+	var spoil_top := k.on_ground(spoil.x, spoil.y, 1.2) + Vector3(out.x, 0.0, out.y) * 3.0
+	k.touchable("the_spoil", spoil_top, "Look at the glass spoil", "core:dialogue/cinderhowe_crater", "", false)
+	# Joss's knapping floor: flakes, a hammerstone, his stool; his tent and fire
+	var floor_at := adit + out * 7.0 - side * 6.5
+	var flakes := m.begin()
+	for i in 40:
+		var p := floor_at + k.jitter(1.6)
+		var at := k.on_ground(p.x, p.y, 0.01)
+		_taper(flakes, at, at + Vector3(k.rng.randf_range(-0.1, 0.1), 0.02, k.rng.randf_range(-0.1, 0.1)), Vector3(k.rng.randf(), 0.0, 1.0), 0.08, 0.02, 0.04, 0.01)
+	await k.step()
+	m.commit(flakes, PoiKit.plain(Color(0.03, 0.03, 0.04), 0.1, 0.25), "Flakes")
+	await k.step()
+	k.place(k.prop("stool"), k.on_ground(floor_at.x, floor_at.y), PoiKit.yaw_of(-side))
+	await k.step()
+	k.place(k.prop("anvil"), k.on_ground(floor_at.x + side.x * 1.0, floor_at.y + side.y * 1.0), PoiKit.yaw_of(out))
+	k.marker("joss_floor", k.on_ground(floor_at.x - side.x * 0.8, floor_at.y - side.y * 0.8), true)
+	var camp := floor_at + out * 4.0 - side * 3.0
+	await _grey_camp(d, camp, side)
+	await PoiDressing.kind_builders().SITES._hook(d, site, Vector3(adit.x, 0.0, adit.y) + Vector3(out.x, 0.0, out.y) * 4.5 + Vector3(side.x, 0.0, side.y) * 3.2)
+	await _rubble(d, adit + out * 6.0, 12.0, 12, Vector2(0.3, 0.7))
+	await _grey_grass(d, 26.0, 30, out * 10.0)

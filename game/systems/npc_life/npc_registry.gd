@@ -698,6 +698,18 @@ var _to_spawn: Array = []
 var _spawning := false
 
 
+## Whether a film is playing or handing over (CinematicPlayer.watched): nobody is stood up meanwhile.
+func _film_holds_people() -> bool:
+	var film := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	return film != null and (film.is_playing() or film.watched())
+
+
+## Whether everybody the loaded cells hold has been stood up (nobody queued): what a film waits for
+## before its first picture, since nobody is stood up while its pictures are watched.
+func settled() -> bool:
+	return _to_spawn.is_empty() and not _spawning
+
+
 func _spawn_queued() -> void:
 	_spawning = true
 	var slice := WorldPace.Slice.new()
@@ -705,11 +717,9 @@ func _spawn_queued() -> void:
 		if not spawning_enabled or abstract_only:
 			_to_spawn.clear()
 			break
-		# while a film's pictures are watched, the people wait for its next hold (black, or the last
-		# frame held): a person stood up is a frame of a tenth of a second on its own
-		while is_inside_tree() and not WorldPace.curtained() \
-				and get_tree().get_first_node_in_group(CinematicPlayer.GROUP) != null \
-				and (get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer).is_playing():
+		# while a film plays, the people wait for it to end (or for its opening's black, where the
+		# film waits for everybody its shots show): a person stood up is a frame of a tenth of a second
+		while is_inside_tree() and not WorldPace.curtained() and _film_holds_people():
 			await WorldPace.next_frame()
 			slice.t0 = Time.get_ticks_usec()
 		if _to_spawn.is_empty() or not is_inside_tree():
@@ -791,12 +801,14 @@ func spawn(npc_id: String, slice: WorldPace.Slice = null) -> Node:
 	if parent == null:
 		node.free()
 		return null
+	# theirs before it enters the tree: anything its entering sets off that asks for them again
+	# finds them stood up, rather than standing up a second of them nobody keeps
+	spawned[npc_id] = node
 	parent.add_child(node)
 	if node is Node3D:
 		(node as Node3D).global_position = spawn_position(npc_id)
 	if node.has_method("apply_state"):
 		node.call("apply_state", state(npc_id))
-	spawned[npc_id] = node
 	npc_spawned.emit(npc_id, node)
 	if is_travelling(npc_id):
 		steer_traveller(npc_id)
@@ -980,6 +992,8 @@ func despawn(npc_id: String) -> void:
 
 
 func despawn_all() -> void:
+	# nobody still queued to stand up comes in after everybody has been sent away
+	_to_spawn.clear()
 	for id in spawned.keys():
 		despawn(id)
 

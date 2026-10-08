@@ -835,6 +835,29 @@ func _through(r: Dictionary) -> Vector3:
 	return Vector3.FORWARD
 
 
+## The boss's room's door along the walk (where its passage, or the drop down into it, meets the
+## room, on its floor) and the way from it to the room's middle, horizontal: [door, toward]. Empty
+## without a boss's room.
+func boss_door() -> Array:
+	for r in rooms:
+		if r["role"] != "boss":
+			continue
+		var c: Vector3 = r["centre"]
+		for want in ["passage", "drop", "loop"]:
+			for li in r["links"]:
+				var l: Dictionary = links[li]
+				if str(l["kind"]) != want:
+					continue
+				var pts: Array = l["points"]
+				var door: Vector3 = pts[-1] if l["b"] == r["id"] else pts[0]
+				var toward := c - door
+				toward.y = 0.0
+				if toward.length() < 0.1:
+					continue
+				return [door, toward.normalized()]
+	return []
+
+
 ## Whether a zone (a circle on the floor) lies clear of every doorway into the room.
 func _clear_of_mouths(r: Dictionary, at: Vector3, radius: float) -> bool:
 	for m in mouths_of(r):
@@ -993,9 +1016,12 @@ func _spot_clear(r: Dictionary, p: Vector3, ms: Array) -> bool:
 	for k in r.get("keep_clear", []):
 		if Vector2((k as Vector3).x - p.x, (k as Vector3).z - p.z).length() < 2.8:
 			return false
+	# the boss's doorways wider: what stands there stands between the player coming in and the
+	# fight (a basalt stack 2 m inside the Kilnway's arena door hid the arena from it)
+	var mouth_clear := 4.0 if r["role"] == "boss" else 2.6
 	for m in ms:
 		var at: Vector3 = m["at"]
-		if Vector2(at.x - p.x, at.z - p.z).length() < 2.6:
+		if Vector2(at.x - p.x, at.z - p.z).length() < mouth_clear:
 			return false
 		# the lane from each doorway to the middle
 		var a := Vector2(at.x, at.z)

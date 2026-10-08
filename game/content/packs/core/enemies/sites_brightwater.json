@@ -115,7 +115,7 @@
     "tint": "#a9a491",
     "lore": "A Tollmere debtor who died owing, struck off the city's Roll the same day, and received into the barrow under a number. Being known holds; being struck, it seems, holds too, in its way. The struck get up off their shelves at dusk and go to the Needle to read their own names through the line, and they take a living hand that reaches for them as a creditor's.",
     "appearance": {
-      "seed": 5520,
+      "seed": 5526,
       "culture": "vale",
       "parts": {
         "torso": "shirt",

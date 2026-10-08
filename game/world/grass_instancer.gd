@@ -32,12 +32,15 @@ static var active := false
 static var last := {}
 
 
-## 0 off, 1 on, 2 on with twice the cover: the run's argument, else the setting.
+## 0 off, 1 on, 2 on with twice the cover: the run's argument only. The setting a settings file may
+## still hold from when the menu offered the trial is not read: on a player's machine (an i9 and an
+## RX 9070 XT, the editor's debug build) handing Hearthvale's rows to the instancer held the main
+## thread past half a minute after "Be named", and the game stopped answering.
 static func mode() -> int:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with(ARG):
 			return clampi(int(arg.trim_prefix(ARG)), 0, 2)
-	return clampi(int(Settings.get_value("graphics", "grass_instancer", 0)), 0, 2)
+	return 0
 
 
 ## Whether the streamer should leave this cell's asset to the instancer.

@@ -17,7 +17,13 @@
       {"event": "core:roadevent/pilgrims", "weight": 1, "when": "day", "cooldown_h": 8},
       {"event": "core:roadevent/lost_traveller", "weight": 1, "when": "day", "cooldown_h": 10},
       {"event": "core:roadevent/wanderer_merchant", "weight": 1, "cooldown_h": 36},
-      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16}
+      {"event": "core:roadevent/fugitive", "weight": 1, "cooldown_h": 16},
+      {"event": "core:roadevent/skerrow_fallen_kite", "weight": 2, "when": "day", "biome": ["upland", "open"], "cooldown_h": 18},
+      {"event": "core:roadevent/skerrow_coffin_bearers", "weight": 1, "when": "day", "cooldown_h": 24},
+      {"event": "core:roadevent/skerrow_rent_rider", "weight": 1, "cooldown_h": 20},
+      {"event": "core:roadevent/skerrow_skep_carriers", "weight": 1, "when": "dusk", "cooldown_h": 24},
+      {"event": "core:roadevent/skerrow_disputed_claim", "weight": 1, "when": "day", "cooldown_h": 24},
+      {"event": "core:roadevent/skerrow_annets_riders", "weight": 3, "sites": ["pass", "bend", "bridge"], "tier": [1, 99], "cooldown_h": 10}
     ],
     "caravans": [
       {"event": "core:roadevent/pack_train", "route": ["core:place/kharrow_hold", "core:place/ruddow"], "speed": 1.2, "start": 0.5},
@@ -33,6 +39,8 @@
     "id": "core:roadevent/skerrow_clanless_ambush",
     "name": "Clanless in the rocks",
     "kind": "ambush",
+    "unless": [{"flag": "black_rent_paid"}],
+    "notes": "The clanless who ride for Corbie Stack let a body pass who has paid the black-rent at the Pillar (core:dialogue/black_rent_pillar_basket).",
     "tell": ["crows", "felled_tree"],
     "cast": [
       {"role": "bandit", "enemy": "core:enemy/clanless_raider", "count": [1, 2]},
@@ -130,5 +138,11 @@
        "talk": {"prompt": "See what the tinker has", "do": "trade", "say": "Mended pots, mended chains, mended news. The news is the dear one."}}
     ],
     "merchant": {"stock": "core:table/stock_pedlar_round", "marks": 180, "buys": ["misc", "material", "ingredient"]}
-  }
+  },
+  {"id": "core:roadevent/skerrow_fallen_kite", "name": "A kite on the road", "kind": "lost_traveller", "notes": "An Oskel kite-boy whose hawk-kite has come down across the road; helping him get it up again reveals the Kite-Watch.", "cast": [{"role": "kite_boy", "folk": {"name": "An Oskel kite-boy", "tags": ["person", "clan"], "appearance": {"age": 13}}, "pose": "Sit_Idle", "talk": {"prompt": "Help the boy with his kite", "do": "help", "say": "It came down in a gust, right across the road, and the line's fouled on the stones. Hold the drum, would you, and walk back when I say. — There! There she goes. Runa'll skin me if she sees it dipping; dipping means riders. She flies the big ones at the Kite-Watch, out west. Go and see them, they're grand.", "hook": {"marks": 10, "rumour": "The kite-boy pointed out {place}.", "reveals": "core:poi/the_kite_watch", "once": true}}}]},
+  {"id": "core:roadevent/skerrow_coffin_bearers", "name": "A coffin going up", "kind": "pilgrims", "speed": 0.8, "notes": "Skarl bearers walking a coffin up to the Breath-Ledge; they tell you why and the Ledge is found.", "cast": [{"role": "bearer", "folk": {"name": "A Skarl coffin-bearer", "tags": ["person", "clan"]}, "count": [2, 3], "talk": {"prompt": "Walk with the bearers", "do": "say", "say": "Old Brenna. Taking her up to the Ledge, to Mags, to be hung as high as the rope goes. Nearest the mouth goes first, and she'd want to be first, she always was. — You can walk with us a bit. Don't help carry. It's ours to carry.", "hook": {"rumour": "The bearers were taking a coffin up to {place}.", "reveals": "core:poi/the_breath_ledge", "once": true}}}]},
+  {"id": "core:roadevent/skerrow_rent_rider", "name": "A rent-rider", "kind": "wanderer", "speed": 1.1, "unless": [{"quest_done": "core:quest/the_black_rent"}], "notes": "One of Annet Blackrent's collectors on foot, polite and unarmed by his own account, reminding the road of the black-rent; reveals the Black-Rent Pillar.", "cast": [{"role": "rider", "folk": {"name": "A rent-rider", "tags": ["person", "clanless"], "appearance": {"age": 34}}, "talk": {"prompt": "Speak to the rider", "do": "say", "say": "No horse? No farm either, then, and nothing for me. — If you ever have a roof below the passes, the basket's on the Pillar by the Rudd road. Put in what's fair and haul it up. It's cheaper than a new barn. Annet says to tell everybody that, nicely.", "hook": {"rumour": "The rent-rider spoke of the basket on {place}.", "reveals": "core:poi/black_rent_pillar", "once": true}}}]},
+  {"id": "core:roadevent/skerrow_skep_carriers", "name": "Skeps to the heather", "kind": "pilgrims", "speed": 0.7, "notes": "At dusk, when the bees are in, a clan's bee-keepers carry their skeps up to the heather on poles; they share a comb and send you to the Bee-Bole Crag.", "cast": [{"role": "keeper", "folk": {"name": "A clan bee-keeper", "tags": ["person", "clan"]}, "count": [1, 2], "talk": {"prompt": "Ask about the skeps", "do": "say", "say": "Going up to the heather while it's in flower; the bees are in for the night and they'll not mind the carrying if you don't jog them. Here, take a bit of last year's. — Ours winter at the Bee-Bole Crag with everybody's, a row a clan. Bannoch keeps them. Don't take from the boles without asking him.", "hook": {"item": "core:item/heather_honey", "count": 1, "rumour": "The bee-keepers keep their skeps at {place}.", "reveals": "core:poi/bee_bole_crag", "once": true}}}]},
+  {"id": "core:roadevent/skerrow_disputed_claim", "name": "A disputed claim", "kind": "lost_traveller", "notes": "Two prospectors, Brindle and Kharrow, at the road's edge with stakes and a vein between them, each waiting for a witness; speaking to them settles it the Moot's way and points to the Scour.", "cast": [{"role": "prospector", "folk": {"name": "A Brindle prospector", "tags": ["person", "clan"]}, "pose": "Sit_Idle", "talk": {"prompt": "Hear the prospectors out", "do": "help", "say": "You'll do for a witness, you're nobody's. He staked it at noon; I staked it at noon. — Halves, then, the Moot's way, and the witness says so. Right. Done. — If you want to see a vein that nobody can argue over, go up to the Scour and watch Wat Hobb pull his sluice. If he ever does.", "hook": {"reputation": {"faction": "core:faction/clan_moot", "delta": 2}, "rumour": "The prospectors spoke of the hushing-dam at {place}.", "reveals": "core:poi/the_scour", "once": true}}}, {"role": "prospector", "folk": {"name": "A Kharrow prospector", "tags": ["person", "clan"]}, "pose": "Sit_Idle"}]},
+  {"id": "core:roadevent/skerrow_annets_riders", "name": "Annet's riders", "kind": "ambush", "if": [{"flag": "black_rent_robbed"}], "unless": [{"quest_done": "core:quest/the_black_rent"}], "notes": "Somebody took the black-rent out of the basket on the Pillar (core:dialogue/black_rent_pillar_basket): Annet Blackrent's riders are on the roads looking for who.", "tell": ["crows", "felled_tree"], "cast": [{"role": "rider", "enemy": "core:enemy/clanless_outrider", "count": [2, 3]}], "lines": {"speaker": "One of Annet's riders", "spring": "That was Hobb's rent you took out of the basket. Hobb's barn burned for it. Your turn."}}
 ]

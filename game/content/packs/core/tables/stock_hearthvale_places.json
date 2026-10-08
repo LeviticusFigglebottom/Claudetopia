@@ -1,0 +1,3 @@
+[
+  {"id": "core:table/stock_chandler", "role": "merchant_stock", "description": "The Candle-Wheel: the Dippers' own candles by the dozen, the torches and lanterns the Wardens buy, and wick and rope.", "rows": [{"item": "core:item/candle", "count": [12, 30], "restock_hours": 24}, {"item": "core:item/torch", "count": [3, 8], "restock_hours": 48}, {"item": "core:item/lantern", "count": [1, 2], "restock_hours": 96}, {"item": "core:item/rope", "count": [1, 3], "restock_hours": 72}]}
+]
