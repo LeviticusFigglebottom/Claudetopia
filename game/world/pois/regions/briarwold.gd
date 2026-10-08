@@ -153,6 +153,12 @@ static func _facing(k: PoiKit) -> Vector2:
 
 
 ## The ground's own texture, darkened: the earth a root plate tore up, a grave's turned soil.
+## The Charter Delf's tips (PoiMasonry.spoil_heap): broken granite, grey fresh, the iron's ochre and a
+## darker grey run down it, the oldest greening from its foot.
+const GRANITE_TINTS := {"fresh": Color(1.0, 1.0, 1.0), "streak_a": Color(0.74, 0.75, 0.79),
+		"streak_b": Color(1.12, 1.0, 0.82), "grass": Color(0.62, 1.0, 0.52)}
+
+
 static func _earth_look(k: PoiKit, slot := "mud", value := 0.42) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	var path := "res://assets/textures/terrain/%s_albedo_height.png" % slot
@@ -1514,12 +1520,17 @@ static func charter_delf(d: PoiDressing) -> void:
 	m.rod(drum, Transform3D(hb * Basis(Vector3.BACK, PI * 0.5), Vector3(house.x, hg + 1.2, house.y)), 0.6, 2.4)
 	m.commit(drum, k.surface("timber", 0.5), "WindingDrum")
 	# the spoil: grey heaps of broken granite down the slope, the oaks standing dead in them
+	# (tips, PoiMasonry.spoil_heap: a smooth mound of it read as a tarpaulin over a heap)
 	var spoil_look := _earth_look(k, "scree", 0.55)
+	spoil_look.vertex_color_use_as_albedo = true
 	var heaps := [[down * 10.0 + side * 2.0, 8.5, 3.6], [down * 17.0 - side * 3.0, 7.0, 2.8], [down * 23.0 + side * 1.5, 5.5, 1.8]]
-	for h in heaps:
-		var c: Vector2 = h[0]
+	var loose: Array = []
+	for hi in heaps.size():
+		var h: Array = heaps[hi]
 		await k.step()
-		m.mound(k.on_ground(c.x, c.y, -0.5), float(h[1]), float(h[2]), spoil_look, "Spoil", true, 1.1, 7, 22, true, 0.14)
+		loose.append_array(m.spoil_heap(h[0], down, float(h[1]) * 0.85, float(h[2]), spoil_look, GRANITE_TINTS, hi == 2, "Spoil", 1.2))
+	await k.step()
+	m.spoil_stones(loose)
 	var dead := m.begin()
 	for i in 5:
 		var p := down * k.rng.randf_range(8.0, 22.0) + side * k.rng.randf_range(-9.0, 9.0)
