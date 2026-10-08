@@ -131,7 +131,7 @@
   "place_id": "core:place/undercroft",
   "pos": [
    -40.0,
-   14.52,
+   14.5,
    -240.0
   ],
   "yaw": 0.0,
@@ -315,7 +315,7 @@
   "place_id": "core:place/frostmothers_cradle",
   "pos": [
    470.0,
-   621.76,
+   621.77,
    -3790.0
   ],
   "yaw": 0.0,
@@ -326,7 +326,7 @@
   "place_id": "core:place/windgate",
   "pos": [
    -230.0,
-   475.53,
+   475.55,
    -3990.0
   ],
   "yaw": 0.0,
@@ -1083,7 +1083,7 @@
   "place_id": "core:poi/pilgrim_stair",
   "pos": [
    -760.0,
-   17.55,
+   17.54,
    -1330.0
   ],
   "yaw": 0.0,
@@ -2289,7 +2289,7 @@
   "place_id": "core:poi/hound_watch",
   "pos": [
    900.0,
-   105.11,
+   105.12,
    2760.0
   ],
   "yaw": 0.0,
@@ -2576,7 +2576,7 @@
   "place_id": "core:poi/bell_wood_stone",
   "pos": [
    -2350.0,
-   73.42,
+   73.41,
    1950.0
   ],
   "yaw": 0.0,
@@ -2741,7 +2741,7 @@
   "place_id": "core:poi/rafters_camp",
   "pos": [
    1560.0,
-   11.99,
+   12.01,
    -430.0
   ],
   "yaw": 0.0,
@@ -3644,7 +3644,7 @@
   "place_id": "core:poi/ghasts_broken_bridge",
   "pos": [
    -2150.0,
-   191.8,
+   191.79,
    -2650.0
   ],
   "yaw": 0.0,
@@ -3992,7 +3992,7 @@
   "place_id": "core:poi/snow_shelter",
   "pos": [
    60.0,
-   521.19,
+   521.21,
    -3640.0
   ],
   "yaw": 0.0,
@@ -4516,7 +4516,7 @@
   "place_id": "core:poi/last_look",
   "pos": [
    610.0,
-   114.73,
+   114.72,
    2840.0
   ],
   "yaw": 0.0,
@@ -6281,7 +6281,7 @@
   "place_id": "core:poi/three_rights",
   "pos": [
    -973.0,
-   37.87,
+   38.08,
    -1458.0
   ],
   "yaw": 0.0,
@@ -6303,7 +6303,7 @@
   "place_id": "core:poi/hespers_boat",
   "pos": [
    -532.0,
-   38.07,
+   38.06,
    -1647.0
   ],
   "yaw": 0.0,
@@ -6325,7 +6325,7 @@
   "place_id": "core:poi/salt_barn",
   "pos": [
    -274.0,
-   12.3,
+   12.29,
    -1667.0
   ],
   "yaw": 0.0,
@@ -6473,7 +6473,7 @@
   "place_id": "core:poi/singing_seat",
   "pos": [
    -2178.0,
-   100.66,
+   100.65,
    -2284.0
   ],
   "yaw": 0.0,
@@ -6712,7 +6712,7 @@
   "place_id": "core:poi/shift_stone",
   "pos": [
    -2585.0,
-   115.24,
+   115.25,
    -2479.0
   ],
   "yaw": 0.0,
@@ -7201,7 +7201,7 @@
   "place_id": "core:poi/lead_carriers_rest",
   "pos": [
    -2950.0,
-   11.25,
+   11.1,
    -2081.0
   ],
   "yaw": 0.0,
@@ -8456,6 +8456,105 @@
   "pad_shape": "slope"
  },
  {
+  "place_id": "core:poi/told_hives",
+  "pos": [
+   2140.0,
+   78.79,
+   956.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_swainmote",
+  "pos": [
+   2836.0,
+   150.87,
+   -644.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 28.0,
+  "radius_level_m": 19.599999999999998
+ },
+ {
+  "place_id": "core:poi/silk_walk",
+  "pos": [
+   2452.0,
+   184.48,
+   -1940.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 34.0,
+  "radius_level_m": 23.799999999999997
+ },
+ {
+  "place_id": "core:poi/noon_owl",
+  "pos": [
+   2996.0,
+   217.75,
+   -2004.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 22.0,
+  "radius_level_m": 15.399999999999999
+ },
+ {
+  "place_id": "core:poi/the_knar",
+  "pos": [
+   2716.0,
+   204.43,
+   1284.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 50.0,
+  "radius_level_m": 35.0
+ },
+ {
+  "place_id": "core:poi/casting_dell",
+  "pos": [
+   3348.0,
+   281.4,
+   -1276.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/letter_oak",
+  "pos": [
+   1964.0,
+   79.12,
+   -900.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0,
+  "radius_level_m": 21.0
+ },
+ {
+  "place_id": "core:poi/pannage_pound",
+  "pos": [
+   1940.0,
+   73.42,
+   620.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_thornwell",
+  "pos": [
+   2596.0,
+   149.44,
+   84.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 38.0,
+  "radius_level_m": 26.599999999999998
+ },
+ {
   "place_id": "core:poi/pennyfold_keep",
   "pos": [
    -1216.0,
@@ -8578,6 +8677,105 @@
   "yaw": 0.0,
   "radius_flat_m": 38.0,
   "radius_level_m": 26.599999999999998
+ },
+ {
+  "place_id": "core:poi/the_long_glass",
+  "pos": [
+   300.0,
+   55.64,
+   -1476.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_cold_baths",
+  "pos": [
+   394.0,
+   9.58,
+   622.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_widows_keels",
+  "pos": [
+   -924.0,
+   9.32,
+   270.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_charter_scale",
+  "pos": [
+   -274.0,
+   9.43,
+   668.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_cormorant_perches",
+  "pos": [
+   808.0,
+   9.46,
+   550.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_pearl_beds",
+  "pos": [
+   1462.0,
+   8.61,
+   -306.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_dumb_fair",
+  "pos": [
+   1190.0,
+   9.32,
+   334.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_saltmound",
+  "pos": [
+   -1384.0,
+   9.53,
+   -532.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 40.0,
+  "radius_level_m": 28.0
+ },
+ {
+  "place_id": "core:poi/fathom_shears",
+  "pos": [
+   -333.0,
+   9.53,
+   -210.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 36.0,
+  "radius_level_m": 25.2
  },
  {
   "place_id": "core:poi/turnback_keep",
@@ -8734,6 +8932,106 @@
   "yaw": 0.0,
   "radius_flat_m": 36.0,
   "radius_level_m": 25.2
+ },
+ {
+  "place_id": "core:poi/the_ash_dial",
+  "pos": [
+   -2932.0,
+   69.65,
+   2908.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0,
+  "radius_level_m": 21.0
+ },
+ {
+  "place_id": "core:poi/name_kiln",
+  "pos": [
+   -1740.0,
+   65.43,
+   2204.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/smoke_hood",
+  "pos": [
+   -532.0,
+   78.11,
+   2820.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/leaving_lines",
+  "pos": [
+   -1348.0,
+   70.24,
+   3444.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_fallen_head",
+  "pos": [
+   -732.0,
+   123.09,
+   3276.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 40.0,
+  "radius_level_m": 28.0
+ },
+ {
+  "place_id": "core:poi/silk_vents",
+  "pos": [
+   -1076.0,
+   70.64,
+   2948.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/fading_glass",
+  "pos": [
+   -2252.0,
+   71.1,
+   2876.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/gentle_fold",
+  "pos": [
+   -124.0,
+   67.38,
+   2516.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/cinderhowe",
+  "pos": [
+   -2204.0,
+   79.76,
+   1708.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 44.0,
+  "radius_level_m": 30.799999999999997,
+  "pad_shape": "slope"
  },
  {
   "place_id": "core:poi/hounds_swallet",
@@ -8948,6 +9246,95 @@
   "radius_level_m": 29.4
  },
  {
+  "place_id": "core:poi/letter_cote",
+  "pos": [
+   -955.0,
+   57.63,
+   2150.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/candle_wheel",
+  "pos": [
+   -1700.0,
+   79.79,
+   1460.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/scarecrow_moot",
+  "pos": [
+   3000.0,
+   126.51,
+   2500.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/wassail_knap",
+  "pos": [
+   2740.0,
+   71.81,
+   1915.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 46.0,
+  "radius_level_m": 32.199999999999996
+ },
+ {
+  "place_id": "core:poi/tamwick_troy",
+  "pos": [
+   1520.0,
+   100.94,
+   1195.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/unfinished_figure",
+  "pos": [
+   1996.0,
+   81.33,
+   1456.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 40.0,
+  "radius_level_m": 28.0,
+  "pad_shape": "slope"
+ },
+ {
+  "place_id": "core:poi/witness_elms",
+  "pos": [
+   2960.0,
+   140.25,
+   2740.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/great_barn",
+  "pos": [
+   3215.0,
+   101.53,
+   2272.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 46.0,
+  "radius_level_m": 32.199999999999996
+ },
+ {
   "place_id": "core:poi/unsung_vault",
   "pos": [
    -2908.0,
@@ -9102,6 +9489,105 @@
   "yaw": 0.0,
   "radius_flat_m": 37.0,
   "radius_level_m": 25.9
+ },
+ {
+  "place_id": "core:poi/the_flood_bride",
+  "pos": [
+   -2708.0,
+   3.55,
+   -188.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/wisp_catchers_rack",
+  "pos": [
+   -2388.0,
+   3.99,
+   -820.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_flood_mark",
+  "pos": [
+   -3404.0,
+   2.77,
+   -484.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/hask_ropewalk",
+  "pos": [
+   -2364.0,
+   3.94,
+   492.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 36.0,
+  "radius_level_m": 25.2
+ },
+ {
+  "place_id": "core:poi/the_unwinding",
+  "pos": [
+   -2428.0,
+   3.92,
+   1252.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0,
+  "radius_level_m": 21.0
+ },
+ {
+  "place_id": "core:poi/the_grey_heronry",
+  "pos": [
+   -3076.0,
+   3.98,
+   -1628.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 28.0,
+  "radius_level_m": 19.599999999999998
+ },
+ {
+  "place_id": "core:poi/sundew_garden",
+  "pos": [
+   -1892.0,
+   9.51,
+   -324.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_great_dredge",
+  "pos": [
+   -3124.0,
+   3.26,
+   -164.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 36.0,
+  "radius_level_m": 25.2
+ },
+ {
+  "place_id": "core:poi/the_keel_barrow",
+  "pos": [
+   -3460.0,
+   2.32,
+   932.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 36.0,
+  "radius_level_m": 25.2
  },
  {
   "place_id": "core:poi/old_ghastow",
@@ -9338,6 +9824,118 @@
   "yaw": 0.0,
   "radius_flat_m": 30.0,
   "radius_level_m": 21.0,
+  "pad_shape": "slope"
+ },
+ {
+  "place_id": "core:poi/the_kinchain",
+  "pos": [
+   -2164.0,
+   409.59,
+   -3140.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 34.0,
+  "radius_level_m": 23.799999999999997
+ },
+ {
+  "place_id": "core:poi/the_kite_watch",
+  "pos": [
+   -3164.0,
+   319.08,
+   -2700.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 24.0,
+  "radius_level_m": 16.799999999999997
+ },
+ {
+  "place_id": "core:poi/bee_bole_crag",
+  "pos": [
+   2972.0,
+   406.48,
+   -2908.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 28.0,
+  "radius_level_m": 19.599999999999998
+ },
+ {
+  "place_id": "core:poi/the_scour",
+  "pos": [
+   -1372.0,
+   416.42,
+   -3308.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 28.0,
+  "radius_level_m": 19.599999999999998,
+  "pad_shape": "slope"
+ },
+ {
+  "place_id": "core:poi/black_rent_pillar",
+  "pos": [
+   980.0,
+   122.07,
+   -1820.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 22.0,
+  "radius_level_m": 15.399999999999999
+ },
+ {
+  "place_id": "core:poi/the_bucket_line",
+  "pos": [
+   -1020.0,
+   196.27,
+   -2884.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 30.0,
+  "radius_level_m": 21.0
+ },
+ {
+  "place_id": "core:poi/the_breath_ledge",
+  "pos": [
+   3476.0,
+   378.62,
+   -2852.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/the_answering_wall",
+  "pos": [
+   1084.0,
+   313.72,
+   -2668.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 26.0,
+  "radius_level_m": 18.2
+ },
+ {
+  "place_id": "core:poi/corbie_stack",
+  "pos": [
+   636.0,
+   521.32,
+   -3324.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 40.0,
+  "radius_level_m": 28.0
+ },
+ {
+  "place_id": "core:poi/the_unmade_giant",
+  "pos": [
+   -1772.0,
+   415.22,
+   -3012.0
+  ],
+  "yaw": 0.0,
+  "radius_flat_m": 40.0,
+  "radius_level_m": 28.0,
   "pad_shape": "slope"
  }
 ]

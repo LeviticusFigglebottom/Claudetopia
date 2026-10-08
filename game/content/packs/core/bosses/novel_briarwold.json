@@ -1,0 +1,166 @@
+[
+  {
+    "id": "core:boss/orrin_sable",
+    "extends": "core:enemy/larkbourne_bruiser",
+    "name": "Master Orrin Sable, Gall-Wright",
+    "archetype": "boss",
+    "arena": "core:poi/the_knar",
+    "region": "core:region/briarwold",
+    "faction": "bandits",
+    "tint": "#2c2622",
+    "scale": 1.3,
+    "height": 2.4,
+    "radius": 0.45,
+    "appearance": {
+      "seed": 61871,
+      "culture": "vale",
+      "skin": "fair",
+      "hair_colour": "black",
+      "build": 0.45,
+      "feminine": 0.0,
+      "height": 1.86,
+      "age": 0.62,
+      "scar": "brow",
+      "parts": {
+        "torso": "shirt",
+        "attachment": "apron",
+        "belt": "belt_satchel",
+        "legs": "leg_wraps",
+        "feet": "boots",
+        "hands": "gloves",
+        "back": "shoulder_cape",
+        "headgear": "shift_cap",
+        "hair": "receding",
+        "beard": "stubble"
+      },
+      "palette": {
+        "primary": "3a332c",
+        "secondary": "16130f",
+        "leather": "2a211a",
+        "metal": "4b4740",
+        "trim": "6e5a3c"
+      }
+    },
+    "holds": {
+      "model": "weapons/axe_long_iron",
+      "tags": [
+        "two_handed"
+      ]
+    },
+    "resists": {
+      "pierce": 0.15,
+      "poison": 0.4,
+      "fire": -0.3
+    },
+    "lore": "A Tollmere ink-maker of the Lantern Row, the Sayers' Circle's own wright, who came to the Greatwood with the Circle's contract and a gall-auger and has not gone home in nine years. He drinks the black, as his cutters do, so as not to sleep; his hands are black to the elbow and his teeth are black and the whites of his eyes have gone the colour of strong tea. He will tell you, while he cuts, that every name the Circle keeps is kept in his ink, and that a tree is a small price for a name that is never forgotten. He means it. He has forgotten his own.",
+    "stats": {
+      "hp": 620,
+      "stamina": 230,
+      "poise": 140,
+      "armour": 11,
+      "speed": 3.4
+    },
+    "behaviour": {
+      "engage_range": 3.1,
+      "circle": 0.3,
+      "retreat_threshold": 0.0,
+      "patience": 3.5,
+      "leash": 48.0,
+      "hyper_armour": 26.0,
+      "aggression": 0.85
+    },
+    "phases": [
+      {
+        "name": "the wright",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "the black",
+        "hp": 0.5,
+        "aggression": 1.0,
+        "speed": 3.9,
+        "hyper_armour": 32.0,
+        "say": "He drops the ladle into the well and drinks from his cupped hands instead, and when he straightens the black is running out of his eyes like tears, and he is laughing."
+      }
+    ],
+    "marks": [
+      190,
+      330
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/circle_ink_contract",
+      "core:item/knar_black"
+    ],
+    "tags": [
+      "bandit",
+      "humanoid",
+      "person",
+      "boss"
+    ]
+  },
+  {
+    "id": "core:boss/the_well_keeper",
+    "extends": "core:enemy/stone_thrall",
+    "name": "The Well-Keeper",
+    "archetype": "boss",
+    "arena": "core:poi/the_thornwell",
+    "region": "core:region/briarwold",
+    "faction": "unquiet",
+    "tint": "#3d3b44",
+    "scale": 2.6,
+    "height": 5.0,
+    "resists": {
+      "pierce": 0.3,
+      "slash": 0.2,
+      "blunt": -0.2,
+      "fire": -0.25
+    },
+    "lore": "A figure of the Builders' black stone, set at the bottom of the Thornwell to keep the feeding of the Briar, and kept still for a thousand years with its seed-stone in its hands. When the root came up the well this spring it went through the figure's chest, and the figure stood up. The Layers say it is not angry. It is doing what it was set to do, which is keep the well, and it does not know who anybody is any more.",
+    "stats": {
+      "hp": 720,
+      "stamina": 220,
+      "poise": 160,
+      "armour": 16,
+      "speed": 2.2
+    },
+    "behaviour": {
+      "engage_range": 3.6,
+      "circle": 0.05,
+      "retreat_threshold": 0.0,
+      "patience": 3.0,
+      "leash": 50.0,
+      "hyper_armour": 30.0,
+      "aggression": 0.85
+    },
+    "phases": [
+      {
+        "name": "the keeper",
+        "hp": 1.0,
+        "aggression": 0.8
+      },
+      {
+        "name": "the root",
+        "hp": 0.5,
+        "aggression": 1.0,
+        "speed": 2.6,
+        "hyper_armour": 36.0,
+        "say": "The root in its chest pulls taut and the whole hall creaks, and thorn comes up out of the channels in the floor all round you, and the figure leans into it like a man leaning into wind."
+      }
+    ],
+    "marks": [
+      200,
+      340
+    ],
+    "loot": "core:loot/rich_chest",
+    "drops": [
+      "core:item/builders_seed_stone"
+    ],
+    "tags": [
+      "unquiet",
+      "stone",
+      "boss"
+    ]
+  }
+]

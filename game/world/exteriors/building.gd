@@ -249,10 +249,29 @@ func _add_windows(fabric: FabricMesh, front: Vector2) -> void:
 		var sface := Transform3D(Basis(Vector3.UP, atan2(sn.x, sn.z)),
 				Vector3(sp.x - front.x, 1.48, sp.y - front.y) + sn * (WALL_THICK * 0.5))
 		shut_at(fabric, sface, timber, Color.WHITE)
+	# the front door faces -z in this building's space; its lamp burns in a lantern on a bracket
+	# beside it (HouseKit.door_lantern), drawn in the joinery, and the light hangs from its box
+	var lantern := HouseKit.door_lantern(fabric, Transform3D(Basis(Vector3.UP, PI),
+			Vector3(_lantern_x(front), 0.0, -WALL_THICK * 0.5)))
+	set_meta("lamp_boxes", [lantern["box"]] as Array[AABB])
 	if is_inside_tree():
 		NightLights.add(self, glows, "window")
-		# the front door faces -z in this building's space; the lamp hangs over it
-		NightLights.add(self, [to_global(Vector3(0.0, 2.3, -WALL_THICK * 0.5 - 0.6))], "door")
+		NightLights.add(self, [to_global(lantern["flame"])], "door")
+
+
+## Where along the front the door's lantern hangs: on the longer side of the door, or across from
+## the trade's sign (`_hang_sign` takes the longer side) where that side has the room.
+func _lantern_x(front: Vector2) -> float:
+	var left := front.x - footprint.position.x
+	var right := footprint.end.x - front.x
+	var long := 1.0 if right >= left else -1.0
+	var trade := str(ContentDB.get_or_empty(interior_id).get("trade", ""))
+	if trade == "" or trade == "none" or not Settlement.EMBLEM.has(trade):
+		return long * HouseKit.LANTERN_ASIDE_M
+	if minf(left, right) >= HouseKit.LANTERN_ASIDE_M + 0.25:
+		return -long * HouseKit.LANTERN_ASIDE_M
+	# past the sign's board, on its side
+	return long * (HouseKit.LANTERN_ASIDE_M + 1.1)
 
 
 ## Which way a window the house forge wrote looks out. Its `normal` names the wall's axis and not

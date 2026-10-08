@@ -94,6 +94,11 @@ var _flora_re := RegEx.new()
 var _shelter_re := RegEx.new()
 var _merged_standing_re := RegEx.new()
 var _poi_kind_cache: Dictionary = {}
+## The boxes of lamps strewn as a MultiMesh (a settlement's lanterns and braziers) or drawn into a
+## merged mesh (a house's door lantern, on the settlement or the Building), each node's
+## `lamp_boxes`, in the world: a light hangs from one, and neither a headless run's MultiMesh nor a
+## town-wide mesh says where its lamps are.
+var _lamp_boxes: Array[AABB] = []
 
 
 func _init(w: World) -> void:
@@ -119,6 +124,7 @@ func _init(w: World) -> void:
 ## settlements' fabric over them. Returns the findings added.
 func audit_cells(cells: Array) -> Array[Dictionary]:
 	var start := findings.size()
+	_lamp_boxes.clear()
 	var rects: Array[Rect2] = []
 	var objects: Array[Dictionary] = []
 	for c: Vector2i in cells:
@@ -147,6 +153,7 @@ func audit_cells(cells: Array) -> Array[Dictionary]:
 ## findings added.
 func audit_node(node: Node, rect: Rect2) -> Array[Dictionary]:
 	var start := findings.size()
+	_lamp_boxes.clear()
 	var objects: Array[Dictionary] = []
 	_visit(node, objects, _anchor_of(node, "probe"), rect)
 	looked_at += objects.size()
@@ -179,6 +186,10 @@ func _visit(n: Node, out: Array[Dictionary], anchor: String, rect: Rect2) -> voi
 	if _skipped(n):
 		return
 	var a := _anchor_of(n, anchor)
+	if n is Node3D and n.has_meta("lamp_boxes"):
+		var xf := (n as Node3D).global_transform
+		for b: AABB in n.get_meta("lamp_boxes"):
+			_lamp_boxes.append(xf * b)
 	if n is MultiMeshInstance3D:
 		if not n.has_meta("lod_group") and not headless:
 			_add_multimesh(n as MultiMeshInstance3D, out, a, rect)
@@ -279,16 +290,22 @@ func _add_multimesh(mmi: MultiMeshInstance3D, out: Array[Dictionary], anchor: St
 func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> void:
 	for g: Variant in streamer.get("_lod_groups"):
 		var group := g as ScatterLod.Group
-		if group == null or group.cell != cell_node or group.ladder == null:
+		if group == null or group.cell != cell_node:
 			continue
-		var asset := group.ladder.asset_path
-		var mesh: Mesh = null
-		for level: Dictionary in group.ladder.levels:
-			mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
-			if mesh != null:
-				break
+		# the ground cover (world/ground_cover.gd) was a plain MultiMesh, read back only when drawn
+		var cover := group as GroundCover.Group
+		if group.ladder == null and (cover == null or headless):
+			continue
+		var asset := cover.asset_path if cover != null else group.ladder.asset_path
+		var mesh: Mesh = cover.cover_mesh if cover != null else null
+		if cover == null:
+			for level: Dictionary in group.ladder.levels:
+				mesh = level.get("solid", null) if level.get("solid", null) != null else level.get("leaves", null)
+				if mesh != null:
+					break
 		if mesh == null:
 			continue
+		var solid := _has_body(cell_node) if cover != null else true
 		var local := mesh.get_aabb()
 		var fam := family(asset)
 		var n := group.count()
@@ -304,7 +321,7 @@ func _scatter_groups(cell_node: Node3D, out: Array[Dictionary], rect: Rect2) -> 
 			if not rect.has_point(Vector2(ctr.x, ctr.z)):
 				continue
 			out.append({"kind": "instance", "src": "scatter", "family": fam, "asset": asset, "aabb": box,
-				"at": xf.origin, "solid": true, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
+				"at": xf.origin, "solid": solid, "axis": _axis_of(xf, local), "flora": asset.contains("/flora/")})
 
 
 ## A placed scene or a built building: one object, the box of everything drawn in it.
@@ -525,6 +542,9 @@ func _check_light(o: Dictionary, tops: Dictionary) -> void:
 		return
 	if _anything_near(o, AABB(p, Vector3.ZERO).grow(LIGHT_REACH_M), tops):
 		return
+	for b in _lamp_boxes:
+		if b.grow(LIGHT_REACH_M).has_point(p):
+			return
 	_add(o, "light_unhung", "a light %.1f m over the ground with nothing within %.1f m" % [p.y - ground, LIGHT_REACH_M])
 
 

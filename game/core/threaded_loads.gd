@@ -64,19 +64,26 @@ static func limit() -> int:
 
 
 ## Asks for `path` to be read on the loader's threads, now or when a read ends. OK, or the loader's
-## refusal when it was handed over at once.
-static func request(path: String) -> Error:
+## refusal when it was handed over at once. `first`: ahead of every read still waiting (something is
+## waiting for this one now, such as the scene a menu is going to).
+static func request(path: String, first := false) -> Error:
 	_mutex.lock()
 	var err := OK
 	if _orphans.has(path):
 		# asked for again while a read nobody wanted is still going: it is wanted after all
 		_orphans.erase(path)
 		_reading[path] = true
+	elif _queued.has(path) and first:
+		_queue.remove_at(_queue.find(path))
+		_queue.insert(0, path)
 	elif not _queued.has(path) and not _reading.has(path):
 		if _reading.size() + _orphans.size() < limit():
 			err = ResourceLoader.load_threaded_request(path)
 			if err == OK:
 				_reading[path] = true
+		elif first:
+			_queue.insert(0, path)
+			_queued[path] = true
 		else:
 			_queue.append(path)
 			_queued[path] = true

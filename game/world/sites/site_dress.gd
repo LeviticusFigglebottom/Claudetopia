@@ -96,6 +96,8 @@ func _light_budget() -> void:
 			for l in lights:
 				l.set_meta("budget_on", l.visible)
 			return
+		# the arrival's light (_arrival_light) is the first view in: the others give way to it
+		on = on.filter(func(o: OmniLight3D) -> bool: return not bool(o.get_meta("keep", false)))
 		on.sort_custom(func(a: OmniLight3D, b: OmniLight3D) -> bool: return a.omni_range > b.omni_range)
 		var widest: OmniLight3D = on[0]
 		if widest.omni_range > 6.0:
@@ -222,6 +224,20 @@ func _way_out() -> void:
 		m.block(leaf, Transform3D(basis, at - back * 0.02 + basis * Vector3(0.0, 0.7, 0.0)), Vector3(1.4, 0.12, 0.1))
 		m.block(leaf, Transform3D(basis, at - back * 0.02 + basis * Vector3(0.0, 1.9, 0.0)), Vector3(1.4, 0.12, 0.1))
 		m.commit(leaf, mat("planks"), "ExitDoor")
+		# the camera stops at the door as at the rock: the arrival stands 1.6 m in front of it with
+		# the wall 1.4 m behind it, and the camera's arm (3.6 m) came to rest between the two, so
+		# every built site's first view was the back of the door's planks
+		var block := StaticBody3D.new()
+		block.name = "ExitCameraBlock"
+		block.collision_layer = 1 << 9   # camera_blocker: what the camera stops at, not the body
+		block.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(2.4, 3.0, 0.7)
+		cs.shape = box
+		block.add_child(cs)
+		block.transform = Transform3D(basis, at + Vector3.UP * 1.5)
+		site.add_child(block)
 		_lamp(at + back * 1.5 + Vector3.UP * 2.3, Color(1.0, 0.7, 0.42), 1.6, 8.0, 0.2)
 	else:
 		# the day at the top of the throat: a soft glow where the tunnel ends (faded at its edges, so
@@ -291,8 +307,87 @@ func _room(r: Dictionary) -> void:
 			await _light_kind(r, str(ls[0]))
 			if reach > 10.0 and ls.size() > 1:
 				await _light_kind(r, str(ls[1]), 1)
+	if role == "entrance":
+		_arrival_light(r)
+	elif role == "boss":
+		_arena_light(r)
 	await _set_piece_dress(r)
 	await _props(r)
+
+
+## How much light the arrival's first view gives back off the rock ahead (SiteInterior.rock_albedo
+## times the light's linear brightness): the strength _arrival_light is set to, whatever the rock.
+const ARRIVAL_GIVE_BACK := 0.6
+
+
+## The first view in. The arrival stands at the way in facing the room, the day (or the door's
+## lamp) behind it, and the room's own lights stand at spots drawn anywhere in it: behind the eye,
+## round the side, by the door the day already lights. On rock as black as the lava tube's that
+## left the Kilnway's mouth room dark from the arrival and lit from its other doorway (looking back
+## into the daylit throat). So a light in the kind's own colour hangs ahead of the arrival, past
+## the room's middle toward the way on, reaching back to the arrival's feet and on to the far wall:
+## the floor, the walls and the mouths read from the first frame, in the place's own colour (the
+## lava tube's red). Darker rock gets a stronger light, so every kind's first room reads alike.
+func _arrival_light(r: Dictionary) -> void:
+	var c: Vector3 = r["centre"]
+	var half: Vector3 = r["half"]
+	var fwd := Vector3(-sin(plan.entrance_yaw), 0.0, -cos(plan.entrance_yaw))
+	var far := plan.edge_along(r, fwd)
+	var at := c + fwd * far * 0.3 + Vector3.UP * clampf(half.y * 0.6, 1.8, 3.2)
+	# from the arrival's feet to the room's farthest corner
+	var reach := clampf(maxf(at.distance_to(plan.entrance) + 4.0, Vector2(half.x, half.z).length() + far * 0.3 + 3.0), 9.0, 24.0)
+	var colour := Color(str(plan.spec.get("light_colour", "#ffb066")))
+	var give := colour.srgb_to_linear().get_luminance() * site.rock_albedo()
+	var l := _lamp(at, colour, clampf(ARRIVAL_GIVE_BACK / maxf(give, 0.01), 0.8, 7.0), reach, 0.06)
+	l.light_specular = 0.1
+	l.name = "ArrivalLight"
+	l.set_meta("keep", true)
+
+
+## How much light the arena's lights give back off the rock, where they reach furthest.
+const ARENA_GIVE_BACK := 0.06
+
+
+## The boss's room, read from its door. Its own lights are a ring of braziers (or of lava vents) at
+## the middle of a huge room: on rock as black as the lava tube's, the Kilnway's arena rendered
+## nearly black from the door, its walls and far side beyond the ring's reach, and its cool fill too
+## weak to give anything back. So the arena's own glow, in the kind's colour (the heat of the lava
+## tube's vents, the braziers' fire in a crypt, a keep or a hall), hangs over its middle, broad and
+## soft (a low attenuation) out to the walls, and a smaller one just inside its door lights the near
+## walls and the faces of what stands in the room on the side the player comes in on. Each is set by
+## the rock's brightness, so the rock it reaches furthest gives back ARENA_GIVE_BACK. (At twice
+## that the arenas of pale rock read bleached and the passage behind the door glared.)
+func _arena_light(r: Dictionary) -> void:
+	var c: Vector3 = r["centre"]
+	var half: Vector3 = r["half"]
+	var high := clampf(half.y * 0.65, 2.6, 5.5)
+	var wall := Vector2(half.x, half.z).length()
+	var door := plan.boss_door()
+	var over := c + Vector3.UP * high
+	var to_door: float = over.distance_to(door[0]) if not door.is_empty() else wall
+	var far := maxf(Vector2(wall, high).length(), to_door)
+	_arena_lamp(over, far, clampf(far + 5.0, 12.0, 30.0), 0.6, "ArenaLight")
+	if door.is_empty():
+		return
+	var d: Vector3 = door[0]
+	var toward: Vector3 = door[1]
+	var across := Vector2(d.x - c.x, d.z - c.z).length()
+	# just inside, over the player's head: what stands past it is lit on the side the player sees
+	var inside := d + toward * clampf(across * 0.18, 2.0, 3.5) + Vector3.UP * clampf(half.y * 0.45, 2.4, 3.6)
+	var near := clampf(across * 0.6, 6.0, 10.0)
+	_arena_lamp(inside, near, near + 3.0, 1.0, "ArenaLightDoor")
+
+
+func _arena_lamp(at: Vector3, far: float, reach: float, att: float, light_name: String) -> void:
+	var colour := Color(str(plan.spec.get("light_colour", "#ffb066")))
+	var give := colour.srgb_to_linear().get_luminance() * site.rock_albedo()
+	var nd := maxf(1.0 - pow(far / reach, 4.0), 0.0)
+	var falloff := nd * nd * pow(maxf(far, 1.0), -att)
+	var l := _lamp(at, colour, clampf(ARENA_GIVE_BACK / maxf(give * falloff, 0.001), 0.5, 10.0), reach, 0.05)
+	l.omni_attenuation = att
+	l.light_specular = 0.1
+	l.name = light_name
+	l.set_meta("keep", true)
 
 
 func _light_kind(r: Dictionary, what: String, count := 2) -> void:
@@ -1344,15 +1439,46 @@ func _nearest_lights() -> void:
 	if _near_from != Vector3.INF and eye.distance_squared_to(_near_from) < 1.0:
 		return
 	_near_from = eye
-	var order: Array = []
+	var on := near_set(lights, eye)
 	for l in lights:
+		l.visible = on.has(l)
+
+
+## The lights on for an eye at `eye` (local): of those the budget left on, the NEAR_LIGHTS whose
+## reach falls least short of it.
+static func near_set(all: Array, eye: Vector3) -> Array:
+	var order: Array = []
+	for l in all:
 		if not bool(l.get_meta("budget_on", true)):
 			continue
-		var reach := (l as OmniLight3D).omni_range if l is OmniLight3D else ((l as SpotLight3D).spot_range if l is SpotLight3D else 0.0)
-		order.append([l.position.distance_to(eye) - reach, l])
+		order.append([l.position.distance_to(eye) - reach_of(l), l])
 	order.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
-	for i in order.size():
-		(order[i][1] as Light3D).visible = i < NEAR_LIGHTS
+	return order.slice(0, NEAR_LIGHTS).map(func(o: Array) -> Light3D: return o[1])
+
+
+static func reach_of(l: Light3D) -> float:
+	return (l as OmniLight3D).omni_range if l is OmniLight3D else ((l as SpotLight3D).spot_range if l is SpotLight3D else 0.0)
+
+
+## How much of a light falls on a surface at `p` (local) facing `n`, as the renderer works it out
+## (Godot's omni/spot attenuation, Lambert, the light's energy and the brightness of its colour, in
+## linear as the renderer takes it): what the arrival's test reads the first room by.
+static func light_at(l: Light3D, p: Vector3, n: Vector3) -> float:
+	var to := l.position - p
+	var d := to.length()
+	var reach := reach_of(l)
+	if d >= reach or d < 0.0001:
+		return 0.0
+	var nd := d / reach
+	nd = maxf(1.0 - nd * nd * nd * nd, 0.0)
+	var k := nd * nd * pow(maxf(d, 0.0001), -(l as OmniLight3D).omni_attenuation if l is OmniLight3D else -(l as SpotLight3D).spot_attenuation)
+	if l is SpotLight3D:
+		var s := l as SpotLight3D
+		var cutoff := cos(deg_to_rad(s.spot_angle))
+		var scos := maxf((-to / d).dot(-s.transform.basis.z), cutoff)
+		var rim := maxf(0.0001, (1.0 - scos) / (1.0 - cutoff))
+		k *= 1.0 - pow(rim, s.spot_angle_attenuation)
+	return k * maxf(n.dot(to / d), 0.0) * float(l.get_meta("base_energy", l.light_energy)) * l.light_color.srgb_to_linear().get_luminance()
 
 
 func flicker() -> void:

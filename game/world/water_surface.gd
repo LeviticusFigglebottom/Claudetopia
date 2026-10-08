@@ -63,6 +63,12 @@ const RIVER_SPEED := Vector2(0.3, 3.5)
 var quality := 2
 
 var provider: TerrainProvider
+## The worker tasks building this water (the sheet, the river ribbons): they read `provider` and
+## this node, so the world finishes them (finish_tasks) before it lets either go.
+var _tasks: Array[int] = []
+## Set once the world tears this water down: a build still pacing itself starts no new worker and
+## stops at its next step (one started after finish_tasks read the freed node: flow, 2026-10-03).
+var _closing := false
 var sheet: MeshInstance3D
 var skirt: MeshInstance3D
 var rivers_root: Node3D
@@ -116,8 +122,33 @@ static func shader_for(mirrored: bool, river := false) -> Shader:
 
 
 func _exit_tree() -> void:
+	finish_tasks()
 	if current == self:
 		current = null
+
+
+## Waits for the worker tasks still building this water. World.tear_down calls it before the
+## provider lets go of Terrain3D and the world is freed: a click on the title's Continue while its
+## world was laying the rivers freed the provider and this node under the worker (a segfault in
+## `_river_mesh`, flow 2026-10-03). The wait is the rest of one task, on a click that leaves.
+func finish_tasks() -> void:
+	_closing = true
+	if _tasks.is_empty():
+		return
+	var t0 := Time.get_ticks_usec()
+	for task in _tasks.duplicate():
+		_finish_task(task)
+	Log.info("WaterSurface", "torn down while building: waited %.1f ms for its worker" % ((Time.get_ticks_usec() - t0) / 1000.0))
+
+
+func _finish_task(task: int) -> void:
+	if _tasks.has(task):
+		_tasks.erase(task)
+		WorkerThreadPool.wait_for_task_completion(task)
+
+
+func _enter_tree() -> void:
+	_closing = false
 
 
 func _ready() -> void:
@@ -162,12 +193,18 @@ func build(p: TerrainProvider, slice: WorldPace.Slice = null) -> void:
 	_build_textures()
 	if slice != null:
 		await slice.pace("water_textures")
+	if _closing:
+		return
 	await _build_sheet(slice)
+	if _closing:
+		return
 	if slice != null:
 		await slice.pace("water_sheet")
 	_build_skirt()
 	if slice != null:
 		await slice.pace("water_skirt")
+	if _closing:
+		return
 	await _build_rivers(slice)
 	shore = ShoreBand.new()
 	shore.name = "Shore"
@@ -304,10 +341,17 @@ func _build_sheet(slice: WorldPace.Slice = null) -> void:
 		slice.due("water_textures")
 		var out: Array = [null]
 		var cell_m: float = QUALITY_CELL_M[quality]
+		if _closing:
+			return
 		var task := WorkerThreadPool.add_task(func() -> void: out[0] = water_mesh(cell_m), true, "wm_water_sheet")
-		while not WorkerThreadPool.is_task_completed(task):
+		_tasks.append(task)
+		while _tasks.has(task) and not WorkerThreadPool.is_task_completed(task):
 			await WorldPace.next_frame()
-		WorkerThreadPool.wait_for_task_completion(task)
+		_finish_task(task)
+		if _closing:
+			sheet.free()
+			sheet = null
+			return
 		slice.t0 = Time.get_ticks_usec()
 		cells = out[0]
 	else:
@@ -529,18 +573,25 @@ func _build_rivers(slice: WorldPace.Slice = null) -> void:
 	if slice != null:
 		slice.due("water_river")
 		made.resize(parsed.size())
+		if _closing:
+			return
 		var task := WorkerThreadPool.add_task(func() -> void:
 			for i in parsed.size():
 				if typeof(parsed[i]) == TYPE_DICTIONARY:
 					made[i] = _river_mesh(parsed[i]), true, "wm_river_meshes")
-		while not WorkerThreadPool.is_task_completed(task):
+		_tasks.append(task)
+		while _tasks.has(task) and not WorkerThreadPool.is_task_completed(task):
 			await WorldPace.next_frame()
-		WorkerThreadPool.wait_for_task_completion(task)
+		_finish_task(task)
+		if _closing:
+			return
 		slice.t0 = Time.get_ticks_usec()
 	for ri in parsed.size():
 		var entry: Variant = parsed[ri]
 		if slice != null:
 			await slice.pace("water_river")
+			if _closing:
+				return
 		if typeof(entry) != TYPE_DICTIONARY:
 			continue
 		var mesh: ArrayMesh = made[ri] if slice != null else _river_mesh(entry)
@@ -572,6 +623,8 @@ func _build_rivers(slice: WorldPace.Slice = null) -> void:
 			_pools.append([Vector2(float(c[0]), float(c[2])), float(pool.get("radius_m", 5.0)), float(c[1])])
 	if slice != null:
 		await slice.pace("water_river")
+		if _closing:
+			return
 	_claim_tex = _claim_texture(claims)
 	for mat in [_sheet_material, _skirt_material]:
 		if mat != null:

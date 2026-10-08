@@ -1,0 +1,214 @@
+[
+  {
+    "id": "core:quest/the_black_rent",
+    "name": "The Black Rent",
+    "layer": "side",
+    "giver": "core:npc/isbel_ko_rudd",
+    "offer": "I'll find out who takes your rent, and where it goes.",
+    "region": "core:region/skerrow",
+    "summary": "Isbel ko-Rudd has paid her farm's black-rent up the Pillar for twelve years. This year her husband was killed on the pass, and she has sat down by the Pillar with the rent and will not send it up until she knows who takes it.",
+    "notes": "Skerrow novel places: the Black-Rent Pillar (black_rent_pillar, own builder) sends you to Corbie Stack (corbie_stack, delve, own builder), core:interior/corbie_cellars (keep), boss core:boss/annet_blackrent, who drops the black-rent book; back to Isbel at the Pillar. The roll on the post at the Stack's foot starts it too (core:dialogue/corbie_stack_roll).",
+    "stages": [
+      {
+        "id": "the_rent",
+        "journal": "Isbel ko-Rudd's husband was killed on the pass this year, and she will not send the black-rent up the Pillar again until she knows who takes it.\n\nThe basket goes up the Pillar full and comes down empty. The riders who empty it come from Corbie Stack, a needle of rock on the high moor north of the Rudd road with a reivers' hold on its top.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/corbie_stack", "count": 1, "text": "Find Corbie Stack on the high moor"}
+        ],
+        "marker": {"place_id": "core:poi/corbie_stack", "radius": 110}
+      },
+      {
+        "id": "the_stack",
+        "journal": "The black-rent of the lower dales goes into the cellars under Corbie Stack, to Annet Blackrent, who keeps a book of every farm that pays.\n\nThe door is at the needle's foot. Go down through the Rudd cellars to the rent-hall at the bottom, and take Annet's book.",
+        "objectives": [
+          {"type": "kill", "target": "core:boss/annet_blackrent", "count": 1, "where": "core:interior/corbie_cellars", "text": "Go down to the rent-hall under Corbie Stack and face Annet Blackrent"},
+          {"type": "collect", "target": "core:item/black_rent_book", "count": 1, "text": "Take Annet's black-rent book"}
+        ],
+        "marker": {"place_id": "core:poi/corbie_stack", "radius": 110}
+      },
+      {
+        "id": "the_book",
+        "journal": "Annet Blackrent's book names every farm that paid her and every farm that did not; Isbel ko-Rudd is waiting at the Pillar to hear what is in it.\n\nHer farm is on the third page: twelve years paid, and this year blank. The book is yours to give, or to keep.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_black_rent",
+            "text": "Tell Isbel ko-Rudd what becomes of the black-rent book",
+            "with": "core:npc/isbel_ko_rudd",
+            "options": [
+              {"id": "back_to_the_farms", "text": "Give Isbel the book, so every farm can take back what it paid from the Stack's store.", "effects": [{"take_item": ["core:item/black_rent_book", 1]}, {"set_flag": "black_rent_returned"}, {"morality": 3}, {"rep": ["core:faction/clan_moot", 4]}]},
+              {"id": "to_the_moot", "text": "Have it carried to the Moot at Kharrow, so the clans see who has been paying, and why.", "effects": [{"take_item": ["core:item/black_rent_book", 1]}, {"set_flag": "black_rent_to_moot"}, {"rep": ["core:faction/clan_moot", 10]}]},
+              {"id": "keep_it", "text": "Keep the book. A list of every farm that pays is worth more than the rent.", "effects": [{"set_flag": "black_rent_book_kept"}, {"marks": 150}, {"morality": -4}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/black_rent_pillar", "radius": 90}
+      },
+      {
+        "id": "paid",
+        "journal": "Isbel ko-Rudd went home down the dale with the empty rent-sack folded under her arm. The basket on the Pillar has hung empty since, and nobody has come for it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 180, "renown": 12, "items": [["core:item/heather_honey", 2]]}
+  },
+  {
+    "id": "core:quest/the_unmade_giant",
+    "name": "The Unmade Giant",
+    "layer": "side",
+    "giver": "core:npc/runa_ko_oskel",
+    "offer": "I'll go and see what your night kite saw.",
+    "region": "core:region/skerrow",
+    "summary": "Runa ko-Oskel's night kite showed her lights moving on something standing on the Upper Dales that was not there in the spring. A bone-warden of the Moot is camped within sight of it, counting.",
+    "notes": "Skerrow novel places' second large site: the_unmade_giant (delve, own builder) leads to core:interior/hag_warren (cave), boss core:boss/mother_scree, who drops her binding-cord. Leads out to the Kinchain (Ottar ko-Ghast). The note under the warden's cairn starts it too (core:dialogue/unmade_giant_cairn).",
+    "stages": [
+      {
+        "id": "the_lights",
+        "journal": "Runa ko-Oskel's night kite showed her lights moving on something standing on the Upper Dales that was not there in spring, and she wants it looked at.\n\nA bone-warden of the Moot, Haskel ko-Ghast, has made camp within sight of it. Find the thing, and find him.",
+        "objectives": [
+          {"type": "reach", "target": "core:poi/the_unmade_giant", "count": 1, "text": "Find what is standing on the Upper Dales"},
+          {"type": "talk", "target": "core:npc/haskel_ko_ghast", "count": 1, "text": "Speak to Haskel ko-Ghast at his camp"}
+        ],
+        "marker": {"place_id": "core:poi/the_unmade_giant", "radius": 110}
+      },
+      {
+        "id": "the_warren",
+        "journal": "Haskel ko-Ghast has counted the Unmade Giant's bones: it is three short of standing, and the hag who knots it lives in the warren under its feet.\n\nThe scree-hags call her Mother Scree. Every bone on the giant went through her hands, tied with one cord. Go down and take the cord from her.",
+        "objectives": [
+          {"type": "kill", "target": "core:boss/mother_scree", "count": 1, "where": "core:interior/hag_warren", "text": "Go down the Hag-Warren to the knotting-hall and face Mother Scree"},
+          {"type": "collect", "target": "core:item/hag_binding_cord", "count": 1, "text": "Take Mother Scree's binding-cord"}
+        ],
+        "marker": {"place_id": "core:poi/the_unmade_giant", "radius": 110}
+      },
+      {
+        "id": "the_cord",
+        "journal": "Mother Scree's binding-cord still tightens in the hand; Haskel says only the Kinchain's chain-hearth burns hot enough to undo a hag's knot.\n\nOttar ko-Ghast keeps the hearth under the Kinchain, south-west of the Giant across the Ghast side of the Dales.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/ottar_ko_ghast", "topic": "q_cord", "count": 1, "text": "Bring the binding-cord to Ottar ko-Ghast at the Kinchain"}
+        ],
+        "marker": {"place_id": "core:poi/the_kinchain", "radius": 90}
+      },
+      {
+        "id": "the_knot",
+        "journal": "Ottar ko-Ghast has the cord on his anvil and the hearth roaring, and will not touch it until he is told whether it is to be bound or burned.\n\nForged into a link and closed on the Kinchain, the knots will be held in Ghast iron for good. Burned, they come undone, and the bones are the Breath's.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_knot",
+            "text": "Tell Ottar ko-Ghast whether the cord is bound or burned",
+            "with": "core:npc/ottar_ko_ghast",
+            "options": [
+              {"id": "bind_it", "text": "Forge it into a link and close it on the Kinchain, bound in Ghast iron.", "effects": [{"take_item": ["core:item/hag_binding_cord", 1]}, {"set_flag": "scree_cord_bound"}, {"rep": ["core:faction/clan_moot", 6]}]},
+              {"id": "burn_it", "text": "Burn it in the hearth and let every knot go. The bones are the Breath's to take.", "effects": [{"take_item": ["core:item/hag_binding_cord", 1]}, {"set_flag": "scree_cord_burned"}, {"morality": 3}, {"renown": 6}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/the_kinchain", "radius": 90}
+      },
+      {
+        "id": "unmade",
+        "journal": "The binding-cord is gone from the world as it was. Haskel ko-Ghast has begun to take the Unmade Giant down, a bone at a time, saying each one's name as he lowers it.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 200, "renown": 14, "rep": [["core:faction/clan_moot", 5]]}
+  },
+  {
+    "id": "core:quest/the_cut_link",
+    "name": "The Cut Link",
+    "layer": "side",
+    "giver": "core:npc/ottar_ko_ghast",
+    "offer": "I'll fetch the cut link back from Dunnow.",
+    "region": "core:region/skerrow",
+    "summary": "There is a gap in the Kinchain twelve links from the top, a link cut out and the chain closed round the hole with a plain ring. Ottar ko-Ghast has heard that the Unwritten at Dunnow kept the link that was taken.",
+    "notes": "Leads out of Dunnow (phase 2's large site, core:interior/dunnow_halls): the cut link lies in its store (QuestItems, room store) and goes back to Ottar ko-Ghast at the Kinchain (the_kinchain).",
+    "stages": [
+      {
+        "id": "the_gap",
+        "journal": "Ottar ko-Ghast's Kinchain has a link cut out twelve from the top, and he has heard the Unwritten at Dunnow kept it among what they took from the clans.\n\nDunnow is the Remembered Hold in the foot of the Wall above the Windgate road. The Unwritten kept their takings in the keepers' store.",
+        "objectives": [
+          {"type": "collect", "target": "core:item/the_cut_link", "count": 1, "where": "core:interior/dunnow_halls", "spot": "store", "text": "Find the cut link in the keepers' store at Dunnow"}
+        ],
+        "marker": {"place_id": "core:poi/dunnow", "radius": 110}
+      },
+      {
+        "id": "the_link",
+        "journal": "The cut link carries the Ghast mark and a filed-off name that began with K; Ottar must be told whether it goes back on the chain.\n\nHe thinks it was Kell ko-Ghast's, who cut himself off the Kinchain and went up to Dunnow to grind his name out of the Tally as well.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_cut_link",
+            "text": "Give Ottar ko-Ghast the cut link and say whether it goes back",
+            "with": "core:npc/ottar_ko_ghast",
+            "options": [
+              {"id": "close_it", "text": "Close it on the chain again where it was cut. A name on the Kinchain stays on it.", "effects": [{"take_item": ["core:item/the_cut_link", 1]}, {"set_flag": "kinchain_link_closed"}, {"rep": ["core:faction/clan_moot", 5]}]},
+              {"id": "hang_it_open", "text": "Hang it open on the ring over the gap. Kell cut himself off; let the chain remember that too.", "effects": [{"take_item": ["core:item/the_cut_link", 1]}, {"set_flag": "kinchain_link_open"}, {"renown": 4}, {"morality": 1}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/the_kinchain", "radius": 90}
+      },
+      {
+        "id": "closed",
+        "journal": "Ottar ko-Ghast has done with the cut link what was decided, and says Kell's name over it every morning when he lights the hearth, with the children's.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 120, "renown": 8, "items": [["core:item/iron_ingot", 2]]}
+  },
+  {
+    "id": "core:quest/the_wall_answers",
+    "name": "The Wall Answers",
+    "layer": "side",
+    "giver": "core:npc/mags_ko_skarl",
+    "offer": "I'll help you find whose coffin fell.",
+    "region": "core:region/skerrow",
+    "summary": "At dusk the Answering Wall gave back a name nobody had called: Aldo ko-Skarl. The callers say such a name belongs to someone being forgotten too fast.",
+    "notes": "Skerrow novel places: the Answering Wall (the_answering_wall, its speaking-stone at dusk, core:dialogue/answering_wall_stone) sends you to Mags ko-Skarl at the Breath-Ledge (the_breath_ledge); the token is given by the fallen boards (core:dialogue/breath_ledge_boards).",
+    "stages": [
+      {
+        "id": "the_name",
+        "journal": "At dusk the Answering Wall gave back a name nobody had called, Aldo ko-Skarl, and the callers say such a name belongs to someone forgotten too fast.\n\nThe Skarl hang their dead on the Breath-Ledge in the east fells, and Mags ko-Skarl, who hangs them, knows every Skarl name.",
+        "objectives": [
+          {"type": "talk", "target": "core:npc/mags_ko_skarl", "topic": "q_aldo", "count": 1, "text": "Ask Mags ko-Skarl at the Breath-Ledge about Aldo ko-Skarl"}
+        ],
+        "marker": {"place_id": "core:poi/the_breath_ledge", "radius": 90}
+      },
+      {
+        "id": "the_fallen",
+        "journal": "Mags ko-Skarl does not know the name Aldo, and that frightens her: a coffin fell from the Ledge last winter and she never looked at its token.\n\nThe broken boards are still at the foot of the face, under the pegs.",
+        "objectives": [
+          {"type": "collect", "target": "core:item/skarl_coffin_token", "count": 1, "text": "Search the fallen coffin's boards for its token"}
+        ],
+        "marker": {"place_id": "core:poi/the_breath_ledge", "radius": 90}
+      },
+      {
+        "id": "the_hanging",
+        "journal": "The token in the fallen boards says Aldo ko-Skarl, a man Mags hung herself and has forgotten; she wants to be told what is right to do.\n\nThe Skarl say a coffin that falls is a soul the Breath did not want yet.",
+        "objectives": [
+          {
+            "type": "choice",
+            "target": "the_wall_answers",
+            "text": "Give Mags ko-Skarl the token and say what is done for Aldo",
+            "with": "core:npc/mags_ko_skarl",
+            "options": [
+              {"id": "hang_again", "text": "Help her peg a new coffin for him higher on the face than before, with the token nailed on.", "effects": [{"take_item": ["core:item/skarl_coffin_token", 1]}, {"set_flag": "aldo_hung_again"}, {"morality": 2}, {"renown": 5}]},
+              {"id": "carry_home", "text": "Carry the token home to Skarlow, so they say his name at the clan fire.", "effects": [{"take_item": ["core:item/skarl_coffin_token", 1]}, {"set_flag": "aldo_carried_home"}, {"rep": ["core:faction/clan_moot", 6]}]}
+            ]
+          }
+        ],
+        "marker": {"place_id": "core:poi/the_breath_ledge", "radius": 90}
+      },
+      {
+        "id": "said",
+        "journal": "Aldo ko-Skarl's name has been said again where it should be. The callers at the Answering Wall say the wall gave it back to nobody at dusk since.",
+        "auto": true,
+        "objectives": []
+      }
+    ],
+    "rewards": {"marks": 100, "renown": 8}
+  }
+]

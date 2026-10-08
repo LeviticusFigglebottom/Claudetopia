@@ -1,0 +1,459 @@
+[
+  {
+    "id": "core:npc/linnet_ashby",
+    "name": "Linnet Ashby",
+    "home_place": "core:poi/told_hives",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/linnet_ashby",
+    "bio": "Fifteen, the last of the Ashbys who keep the bee-tree in the Lower Wold, and its keeper since her grandmother Mab died at midsummer. She has tied the black on every hive and cannot make herself say the words the custom wants said to the bees, because when they are said it will be so.",
+    "unique_habit": "Hums under her breath at the pitch of the hives without knowing she does it, and stops when she notices.",
+    "personality": {
+      "traits": [
+        "timid",
+        "kind",
+        "quiet",
+        "pious"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61803,
+      "build": "slight",
+      "age": 15,
+      "hair": "flax_in_one_plait_with_a_black_ribbon",
+      "notes": "a keeper's veil pushed back on a straw hat, her grandmother's leather gauntlets too big for her, bee-stings on her wrists she does not notice"
+    },
+    "merchant": {
+      "stock": "core:table/stock_bee_tree",
+      "marks": 110,
+      "buys": [
+        "ingredient",
+        "food",
+        "misc"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/told_hives",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/told_hives",
+        "activity": "shop",
+        "spot": "the_skeps"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/told_hives",
+        "activity": "eat",
+        "spot": "the_skeps"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/told_hives",
+        "activity": "shop",
+        "spot": "the_skeps"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/told_hives",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/ambrose_gale",
+    "name": "Ambrose Gale",
+    "home_place": "core:poi/the_swainmote",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/ambrose_gale",
+    "bio": "Steward of the Swainmote these thirty years, who sits in the chair cut into the pollard and says custom aloud when two people say it differently. He keeps the mote's roll: every hound measured, every claim heard, every Hart-Knight's oath sworn on the turf. The mote has sat short of twelve since the knights went east, and he has sat in the chair anyway, every day it is called.",
+    "unique_habit": "Will not sit in the chair until whoever he is talking to has sat down on the turf first, and then sits as if it hurt him.",
+    "personality": {
+      "traits": [
+        "proud",
+        "quiet",
+        "pious",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "feminine": 0.0,
+      "seed": 61817,
+      "build": "tall_spare",
+      "age": 67,
+      "hair": "white_and_cropped_like_a_monk",
+      "notes": "a steward's green over-gown faded to the colour of moss, a hazel rod with notches cut down it, and the mote's roll in a leather case at his hip"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_swainmote",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/the_swainmote",
+        "activity": "work",
+        "spot": "the_chair"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/the_swainmote",
+        "activity": "eat",
+        "spot": "the_chair"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/the_swainmote",
+        "activity": "work",
+        "spot": "the_chair"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/the_swainmote",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/hawys_tolly",
+    "name": "Hawys Tolly",
+    "home_place": "core:poi/the_swainmote",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/hawys_tolly",
+    "bio": "A charcoal-burner's daughter from the Unasked Camp, fourteen, whose mastiff Gristle pulled down a hart in the Greatwood in the spring. The verderers brought the hound to the Swainmote to be put to the gauge, and Hawys came after it, and has waited at the pound for three days for the mote to make up its twelve.",
+    "unique_habit": "Talks to the hound through the wattle in a low voice whenever anyone else is talking, so that he knows she is there.",
+    "personality": {
+      "traits": [
+        "brave",
+        "kind",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61829,
+      "build": "slight",
+      "age": 14,
+      "hair": "black_cropped_short_with_a_knife",
+      "notes": "a burner's smock too long for her, soot on her knees, a hound's leash of plaited hide wound round her wrist with nothing on the end of it"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_swainmote",
+        "activity": "eat",
+        "spot": "the_pound"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/the_swainmote",
+        "activity": "work",
+        "spot": "the_pound"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/the_swainmote",
+        "activity": "eat",
+        "spot": "the_pound"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/the_swainmote",
+        "activity": "work",
+        "spot": "the_pound"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_swainmote",
+        "activity": "sleep",
+        "spot": "the_pound"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/margery_laithe",
+    "name": "Margery Laithe",
+    "home_place": "core:poi/silk_walk",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/margery_laithe",
+    "bio": "The ropewalker of the Northwold, who lays weaver silk into the line the Grandfather's rope walks hang from and Weaverdeep's bridges are strung with. Forty years walking her walk backward with silk round her waist have bent her into the shape of the work. She tells good silk by the sound it makes on the posts in the wind, and this autumn the silk has stopped singing.",
+    "unique_habit": "Walks backward when she is thinking, even away from the walk, and never trips.",
+    "personality": {
+      "traits": [
+        "proud",
+        "cynical",
+        "generous",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61841,
+      "build": "stooped_strong",
+      "age": 63,
+      "hair": "grey_wound_up_in_silk_thread",
+      "notes": "a hank of white silk wound round her waist like a sash, leather palms on both hands, forearms like a sawyer's"
+    },
+    "merchant": {
+      "stock": "core:table/stock_silk_walk",
+      "marks": 160,
+      "buys": [
+        "material",
+        "misc"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/silk_walk",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/silk_walk",
+        "activity": "shop",
+        "spot": "the_jack"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/silk_walk",
+        "activity": "eat",
+        "spot": "the_jack"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/silk_walk",
+        "activity": "shop",
+        "spot": "the_jack"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/silk_walk",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/gammer_hoole",
+    "name": "Gammer Hoole",
+    "home_place": "core:poi/noon_owl",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/gammer_hoole",
+    "bio": "A Woodfolk widow who sits in the hurdle ring under the white oak in the Northwold every day of the year and counts the noon owl's calls on a hazel stick. She says the owl calls where lost things are, and keeps a count of everything it has found: a child, a seal-ring, the Brother's dark the morning after the Long Wind. She is very old. She is very seldom wrong.",
+    "unique_habit": "Never looks up at the hollow, and slaps the hand of anyone who points at it.",
+    "personality": {
+      "traits": [
+        "pious",
+        "quiet",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61853,
+      "build": "small_bent",
+      "age": 84,
+      "hair": "white_under_a_grey_shawl",
+      "notes": "a shawl of undyed wool pinned with an owl's claw, a hazel count-stick across her knees, eyes that do not move when the rest of her does"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/noon_owl",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 8,
+        "place": "core:poi/noon_owl",
+        "activity": "work",
+        "spot": "the_ring"
+      },
+      {
+        "days": "all",
+        "hour": 15,
+        "place": "core:poi/noon_owl",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 16,
+        "place": "core:poi/noon_owl",
+        "activity": "work",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 20,
+        "place": "core:poi/noon_owl",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/dunstan_agar",
+    "name": "Dunstan Agar",
+    "home_place": "core:poi/pannage_pound",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/dunstan_agar",
+    "bio": "Agister of the Lower Wold forty years: he counts the commoners' pigs into the pannage at Michaelmas and out again at Martinmas, and every household pays for a pig it cannot show him. His count has never been out. This autumn it is out by one every night.",
+    "unique_habit": "Counts everything out loud under his breath, people included, and nods when the number is right.",
+    "personality": {
+      "traits": [
+        "proud",
+        "greedy",
+        "brave"
+      ]
+    },
+    "appearance": {
+      "feminine": 0.0,
+      "seed": 61889,
+      "build": "broad_heavy",
+      "age": 66,
+      "hair": "grey_stubble_under_a_leather_hood",
+      "notes": "a swineherd's horn on a cord, a long hazel goad notched at the top, mud to the knee and a clean slate on his belt"
+    },
+    "merchant": {
+      "stock": "core:table/stock_pannage",
+      "marks": 120,
+      "buys": [
+        "food",
+        "material",
+        "ingredient"
+      ]
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/pannage_pound",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/pannage_pound",
+        "activity": "shop",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/pannage_pound",
+        "activity": "eat",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/pannage_pound",
+        "activity": "shop",
+        "spot": "the_tally"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/pannage_pound",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/edda_layward",
+    "name": "Edda Layward",
+    "home_place": "core:poi/the_thornwell",
+    "faction": "core:faction/woodfolk",
+    "dialogue": "core:dialogue/edda_layward",
+    "bio": "A Layer from the Layers' Ring, who has laid the Briar on the eastern rim with bill-hook and stake for thirty years, and has camped at the Thornwell a month cutting back the thorn that comes up out of the Builders' well in the Greatwood. It comes up higher every night than she cut it. Two of her crew went down the well's stair and did not come up.",
+    "unique_habit": "Strokes the thorn she has cut the way a smith strokes a hot bar, by its grain, and never gets pricked.",
+    "personality": {
+      "traits": [
+        "brave",
+        "cynical",
+        "quiet",
+        "kind"
+      ]
+    },
+    "appearance": {
+      "feminine": 1.0,
+      "seed": 61897,
+      "build": "lean_weathered",
+      "age": 52,
+      "hair": "iron_grey_cropped_under_a_leather_coif",
+      "notes": "layer's leather gauntlets to the elbow scored white with thorn, a bill-hook at her belt, a stake-maul over her shoulder"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/the_thornwell",
+        "activity": "eat",
+        "spot": "home"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/the_thornwell",
+        "activity": "work",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/the_thornwell",
+        "activity": "eat",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/the_thornwell",
+        "activity": "work",
+        "spot": "the_cut_thorn"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/the_thornwell",
+        "activity": "sleep",
+        "spot": "home"
+      }
+    ]
+  }
+]

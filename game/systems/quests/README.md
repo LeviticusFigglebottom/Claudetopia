@@ -137,9 +137,18 @@ every quest and fails on one that lands on its giver while its content names som
 log of first lines; never a later stage, `description`, `summary` or `notes`. An objective may say
 `"after": <index>` (or a list of indices in its stage): it is kept out of the journal, the tracker,
 the compass and the HUD's notice until those are done (`objectives_of` marks it `veiled`), and it
-still counts if done early. When a stage moves on, the HUD puts up "NEW OBJECTIVE · MAIN QUEST",
-the objective, and **the first line of the stage's journal**, which should therefore say why this
-is next; a quest taken says "NEW QUEST", a quest finished "QUEST COMPLETE".
+still counts if done early.
+
+**The quest notice (`ui/hud/quest_notice.gd`, `quest_notice_queue.gd`).** When a quest is taken, a
+stage moves on or a quest ends, a plate near the top of the screen, under the compass, says
+"QUEST STARTED / JOURNAL UPDATED / QUEST COMPLETE · <tier>", the quest's name, the objective in large
+letters, and **the first line of the stage's journal** as the reason, which must therefore say why
+this is next, in the giver's terms, whole in 170 letters, naming nothing a later stage holds
+(`test_quest_notice` holds every starter stage to it). It is held 6-10 s by its words (gameplay
+"Quest news stays up" scales it), several wait their turn, a newer notice of the same quest takes
+the place of one up less than 1.5 s, and none is spent under a conversation, a film, a menu or the
+loading screen. It sounds a page turned, the tracker's rows and the compass's pins glow with it, and
+the journal key (named on the plate) opens the journal at its quest.
 
 ### Radiant templates
 

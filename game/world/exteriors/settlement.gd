@@ -485,6 +485,11 @@ func _build(fabric: FabricMesh, plan: Dictionary) -> void:
 		_window_glows.append_array(made["glows"])
 		if made["lamp"] != Vector3.INF:
 			_door_lamps.append(made["lamp"])
+			# the lantern it burns in (HouseKit.door_lantern), drawn in the joinery: the seat audit
+			# hangs the light from its box (tools_gd/seat_audit.gd `_check_light`)
+			var boxes: Array[AABB] = get_meta("lamp_boxes", [] as Array[AABB])
+			boxes.append(made["lamp_box"])
+			set_meta("lamp_boxes", boxes)
 		# about two chimneys in three are drawing by day: somebody is cooking
 		for top in made["chimneys"]:
 			if standing and not ruined and _lights.randf() < 0.66:
@@ -1930,6 +1935,15 @@ func _strew_mesh(path: String, mesh: Mesh, transforms: Array, part: String, shad
 	var inst := MultiMeshInstance3D.new()
 	inst.name = path.get_file().get_basename() + ("_" + part if part != "" else "")
 	inst.multimesh = mm
+	if lamp != "":
+		# each lamp's box, for the seat audit: its lights hang from these, and a headless run keeps
+		# no MultiMesh buffer to read them back from (tools_gd/seat_audit.gd `_check_light`)
+		var boxes: Array[AABB] = []
+		for i in transforms.size():
+			var xf: Transform3D = transforms[i]
+			xf.origin.y += lift * xf.basis.get_scale().y
+			boxes.append(xf * mesh.get_aabb())
+		inst.set_meta("lamp_boxes", boxes)
 	# a mug on a stall is a pixel from the next street and a cart is not: the small things go early
 	# and throw no shadow (a shadow pass for each kind of crockery was a tenth of a street's draws)
 	# (a range is measured to the middle of all of a kind at once, so it reaches past half of them)

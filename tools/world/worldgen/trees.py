@@ -232,6 +232,11 @@ def clear_sightlines(buckets: dict, grid: Grid, H: np.ndarray, claims: list, k: 
 
 ## A glade's way to its road, metres wide, where its def does not say (`glade_approach_m`).
 GLADE_APPROACH_M = 18.0
+## How far a tree's crown reaches out from its trunk, as a share of its height: a glade is open sky,
+## so a tree goes if its crown reaches in, not only if its trunk stands in. (Taken by the trunk, the
+## w4096j glades round the Windthrow and Tinehold had the giant oaks just outside them roofing
+## the ground inside, and poi_sheet's views stood under their crowns.)
+GLADE_CROWN_PER_H = 0.4
 
 
 def glades(pois: list, roads: list) -> list:
@@ -262,13 +267,16 @@ def glades(pois: list, roads: list) -> list:
     return out
 
 
-def clear_glades(buckets: dict, glade_list: list) -> dict:
-    """Take out of `buckets` (in place) every tree inside a glade (`glades`): on its disc, or on the
-    way from its middle to its road and two metres past the road's middle. Only trees: the ground's
-    low cover, the logs and the rocks stay. Returns {"trees": taken, "by_glade": [taken per glade]}."""
+def clear_glades(buckets: dict, glade_list: list, table: dict | None = None) -> dict:
+    """Take out of `buckets` (in place) every tree whose crown reaches into a glade (`glades`): over
+    its disc, or over the way from its middle to its road and two metres past the road's middle. A
+    crown reaches GLADE_CROWN_PER_H of the tree's height (the contact table's, times its scale) from
+    its trunk. Only trees: the ground's low cover, the logs and the rocks stay. Returns
+    {"trees": taken, "by_glade": [taken per glade]}."""
     out = {"trees": 0, "by_glade": [0] * len(glade_list)}
     if not glade_list:
         return out
+    table = load_table() if table is None else table
     for key in list(buckets):
         by_asset = buckets[key]
         for asset in list(by_asset):
@@ -277,14 +285,19 @@ def clear_glades(buckets: dict, glade_list: list) -> dict:
             rows = by_asset[asset]
             if not len(rows):
                 continue
+            name = os.path.splitext(os.path.basename(asset))[0]
+            height = table[name][1] if name in table else TREE_HEIGHT_DEFAULT_M
             if isinstance(rows, Rows):
                 xz = rows.xz()
+                scale = rows.column(4, "scale")
             else:
                 xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64).reshape(-1, 2)
+                scale = np.array([float(r[4]) for r in rows], dtype=np.float64)
+            crown = height * np.asarray(scale, dtype=np.float64) * GLADE_CROWN_PER_H
             hit = np.zeros(len(xz), dtype=bool)
             for gi, (c, radius, road, width) in enumerate(glade_list):
                 c = np.asarray(c, dtype=np.float64)
-                inside = np.hypot(xz[:, 0] - c[0], xz[:, 1] - c[1]) < radius
+                inside = np.hypot(xz[:, 0] - c[0], xz[:, 1] - c[1]) - crown < radius
                 if road is not None:
                     e = np.asarray(road, dtype=np.float64)
                     seg = e - c
@@ -294,13 +307,120 @@ def clear_glades(buckets: dict, glade_list: list) -> dict:
                         rel = xz - c
                         along = rel @ u
                         off = np.abs(rel[:, 0] * u[1] - rel[:, 1] * u[0])
-                        inside |= (along >= 0.0) & (along <= length + 2.0) & (off < width * 0.5)
+                        inside |= (along >= -crown) & (along <= length + 2.0 + crown) & (off - crown < width * 0.5)
                 n = int((inside & ~hit).sum())
                 out["by_glade"][gi] += n
                 hit |= inside
             if not hit.any():
                 continue
             out["trees"] += int(hit.sum())
+            if isinstance(rows, Rows):
+                rows.keep(~hit)
+                if not len(rows):
+                    del by_asset[asset]
+                continue
+            keep = [r for r, w in zip(rows, hit) if not w]
+            if keep:
+                by_asset[asset] = keep
+            else:
+                del by_asset[asset]
+    return out
+
+
+## How far past a town's pad its houses' gardens, yards and what stands in them may run (the game's
+## StreetPlan.GARDEN_PAST_EDGE_M), and so how far out no tree's crown may reach (`clear_off_towns`).
+TOWN_CROWN_CLEAR_M = 7.0
+
+_CROWNS: dict = {}
+
+
+def crown_box(asset: str, repo_root: str):
+    """(lo, hi): the x and z extent of a tree's whole drawn shape at scale one, its own axes, off the
+    forge's meta (`bounds`), or None where there is none. A giant oak's crown runs 20 m from its trunk
+    and its leaves come down to the ground."""
+    if asset in _CROWNS:
+        return _CROWNS[asset]
+    rel = asset.replace("res://", "game/", 1)
+    path = os.path.join(repo_root, os.path.splitext(rel)[0] + ".meta.json")
+    out = None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            b = json.load(f).get("bounds") or {}
+        if "min" in b and "max" in b:
+            out = (np.array([b["min"][0], b["min"][2]], dtype=np.float64),
+                   np.array([b["max"][0], b["max"][2]], dtype=np.float64))
+    except (OSError, ValueError):
+        pass
+    _CROWNS[asset] = out
+    return out
+
+
+def crown_distance(cx: float, cz: float, xz: np.ndarray, yaw_deg: np.ndarray, scale: np.ndarray,
+                   lo: np.ndarray, hi: np.ndarray) -> np.ndarray:
+    """[n]: how far the point (cx, cz) stands from each tree's crown (its box `lo`, `hi` at scale one,
+    turned by its yaw about +Y as the streamer turns it and scaled), 0 where the point is under it."""
+    a = np.radians(np.asarray(yaw_deg, dtype=np.float64))
+    c, s = np.cos(a), np.sin(a)
+    dx = cx - xz[:, 0]
+    dz = cz - xz[:, 1]
+    sc = np.maximum(np.asarray(scale, dtype=np.float64), 1e-3)
+    lx = (dx * c - dz * s) / sc
+    lz = (dx * s + dz * c) / sc
+    ox = np.maximum(np.maximum(lo[0] - lx, lx - hi[0]), 0.0)
+    oz = np.maximum(np.maximum(lo[1] - lz, lz - hi[1]), 0.0)
+    return np.hypot(ox, oz) * sc
+
+
+def clear_off_towns(buckets: dict, towns: list, repo_root: str, margin: float = TOWN_CROWN_CLEAR_M) -> dict:
+    """Take out of `buckets` (in place) every tree whose crown reaches over a town: within its pad's
+    radius and `margin` past it, where the game stands the town's houses (inside the pad) and their
+    gardens and yards (up to StreetPlan.GARDEN_PAST_EDGE_M past it). The scatter keeps a tree's trunk
+    off the pad, and nothing kept its crown off: the Briarwold's giant oaks, 40 m across with leaves
+    to the ground, stood at the edge of Fernhold's pad and their leaves came through the lodge's
+    houses (the owner, 2026-10-02). `towns` are (x, z, pad radius). Returns {"trees": taken,
+    "by_town": [taken per town, in order], "by_asset": {asset: taken}}."""
+    out = {"trees": 0, "by_town": [0] * len(towns), "by_asset": {}}
+    if not towns:
+        return out
+    t = np.asarray([(float(x), float(z), float(r)) for x, z, r in towns], dtype=np.float64)
+    for key in list(buckets):
+        by_asset = buckets[key]
+        for asset in list(by_asset):
+            if "/trees/" not in asset:
+                continue
+            rows = by_asset[asset]
+            if not len(rows):
+                continue
+            box = crown_box(asset, repo_root)
+            if box is None:
+                continue
+            lo, hi = box
+            reach_1 = float(np.max(np.abs(np.concatenate([lo, hi]))))
+            if isinstance(rows, Rows):
+                xz = rows.xz()
+                yaw = rows.column(3, "yaw")
+                scale = rows.column(4, "scale")
+            else:
+                xz = np.array([(float(r[0]), float(r[2])) for r in rows], dtype=np.float64).reshape(-1, 2)
+                yaw = np.array([float(r[3]) for r in rows], dtype=np.float64)
+                scale = np.array([float(r[4]) for r in rows], dtype=np.float64)
+            # only the towns any of these crowns could reach
+            mid = xz.mean(axis=0)
+            spread = float(np.max(np.hypot(xz[:, 0] - mid[0], xz[:, 1] - mid[1]))) if len(xz) else 0.0
+            near = np.hypot(t[:, 0] - mid[0], t[:, 1] - mid[1]) < spread + reach_1 * float(scale.max()) + t[:, 2] + margin
+            if not near.any():
+                continue
+            hit = np.zeros(len(xz), dtype=bool)
+            for ti in np.flatnonzero(near):
+                x, z, r = t[ti]
+                inside = crown_distance(x, z, xz, yaw, scale, lo, hi) < r + margin
+                out["by_town"][int(ti)] += int((inside & ~hit).sum())
+                hit |= inside
+            if not hit.any():
+                continue
+            n = int(hit.sum())
+            out["trees"] += n
+            out["by_asset"][asset] = out["by_asset"].get(asset, 0) + n
             if isinstance(rows, Rows):
                 rows.keep(~hit)
                 if not len(rows):

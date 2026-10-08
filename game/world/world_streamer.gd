@@ -126,6 +126,11 @@ var _loaded: Dictionary = {}          # Vector2i -> Node3D
 var _pending: Dictionary = {}         # Vector2i -> int (ring) awaiting parse
 var _parsed: Dictionary = {}          # Vector2i -> Dictionary (data ready to build)
 var _tasks: Dictionary = {}           # Vector2i -> task id
+## Cells wanted whose file read waits for a worker: at most ThreadedLoads.limit() are read at once
+## (the pool's threads less two), so the engine's shader compiles, tasks on the same pool, always
+## have a thread. A film asked for dozens at once, every worker was a cell's read, and the main
+## thread waited on a compile queued behind them (seconds "not responding" after Be named).
+var _read_queue: Array = []
 var _jobs: Dictionary = {}            # Vector2i -> CellRead (what the task runs, kept alive with it)
 ## Cells being built a piece at a time: Vector2i -> {node, ring, data, instances, assets, next, solids}.
 var _building: Dictionary = {}
@@ -197,6 +202,12 @@ func apply_view_range() -> void:
 				var base := float(child.get_meta("range_base"))
 				(child as GeometryInstance3D).visibility_range_end = base * view_range
 				(child as GeometryInstance3D).visibility_range_end_margin = base * view_range * 0.15
+	for g in _lod_groups:
+		if g is GroundCover.Group:
+			var cover := g as GroundCover.Group
+			cover.set_reach(_range_for(cover.kind, 0) * view_range, _range_for(cover.kind, full_ring + 1) * view_range)
+		elif GroundCover.enabled and not (g as ScatterLod.Group).far_ring:
+			_set_lod_reach(g as ScatterLod.Group)
 
 
 func apply_lod_bias() -> void:
@@ -249,6 +260,7 @@ func _physics_process(delta: float) -> void:
 	if _region_timer <= 0.0:
 		_region_timer = REGION_CHECK_SECONDS
 		_check_region()
+	_pump_reads()
 	_drain_parsed()
 	if not _to_unload.is_empty():
 		_let_go()
@@ -447,6 +459,15 @@ func cell_state(c: Vector2i) -> String:
 	return "not asked for"
 
 
+## How far the building has got, as one number that grows with every piece of a cell built and every
+## cell standing: whoever waits on the streamer tells moving from stuck by it (CinematicPlayer).
+func progress() -> int:
+	var n := _loaded.size() * 10000
+	for c in _building:
+		n += maxi(int((_building[c] as Dictionary).get("next", 0)), 0)
+	return n
+
+
 func queue() -> Dictionary:
 	_mutex.lock()
 	var parsed := _parsed.size()
@@ -577,6 +598,34 @@ func _in_world(c: Vector2i) -> bool:
 
 func _request(cell: Vector2i, ring: int) -> void:
 	_pending[cell] = ring
+	if _reads_going() >= ThreadedLoads.limit():
+		if not _read_queue.has(cell):
+			_read_queue.append(cell)
+		return
+	_start_read(cell)
+
+
+## Cell reads still running on the pool.
+func _reads_going() -> int:
+	var n := 0
+	for c in _tasks:
+		if not WorkerThreadPool.is_task_completed(int(_tasks[c])):
+			n += 1
+	return n
+
+
+## Starts the queued reads, the nearest first, while threads are left for anything else.
+func _pump_reads() -> void:
+	while not _read_queue.is_empty() and _reads_going() < ThreadedLoads.limit():
+		var cell: Variant = _nearest(_read_queue)
+		if cell == null:
+			cell = _read_queue[0]
+		_read_queue.erase(cell)
+		if _pending.has(cell) and not _tasks.has(cell):
+			_start_read(cell)
+
+
+func _start_read(cell: Vector2i) -> void:
 	var path := "%s/cells/%d_%d.json" % [GENERATED, cell.x, cell.y]
 	# read by an object of its own into the shared `_parsed`, not by this node's method: a streamer
 	# torn down while a cell is read (the title's, on a click) leaves the read to finish (`_exit_tree`)
@@ -980,8 +1029,8 @@ func _build_piece(cell: Vector2i) -> bool:
 	var at := step - assets.size() - 1
 	var world_pois := _world_pois()
 	if at < places.size():
-		# a place is a piece of tens of milliseconds: while a film's pictures are watched it waits for
-		# the film's next hold (the black, or the last frame held), where a long frame is not seen
+		# a place is a piece of tens of milliseconds: while a film's pictures are watched (its cuts
+		# too) it waits for the film to end; the film asked for its own before its first picture
 		if WorldPace.paced() and not WorldPace.curtained() and _film_watched():
 			b["next"] = step
 			b["waiting"] = true
@@ -1051,7 +1100,12 @@ var _cinder_assets_asked := false
 ## Whether a film's pictures are playing (its group as a literal: see `_world_pois`).
 func _film_watched() -> bool:
 	var film := get_tree().get_first_node_in_group("cinematic") if is_inside_tree() else null
-	return film != null and film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
+	if film == null:
+		return false
+	# from its first picture to the hand-over, its cuts too: everything it shows came before it began
+	if film.has_method("watched"):
+		return bool(film.call("watched"))
+	return film.has_method("phase_name") and str(film.call("phase_name")) == "PLAY"
 
 
 ## The places' dressings (WorldPois), by its group: the group name as a literal, not
@@ -1127,6 +1181,9 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	if lad != null and (ring <= full_ring or lad.has_impostor()):
 		_build_lod_group(parent, asset_path, lad, rows, ring, kind)
 		return
+	if GroundCover.takes(kind):
+		_build_cover(parent, asset_path, mesh, rows, ring, kind)
+		return
 	var keep := rows.size()
 	if ring > full_ring:
 		keep = int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density))))
@@ -1166,6 +1223,45 @@ func _build_multimesh(parent: Node3D, asset_path: String, mesh: Mesh, rows: Arra
 	parent.add_child(mmi)
 
 
+## Ground cover and the lighter scatter, drawn out to their reach from the eye (world/ground_cover.gd):
+## in a near-ring cell every row (the density setting thinning grass and bushes) to the near reach
+## and the far ring's share beyond it; in a far-ring cell that share alone, picked the same way.
+func _build_cover(parent: Node3D, asset_path: String, mesh: Mesh, rows: Array, ring: int, kind: String) -> void:
+	var near := ring <= full_ring
+	var near_rows: Array = []
+	if near and _range_for(kind, 0) > 0.0:
+		near_rows = _every_nth(rows, int(ceil(float(rows.size()) * scatter_density)) \
+				if kind in ["herb", "bush"] else rows.size())
+	var far_rows: Array = []
+	if _range_for(kind, full_ring + 1) > 0.0:
+		far_rows = _every_nth(rows, int(ceil(float(rows.size()) * float(FAR_KEEP.get(kind, far_density)))))
+	if near_rows.is_empty() and far_rows.is_empty():
+		return
+	var far_mesh := mesh if not near else (_mesh_for(asset_path, full_ring + 1) if not far_rows.is_empty() else null)
+	if far_mesh == null:
+		far_rows = []
+	var cover := GroundCover.make_group(parent, asset_path, kind, mesh, far_mesh, near_rows, far_rows,
+			_range_for(kind, 0) * view_range, _range_for(kind, full_ring + 1) * view_range,
+			_range_for(kind, 0), _range_for(kind, full_ring + 1), near and kind in ["rock", "prop"])
+	for t: GroundCover.Tier in cover.tiers:
+		t.mmi.lod_bias = (1.0 if t.key == "near" else lod_bias_far) * lod_bias
+	# a streamer following nothing (a tool, a test) has no eye to measure from: all of it
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	cover.update(lod_eye() if target != null or cam != null else Vector3.INF)
+	_lod_groups.append(cover)
+
+
+## `n` of `rows`, evenly through them: how the far ring has always picked its share.
+static func _every_nth(rows: Array, n: int) -> Array:
+	var out: Array = []
+	if n <= 0 or rows.is_empty():
+		return out
+	var every := float(rows.size()) / float(mini(n, rows.size()))
+	for i in mini(n, rows.size()):
+		out.append(rows[int(floor(float(i) * every))])
+	return out
+
+
 ## How far a kind is drawn in a ring, before the view-range setting multiplies it.
 func _range_for(kind: String, ring: int) -> float:
 	return float(VIEW_RANGE.get(kind, 220.0)) if ring <= full_ring \
@@ -1189,13 +1285,48 @@ func _build_lod_group(parent: Node3D, asset_path: String, lad: ScatterLod.Ladder
 	var far := ring > full_ring
 	var group := ScatterLod.make_group(lad, parent, rows, far, not far, range_end, asset_path)
 	for mmi in group.mmis.values():
+		if not far and GroundCover.enabled:
+			# a near-ring group holds each instance at its level out to its reach, so the reach is the
+			# group's (`_set_lod_reach`); a range measured to the MultiMesh's box centre dropped a
+			# corner cell's trees 340-720 m off while the far ring's beyond them stood
+			(mmi as Node).set_meta("range_base", 0.0)
+			(mmi as GeometryInstance3D).visibility_range_end = 0.0
+			(mmi as GeometryInstance3D).visibility_range_end_margin = 0.0
+			continue
 		(mmi as GeometryInstance3D).visibility_range_end = range_end * view_range
 		(mmi as GeometryInstance3D).visibility_range_end_margin = range_end * view_range * 0.15
+	if not far and GroundCover.enabled:
+		if not lad.has_impostor():
+			# the far ring's share of a solid ladder's rows stands out to the far ring's reach, as a
+			# far-ring cell's would (GroundCover); the rest to the near ring's
+			var n := rows.size()
+			var share := int(ceil(float(n) * float(FAR_KEEP.get(kind, far_density))))
+			group.far_kept.resize(n)
+			if share > 0:
+				var every := float(n) / float(mini(share, n))
+				for i in mini(share, n):
+					group.far_kept[int(floor(float(i) * every))] = 1
+		_set_lod_reach(group)
 	if far:
 		group.fill_far()
 	else:
 		group.update(lod_eye())
 	_lod_groups.append(group)
+
+
+## A near-ring group's reach: a tree with its picture is drawn wherever it stands in the near ring
+## (every near-ring tree is within the far ring's reach, and a far-ring cell keeps all of its
+## pictured trees); a solid ladder (a wall, a boulder) to its kind's near reach, and its far share
+## to the far ring's.
+func _set_lod_reach(g: ScatterLod.Group) -> void:
+	if g.ladder == null or g.ladder.has_impostor():
+		g.reach_near = INF
+		g.reach_far = INF
+	else:
+		var kind := asset_kind(g.ladder.asset_path)
+		g.reach_near = _range_for(kind, 0) * view_range
+		g.reach_far = _range_for(kind, full_ring + 1) * view_range
+	g.last_eye = Vector3(INF, INF, INF)
 
 
 ## A scatter row is [x, y, z, yaw_deg, scale, tint_hex] in world metres (CONTRACTS §6), and
@@ -1385,6 +1516,13 @@ static func _transform_within(node: Node3D, root: Node) -> Transform3D:
 
 ## The kind of thing an asset is, from where the forge files it. Scatter rules put trees in
 ## models/trees, foliage in models/flora, rocks in models/rocks and everything else in props.
+## Foliage is a bush when a word of its own name (the file's, past its region's prefix) is or starts
+## with a bush's word: `briarwold_briar_vine_a` is a bush, `briarwold_grass_clump_a` is not (the
+## whole path once matched "briar" in "briarwold", and every Briarwold herb stood to 190 m).
+const BUSH_WORDS := ["briar", "juniper", "hawthorn", "bush"]
+const ASSET_REGIONS := ["hearthvale", "brightwater", "sedgemire", "briarwold", "skerrow", "cinderlea"]
+
+
 static func asset_kind(asset_path: String) -> String:
 	if asset_path.contains("/trees/"):
 		return "tree"
@@ -1392,9 +1530,13 @@ static func asset_kind(asset_path: String) -> String:
 		return "rock"
 	if asset_path.contains("/props/"):
 		return "prop"
-	for bush in ["briar", "juniper", "hawthorn", "bush"]:
-		if asset_path.contains(bush):
-			return "bush"
+	var words := asset_path.get_file().get_basename().to_lower().split("_", false)
+	if not words.is_empty() and ASSET_REGIONS.has(words[0]):
+		words.remove_at(0)
+	for w in words:
+		for bush in BUSH_WORDS:
+			if w.begins_with(bush):
+				return "bush"
 	return "herb"
 
 
@@ -1595,6 +1737,7 @@ func unload_all() -> void:
 	for cell in _building.keys():
 		_abandon(cell)
 	_pending.clear()
+	_read_queue.clear()
 	for cell in _tasks.keys():
 		_finish_task(cell)
 	_parsed.clear()

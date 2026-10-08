@@ -115,6 +115,9 @@ func limb(st: SurfaceTool, a: Vector3, b: Vector3, r: float) -> void:
 ## A capsule's mesh, made once for each radius and length to the centimetre: a beacon's cage is
 ## forty bars of two sizes, and making each afresh was most of what a tower cost (TRIAGE item 36).
 static var _capsules: Dictionary = {}
+## Under these radii a limb is drawn coarser (`_capsule`).
+const THIN_LIMB_M := 0.075
+const SLENDER_LIMB_M := 0.2
 
 
 static func _capsule(r: float, length: float) -> ArrayMesh:
@@ -124,8 +127,16 @@ static func _capsule(r: float, length: float) -> ArrayMesh:
 	var capsule := CapsuleMesh.new()
 	capsule.radius = float(key.x) / 100.0
 	capsule.height = float(key.y) / 100.0 + capsule.radius * 2.0
-	capsule.radial_segments = 14
-	capsule.rings = 5
+	# a limb no thicker than a thumb's breadth (a taken hart's tines on their poles, hair-roots, a
+	# nest's sticks) on six sides and two rings: the full 14 x 5 was 364 triangles a twig, and
+	# Tinehold's forty-odd tine-tips on their poles, drawn again into each of the sun's cascades,
+	# were 0.28 M primitives of a 1.57 M frame. Six sides on a 6 cm stick are not seen as sides.
+	# An arm's thickness (most of a root plate's roots) takes ten sides and three rings, half the
+	# triangles: the Windthrow's 300-odd root pieces were 0.1 M triangles before the sun's passes.
+	var thin := capsule.radius < THIN_LIMB_M
+	var slender := capsule.radius < SLENDER_LIMB_M
+	capsule.radial_segments = 6 if thin else (10 if slender else 14)
+	capsule.rings = 2 if thin else (3 if slender else 5)
 	var made := unindexed(capsule)
 	if _capsules.size() > 4096:
 		_capsules.clear()
@@ -613,18 +624,23 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 			var y := gp + maxf(top - gp, h * 0.4) * share
 			if i == rings:
 				y = gp - 0.35
-			elif i > 0:
-				# the loads on the top
+			else:
+				# the loads on the top, the middle point too: raised round a middle left low, the
+				# top read as a sack's neck drawn in
 				for l: Vector4 in loads:
 					var lc := Vector2(l.x, l.y) * l.z
 					var dd := (Vector2(sin(a), cos(a)) * f - lc).length() / l.w
 					if dd < 1.6:
 						y += h * 0.07 * exp(-dd * dd * 1.6) * (1.0 - steep)
-				# lumps everywhere, rougher on the faces; rills down the faces
-				y += h * lump * (0.6 + steep) * (0.5 * sin(a * 14.0 + f * 23.0 + ph) * sin(f * 31.0 - a * 9.0 + ph2)
+			if i > 0 and i < rings:
+				# lumps everywhere, rougher on the faces; rills down the faces. Both come in over the
+				# level top (TIP_PROFILE's first 0.28): at full strength round the one middle point
+				# they folded in to it like a sack's neck.
+				var crown := smoothstep(0.0, 0.3, f)
+				y += crown * h * lump * (0.6 + steep) * (0.5 * sin(a * 14.0 + f * 23.0 + ph) * sin(f * 31.0 - a * 9.0 + ph2)
 						+ k.rng.randf_range(-0.6, 0.6))
 				var rill := pow(maxf(cos(a * float(rills) + ph + 3.0 * f), 0.0), 10.0)
-				y -= h * (0.04 if old else 0.09) * steep * rill
+				y -= crown * h * (0.04 if old else 0.09) * steep * rill
 			row.append(Vector3(p.x, y, p.y))
 			# the faces fresh and darker, the benches and the top weathered paler; the streaks run
 			# down the faces; an old tip greens from its foot
@@ -664,7 +680,9 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 		k.collider_shape(shape, Transform3D.IDENTITY, "dirt")
 	# loose stone: over its faces and benches, and round the toe where it rolled further down the land
 	var out: Array = []
-	for n in (18 if old else 64):
+	# (each stone is one of the forge's, some 2500 triangles near: 64 a tip took the Charter Delf's
+	# three from 33k triangles to 433k)
+	for n in (6 if old else 16):
 		var i := k.rng.randi_range(int(rings * 0.3), rings - 1)
 		if n % 4 == 0:
 			i = rings - k.rng.randi_range(0, 1)
@@ -681,7 +699,7 @@ func spoil_heap(at: Vector2, spill: Vector2, r: float, h: float, mat: Material, 
 ## Loose stone at `points` (local, as spoil_heap returns them): every third one of the region's
 ## boulders at a small scale, the rest its scree. The two scatters, either of them null where the
 ## region has no such rock or in the far ring.
-func spoil_stones(points: Array, big_scale := Vector2(0.32, 0.75)) -> Array:
+func spoil_stones(points: Array, big_scale := Vector2(0.4, 0.9)) -> Array:
 	var k := kit
 	if k.far or points.is_empty():
 		return [null, null]
@@ -695,7 +713,7 @@ func spoil_stones(points: Array, big_scale := Vector2(0.32, 0.75)) -> Array:
 			var sc := k.rng.randf_range(big_scale.x, big_scale.y)
 			big.append(PoiKit.transform_at(p - Vector3(0.0, 0.3 * sc, 0.0), k.rng.randf_range(0.0, TAU), sc))
 		elif scree != "":
-			small.append(PoiKit.transform_at(p - Vector3(0.0, 0.08, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.5, 1.0)))
+			small.append(PoiKit.transform_at(p - Vector3(0.0, 0.08, 0.0), k.rng.randf_range(0.0, TAU), k.rng.randf_range(0.7, 1.3)))
 	var a: MultiMeshInstance3D = k.scatter(rock, big, true) if not big.is_empty() else null
 	var b: MultiMeshInstance3D = k.scatter(scree, small, false) if not small.is_empty() else null
 	return [a, b]

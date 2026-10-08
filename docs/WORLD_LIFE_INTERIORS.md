@@ -267,6 +267,24 @@ there stands in the site: the build's trees in Scathe's yard.
   way in (more than 32 down the tube in view, the mouth room's own among those dropped). So only
   the 24 lights nearest the eye are on at once (`SiteDress.NEAR_LIGHTS`, chosen again as the eye
   moves a metre).
+- The first view in: the arrival faces the room with the day (or the door's lamp) behind it, and
+  a room's own lights stand at spots drawn anywhere in it. On the lava tube's black rock that left
+  the Kilnway's mouth room dark from the arrival and lit from its other doorway (looking back into
+  the daylit throat). So every entrance room has an `ArrivalLight` in the kind's own colour ahead
+  of the arrival, its strength set by the rock's brightness (`SiteDress._arrival_light`), and a
+  built site's exit door stops the camera (`ExitCameraBlock`): the arrival's camera had come to
+  rest between the door's planks and the wall. `test_sites` reads every shipped site's arrival
+  from the player's camera (`SiteInterior.arrival_view`) and wants 70% of the room seen lit.
+  `site_review` renders that camera as `00_arrival`; `--only=00_,01_` renders just the arrival
+  and the first room.
+- The boss's room from its door: a ring of braziers (or lava vents) round the middle of a huge
+  room left the Kilnway's arena nearly black from its door, and a basalt stack 2 m inside the door
+  hid the rest. Every boss's room has an `ArenaLight` over its middle and an `ArenaLightDoor` just
+  inside its door, in the kind's colour, broad and soft (attenuation 0.6), set by the rock's
+  brightness (`SiteDress._arena_light`), and nothing is stood within 4 m of a boss's doorway
+  (`SitePlan._spot_clear`). `test_sites` reads every site's boss room from the player's camera in
+  its doorway (`SiteInterior.boss_view`, `SitePlan.boss_door`) and wants 70% of it lit; a kind no
+  shipped site is built as is read from a stand-in. `site_review` renders it as `99_boss_door`.
 - A fort's trees: until the next world build the showcases stand on the ground as the last build
   left it, with its scatter (Scathe's yard has the build's trees in it).
 - A drop's lip is the passage's end in the lower room's wall, with nothing to mark it but the

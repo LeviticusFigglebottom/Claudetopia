@@ -440,7 +440,27 @@ func test_a_rogue_s_new_game_begins_on_the_boards_at_moreva() -> void:
 	var sack: Variant = spots.props.get("eel_sack", null)
 	assert_true(sack is Pell and (sack as Pell).kind == "sack", "the sack on its crossbar")
 	var cover := spots.props.values().filter(func(p: Variant) -> bool: return p is QuestCover)
-	assert_eq(cover.size(), 5, "the lane down the way's east side: five things to be low behind")
+	assert_eq(cover.size(), 11, "the lane down the way's east side: eleven things to be low behind, end to end")
+	# and they hide the lane: from her post (and a stride either way of it), the small of a crouched
+	# back anywhere down the lane's east side is behind something. Five stacks with a body's width
+	# between them read Noticed half the way down and Seen on a bad night (the full check, 2026-10-03)
+	await _tree().physics_frame
+	var lane_post := spots.position_of("tella_boards")
+	var lane: Array[Vector2] = [Vector2(-2786.7, -954.5), Vector2(-2786.4, -950.0), Vector2(-2786.4, -942.0),
+			Vector2(-2786.6, -938.0), Vector2(-2787.5, -934.0)]
+	var space := player.get_world_3d().direct_space_state
+	var open_to_her: Array[String] = []
+	for i in lane.size() - 1:
+		var steps := int(lane[i].distance_to(lane[i + 1]) / 0.5)
+		for k in steps:
+			var xz := lane[i].lerp(lane[i + 1], float(k) / float(steps))
+			var back := Vector3(xz.x, WorldProbe.get_height(xz.x, xz.y, lane_post.y), xz.y) + Vector3.UP * Stealth.SIGHT_POINT_CROUCHED_M
+			for off: Vector3 in [Vector3.ZERO, Vector3(0.7, 0, 0), Vector3(-0.7, 0, 0), Vector3(0, 0, 0.7), Vector3(0, 0, -0.7)]:
+				var eye := lane_post + off + Vector3.UP * 1.65
+				var q := PhysicsRayQueryParameters3D.create(eye, back, 1 | (1 << 10), [(player as CollisionObject3D).get_rid()])
+				if space.intersect_ray(q).is_empty():
+					open_to_her.append("%s from %s" % [str(Vector2(back.x, back.z).snapped(Vector2.ONE * 0.1)), str(off)])
+	assert_true(open_to_her.is_empty(), "the lane is behind cover from her post the whole way down: open at %s" % ", ".join(open_to_her))
 	if box is Node3D:
 		var d := (box as Node3D).global_position.distance_to(player.global_position)
 		assert_true(d < 40.0, "the strongbox on the landing, %.0f m off" % d)

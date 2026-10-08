@@ -49,11 +49,14 @@
 [ext_resource type="Shader" path="res://world/fallback_terrain.gdshader" id="43_klbg2"]
 [ext_resource type="Shader" path="res://assets/shaders/wisp_glow.gdshader" id="44_fyy4v"]
 [ext_resource type="Shader" path="res://assets/shaders/wisp_veil.gdshader" id="45_sieyh"]
+[ext_resource type="Shader" path="res://assets/shaders/fallen_bark.gdshader" id="46_fbark"]
+[ext_resource type="Shader" path="res://world/sites/site_lava_ground.gdshader" id="47_lavgr"]
+[ext_resource type="Shader" path="res://assets/shaders/map_fog.gdshader" id="48_mapfg"]
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_fyy4v"]
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_sieyh"]
 resource_name = "placeholder_2d"
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sieyh"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1gbky"]
 emission_shape = 1
 emission_sphere_radius = 0.3
 direction = Vector3(0, 1, 0)
@@ -65,10 +68,10 @@ damping_min = 0.04
 damping_max = 0.08
 scale_min = 0.8
 scale_max = 1.3
-scale_curve = SubResource("PlaceholderTexture2D_fyy4v")
-color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
+scale_curve = SubResource("PlaceholderTexture2D_sieyh")
+color_ramp = SubResource("PlaceholderTexture2D_sieyh")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_1gbky"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_m8nxs"]
 emission_shape = 3
 emission_box_extents = Vector3(2.4071379, 0.15, 0.6)
 direction = Vector3(0, 1, 0)
@@ -78,9 +81,9 @@ initial_velocity_max = 0.39
 gravity = Vector3(0, 0, 0)
 scale_min = 0.7
 scale_max = 1.3
-color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
+color_ramp = SubResource("PlaceholderTexture2D_sieyh")
 
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_m8nxs"]
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_knirb"]
 emission_shape = 3
 emission_box_extents = Vector3(2.25, 0.2, 1.25)
 angle_min = -180.0
@@ -94,16 +97,16 @@ damping_min = 0.4
 damping_max = 1.2
 scale_min = 0.6
 scale_max = 1.5
-scale_curve = SubResource("PlaceholderTexture2D_fyy4v")
-color_ramp = SubResource("PlaceholderTexture2D_fyy4v")
+scale_curve = SubResource("PlaceholderTexture2D_sieyh")
+color_ramp = SubResource("PlaceholderTexture2D_sieyh")
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_knirb"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sqdxb"]
 sky_top_color = Color(0.42, 0.55, 0.72, 1)
 sky_horizon_color = Color(0.75, 0.78, 0.8, 1)
 ground_bottom_color = Color(0.3, 0.3, 0.28, 1)
 ground_horizon_color = Color(0.6, 0.62, 0.6, 1)
 
-[sub_resource type="Shader" id="Shader_sqdxb"]
+[sub_resource type="Shader" id="Shader_yqlvi"]
 code = "shader_type spatial;
 render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx,skip_vertex_transform;
 
@@ -651,9 +654,9 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yqlvi"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gphvb"]
 render_priority = 0
-shader = SubResource("Shader_sqdxb")
+shader = SubResource("Shader_yqlvi")
 shader_parameter/_camera_pos = Vector3(0, 0, 0)
 shader_parameter/_mesh_size = 48.0
 shader_parameter/_background_mode = 1
@@ -687,7 +690,7 @@ shader_parameter/noise1_angle = 0.0
 shader_parameter/noise1_offset = Vector2(0.5, 0.5)
 shader_parameter/noise2_scale = 0.076
 
-[sub_resource type="Shader" id="Shader_gphvb"]
+[sub_resource type="Shader" id="Shader_xh3nk"]
 code = "shader_type spatial;
 #define WATER_NO_MIRROR
 #define WATER_RIVER
@@ -1268,9 +1271,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xh3nk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3wlg4"]
 render_priority = 0
-shader = SubResource("Shader_gphvb")
+shader = SubResource("Shader_xh3nk")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -1305,7 +1308,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="Shader" id="Shader_3wlg4"]
+[sub_resource type="Shader" id="Shader_dgx2d"]
 code = "
 shader_type spatial;
 render_mode unshaded;
@@ -1338,11 +1341,11 @@ void fragment() {
 
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_dgx2d"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_x3u56"]
 render_priority = 0
-shader = SubResource("Shader_3wlg4")
+shader = SubResource("Shader_dgx2d")
 
-[sub_resource type="Shader" id="Shader_x3u56"]
+[sub_resource type="Shader" id="Shader_6qdpf"]
 code = "shader_type canvas_item;
 uniform vec4 tint : source_color = vec4(1.0);
 void fragment() {
@@ -1350,11 +1353,11 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6qdpf"]
-shader = SubResource("Shader_x3u56")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8k45q"]
+shader = SubResource("Shader_6qdpf")
 shader_parameter/tint = Color(1, 1, 1, 1)
 
-[sub_resource type="Shader" id="Shader_8k45q"]
+[sub_resource type="Shader" id="Shader_cavkc"]
 code = "shader_type spatial;
 #define WATER_NO_MIRROR
 render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
@@ -1934,9 +1937,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cavkc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4j3vn"]
 render_priority = 0
-shader = SubResource("Shader_8k45q")
+shader = SubResource("Shader_cavkc")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -1971,7 +1974,665 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="Shader" id="Shader_4j3vn"]
+[sub_resource type="Shader" id="Shader_subcw"]
+code = "shader_type spatial;
+render_mode blend_mix,depth_draw_opaque,cull_back,diffuse_burley,specular_schlick_ggx,skip_vertex_transform;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+
+
+
+uniform vec3 _camera_pos = vec3(0.f);
+uniform float _mesh_size = 48.f;
+uniform uint _background_mode = 1u; 
+uniform uint _mouse_layer = 0x80000000u; 
+uniform float _vertex_spacing = 1.0;
+uniform float _vertex_density = 1.0; 
+uniform float _region_size = 1024.0;
+uniform float _region_texel_size = 0.0009765625; 
+uniform int _region_map_size = 32;
+uniform int _region_map[1024];
+uniform vec2 _region_locations[1024];
+uniform float _texture_normal_depth_array[32];
+uniform float _texture_ao_strength_array[32];
+uniform float _texture_roughness_mod_array[32];
+uniform float _texture_uv_scale_array[32];
+uniform vec2 _texture_detile_array[32];
+uniform vec4 _texture_color_array[32];
+uniform highp sampler2DArray _height_maps : repeat_disable;
+uniform highp sampler2DArray _control_maps : repeat_disable;
+
+uniform highp sampler2DArray _color_maps : source_color, filter_linear_mipmap_anisotropic, repeat_disable;
+uniform highp sampler2DArray _texture_array_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform highp sampler2DArray _texture_array_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+
+
+
+uniform int dual_scale_texture : hint_range(0,31) = 0;
+uniform float dual_scale_reduction : hint_range(0.001,1) = 0.3;
+uniform float tri_scale_reduction : hint_range(0.001,1) = 0.3;
+uniform float dual_scale_far : hint_range(0,1000) = 170.0;
+uniform float dual_scale_near : hint_range(0,1000) = 100.0;
+
+uniform float blend_sharpness : hint_range(0, 1) = 0.5;
+uniform bool flat_terrain_normals = false;
+uniform bool enable_projection = true;
+uniform float projection_threshold : hint_range(0.0, 0.99, 0.01) = 0.8;
+
+uniform float mipmap_bias : hint_range(0.5, 1.5, 0.01) = 1.0;
+uniform float depth_blur : hint_range(0.0, 35.0, 0.1) = 0.0;
+uniform float bias_distance : hint_range(0.0, 16384.0, 0.1) = 512.0;
+
+uniform bool enable_macro_variation = true;
+uniform vec3 macro_variation1 : source_color = vec3(1.);
+uniform vec3 macro_variation2 : source_color = vec3(1.);
+uniform float macro_variation_slope : hint_range(0., 1.) = 0.333;
+
+
+uniform highp sampler2D noise_texture : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+
+uniform float noise1_scale : hint_range(0.001, 1.) = 0.04; 
+uniform float noise1_angle : hint_range(0, 6.283) = 0.;
+uniform vec2 noise1_offset = vec2(0.5);
+uniform float noise2_scale : hint_range(0.001, 1.) = 0.076; 
+
+
+
+struct material {
+ vec4 albedo_height;
+ vec4 normal_rough;
+ float normal_map_depth;
+ float ao_strength;
+ float total_weight;
+};
+
+varying float v_vertex_xz_dist;
+varying vec3 v_vertex;
+
+
+
+
+
+
+
+
+
+ivec3 get_index_coord(const vec2 uv, const int search) {
+ vec2 r_uv = round(uv);
+ vec2 o_uv = mod(r_uv,_region_size);
+ ivec2 pos;
+ int bounds, layer_index = -1;
+ for (int i = -1; i < clamp(search,  0 ,  2 ); i++) {
+ if ((layer_index == -1 && _background_mode == 0u ) || i < 0) {
+ r_uv -= i == -1 ? vec2(0.0) : vec2(float(o_uv.x <= o_uv.y), float(o_uv.y <= o_uv.x));
+ pos = ivec2(floor((r_uv) * _region_texel_size)) + (_region_map_size / 2);
+ bounds = int(uint(pos.x | pos.y) < uint(_region_map_size));
+ layer_index = (_region_map[ pos.y * _region_map_size + pos.x ] * bounds - 1);
+ }
+ }
+ return ivec3(ivec2(mod(r_uv,_region_size)), layer_index);
+}
+
+
+
+
+vec3 get_index_uv(const vec2 uv2) {
+ ivec2 pos = ivec2(floor(uv2)) + (_region_map_size / 2);
+ int bounds = int(uint(pos.x | pos.y) < uint(_region_map_size));
+ int layer_index = _region_map[ pos.y * _region_map_size + pos.x ] * bounds - 1;
+ return vec3(uv2 - _region_locations[layer_index], float(layer_index));
+}
+
+void vertex() {
+ 
+ v_vertex = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+
+ 
+ v_vertex_xz_dist = length(v_vertex.xz - _camera_pos.xz);
+
+ 
+ float scale = MODEL_MATRIX[0][0];
+ float vertex_lerp = smoothstep(0.55, 0.95, (v_vertex_xz_dist / scale - _mesh_size - 4.0) / (_mesh_size - 2.0));
+ vec2 v_fract = fract(VERTEX.xz * 0.5) * 2.0;
+ 
+ vec2 shift = (scale < _vertex_spacing + 1e-6) ? 
+ 
+ mix(v_fract, vec2(v_fract.x, -v_fract.y),
+ round(fract(round(mod(v_vertex.z * _vertex_density, 4.0)) *
+ round(mod(v_vertex.x * _vertex_density, 4.0)) * 0.25))
+ ) :
+ 
+ v_fract * round((fract(v_vertex.xz * 0.25 / scale) - 0.5) * 4.0);
+ vec2 start_pos = v_vertex.xz * _vertex_density;
+ vec2 end_pos = (v_vertex.xz - shift * scale) * _vertex_density;
+ v_vertex.xz -= shift * scale * vertex_lerp;
+
+ 
+ UV = v_vertex.xz * _vertex_density;
+
+ 
+ UV2 =  ((UV) * (vec2(_region_texel_size)) + (vec2(0.5 * _region_texel_size))) ;
+
+ 
+ ivec3 v_region = get_index_coord(start_pos,  1 );
+ uint control = floatBitsToUint(texelFetch(_control_maps, v_region, 0)).r;
+ bool hole =  bool(control >>2u & 0x1u) ;
+
+ 
+ if ( !(CAMERA_VISIBLE_LAYERS == _mouse_layer) && 
+ (hole || (_background_mode == 0u && v_region.z == -1))) {
+ v_vertex.x = 0. / 0.;
+ } else { 
+ 
+ ivec3 coord_a = get_index_coord(start_pos,  1 );
+ ivec3 coord_b = get_index_coord(end_pos,  1 );
+ float h = mix(texelFetch(_height_maps, coord_a, 0).r,texelFetch(_height_maps, coord_b, 0).r,vertex_lerp);
+ v_vertex.y = h;
+ }
+
+ 
+ VERTEX = (VIEW_MATRIX * vec4(v_vertex, 1.0)).xyz;
+ NORMAL = normalize((MODELVIEW_MATRIX * vec4(NORMAL, 0.0)).xyz);
+ BINORMAL = normalize((MODELVIEW_MATRIX * vec4(BINORMAL, 0.0)).xyz);
+ TANGENT = normalize((MODELVIEW_MATRIX * vec4(TANGENT, 0.0)).xyz);
+}
+
+
+
+
+
+float random(in vec2 xy) {
+ return fract(sin(dot(xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec2 rotate_vec2(const vec2 v, const vec2 cs) {
+ return vec2( ((cs.x) * (v.x) + (cs.y * v.y)) ,  ((cs.x) * (v.y) + (-cs.y * v.x)) );
+}
+
+
+void accumulate_material(const vec3 base_ddx, const vec3 base_ddy, const float weight, const ivec3 index,
+ const uint control, const vec2 texture_weight, const ivec2 texture_id, const vec3 i_normal,
+ const float h, inout material mat) {
+
+ 
+ vec2 i_pos =  ((_region_locations[index.z]) * (vec2(_region_size)) + (vec2(index.xy)))  * _vertex_spacing;
+
+ 
+ vec2 i_uv = v_vertex.xz;
+ vec4 i_dd = vec4(base_ddx.xz, base_ddy.xz);
+ mat2 p_align = mat2(1.);
+ if (i_normal.y <= projection_threshold && enable_projection) {
+ 
+ p_align = mat2(vec2(i_normal.z, -i_normal.x), vec2(i_normal.x, i_normal.z));
+ 
+ vec2 xz = round(normalize(-i_normal.xz) * 1.3065629648763765); 
+ xz *= abs(xz.x) + abs(xz.y) > 1.5 ? 0.7071067811865475 : 1.0; 
+ xz = vec2(-xz.y, xz.x);
+ i_pos = floor(vec2(dot(i_pos, xz), -h));
+ i_uv = vec2(dot(v_vertex.xz, xz), -v_vertex.y);
+ i_dd.xy = vec2(dot(base_ddx.xz, xz), -base_ddx.y);
+ i_dd.zw = vec2(dot(base_ddy.xz, xz), -base_ddy.y);
+ }
+
+ 
+ float control_scale =  (0.9 - float(((control >>7u & 0x7u) + 3u) % 8u + 1u) * 0.1) ;
+ i_dd *= control_scale;
+ i_uv *= control_scale;
+ i_pos *= control_scale;
+
+ 
+ float c_angle =  float(control >>10u & 0xFu) *  -0.392699081698724  ;
+ vec2 c_cs_angle = vec2(cos(c_angle), sin(c_angle));
+ i_uv = rotate_vec2(i_uv, c_cs_angle);
+ i_pos = rotate_vec2(i_pos, c_cs_angle);
+
+ 
+ float world_normal = 1.;
+ vec3 T = normalize(base_ddx), B = -normalize(base_ddy);
+ 
+ 
+ 
+ float blend =  float(control >> 14u & 0xFFu) *  0.003921568627450  ; 
+ float sharpness =  ((56.) * (blend_sharpness) + (8.)) ;
+
+ 
+ if (index.z < 0) {
+ i_dd *= tri_scale_reduction;
+ i_uv *= tri_scale_reduction;
+ i_pos *= tri_scale_reduction;
+ }
+
+ 
+ float far_factor = clamp(smoothstep(dual_scale_near, dual_scale_far, length(v_vertex - _camera_pos)), 0.0, 1.0);
+ vec4 far_alb = vec4(0.);
+ vec4 far_nrm = vec4(0.);
+ if (far_factor > 0. && any(equal(texture_id, ivec2(dual_scale_texture)))) {
+ float far_scale = _texture_uv_scale_array[dual_scale_texture] * dual_scale_reduction;
+ vec4 far_dd = i_dd * far_scale;
+
+ 
+ vec2 uv_center = floor( ((i_pos) * (vec2(far_scale)) + (vec2(0.5))) );
+ vec2 far_detile =  ((random(uv_center)) * (2.0) + (-1.0))  * _texture_detile_array[dual_scale_texture] * TAU;
+ vec2 far_cs_angle = vec2(cos(far_detile.x), sin(far_detile.x));
+ 
+ vec2 far_uv = rotate_vec2( ((i_uv) * (vec2(far_scale)) + (-uv_center)) , far_cs_angle) + uv_center + far_detile.y - 0.5;
+ 
+ 
+ far_cs_angle = vec2(
+  ((far_cs_angle.x) * (c_cs_angle.x) + (-far_cs_angle.y * c_cs_angle.y)) ,
+  ((far_cs_angle.y) * (c_cs_angle.x) + (far_cs_angle.x * c_cs_angle.y)) );
+ 
+ far_dd.xy = rotate_vec2(far_dd.xy, far_cs_angle);
+ far_dd.zw = rotate_vec2(far_dd.zw, far_cs_angle);
+
+ far_alb = textureGrad(_texture_array_albedo, vec3(far_uv, float(dual_scale_texture)), far_dd.xy, far_dd.zw);
+ far_nrm = textureGrad(_texture_array_normal, vec3(far_uv, float(dual_scale_texture)), far_dd.xy, far_dd.zw);
+ far_alb.rgb *= _texture_color_array[dual_scale_texture].rgb;
+ far_nrm.a = clamp(far_nrm.a + _texture_roughness_mod_array[dual_scale_texture], 0., 1.);
+ 
+ far_nrm.xyz =  ((far_nrm.xzy) * (vec3(2.0)) + (vec3(-1.0))) ;
+ far_nrm.xz = rotate_vec2(far_nrm.xz, far_cs_angle) * p_align;
+ 
+ 
+ if (far_factor == 1.0) {
+ float id_w = texture_id[0] == dual_scale_texture ? texture_weight[0] : texture_weight[1];
+ float id_weight = exp2(sharpness * log2(weight + id_w + far_alb.a)) * weight;
+ world_normal =   ((T) * (vec3(far_nrm.x)) + ( ((B) * (vec3(far_nrm.z)) + (i_normal * vec3(far_nrm.y))) ))  .y;
+ mat.albedo_height =  ((far_alb) * (vec4(id_weight)) + (mat.albedo_height)) ;
+ mat.normal_rough =  ((far_nrm) * (vec4(id_weight)) + (mat.normal_rough)) ;
+ mat.normal_map_depth =  ((_texture_normal_depth_array[dual_scale_texture]) * (id_weight) + (mat.normal_map_depth)) ;
+ mat.ao_strength =  ((_texture_ao_strength_array[dual_scale_texture]) * (id_weight) + (mat.ao_strength)) ;
+ mat.total_weight += id_weight;
+ }
+ }
+
+
+ 
+ if (blend < 1.0 
+ && !(far_factor == 1.0 && texture_id[0] == dual_scale_texture)
+ ) {
+ int id = texture_id[0];
+ float id_w = texture_weight[0];
+ float id_scale = _texture_uv_scale_array[id];
+ vec4 id_dd = i_dd * id_scale;
+
+ 
+ vec2 uv_center = floor( ((i_pos) * (vec2(id_scale)) + (vec2(0.5))) );
+ vec2 id_detile =  ((random(uv_center)) * (2.0) + (-1.0))  * _texture_detile_array[id] * TAU;
+ vec2 id_cs_angle = vec2(cos(id_detile.x), sin(id_detile.x));
+ 
+ vec2 id_uv = rotate_vec2( ((i_uv) * (vec2(id_scale)) + (-uv_center)) , id_cs_angle) + uv_center + id_detile.y - 0.5;
+ 
+ 
+ id_cs_angle = vec2(
+  ((id_cs_angle.x) * (c_cs_angle.x) + (-id_cs_angle.y * c_cs_angle.y)) ,
+  ((id_cs_angle.y) * (c_cs_angle.x) + (id_cs_angle.x * c_cs_angle.y)) );
+ 
+ id_dd.xy = rotate_vec2(id_dd.xy, id_cs_angle);
+ id_dd.zw = rotate_vec2(id_dd.zw, id_cs_angle);
+
+ vec4 alb = textureGrad(_texture_array_albedo, vec3(id_uv, float(id)), id_dd.xy, id_dd.zw);
+ vec4 nrm = textureGrad(_texture_array_normal, vec3(id_uv, float(id)), id_dd.xy, id_dd.zw);
+
+ alb.rgb *= _texture_color_array[id].rgb;
+ nrm.a = clamp(nrm.a + _texture_roughness_mod_array[id], 0., 1.);
+ 
+ nrm.xyz =  ((nrm.xzy) * (vec3(2.0)) + (vec3(-1.0))) ;
+ nrm.xz = rotate_vec2(nrm.xz, id_cs_angle) * p_align;
+
+ 
+ if (id == dual_scale_texture && far_factor > 0.) {
+ alb = mix(alb, far_alb, far_factor);
+ nrm = mix(nrm, far_nrm, far_factor);
+ }
+ world_normal =   ((T) * (vec3(nrm.x)) + ( ((B) * (vec3(nrm.z)) + (i_normal * vec3(nrm.y))) ))  .y;
+
+ float id_weight = exp2(sharpness * log2(weight + id_w + alb.a)) * weight;
+ mat.albedo_height =  ((alb) * (vec4(id_weight)) + (mat.albedo_height)) ;
+ mat.normal_rough =  ((nrm) * (vec4(id_weight)) + (mat.normal_rough)) ;
+ mat.normal_map_depth =  ((_texture_normal_depth_array[id]) * (id_weight) + (mat.normal_map_depth)) ;
+ mat.ao_strength =  ((_texture_ao_strength_array[id]) * (id_weight) + (mat.ao_strength)) ;
+ mat.total_weight += id_weight;
+ }
+
+ 
+ if (blend > 0.0 && texture_id[1] != texture_id[0]
+ && !(far_factor == 1.0 && texture_id[1] == dual_scale_texture)
+ ) {
+ int id = texture_id[1];
+ float id_w = texture_weight[1];
+ float id_scale = _texture_uv_scale_array[id];
+ vec4 id_dd = i_dd * id_scale;
+
+ 
+ vec2 uv_center = floor( ((i_pos) * (vec2(id_scale)) + (vec2(0.5))) );
+ vec2 id_detile = _texture_detile_array[id] *  ((random(uv_center)) * (2.0) + (-1.0))  * TAU;
+ vec2 id_cs_angle = vec2(cos(id_detile.x), sin(id_detile.x));
+ 
+ vec2 id_uv = rotate_vec2( ((i_uv) * (vec2(id_scale)) + (-uv_center)) , id_cs_angle) + uv_center + id_detile.y - 0.5;
+ 
+ 
+ id_cs_angle = vec2(
+  ((id_cs_angle.x) * (c_cs_angle.x) + (-id_cs_angle.y * c_cs_angle.y)) ,
+  ((id_cs_angle.y) * (c_cs_angle.x) + (id_cs_angle.x * c_cs_angle.y)) );
+ 
+ id_dd.xy = rotate_vec2(id_dd.xy, id_cs_angle);
+ id_dd.zw = rotate_vec2(id_dd.zw, id_cs_angle);
+
+ vec4 alb = textureGrad(_texture_array_albedo, vec3(id_uv, float(id)), id_dd.xy, id_dd.zw);
+ vec4 nrm = textureGrad(_texture_array_normal, vec3(id_uv, float(id)), id_dd.xy, id_dd.zw);
+ alb.rgb *= _texture_color_array[id].rgb;
+ nrm.a = clamp(nrm.a + _texture_roughness_mod_array[id], 0., 1.);
+ 
+ nrm.xyz =  ((nrm.xzy) * (vec3(2.0)) + (vec3(-1.0))) ;
+ nrm.xz = rotate_vec2(nrm.xz, id_cs_angle) * p_align;
+
+ 
+ if (id == dual_scale_texture && far_factor > 0.) {
+ alb = mix(alb, far_alb, far_factor);
+ nrm = mix(nrm, far_nrm, far_factor);
+ }
+ float id_weight = exp2(sharpness * log2(weight + id_w + alb.a * clamp(world_normal, 0., 1.))) * weight;
+ mat.albedo_height =  ((alb) * (vec4(id_weight)) + (mat.albedo_height)) ;
+ mat.normal_rough =  ((nrm) * (vec4(id_weight)) + (mat.normal_rough)) ;
+ mat.normal_map_depth =  ((_texture_normal_depth_array[id]) * (id_weight) + (mat.normal_map_depth)) ;
+ mat.ao_strength =  ((_texture_ao_strength_array[id]) * (id_weight) + (mat.ao_strength)) ;
+ mat.total_weight += id_weight;
+ }
+}
+
+void fragment() {
+ 
+ vec2 uv = UV;
+ vec2 uv2 = UV2;
+ 
+ 
+ vec3 region_uv = get_index_uv(uv2);
+ const vec3 offsets = vec3(0, 1, 2);
+ vec2 index_id = floor(uv);
+ vec2 weight = fract(uv);
+ vec2 invert = 1.0 - weight;
+ vec4 weights = vec4(
+ invert.x * weight.y, 
+ weight.x * weight.y, 
+ weight.x * invert.y, 
+ invert.x * invert.y 
+ );
+
+ ivec3 index[4];
+ 
+ index[0] = get_index_coord(index_id + offsets.xy,  2 );
+ index[1] = get_index_coord(index_id + offsets.yy,  2 );
+ index[2] = get_index_coord(index_id + offsets.yx,  2 );
+ index[3] = get_index_coord(index_id + offsets.xx,  2 );
+ 
+ vec3 base_ddx =  dFdx(v_vertex) ;
+ vec3 base_ddy =  dFdy(v_vertex) ;
+ 
+ 
+ float region_mip = log2(max(length(base_ddx.xz), length(base_ddy.xz)) * _vertex_density);
+ bool bilerp = region_mip < 0.0 && region_uv.z > -1.;
+
+ 
+ vec3 index_normal[4];
+ float h[4];
+ 
+ float u = 0.0;
+ float v = 0.0;
+ 
+ 
+ h[3] = texelFetch(_height_maps, index[3], 0).r; 
+ h[2] = texelFetch(_height_maps, index[2], 0).r; 
+ h[0] = texelFetch(_height_maps, index[0], 0).r; 
+ index_normal[3] = normalize(vec3(h[3] - h[2] + u, _vertex_spacing, h[3] - h[0] + v));
+
+ 
+ vec3 w_normal = index_normal[3];
+
+ 
+ float bias = mix(mipmap_bias,
+ depth_blur + 1.,
+ smoothstep(0.0, 1.0, (v_vertex_xz_dist - bias_distance) *  0.0009765625 ));
+ base_ddx *= bias;
+ base_ddy *= bias;
+
+ 
+ vec4 color_map = region_uv.z > -1.0 ? textureLod(_color_maps, region_uv, region_mip) :  vec4(1.0, 1.0, 1.0, 0.5) ;
+
+ 
+ if (bilerp) {
+ 
+ vec4 col_map[4];
+ col_map[3] = index[3].z > -1 ? texelFetch(_color_maps, index[3], 0) :  vec4(1.0, 1.0, 1.0, 0.5) ;
+ 
+ col_map[0] = index[0].z > -1 ? texelFetch(_color_maps, index[0], 0) :  vec4(1.0, 1.0, 1.0, 0.5) ;
+ col_map[1] = index[1].z > -1 ? texelFetch(_color_maps, index[1], 0) :  vec4(1.0, 1.0, 1.0, 0.5) ;
+ col_map[2] = index[2].z > -1 ? texelFetch(_color_maps, index[2], 0) :  vec4(1.0, 1.0, 1.0, 0.5) ;
+
+ color_map =
+ col_map[0] * weights[0] +
+ col_map[1] * weights[1] +
+ col_map[2] * weights[2] +
+ col_map[3] * weights[3] ;
+ 
+
+
+
+ 
+ 
+ h[1] = texelFetch(_height_maps, index[1], 0).r; 
+ float h_4 = texelFetch(_height_maps, get_index_coord(index_id + offsets.yz,  2 ), 0).r; 
+ float h_5 = texelFetch(_height_maps, get_index_coord(index_id + offsets.zy,  2 ), 0).r; 
+ float h_6 = texelFetch(_height_maps, get_index_coord(index_id + offsets.zx,  2 ), 0).r; 
+ float h_7 = texelFetch(_height_maps, get_index_coord(index_id + offsets.xz,  2 ), 0).r; 
+
+ 
+ index_normal[0] = normalize(vec3(h[0] - h[1] + u, _vertex_spacing, h[0] - h_7 + v));
+ index_normal[1] = normalize(vec3(h[1] - h_5 + u, _vertex_spacing, h[1] - h_4 + v));
+ index_normal[2] = normalize(vec3(h[2] - h_6 + u, _vertex_spacing, h[2] - h[1] + v));
+
+ 
+ w_normal =
+ index_normal[0] * weights[0] +
+ index_normal[1] * weights[1] +
+ index_normal[2] * weights[2] +
+ index_normal[3] * weights[3] ;
+ }
+
+ 
+ if (flat_terrain_normals) {
+ NORMAL = normalize(cross( dFdy(VERTEX) , dFdx(VERTEX) ));
+ TANGENT = normalize(cross(NORMAL, VIEW_MATRIX[2].xyz));
+ BINORMAL = normalize(cross(NORMAL, TANGENT));
+ } else {
+ vec3 w_tangent = normalize(cross(w_normal, vec3(0.0, 0.0, 1.0)));
+ vec3 w_binormal = normalize(cross(w_normal, w_tangent));
+ NORMAL = mat3(VIEW_MATRIX) * w_normal;
+ TANGENT = mat3(VIEW_MATRIX) * w_tangent;
+ BINORMAL = mat3(VIEW_MATRIX) * w_binormal;
+ }
+
+ 
+ 
+ uvec4 control = uvec4(floatBitsToUint(texelFetch(_control_maps, index[3], 0).r));
+ if (bilerp) {
+ control = uvec4(
+ floatBitsToUint(texelFetch(_control_maps, index[0], 0).r),
+ floatBitsToUint(texelFetch(_control_maps, index[1], 0).r),
+ floatBitsToUint(texelFetch(_control_maps, index[2], 0).r),
+ control[3]);
+ }
+
+
+ 
+ 
+ 
+ ivec4 t_id[2] = {ivec4(control >> uvec4(27u) & uvec4(0x1Fu)),
+ ivec4(control >> uvec4(22u) & uvec4(0x1Fu))};
+ ivec2 texture_ids[4] = ivec2[4](
+ ivec2(t_id[0].x, t_id[1].x),
+ ivec2(t_id[0].y, t_id[1].y),
+ ivec2(t_id[0].z, t_id[1].z),
+ ivec2(t_id[0].w, t_id[1].w));
+
+ 
+ vec4 weights_id_1 = vec4(control >> uvec4(14u) & uvec4(0xFFu)) *  0.003921568627450 ;
+ vec4 weights_id_0 = 1.0 - weights_id_1;
+ vec2 t_weights[4] = vec2[4](
+ vec2(weights_id_0[0], weights_id_1[0]),
+ vec2(weights_id_0[1], weights_id_1[1]),
+ vec2(weights_id_0[2], weights_id_1[2]),
+ vec2(weights_id_0[3], weights_id_1[3]));
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+ material mat = material(vec4(0.0), vec4(0.0), 0., 0., 0.);
+
+ 
+ accumulate_material(base_ddx, base_ddy, weights[3], index[3], control[3], t_weights[3],
+ texture_ids[3], index_normal[3], h[3], mat);
+
+ 
+ if (bilerp) {
+ accumulate_material(base_ddx, base_ddy, weights[2], index[2], control[2], t_weights[2],
+ texture_ids[2], index_normal[2], h[2], mat);
+ accumulate_material(base_ddx, base_ddy, weights[1], index[1], control[1], t_weights[1],
+ texture_ids[1], index_normal[1], h[1], mat);
+ accumulate_material(base_ddx, base_ddy, weights[0], index[0], control[0], t_weights[0],
+ texture_ids[0], index_normal[0], h[0], mat);
+ }
+
+ 
+ float weight_inv = 1.0 / mat.total_weight;
+ mat.albedo_height *= weight_inv;
+ mat.normal_rough *= weight_inv;
+ mat.normal_map_depth *= weight_inv;
+ mat.ao_strength *= weight_inv;
+
+ 
+ vec3 macrov = vec3(1.);
+ if (enable_macro_variation) {
+ float noise1 = texture(noise_texture, rotate_vec2( ((uv) * (vec2(noise1_scale * .1)) + (noise1_offset))  , vec2(cos(noise1_angle), sin(noise1_angle)))).r;
+ float noise2 = texture(noise_texture, uv * noise2_scale * .1).r;
+ macrov = mix(macro_variation1, vec3(1.), noise1);
+ macrov *= mix(macro_variation2, vec3(1.), noise2);
+ macrov = mix(vec3(1.0), macrov, clamp(w_normal.y + macro_variation_slope, 0., 1.));
+ }
+ 
+ 
+ float roughness = clamp( ((color_map.a - 0.5) * (2.0) + (mat.normal_rough.a)) , 0., 1.);
+ 
+ 
+ ALBEDO = mat.albedo_height.rgb * color_map.rgb * macrov;
+ ROUGHNESS = roughness;
+ SPECULAR = 1. - mat.normal_rough.a;
+ 
+ NORMAL_MAP =  ((normalize(mat.normal_rough.xzy)) * (vec3(0.5)) + (vec3(0.5))) ;
+ NORMAL_MAP_DEPTH = mat.normal_map_depth;
+
+ 
+ float ao = (1. - (mat.albedo_height.a * log(2.1 - mat.ao_strength))) * (1. - mat.normal_rough.y);
+ AO = clamp(1. - ao * mat.ao_strength, mat.albedo_height.a, 1.0);
+ AO_LIGHT_AFFECT = (1.0 - mat.albedo_height.a) * clamp(mat.normal_rough.y, 0., 1.);
+
+}
+
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
+render_priority = 0
+shader = SubResource("Shader_subcw")
+shader_parameter/_camera_pos = Vector3(0, 0, 0)
+shader_parameter/_mesh_size = 48.0
+shader_parameter/_background_mode = 1
+shader_parameter/_mouse_layer = 2147483648
+shader_parameter/_vertex_spacing = 1.0
+shader_parameter/_vertex_density = 1.0
+shader_parameter/_region_size = 1024.0
+shader_parameter/_region_texel_size = 0.0009765625
+shader_parameter/_region_map_size = 32
+shader_parameter/_region_map = PackedInt32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_region_locations = PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_normal_depth_array = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_ao_strength_array = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_roughness_mod_array = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_uv_scale_array = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_detile_array = PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_texture_color_array = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/dual_scale_texture = 0
+shader_parameter/dual_scale_reduction = 0.3
+shader_parameter/tri_scale_reduction = 0.3
+shader_parameter/dual_scale_far = 170.0
+shader_parameter/dual_scale_near = 100.0
+shader_parameter/blend_sharpness = 0.5
+shader_parameter/flat_terrain_normals = false
+shader_parameter/enable_projection = true
+shader_parameter/projection_threshold = 0.8
+shader_parameter/mipmap_bias = 1.0
+shader_parameter/depth_blur = 0.0
+shader_parameter/bias_distance = 512.0
+shader_parameter/enable_macro_variation = true
+shader_parameter/macro_variation1 = Color(1, 1, 1, 1)
+shader_parameter/macro_variation2 = Color(1, 1, 1, 1)
+shader_parameter/macro_variation_slope = 0.333
+shader_parameter/noise1_scale = 0.04
+shader_parameter/noise1_angle = 0.0
+shader_parameter/noise1_offset = Vector2(0.5, 0.5)
+shader_parameter/noise2_scale = 0.076
+
+[sub_resource type="Shader" id="Shader_uihw2"]
 code = "shader_type spatial;
 #define WATER_RIVER
 render_mode blend_mix, depth_draw_always, cull_disabled, diffuse_burley, specular_schlick_ggx;
@@ -2551,9 +3212,9 @@ void fragment() {
 }
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_subcw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
 render_priority = 0
-shader = SubResource("Shader_4j3vn")
+shader = SubResource("Shader_uihw2")
 shader_parameter/has_shore = false
 shader_parameter/world_origin = Vector2(-4096, -4096)
 shader_parameter/world_size = 8192.0
@@ -2588,7 +3249,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vntpa"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
 render_priority = 0
 shader = ExtResource("1_bg8tn")
 shader_parameter/ash = Color(0.4, 0.385, 0.37, 1)
@@ -2600,7 +3261,7 @@ shader_parameter/threshold_near = 0.555
 shader_parameter/patch_m = 9.0
 shader_parameter/ghost_m = 2.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uihw2"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
 render_priority = 0
 shader = ExtResource("2_fxsgc")
 shader_parameter/cloth_colour = Color(0.17, 0.21, 0.15, 1)
@@ -2612,7 +3273,7 @@ shader_parameter/fray = 0.09
 shader_parameter/sway = 0.12
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_74r8u"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
 render_priority = 0
 shader = ExtResource("3_frfdy")
 shader_parameter/design0 = 0
@@ -2632,7 +3293,7 @@ shader_parameter/ink1 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink2 = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/ink3 = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1gbky"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
 render_priority = 0
 shader = ExtResource("4_sieyh")
 shader_parameter/rim = Color(0.62, 0.86, 0.8, 1)
@@ -2644,7 +3305,7 @@ shader_parameter/bands = 0.0
 shader_parameter/rise = 0.5
 shader_parameter/fill = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_7frfp"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
 render_priority = 0
 shader = ExtResource("2_smsev")
 shader_parameter/bed_scale = 0.11
@@ -2665,7 +3326,7 @@ shader_parameter/brightness = 1.25
 shader_parameter/grain_fade_start = 9.0
 shader_parameter/grain_fade_end = 30.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sa44b"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
 render_priority = 0
 shader = ExtResource("4_rqkyd")
 shader_parameter/rise = 7.5
@@ -2673,20 +3334,20 @@ shader_parameter/life = 10.0
 shader_parameter/smoke_color = Color(0.74, 0.73, 0.72, 1)
 shader_parameter/density = 0.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_xmu3k"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
 render_priority = 0
 shader = ExtResource("6_lljb6")
 shader_parameter/pattern = 0
 shader_parameter/base_color = Color(0.8, 0.8, 0.8, 1)
 shader_parameter/unit = 0.05
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6iyti"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
 render_priority = 0
 shader = ExtResource("2_2un45")
 shader_parameter/core = Color(1, 0.42, 0.1, 1)
 shader_parameter/lip = Color(0.05, 0.035, 0.03, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_upybg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
 render_priority = 0
 shader = ExtResource("3_i50ei")
 shader_parameter/core = Color(1, 0.46, 0.12, 1)
@@ -2694,7 +3355,7 @@ shader_parameter/crust = Color(0.045, 0.036, 0.032, 1)
 shader_parameter/stain = Color(0.16, 0.1, 0.07, 1)
 shader_parameter/plates = 5.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ud06p"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
 render_priority = 0
 shader = ExtResource("7_7c5sf")
 shader_parameter/iris_tint = Color(1, 1, 1, 1)
@@ -2711,7 +3372,7 @@ shader_parameter/caustic = 0.45
 shader_parameter/wet = 1.2
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rv531"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
 render_priority = 0
 shader = ExtResource("9_u8gom")
 shader_parameter/brow_style = 0
@@ -2729,7 +3390,7 @@ shader_parameter/tattoo1_box = Vector4(0, 0, 0.01, 0.01)
 shader_parameter/tattoo0_ink = Color(0.1, 0.11, 0.13, 0)
 shader_parameter/tattoo1_ink = Color(0.1, 0.11, 0.13, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_umom3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
 render_priority = 0
 shader = ExtResource("4_i50ei")
 shader_parameter/water_color = Color(0.7, 0.8, 0.85, 1)
@@ -2741,7 +3402,7 @@ shader_parameter/streaks = 7.0
 shader_parameter/opacity = 0.8
 shader_parameter/glass = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_y5enf"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
 render_priority = 0
 shader = ExtResource("4_ggl34")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2762,7 +3423,7 @@ shader_parameter/backlight = 0.25
 shader_parameter/lod_fade_in = Vector2(0, 0)
 shader_parameter/lod_fade_out = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_l1hhd"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
 render_priority = 0
 shader = ExtResource("10_frfdy")
 shader_parameter/use_orm = true
@@ -2778,13 +3439,13 @@ shader_parameter/grime_height = 0.55
 shader_parameter/grime_amount = 0.45
 shader_parameter/sheen = 0.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vjagh"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
 shader = ExtResource("5_g13gw")
 shader_parameter/mode = 0
 shader_parameter/amount = 0.2
 shader_parameter/tint = Color(0.08, 0.06, 0.05, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_uyaip"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
 render_priority = 0
 shader = ExtResource("6_0evr1")
 shader_parameter/world_rect = Vector4(-4096, -4096, 8, 1024)
@@ -2798,7 +3459,7 @@ shader_parameter/weather = 1.0
 shader_parameter/strength = 1.0
 shader_parameter/drift = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lvuhw"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
 render_priority = 0
 shader = ExtResource("13_u8gom")
 shader_parameter/use_orm = true
@@ -2819,7 +3480,7 @@ shader_parameter/wrap = 0.35
 shader_parameter/edge_cut = 0.4
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ulo08"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
 render_priority = 0
 shader = ExtResource("14_42nll")
 shader_parameter/tint = Color(1, 1, 1, 1)
@@ -2844,7 +3505,7 @@ shader_parameter/diffuse_gain = 0.31831
 shader_parameter/sway_amount = 0.008
 shader_parameter/sway_speed = 1.4
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yrphx"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
 render_priority = 0
 shader = ExtResource("9_8khgv")
 shader_parameter/core_color = Color(1, 0.86, 0.55, 1)
@@ -2852,7 +3513,7 @@ shader_parameter/edge_color = Color(1, 0.42, 0.1, 1)
 shader_parameter/strength = 1.5
 shader_parameter/seed = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rlwxg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
 render_priority = 0
 shader = ExtResource("7_smsev")
 shader_parameter/leg_top = Vector4(0.8, 0.8, 0.8, 0.8)
@@ -2865,7 +3526,7 @@ shader_parameter/leg_colour = Color(0.18, 0.12, 0.08, 1)
 shader_parameter/tail_colour = Color(0.12, 0.08, 0.06, 1)
 shader_parameter/antler_colour = Color(0.45, 0.37, 0.27, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ypnd5"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
 render_priority = 0
 shader = ExtResource("9_ggl34")
 shader_parameter/mist = Color(0.78, 0.79, 0.8, 1)
@@ -2880,11 +3541,11 @@ shader_parameter/end_fade_m = 500.0
 shader_parameter/near_fade_from = 60.0
 shader_parameter/near_fade_to = 260.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_62bd4"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
 render_priority = 0
 shader = ExtResource("20_42nll")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wrsko"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
 render_priority = 0
 shader = ExtResource("8_8khgv")
 shader_parameter/pane_dark = Color(0.085, 0.08, 0.075, 1)
@@ -2896,7 +3557,7 @@ shader_parameter/weathered = Color(0.56, 0.54, 0.5, 1)
 shader_parameter/weather_strength = 0.3
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ungka"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
 render_priority = 0
 shader = ExtResource("13_ifdwk")
 shader_parameter/shaft_color = Color(1, 0.94, 0.78, 1)
@@ -2905,13 +3566,13 @@ shader_parameter/edge_softness = 0.6
 shader_parameter/bottom_fade = 0.7
 shader_parameter/dust_speed = 0.06
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_68gir"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
 render_priority = 0
 shader = ExtResource("9_ifdwk")
 shader_parameter/min_angle = 0.0028
 shader_parameter/haze_per_m = 0.00075
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jbx0d"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
 render_priority = 0
 shader = ExtResource("10_00pen")
 shader_parameter/glass_color = Color(0.03, 0.028, 0.034, 1)
@@ -2935,7 +3596,7 @@ shader_parameter/sky_reflect = 1.0
 shader_parameter/world_uv = 0.0
 shader_parameter/world_flow = Vector2(0, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_so67a"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
 render_priority = 0
 shader = ExtResource("11_ayv1d")
 shader_parameter/albedo_tint = Color(1, 1, 1, 1)
@@ -2960,7 +3621,7 @@ shader_parameter/heights_bound = 0.0
 shader_parameter/own_region = 0
 shader_parameter/region_count = 6
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_u4tdq"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
 shader = ExtResource("12_b51qq")
 shader_parameter/top_color = Color(0.25, 0.45, 0.8, 1)
 shader_parameter/horizon_color = Color(0.8, 0.78, 0.72, 1)
@@ -2997,7 +3658,7 @@ shader_parameter/moon_color = Color(0.85, 0.88, 0.95, 1)
 shader_parameter/moon_disc_deg = 1.9
 shader_parameter/moon_strength = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_030w0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
 render_priority = 0
 shader = ExtResource("13_n1w2m")
 shader_parameter/pattern = 0
@@ -3018,7 +3679,7 @@ shader_parameter/dado_color = Color(0.52, 0.36, 0.24, 1)
 shader_parameter/terrain_follow = false
 shader_parameter/ground_follow = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jf8rk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
 render_priority = 0
 shader = ExtResource("14_fxsgc")
 shader_parameter/has_shore = false
@@ -3055,7 +3716,7 @@ shader_parameter/shore_soft_m = 0.5
 shader_parameter/true_depth_m = 380.0
 shader_parameter/clarity_m = 2.2
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_d2knn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
 render_priority = 0
 shader = ExtResource("15_rqkyd")
 shader_parameter/deep_colour = Color(0.05, 0.16, 0.18, 1)
@@ -3070,7 +3731,7 @@ shader_parameter/opacity = 0.9
 shader_parameter/rim_fade = 0.3
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_mxbak"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
 shader = ExtResource("30_xlg6m")
 shader_parameter/zenith = Color(0.22, 0.25, 0.34, 1)
 shader_parameter/upper = Color(0.47, 0.44, 0.47, 1)
@@ -3082,7 +3743,7 @@ shader_parameter/glow_strength = 0.55
 shader_parameter/vignette = 0.55
 shader_parameter/brush = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3qorg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
 render_priority = 0
 shader = ExtResource("31_klbg2")
 shader_parameter/tile_metres = 1.6
@@ -3092,11 +3753,11 @@ shader_parameter/pool = 1.8
 shader_parameter/fade_from = 2.8
 shader_parameter/fade_to = 8.5
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_apja3"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
 render_priority = 0
 shader = ExtResource("16_7c5sf")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_raca0"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
 render_priority = 0
 shader = ExtResource("17_frfdy")
 shader_parameter/has_shore = false
@@ -3108,7 +3769,7 @@ shader_parameter/foam_colour = Color(0.93, 0.95, 0.95, 1)
 shader_parameter/strength = 1.0
 shader_parameter/damp = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_nau14"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
 render_priority = 0
 shader = ExtResource("29_8pb5p")
 shader_parameter/use_orm = true
@@ -3136,7 +3797,7 @@ shader_parameter/sss_strength = 0.18
 shader_parameter/albedo_scale = 0.84
 shader_parameter/diffuse_gain = 0.31831
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_6jvnn"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
 render_priority = 0
 shader = ExtResource("20_ggl34")
 shader_parameter/shallow_color = Color(0.22, 0.42, 0.4, 1)
@@ -3150,14 +3811,14 @@ shader_parameter/fresnel_power = 3.0
 shader_parameter/sheen_color = Color(0.75, 0.85, 0.9, 1)
 shader_parameter/floor_y = -1000.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_30frm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
 render_priority = 0
 shader = ExtResource("34_u8gom")
 shader_parameter/use_flow = false
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/alpha = 0.42
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_my81t"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrhgo"]
 render_priority = 0
 shader = ExtResource("18_u8gom")
 shader_parameter/frame_axis = Vector2(0, 0)
@@ -3174,23 +3835,23 @@ shader_parameter/roughness_value = 0.72
 shader_parameter/tint = Color(1, 1, 1, 1)
 shader_parameter/lod_fade_in = Vector2(0, 0)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bei6l"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_b4p2s"]
 render_priority = 0
 shader = ExtResource("19_42nll")
 shader_parameter/water_colour = Color(0.06, 0.2, 0.24, 1)
 shader_parameter/depth_m = 0.5
 shader_parameter/visibility_m = 9.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cprsc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ujfdm"]
 render_priority = 0
 shader = ExtResource("20_8pb5p")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sh1kc"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gbcet"]
 render_priority = 0
 shader = ExtResource("21_xlg6m")
 shader_parameter/softness = 0.8
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vrhgo"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ct7nk"]
 render_priority = 0
 shader = ExtResource("22_klbg2")
 shader_parameter/water_colour = Color(0.36, 0.5, 0.5, 1)
@@ -3205,7 +3866,7 @@ shader_parameter/opacity = 0.92
 shader_parameter/veil_opacity = 0.32
 shader_parameter/detail = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_b4p2s"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2ac5y"]
 render_priority = 0
 shader = ExtResource("23_lljb6")
 shader_parameter/wing_root = Vector2(0.05, 0.1)
@@ -3217,7 +3878,7 @@ shader_parameter/beat_hz = 3.0
 shader_parameter/beat_amp = 0.75
 shader_parameter/wetness = 0.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ujfdm"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qki7j"]
 render_priority = 0
 shader = ExtResource("44_fyy4v")
 shader_parameter/glow = Color(1, 0.68, 0.26, 1)
@@ -3225,14 +3886,14 @@ shader_parameter/energy = 1.0
 shader_parameter/fade = 1.0
 shader_parameter/billboard = false
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_gbcet"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_413rm"]
 render_priority = 0
 shader = ExtResource("45_sieyh")
 shader_parameter/tint = Color(0.62, 0.84, 0.8, 1)
 shader_parameter/strength = 0.55
 shader_parameter/fade = 1.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ct7nk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dr1q3"]
 render_priority = 0
 shader = ExtResource("43_klbg2")
 shader_parameter/height_origin = Vector2(-4093, -4093)
@@ -3260,7 +3921,7 @@ shader_parameter/blend_sharpness = 0.34
 shader_parameter/macro_variation1 = Color(0.95, 0.97, 0.91, 1)
 shader_parameter/macro_variation2 = Color(0.92, 0.9, 0.87, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_2ac5y"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_7am8n"]
 render_priority = 0
 shader = ExtResource("41_42nll")
 shader_parameter/base_color = Color(0.72, 0.68, 0.6, 1)
@@ -3286,215 +3947,215 @@ shader_parameter/lichen_amount = 0.5
 shader_parameter/streak_amount = 0.55
 shader_parameter/ground_y = 0.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qki7j"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
 shading_mode = 0
 albedo_color = Color(1, 0.84705883, 0.5647059, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_413rm"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
 albedo_color = Color(0.58, 0.6, 0.42, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dr1q3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
 texture_filter = 5
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7am8n"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
 albedo_color = Color(0.03, 0.03, 0.035, 1)
 roughness = 0.9
 emission_enabled = true
 emission = Color(0.55, 0.75, 1, 1)
 emission_energy_multiplier = 0.6
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3kho6"]
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 roughness = 0.95
 uv1_scale = Vector3(200, 200, 1)
 texture_filter = 5
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_un4ti"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ti57r"]
 albedo_color = Color(0.42, 0.42, 0.42, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 roughness = 0.95
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
 uv1_scale = Vector3(0.3846154, 0.3846154, 0.3846154)
 uv1_triplanar = true
 uv1_world_triplanar = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_en0dx"]
-resource_name = "hearthvale_chalk_hound_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q57jl"]
-resource_name = "brightwater_the_lamp_a_mat"
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_fyy4v")
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qrth3"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(0.92, 0.9, 0.87, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ti57r"]
-resource_name = "skerrow_juniper_c_bark"
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
-ao_enabled = true
-ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vkjtc"]
-resource_name = "hearthvale_campfire_b_mat"
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+resource_name = "hearthvale_chalk_hound_a_mat"
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
 metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
 roughness_texture_channel = 1
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_operator = 1
-emission_texture = SubResource("PlaceholderTexture2D_fyy4v")
 normal_enabled = true
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
 ao_enabled = true
 ao_light_affect = 0.35
-ao_texture = SubResource("PlaceholderTexture2D_fyy4v")
+ao_texture = SubResource("PlaceholderTexture2D_sieyh")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1hste"]
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(0.78, 0.83, 0.92, 1)
+resource_name = "brightwater_the_lamp_a_mat"
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = SubResource("PlaceholderTexture2D_sieyh")
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_sieyh")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ce7v7"]
-cull_mode = 2
-albedo_color = Color(0.05, 0.05, 0.06, 1)
-roughness = 0.85
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.92, 0.9, 0.87, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_onrrp"]
-resource_name = "WM_Eye_hawk_f"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness = 0.18
+resource_name = "skerrow_juniper_c_bark"
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_sieyh")
+texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ksov"]
-resource_name = "WM_Eye"
-cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness = 0.18
+resource_name = "hearthvale_campfire_b_mat"
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_operator = 1
+emission_texture = SubResource("PlaceholderTexture2D_sieyh")
+normal_enabled = true
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
+ao_enabled = true
+ao_light_affect = 0.35
+ao_texture = SubResource("PlaceholderTexture2D_sieyh")
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wfdwr"]
-resource_name = "WM_kirtle"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-metadata/_gltf_primary_texture_coord = 0
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sieyh"]
-resource_name = "WM_miners_hat_candle"
-cull_mode = 2
-albedo_color = Color(0.9098039, 0.8627451, 0.7529412, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-metadata/_gltf_primary_texture_coord = 0
-metadata/dressed = true
+shading_mode = 0
+albedo_color = Color(0.78, 0.83, 0.92, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pdda5"]
-resource_name = "WM_shirt"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-texture_filter = 5
-metadata/_gltf_primary_texture_coord = 0
+albedo_color = Color(0.05, 0.05, 0.06, 1)
+roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_djmg8"]
-resource_name = "WM_Skin_hawk_f"
+resource_name = "WM_Eye_hawk_f"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness = 0.18
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6flue"]
-resource_name = "WM_Skin_Body"
+resource_name = "WM_Eye"
 cull_mode = 2
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic = 1.0
-metallic_texture = SubResource("PlaceholderTexture2D_fyy4v")
-metallic_texture_channel = 2
-roughness_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness_texture_channel = 1
-normal_enabled = true
-normal_scale = 0.8
-normal_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness = 0.18
 texture_filter = 5
 metadata/_gltf_primary_texture_coord = 0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hqym3"]
+resource_name = "WM_kirtle"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
+resource_name = "WM_miners_hat_candle"
+cull_mode = 2
+albedo_color = Color(0.9098039, 0.8627451, 0.7529412, 1)
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+metadata/_gltf_primary_texture_coord = 0
+metadata/dressed = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
+resource_name = "WM_shirt"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
+resource_name = "WM_Skin_hawk_f"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c63jk"]
+resource_name = "WM_Skin_Body"
+cull_mode = 2
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic = 1.0
+metallic_texture = SubResource("PlaceholderTexture2D_sieyh")
+metallic_texture_channel = 2
+roughness_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_scale = 0.8
+normal_texture = SubResource("PlaceholderTexture2D_sieyh")
+texture_filter = 5
+metadata/_gltf_primary_texture_coord = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p3785"]
 transparency = 1
 shading_mode = 0
 albedo_color = Color(0.55, 0.52, 0.49, 0.5)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ibdo5"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ypxsi"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
@@ -3504,17 +4165,17 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_48sb3"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_846w2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
 transparency = 1
 albedo_color = Color(0.92, 0.94, 0.9, 0.75)
 roughness = 0.35
@@ -3522,60 +4183,18 @@ emission_enabled = true
 emission = Color(0.8, 0.85, 0.82, 1)
 emission_energy_multiplier = 0.25
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c63jk"]
-transparency = 1
-albedo_color = Color(0.3, 0.02, 0.02, 0.85)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness = 0.4
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p3785"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-billboard_mode = 3
-particles_anim_h_frames = 1
-particles_anim_v_frames = 1
-particles_anim_loop = false
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ypxsi"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-vertex_color_use_as_albedo = true
-vertex_color_is_srgb = true
-billboard_mode = 1
-billboard_keep_scale = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wdob3"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.82, 0.88, 0.92, 0.28)
-roughness = 0.12
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xk8hg"]
-transparency = 1
-cull_mode = 2
-albedo_color = Color(0.72, 0.76, 0.85, 0.42)
-emission_enabled = true
-emission = Color(0.6, 0.68, 0.8, 1)
-emission_energy_multiplier = 0.6
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n80v5"]
 transparency = 1
-cull_mode = 2
-vertex_color_use_as_albedo = true
-roughness = 0.9
-billboard_mode = 2
-billboard_keep_scale = true
+albedo_color = Color(0.3, 0.02, 0.02, 0.85)
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness = 0.4
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0ujc4"]
 transparency = 1
 cull_mode = 2
+shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
-roughness = 0.35
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
@@ -3584,11 +4203,53 @@ particles_anim_loop = false
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pa7hx"]
 transparency = 1
 cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+billboard_mode = 1
+billboard_keep_scale = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5jca"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.82, 0.88, 0.92, 0.28)
+roughness = 0.12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vfmcv"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.72, 0.76, 0.85, 0.42)
+emission_enabled = true
+emission = Color(0.6, 0.68, 0.8, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekx7u"]
+transparency = 1
+cull_mode = 2
+vertex_color_use_as_albedo = true
+roughness = 0.9
+billboard_mode = 2
+billboard_keep_scale = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qw36s"]
+transparency = 1
+cull_mode = 2
+vertex_color_use_as_albedo = true
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
+roughness = 0.35
+billboard_mode = 3
+particles_anim_h_frames = 1
+particles_anim_v_frames = 1
+particles_anim_loop = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmm7x"]
+transparency = 1
+cull_mode = 2
 depth_draw_mode = 2
 shading_mode = 0
 vertex_color_use_as_albedo = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v5jca"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m55g4"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
@@ -3598,35 +4259,35 @@ particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vfmcv"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5rm0o"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.78, 0)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m8nxs"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p70qx"]
 transparency = 1
 blend_mode = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 3
 particles_anim_h_frames = 1
 particles_anim_v_frames = 1
 particles_anim_loop = false
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ekx7u"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gnxom"]
 transparency = 1
 blend_mode = 1
 no_depth_test = true
 shading_mode = 0
 albedo_color = Color(1, 0.93, 0.7, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 billboard_mode = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qw36s"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7s6mm"]
 transparency = 1
 blend_mode = 1
 cull_mode = 2
@@ -3635,22 +4296,22 @@ vertex_color_use_as_albedo = true
 billboard_mode = 2
 billboard_keep_scale = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmm7x"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fhu23"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 albedo_color = Color(0.55, 0.52, 0.48, 1)
-albedo_texture = SubResource("PlaceholderTexture2D_fyy4v")
+albedo_texture = SubResource("PlaceholderTexture2D_sieyh")
 roughness = 0.95
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m55g4"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ikxmh"]
 transparency = 2
 alpha_scissor_threshold = 0.5
 alpha_antialiasing_mode = 0
 vertex_color_use_as_albedo = true
 vertex_color_is_srgb = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5rm0o"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7us1f"]
 resource_name = "WM_crown_braid_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3659,7 +4320,7 @@ cull_mode = 2
 albedo_color = Color(0.6651851, 0.5657284, 0.47312066, 1)
 roughness = 0.7
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p70qx"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_16jcy"]
 resource_name = "WM_short_cards"
 transparency = 2
 alpha_scissor_threshold = 0.5
@@ -3669,7 +4330,19 @@ albedo_color = Color(0.6651851, 0.5657284, 0.47312066, 1)
 roughness = 0.7
 texture_filter = 5
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fbark"]
+render_priority = 0
+shader = ExtResource("46_fbark")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lavgr"]
+render_priority = 0
+shader = ExtResource("47_lavgr")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mapfg"]
+render_priority = 0
+shader = ExtResource("48_mapfg")
+
 [resource]
 script = ExtResource("24_8oq1d")
-materials = Array[Material]([SubResource("ParticleProcessMaterial_sieyh"), SubResource("ParticleProcessMaterial_1gbky"), SubResource("ParticleProcessMaterial_m8nxs"), SubResource("ProceduralSkyMaterial_knirb"), SubResource("ShaderMaterial_yqlvi"), SubResource("ShaderMaterial_xh3nk"), SubResource("ShaderMaterial_dgx2d"), SubResource("ShaderMaterial_6qdpf"), SubResource("ShaderMaterial_cavkc"), SubResource("ShaderMaterial_subcw"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_uihw2"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_1gbky"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("ShaderMaterial_vrhgo"), SubResource("ShaderMaterial_b4p2s"), SubResource("ShaderMaterial_ujfdm"), SubResource("ShaderMaterial_gbcet"), SubResource("ShaderMaterial_ct7nk"), SubResource("ShaderMaterial_2ac5y"), SubResource("StandardMaterial3D_qki7j"), SubResource("StandardMaterial3D_413rm"), SubResource("StandardMaterial3D_dr1q3"), SubResource("StandardMaterial3D_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_sieyh"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx"), SubResource("StandardMaterial3D_v5jca"), SubResource("StandardMaterial3D_vfmcv"), SubResource("StandardMaterial3D_m8nxs"), SubResource("StandardMaterial3D_ekx7u"), SubResource("StandardMaterial3D_qw36s"), SubResource("StandardMaterial3D_rmm7x"), SubResource("StandardMaterial3D_m55g4"), SubResource("StandardMaterial3D_5rm0o"), SubResource("StandardMaterial3D_p70qx")])
-seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "creature_review.tscn @ /root/CreatureReview/@WorldEnvironment@20", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "creature_review.tscn @ /root/CreatureReview/PlaceholderBody/hips/torso/@MeshInstance3D@24", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Core", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@153/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Carry_Hips/Carried_hearthvale_lantern_hand_a/CarriedFlame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "motion_studio.tscn @ /root/MotionStudio/@MeshInstance3D@18", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@1935/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/headgear_miners_hat_candle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/AuraMotes", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards")
+materials = Array[Material]([SubResource("ParticleProcessMaterial_1gbky"), SubResource("ParticleProcessMaterial_m8nxs"), SubResource("ParticleProcessMaterial_knirb"), SubResource("ProceduralSkyMaterial_sqdxb"), SubResource("ShaderMaterial_gphvb"), SubResource("ShaderMaterial_3wlg4"), SubResource("ShaderMaterial_x3u56"), SubResource("ShaderMaterial_8k45q"), SubResource("ShaderMaterial_4j3vn"), SubResource("ShaderMaterial_vntpa"), SubResource("ShaderMaterial_74r8u"), SubResource("ShaderMaterial_7frfp"), SubResource("ShaderMaterial_sa44b"), SubResource("ShaderMaterial_xmu3k"), SubResource("ShaderMaterial_6iyti"), SubResource("ShaderMaterial_upybg"), SubResource("ShaderMaterial_ud06p"), SubResource("ShaderMaterial_rv531"), SubResource("ShaderMaterial_umom3"), SubResource("ShaderMaterial_y5enf"), SubResource("ShaderMaterial_l1hhd"), SubResource("ShaderMaterial_vjagh"), SubResource("ShaderMaterial_uyaip"), SubResource("ShaderMaterial_lvuhw"), SubResource("ShaderMaterial_ulo08"), SubResource("ShaderMaterial_yrphx"), SubResource("ShaderMaterial_rlwxg"), SubResource("ShaderMaterial_ypnd5"), SubResource("ShaderMaterial_62bd4"), SubResource("ShaderMaterial_wrsko"), SubResource("ShaderMaterial_ungka"), SubResource("ShaderMaterial_68gir"), SubResource("ShaderMaterial_jbx0d"), SubResource("ShaderMaterial_so67a"), SubResource("ShaderMaterial_u4tdq"), SubResource("ShaderMaterial_030w0"), SubResource("ShaderMaterial_jf8rk"), SubResource("ShaderMaterial_d2knn"), SubResource("ShaderMaterial_mxbak"), SubResource("ShaderMaterial_3qorg"), SubResource("ShaderMaterial_apja3"), SubResource("ShaderMaterial_raca0"), SubResource("ShaderMaterial_nau14"), SubResource("ShaderMaterial_6jvnn"), SubResource("ShaderMaterial_30frm"), SubResource("ShaderMaterial_my81t"), SubResource("ShaderMaterial_bei6l"), SubResource("ShaderMaterial_cprsc"), SubResource("ShaderMaterial_sh1kc"), SubResource("ShaderMaterial_vrhgo"), SubResource("ShaderMaterial_b4p2s"), SubResource("ShaderMaterial_ujfdm"), SubResource("ShaderMaterial_gbcet"), SubResource("ShaderMaterial_ct7nk"), SubResource("ShaderMaterial_2ac5y"), SubResource("ShaderMaterial_qki7j"), SubResource("ShaderMaterial_413rm"), SubResource("ShaderMaterial_dr1q3"), SubResource("ShaderMaterial_7am8n"), SubResource("StandardMaterial3D_3kho6"), SubResource("StandardMaterial3D_un4ti"), SubResource("StandardMaterial3D_en0dx"), SubResource("StandardMaterial3D_q57jl"), SubResource("StandardMaterial3D_qrth3"), SubResource("StandardMaterial3D_ti57r"), SubResource("StandardMaterial3D_vkjtc"), SubResource("StandardMaterial3D_1hste"), SubResource("StandardMaterial3D_ce7v7"), SubResource("StandardMaterial3D_onrrp"), SubResource("StandardMaterial3D_7ksov"), SubResource("StandardMaterial3D_wfdwr"), SubResource("StandardMaterial3D_pdda5"), SubResource("StandardMaterial3D_djmg8"), SubResource("StandardMaterial3D_6flue"), SubResource("StandardMaterial3D_hqym3"), SubResource("StandardMaterial3D_ibdo5"), SubResource("StandardMaterial3D_48sb3"), SubResource("StandardMaterial3D_846w2"), SubResource("StandardMaterial3D_c63jk"), SubResource("StandardMaterial3D_p3785"), SubResource("StandardMaterial3D_ypxsi"), SubResource("StandardMaterial3D_wdob3"), SubResource("StandardMaterial3D_xk8hg"), SubResource("StandardMaterial3D_n80v5"), SubResource("StandardMaterial3D_0ujc4"), SubResource("StandardMaterial3D_pa7hx"), SubResource("StandardMaterial3D_v5jca"), SubResource("StandardMaterial3D_vfmcv"), SubResource("StandardMaterial3D_ekx7u"), SubResource("StandardMaterial3D_qw36s"), SubResource("StandardMaterial3D_rmm7x"), SubResource("StandardMaterial3D_m55g4"), SubResource("StandardMaterial3D_5rm0o"), SubResource("StandardMaterial3D_p70qx"), SubResource("StandardMaterial3D_gnxom"), SubResource("StandardMaterial3D_7s6mm"), SubResource("StandardMaterial3D_fhu23"), SubResource("StandardMaterial3D_ikxmh"), SubResource("StandardMaterial3D_7us1f"), SubResource("StandardMaterial3D_16jcy"), SubResource("ShaderMaterial_fbark"), SubResource("ShaderMaterial_lavgr"), SubResource("ShaderMaterial_mapfg")])
+seen_at = PackedStringArray("main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/Puffs", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "creature_review.tscn @ /root/CreatureReview/@WorldEnvironment@20", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D/MouseViewport/MouseCamera/MouseQuad", "world.tscn @ /root/World/Opening/CinematicOverlay/Frame/@CenterContainer@1919/TitleCard/@TextureRect@1920", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Terrain3D", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Drifts", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_wardens_rest/Banner0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7882/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Shell/shell_mouth", "smoke_runner.tscn @ /root/SmokeRunner/World/Doors/Fabric_merrowby/ChimneySmoke", "creature_review.tscn @ /root/CreatureReview/PlaceholderBody/hips/torso/@MeshInstance3D@24", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Embers", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Pools", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_skarl_spout/Fall", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_heather_a", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GradeOverlay/Vignette", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/GroundMist", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/Features/Hearthstone/Flame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/Edges/Hushline_0", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@7843/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/jewellery", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Timber", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@22", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/NightLights/Glows", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Shards", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/cinderlea_scree_b_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Environment", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Stone", "boot.tscn @ /root/MaterialCensus", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Pool", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/@Wo", "naming.tscn @ /root/Naming/@PanelContainer@37/@VBoxContainer@35/@VBoxContainer@36/@HBoxContainer@38/@VBoxContainer@66/@PanelContainer@39/@Control@40/@SubViewport@42/Stage/Flo", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Rags", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Shore/ShoreBand", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_30/Poi_hushline_cave/TidePool", "smoke_runner.tscn @ /root/SmokeRunner/@CharacterBody3D@8643/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_shaven", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_impostor", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Underwater/Underwater", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Rises", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Spray", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Water/Rivers/Falls/Fall0/Sheet", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Heron", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Core", "creature_review.tscn @ /root/CreatureReview/@CharacterBody3D@148/Model/CreatureModel/wisp/Armature/Skeleton3D/Wisp_Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/FallbackTerrain/Chunk_0_0", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_10_27/Poi_scavengers_ring/Walls", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@153/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Carry_Hips/Carried_hearthvale_lantern_hand_a/CarriedFlame", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_16_27/TownStone/Lichen", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Wildlife/Deer/Deer_Hind", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/B_headless_watch/Eyes", "motion_studio.tscn @ /root/MotionStudio/@MeshInstance3D@18", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_9/Poi_the_hush_hole/Bank", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_chalk_hound/hearthvale_chalk_hound_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Horizon/A_the_lamp/brightwater_the_lamp_a_LOD1", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_27/CinderCountry/Pillars", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/skerrow_juniper_c_lod0", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_13_29/Poi_bell_garden/hearthvale_campfire_b/hearthvale_campfire_b", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@MeshInstance3D@23", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_9_12/Poi_the_priced_gibbet/Crows/Crow0/crow_0", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Eye_L", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_kirtle", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@1935/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/headgear_miners_hat_candle", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/torso_shirt", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/head_Head_Mesh", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/Body", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/CinderCountry/AshMotes", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/Atmosphere/Precipitation", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/CinderCountry/Steam", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_28_15/Poi_fern_gully/Silk0", "fights.tscn @ /root/Fights/Impact_stain", "fights.tscn @ /root/Fights/Impact_dust", "smoke_runner.tscn @ /root/SmokeRunner/Npc/QuestMark", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@655/Windows/@MeshInstance3D@673", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/BossArena_reeve_hall/FogGate/Plane", "fights.tscn @ /root/Fights/Impact_splinters", "fights.tscn @ /root/Fights/Impact_blood", "fights.tscn @ /root/Fights/Stage/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/SocketWeaponR/Held_dagger_iron/Trail", "smoke_runner.tscn @ /root/SmokeRunner/SmokeHost/@Node3D@16/LightShafts/@CPUParticles3D@24", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_20_25/QuestItem_wayside_long_table_bench/Glint", "motion_studio.tscn @ /root/MotionStudio/@CharacterBody3D@864/Model/HumanoidModel/AuraMotes", "fights.tscn @ /root/Fights/Stage/Spawner/Enemy/AttackOrigin/Tell", "fights.tscn @ /root/Fights/Impact_sparks", "smoke_runner.tscn @ /root/SmokeRunner/World/WorldStreamer/Cell_8_23/Poi_grey_hedge/briarwold_briar_vine_a_x11", "main_menu.tscn @ /root/MainMenu/TitleVista/TitleWorld/WorldStreamer/Cell_15_28/Fingerpost/Way", "smoke_runner.tscn @ /root/SmokeRunner/Npc/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_crown_braid_cards", "smoke_runner.tscn @ /root/SmokeRunner/World/Player/Model/HumanoidModel/humanoid_rig/Armature/Skeleton3D/hair_short_cards", "briarwold.gd _bark_look: the Windthrow's Bole and CrownLimbs (added by hand, polish4 2026-10-04)", "site_exterior.gd: the Kilnway's mouth ground (added by hand, polish4 2026-10-04)", "map_screen.gd: the chart's fog (added by hand, polish4 2026-10-04)")

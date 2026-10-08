@@ -760,6 +760,11 @@ static func _crag(d: PoiDressing, mouth: Vector2, into: Vector2, across: Vector2
 		var tilt := Vector3(k.rng.randf_range(-0.3, 0.3), 0.0, k.rng.randf_range(-0.3, 0.3))
 		var yaw := k.rng.randf_range(0.0, TAU)
 		var y := _crag_y(k, at, o, piece, high, bh * sc)
+		# a capstone the hill already closes over is left out: the ground over the roof is the lintel.
+		# On the Rafters' Locker's shelf both lay inside the bank, 99% and 165% of their height under
+		# it (the seat audit's `sunk`, over 60% under at the middle)
+		if bool(piece[4]) and k.on_ground(at.x, at.y).y > y + bh * sc * 0.6:
+			continue
 		var box := _rock_box(path, Vector3(at.x, y, at.y), yaw, sc, tilt)
 		# Turned and canted, a boulder's drawn box is not the footprint above, and two of them still
 		# shared most of one (the seat audit's overlaps at the Horn Hole, the Wrist Hole, the Briar

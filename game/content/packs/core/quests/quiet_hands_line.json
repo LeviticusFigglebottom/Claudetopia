@@ -280,7 +280,7 @@
                 "id": "burn_it",
                 "text": "Burn it. Nobody should be able to look a price like that up.",
                 "effects": [
-                  {"set_flag": "ledger_burned"},
+                  {"set_flag": "ledger_of_prices_burned"},
                   {"rep": ["core:faction/quiet_hands", -10]},
                   {"rep": ["core:faction/tallymen", -10]},
                   {"renown": 20},

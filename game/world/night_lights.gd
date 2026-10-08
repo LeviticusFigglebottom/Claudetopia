@@ -96,7 +96,11 @@ static func add(owner: Node, points: Array, kind: String, colour := Color(0, 0, 
 	var id := owner.get_instance_id()
 	if not _sources.has(id):
 		_sources[id] = []
-		owner.tree_exiting.connect(Callable(NightLights, "remove").bind(id), CONNECT_ONE_SHOT)
+		# its sources can be dropped while it stays in the tree (`remove`, a world's teardown), and
+		# the one-shot it was given then is still waiting: connected twice is an error each lamp
+		var gone := Callable(NightLights, "remove").bind(id)
+		if not owner.tree_exiting.is_connected(gone):
+			owner.tree_exiting.connect(gone, CONNECT_ONE_SHOT)
 	var k: Dictionary = KINDS[kind]
 	var c: Color = colour if colour.a > 0.0 else k["colour"]
 	var e: float = energy if energy >= 0.0 else float(k["energy"])

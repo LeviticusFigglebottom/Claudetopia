@@ -4,12 +4,160 @@
  "fingerposts": [
   {
    "at": [
-    -2331.6,
-    -2174.2
+    -3562.7,
+    733.5
    ],
    "junction": [
-    -2334.3,
-    -2165.6
+    -3559.6,
+    739.8
+   ],
+   "roads": [
+    "core:road/saeva_traders_post",
+    "core:road/the_keel_barrow_saeva"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_keel_barrow",
+     "name": "The Keel-Barrow",
+     "metres": 192,
+     "miles": "¼",
+     "road": "core:road/the_keel_barrow_saeva"
+    },
+    {
+     "place": "core:poi/traders_post",
+     "name": "The Traders' Post",
+     "metres": 232,
+     "miles": "¼",
+     "road": "core:road/saeva_traders_post"
+    },
+    {
+     "place": "core:place/saeva",
+     "name": "Saeva",
+     "metres": 671,
+     "miles": "½",
+     "road": "core:road/the_keel_barrow_saeva"
+    }
+   ]
+  },
+  {
+   "at": [
+    -3037.6,
+    -330.7
+   ],
+   "junction": [
+    -3040.2,
+    -324.2
+   ],
+   "roads": [
+    "core:road/isseva_oulea",
+    "core:road/the_great_dredge_oulea"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_great_dredge",
+     "name": "The Great Dredge",
+     "metres": 160,
+     "miles": "¼",
+     "road": "core:road/the_great_dredge_oulea"
+    },
+    {
+     "place": "core:place/oulea",
+     "name": "Oulea",
+     "metres": 608,
+     "miles": "½",
+     "road": "core:road/the_great_dredge_oulea"
+    },
+    {
+     "place": "core:place/isseva",
+     "name": "Isseva",
+     "metres": 628,
+     "miles": "½",
+     "road": "core:road/isseva_oulea"
+    }
+   ]
+  },
+  {
+   "at": [
+    -2474.3,
+    599.6
+   ],
+   "junction": [
+    -2469.1,
+    594.9
+   ],
+   "roads": [
+    "core:road/hask_ropewalk_nauvissa",
+    "core:road/nauvissa_isseva"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/hask_ropewalk",
+     "name": "Hask's Ropewalk",
+     "metres": 124,
+     "miles": "¼",
+     "road": "core:road/hask_ropewalk_nauvissa"
+    },
+    {
+     "place": "core:place/nauvissa",
+     "name": "Nauvissa",
+     "metres": 532,
+     "miles": "¼",
+     "road": "core:road/hask_ropewalk_nauvissa"
+    },
+    {
+     "place": "core:place/isseva",
+     "name": "Isseva",
+     "metres": 576,
+     "miles": "¼",
+     "road": "core:road/nauvissa_isseva"
+    }
+   ]
+  },
+  {
+   "at": [
+    -2347.5,
+    1991.4
+   ],
+   "junction": [
+    -2342.2,
+    1986.8
+   ],
+   "roads": [
+    "core:road/cinderhowe_west_walk",
+    "core:road/west_walk_strand_beacon"
+   ],
+   "arms": [
+    {
+     "place": "core:place/west_walk",
+     "name": "The West Walk",
+     "metres": 180,
+     "miles": "¼",
+     "road": "core:road/cinderhowe_west_walk"
+    },
+    {
+     "place": "core:poi/cinderhowe",
+     "name": "Cinderhowe",
+     "metres": 292,
+     "miles": "¼",
+     "road": "core:road/cinderhowe_west_walk"
+    },
+    {
+     "place": "core:poi/strand_beacon",
+     "name": "The Strand Beacon",
+     "metres": 1858,
+     "miles": "1¼",
+     "road": "core:road/west_walk_strand_beacon"
+    }
+   ]
+  },
+  {
+   "at": [
+    -2331.4,
+    -2174.4
+   ],
+   "junction": [
+    -2334.1,
+    -2165.8
    ],
    "roads": [
     "core:road/clanless_camp_oskelcrag",
@@ -19,21 +167,21 @@
     {
      "place": "core:poi/ghastfoot",
      "name": "Ghastfoot",
-     "metres": 561,
+     "metres": 562,
      "miles": "¼",
      "road": "core:road/ghastfoot_ghastfell"
     },
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1107,
+     "metres": 1112,
      "miles": "¾",
      "road": "core:road/clanless_camp_oskelcrag"
     },
     {
      "place": "core:place/ghastfell",
      "name": "Ghastfell",
-     "metres": 1261,
+     "metres": 1265,
      "miles": "¾",
      "road": "core:road/ghastfoot_ghastfell"
     }
@@ -41,11 +189,11 @@
   },
   {
    "at": [
-    -2204.2,
+    -2203.9,
     -2289.8
    ],
    "junction": [
-    -2198.8,
+    -2198.5,
     -2282.6
    ],
    "roads": [
@@ -63,14 +211,14 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1310,
+     "metres": 1315,
      "miles": "¾",
      "road": "core:road/clanless_camp_oskelcrag"
     },
     {
      "place": "core:poi/clanless_camp",
      "name": "The Clanless Camp",
-     "metres": 1404,
+     "metres": 1403,
      "miles": "¾",
      "road": "core:road/clanless_camp_oskelcrag"
     }
@@ -78,12 +226,12 @@
   },
   {
    "at": [
-    -2152.1,
-    -2085.3
+    -2152.2,
+    -2085.0
    ],
    "junction": [
-    -2145.2,
-    -2086.1
+    -2145.3,
+    -2085.8
    ],
    "roads": [
     "core:road/clanless_camp_oskelcrag",
@@ -100,7 +248,7 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1589,
+     "metres": 1593,
      "miles": "1",
      "road": "core:road/clanless_camp_oskelcrag"
     }
@@ -108,12 +256,12 @@
   },
   {
    "at": [
-    -2109.5,
+    -2111.3,
     -2235.6
    ],
    "junction": [
-    -2120.5,
-    -2236.6
+    -2120.3,
+    -2236.4
    ],
    "roads": [
     "core:road/clanless_camp_oskelcrag",
@@ -130,14 +278,14 @@
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 1414,
+     "metres": 1419,
      "miles": "1",
      "road": "core:road/clanless_camp_oskelcrag"
     },
     {
      "place": "core:place/ghastfell",
      "name": "Ghastfell",
-     "metres": 1647,
+     "metres": 1651,
      "miles": "1",
      "road": "core:road/ghastfoot_ghastfell"
     }
@@ -183,12 +331,12 @@
   },
   {
    "at": [
-    -1602.6,
-    -2109.8
+    -1603.7,
+    -2112.6
    ],
    "junction": [
-    -1608.9,
-    -2106.7
+    -1610.1,
+    -2109.8
    ],
    "roads": [
     "core:road/clanless_camp_oskelcrag",
@@ -205,14 +353,14 @@
     {
      "place": "core:poi/three_sisters_falls",
      "name": "The Three Sisters",
-     "metres": 908,
+     "metres": 928,
      "miles": "½",
      "road": "core:road/three_sisters_falls_clanless_camp"
     },
     {
      "place": "core:place/oskelcrag",
      "name": "Oskelcrag",
-     "metres": 2507,
+     "metres": 2511,
      "miles": "1½",
      "road": "core:road/clanless_camp_oskelcrag"
     }
@@ -266,7 +414,7 @@
     {
      "place": "core:poi/three_sisters_falls",
      "name": "The Three Sisters",
-     "metres": 1120,
+     "metres": 1136,
      "miles": "¾",
      "road": "core:road/three_sisters_falls_clanless_camp"
     },
@@ -281,12 +429,49 @@
   },
   {
    "at": [
-    -1097.9,
-    -2226.7
+    -1506.9,
+    -532.9
    ],
    "junction": [
-    -1100.0,
-    -2220.0
+    -1500.0,
+    -531.7
+   ],
+   "roads": [
+    "core:road/gullhithe_eelweir",
+    "core:road/the_saltmound_gullhithe"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_saltmound",
+     "name": "The Saltmound",
+     "metres": 91,
+     "miles": "¼",
+     "road": "core:road/the_saltmound_gullhithe"
+    },
+    {
+     "place": "core:poi/eelweir",
+     "name": "The Eelweir",
+     "metres": 284,
+     "miles": "¼",
+     "road": "core:road/gullhithe_eelweir"
+    },
+    {
+     "place": "core:place/gullhithe",
+     "name": "Gullhithe",
+     "metres": 472,
+     "miles": "¼",
+     "road": "core:road/the_saltmound_gullhithe"
+    }
+   ]
+  },
+  {
+   "at": [
+    -1096.2,
+    -2224.7
+   ],
+   "junction": [
+    -1098.3,
+    -2218.0
    ],
    "roads": [
     "core:road/kharrow_gate_three_sisters_falls",
@@ -297,16 +482,16 @@
     {
      "place": "core:poi/clanless_camp",
      "name": "The Clanless Camp",
-     "metres": 1120,
+     "metres": 1136,
      "miles": "¾",
      "road": "core:road/three_sisters_falls_clanless_camp"
     },
     {
-     "place": "core:poi/kharrow_gate",
-     "name": "Kharrow Gate",
-     "metres": 2112,
+     "place": "core:place/brindlecrag",
+     "name": "Brindlecrag",
+     "metres": 1862,
      "miles": "1¼",
-     "road": "core:road/kharrow_gate_three_sisters_falls"
+     "road": "core:road/three_sisters_falls_brindlecrag"
     }
    ]
   },
@@ -357,11 +542,11 @@
   {
    "at": [
     -899.0,
-    -2147.2
+    -2147.1
    ],
    "junction": [
     -894.0,
-    -2142.3
+    -2142.2
    ],
    "roads": [
     "core:road/kharrow_gate_three_sisters_falls",
@@ -371,7 +556,7 @@
     {
      "place": "core:poi/three_sisters_falls",
      "name": "The Three Sisters",
-     "metres": 401,
+     "metres": 402,
      "miles": "¼",
      "road": "core:road/kharrow_gate_three_sisters_falls"
     },
@@ -393,12 +578,49 @@
   },
   {
    "at": [
-    -628.1,
-    -1527.0
+    -846.6,
+    3391.3
    ],
    "junction": [
-    -633.2,
-    -1531.8
+    -842.1,
+    3386.0
+   ],
+   "roads": [
+    "core:road/last_camp_kneeling_colossus",
+    "core:road/the_fallen_head_last_camp"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_fallen_head",
+     "name": "The Fallen Head",
+     "metres": 131,
+     "miles": "¼",
+     "road": "core:road/the_fallen_head_last_camp"
+    },
+    {
+     "place": "core:place/last_camp",
+     "name": "The Last Camp",
+     "metres": 308,
+     "miles": "¼",
+     "road": "core:road/the_fallen_head_last_camp"
+    },
+    {
+     "place": "core:poi/kneeling_colossus",
+     "name": "The Kneeling Colossus",
+     "metres": 2024,
+     "miles": "1¼",
+     "road": "core:road/last_camp_kneeling_colossus"
+    }
+   ]
+  },
+  {
+   "at": [
+    -633.8,
+    -1541.0
+   ],
+   "junction": [
+    -633.5,
+    -1532.0
    ],
    "roads": [
     "core:road/gullhithe_narrows_bridge",
@@ -408,28 +630,28 @@
     {
      "place": "core:poi/north_cliff_beacon",
      "name": "North Cliff Beacon",
-     "metres": 131,
+     "metres": 140,
      "miles": "¼",
      "road": "core:road/north_cliff_beacon_pilgrim_stair"
     },
     {
      "place": "core:poi/narrows_bridge",
      "name": "The Narrows Bridge",
-     "metres": 762,
+     "metres": 766,
      "miles": "½",
      "road": "core:road/gullhithe_narrows_bridge"
     },
     {
      "place": "core:poi/pilgrim_stair",
      "name": "The Pilgrim Stair",
-     "metres": 1188,
+     "metres": 1176,
      "miles": "¾",
      "road": "core:road/north_cliff_beacon_pilgrim_stair"
     },
     {
      "place": "core:place/gullhithe",
      "name": "Gullhithe",
-     "metres": 1234,
+     "metres": 1226,
      "miles": "¾",
      "road": "core:road/gullhithe_narrows_bridge"
     }
@@ -437,8 +659,8 @@
   },
   {
    "at": [
-    -614.1,
-    -2178.1
+    -616.8,
+    -2175.2
    ],
    "junction": [
     -622.9,
@@ -452,21 +674,21 @@
     {
      "place": "core:poi/three_sisters_falls",
      "name": "The Three Sisters",
-     "metres": 776,
+     "metres": 779,
      "miles": "½",
      "road": "core:road/kharrow_gate_three_sisters_falls"
     },
     {
      "place": "core:place/brindlecrag",
      "name": "Brindlecrag",
-     "metres": 805,
+     "metres": 801,
      "miles": "½",
      "road": "core:road/three_sisters_falls_brindlecrag"
     },
     {
      "place": "core:poi/kharrow_gate",
      "name": "Kharrow Gate",
-     "metres": 1336,
+     "metres": 1332,
      "miles": "¾",
      "road": "core:road/kharrow_gate_three_sisters_falls"
     }
@@ -474,12 +696,12 @@
   },
   {
    "at": [
-    -563.4,
-    -1682.7
+    -565.1,
+    -1682.5
    ],
    "junction": [
     -554.0,
-    -1677.0
+    -1675.8
    ],
    "roads": [
     "core:road/gullhithe_narrows_bridge",
@@ -489,14 +711,14 @@
     {
      "place": "core:poi/north_cliff_beacon",
      "name": "North Cliff Beacon",
-     "metres": 299,
+     "metres": 295,
      "miles": "¼",
      "road": "core:road/north_cliff_beacon_pilgrim_stair"
     },
     {
      "place": "core:poi/narrows_bridge",
      "name": "The Narrows Bridge",
-     "metres": 427,
+     "metres": 423,
      "miles": "¼",
      "road": "core:road/gullhithe_narrows_bridge"
     },
@@ -578,12 +800,12 @@
   },
   {
    "at": [
-    -352.0,
-    -1764.5
+    -371.3,
+    -1770.3
    ],
    "junction": [
-    -352.1,
-    -1757.5
+    -372.2,
+    -1763.4
    ],
    "roads": [
     "core:road/gullhithe_narrows_bridge",
@@ -593,21 +815,21 @@
     {
      "place": "core:poi/narrows_bridge",
      "name": "The Narrows Bridge",
-     "metres": 192,
+     "metres": 212,
      "miles": "¼",
      "road": "core:road/gullhithe_narrows_bridge"
     },
     {
      "place": "core:poi/north_cliff_beacon",
      "name": "North Cliff Beacon",
-     "metres": 527,
+     "metres": 507,
      "miles": "¼",
      "road": "core:road/north_cliff_beacon_pilgrim_stair"
     },
     {
      "place": "core:poi/pilgrim_stair",
      "name": "The Pilgrim Stair",
-     "metres": 792,
+     "metres": 808,
      "miles": "½",
      "road": "core:road/north_cliff_beacon_pilgrim_stair"
     }
@@ -615,12 +837,12 @@
   },
   {
    "at": [
-    -225.2,
-    -1943.8
+    -224.9,
+    -1943.6
    ],
    "junction": [
-    -227.1,
-    -1950.5
+    -226.7,
+    -1950.4
    ],
    "roads": [
     "core:road/kharrow_gate_three_sisters_falls",
@@ -690,11 +912,11 @@
   },
   {
    "at": [
-    -188.9,
+    -189.4,
     -1824.7
    ],
    "junction": [
-    -187.7,
+    -188.2,
     -1817.8
    ],
    "roads": [
@@ -713,7 +935,7 @@
     {
      "place": "core:place/gullhithe",
      "name": "Gullhithe",
-     "metres": 1996,
+     "metres": 1992,
      "miles": "1¼",
      "road": "core:road/gullhithe_narrows_bridge"
     }
@@ -721,11 +943,11 @@
   },
   {
    "at": [
-    -118.2,
+    -118.3,
     -2072.7
    ],
    "junction": [
-    -124.9,
+    -125.0,
     -2074.6
    ],
    "roads": [
@@ -739,19 +961,19 @@
      "name": "Kharrow Gate",
      "metres": 52,
      "miles": "¼",
-     "road": "core:road/kharrow_gate_three_sisters_falls"
+     "road": "core:road/kharrow_gate_ruddale_bridge"
     },
     {
      "place": "core:poi/narrows_bridge",
      "name": "The Narrows Bridge",
-     "metres": 458,
+     "metres": 454,
      "miles": "¼",
      "road": "core:road/narrows_bridge_kharrow_hold"
     },
     {
      "place": "core:place/kharrow_hold",
      "name": "Kharrow Hold",
-     "metres": 1577,
+     "metres": 1579,
      "miles": "1",
      "road": "core:road/narrows_bridge_kharrow_hold"
     },
@@ -833,12 +1055,12 @@
   },
   {
    "at": [
-    60.3,
-    -3646.9
+    61.7,
+    -3645.7
    ],
    "junction": [
-    52.8,
-    -3638.9
+    55.5,
+    -3639.2
    ],
    "roads": [
     "core:road/chain_bridge_windgate",
@@ -848,7 +1070,7 @@
     {
      "place": "core:place/windgate",
      "name": "Windgate Pass",
-     "metres": 741,
+     "metres": 745,
      "miles": "½",
      "road": "core:road/chain_bridge_windgate"
     },
@@ -862,7 +1084,7 @@
     {
      "place": "core:poi/chain_bridge",
      "name": "The Chain Bridge",
-     "metres": 3039,
+     "metres": 3038,
      "miles": "2",
      "road": "core:road/chain_bridge_windgate"
     }
@@ -937,12 +1159,12 @@
   },
   {
    "at": [
-    152.7,
-    -2632.5
+    153.0,
+    -2632.9
    ],
    "junction": [
-    146.5,
-    -2635.7
+    146.7,
+    -2636.0
    ],
    "roads": [
     "core:road/chain_bridge_windgate",
@@ -959,7 +1181,7 @@
     {
      "place": "core:poi/narrows_bridge",
      "name": "The Narrows Bridge",
-     "metres": 1617,
+     "metres": 1616,
      "miles": "1",
      "road": "core:road/narrows_bridge_kharrow_hold"
     }
@@ -967,12 +1189,12 @@
   },
   {
    "at": [
-    253.2,
-    844.5
+    256.8,
+    846.3
    ],
    "junction": [
-    256.6,
-    838.4
+    260.2,
+    840.2
    ],
    "roads": [
     "core:road/merrowby_strides_foot",
@@ -982,22 +1204,22 @@
     {
      "place": "core:place/strides_foot",
      "name": "Stride's Foot",
-     "metres": 76,
+     "metres": 84,
      "miles": "¼",
      "road": "core:road/rafters_camp_strides_foot"
     },
     {
      "place": "core:place/merrowby",
      "name": "Merrowby",
-     "metres": 718,
+     "metres": 714,
      "miles": "½",
      "road": "core:road/merrowby_strides_foot"
     },
     {
      "place": "core:poi/rafters_camp",
      "name": "The Rafters' Camp",
-     "metres": 2210,
-     "miles": "1¼",
+     "metres": 2227,
+     "miles": "1½",
      "road": "core:road/rafters_camp_strides_foot"
     }
    ]
@@ -1102,7 +1324,7 @@
     {
      "place": "core:poi/ruddale_bridge",
      "name": "Ruddale Bridge",
-     "metres": 834,
+     "metres": 837,
      "miles": "½",
      "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
     },
@@ -1117,12 +1339,12 @@
   },
   {
    "at": [
-    575.6,
-    2866.2
+    595.5,
+    2829.4
    ],
    "junction": [
-    582.7,
-    2874.6
+    595.1,
+    2822.4
    ],
    "roads": [
     "core:road/pilgrims_ash_bramcombe",
@@ -1130,16 +1352,23 @@
    ],
    "arms": [
     {
+     "place": "core:poi/wake_barrow",
+     "name": "Wake Barrow",
+     "metres": 124,
+     "miles": "¼",
+     "road": "core:road/wake_barrow_pilgrims_ash"
+    },
+    {
      "place": "core:place/pilgrims_ash",
      "name": "Pilgrim's Ash",
-     "metres": 626,
-     "miles": "½",
-     "road": "core:road/wake_barrow_pilgrims_ash"
+     "metres": 559,
+     "miles": "¼",
+     "road": "core:road/pilgrims_ash_bramcombe"
     },
     {
      "place": "core:place/bramcombe",
      "name": "Bramcombe",
-     "metres": 1291,
+     "metres": 1251,
      "miles": "¾",
      "road": "core:road/pilgrims_ash_bramcombe"
     }
@@ -1147,12 +1376,12 @@
   },
   {
    "at": [
-    622.3,
-    -2871.2
+    621.0,
+    -2871.6
    ],
    "junction": [
-    624.4,
-    -2877.9
+    623.1,
+    -2878.3
    ],
    "roads": [
     "core:road/chain_bridge_windgate",
@@ -1162,14 +1391,14 @@
     {
      "place": "core:place/fallen_hand",
      "name": "The Fallen Hand",
-     "metres": 731,
+     "metres": 730,
      "miles": "½",
      "road": "core:road/ruddow_fallen_hand"
     },
     {
      "place": "core:place/ruddow",
      "name": "Ruddow",
-     "metres": 795,
+     "metres": 799,
      "miles": "½",
      "road": "core:road/ruddow_fallen_hand"
     },
@@ -1184,12 +1413,12 @@
   },
   {
    "at": [
-    647.5,
-    821.9
+    649.2,
+    820.4
    ],
    "junction": [
-    650.8,
-    828.1
+    652.5,
+    826.6
    ],
    "roads": [
     "core:road/cressbourne_the_limekilns",
@@ -1199,7 +1428,7 @@
     {
      "place": "core:place/strides_foot",
      "name": "Stride's Foot",
-     "metres": 503,
+     "metres": 511,
      "miles": "¼",
      "road": "core:road/rafters_camp_strides_foot"
     },
@@ -1214,12 +1443,12 @@
   },
   {
    "at": [
-    657.3,
-    -1688.3
+    658.5,
+    -1688.7
    ],
    "junction": [
-    664.3,
-    -1687.6
+    665.5,
+    -1688.1
    ],
    "roads": [
     "core:road/kharrow_gate_ruddale_bridge",
@@ -1229,7 +1458,7 @@
     {
      "place": "core:poi/rudd_mouth_bridge",
      "name": "The Stair Bridge",
-     "metres": 363,
+     "metres": 367,
      "miles": "¼",
      "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
     },
@@ -1244,43 +1473,44 @@
   },
   {
    "at": [
-    668.7,
-    -3059.5
+    670.0,
+    -3078.1
    ],
    "junction": [
-    668.7,
-    -3066.5
+    673.9,
+    -3072.3
    ],
    "roads": [
     "core:road/chain_bridge_windgate",
+    "core:road/corbie_stack_fallen_hand",
     "core:road/ruddow_fallen_hand"
    ],
    "arms": [
     {
      "place": "core:place/fallen_hand",
      "name": "The Fallen Hand",
-     "metres": 293,
+     "metres": 236,
      "miles": "¼",
      "road": "core:road/ruddow_fallen_hand"
     },
     {
      "place": "core:place/ruddow",
      "name": "Ruddow",
-     "metres": 1233,
+     "metres": 1293,
      "miles": "¾",
      "road": "core:road/ruddow_fallen_hand"
     },
     {
-     "place": "core:place/windgate",
-     "name": "Windgate Pass",
-     "metres": 1882,
+     "place": "core:poi/chain_bridge",
+     "name": "The Chain Bridge",
+     "metres": 1891,
      "miles": "1¼",
      "road": "core:road/chain_bridge_windgate"
     },
     {
-     "place": "core:poi/chain_bridge",
-     "name": "The Chain Bridge",
-     "metres": 1898,
+     "place": "core:place/windgate",
+     "name": "Windgate Pass",
+     "metres": 1892,
      "miles": "1¼",
      "road": "core:road/chain_bridge_windgate"
     }
@@ -1288,12 +1518,12 @@
   },
   {
    "at": [
-    691.9,
-    -1934.4
+    690.9,
+    -1940.7
    ],
    "junction": [
-    702.8,
-    -1935.6
+    702.9,
+    -1935.8
    ],
    "roads": [
     "core:road/kharrow_gate_ruddale_bridge",
@@ -1303,14 +1533,14 @@
     {
      "place": "core:poi/ruddale_bridge",
      "name": "Ruddale Bridge",
-     "metres": 196,
+     "metres": 192,
      "miles": "¼",
      "road": "core:road/kharrow_gate_ruddale_bridge"
     },
     {
      "place": "core:poi/rudd_mouth_bridge",
      "name": "The Stair Bridge",
-     "metres": 626,
+     "metres": 634,
      "miles": "½",
      "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
     }
@@ -1318,12 +1548,12 @@
   },
   {
    "at": [
-    749.7,
-    -1999.0
+    749.8,
+    -1999.2
    ],
    "junction": [
-    743.9,
-    -2002.9
+    744.0,
+    -2003.1
    ],
    "roads": [
     "core:road/kharrow_gate_ruddale_bridge",
@@ -1340,7 +1570,7 @@
     {
      "place": "core:poi/rudd_mouth_bridge",
      "name": "The Stair Bridge",
-     "metres": 730,
+     "metres": 733,
      "miles": "½",
      "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
     },
@@ -1355,12 +1585,12 @@
   },
   {
    "at": [
-    761.8,
-    807.9
+    764.5,
+    807.6
    ],
    "junction": [
-    763.2,
-    814.8
+    766.0,
+    814.4
    ],
    "roads": [
     "core:road/cressbourne_the_limekilns",
@@ -1370,21 +1600,21 @@
     {
      "place": "core:poi/the_limekilns",
      "name": "The Limekilns",
-     "metres": 104,
+     "metres": 108,
      "miles": "¼",
      "road": "core:road/cressbourne_the_limekilns"
     },
     {
      "place": "core:place/cressbourne",
      "name": "Cressbourne",
-     "metres": 956,
+     "metres": 952,
      "miles": "½",
      "road": "core:road/cressbourne_the_limekilns"
     },
     {
      "place": "core:poi/rafters_camp",
      "name": "The Rafters' Camp",
-     "metres": 1671,
+     "metres": 1687,
      "miles": "1",
      "road": "core:road/rafters_camp_strides_foot"
     }
@@ -1392,12 +1622,12 @@
   },
   {
    "at": [
-    806.1,
-    -2096.8
+    806.2,
+    -2097.0
    ],
    "junction": [
-    799.7,
-    -2099.6
+    799.8,
+    -2099.8
    ],
    "roads": [
     "core:road/kharrow_gate_ruddale_bridge",
@@ -1408,7 +1638,7 @@
     {
      "place": "core:poi/rudd_mouth_bridge",
      "name": "The Stair Bridge",
-     "metres": 834,
+     "metres": 837,
      "miles": "½",
      "road": "core:road/rudd_mouth_bridge_ruddale_bridge"
     },
@@ -1453,12 +1683,12 @@
   },
   {
    "at": [
-    1553.4,
-    -432.1
+    1553.0,
+    -429.2
    ],
    "junction": [
-    1560.1,
-    -429.9
+    1560.0,
+    -430.0
    ],
    "roads": [
     "core:road/hazelwick_rafters_camp",
@@ -1476,15 +1706,45 @@
     {
      "place": "core:place/hazelwick",
      "name": "Hazelwick",
-     "metres": 1286,
+     "metres": 1297,
+     "miles": "¾",
+     "road": "core:road/hazelwick_rafters_camp"
+    }
+   ]
+  },
+  {
+   "at": [
+    1611.5,
+    -329.3
+   ],
+   "junction": [
+    1618.3,
+    -330.7
+   ],
+   "roads": [
+    "core:road/hazelwick_rafters_camp",
+    "core:road/rafters_camp_strides_foot"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/rafters_camp",
+     "name": "The Rafters' Camp",
+     "metres": 104,
+     "miles": "¼",
+     "road": "core:road/hazelwick_rafters_camp"
+    },
+    {
+     "place": "core:place/hazelwick",
+     "name": "Hazelwick",
+     "metres": 1193,
      "miles": "¾",
      "road": "core:road/hazelwick_rafters_camp"
     },
     {
      "place": "core:place/strides_foot",
      "name": "Stride's Foot",
-     "metres": 2286,
-     "miles": "1½",
+     "metres": 2194,
+     "miles": "1¼",
      "road": "core:road/rafters_camp_strides_foot"
     }
    ]
@@ -1621,7 +1881,7 @@
     {
      "place": "core:poi/rafters_camp",
      "name": "The Rafters' Camp",
-     "metres": 728,
+     "metres": 739,
      "miles": "½",
      "road": "core:road/hazelwick_rafters_camp"
     },
@@ -1741,6 +2001,43 @@
   },
   {
    "at": [
+    2461.4,
+    215.7
+   ],
+   "junction": [
+    2461.8,
+    208.7
+   ],
+   "roads": [
+    "core:road/grandfather_hollow_hazelwick",
+    "core:road/the_thornwell_hazelwick"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_thornwell",
+     "name": "The Thornwell",
+     "metres": 187,
+     "miles": "¼",
+     "road": "core:road/the_thornwell_hazelwick"
+    },
+    {
+     "place": "core:place/grandfather_hollow",
+     "name": "Grandfather Hollow",
+     "metres": 574,
+     "miles": "¼",
+     "road": "core:road/grandfather_hollow_hazelwick"
+    },
+    {
+     "place": "core:place/hazelwick",
+     "name": "Hazelwick",
+     "metres": 611,
+     "miles": "½",
+     "road": "core:road/the_thornwell_hazelwick"
+    }
+   ]
+  },
+  {
+   "at": [
     2479.9,
     -235.4
    ],
@@ -1778,6 +2075,117 @@
   },
   {
    "at": [
+    2491.6,
+    -1774.4
+   ],
+   "junction": [
+    2489.4,
+    -1781.0
+   ],
+   "roads": [
+    "core:road/silk_walk_ormhold",
+    "core:road/skarl_bridge_ormhold"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/silk_walk",
+     "name": "The Silk Walk",
+     "metres": 144,
+     "miles": "¼",
+     "road": "core:road/silk_walk_ormhold"
+    },
+    {
+     "place": "core:place/ormhold",
+     "name": "Ormhold",
+     "metres": 411,
+     "miles": "¼",
+     "road": "core:road/silk_walk_ormhold"
+    },
+    {
+     "place": "core:poi/skarl_bridge",
+     "name": "The Skarl Bridge",
+     "metres": 808,
+     "miles": "½",
+     "road": "core:road/skarl_bridge_ormhold"
+    }
+   ]
+  },
+  {
+   "at": [
+    2509.3,
+    1215.5
+   ],
+   "junction": [
+    2516.0,
+    1217.5
+   ],
+   "roads": [
+    "core:road/tamwick_grandfather_hollow",
+    "core:road/the_knar_grandfather_hollow"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/the_knar",
+     "name": "The Knar",
+     "metres": 188,
+     "miles": "¼",
+     "road": "core:road/the_knar_grandfather_hollow"
+    },
+    {
+     "place": "core:place/grandfather_hollow",
+     "name": "Grandfather Hollow",
+     "metres": 1014,
+     "miles": "¾",
+     "road": "core:road/the_knar_grandfather_hollow"
+    },
+    {
+     "place": "core:place/tamwick",
+     "name": "Tamwick",
+     "metres": 1865,
+     "miles": "1¼",
+     "road": "core:road/tamwick_grandfather_hollow"
+    }
+   ]
+  },
+  {
+   "at": [
+    2602.3,
+    1719.0
+   ],
+   "junction": [
+    2596.0,
+    1722.1
+   ],
+   "roads": [
+    "core:road/hazelcombe_standing_moot",
+    "core:road/wassail_knap_hazelcombe"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/wassail_knap",
+     "name": "Wassail Knap",
+     "metres": 224,
+     "miles": "¼",
+     "road": "core:road/wassail_knap_hazelcombe"
+    },
+    {
+     "place": "core:place/hazelcombe",
+     "name": "Hazelcombe",
+     "metres": 439,
+     "miles": "¼",
+     "road": "core:road/wassail_knap_hazelcombe"
+    },
+    {
+     "place": "core:place/standing_moot",
+     "name": "The Standing Moot",
+     "metres": 2534,
+     "miles": "1½",
+     "road": "core:road/hazelcombe_standing_moot"
+    }
+   ]
+  },
+  {
+   "at": [
     2986.3,
     1118.7
    ],
@@ -1810,6 +2218,157 @@
      "metres": 2063,
      "miles": "1¼",
      "road": "core:road/hazelcombe_standing_moot"
+    }
+   ]
+  },
+  {
+   "at": [
+    3109.3,
+    2807.1
+   ],
+   "junction": [
+    3099.3,
+    2802.5
+   ],
+   "roads": [
+    "core:road/great_barn_rookdown",
+    "core:road/rookdown_southgate_stone",
+    "core:road/scarecrow_moot_rookdown",
+    "core:road/witness_elms_rookdown"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/witness_elms",
+     "name": "The Witness Elms",
+     "metres": 144,
+     "miles": "¼",
+     "road": "core:road/witness_elms_rookdown"
+    },
+    {
+     "place": "core:poi/scarecrow_moot",
+     "name": "The Scarecrow Moot",
+     "metres": 482,
+     "miles": "¼",
+     "road": "core:road/scarecrow_moot_rookdown"
+    },
+    {
+     "place": "core:place/rookdown",
+     "name": "Rookdown",
+     "metres": 607,
+     "miles": "½",
+     "road": "core:road/witness_elms_rookdown"
+    }
+   ]
+  },
+  {
+   "at": [
+    3196.9,
+    2609.7
+   ],
+   "junction": [
+    3185.9,
+    2609.5
+   ],
+   "roads": [
+    "core:road/great_barn_rookdown",
+    "core:road/rookdown_southgate_stone",
+    "core:road/scarecrow_moot_rookdown"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/scarecrow_moot",
+     "name": "The Scarecrow Moot",
+     "metres": 262,
+     "miles": "¼",
+     "road": "core:road/scarecrow_moot_rookdown"
+    },
+    {
+     "place": "core:poi/great_barn",
+     "name": "The Great Barn",
+     "metres": 531,
+     "miles": "¼",
+     "road": "core:road/great_barn_rookdown"
+    },
+    {
+     "place": "core:place/rookdown",
+     "name": "Rookdown",
+     "metres": 828,
+     "miles": "½",
+     "road": "core:road/great_barn_rookdown"
+    }
+   ]
+  },
+  {
+   "at": [
+    3262.0,
+    -1002.7
+   ],
+   "junction": [
+    3268.0,
+    -1006.3
+   ],
+   "roads": [
+    "core:road/casting_dell_rookhold",
+    "core:road/elderhold_rookhold"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/casting_dell",
+     "name": "The Casting Dell",
+     "metres": 327,
+     "miles": "¼",
+     "road": "core:road/casting_dell_rookhold"
+    },
+    {
+     "place": "core:place/rookhold",
+     "name": "Rookhold",
+     "metres": 635,
+     "miles": "½",
+     "road": "core:road/casting_dell_rookhold"
+    },
+    {
+     "place": "core:place/elderhold",
+     "name": "Elderhold",
+     "metres": 2820,
+     "miles": "1¾",
+     "road": "core:road/elderhold_rookhold"
+    }
+   ]
+  },
+  {
+   "at": [
+    3408.0,
+    2367.4
+   ],
+   "junction": [
+    3402.0,
+    2363.9
+   ],
+   "roads": [
+    "core:road/great_barn_rookdown",
+    "core:road/rookdown_southgate_stone"
+   ],
+   "arms": [
+    {
+     "place": "core:poi/great_barn",
+     "name": "The Great Barn",
+     "metres": 183,
+     "miles": "¼",
+     "road": "core:road/great_barn_rookdown"
+    },
+    {
+     "place": "core:poi/southgate_stone",
+     "name": "The Southgate Stone",
+     "metres": 494,
+     "miles": "¼",
+     "road": "core:road/rookdown_southgate_stone"
+    },
+    {
+     "place": "core:place/rookdown",
+     "name": "Rookdown",
+     "metres": 1175,
+     "miles": "¾",
+     "road": "core:road/great_barn_rookdown"
     }
    ]
   }
@@ -1999,6 +2558,20 @@
   },
   {
    "at": [
+    -36.0,
+    -263.6
+   ],
+   "entry": [
+    -36.6,
+    -268.1
+   ],
+   "yaw": -82.5,
+   "road": "core:road/fathom_shears_tollmere",
+   "place": "core:place/tollmere",
+   "name": "Tollmere"
+  },
+  {
+   "at": [
     -1334.6,
     -912.1
    ],
@@ -2181,12 +2754,12 @@
   },
   {
    "at": [
-    227.1,
-    -2730.2
+    227.5,
+    -2730.1
    ],
    "entry": [
-    228.2,
-    -2734.6
+    228.5,
+    -2734.5
    ],
    "yaw": -103.6,
    "road": "core:road/narrows_bridge_kharrow_hold",
@@ -2195,12 +2768,12 @@
   },
   {
    "at": [
-    256.0,
-    -2795.8
+    257.1,
+    -2795.2
    ],
    "entry": [
-    258.2,
-    -2799.7
+    259.3,
+    -2799.1
    ],
    "yaw": -119.6,
    "road": "core:road/chain_bridge_windgate",
@@ -2209,12 +2782,12 @@
   },
   {
    "at": [
-    354.3,
-    -2688.8
+    353.6,
+    -2687.6
    ],
    "entry": [
-    350.3,
-    -2690.9
+    349.7,
+    -2689.7
    ],
    "yaw": -28.3,
    "road": "core:road/chain_bridge_windgate",
@@ -2223,14 +2796,14 @@
   },
   {
    "at": [
-    -845.7,
-    -2611.4
+    -845.5,
+    -2611.6
    ],
    "entry": [
-    -850.1,
-    -2610.4
+    -849.7,
+    -2610.2
    ],
-   "yaw": 12.2,
+   "yaw": 18.0,
    "road": "core:road/three_sisters_falls_brindlecrag",
    "place": "core:place/brindlecrag",
    "name": "Brindlecrag"
@@ -2265,14 +2838,14 @@
   },
   {
    "at": [
-    231.0,
-    2901.2
+    228.1,
+    2912.9
    ],
    "entry": [
-    229.2,
-    2905.4
+    226.2,
+    2917.0
    ],
-   "yaw": 67.1,
+   "yaw": 64.7,
    "road": "core:road/pilgrims_ash_bramcombe",
    "place": "core:place/pilgrims_ash",
    "name": "Pilgrim's Ash"
@@ -2433,12 +3006,12 @@
   },
   {
    "at": [
-    1602.9,
-    2762.6
+    1605.0,
+    2763.6
    ],
    "entry": [
-    1604.8,
-    2758.6
+    1606.9,
+    2759.6
    ],
    "yaw": -116.1,
    "road": "core:road/pilgrims_ash_bramcombe",
@@ -2587,15 +3160,15 @@
   },
   {
    "at": [
-    -704.7,
-    3620.9
+    -705.2,
+    3623.1
    ],
    "entry": [
-    -697.4,
-    3622.6
+    -701.3,
+    3620.9
    ],
-   "yaw": 166.5,
-   "road": "core:road/sunken_choir_last_camp",
+   "yaw": -149.6,
+   "road": "core:road/last_camp_kneeling_colossus",
    "place": "core:place/last_camp",
    "name": "The Last Camp"
   },
@@ -2769,14 +3342,14 @@
   },
   {
    "at": [
-    -3028.6,
-    419.0
+    -3040.9,
+    405.5
    ],
    "entry": [
-    -3031.8,
-    415.8
+    -3042.9,
+    401.5
    ],
-   "yaw": -45.0,
+   "yaw": -63.2,
    "road": "core:road/saeva_traders_post",
    "place": "core:place/saeva",
    "name": "Saeva"
@@ -2811,14 +3384,28 @@
   },
   {
    "at": [
-    -3574.3,
+    -2279.8,
+    1118.3
+   ],
+   "entry": [
+    -2283.0,
+    1115.1
+   ],
+   "yaw": -44.2,
+   "road": "core:road/the_unwinding_nauvissa",
+   "place": "core:place/nauvissa",
+   "name": "Nauvissa"
+  },
+  {
+   "at": [
+    -3574.1,
     -368.6
    ],
    "entry": [
-    -3574.7,
+    -3574.4,
     -364.2
    ],
-   "yaw": 85.9,
+   "yaw": 86.5,
    "road": "core:road/isseva_oulea",
    "place": "core:place/oulea",
    "name": "Oulea"
@@ -2895,6 +3482,20 @@
   },
   {
    "at": [
+    1976.1,
+    390.3
+   ],
+   "entry": [
+    1972.1,
+    392.3
+   ],
+   "yaw": 26.8,
+   "road": "core:road/pannage_pound_hazelwick",
+   "place": "core:place/hazelwick",
+   "name": "Hazelwick"
+  },
+  {
+   "at": [
     2716.9,
     -2017.5
    ],
@@ -2937,15 +3538,29 @@
   },
   {
    "at": [
-    -2109.0,
-    -2883.0
+    -2105.9,
+    -2882.7
    ],
    "entry": [
-    -2108.6,
-    -2887.5
+    -2105.6,
+    -2887.2
    ],
-   "yaw": -95.3,
+   "yaw": -93.5,
    "road": "core:road/ghastfoot_ghastfell",
+   "place": "core:place/ghastfell",
+   "name": "Ghastfell"
+  },
+  {
+   "at": [
+    -2010.3,
+    -2888.2
+   ],
+   "entry": [
+    -2012.7,
+    -2884.4
+   ],
+   "yaw": 57.9,
+   "road": "core:road/the_unmade_giant_ghastfell",
    "place": "core:place/ghastfell",
    "name": "Ghastfell"
   },
@@ -2979,14 +3594,14 @@
   },
   {
    "at": [
-    -2849.4,
-    -2464.5
+    -2848.9,
+    -2464.1
    ],
    "entry": [
-    -2852.5,
-    -2461.2
+    -2851.9,
+    -2460.8
    ],
-   "yaw": 47.1,
+   "yaw": 47.8,
    "road": "core:road/clanless_camp_oskelcrag",
    "place": "core:place/oskelcrag",
    "name": "Oskelcrag"

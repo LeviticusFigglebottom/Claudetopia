@@ -360,7 +360,9 @@ def apply_pads(grid: Grid, H: np.ndarray, places: list, min_levels: dict | None 
 ## and 60 m across at the settlement's edge, walled on the pad side at seventy degrees (the owner's
 ## Briar crash, 2026-09-30: whatever went in did not come out). Every dry closed hollow that a
 ## pad's skirt closes is filled back to where it would spill, less DAM_DELL_M, so the valley is a
-## dell under the pad and never a pit. A hollow no deeper than DAM_MIN_M is left as it is: the
+## dell under the pad and never a pit; a hollow the pad's own middle lies in is filled no higher than
+## the pad, so a pad laid on the floor of a basin of the country's own is not walled in by it. A
+## hollow no deeper than DAM_MIN_M is left as it is: the
 ## limestone's shakeholes and the ash's buried streets are hollows by design, and the marsh's
 ## pools are water. DAM_WINDOW_M is how far round a pad's skirt a hollow is looked for.
 DAM_MIN_M = 6.0
@@ -430,6 +432,14 @@ def drain_pad_dams(grid: Grid, H: np.ndarray, places: list, outlet: np.ndarray |
             continue
         m = np.isin(lab, take)
         raise_m = np.where(m & ~core[i0:i1, j0:j1], np.maximum(depth - DAM_DELL_M, 0.0), 0.0)
+        # A hollow the pad's own middle lies in is a basin of the country's own that the pad was laid
+        # on the floor of, not one its skirt closed: filled no higher than the pad. Filled to where it
+        # would spill, it stood round the pad as a wall (w4096l: Wassail Knap's valley 17 m over its
+        # pad across ten hectares, the Letter-Cote's 6 m). A hollow beside the pad is filled as before.
+        own = int(lab[int(i) - i0, int(j) - j0])
+        if own in set(take.tolist()):
+            level = float(sub[int(i) - i0, int(j) - j0])
+            raise_m = np.where(lab == own, np.clip(level - sub, 0.0, raise_m), raise_m)
         if hold is not None:
             raise_m = raise_m * hold[i0:i1, j0:j1]
         H[i0:i1, j0:j1] = (sub + raise_m).astype(np.float32)

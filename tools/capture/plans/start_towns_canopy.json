@@ -1,0 +1,21 @@
+{
+  "note": "The four fighting-style start towns, for tree crowns in houses and props (the owner, 2026-10-02: the Ranger's opening had leaves through Fernhold's houses). Each town from its start's own spot, as the body stands when a new game hands over, and from above its roofs. Taken before and after the world builder kept the crowns off the towns (worldgen.trees.clear_off_towns).",
+  "shots": [
+    {"label": "fernhold_start", "at": {"place": "core:place/fernhold", "bearing": 80.0, "distance": 27.0, "height": 1.7},
+     "look": {"place": "core:place/fernhold", "height": 3.0}, "fov": 75, "time": 10.5, "weather": "core:weather/still"},
+    {"label": "fernhold_east", "at": {"place": "core:place/fernhold", "bearing": 250.0, "distance": 10.0, "height": 1.7},
+     "look": {"place": "core:place/fernhold", "bearing": 70.0, "distance": 40.0, "height": 4.0}, "fov": 75, "time": 10.5, "weather": "core:weather/still"},
+    {"label": "fernhold_above", "at": {"place": "core:place/fernhold", "bearing": 300.0, "distance": 55.0, "height": 40.0},
+     "look": {"place": "core:place/fernhold", "bearing": 70.0, "distance": 10.0, "height": 2.0}, "fov": 70, "time": 10.5, "weather": "core:weather/still"},
+    {"label": "wardens_rest_start", "at": {"place": "core:place/wardens_rest", "bearing": 142.6, "distance": 16.0, "height": 1.7},
+     "look": {"place": "core:place/wardens_rest", "height": 3.0}, "fov": 75, "time": 10.5, "weather": "core:weather/clear"},
+    {"label": "wardens_rest_above", "at": {"place": "core:place/wardens_rest", "bearing": 120.0, "distance": 70.0, "height": 40.0},
+     "look": {"place": "core:place/wardens_rest", "height": 2.0}, "fov": 70, "time": 10.5, "weather": "core:weather/clear"},
+    {"label": "gullhithe_above", "at": {"place": "core:place/gullhithe", "bearing": 300.0, "distance": 75.0, "height": 40.0},
+     "look": {"place": "core:place/gullhithe", "height": 2.0}, "fov": 70, "time": 10.5, "weather": "core:weather/clear"},
+    {"label": "moreva_start", "at": {"place": "core:place/moreva", "bearing": 180.0, "distance": 40.0, "height": 1.7},
+     "look": {"place": "core:place/moreva", "height": 3.0}, "fov": 75, "time": 10.5, "weather": "core:weather/clear"},
+    {"label": "moreva_above", "at": {"place": "core:place/moreva", "bearing": 330.0, "distance": 65.0, "height": 38.0},
+     "look": {"place": "core:place/moreva", "height": 2.0}, "fov": 70, "time": 10.5, "weather": "core:weather/clear"}
+  ]
+}

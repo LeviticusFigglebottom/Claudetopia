@@ -1,0 +1,1779 @@
+[
+  {
+    "id": "core:dialogue/linnet_ashby",
+    "speaker_name": "Linnet Ashby",
+    "notes": "The keeper of the bee-tree at the Told Hives (novel places, Briarwold). Gives core:quest/telling_the_bees and hears its telling; a merchant of comb, mead and candles.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Linnet Ashby",
+        "text": "*She has the veil down before she sees who you are, and puts it back up when she has.* — Sorry. They've been short with everybody. — Linnet. Ashby. If you've come for comb, there's comb. If you've come for Gran, she's not here.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Linnet Ashby",
+        "text": "The bee-tree. It's been dead since before Gran was born, and the bees like it better dead: it goes hollow, and hollow's what they want. There's twelve logs on it and four skeps on the bench and a bort cut in the bole that's older than the Hollow. — The Moot's candles come out of it. All of them.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Linnet Ashby",
+        "text": "You tell the bees. When the keeper dies, the one that keeps them after goes to the hives and knocks, and says it: who's dead, and who keeps them now. Plain. And you tie black on the hives, and you leave them a comb. — If you don't, they take it ill. They swarm and they don't come back. Or they stay and they die in the logs. Gran said she'd seen both.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Linnet Ashby",
+        "text": "I've tied the black on. That's half. — I go to the low log every morning and I knock three times and I open my mouth. — *She stops.* — If I say it to them, it's so. Do you see? Everybody else has said it. The Moot sent a candle. But nobody's said it to the bees. — They've hung a swarm on the Tamwick fingerpost twice. That's them asking.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Linnet Ashby",
+        "text": "Ask what you like. They're listening anyway.",
+        "choices": [
+          {
+            "text": "What is this tree?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What does it mean, telling the bees?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why haven't you told them?",
+            "next": "topic_3"
+          },
+          {
+            "text": "Gran's book says somebody can stand with you who can say it. I'll stand with you.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/telling_the_bees"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/telling_the_bees"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I'm ready. Let's go to the low log.",
+            "next": "q_tell",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/telling_the_bees",
+                  "the_untold"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Linnet Ashby",
+        "text": "Walk slow past the bench. They mind quick things.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Linnet Ashby",
+        "text": "*She looks at you a long while, the veil in her hands.* — She did say that. The verderer stood with her, for her gran. — It has to be said at the low log, knocking first. You can say it, or I can say it with you there, or — *she swallows* — or we can tell them she's gone into the wood. That's not lying, quite. The old ones say that sometimes. — Will you?",
+        "choices": [
+          {
+            "text": "I'll stand with you at the low log.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/telling_the_bees"
+              }
+            ]
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Linnet Ashby",
+        "text": "Then come when you're ready, and we'll go together. — Don't wear anything that smells of smoke. They'll think it's a fire, and it isn't.",
+        "next": "hub"
+      },
+      "q_tell": {
+        "speaker": "Linnet Ashby",
+        "text": "*At the low log she knocks three times, as the book says, and the hum inside changes. She looks at you.* — Go on. Or I will. Or — say it how it should be said.",
+        "choices": [
+          {
+            "text": "*Knock, and say it plain:* Mab Ashby is dead. Linnet keeps you now.",
+            "next": "q_true",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/telling_the_bees",
+                  "tell_them_plain"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "*Knock, and say it the old way:* Mab Ashby has gone into the wood. Linnet keeps you till she comes back.",
+            "next": "q_gone",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/telling_the_bees",
+                  "into_the_wood"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "*Stand by her, and say nothing.* It's yours to say, Linnet. I'm here.",
+            "next": "q_hers",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/telling_the_bees",
+                  "stand_by_her"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Not yet.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_true": {
+        "speaker": "Linnet Ashby",
+        "text": "*The hum goes down, and down, until it is hardly a sound at all, and then it comes back up, steady, the way it is on a still evening.* — *Linnet is crying and laughing at once.* — They've heard. That's them saying so. — Take a comb. Gran'd say you've earned it, and they'll not miss one.",
+        "next": "hub"
+      },
+      "q_gone": {
+        "speaker": "Linnet Ashby",
+        "text": "*The hum stays where it is, and stays, and a few bees come out of the log and walk about on the bark as if looking for someone.* — *Linnet watches them.* — They'll stay. They'll wait. — That's what I'm doing too, isn't it. — Take a comb. Thank you for standing with me.",
+        "next": "hub"
+      },
+      "q_hers": {
+        "speaker": "Linnet Ashby",
+        "text": "*For a long time nobody says anything. Then Linnet knocks again, three times, herself.* — Gran. Mab Ashby. She's dead. — *Her voice goes and comes back.* — I keep you now. Me. — *The hum goes down and steadies, and she puts her forehead against the log.* — Thank you for not saying it. Take a comb. Take two.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/telling_the_bees"
+          },
+          {
+            "flag": "bees_told_plain"
+          }
+        ],
+        "text": "They've not swarmed since. Gran's book says a told hive gives the best comb in the year after. It's true."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/telling_the_bees"
+          },
+          {
+            "flag": "bees_told_gone"
+          }
+        ],
+        "text": "They walk about on the bark every morning, looking. So do I. — Comb?"
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/telling_the_bees"
+          },
+          {
+            "flag": "bees_told_by_linnet"
+          }
+        ],
+        "text": "I said it. I said it myself. — They're quiet now. So am I, mostly."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/told_hives_knock",
+    "speaker_name": "The bee-tree",
+    "notes": "The touch at the bee-tree's low log (builder told_hives): what the hum says before and after the telling.",
+    "start": "untold",
+    "nodes": {
+      "untold": {
+        "speaker": "The bee-tree",
+        "no_talk": true,
+        "conditions": [
+          {
+            "not": {
+              "quest_done": "core:quest/telling_the_bees"
+            }
+          }
+        ],
+        "else": "told",
+        "text": "You knock on the low log, and the hum inside rises sharp and thin, the sound of a hive about to go. A band of black cloth is tied round the log, and round every log up the bole. A few bees come out and walk on your knuckles, looking for something, and go back in.",
+        "next": "end"
+      },
+      "told": {
+        "speaker": "The bee-tree",
+        "no_talk": true,
+        "text": "You knock on the low log, and the hum inside answers low and steady, like somebody saying yes in their sleep. The black is still tied round every hive. It will stay a year, Linnet says.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/ambrose_gale",
+    "speaker_name": "Ambrose Gale",
+    "notes": "The steward of the Swainmote (novel places, Briarwold). Gives core:quest/the_twelfth_at_the_mote and hears its decision; gives core:quest/the_hundred_and_twelve (from Tinehold's chapel) and hears that; offers the mote's work.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Ambrose Gale",
+        "text": "*He waits, standing, until you have sat down on the turf, and then lowers himself into the chair in the pollard.* — Ambrose Gale. Steward of the mote. I say custom. I don't make it. — You came into the ring while the mote is short. Do you know what that makes you?",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Ambrose Gale",
+        "text": "The Swainmote. Twelve Woodmen on the turf and the steward in the chair. When two people say custom differently, they come here and the twelve hear them and I say it aloud, and then it's custom again. — We've no law in the Wold. We've never needed it. We've needed this.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Ambrose Gale",
+        "text": "The dog-gauge. An iron stirrup the verderers have measured hounds by since before the knights. A hound that goes through it is a hound. A hound too big to go through can pull down a hart, and custom says three claws off each forefoot, and no more. — It's not cruel. It's not kind either. It's what keeps the harts.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Ambrose Gale",
+        "text": "A Woodman for the day. Custom says whoever walks into the ring while the mote is short may sit, and make up the number. — We've been eleven three days, with a hound in the pound and a girl at the gate. The eleven won't say it without a twelfth. Nobody comes into the Greatwood's middle any more.",
+        "next": "hub"
+      },
+      "topic_4": {
+        "speaker": "Ambrose Gale",
+        "text": "The mote's roll. Everything the mote witnesses is in it: every hound, every claim, every knight's oath sworn on this turf when they took the antlers. — The Marshal at Tinehold cut the knights' names off his chapel. He can't cut them out of this.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Ambrose Gale",
+        "text": "Speak, Woodman. The mote hears you.",
+        "choices": [
+          {
+            "text": "What is the Swainmote?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What is that iron stirrup?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What do you mean, a Woodman for the day?",
+            "next": "topic_3"
+          },
+          {
+            "text": "What's in the roll at your hip?",
+            "next": "topic_4"
+          },
+          {
+            "text": "I'll sit as your twelfth.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_twelfth_at_the_mote"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_twelfth_at_the_mote"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've heard the girl. Put the hound to the gauge.",
+            "next": "q_gauge",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_twelfth_at_the_mote",
+                  "the_gauge"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "The mason at Tinehold kept the names he cut off the chapel. I've brought them.",
+            "next": "q_names_found",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/hundred_and_twelve",
+                  1
+                ]
+              },
+              {
+                "quest_not_done": "core:quest/the_hundred_and_twelve"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_hundred_and_twelve"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": [
+                  "core:quest/the_hundred_and_twelve",
+                  "the_mote_remembers"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Tell me about the names cut off Tinehold's chapel.",
+            "next": "q_names_offer",
+            "conditions": [
+              {
+                "has_no_item": "core:item/hundred_and_twelve"
+              },
+              {
+                "quest_not_done": "core:quest/the_hundred_and_twelve"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_hundred_and_twelve"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Here is the roll from under Tinehold's altar.",
+            "next": "q_names_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_hundred_and_twelve",
+                  "the_mote_remembers"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "The Circle's contract for the Knar. Margery Laithe sent it to the mote.",
+            "next": "q_knar",
+            "conditions": [
+              {
+                "flag": "knar_to_mote"
+              },
+              {
+                "not": {
+                  "flag": "knar_heard_at_mote"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "set_flag": "knar_heard_at_mote"
+              },
+              {
+                "rep": [
+                  "core:faction/woodfolk",
+                  3
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Is there work for a Woodman?",
+            "next": "work",
+            "effects": [
+              {
+                "offer_work": true
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "work": {
+        "speaker": "Ambrose Gale",
+        "text": "There's always somebody wants custom said for them. Go and see.",
+        "next": "hub"
+      },
+      "bye": {
+        "speaker": "Ambrose Gale",
+        "text": "Go well. You'll be a Woodman again, any day the mote is short.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Ambrose Gale",
+        "text": "*He looks at you for a long time, and then nods once.* — Then sit. Custom says so, and the eleven will go with the twelfth. — The hound is Gristle, a burner's mastiff out of the Unasked Camp. He pulled down a hart in the spring. The girl at the pound is his. Hear her first. Then we'll go to the gauge.",
+        "choices": [
+          {
+            "text": "I'll hear her.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_twelfth_at_the_mote"
+              }
+            ]
+          },
+          {
+            "text": "Not today.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Ambrose Gale",
+        "text": "Good. Custom's slow, Woodman. It wants to be.",
+        "next": "hub"
+      },
+      "q_gauge": {
+        "speaker": "Ambrose Gale",
+        "text": "*The eleven stand up off the turf, one at a time. Ambrose takes the stirrup off its hook and holds it out to you: rusted, the iron worn thin and bright on its inside where nine hundred hounds have gone through it.* — Gristle won't go through it. He's too broad in the chest. Everybody here knows that. — The twelfth says. The eleven go with it.",
+        "choices": [
+          {
+            "text": "Custom is custom. Law him: three claws, and no more.",
+            "next": "q_law",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_twelfth_at_the_mote",
+                  "law_him"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "*Hold the gauge yourself, and hold it wide where the iron is worn.* He goes through.",
+            "next": "q_wide",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_twelfth_at_the_mote",
+                  "hold_it_wide"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "I'll pay the hart's worth to the Moot myself, and the mote can keep the hound's claws.",
+            "next": "q_pay",
+            "conditions": [
+              {
+                "marks_min": 80
+              }
+            ],
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_twelfth_at_the_mote",
+                  "pay_the_hart"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_law": {
+        "speaker": "Ambrose Gale",
+        "text": "*It is done quickly, by the verderer, with the burner's own knife, and the hound hardly cries. Hawys holds his head the whole time.* — Custom's said. — *Ambrose writes in the roll.* — She'll hate you for a year. Then she'll be a verderer. That's how it goes.",
+        "next": "hub"
+      },
+      "q_wide": {
+        "speaker": "Ambrose Gale",
+        "text": "*You hold it, and you hold it where the iron is thin, and Gristle goes through it scraping, and stands on the other side shaking himself. Nobody says anything. Then Ambrose writes in the roll.* — The hound passed the stirrup. — *He looks at you over the roll.* — The mote witnessed it. The mote remembers it. All of it.",
+        "next": "hub"
+      },
+      "q_pay": {
+        "speaker": "Ambrose Gale",
+        "text": "*He takes the marks without counting them and puts them in the hart-box under the chair.* — What's given back isn't counted against the one who took. That's custom too. — The hound goes home whole. Hawys owes you, and she knows it, and she'll hate that more than the claws.",
+        "next": "hub"
+      },
+      "q_names_offer": {
+        "speaker": "Ambrose Gale",
+        "text": "The Marshal had the knights' names cut off their niches, a hundred and twelve, because he said they never took a hart. — The mason who cut them was a Woodman. He'd have kept a list. Masons do. It'll be in the chapel under the keep, if it's anywhere. — Bring it to the mote, and the roll will say whose oaths they were.",
+        "choices": [
+          {
+            "text": "I'll go to Tinehold's chapel and look.",
+            "next": "q_names_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_hundred_and_twelve"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_names_accept": {
+        "speaker": "Ambrose Gale",
+        "text": "Under the altar, I'd think. Masons put things under altars. — Mind the Unvowed. They hunt.",
+        "next": "hub"
+      },
+      "q_names_found": {
+        "speaker": "Ambrose Gale",
+        "text": "*He holds out his hand, and you put the bark roll in it, and he reads down it with his finger moving. Then he takes the mote's roll out of its case and opens it on the chair's arm and reads down that.* — They're all here. Every one. Sworn on this turf. — Give it back to me properly, Woodman, when you've thought what's to be done with them. It's yours to say. You found them.",
+        "next": "hub"
+      },
+      "q_names_decide": {
+        "speaker": "Ambrose Gale",
+        "text": "*The two rolls lie side by side on the chair's arm.* — The mote can say them aloud, on the turf, and then they're custom again, the knights who were, whatever the Marshal says. Or the roll can keep them, and say nothing, which is also custom: they swore, and they went east, and the oath went with them. — Or there's a knight kneeling at the Moot Gate who'd want them. You say.",
+        "choices": [
+          {
+            "text": "Say them aloud at the mote. Every one.",
+            "next": "q_say",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_hundred_and_twelve",
+                  "say_them"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Keep them in the roll. Their oaths went east with them.",
+            "next": "q_keep",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_hundred_and_twelve",
+                  "keep_them"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Send them to Wystan Tine at the Moot Gate Stone.",
+            "next": "q_wystan",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_hundred_and_twelve",
+                  "to_wystan"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_say": {
+        "speaker": "Ambrose Gale",
+        "text": "*It takes the rest of the day. Ambrose reads, and the eleven say each name back after him, and the twelfth with them, a hundred and twelve times. Ardo. Bell of the Long Spear. Tamsen. Harrow. At the end of it the ring is dark, and the pollard is full of rooks.* — Custom again. — *He closes the roll.*",
+        "next": "hub"
+      },
+      "q_keep": {
+        "speaker": "Ambrose Gale",
+        "text": "*He rolls the bark up and puts it in the case with the mote's roll.* — Kept. Not said. — There's a difference, and the Circle in Tollmere would never understand it, and that's why we don't have a Circle.",
+        "next": "hub"
+      },
+      "q_wystan": {
+        "speaker": "Ambrose Gale",
+        "text": "*He nods slowly.* — He'd know what to do with them. He's the only one left who swore. — I'll send them by a verderer. He'll have them by the next kneeling.",
+        "next": "hub"
+      },
+      "q_knar": {
+        "speaker": "Ambrose Gale",
+        "text": "*He reads the contract twice, the second time with his lips moving at the last four words.* — For as long as the tree shall yield. — *He puts it in the roll.* — The mote will sit on the Knar. A tree can't come to the ring. It doesn't need to: the mote will go to it. — Thank you, Woodman.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_lawed"
+          }
+        ],
+        "text": "The twelfth. Sit, sit. — The verderers say Gristle hunts rats now. Very well, they say."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_wide"
+          }
+        ],
+        "text": "The twelfth. — The stirrup's on its hook. The eleven measure it every morning now. It's still wide where you held it."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_paid"
+          }
+        ],
+        "text": "The twelfth. The hart-box has your marks in it still. Nobody's spent them. Nobody will."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/hawys_tolly",
+    "speaker_name": "Hawys Tolly",
+    "notes": "The burner's girl at the Swainmote's pound (novel places, Briarwold). The first stage of core:quest/the_twelfth_at_the_mote closes on a talk with her.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Hawys Tolly",
+        "text": "*She does not look round from the wattle.* — He's not to be fed. They said. I'm not feeding him. I'm talking to him. That's not feeding.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Hawys Tolly",
+        "text": "Gristle. He's a mastiff. He's mine. — He went after a hart in the spring, in the Greatwood, and he got it, and the verderers found it, and they found him with it. I wasn't there. I'd have stopped him. — I'd have tried.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Hawys Tolly",
+        "text": "They'll put him through the stirrup and he won't go, he's too wide, and they'll take his claws. Three off each front foot. He won't run right after. He won't hunt. — He's not a hunter. He's a burner's dog. He sleeps on the clamp. He went after it because it ran.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Hawys Tolly",
+        "text": "Ambrose won't say it without twelve, and there's eleven, and they won't let me be the twelfth because he's my dog. — That's fair. I know that's fair. I'd say anything.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Hawys Tolly",
+        "text": "*Through the wattle a big brindled head pushes at her hand.* — What?",
+        "choices": [
+          {
+            "text": "Whose hound is that?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What will the mote do to him?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Why hasn't the mote sat?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'm the mote's twelfth. Tell me what you'd want said.",
+            "next": "q_plead",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_twelfth_at_the_mote",
+                  "the_twelfth"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Hawys Tolly",
+        "text": "*To the hound, not to you:* — They're going. It's all right.",
+        "next": "end"
+      },
+      "q_plead": {
+        "speaker": "Hawys Tolly",
+        "text": "*She turns round for the first time.* — You. — *She looks at you as if measuring you for the stirrup.* — Then say this. He's a burner's dog and he sleeps on the clamp and he's never been off the camp but the once. Say he went after it because it ran, not because he's a hunter. Say I'll keep him chained in the spring. — And if they take his claws, say I'll hold him while they do it. He'll stand it if I'm holding him. — That's all. That's everything.",
+        "next": "q_plead_end"
+      },
+      "q_plead_end": {
+        "speaker": "Hawys Tolly",
+        "text": "Go on, then. Ambrose is at the chair.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_lawed"
+          }
+        ],
+        "text": "*She does not look at you.* — He's walking better. He doesn't run. — Go away."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_wide"
+          }
+        ],
+        "text": "He went through it. Everybody saw. — *Quietly:* — I saw where you held it. I won't tell."
+      },
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_twelfth_at_the_mote"
+          },
+          {
+            "flag": "mote_paid"
+          }
+        ],
+        "text": "I'm going to pay you back. I don't know how. I'm going to."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/swainmote_gauge",
+    "speaker_name": "The dog-gauge",
+    "notes": "The touch at the Swainmote's dog-gauge (builder swainmote).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The dog-gauge",
+        "no_talk": true,
+        "text": "An iron stirrup the width of two hands, hung on a hook on an oak post as high as your hip. The iron is rusted brown outside and worn bright as a coin inside, where nine hundred years of hounds have gone through it. On the post under it, cut in a column, the verderers' marks for every hound measured, and beside about one in four, three small notches.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/margery_laithe",
+    "speaker_name": "Margery Laithe",
+    "notes": "The ropewalker of the Silk Walk (novel places, Briarwold). Gives core:quest/the_black_that_keeps (the Knar) and hears its decision; lays a silk-laid cord for three weaver silk; a merchant of rope and silk.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Margery Laithe",
+        "text": "*She is walking backward down the walk with silk paying out from her waist, and does not stop.* — Don't step over the strands. Walk round. Everybody steps over the strands. — Margery Laithe. This is my walk. What's yours?",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Margery Laithe",
+        "text": "Three into yarn, sunwise. Three yarn into strand, the other way. Three strand into line, sunwise again. What's laid against itself holds. — The Hollow hangs its rope walks off my line. Weaverdeep hangs its bridges. If my line goes, people fall. So it doesn't.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Margery Laithe",
+        "text": "Weavers' silk. The gatherers take it out of the crowns with poles and smoke. Good silk sings on the posts when the wind's in it: you hear the walk before you see it. — This autumn it's come in black. Stained right through, sticky, smelling of oak-galls. It doesn't sing. I won't lay it.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Margery Laithe",
+        "text": "The Dunnocks. Pell and Sib, brother and sister, my best gatherers. The north's crowns were stripped, and a Tollmere man came through paying wages for gall-silk off the Knar, in the Greatwood, south. They went. — That was a month ago. The black silk comes up the road with the carters. The Dunnocks don't.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Margery Laithe",
+        "text": "*She stops at last, and turns the top on its sledge half a turn.* — Well?",
+        "choices": [
+          {
+            "text": "How do you lay silk into line?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What's wrong with the silk?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Who hasn't come back?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll go south to the Knar and find the Dunnocks.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_black_that_keeps"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_black_that_keeps"
+                }
+              }
+            ]
+          },
+          {
+            "text": "I've been to the Knar. Sable is dead, and I have his contract and Pell's reel.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/the_black_that_keeps",
+                  "the_contract"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Would you lay me a cord of silk? I have three hanks of weaver silk.",
+            "next": "cord",
+            "conditions": [
+              {
+                "has_item": [
+                  "core:item/weaver_silk",
+                  3
+                ]
+              },
+              {
+                "marks_min": 25
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Margery Laithe",
+        "text": "Walk round the strands.",
+        "next": "end"
+      },
+      "cord": {
+        "speaker": "Margery Laithe",
+        "text": "*She takes the silk and smells it and listens to it, holding a hank up in the wind, and nods.* — Clean. It sings. — Twenty-five for the laying. Three times three, on the small jack. *It takes her the time it takes you to drink a cup of something, and she puts it on your finger herself.*",
+        "next": "hub",
+        "effects": [
+          {
+            "take_item": [
+              "core:item/weaver_silk",
+              3
+            ]
+          },
+          {
+            "marks": -25
+          },
+          {
+            "give_item": "core:item/ring_silk_laid_cord"
+          }
+        ]
+      },
+      "q_offer": {
+        "speaker": "Margery Laithe",
+        "text": "*She stops dead, which you have not seen her do.* — You would. — The Knar is in the Greatwood, south of the Hollow road. An oak with a gall at its foot as big as a barn, they say; you'll see the smoke first. The Tollmere man's called Sable. He cuts ink out of the gall for the Sayers. — Bring them home. If you can't bring them home, bring me something of theirs, so I know.",
+        "choices": [
+          {
+            "text": "I'll bring them home, or word of them.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/the_black_that_keeps"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Margery Laithe",
+        "text": "Pell marks his reels. PD, burned in the end. He's vain about it. — Go on. I'll keep the walk.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Margery Laithe",
+        "text": "*She takes the reel and unwinds a turn of the black silk and holds it in the wind. It does not make a sound.* — Pell. — *She is quiet a long while. Then she takes the contract and reads it, and reads the last four words twice.* — For as long as the tree shall yield. — The Circle sent him and the Circle will send another. Unless. — You went in. You say who has this.",
+        "choices": [
+          {
+            "text": "Send it back to the Circle in Tollmere, sealed, with word of what it cost.",
+            "next": "q_circle",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_black_that_keeps",
+                  "to_the_circle"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Take it to the Swainmote. Let the mote say what the Knar can spare.",
+            "next": "q_mote",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_black_that_keeps",
+                  "to_the_mote"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Burn it in the Knar's own vats, and let the bores close.",
+            "next": "q_burn",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/the_black_that_keeps",
+                  "burn_it"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_circle": {
+        "speaker": "Margery Laithe",
+        "text": "Then they'll know what it cost, and they'll pay it, and they'll send another wright. That's the Circle. — *She folds it and seals it with silk.* — There's the carriage money. Don't thank me. I'm thanking you.",
+        "next": "hub"
+      },
+      "q_mote": {
+        "speaker": "Margery Laithe",
+        "text": "*She nods slowly.* — The mote. Ambrose Gale. He'll sit on it, and he'll say custom, and the Circle'll laugh, and then they'll find nobody in the Wold will carry their barrels. That's how custom works. Slow. — Take it to him. Say Laithe sent it.",
+        "next": "hub"
+      },
+      "q_burn": {
+        "speaker": "Margery Laithe",
+        "text": "Good. — *She says it flat, like a strand pulled tight.* — The Circle has its Rolls. Let it write them in something that fades, like everybody else. — Sib Dunnock came up the road yesterday, black to the elbow, and won't talk. I'll tell her. She'll want to know it burned.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/the_black_that_keeps"
+          }
+        ],
+        "text": "The silk's started singing again. Not much. Enough. — Walk round the strands."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/silk_walk_jack",
+    "speaker_name": "The twisting jack",
+    "notes": "The touch at the Silk Walk's jack (builder silk_walk).",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The twisting jack",
+        "no_talk": true,
+        "text": "A wheel as high as your chest on an oak frame, with a crank, and three iron hooks on its face that turn when the wheel turns. Three strands of silk run from the hooks down the walk, over the crossed heads of the posts, to the top on its sledge and on. You turn the crank a quarter-turn and every strand down the whole walk tightens and shines at once, and a note comes off them, very high, like a wet finger round a glass.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/gammer_hoole",
+    "speaker_name": "Gammer Hoole",
+    "notes": "The counter at the Noon Owl (novel places, Briarwold). At noon (11-14) she reads the owl's calls: five readings in turn, each finding a place (discover), and the owl's feather after the fifth.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Gammer Hoole",
+        "text": "*She does not look round, and does not look up.* — Sit, if you're sitting. Don't, if you're not. Don't point at the hollow. — Hoole. They call me Gammer. I count.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Gammer Hoole",
+        "text": "The owl in the white oak. It calls at noon. Every day, at the top of the sun, the wrong hour. — The old ones say it saw the Hush go south, the day the Briar was grown, and it's called the hour wrong ever since. I say it calls where lost things are. Both can be true. Most things can.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Gammer Hoole",
+        "text": "One call is nothing lost. Three, a thing dropped on a road. Five, a thing under the ground. Seven, a thing somebody hid. Nine is a place. — It called nine at the Long Wind, and the next morning the Brother was down and the dark under him open. It called nine yesterday.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Gammer Hoole",
+        "text": "Come at the top of the sun, when it calls. Sit in the ring. Don't look up. I'll count, and I'll tell you what it said, and you can go and find out if it was right. — Once a day it's right. I never know which once.",
+        "next": "hub"
+      },
+      "not_noon": {
+        "speaker": "Gammer Hoole",
+        "text": "*She shakes her head without lifting it.* — Not now. It calls at the top of the sun and not before and not after. Come back at noon and sit.",
+        "next": "hub"
+      },
+      "gift": {
+        "speaker": "Gammer Hoole",
+        "text": "*She ties a grey feather on a thong round your wrist with fingers that know the knot without her looking.* — Five noons. It knows you now. When you hear it at noon, anywhere in the Wold, it's saying where you are.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/feather"
+          },
+          {
+            "give_item": "core:item/amulet_noon_owl_feather"
+          }
+        ]
+      },
+      "read_1": {
+        "speaker": "Gammer Hoole",
+        "text": "*You sit. Nothing happens for so long that you forget to wait. Then, high over you, the owl calls: once, twice, on, nine times, and stops.* — *Gammer Hoole has not looked up.* — Nine. A place. — South. Under the Greatwood's oldest, where something has been taken out of the ground that should have been left in it. There's smoke over it. Go and see what's eating the oak.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/read_1"
+          },
+          {
+            "inc_counter": "noon_owl_readings"
+          },
+          {
+            "discover": "core:poi/the_knar"
+          }
+        ]
+      },
+      "read_2": {
+        "speaker": "Gammer Hoole",
+        "text": "*The owl calls five times, slowly, and then three, quickly.* — Five's a thing under the ground. Three's a thing dropped on a road. — *She frowns.* — A word not said, and put away under the ground. In the Lower Wold, by the Tamwick road. There's a dead tree there that hums. Go and listen to it.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/read_2"
+          },
+          {
+            "inc_counter": "noon_owl_readings"
+          },
+          {
+            "discover": "core:poi/told_hives"
+          }
+        ]
+      },
+      "read_3": {
+        "speaker": "Gammer Hoole",
+        "text": "*Seven calls, and then a long while, and then one.* — Seven's a thing somebody hid. One's nothing lost. — A thing hid in plain sight, then, and nothing lost by it. — That's the mote. The Greatwood's middle, by the Rookhold road. They've a hound there they're hiding nothing about. Go and sit.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/read_3"
+          },
+          {
+            "inc_counter": "noon_owl_readings"
+          },
+          {
+            "discover": "core:poi/the_swainmote"
+          }
+        ]
+      },
+      "read_4": {
+        "speaker": "Gammer Hoole",
+        "text": "*Three calls, three, three, like somebody plaiting.* — *For the first time she smiles.* — That's only Margery. Three and three and three. Her walk, by the Skarl road, west of here. She's lost something, and the owl knows it, and it's being kind. Go and help her lay it.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/read_4"
+          },
+          {
+            "inc_counter": "noon_owl_readings"
+          },
+          {
+            "discover": "core:poi/silk_walk"
+          }
+        ]
+      },
+      "read_5": {
+        "speaker": "Gammer Hoole",
+        "text": "*Nine calls again, the same as the first time, and then, after, a tenth, very soft.* — *She sits a long while.* — Nine and one more. A place, and a place inside it. — Fern Gully, east of Mossgrave, where the ferns grow over your head. There's a way in nobody uses. Go and use it. — *She reaches in her shawl.* — And take this. Five noons. The owl knows you now.",
+        "next": "hub",
+        "effects": [
+          {
+            "set_flag": "noon_owl/read_5"
+          },
+          {
+            "inc_counter": "noon_owl_readings"
+          },
+          {
+            "discover": "core:poi/fern_gully"
+          }
+        ]
+      },
+      "hub": {
+        "speaker": "Gammer Hoole",
+        "text": "*Her hands lie still on the count-stick.* — Well?",
+        "choices": [
+          {
+            "text": "What is the owl?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What do the calls mean?",
+            "next": "topic_2"
+          },
+          {
+            "text": "Can I listen?",
+            "next": "topic_3"
+          },
+          {
+            "text": "*Sit with her in the ring, and listen.*",
+            "next": "read_1",
+            "conditions": [
+              {
+                "time_between": [
+                  11,
+                  14
+                ]
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/read_1"
+                }
+              }
+            ]
+          },
+          {
+            "text": "*Sit with her in the ring, and listen.*",
+            "next": "read_2",
+            "conditions": [
+              {
+                "time_between": [
+                  11,
+                  14
+                ]
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/read_2"
+                }
+              },
+              {
+                "flag": "noon_owl/read_1"
+              }
+            ]
+          },
+          {
+            "text": "*Sit with her in the ring, and listen.*",
+            "next": "read_3",
+            "conditions": [
+              {
+                "time_between": [
+                  11,
+                  14
+                ]
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/read_3"
+                }
+              },
+              {
+                "flag": "noon_owl/read_2"
+              }
+            ]
+          },
+          {
+            "text": "*Sit with her in the ring, and listen.*",
+            "next": "read_4",
+            "conditions": [
+              {
+                "time_between": [
+                  11,
+                  14
+                ]
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/read_4"
+                }
+              },
+              {
+                "flag": "noon_owl/read_3"
+              }
+            ]
+          },
+          {
+            "text": "*Sit with her in the ring, and listen.*",
+            "next": "read_5",
+            "conditions": [
+              {
+                "time_between": [
+                  11,
+                  14
+                ]
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/read_5"
+                }
+              },
+              {
+                "flag": "noon_owl/read_4"
+              }
+            ]
+          },
+          {
+            "text": "Will it call for me?",
+            "next": "not_noon",
+            "conditions": [
+              {
+                "not": {
+                  "time_between": [
+                    11,
+                    14
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "text": "The owl gave me five places, Gammer.",
+            "next": "gift",
+            "conditions": [
+              {
+                "flag": "noon_owl/read_5"
+              },
+              {
+                "not": {
+                  "flag": "noon_owl/feather"
+                }
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Gammer Hoole",
+        "text": "Don't look up on your way out.",
+        "next": "end"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "flag": "noon_owl/feather"
+          }
+        ],
+        "text": "You. It called your name at noon yesterday. Well. It called something."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/noon_owl_hollow",
+    "speaker_name": "The white oak",
+    "notes": "The touch at the foot of the Noon Owl's oak (builder noon_owl).",
+    "start": "noon",
+    "nodes": {
+      "noon": {
+        "speaker": "The white oak",
+        "no_talk": true,
+        "conditions": [
+          {
+            "time_between": [
+              11,
+              14
+            ]
+          }
+        ],
+        "else": "other",
+        "text": "You put your hand on the white oak. Over your head, high in the bole, from the black of the hollow, an owl calls: a long, soft, hollow note, wrong in the full light of noon, and then again. You find you have not looked up.",
+        "next": "end"
+      },
+      "other": {
+        "speaker": "The white oak",
+        "no_talk": true,
+        "text": "You put your hand on the white oak. It is dry and smooth as bone and cold even in the sun. The hollow high in the bole is black and nothing moves in it. The ground round your feet is grey with owl-pellets, each one full of the tiny bones of what it ate.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/knar_notice",
+    "speaker_name": "The wrights' notice",
+    "notes": "The Knar's hook (site hook post by the vats): starts core:quest/the_black_that_keeps for whoever has not had it from Margery Laithe.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The wrights' notice",
+        "no_talk": true,
+        "text": "A board on a post, the letters written in the black and so not faded at all, though the board under them has gone grey: KNAR WORKS. BY CONTRACT TO THE SAYERS' CIRCLE OF TOLLMERE. CUTTERS WANTED. NO WOODFOLK. NO LEAVING. — Pinned under it, a scrap of silk-gatherer's tally-paper with PD scratched on it, and a line in a different hand: Sib, if you get out, tell Margery.",
+        "choices": [
+          {
+            "text": "Go in after whoever wrote that.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_black_that_keeps"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_black_that_keeps"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/the_black_that_keeps"
+              }
+            ]
+          },
+          {
+            "text": "Leave the notice.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The wrights' notice",
+        "text": "Behind the notice the gall weeps black out of a hundred bores, and the vats steam, and somewhere inside the brown mass somebody is talking very quickly about nothing.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/dunstan_agar",
+    "speaker_name": "Dunstan Agar",
+    "notes": "The agister at the Pannage Pound (novel places, Briarwold). Gives core:quest/counted_out (the thornhounds at the pound after dark); a merchant of pannage ham.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Dunstan Agar",
+        "text": "*He looks you up and down and his lips move.* — One. — Dunstan Agar, agister. If you've a pig in here you'd best know its ear-mark, and if you haven't, you'll keep your hands off theirs.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Dunstan Agar",
+        "text": "Pannage. From Michaelmas to Martinmas the Wold lets the commoners turn their pigs out to the acorns. So many to a household. I count them in at that gate and I count them out at that gate, every one, and a household that can't show me its pig pays for it. Forty years. Never been out.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Dunstan Agar",
+        "text": "Forty-one in. Thirty-eight this morning. One a night, over the bank in the dark, and nothing left but a smear on the hazel. — Hounds. Bark-hounds out of the Greatwood. They've never come this far west before. Something's moving them.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Dunstan Agar",
+        "text": "*He nods at you, as if you had come out right.* — Well?",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "topic_1"
+          },
+          {
+            "text": "Why is the count out?",
+            "next": "topic_2"
+          },
+          {
+            "text": "I'll sit up at the bank tonight and see what comes over it.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/pannage_count"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/pannage_count"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The hounds that came over your bank are dead.",
+            "next": "q_done",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/pannage_count",
+                  "the_count_right"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Dunstan Agar",
+        "text": "*His lips move as you go.* — One.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Dunstan Agar",
+        "text": "You would. — They come after dark, over the bank on the wood side where the hazel's lowest. Two, by the marks. Kill them and the count comes right, and I'll see you're paid in ham, which is better than marks, whatever the Tallymen say.",
+        "choices": [
+          {
+            "text": "I'll be at the bank after dark.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/pannage_count"
+              }
+            ]
+          },
+          {
+            "text": "Not tonight.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Dunstan Agar",
+        "text": "Don't stand in the pound. The pigs'll have your boots.",
+        "next": "hub"
+      },
+      "q_done": {
+        "speaker": "Dunstan Agar",
+        "text": "*He goes to the gate and counts, out loud, slowly, all the way, and when he gets to the end he says the number twice.* — Thirty-eight. And thirty-eight it'll stay. — Here. Off the hook in the chimney. You'll not taste better.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/pannage_count"
+          }
+        ],
+        "text": "Thirty-eight every morning since. Right as rain. — One. That's you."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/letter_oak_threads",
+    "speaker_name": "The Letter Oak",
+    "notes": "The touch at the Letter Oak's threads (builder letter_oak): looking for your name, and the twenty-year letter to Wystan Tine, which starts core:quest/the_letter_on_the_oak.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The Letter Oak",
+        "no_talk": true,
+        "text": "Letters on every thread, folded small and tied on with a turn of wool: to Ma at Elderhold, to the Rookes at the camp, to Whoever Has My Good Knife. None to you. On the thread nearest the road one letter hangs that is older than the rest, brown as a leaf, sealed with a hart and a spear in green wax: To Wystan Tine, at the Moot Gate, by whoever goes that way.",
+        "choices": [
+          {
+            "text": "Take the old letter on to the Moot Gate.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/the_letter_on_the_oak"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/the_letter_on_the_oak"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "give_item": "core:item/vanes_letter"
+              },
+              {
+                "start_quest": "core:quest/the_letter_on_the_oak"
+              }
+            ]
+          },
+          {
+            "text": "Leave the letters to their own.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The Letter Oak",
+        "text": "The thread it hung on is left swinging, the only bare one on the oak. Somebody has knotted it, so the next letter can go on.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/casting_dell_stone",
+    "speaker_name": "The dell's stone",
+    "notes": "The touch at the Casting Dell's stone (builder casting_dell): the antler the dell gives, once.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The dell's stone",
+        "no_talk": true,
+        "conditions": [
+          {
+            "not": {
+              "flag": "casting_dell_given"
+            }
+          }
+        ],
+        "else": "given",
+        "text": "A flat grey stone at the head of the dell, and on it, set apart from the hundreds in the bracken, one antler: a twelve-pointer, its burr still dark, laid square on the stone as if somebody had put it there for you. The Warden at the dell's mouth has not moved.",
+        "choices": [
+          {
+            "text": "Take the one the dell gives.",
+            "next": "taken",
+            "effects": [
+              {
+                "set_flag": "casting_dell_given"
+              },
+              {
+                "give_item": "core:item/dell_tine"
+              },
+              {
+                "rep": [
+                  "core:faction/woodfolk",
+                  2
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Leave it.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The dell's stone",
+        "text": "You break one tine off at the beam, as the custom says, and leave the rest on the stone for the moss. Down at the mouth the Warden's leaves stir in no wind, and settle.",
+        "next": "end"
+      },
+      "given": {
+        "speaker": "The dell's stone",
+        "no_talk": true,
+        "text": "The antler lies on the stone where you left it, one tine short. The dell gives one.",
+        "next": "end"
+      }
+    }
+  },
+  {
+    "id": "core:dialogue/edda_layward",
+    "speaker_name": "Edda Layward",
+    "notes": "The Layer at the Thornwell (novel places, Briarwold; large site). Gives core:quest/what_the_builders_planted and hears what is done with the seed-stone.",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "speaker": "Edda Layward",
+        "text": "*She does not stop cutting.* — Stand clear of the stack. It moves at night. — Edda. Layward. From the Ring. I lay the Briar on the rim, or I did. Now I cut it here, where it's no business being.",
+        "next": "hub"
+      },
+      "topic_1": {
+        "speaker": "Edda Layward",
+        "text": "The Builders' well. Black stone, no joints, a stair going down. Nobody knew it was under the moss. This spring the ground split and the thorn came up out of it, the Briar's own root, three miles inside the wall. — I cut it back every day. Every morning it's higher than I cut it.",
+        "next": "hub"
+      },
+      "topic_2": {
+        "speaker": "Edda Layward",
+        "text": "Laying. You cut the thorn half through at the foot and bend it over and stake it down, and it grows along the ground instead of up, thick, into a wall. That's what the Briar is: laid thorn, two hundred miles of it. The Builders laid it. We keep it laid. — This I can't lay. It won't bend.",
+        "next": "hub"
+      },
+      "topic_3": {
+        "speaker": "Edda Layward",
+        "text": "Odo and Ferris went down the stair a fortnight back, with lanterns. Ferris's lantern's at the bottom of the stair still, I can see it. — At night, you can hear it. Stone, walking on stone. Slow. Round and round.",
+        "next": "hub"
+      },
+      "hub": {
+        "speaker": "Edda Layward",
+        "text": "*The bill-hook goes in and out of the thorn without catching.* — Well?",
+        "choices": [
+          {
+            "text": "What is this place?",
+            "next": "topic_1"
+          },
+          {
+            "text": "What does a Layer do?",
+            "next": "topic_2"
+          },
+          {
+            "text": "What's at the bottom?",
+            "next": "topic_3"
+          },
+          {
+            "text": "I'll go down the well and find what's walking.",
+            "next": "q_offer",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_builders_planted"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_builders_planted"
+                }
+              }
+            ]
+          },
+          {
+            "text": "The stone thing at the bottom is down. It was holding this.",
+            "next": "q_decide",
+            "conditions": [
+              {
+                "quest_at": [
+                  "core:quest/what_the_builders_planted",
+                  "the_seed_stone"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Goodbye.",
+            "next": "bye"
+          }
+        ]
+      },
+      "bye": {
+        "speaker": "Edda Layward",
+        "text": "Mind the stack.",
+        "next": "end"
+      },
+      "q_offer": {
+        "speaker": "Edda Layward",
+        "text": "*She stops cutting for the first time.* — You would. — Take a light. Take a blade that'll cut thorn. Odo had the tally-board; if it's down there, read it, he wrote down what he found. — Whatever's walking, it's keeping something. Bring me word what.",
+        "choices": [
+          {
+            "text": "I'll go down.",
+            "next": "q_accept",
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_builders_planted"
+              }
+            ]
+          },
+          {
+            "text": "Not now.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_accept": {
+        "speaker": "Edda Layward",
+        "text": "The stair's inside the ring. The thorn comes down it; go with the grain or it'll have you.",
+        "next": "hub"
+      },
+      "q_decide": {
+        "speaker": "Edda Layward",
+        "text": "*She takes the seed-stone in both gauntlets and the cut thorn in the stack beside her shifts toward it, all of it, like grass in a wind.* — Builders' work. They fed the wall from here. A thousand years, and this is the last of them, and the wall's failing in the south. — *She looks at you.* — Odo's board says don't take the last one unless you know what it's for. Now we know. You brought it up. You say.",
+        "choices": [
+          {
+            "text": "Put it back in the Keeper's hands. Let the well feed the wall, thorn and all.",
+            "next": "q_back",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "set_it_back"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Take it to the Standing Moot. The stones there will know what the Builders meant.",
+            "next": "q_moot",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "to_the_moot"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Lay it in the Layers' Ring, and lay the thorn here down over it, the old way.",
+            "next": "q_ring",
+            "effects": [
+              {
+                "quest_choice": [
+                  "core:quest/what_the_builders_planted",
+                  "to_the_ring"
+                ]
+              }
+            ]
+          },
+          {
+            "text": "Let me think.",
+            "next": "hub"
+          }
+        ]
+      },
+      "q_back": {
+        "speaker": "Edda Layward",
+        "text": "Then the well keeps feeding, and the thorn keeps coming up here, and the wall in the south gets what it's owed. — I'll cut a path round it. The Hollow can learn to live with a hedge in its wood. It's lived with worse.",
+        "next": "hub"
+      },
+      "q_moot": {
+        "speaker": "Edda Layward",
+        "text": "The Moot. *She nods slowly.* — The stones hum when you stand in the middle. Maybe this is what they're humming about. — Carry it careful. It'll pull toward the thorn the whole way.",
+        "next": "hub"
+      },
+      "q_ring": {
+        "speaker": "Edda Layward",
+        "text": "*Something like a smile.* — Laid the old way. Cut half through and bent down and staked. It'll grow along the ground and not up, and the Ring will keep it. — That's not what the Builders meant. It's what we'd mean. Good.",
+        "next": "hub"
+      }
+    },
+    "greetings": [
+      {
+        "conditions": [
+          {
+            "quest_done": "core:quest/what_the_builders_planted"
+          }
+        ],
+        "text": "It's stopped growing up. Whatever you did. — It's growing along, now. Like it should."
+      }
+    ]
+  },
+  {
+    "id": "core:dialogue/thornwell_cairn",
+    "speaker_name": "The layers' cairn",
+    "notes": "The Thornwell's hook (site hook cairn by the well-head): starts core:quest/what_the_builders_planted for whoever has not had it from Edda Layward.",
+    "start": "look",
+    "nodes": {
+      "look": {
+        "speaker": "The layers' cairn",
+        "no_talk": true,
+        "text": "A cairn of the Builders' black stone, broken off the well's rim, with a note under the top one in a layer's square hand: ODO AND FERRIS DOWN THE STAIR, 3RD DAY. IF YOU ARE GOING DOWN, GO WITH THE GRAIN OF THE THORN. IF YOU ARE COMING UP, TELL EDDA WHAT IS WALKING. — From the ring of black stone behind it comes, very faintly, the sound of stone set down on stone.",
+        "choices": [
+          {
+            "text": "Go down the well and find out what is walking.",
+            "next": "taken",
+            "conditions": [
+              {
+                "quest_not_done": "core:quest/what_the_builders_planted"
+              },
+              {
+                "not": {
+                  "quest_active": "core:quest/what_the_builders_planted"
+                }
+              }
+            ],
+            "effects": [
+              {
+                "start_quest": "core:quest/what_the_builders_planted"
+              }
+            ]
+          },
+          {
+            "text": "Leave the cairn.",
+            "next": "end"
+          }
+        ]
+      },
+      "taken": {
+        "speaker": "The layers' cairn",
+        "text": "The thorn over the well-head creaks in no wind.",
+        "next": "end"
+      }
+    }
+  }
+]

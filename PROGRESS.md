@@ -16103,6 +16103,58 @@ test_content_split, test_region_check; `region_check.py briarwold` PASS.
 **For the coordinator**: a world build is needed for the Delf's tree (and every far-province speck)
 and the three glades. Not done: the Charter Delf, Tinehold and the Windthrow were not shot again
 (their glades only exist after a build; shoot them with `--weather clear --time 16.5`).
+
+## Polish, second pass: the Briarwold three's glades and the Name-Wife's Hollow, shot on w4096j (polish, 2026-10-03)
+
+The pass's last five commits (from `wip/polish`), checked, tested and shot in one batch
+(`poi_sheet --weather clear --time 16.5`, previews on the installed w4096j):
+
+- **The Hollow faces the way to its road** (afdb8ebd): `_to_road` takes the nearest point of the
+  nearest road within 400 m (its road is 302 m off). The sheet's first view, from the road's side,
+  looks into the mouth with the weep and the Name-Tree beside it.
+- **The Hollow's crag** (4bc31548): cheeks of 15 and 11 m, the piece behind leaning, two slab
+  pinnacles, a toppled slab and four blocks on the apron, moss and fern on the bank. It reads as a
+  limestone outcrop over its mouth; the right-hand pinnacle still reads as a squared pillar from the
+  north-east (view 2). View 1 is 2.01 M primitives against the 1.5 M budget (2.09 M before).
+- **A glade is open sky** (81d574bd): `clear_glades` takes a tree whose crown (0.4 of its height times
+  its scale) reaches over the disc or the way. **It needs the next world build to be seen.** w4096j
+  was built before it, and neither the built world nor a poi_sheet preview applies it (a preview only
+  clears its pad, `PoiPreview.clear_cell`). Run over w4096j's own cells, it would still take 78
+  trees: 38 at the Windthrow, 28 at Tinehold, 12 at the Charter Delf. Those include every tree whose
+  crown is over a sheet camera, so the sheets show the problem the commit fixes:
+  - the Windthrow: view 1 under a 44 m oak's crown, view 3 against a 52 m oak's trunk 24 m off;
+  - Tinehold: views 1 and 2 inside giant oaks' crowns, near black;
+  - the Delf: view 2 under an oak's crown.
+
+  Views 2 and 4 of the Windthrow show the open glade round the plate and the trunk.
+- **The Charter Delf's tips** (10b1d674): tips, not domes, at 16 loose stones a tip. On the sheet
+  they still read as brown cloth, and the old tip's grass tint looked mint on the scree texture. That
+  material was the cause: the other mines' tips are `PoiKit.painted(5, ...)` beaten earth, and the
+  Delf's was the ground's scree texture, darkened. It is now painted beaten earth too, in granite grey
+  (`GRANITE_SPOIL`). On the re-check sheet the tips read as grey stone waste. **Still open (shared, all
+  four mines):** each tip's top is puckered like a sack's neck. The lumps and rills reach full
+  strength at ring 1, round the single apex vertex, so they fold in to it. Fading them in over the
+  top quarter of `f` in `PoiMasonry.spoil_heap` should fix it; that was not done or shot.
+- **Rain cleared on settle** (132368dd): `settle()` restarts the stopped CPUParticles3D, so a
+  pinned-clear capture has no drops left. None are in any view.
+- `briarwold.gd`'s `GRANITE_TINTS` had been put between `_earth_look` and its doc comment. Moved.
+- Not changed: the Windthrow's trunk is a smooth, pale grey bole with peg-like stubs (DEADWOOD,
+  painted timber). From the east it reads more like a beam than a tree.
+
+**Sheets**: `$SCRATCH/sheets/the_windthrow_tinehold.jpg` (the Windthrow, and Tinehold's views 1-2;
+the first run was stopped there by the background limit on this loaded box, and Tinehold's last
+two views were not taken again), `$SCRATCH/sheets/charter_delf_name_wifes_hollow.jpg`,
+`$SCRATCH/recheck/charter_delf.jpg` (after the spoil fix). Views ran at about 9 minutes each, with
+the machine at under 200 MB free.
+
+**Tests**: `pytest test_glades.py` (3 pass); `./run.sh test --filter=test_sites_briarwold,
+test_sites_sedgemire,test_atmosphere,test_objects_seated_briarwold,test_objects_seated_sedgemire`:
+33 tests, 0 failed, 0 script errors. Seat counts: Briarwold on_road 2, buried 4, overlap 1,
+fence_gap 142; Sedgemire floating 1, buried 1.
+
+**For the coordinator**: shoot the Windthrow, Tinehold and the Delf again after the next world
+build. The glades with the crown rule, and the Delf's tree, exist only after it.
+
 ## Ground texture quality (Standard/High) lands; far-tree pictures nearer and ground cover through Terrain3D's instancer are measured and not adopted (terrain-fidelity, 2026-10-02)
 
 ### Ground texture quality: Standard and High
@@ -16324,3 +16376,982 @@ It ran end to end here on OpenGL with no script errors. Draws by stop: 960 / 134
 The owner's benchmark runs at Medium and at High, on the laptop and on the 9070 XT, will say.
 Pre-existing in the targeted tests, not from this branch: dummy-renderer ERROR lines
 ("Parameter material is null") in test_naming_screen.
+
+**Follow-up, 2026-10-03 (lowend):** the title's film now holds all seven shots. It is 75 s and
+12.5 MB, Theora at quality 4, 1280x720, filmed at 12 fps on llvmpipe and played at 24. Each shot
+dips in from and out to the menu's dark, so the loop's seam is dark to dark. The Briarwold road
+took 37-45 s a frame to film here, and the other shots about 5 s. The shader warm set holds
+Terrain3D's dual-scaling shader (a9470fd8; 100 to 101 materials).
+
+## Playtest fixes: crowns off the start towns, a load that offers the way back (playtest-fixes, 2026-10-03)
+
+The owner's playtest (2026-10-02) found tree crowns reaching into the start towns' houses and
+props (the Ranger's opening had leaves through Fernhold's houses), and a load that could hang
+the way into the world. Triage 81.
+
+- **The builder keeps every crown off the towns** (8aa0cbab). Before this, only the trunk was
+  kept off. `worldgen.trees.clear_off_towns` takes out every tree whose crown reaches over a
+  town's pad and the gardens past it, as the build writes the cells.
+- **The installed world took the same pass without a rebuild.** `tools/world/crowns_off_towns.py`
+  (8601bf73) was only dry-run in its first session. It has now run over w4096j (d8210835): 585
+  trees off 37 towns, in 69 cells.
+  - Biggest removals: Ormhold 61, Hazelwick 56, Grandfather 55, Rookhold 51, Fernhold 35.
+  - The diff was checked cell by cell. Only tree instances were dropped (Cinderlea's dead ash and
+    char stumps among them), all within 116 m of a town centre. No other field or bucket changed.
+  - A second dry run finds nothing left to take.
+- **The loading caption watches its load** (31fc6ea0). After 60 s without movement it says what
+  it waits on, reports it, and offers "Back to the title". Continue, Load and Be named take the
+  world's scene from the cache, or read it on the loader's threads, never on the main thread.
+- **A crash the flow found, fixed** (caa62afb). Clicking Continue while the title's world was
+  laying its rivers crashed the game (signal 11 in `WaterSurface._river_mesh`).
+  - The cause: `World.tear_down` unbound Terrain3D and the world was freed while the river
+    worker still read heights through the provider.
+  - The fix: the water keeps its worker tasks, and `tear_down` and its `_exit_tree` finish them
+    first. That costs the rest of one task on a click that leaves (231 ms on llvmpipe here).
+  - `test_water_surface_query` covers it.
+
+**Checks:**
+- test_start_towns_clear_of_crowns, test_loading_watch, naming, the title/menu tests,
+  world_streamer, threaded_loads, safe_mode and world_status: 97 tests, all passing.
+- The water, river, loading-watch, world-streamer and title-vista tests: 62 tests, all passing.
+- tools/world/tests for crowns, sightlines and seating: 16 passed, 1 skipped.
+- `./run.sh flow`: PASS in new (103 checks), load (36) and continue (39).
+- `start_towns_canopy` capture in `captures/`: Fernhold, Warden's Rest, Gullhithe and Moreva
+  show no crown in a house or prop.
+## The Greatwood under the primitive budget: the sun's shadow made cheaper, not the trees (terrain-fidelity, 2026-10-03)
+
+The brief was to bring the Greatwood's views under 1.5 M primitives with per-species LOD distances.
+Attribution showed the frame's cost was not the canopy's own meshes. It was the canopy, the crag
+pieces and the land each drawn again into the sun's four cascades: 0.96-1.41 M of a 1.58-2.25 M
+frame went to the shadow passes. A per-species cap on the full mesh's line (aa30faec,
+`-- --lod-near-max=M`) moved the views by 1-2% at 70 m, so it stays as an option and is **off by
+default**. What landed instead (6051b2e2, finished here) makes each shadow cheaper and leaves every
+drawn tree, crag piece and stone as it was:
+- **Shadow LOD** (`world/scatter_lod.gd`). A tree or a scatter rock at a level with a coarser one
+  below it casts nothing itself. A shadow-only MultiMesh of the next level down casts for the same
+  instances: LOD1's bark and cards for a full tree, LOD1/LOD2 for a rock. The caster's cards never
+  dissolve. Finished here: the crown's caster covers every tree whose full crown is drawn at all
+  (`leaves0`), not only those before the bark's line. A tree just past the middle of the near band
+  had cast only LOD1's half-dissolved cards, a thinned shadow.
+- **Small dressing casts none** (`world/shadow_trim.gd`). A mesh raised inside a streamed cell whose
+  longest side is under 1 m (cups, stools, crates, ferns) loses its sun shadow. Anything a body
+  carries, a scatter MultiMesh, and everything bigger keep theirs.
+- **The land casts from a coarse caster** (`world/shadow_ground.gd`). Terrain3D casts nothing, and a
+  shadow-only mesh from the runtime 8 m map is built round the camera: 7 x 7 chunks of 192 m, two a
+  frame. Each vertex is the lowest of its texel and its four neighbours, less 0.5 m, so the caster
+  never stands above the ground.
+- Each is on by default and can be switched off for an A/B: `--no-shadow-lod`, `--no-shadow-trim`,
+  `--no-shadow-ground`.
+
+**Measured** (Compatibility under xvfb, 1280x720, the default High preset, w4096j, `run_plan.sh
+--attribute`). Before is the same build with the three flags; after is the default.
+
+| view | draws before | draws after | primitives before | primitives after | shadow passes before | shadow passes after |
+|---|---|---|---|---|---|---|
+| Tinehold, from its approach | 1,718 | 1,591 | 1.58 M | **1.15 M** | 0.96 M | 0.53 M |
+| the Windthrow, from its road | 1,277 | 1,193 | 1.88 M | **1.50 M** (1,498,805) | 1.16 M | 0.78 M |
+| the Greatwood (perf_suite's `briarwold_wood`) | 1,708 | 1,595 | 2.25 M | **1.34 M** | 1.41 M | 0.49 M |
+
+By owner in the wood view: trees 640 -> 331 k, scatter rock 620 -> 367 k, Terrain3D 557 -> 199 k.
+The Windthrow's remainder is its own place: "scenes (landmarks, encounters)" are 0.72 M there,
+unchanged by the trim. That is the camp's people and the plate, not the canopy.
+
+**Looked at**: `docs/review/perf/greatwood_shadow_cost.jpg` shows the Windthrow before, after, and
+the difference x4, with crops of the canopy and the ground.
+- The canopy is the same density and outline. Its dissolve stipple sits in the same places, and no
+  crown is thinned or popped.
+- The difference is wind sway and a little light on the leaf edges. LOD1's cards shade the crowns
+  where the full crowns did.
+- The ground in shade is identical.
+- At Tinehold one sunlit fleck on the ground beside the wall closed. A LOD1 crown is blobbier than
+  the full one and fills a gap the full crown had. Elsewhere the dapple is the same.
+
+**Tests**:
+- `test_shadow_cost.gd` is new (3 tests): the full tree casts through LOD1, whole across the band;
+  small things in a cell cast none, while walls, scaled pieces and what bodies carry keep theirs; the
+  land's caster is never above its texel and reaches past the 260 m shadow distance.
+- The same run took in test_scatter_lod, test_scatter_solids and test_graphics_settings: 39 passed.
+- test_world_streamer, test_sites_briarwold, test_objects_seated (the Briarwold), test_walking_into_the_scatter,
+  test_ledge_lod and test_landmarks_seated: 17 passed, 0 script errors.
+
+**Limits / left**:
+- Not measured: Painted (1.5x shadow distance, an 8192 atlas). Forward+ cannot be looked at here,
+  because Terrain3D is kept off lavapipe.
+- The Windthrow sits on the line, at 1.4988 M. A further cut there would come from the people's
+  shadows, not the wood.
+- The land's caster reaches at least 576 m round the camera. Near sunset a hill farther off than that
+  no longer throws its shadow into the view; Terrain3D's clipmap cast to 12 km. It also does not
+  know Terrain3D's holes, so a cave mouth is shadowed as if the ground were whole.
+- The trim weighs every geometry node that enters the tree, a frame later (a type check and a walk
+  up to the cell). It has not been timed on its own.
+- The before run exited 134 after "quit (the game ended)", at teardown; the after runs exited 0.
+## Ground cover in patches: a visibility range is measured from the box's centre (ground-cover, 2026-10-03)
+
+The owner, on the RX 9070 XT (Forward+, High): grass and the small scatter came and went in patches
+as he walked, present in some places and absent in others.
+
+**The cause.** Godot's scene cull measures a visibility range from the camera to the **centre of the
+node's bounding box**. This is the same under Forward+ and Compatibility, because it is the
+renderer-independent `RendererSceneCull`. Each near-ring cell drew each herb or bush kind as one
+MultiMesh over the whole 256 m cell, so its box's centre was roughly the cell's middle. That is up to
+181 m from a player standing inside the same cell. The herbs' reach is `VIEW_RANGE.herb` 110 m, times
+the view range (0.75 on Low, 0.9 on Medium). So a cell's grass was drawn only while the eye was
+within about 110 m of the cell's middle, and then the whole cell's grass at once. A neighbouring
+cell's grass was almost never drawn. The data is continuous. What the player sees is a 256 m grid
+switching on and off.
+
+**Measured.** Walking the Tamwick road east out of Merrowby, I took 51 stops 16 m apart and counted
+the herb instances within 40 m in the baked cells. I then counted how many sat in a MultiMesh the
+cull would draw (`route_herbs.py`, the renderer's rule applied to the cells' rows):
+
+| | herbs within 40 m drawn | stops with under half drawn |
+|---|---|---|
+| High (view range 1.0), before | 72% | 19 of 51 (5 with none) |
+| Medium (0.9), before | 57% | 32 |
+| Low (0.75), before | 44% | 37 |
+| any preset, after | 100% | 0 |
+
+Every stop but Merrowby's own pad had 200-1,400 herbs within 40 m in the data. The baked cells,
+the scatter rules, the ground paint and the first-launch preset are not the cause. Neither is
+GrassInstancer (off unless chosen), ShadowTrim (shadows only, and it skips scatter), ScatterLod's
+near-max (off; trees only) or the MultiMesh's frustum box (correct, just too big for a range).
+
+**The fix** (`world/ground_cover.gd`):
+- The near ring's herbs and bushes are sorted into 32 m tiles a kind and cell.
+- Each kind is still **one MultiMesh a cell**. It holds only the tiles within reach + 8 m of the eye,
+  refilled when the eye has moved 4 m. These groups ride in the streamer's `_lod_groups` with the
+  trees, so unloading, the LOD budget and FallbackTerrain's set-down take them as they take a tree.
+- The edge is a dissolve per plant over the last fifth of the reach. It uses the foliage shader's
+  `lod_fade_out`, written into the plant's own copy of its materials.
+- The MultiMesh's own visibility range is now a backstop at three reaches.
+- The view-range setting moves the reach and the band live.
+- `-- --cover-by-cell` draws the cover the old way, for an A/B.
+- world_streamer.gd took a 12-line branch in `_build_multimesh` and 4 lines in `apply_view_range`.
+  `seat_audit.gd` reads the cover groups' rows where it read the plain MultiMesh before (rendered
+  runs only, as before).
+
+**Looked at, and cost**: `docs/review/perf/ground_cover_tamwick_road.jpg` (Compatibility, High,
+1280x720, w4096j). It has six stops along the road, before (`--cover-by-cell`) over after. At 317,
+555 and 773 m the verges were bare before and have their grass and flowers after. Where the cover
+was already drawn, nothing changed. Draws per frame went from 625-921 to 655-948 (+0 to +45).
+Primitives went from 0.45-0.78 M to 0.48-0.77 M (-0.04 to +0.05 M), well inside the 2,000 draw and
+1.5 M budget. Fewer plants are drawn than when a whole cell was on, and more than when it was off.
+
+**Tests**:
+- `test_ground_cover` (4 tests) stands an eye at a cell's corner, edge, middle and walking across it.
+  By the renderer's rule, it asks that every plant within reach is in a MultiMesh that is drawn. It
+  also checks that each kind is one MultiMesh, that nothing is held past reach plus a tile, and that
+  the band follows the view range while the shared material keeps none.
+- Run with `--cover-by-cell`, it fails as the bug did: 0 of 100-230 plants drawn at the corner and
+  the edges.
+- With it, and with test_scatter_lod, test_shadow_cost, test_world_streamer, test_graphics_settings,
+  test_scatter_solids, test_world_data, test_fallback_terrain, test_walking_into_the_scatter and
+  test_settings_graphics_screen: 79 tests, 0 failed. GDScript warnings are at the 49 baseline.
+
+**Not verified / left**:
+- Forward+ was not looked at here, because Terrain3D is kept off lavapipe. The cause and the fix are
+  in the renderer-independent cull and in a shader path (`lod_fade.gdshaderinc`) that the trees
+  already use under Forward+. A walk on the 9070 XT should confirm it, and the benchmark's
+  Merrowby/Hearthvale stops should show the draw count.
+- The same box-centre rule still applies to the other plain scatter MultiMeshes:
+  - the near ring's light props and rocks (200/230 m reach, so a neighbour's fence or stones can drop
+    out 130-200 m away);
+  - the far ring's bushes (430 m, whole far cells at 380-500 m);
+  - the trees' impostor MultiMesh in a near-ring corner cell (340 m).
+  These are much less visible than grass at the feet, and they are a follow-up of the same shape.
+
+## The intro films never wait once they have begun; Continue draws its first frames under the caption (films-stream, 2026-10-03)
+
+The owner: during the class intros the picture kept freezing, "loading N cells" came up mid-film, and
+only then did the film go on. The flow's Continue: "no frame was drawn between 12.9 s and 16.6 s after
+the press".
+
+### The cause
+- **Mid-film waits.** A cut asked for the next shot's country only when the shot before it began
+  (`_stream_ahead`), and the big pieces of that country were never built while the pictures played: a
+  place (WorldStreamer, `_film_watched`), a town (WorldDoors) and a person (NpcRegistry) all waited for
+  the film's next hold. A cell is not loaded until its places are, so the next shot's cells could only
+  finish in the hold at the cut. The hold hurried the streamer (the curtain's budget), stood those
+  pieces up in frames of 50-300 ms on the frozen still, and after HOLD_GRACE_SECONDS went to black
+  with the hold line and "Laying the country: N cells", music paused, for up to HOLD_CAP_SECONDS.
+- **The frames at every cut.** Each cut forced its shot's weather and region, and `_start_weather`
+  told `weather_changed` every time, same weather or not: NpcRegistry ran `simulate_all` over the whole
+  roster, with the ambience and the stealth. That was 60-250 ms of one frame at every cut and at the
+  hand-over (`film_enter_sky`, `film_restore_sky`).
+- **Continue.** When the fade's wait for the country ended, the world's 3D was given back and the fade
+  lifted in the same frame. The next frame drew, and first used, everything at once.
+
+### What changed
+- **The whole film's country before its first picture** (`CinematicPlayer._plan_film`, `_preroll_ready`):
+  - It asks for every cell every shot sees (ShotSight), the near and far rings round its camera's path,
+    and the rings and towns round every point a shot opens on or looks at. That is 45-62 cells, 12-22 of
+    them near.
+  - It keeps all of it wanted until the hand-over is over, so nothing is let go or asked for again at a cut.
+  - The first picture waits under the opening's black for all of the near part and its towns, and for
+    everybody living there to be stood up and dressed (`NpcRegistry.settled`, `Npc.dressing_count`).
+    It then gives the far ring up to 3 s more.
+  - It gives up when nothing has moved for 6 s and 90 frames (`streamer.progress()`, never
+    `WorldPace.built`, which the film's own counting moves), or after 90 s.
+  - The wait for each shot's own opening is logged.
+- **Nothing waits after the first picture** (`_mid_film`):
+  - A cut holds its still for its settling frames without hurrying the streamer.
+  - It never goes to black and never shows the hold line.
+  - If its country is somehow not in, it is shown after `MID_HOLD_CAP_SECONDS` (1 s) with what there
+    is (`shown_early`). A skip still goes to black as before.
+- **Big pieces wait for the film** (`CinematicPlayer.watched()`, from the first picture to the end of
+  the hand-over): the streamer's places, WorldDoors' towns and NpcRegistry's people.
+- **The weather is told only when the game's weather changes** (`Atmosphere.quiet`, `tell_if_changed`):
+  - While a film borrows the sky, nothing is told.
+  - The hand-over's weather is told once, under the opening's black.
+  - The restore tells it again only if it differs from what was last told.
+- **Continue and Load** (`World.warm_in`, called from `UI._on_player_spawned` when no film plays):
+  - After the wait for the country, the world is drawn a layer a frame under the caption (ground and
+    sky, then water, then horizon, then cells), at a quarter of the 3D resolution.
+  - The fade lifts only after that.
+- **Measuring:**
+  - `CinematicPlayer.holds` records every hold (ready, caption, early, ms).
+  - The CPU probe prints `FILM|` lines: mid-film waits, hold captions, captions up, the longest frame,
+    frames over 50 ms and what each was spent on.
+  - The flow lists every frame over a second after the press, with what was on the screen.
+
+### Measured: films (CPU probe, headless, paced, `--cpu-new=core:style/<x>`; this box under other agents' load)
+| film | mid-film waits / captions | longest frame | frames > 50 ms | opening hold | cut holds (ms) |
+|---|---|---|---|---|---|
+| warrior before | 1 / 1 (shot 3, 1.3 s on black, 27 frames of caption) | 171 ms | 22 | 5.1 s | 374, 1317, 545 |
+| warrior after | 0 / 0 | 97 ms | 3 | 11.4 s | 85, 104, 101 |
+| ranger before | 1 / 1 (shot 3, 1.2 s) | 315 ms | 23 | 3.1 s | 1094, 1167, 510 |
+| ranger after | 0 / 0 | 240 ms | 4 | 6.1 s | 326, 108, 156 |
+| mage before | 0 / 0 | 132 ms | 13 | 4.4 s | 346, 277, 217 |
+| mage after | 0 / 0 | 65 ms | 1 | 5.8 s | 95, 74, 57 |
+| rogue before | 0 / 0 | 171 ms | 13 | 4.5 s | 395, 251, 213 |
+| rogue after | 0 / 0 | 222 ms | 2 | 6.3 s | 87, 71, 71 |
+
+The opening hold is longer: 3.4-9.1 s of it is the whole film's country, in the black before the first
+picture. The warrior's is longest because the road's opening takes 7.4 s on its own.
+
+**What is left over 50 ms:**
+- one engine-side frame at the ranger's first cut, on the held still (240 ms, not a paced piece);
+- the frame control comes back in (the story starting, 66-222 ms);
+- the first cell let go after the hand-over (60-97 ms).
+
+### Measured: Continue (the flow, Compatibility on llvmpipe, 1280x720)
+- **Before:** the fade lifted about 17.5 s after the press. The next frame drew the world for the first
+  time and took 5.1 s, with the caption's last frame on the screen. After that, every frame took
+  3.1-3.8 s.
+- **After:**
+  - Under the caption, the world was drawn a layer a frame: 1.8, 1.0 and 1.4 s, then 3.7 s for the
+    cells. The bell moved between them.
+  - The fade then lifted onto frames of 3.2-3.5 s.
+  - The longest frame from the press to control was 3.7 s, against 5.1 s before. This box draws any
+    frame of this world in about 3.2 s.
+  - The quarter resolution does not help the cells' frame on llvmpipe, which is bound by vertices.
+- Load is the same: 5.7 s before, and at most 2.6 s while the caption is up after.
+- flow passes: new 103, load 36, continue 39.
+
+### Tests
+- **New:** `test_film_streaming.gd` (4 tests). It plays each style's film as a new game in the built
+  world, headless, with the streaming paced from `world_ready` on, at the pictures' own speed. It fails
+  on any hold after the first picture that waited, showed the hold line or was cut short, on any
+  loading caption or hold line after the first picture, and on a wait before the first picture that
+  ended on a cap rather than with the country. 4 passed.
+- test_cinematic_player (after the stall-key fix), test_shot_sight, test_loading_watch,
+  test_cinematic_def, test_audio_wired, test_screen_fade, test_atmosphere, test_npc_registry: all pass,
+  0 script errors.
+- `./run.sh flow`: PASS. `./run.sh journey`: 16 of 16.
+
+### Not done
+- Not looked at on a GPU. The probe's frames are main-thread time with no renderer.
+- The ranger's 240 ms frame at its first cut is engine-side process (Terrain3D's clipmap at the new
+  place, or the people there first posed close); not traced.
+
+## Quest news on the screen, the way Oblivion says it (quest-notice, 2026-10-03)
+
+The owner: "make objective transitions appear on screen like Oblivion does it; almost every starter
+quest progresses from point-to-point with no clear reason why, or the bit that pops up is small and
+disappears". The notice of triage 49/50 was one Small line under the compass with a Tiny head and the
+journal's first line, held 7-9 s from the moment the stage moved, under whatever had the screen.
+
+**The notice (`ui/hud/quest_notice.gd`, `quest_notice_queue.gd`).** A dark plate under the compass
+(568 px at the 1280x720 canvas, beside the tracker; wider and over it, the tracker stepped back, when
+a large UI leaves no room): "QUEST STARTED / JOURNAL UPDATED / QUEST COMPLETE · <tier>" in the tier's
+colour, the quest's name, the objective at 23 px, the stage's reason in the journal italic (up to three
+lines), and "[J] Journal" (the bound key, the pad's on a pad).
+- Held 6-10 s at full ink by its words (2.5 s + 0.045 s a letter), 0.45 s in, 1.1 s out; Gameplay
+  "Quest news stays up" scales it (0.75, 1, 1.5, 2).
+- Several wait their turn; none writes over another. A newer one of the same quest takes the place of
+  its own waiting ones and of one up less than 1.5 s (a quest taken and moved on by one answer shows
+  its latest objective, still "Quest started"); a completion takes an update's place.
+- Nothing is spent while a conversation runs, a film plays, a menu or the loading screen is up or the
+  HUD is hidden: it waits, comes up 0.6 s after, and one taken down half read comes back in full.
+- A page turned (`ui_page_turn`) as it comes up; the tracker's quest and its open rows glow gold and
+  settle, and the compass's pins swell and beat gold for 4 s, when it is the quest followed.
+- The journal key opens the journal at the notice's quest (up now or gone under 30 s).
+- The HUD's `objective_shown`/`quest_notice_shown` keep their meaning for the tests and the probe.
+
+**Reason lines.** Every stage of the four starts and their tie-ins opens on why you are now going
+there, in the giver's terms, whole in 170 letters. Sharpened: the Rogue's strongbox ("Tomorrow is
+tithe-day." alone), the Warrior's ditch ("Dole has seen you take a blow." alone), the Glass Bridge, the
+Relief's Stair Head (opened on Tam's letter, not the pay), the Mage's boat and report, the Note's ride
+and Stair Head, the Grey Hart's shrine and Stair Head, the butts (cut at 174 letters), the Unsaid
+Page's ride and Stair Head.
+
+**Tests:** test_quest_notice (new, 11: the timing, the queue, the defer under talk and films on the
+queue and on the HUD, the plate's place clear of the crosshair, the key, the journal at the quest, the
+glow, the setting, every starter stage's reason line); test_quest_cues updated to the new heads.
+Green with test_quests, test_journal_*, test_waymark*, test_start_*, test_content_social, test_the_start,
+test_quest_tracker, test_compass*, test_settings*, test_ui_fits_at_every_scale (210 in one run). Journeys: warrior 7/7, ranger 6/6 (1 skipped), mage 7/7, rogue 7/7, 0 logged errors.
+`tools/quests/softlock_check.py`: 140 quests, 0 findings. Screenshot: `./run.sh shots
+tools/capture/plans/quest_notice.json` (the plan's `"hud": {"quest_notice": true}` puts the followed
+quest's notice up for the exposure).
+### Past the grass: a neighbour's props, the far ring's bushes, a corner cell's trees (ground-cover 2, 2026-10-03)
+
+The same rule, measured to a MultiMesh's box centre, cut three more kinds of scatter. These are
+counts along the same road, every 32 m, High, with the renderer's rule applied to w4096j/k's cells
+(`route_far.py`):
+- **The near ring's lighter rocks and props** (200-230 m reach): 91.7% of those within 0.8 of their
+  reach were drawn on High and 78.3% on Low. A neighbouring cell's fences and stones dropped out
+  130-200 m away.
+- **The far ring's bushes** (430 m):
+  - 93.4% of those within reach were drawn on High, and 35.5% on Low;
+  - 10.2% of those *past* it were drawn, because whole far cells switched on and off at 380-670 m.
+- **The near ring's trees 340-700 m off**: 53.0% were drawn on High and 23.0% on Low. A corner
+  cell's pictures were culled at 340 m from its middle, while the far ring's trees beyond them
+  still stood.
+
+**The fix:**
+- **`GroundCover` takes rocks and props without a forge ladder, in both rings.** Each kind draws up
+  to two tiers, each one MultiMesh:
+  - *near*: every row, out to the near reach;
+  - *far*: the far ring's share of the rows, picked exactly as a far-ring cell picks it
+    (`WorldStreamer._every_nth`), out to the far reach.
+
+  A near-ring cell draws both tiers and a far-ring cell draws only the far one, so a cell crossing
+  rings draws the same things at the same distances.
+- **Foliage dissolves at each edge.** The far tier fades in (`lod_fade_in`) over the same band where
+  the near tier fades out, using the same noise.
+- **Stone and wood have no dissolve**, so they are sorted one by one into exactly one tier at the
+  line.
+- **Step and slack grow with the reach** (1/30 of it, at least 4 m and 8 m).
+- **Only the near tier casts shadows**, as before.
+- **A near-ring ScatterLod group's MultiMeshes no longer have a visibility range.**
+  - A tree with its picture is held at its level wherever it stands in the near ring.
+  - A solid ladder (crates, boulders, walls) is cut at its kind's near reach, and its far share at
+    the far reach (`reach_near`, `reach_far`, `far_kept`, `ScatterLod.OUT`).
+- **`--cover-by-cell` brings all of the old behaviour back.**
+
+**Cost**: `docs/review/perf/ground_cover_far_scatter.jpg` has four views along the road, looking
+toward where the old rule dropped the most. Before is `--cover-by-cell` (the grass too); after is
+the default. Compatibility, High, w4096k:
+
+| view | draws before → after | primitives before → after |
+|---|---|---|
+| far_785_1539 | 453 → 590 | 0.37 → 0.41 M |
+| far_1049_1480 | 857 → 949 | 0.67 → 0.61 M |
+| Merrowby, far_250_1330 | 909 → 1,081 | 0.91 → 0.99 M |
+| far_595_1549 | 640 → 800 | 0.57 → 0.56 M |
+
+All four views are inside the 2,000 draw and 1.5 M budget.
+- The extra draws are the streamer's own (+85 to +141) and the shadow passes (+38 to +61), from what
+  now stands. They include the grass fix, since before is fully the old behaviour.
+- These were measured with the far tier casting. It no longer does, which takes some of the shadow
+  draws back; that has not been re-measured.
+
+**What the views show:**
+- The verge grass now stands, and a few more bushes and stones show at distance (the x3 crops of the
+  far band).
+- These four views are hill-bound, so the far trees' gain is slight in them. The 53% → all count is
+  the measure for those.
+
+**Tests**:
+- `test_ground_cover` grew to 9 tests: a neighbour's milestones within reach; a far cell's bracken
+  out to the far reach and no further; a cell keeping its far share across rings; a corner cell's
+  hawthorns all drawn 360-720 m off; and a crate ladder's reach.
+- With `--cover-by-cell`, all 9 fail.
+- The set from before (with test_world_data, test_fallback_terrain, test_walking_into_the_scatter
+  and test_settings_graphics_screen): 84 tests, 0 failed. GDScript warnings are at the 49 baseline.
+- test_objects_seated for Hearthvale and the Briarwold passed, findings at their baselines
+  (Briarwold fence_gap 142, buried 4).
+
+**Not done / noticed:**
+- `asset_kind` calls every Briarwold flora asset a bush, grass included, because "briar" matches
+  "briarwold". So the Briarwold's grass reaches 190 m, and a 30% share stands in its far ring.
+  That predates this work and has not been touched.
+- The far ring's tree impostor groups keep their 920 m range to a cell's centre. That is the edge of
+  what is streamed, so on Low a far corner cell can still go at 700-900 m.
+- Forward+ was not looked at.
+
+
+## Polish, fourth pass: the Windthrow's trunk, every boss room from its door, Briarwold grass a herb, the Pilgrim's Ash lane (polish4, 2026-10-04)
+
+Sheet: `docs/review/sites/boss_rooms_and_windthrow_trunk.jpg` (Compatibility, w4096k): the
+Windthrow's trunk at 13:00, clear (flank and break, the same views as the last sheet), and the boss
+rooms of the Kilnway (lava tube), the Wake Barrow crypt and Hound's Swallet (cave) from their doors,
+as `site_review`'s new `99_boss_door` shot.
+
+**The Windthrow's trunk** (`briarwold.gd` `_bark_look`, `_bark_bole`; new
+`assets/shaders/fallen_bark.gdshader`).
+- Causes: the bark was the oak's picture times one flat tint, even and pale in the sun; the moss was
+  the bark's own picture darkened toward green by vertex colour, so it was the bark's darkness; and
+  the world's ambient under a log at 13:00 is a small part of its sun, so the stubs' shadows on the
+  bole (the "black wedges": each sits under a stub, the shape of its shadow down the curved flank)
+  and the underside were black. The stubs' normals are not inverted (their winding is the bole's).
+- Fix: a shader for the bole, its stubs and the crown's limbs. Vertex colours become data (shade,
+  heartwood, jitter, moss). The bark is darker (tint 0.47) and broken up by noise over the log
+  (reaches of 5 m, blotches of 1 m, grey weathered patches). The moss is the oak's moss picture in
+  its own colour, laid from above, in drifts. Every face takes 0.14 of the sun's light whatever its
+  shadow and facing (the bounce off the ground and the sky; `light()`, Lambert otherwise). The
+  stubs are longer (2.6-5 m).
+- Seen (first re-check): the bark darker and varied; the shadows and the underside dark brown, not
+  black; the break's heartwood pale. But the moss was a neon green in leaf bands over the whole top
+  (the moss picture's own colour, repeating at 1.8 m), and the stubs, out square to the bole, were
+  seen from below as their broken ends alone: pegs.
+- Second pass: the moss is a flat dull olive (`moss_colour`, near the bark's own brightness) with
+  the picture's brightness over it at low contrast and a 0.6 m repeat, and its threshold raised so
+  it lies in drifts; the stubs leave the bole slanted toward the crown (about 40-50 degrees off the
+  bole, not square to it). Re-check (`docs/review/sites/windthrow_trunk_second_pass.jpg`, the same two views): the moss
+  reads as dark olive drifts over brown bark, no stripes, no neon; the stubs read as slanted broken
+  limbs along the flank with their pale snapped ends, from below as low barked humps. The moss in
+  the bole's own shade is dark olive, not black. Still plain: from directly below the stubs are
+  short, and the flank's top half is in the bole's own shade at 13:00.
+- `fallen_bark.gdshader`, `site_lava_ground.gdshader` and `map_fog.gdshader` were not in the export's
+  warm set (none of the census's runs had drawn them): added to `warm_set.tres` by hand (a
+  ShaderMaterial with the shader: its key is the file alone), and `test_shader_warm` now wants every
+  .gdshader in the game in the set. A headless census run rewrote the whole file (format 4 to 3,
+  Terrain3D's uniforms dropped), so the three were appended to the text instead.
+- Cost: 1253 / 1155 draws, 1.31 / 1.25 M primitives (unchanged).
+
+**Every boss room from its door** (`site_dress.gd` `_arena_light`, `site_plan.gd`, `site_interior.gd`).
+- Cause: a boss's room is lit by four braziers (or lava vents) round the middle of a huge room and a
+  cool fill. On the lava tube's black rock the walls and far side got nothing back from the door
+  (14% lit by the test's reading), and a basalt stack 2 m inside the door hid most of the rest.
+- Fix: an `ArenaLight` over the middle (attenuation 0.6, to the walls and the door) and an
+  `ArenaLightDoor` just inside the door (to the near walls and the faces turned to the player), in
+  the kind's colour, each set by the rock's brightness (`ARENA_GIVE_BACK` 0.06; at 0.12 pale rock
+  read bleached). Nothing stands within 4 m of a boss's doorway (2.6 m elsewhere).
+- Test: `test_every_site_boss_room_is_lit_from_its_door` reads every site's boss room from the
+  player's camera in its doorway as the arrival test reads the first room, 70% lit wanted, every kind
+  (the bandit cave from a stand-in). Without the two lights: the Kilnway 14%, Hum Stone Throat 46%,
+  Hound's Swallet 47%. With them: 89-100%, the Kilnway 97%.
+- Seen: the Kilnway's arena reads in its own red, pillars, boss and far wall; the crypt and the cave
+  read to their far walls. The passage walls behind the door take some of the door light (bright in
+  the crypt's pale stone).
+
+**Briarwold grass a herb** (`world_streamer.gd` `asset_kind`): "briar" matched the region's own name.
+The kind now reads the file's own name past its region's prefix, a word at a time. Of the 20
+Briarwold flora assets the three briar vines are bushes, the rest herbs (new test in
+test_world_streamer). test_ground_cover's "bush" was the bracken, a bush only by the bug: now the
+briar vine. test_ground_cover, test_scatter_lod, test_world_streamer, test_objects_seated_briarwold
+pass (Briarwold findings at baseline).
+
+**The Pilgrim's Ash-Bramcombe lane** (`atlas.json`): its first waypoint [380, 2980] lay 28 m past the
+Wake Barrow track's bend, so the lane hairpinned back beside the track (two partings, no post). Now
+[362, 2954], on the track's bend. test_atlas and test_roads pass; test_signposts fails on those two
+partings until the next build. **After the build:** test_signposts' "every parting has a fingerpost"
+passes; the lane leaves Pilgrim's Ash on the track's line with no out-and-back near (370, 2960)
+(roads.json); the fingerpost at the Wake Barrow fork (~(586, 2881)) still names Bramcombe;
+test_roads' graded/carve tests pass.
+
+## Cinderlea's novel places: seven new kinds of place, two large sites, five road events (novel-cinderlea, 2026-10-04)
+
+The owner asked for truly novel places, distinct from every ruin, camp, shrine, tower and cave the
+pack already has, and for more large sites and quests. All of it is data plus Cinderlea's own builders
+(`game/world/pois/regions/cinderlea.gd`); no shared builder was changed. The `kind` fields are the
+nearest existing kinds (the tests and the map know a place by them), but each place is built by its
+own builder and is a new kind of place.
+
+**Seven new places** (`pois/cinderlea.json`, people/words/quests/items in new `*/novel_cinderlea.json`):
+- **The Ash Dial** (`the_ash_dial`, -2932 2908): the Builders' sun-dial. A 21 m fused-stone blade leans
+  from a stepped dais at the pole over a ring of thirteen hour-stones notched with bell-counts, one
+  blank. Wenna Thrope reads it for the Order. Press the blank stone between 16 and 18 o'clock
+  (`time_between`) and it sinks, giving the Thirteenth Hour-Plate. Ash-wights stand on the stones by night.
+- **The Name-Kiln** (`name_kiln`, -1740 2204): a beehive kiln on a vent beside a 16 m screen hung with
+  some 1,200 fired name-tiles. Odile Wark fires your name for 25 marks (renown), and the screen
+  answers with your tile. She gives *A Name for the Warden* and closes two other quests.
+- **The Smoke-Speakers' Hood** (`smoke_hood`, -532 2820): the Order's signal gantry, with a hide hood
+  on a counterweighted beam over a roaring vent and a smoke column. Work the lever: "where?" sent to
+  the west, north or south reveals the Ash Dial, the Name-Kiln or the Leaving-Lines. Pell Hoddy gives
+  *The Head That Sings*.
+- **The Leaving-Lines** (`leaving_lines`, -1348 3444): pole-lines hung with pilgrims' faded clothes (the
+  only colour south of Greyfold, one vertex-coloured draw), a heap of shed coats, and a warm ash-basin.
+  Corra Dunn has not gone on for three days. Share an ash-cake with her (or have renown 40) and she
+  turns back, which starts *Something Red*.
+- **The Silk Vents** (`silk_vents`, -1076 2948): moth-silk racks of cocoons over warm cracks, a
+  moth-lamp pole and a spinning-wheel. Stand under the lamp at dusk (19-22) and the moths come down;
+  Hessa Lowe gives a skein of ash-silk.
+- **The Fading-Glass** (`fading_glass`, -2252 2876): a 10 m sheet of black glass the pilgrims kneel at.
+  It shows you grey, faint or in colour by renown, and in colour a chip comes away. A pilgrim's note
+  lies at its foot, and a chorister stands there at dusk.
+- **The Gentle Fold** (`gentle_fold`, -124 2516): a drystone fold where the Order keeps the wights that
+  will not lie down, under grey blankets. Novice Brin Callow reads them the names. Read them yourself
+  at dusk, or find his lost page (*The Lost Page*, at the Tenth Waystone).
+
+**Two new large sites**:
+- **The Fallen Head** (`the_fallen_head`, -732 3276, pad 40): one of the Choir's twelve lost heads, 18 m
+  long on its cheek at the end of the furrow it ploughed. Its mouth is the door. Inside is a crypt
+  (`core:interior/the_fallen_head`, 8 written rooms: the tongue, the palate's sleepers, the eye's
+  daylight, the throat, the voice-box chasm, the hollow). The boss is **Ysmay Corrow** (ash-wight
+  based; a lullaby burst, and the sleepers wake at half). *The Head That Sings*: Pell Hoddy -> Aud Venn
+  at the Head -> the boss and her roll of forty sleepers -> Odile Wark fires 41 tiles -> hang them on
+  the screen or in the Head's mouth.
+- **Cinderhowe** (`cinderhowe`, -2204 1708, pad 44): a 21 m cinder cone with a red crater, a plume and
+  glass runs down its sides, and a timbered adit at its foot. Inside is a mine
+  (`core:interior/cinderhowe_galleries`, 8 written rooms). The boss is **Ser Orvel Glasse**, a knight
+  glassed to the bone (tolling-knight based, weak to blunt). *The Glass Knight*: Joss Fennick -> the
+  heart -> the vow-plate with his grandmother's name -> cut the galleries again or leave the heart.
+
+**Quests for every large site.** Cinderlea's large sites all had one except the Cistern of Isse:
+*The Full Jar* (Ama Reedwright, a new stilt-walker at the Cistern; her spot was added to its
+builder). *A Name for the Warden* leads out of the Kilnway: the Kiln-Warden's toll-token (Hob
+Atherley) is laid in its boss room by QuestItems and carried to the Name-Kiln. Six quests in
+all, every stage opening on its reason in under 170 letters.
+
+**Road events** (`roadlife/cinderlea.json`): a Hush-walker with her brothers behind (fugitive), the
+potter's boy with a basket of names (reveals the Name-Kiln), a Sayer listening to the note through the
+road (reveals the Fallen Head), the Hood's runner (reveals the Hood), and novices hauling a bell to the
+Choir (take a turn on the rope). All use the existing behaviours.
+
+**Checks:** `region_check.py cinderlea --godot --edited cistern_of_isse` PASS. Every place seats clean:
+5-32 draws and 18-84 k triangles each, reaches inside the pads. The targeted tests, 238 then the 15
+re-run after two fixes, are 0 failed: `test_sites_cinderlea` now raises the nine places and walks
+both new insides. GDScript warnings are at the 49 baseline. `softlock_check.py`: 146 quests, 0
+findings. `poi_hooks.py` re-run.
+
+**Needs the next world build:** pads for the nine new POIs (previewed until then), and no glades
+(the heath has no wood). Each is 110-300 m from a road, and none has a track. Tracks to the Fallen
+Head and Cinderhowe would help, as both are reached across open heath.
+## Seven new kinds of place, two large sites and four quests: Hearthvale, the novel round (2026-10-04)
+
+The owner's ask: truly novel places, new kinds the game did not have, and new large ones. Everything is
+in `game/world/pois/regions/hearthvale.gd` (the builders) and the region's own content files.
+
+**New kinds** (shared, minimal: the kind names in `PoiDressing.KINDS`/`KINDS_BUILT`, their reveal and
+landmark heights in `map_screen.gd`/`place_discovery.gd`, and a drawn map marker each in
+`tools/ui/gen_ui_textures.py`; each is built only by its region builder): `dovecote`, `chandlery`,
+`scarecrow_moot`, `turf_maze`, `figure_cutting`, `rookery`.
+
+**The seven places** (each with a person, something to do, a reason to come back and a hook):
+- **The Letter-Cote** (`dovecote`, -955, 2150): an 11 m round cob dovecote under a thatch cone and
+  lantern, doves (the camps' Crows in grey-white) about it. Wenna Cotter keeps the Vale's dove-post
+  and still writes to the four villages struck off the Roll Stone. *Do*: send a dove (3 marks) to a
+  place the cote knows and it is found (`discover`): Wassail Knap, the Moot, the Candle-Wheel, the
+  Figure; one sent to Harewell comes back with a letter from a village that is not there.
+- **The Candle-Wheel** (`chandlery`, -1700, 1460): an oak mast with a turning dipping-wheel the width
+  of a cottage hung with a hundred-odd candle pairs, the steaming tallow vat, drying racks, and the
+  candle-house where a candle burns for every name on the Wardens' Roll. Tallis Dipper sells candles.
+  *Do*: have a candle dipped for a name (5 marks): your own, the four villages, and more names as
+  quests are done (Ebba Crowle, Hob Applegarth, the night shift).
+- **The Scarecrow Moot** (`scarecrow_moot`, 3000, 2500): forty retired scarecrows in ranks on Hound
+  Down's crown, all facing Merrowby, a corn-crowned reeve before them, rooks on their arms. One more
+  than forty: a hedge-wight asleep in the ranks until it is looked in the face (`rises_when`). Quest
+  **The Forty-First** (Abner Strawe; reward his felt hat).
+- **Tamwick Troy** (`turf_maze`, 1520, 1195): a real maze, five rings of clipped hawthorn (colliding)
+  with alternating gaps round a white maypole of naming-ribbons. *Do*: walk it to the heart and say a
+  name there; your own gets you Maudie Twelvetrees' naming ribbon (an amulet).
+- **The Unfinished Figure** (`figure_cutting`, 1996, 1456, `pad_shape: slope`): a chalk woman 30 m tall
+  being cut into the down over the Tamwick road, her face still pegs and string. *Do*: cut turf for
+  the gang (pay), and choose her face (from the Harewell letter, or any face); the builder cuts the
+  face once the flag is set. A bristleback at dusk.
+- **The Witness Elms** (`rookery`, 2960, 2740): three dead elms black with rooks' nests, the offering
+  stump heaped with bright things. *Do*: leave the rooks a coin and they show you a place you have not
+  found (four, each once). Hester Corvey reads them. Down wolves at night.
+- **Wassail Knap** and **the Great Barn** are the two large sites (below).
+
+**Large sites:**
+- **Wassail Knap** (`delve`, 2740, 1915, pad 46): the old Great Press: a long thatched press-house, its
+  press-beam a whole oak run out through the gable between the press-tree's cheeks to the great screw
+  and the hanging stone, the dead orchard (one MultiMesh) round the knap, the Wassail Tree, the bowl,
+  the cold bonfire, Pip Applegarth's hut. Inside, `core:interior/wassail_cellars` (keep, seed 2205,
+  8 written rooms): the pomace cellar, the barrel run, the wassail hall, the vat hall, the press
+  spring, the King's table, and Hob Applegarth, the Wassail King (`core:boss/wassail_king`), at the
+  Mother Vat, who at half health drinks the bowl and raises his wassailers (`core:enemy/wassailer`).
+  Quest **The Last Wassail** (Pip Applegarth, 4 stages): find the Hazelcombe pickers' tally, take the
+  crown off the King, give it back at the Mother Pippin (a choice there: hang it, bury it, or carry it
+  to Tamwick for a new King), tell Pip.
+- **The Great Barn** (`delve`, 3215, 2272, pad 46): the roofless tithe barn by Southgate, seven pairs of
+  oak crucks against the sky, stone gables to the apex, the wagon porch, the rotted ricks and the
+  broken wain; Dunnock Southgate's hut. Inside, `core:interior/great_barn_undercroft` (ruined_hall,
+  seed 2206): the granary under the fallen floor, the flue, the reapers' loft, the drying kiln and its
+  plank walk, the tithe vault, the sheaf hall, and the Kern Mother (`core:boss/kern_mother`), the last
+  sheaf of the last harvest, never carried out, who sheds her chaff at half health and raises
+  sheaf-men (`core:enemy/sheaf_man`, weak to fire). Quest **The Last Sheaf** (4 stages): the reeve's
+  last tally, the Kern Mother and her kern-knot, the knot to Oswen Bellsey at the Brow Long Table (set
+  it at the table's head, plough it into Southgate's furrow, or burn it), Dunnock.
+
+**Quests for the older large sites that had none:**
+- **The Third Hand** (Briarfoot Watch, Ferris Oakden, 3 stages): meet what comes up from the grey at
+  midnight, take Amis Hale's bell from under the tally-board, show Oakden; leads out to the
+  Candle-Wheel, where hers is the Roll candle that keeps going out.
+- **Counted Out** (the Drovers' Pound, Enid Drove, 2 stages): clear the wolves and take the drovers'
+  tally out of the pound to Enid, who counts the last flock out or leaves it counted in.
+- Every Hearthvale large site now has at least one quest.
+
+**Road life** (`roadlife/hearthvale.json`, existing behaviours only): a dove down on the road from
+Harewell (a Fallowfold girl), a farmer carrying his scarecrow up to the Moot, bearers a corner short
+(take a corner: `help`), an invitation to the wassail at night (drink, and the dancers spring; until
+the King is down), and a gossip on a stile who knows a way into the dark (`nearest:delve`).
+
+**Checked:**
+- `region_check.py hearthvale --godot`: PASS; all eight seat-clean. Costs: Letter-Cote 65 draws/41 k,
+  Candle-Wheel 35/62 k, Moot 40/48 k, Wassail Knap 44/255 k, Troy 33/31 k, Figure 23/13 k, Elms
+  38/39 k, Great Barn 35/38 k. Density: weak share 0.091, 15 strong, 115 POIs.
+- `./run.sh test` with test_pois, test_poi_preview, test_sites (and test_sites_hearthvale's two new
+  walks), test_site_interiors_walk, test_road_life, test_objects_seated_hearthvale, test_quests,
+  test_content_db, test_poi_encounters, test_ui_theme, test_poi_kinds, test_map_quests,
+  test_quest_notice, test_books, test_quest_walk and more: 270 + 182 + 37 tests, 0 failed after the fix
+  below.
+- `./run.sh quests --only=the_last_sheaf,the_last_wassail,the_forty_first,the_third_hand,counted_out`:
+  5 of 5, 11 of 11 walks, 0 errors. `softlock_check.py`: 145 quests, 0 findings. `poi_hooks.py` re-run.
+- One finding fixed: The Last Sheaf's choice first stood as a choice point on the open Long Table, and
+  its cold light was "a light hung from nothing" to the seat test; it is Oswen Bellsey's to put now.
+
+**Needs the next world build:** pads for the eight places (the Figure keeps its slope); tracks from the
+roads to Wassail Knap (~200 m to the Hazelcombe road) and the Great Barn (~210 m to the Southgate road),
+and ideally to the Moot and the Elms (~150-200 m); a glade is not needed.
+
+**The look and the last checks (after a container restart):**
+- One batched sheet of all eight, clear at 13:00 (`docs/review/world_life/hearthvale/novel_round.jpg`):
+  every view within budget, at most 1265 draws and 0.99 M primitives (the Witness Elms).
+- From the first sheet: the Unfinished Figure was too small to read from the road, so she is now cut at
+  1.75 times her size (pad 40). The Great Press's tree, screw and stone were raised to 12.6 m.
+- The Scarecrow Moot's eye-height views are hidden by the last build's trees standing on its pad. The
+  next build clears its pad; a `glade_m` may still be wanted for it to be seen from the Southgate road.
+- `region_check --godot` PASS after these changes; `./run.sh test --filter=test_start_`: 47 tests, 0 failed;
+  `./run.sh journey --style=core:style/warrior`: 7 of 7, 0 logged errors.
+## The Briarwold's novel places: seven new kinds of place, two new large sites, quests for them (novel places, 2026-10-04)
+
+The owner's ask: truly novel places, new kinds the game had none of, plus large ones. All in the
+Briarwold's own files (`pois/briarwold.json`, `encounters/pois_briarwold.json`, `roadlife/briarwold.json`,
+new `*/novel_briarwold.json` and `tables/stock_novel_briarwold.json`) and new functions at the foot of
+`world/pois/regions/briarwold.gd` (nothing above them touched: the polish agent's `_bark_bole`, stubs,
+`asset_kind` and the atlas are left alone). No shared builder was changed.
+
+
+## Brightwater's novel places: seven new kinds of place, two new large sites, seven quests (novel places, 2026-10-05)
+
+The owner's ask: truly novel places of kinds the game had none of, plus two large ones. All in Brightwater's
+own files (`pois/brightwater.json`, `encounters/pois_brightwater.json`, `roadlife/brightwater.json`, the new
+`*/novel_brightwater.json`, `tables/stock_brightwater_novel.json`) and new functions at the foot of
+`world/pois/regions/brightwater.gd`. No shared builder was changed. Each place keeps an existing `kind` label
+(the map, the audit and the tests read it) and is built entirely by its own builder.
+
+A ropewalk, fishing kites and a Builders' listening-dish were built first and then replaced: the Briarwold's
+round has a ropewalk (the Silk Walk), Skerrow's has kites (the Kite Watch) and an echo-crag (the Answering
+Wall), and Brightwater already had a listening horn (the Listening Post).
+
+### Seven places of new kinds
+| place | kind (builder) | what it is | what you do there | hook |
+|---|---|---|---|---|
+| **The Told Hives** (2140, 956) | strange_tree (`told_hives`) | a dead oak's bole hung with log hives at every height, each tied with black cloth; skep bench, ladder, the low log | **Telling the Bees**: stand with Linnet Ashby and tell the bees her grandmother is dead (plain, "into the wood", or let her say it); knock on the low log; Linnet sells comb, mead, candles | a swarm on a fingerpost (road event), a rumour, Mab Ashby's bee-book |
+| **The Swainmote** (2836, -644) | market_field (`swainmote`) | the Woodfolk's court of custom: tiers of turf round a pollard with the steward's chair cut in it, the iron dog-gauge, a hound pound | **The Twelfth at the Mote**: sit as the twelfth, hear Hawys Tolly, give the word at the gauge (law the hound, hold the stirrup wide, pay the hart); the mote's notice post (radiant work) | a girl with an empty leash (road event), a rumour, the mote's customs board; the Knar's and Tinehold's quests come back here |
+| **The Silk Walk** (2452, -1940) | mill (`silk_walk`) | a 56 m ropewalk of posts strung with shining weaver silk, the twisting jack under its shed, the top on its sledge | Margery Laithe lays three weaver silk into a silk-laid cord (a ring); she trades rope and silk; gives the Knar's quest line | ropewalkers carrying a line (road event), a rumour, Laithe's rule |
+| **The Noon Owl** (2996, -2004) | strange_tree (`noon_owl`) | a bone-white dead oak with one black hollow (eyes in it), a hurdle ring of log seats, owl-pellets | at noon (11-14) sit with Gammer Hoole: five readings, each finds a place (the Knar, the Hives, the Mote, the Walk, Fern Gully), then the owl's feather (amulet) | listeners at noon (road event), a rumour, her count-stick |
+| **The Casting Dell** (3348, -1276) | hidden_valley (`casting_dell`) | where the harts cast their antlers: a ring of stakes each crowned with an antler, the bracken white with cast antlers, the stone with the one the dell gives | take the antler the dell gives (an amulet); take the loose ones and the Warden at the mouth wakes (`wakes_for`) | a rumour, the verderers' slip |
+| **The Letter Oak** (1964, -900) | strange_tree (`letter_oak`) | an oak ringed with posts and threads hung with hundreds of letters | **The Letter on the Oak**: carry the twenty-year letter (the Marshal's answer to Tinehold's "The Last Knight Out") to Wystan Tine at the Moot Gate Stone | a rumour, the oak's rule card |
+| **The Pannage Pound** (1940, 620) | fold (`pannage_pound`) | a turf bank and woven hazel round the acorn ground, pigs rooting, the agister's notched tally-post | **Counted Out**: kill the thornhounds that come over the bank at night; Dunstan Agar sells pannage ham | a rumour, Agar's count slate |
+
+### Two new large sites
+- **The Knar** (2716, 1284; delve, `the_knar`, pad 50, glade 80): an oak with a gall round its foot as big as a
+  barn, warted and bored, the black weeping out; the oak's crown grey on one side; the gall-wrights' vats steaming
+  with a smoke column over the canopy. Inside (`core:interior/the_knar`, bandit_cave in heartwood browns, 9 rooms,
+  seed 1077): the vat hall, the drying loft, the sap well, the heart shaft, the sleepless camp, the black gallery,
+  and **Master Orrin Sable, Gall-Wright** (human boss, extends the bruiser, long axe) at the well of the black.
+  New foes: gall-cutter, vat-keeper. **The Black That Keeps** (4 stages, Margery Laithe or the wrights' notice):
+  find the Knar, Pell Dunnock's reel and Sable, then the Sayers' Circle's contract goes to the Circle, to the
+  Swainmote (Ambrose Gale hears it), or into the vats.
+- **The Thornwell** (2596, 84; delve, `thornwell`, pad 38, glade 70): a ring of the Builders' black stone in the
+  Greatwood with the Briar's root burst up out of it in a crown of thorn arches 24-34 m high. Inside
+  (`core:interior/the_thornwell`, ruined_hall in the Builders' grey, 8 rooms, seed 1093): the channels, the root
+  hall, the seed niches, the rift, the dead layers' camp, the crown hall and **the Well-Keeper** (a Builders'
+  stone figure with the root through it; extends the stone thrall). **What the Builders Planted** (3 stages,
+  Edda Layward or the layers' cairn): kill the Keeper, then its seed-stone is set back, carried to the Standing
+  Moot, or laid in the Layers' Ring.
+
+### Quests for every large site
+The six older ones already each had theirs. Added: the two above, and **The Hundred and Twelve**, which leads out
+of Tinehold: the mason's roll of the names cut off the chapel lies under its altar (QuestItems, always), and
+Ambrose Gale at the Swainmote takes it from there (said aloud, kept, or sent to Wystan Tine). The Knar's line leads
+out to the Swainmote; the Letter Oak's to the Moot Gate Stone. Every stage opens on its reason line (40-170 letters).
+
+### Road life
+Six new Briarwold events (no new behaviour): a swarm on the fingerpost (`help`), two claims to a windfall (a burner
+and a Company sawyer, help one: custom or coin), a girl with a leash and no hound (to the Mote), a gatherer black to
+the elbow (escort; reveals the Knar), listeners at noon, ropewalkers carrying a line.
+
+### Checks
+- `region_check.py briarwold --godot`: PASS. Each new place seats clean; cost per place 7-38 draws and 12-113 k triangles (the Thornwell's crown the most); the Knar's and the Letter Oak's pads were widened (50, 30) to hold their oaks' crowns.
+- Tests (`test_pois, test_poi_preview, test_sites, test_site_interiors_walk, test_road_life, test_objects_seated_briarwold, test_quests, test_content_db`, plus enemy dress, boss fights, quest items, kill places, waymarks, settlement people, boss arena): 233 run. The one failure, the Thornwell's arrival room lit at 66%, was fixed with a paler Builders' stone and braziers (96%); test_sites passed again after that.
+- Quest walker: all 8 new quests walk every branch. `softlock_check.py`: 147 quests, 0 findings. `poi_hooks.py --check`: current.
+- Sheet: the batched `poi_sheet.py` run got 9 of 36 views (told_hives and the_swainmote: 1087-1783 draws, 0.81-1.17 M primitives) before it was stopped. The box was loaded and it was taking 15-20 min a view. The preview leaves the Greatwood's canopy standing round each pad, so the eye-height views are near black. `docs/review/world_life/briarwold/novel_places_partial.jpg`. **Reshoot all nine after the next world build lays their glades** (`--weather clear --time 16.5`).
+
+### For the next build
+- Pads and glades for the nine new places (`pad_radius_m`, `glade_m` in their defs; the Knar and the Thornwell have `pad_shape: level`).
+- Tracks from the road to the Knar (210 m off the Tamwick-Hollow road), the Thornwell (165 m), the Silk Walk (160 m), the Casting Dell (215 m) and the Pannage Pound (250 m).
+
+## Skerrow's novel places: eight new kinds of place, two large sites, four quests, six road events (novel-skerrow, 2026-10-05)
+
+The owner asked for places unlike any ruin, camp, shrine, tower or cave already in the pack, and for
+more large sites and quests. All of it is data plus Skerrow's own builders in
+`game/world/pois/regions/skerrow.gd` (section "the novel places"). No shared builder was changed. A
+`kind` is the nearest existing kind, and each place is built by its own builder. People, words, quests,
+items, books, bosses, interiors and rumours are in new `*/novel_skerrow.json` files.
+
+**Eight new places** (`pois/skerrow.json`):
+- **The Kinchain** (`the_kinchain`, -2164 -3140): a crag with a black-oak jib and the Ghast birth-chain
+  hanging 14 m from it into a man-high coil, with a plain ring closing a gap twelve links down. Ottar
+  ko-Ghast closes a link with your name on it for a bar of iron (renown). He gives *The Cut Link*.
+- **The Kite-Watch** (`the_kite_watch`, -3164 -2700): two hide kites 25-30 m up on lines from windlasses
+  (the Oskel reiver-watch), a streamer pole and a turf hut. Work the windlass: by day the hawk reveals
+  Corbie Stack, and by night (21-5) the lantern-kite reveals the Unmade Giant. Runa ko-Oskel gives
+  *The Unmade Giant*.
+- **The Bee-Bole Crag** (`bee_bole_crag`, 2972 -2908): a white limestone face cut in eight rows of
+  niches with straw skeps, each row with its clan's daub, and bees drifting in front. The top row,
+  the Bone Clan's, is empty. Buy guest-honey from Bannoch, or smoke a skep and steal it (theft, seen by
+  him).
+- **The Scour** (`the_scour`, -1372 -3308, `pad_shape: slope`): a lead-miners' hush. A turf dam holds a
+  black pond, with an oak sluice and windlass, above a raw gravel gash down the fell and a sorting-floor
+  below. Pull the sluice once for ore and a shard of giant's tooth. Wat Hobb ko-Brindle is the husher.
+- **The Black-Rent Pillar** (`black_rent_pillar`, 980 -1820): a 9 m limestone pillar with black rags and
+  spikes, a pulley and the rent-basket. Pay 40 marks of black-rent and the clanless ambush leaves your
+  roads be (`unless black_rent_paid`). Or rob the basket, and *Annet's riders* hunt you on the road.
+  Isbel ko-Rudd gives *The Black Rent*.
+- **The Bucket-Line** (`the_bucket_line`, -1020 -2884): an ore ropeway across the dale, with two 10 m
+  trestles, a cable and buckets both ways, a treadwheel, a chute and an ore heap. Walk the wheel for
+  12 marks (five turns), or buy Ghaleld iron from Grett ko-Brindle.
+- **The Breath-Ledge** (`the_breath_ledge`, 3476 -2852): the Skarl hang their dead in coffins on iron
+  pegs high on a bedded limestone scar, nearest the Breath. There is a ladder, ropes from a beam, a new
+  coffin on trestles and the fallen boards. Hold the rope for Mags ko-Skarl's hanging (once).
+- **The Answering Wall** (`the_answering_wall`, 1084 -2668): a curved crag round a turf bowl, a
+  speaking-stone, ochre-daubed name-stones and callers' cairns. Call your name (renown). Listen at dusk
+  (18-22) and the wall gives back a name nobody called, which starts *The Wall Answers*.
+
+**Two large sites:**
+- **Corbie Stack** (`corbie_stack`, 636 -3324, pad 40): a 30 m needle of bedded limestone with a
+  stone-slate reivers' hold on top, smoke and a black rag. Its chain bridge is drawn up and hangs down
+  the side from a gantry arm, beside a lower crag with steps and empty rings. An iron-bound door at the
+  foot leads to `core:interior/corbie_cellars` (keep, 8 written rooms: cistern, barracks, rent-store,
+  well-shaft, smithy, rent-hall). The boss is **Annet Blackrent**, who drops the black-rent book.
+  *The Black Rent*: Isbel → the Stack → Annet → the book back to Isbel. You choose to return the rents,
+  give the book to the Moot, or keep it.
+- **The Unmade Giant** (`the_unmade_giant`, -1772 -3012, pad 40): a 20 m giant being built of lashed
+  boulders and bones in a scaffold cage. It has one arm, half its ribs, and its skull half-way up a
+  gin-pole, with the hags' lanterns lit by night. The warren mouth below leads to
+  `core:interior/hag_warren` (cave, 8 rooms: the drag, cord gallery, bone store, sump, thrall hall,
+  knotting-hall). The boss is **Mother Scree**, who drops her binding-cord. *The Unmade Giant*: Runa →
+  Haskel ko-Ghast at his camp → Mother Scree → the cord to Ottar at the Kinchain → bind it in the chain
+  or burn it.
+
+**Quests** (`quests/novel_skerrow.json`): *The Black Rent* and *The Unmade Giant* (above). *The Cut
+Link* leads out of Dunnow: the cut Ghast link lies in Dunnow's store (QuestItems, room `store`), and you
+take it back to the Kinchain. *The Wall Answers* goes from the Answering Wall to the Breath-Ledge: the
+token is in the fallen boards, then you choose. Every stage opens on a reason line of 170 letters or
+fewer. Every Skerrow large site on main already had a quest.
+
+**Road events** (`roadlife/skerrow.json`), all on the existing behaviours:
+- a kite-boy with a fallen kite (help, reveals the Kite-Watch);
+- Skarl bearers walking a coffin up (reveals the Breath-Ledge);
+- a polite rent-rider (reveals the Pillar);
+- bee-keepers carrying skeps to the heather at dusk (honey, reveals the Crag);
+- two prospectors who want a witness (clan_moot +2, reveals the Scour);
+- *Annet's riders*, an ambush only after you rob the basket.
+
+The clanless ambush is skipped once the black-rent is paid.
+
+**Tests touched:**
+- `test_sites_skerrow`: the two new sites added to its SITES table.
+- `test_poi_encounters`: WHAT_STANDS rows for the ten places.
+
+**After the sheet:**
+- The Kinchain: three crags, a taller jib (18 m) and a heavier chain; its pad is now 34 m.
+- The Breath-Ledge: a wider (22 x 13 m) bedded fin with shear-legs on top and coffins on both faces.
+  The first sheet's cameras saw only its back, and a forge cliff stood in front of it, so that cliff
+  is gone.
+- The Scour: its gash is scree, not a pale ground mesh (the patches read as texture errors), and its
+  dam is a ridge of turf, not two domes.
+- The Wall Answers: Mags ko-Skarl now offers the quest and hands over the token, so the walker can
+  reach both.
+
+**Checks:**
+- `region_check.py skerrow --godot` passes. Every place seats clean, at 12-73 draws and 5-136 k
+  triangles; the Unmade Giant is the dearest.
+- Sheet views run 483-1020 draws and 0.46-1.02 M primitives.
+- The targeted tests pass, with GDScript warnings at the 49 baseline:
+  test_pois, test_poi_preview, test_sites, test_site_interiors_walk, test_road_life,
+  test_objects_seated_skerrow, test_quests, test_content_db, test_poi_encounters, test_sites_skerrow,
+  test_quest_notice and test_settlement_people (161 tests). After the last changes, 49 seat and POI
+  tests were run again.
+- Both new insides walk to all 9 rooms.
+- The quest walker passes for the four quests, every branch.
+- `softlock_check.py`: 144 quests, 0 findings. `poi_hooks.py` was re-run.
+- Sheets: `docs/review/world_life/skerrow/novel_places.jpg` (all ten) and `novel_places_recheck.jpg`
+  (the Kinchain, the Scour and the Breath-Ledge before their last change).
+
+**Needs the next world build:**
+- pads for the ten places (previewed until then);
+- no glades (open fell).
+
+Every place is 200-860 m from a road and has no track. Tracks to Corbie Stack and the Unmade Giant
+would help.
+| **The Long Glass** (300, -1476) | vista (`the_long_glass`) | the Tallymen's 8 m brass telescope on a trunnion between black A-frames on the north brow, a platform, the Glass-Clerk's hut and his count-board | look through it: five daytime sightings, each finding a place, and two by night by their lights (the Dumb Fair, the Patience's ports); **The Unlit Boat** | a rumour; Hamnet Squire |
+| **The Cold Baths** (394, 622) | hut (`the_cold_baths`) | five red-and-white bathing-machines on wheels on the south shingle, a capstan, towel-rails | take the Cold: come up at ten, twenty or thirty (renown; the first thirty finds a drowned silver mark); **The Alderman's Ring** | a rumour |
+| **The Widows' Keels** (-924, 270) | hut (`the_widows_keels`) | three lake-boats turned keel-up for houses, stovepipes through their bottoms, eel-racks, the drowned-board chalked with lost boats | read the board; buy smoked eel; **Chalked Off** | a rumour; the boat-bearers road event; the Long Glass |
+| **The Charter Scale** (-274, 668) | tally_post (`the_charter_scale`) | a beam-balance that weighed boats: two A-frames 12 m high, a 16 m beam on a brass pivot, one pan grounded under iron weights, one swung up, the Weighmaster's booth | a weighing puzzle (bring the beam true: 4 + 6 + 13 = 23; the Weighmaster's drop); **Short Weight** | a rumour; the split salt-sack road event |
+| **The Cormorant Perches** (808, 550) | camp (`the_cormorant_perches`) | two staggered rows of T-perches at the water, a cormorant on each holding its wings out to dry, a reed shelter | watch the birds dive (a drowned Tallyman's seal-ring, then pike); **Old Tithe**, **The Alderman's Ring** | a rumour; the Long Glass |
+| **The Pearl Beds** (1462, -306) | camp (`the_pearl_beds`) | middens of opened mussel shells taller than the waders, a rack of 4 m wading-staves, nets, the pearl-tithe scale | open a shell from Dilly Fane's heap (empty, a seed pearl, a pearl, then luck); **Old Tithe** | a rumour; the spilled-shells road event |
+| **The Dumb Fair** (1190, 334) | camp (`the_dumb_fair`) | a ring of tall black poles hung with tarred sailcloth screens, hooded lanterns, trestles round a felt-wrapped bell | the silent smugglers' market: the Hush-wife trades in knocks (unsealed salt, Hush sayings, picks); ring the bell by night; **The Unlit Boat** | a rumour; the salt-train road event; Corbin Vell |
+
+### Two new large sites
+- **The Saltmound** (-1384, -532; delve, `the_saltmound`, pad 40): a cone of grey-white salt 16 m high,
+  the Charter's tithe of the Salt Isles' trade, with a barrow-trestle up its flank, the seal-pole on its top, a
+  lime-washed salt-gate with brass-bound doors under red Charter wax, the salt-reeve's sentry box; round the
+  back the Free Salters' timbered cut, their boats and sacks. Inside (`core:interior/the_saltmound`,
+  bandit_cave in salt white, seed 5811, 8 rooms + boss): the cut, the brine pool, the Salters' camp, the air
+  hall, the counting floor, and **Hesketh Vane, the Salt-King** (extends the smuggler-sayer; a crown of salt
+  crystals, an eel-leister). New foes: Free Salter, Salt Porter. **Short Weight** (Prudence Gauge or the
+  tithe-board; 4 stages): the barges weigh four stone light, Obed Marrow's seals are whole, the cut, the King,
+  then the ledger goes to the Row or into the Mere.
+- **Fathom Shears** (-330, -200, Tollmere's west tail; delve, `fathom_shears`, pad 36): two ship's masts
+  20 m high leaning out over a quay of Builders' stone, the diving bell the Patience on her cradle under the
+  head, a shot-line into the Mere, the windlass, the salvors' shed and salvage. Inside
+  (`core:interior/the_drowned_quarter`, ruined_hall in wet dark grey, seed 6907, 8 rooms + boss): the Drowned
+  Quarter forty fathom down, dry, the water held at its doors; the Bell Street, the flooded nave, the
+  salvors' camp, the niche hall, the Singing Gallery, and **Corwen Lisle, Master of the Patience**, striking
+  the Undersong with its own clapper. New foes: held salvor, drowned chainman. **The Patience Came Up Empty**
+  (Merryn Lisle or the salvors' slate; 3 stages): ride the bell down, put Corwen Lisle to rest, tell Merryn; she leaves the clapper with you.
+
+### Quests
+Seven new: Short Weight, The Patience Came Up Empty, **The Undersong** (leads out of Fathom Shears to Emmet
+Quarle's horn at the Listening Post: strike the clapper there or let the Circle have it), **Chalked Off**
+(Grisel Mew; the Merry Tally's name-board lies in the Saltmound's camp, so it leads into and out of the
+large site), **The Unlit Boat** (the Long Glass to the Dumb Fair), **Old Tithe** (the Perches to the Pearl
+Beds), **The Alderman's Ring** (the Cold Baths to the Perches). The Crown Drift, the Struck Barrow and
+Holmwatch kept their one quest each. Every stage opens on its reason line.
+
+### Road life
+Five new events, no new behaviour: a split salt-sack between a carter and a tithe-clerk (help one: coin
+and unsealed salt, or the Row's thanks and the Charter Scale), mourners carrying a boat to the water (the
+Widows' Keels), a pearl-wader's spilled basket (the Pearl Beds), a silent salt-train by night with a
+packhorse and a trader (the Dumb Fair), a salvor with a sack of bronze (Fathom Shears).
+
+### Placement
+Every place is outside the atlas's Mere polygon (the first shore spots were inside it and the atlas check
+failed two of them), at least 50 m from every other pad, on ground under 10 degrees. `visible_from` is left
+empty on all nine until the next build can test the sightlines.
+
+## Sedgemire's novel places: seven new kinds and two large sites (novel-sedgemire, 2026-10-05)
+
+New kinds (`PoiDressing.KINDS`/`KINDS_BUILT`, built only by `regions/sedgemire.gd`), each with a person,
+a touch, a note lying there, a rumour and a road event or a quest that sends you there:
+- **The Flood-Bride** (`effigy`, -2708,-188): a 10.5 m reed bride at a black mere, arms over the water,
+  indigo veil; last spring's slumped grey beside her. Touch: a knot and five marks lifts the fog
+  (`weather` clear). Orrin Vasse; the drowned stand before her at night.
+- **The Wisp-Catcher's Rack** (`wisp_jars`, -2388,-820): forty glowing jars on a bog-oak frame. Ferrit
+  Oache sells the Wisp-Jar (an oil-less green light); wild wisps visit at night; free a jar (Hearth).
+- **The Flood-Mark** (`tide_gauge`, -3404,-484): a 15 m Builders' needle with the flood-line and a
+  notched gauge. Hesk Vaurel, Tide-Watcher, gives the Keel-Barrow and reads the Dredge's plate.
+- **Hask's Ropewalk** (`ropewalk`, -2364,492): a 55 m walk, wheel, trestles, sledge, named ropes.
+  Corra Hask sells rope; the wheel walks a name into a rope for you.
+- **The Unwinding** (`maze`, -2428,1252): a five-ring reed-hedge maze (walkable, colliders) to a grief
+  pool. Edda Moye; ends the First Cord.
+- **The Grey Heronry** (`heronry`, -3076,-1628): nine dead alders, nests, herons. Pell Oduin reads a
+  flight for five marks and each reading discovers the next new place.
+- **The Sundew Garden** (`bog_garden`, -1892,-324): peat beds, giant sundews, fly-tower; the Mother
+  Sundew turns an eel liver into her dew (new ingredient). Nelle Saye sells dew.
+
+Large sites (both `delve`, `pad_shape: level`, own builders and doors):
+- **The Great Dredge** (-3124,-164): a beached barge, treadwheel, 19 m sheer-legs and bucket-chain over a
+  shaft; inside a `mine` (the Builders' street) with Brannoc Tull. Quest *None Up* (Wenna Corley), and out
+  of it *The Line on the Needle* to the Flood-Mark.
+- **The Keel-Barrow** (-3460,932): a turf barrow with a ship's gull-headed stem and stern, oars on the
+  ridge, a chain sail, a salt-white door; inside a `crypt` with Hrothe Tidecaller. Quest *The Keel-Barrow*
+  (Hesk Vaurel), and out of it *For Iven Hask, When He Comes Home* to the ropewalk.
+- From the old Name-Wife's Hollow: *The First Cord* (Iffo Nauve) to the Unwinding's middle.
+
+Road events (roadlife/sedgemire.json): the bride-weavers' withies, a loose wisp, the Guild's surveyors
+vs a stake-puller (a choice), a drowned man asking the way (escort), a ropewalker measuring the
+causeway, a man with one boot. Existing behaviours only.
+
+Checks: region_check --godot PASS (all nine seat clean, 13-29 draws, 5-209 k tris); targeted tests
+(test_pois, test_poi_preview, test_sites*, test_site_interiors_walk, test_road_life,
+test_objects_seated_sedgemire, test_quests, test_content_db, test_poi_encounters, test_poi_steps) pass;
+quest walker 6/6 quests, 17/17 walks; softlock_check clean. Sheet:
+docs/review/world_life/sedgemire/novel_places.jpg (all views within budget; the Heronry 1.44 M, over
+the aim). **Next build:** pads for all nine; `glade_m` for the Unwinding and the Heronry (they stand in
+wood); tracks to the Ropewalk (147 m), the Unwinding (248 m), the Dredge (181 m) and the Barrow (216 m).
+
+## The world w4096l: the novel round's 54 places on their pads, nineteen tracks, glades, and no pad in a pit (w4096l, 2026-10-05)
+
+Built with `./run.sh world` (MEM_GB=7, 2165 s), re-imported, committed as w4096k was (the runtime set
+only). It does every "for the next build" list of the six novel-round sections.
+
+**Pads.** All 54 new places (Hearthvale 8, Briarwold 9, Cinderlea 9, Skerrow 10, Brightwater 9,
+Sedgemire 9) at their defs' `pad_radius_m` and `pad_shape`. No tree's trunk stands inside a new pad
+but five on a rim (within 0.5 m of the edge). Fathom Shears moved 10 m nearer its water, to (-333,-210):
+its quay runs from the shingle to the water's edge, 37-39 m north of the old middle, and reached 44 m
+past a 36 m pad.
+
+**Glades** (`glade_m`, 1047 trees from 17 places; w4096k 235 from 3): the Briarwold's nine (the Knar
+131, Silk Walk 77, Swainmote 74, Told Hives 71, Thornwell 69, Noon Owl 50, Letter Oak 44, Casting Dell
+40, Pannage Pound 35), and new ones for the Scarecrow Moot (44 m, 70 trees), the Witness Elms (40, 38),
+the Grey Heronry (44, 63), the Unwinding (46, 38) and the Wisp-Catcher's Rack (30, the 6 that stood on
+it). The Letter-Cote and the Candle-Wheel stand among Hearthvale's hedgerow trees and have none.
+
+**Tracks** (atlas, 105 roads; built 156). Each runs from a place to the nearer settlement end of its
+nearest road, turning onto it on the w4096k line; none ends at a POI another road ends at (a second
+road there moves the first's dead end into the place's middle). Own way, past the shared trunk:
+Wassail Knap-Hazelcombe 227 m, the Great Barn-Rookdown 185, the Scarecrow Moot-Rookdown 263, the
+Witness Elms-Rookdown 145, the Knar-Grandfather Hollow 191, the Thornwell-Hazelwick 189, the Silk
+Walk-Ormhold 145, the Casting Dell-Rookhold 331, the Pannage Pound-Hazelwick 240, the Fallen
+Head-Last Camp 132, Cinderhowe-West Walk 299, Corbie Stack-Fallen Hand 317, the Unmade Giant-Ghastfell
+801 (it zigzags 120 m down off its plateau), the Saltmound-Gullhithe 91, Fathom Shears-Tollmere 297,
+the Great Dredge-Oulea 162, the Keel-Barrow-Saeva 193, Hask's Ropewalk-Nauvissa 125, the
+Unwinding-Nauvissa 201: 4.5 km. Routed first on heights-only 4096 builds (6 min each; their roads
+are the full build's): four tracks that cut across country after their turning got via points along
+their trunk every 100 m; the Knar's was held to the Wold Road's hairpin past the Oiled Stone (it cut
+through the shrine); Cinderhowe's turns further north, clear of the Bell Wood Stone. signposts.json is
+made from those roads before the build, so the build stands the posts it checks: 66 fingerposts (185
+arms), 89 town stones, `--check` matches. The Pilgrim's Ash fingerpost waypoint [362, 2954] took.
+
+**The pad-dam fill walled pads in** (fixed, `roads.drain_pad_dams`). A closed hollow touching a pad's
+skirt was filled to where it would spill; where the pad lay on the floor of a basin of the country's own,
+the basin was filled to its rim round the pad and the pad stood in a pit: Wassail Knap 17 m down in ten
+hectares of flat fill (seen on the first sheet), the Letter-Cote 6 m. The same stood in the older world
+at the Clanless Camp (27 m), the Thornmarch (21), Stray Thorn (15, 13 ha), Ghastfoot (17), Briar's End,
+the Watch of the Gate and others. A hollow the pad's own middle lies in is now filled no higher than the
+pad; a hollow beside a pad (Fernhold's) as before. Two heights-only builds with and without: the land
+changes round 24 such places only, every change a lowering of the fill.
+
+**Builders fixed by the checks:** Hask's Ropewalk lays its walk across a road that ends at it (the grain
+was the new track's own line and the sledge stood on it); the Tamwick Troy's hedges and the Unfinished
+Figure's turf stacks say "dirt" underfoot; a cave mouth's capstone the hill already closes over is left
+out (the Rafters' Locker's two lay 99% and 165% inside its bank; newly in the seat test's sample).
+
+**Checks on the final world:**
+- `region_check.py <region> --godot --edited <its novel places>`: PASS for all six; 54 of 54 seat clean,
+  5-73 draws and 5-209 k triangles a place.
+- `./run.sh test --filter=test_signposts,test_pois,test_poi_,test_objects_seated,test_sites,
+  test_landmarks_seated,test_roads,test_tracks,test_world,test_settlement,test_pad_layout,test_wayside,
+  test_town_stone,test_ruins_off_the_road,test_road_`: 306 tests, 1 failed (objects_seated_skerrow,
+  fence_gap 5018 over 4285), 0 script errors, warnings at the 49 baseline. The test seats every eighth
+  place of the built list, and 54 new places moved the sample: at w4096k's sample places (SEAT_PLACES_FROM)
+  the first w4096l build (before the dam fix) counted 4084, under the baseline. The line-work's variants are drawn afresh by every build (the
+  pieces of a wall run differ in every cell even where the ground is the same), so Skerrow's baseline is
+  re-measured at the new sample: fence_gap 5018, buried 3 (was 7; on_road, overlap, sunk, fence_lone 0).
+- Python: tools/world/tests 333 passed, 1 skipped (the three that build a world left out);
+  test_capture_plan and test_relative_plan 34 passed with the capture plans remade on w4096l.
+- One region_check probe (Cinderlea, before the restart) hung in Godot's shutdown after writing its
+  probe: the main thread waiting on a worker-pool condition with every worker idle. The same check ran
+  clean twice after. Not chased.
+
+**Sheets** (`poi_sheet.py --built --weather clear --time 16.5`, combined by hand):
+- `docs/review/world_life/w4096l_large_sites.jpg`: the twelve large sites, four views each. Wassail Knap
+  stands on its valley floor (the first sheet had it in the 17 m pit). Every view within the budget but
+  the Thornwell's third, 1661 draws and **1.55 M primitives, over the 1.5 M budget** (its first two 1.36
+  and 1.35 M, over the aim; the Knar's 1.24 and 1.13 M over the aim): the Greatwood behind an open glade.
+  Not chased here. The tracks read as worn strips to the Fallen Head, Cinderhowe and the Unmade Giant;
+  under the Greatwood and in the Sedgemire wet they hardly show.
+- `docs/review/world_life/w4096l_briarwold_novel.jpg`: the Briarwold's nine, a view from the road's side
+  and one from above each (the full four-view run was taking 15-35 min a view in the Greatwood). The
+  glades are open from above, but at 16:30 the eye-level views of the Told Hives, the Swainmote and the
+  Silk Walk are still near black: the camera stands 1.5 radii out, at the glade's edge under the crowns,
+  and the low sun leaves the glade floor in the wood's shadow. The Noon Owl, the Casting Dell, the
+  Letter Oak, the Pannage Pound and the Thornwell read; the Knar's first view has a trunk at its right.

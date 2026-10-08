@@ -62,6 +62,17 @@ var _slowest: Dictionary = {}      # phase -> [wall_ms, what the streamer and wo
 var _blame: Dictionary = {}        # phase -> {culprit -> frames over 8 ms}
 var _blame30: Dictionary = {}      # the same, over 30 ms
 var _frames30: Array = []          # [phase, cpu ms, {piece: ms}] of every frame over 30 ms
+## From the film's first picture to control: the longest frame on the wall clock (ms), the frames over
+## 50 ms, the frames a loading caption (the UI's, or the film's own hold line) was on the screen and how
+## often one went up, and the film's holds (CinematicPlayer.holds, kept past the film's end).
+var _film_longest_ms := 0.0
+var _film_over50 := 0
+var _film_frames := 0
+var _film_caption_frames := 0
+var _film_captions := 0
+var _film_caption_was := false
+var _film_holds: Array = []
+var _film_slow: Array = []         # [ms since the first picture, wall ms, phase, culprit] over 50 ms
 
 
 func _ready() -> void:
@@ -163,12 +174,32 @@ func _process(_delta: float) -> void:
 					for k: String in src:
 						all[k] = snappedf(float(all.get(k, 0.0)) + float(src[k]), 0.1)
 				_frames30.append([_phase, snappedf(cpu_ms, 0.1), all])
+		if _phase in ["film", "film_hold"] and _marks.has("first_film_frame"):
+			_film_frame(wall_ms)
 	_last_us = Time.get_ticks_usec()
 	_last_cpu_ns = _cpu_ns()
 	_advance()
 	if Time.get_ticks_msec() > CAP_S * 1000.0:
 		print("CPU: the cap (%d s) came first, in %s" % [int(CAP_S), _phase])
 		_finish()
+
+
+## A frame of the film after its first picture: how long it was, and whether a caption was up.
+func _film_frame(wall_ms: float) -> void:
+	_film_frames += 1
+	_film_longest_ms = maxf(_film_longest_ms, wall_ms)
+	if wall_ms > 50.0:
+		_film_over50 += 1
+		_film_slow.append([Time.get_ticks_msec() - int(_marks["first_film_frame"]), snappedf(wall_ms, 0.1), _phase, _culprit()])
+	var cin := get_tree().get_first_node_in_group(CinematicPlayer.GROUP) as CinematicPlayer
+	if cin != null:
+		_film_holds = cin.holds
+	var up := UI.is_loading_shown() or (cin != null and cin.overlay() != null and cin.overlay().caption_shown())
+	if up:
+		_film_caption_frames += 1
+		if not _film_caption_was:
+			_film_captions += 1
+	_film_caption_was = up
 
 
 ## The biggest single piece built in this frame (the streamer's, and everything paced by WorldPace),
@@ -387,6 +418,25 @@ func _finish() -> void:
 				% [t.call("be_named_pressed", "world_ready"), t.call("be_named_pressed", "body_stands"),
 					t.call("be_named_pressed", "fade_lifted"), t.call("be_named_pressed", "first_film_frame"),
 					t.call("be_named_pressed", "control")])
+	if _marks.has("first_film_frame"):
+		var mid_waits := 0
+		var mid_captions := 0
+		var rows: Array[String] = []
+		for h: Dictionary in _film_holds:
+			if bool(h.get("mid", false)):
+				mid_waits += 0 if bool(h.get("ready", true)) else 1
+				mid_captions += 1 if bool(h.get("caption", false)) else 0
+			rows.append("%d:%s%s%s %d ms" % [int(h.get("shot", -1)), "ready" if bool(h.get("ready", true)) else "WAIT",
+					" CAPTION" if bool(h.get("caption", false)) else "", " EARLY" if bool(h.get("early", false)) else "", int(h.get("ms", 0))])
+		report["film"] = {"style": style, "opening_hold_s": (int(_marks.get("first_film_frame", 0)) - int(_marks.get("film_begins", 0))) / 1000.0,
+				"mid_waits": mid_waits, "mid_hold_captions": mid_captions, "caption_frames": _film_caption_frames,
+				"captions_up": _film_captions, "longest_frame_ms": _film_longest_ms, "frames_over_50ms": _film_over50,
+				"frames": _film_frames, "holds": _film_holds, "slow_frames": _film_slow}
+		print("FILM| %s: opening hold %.1f s; mid-film waits %d, hold captions %d, captions up %d (%d frames); longest frame %.0f ms; frames over 50 ms %d of %d"
+				% [style, report["film"]["opening_hold_s"], mid_waits, mid_captions, _film_captions, _film_caption_frames,
+					_film_longest_ms, _film_over50, _film_frames])
+		print("FILM| holds: %s" % ", ".join(rows))
+		print("FILM| frames over 50 ms [ms in, wall ms, phase, culprit]: %s" % str(_film_slow))
 	var w := World.instance
 	if w != null:
 		report["stand_up_ms"] = w.stand_up_ms

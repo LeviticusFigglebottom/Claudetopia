@@ -1,0 +1,294 @@
+[
+  {
+    "id": "core:npc/odile_wark",
+    "name": "Odile Wark",
+    "home_place": "core:poi/name_kiln",
+    "dialogue": "core:dialogue/odile_wark",
+    "no_radiant": true,
+    "bio": "The fourth keeper of the Name-Kiln, a Greyfold potter's great-granddaughter, who has never let the kiln go out and never been further than Pilgrim's Ash. She presses each name into the clay with her thumbnail and a bone stylus, fires twelve at a time, and hangs them herself. She knows the screen by heart, row by row, and will tell you whose tile is clinking.",
+    "unique_habit": "Says each name aloud as she presses it, and again as she hangs it, and if she has spelt it wrong she breaks the tile and starts again, however long it took.",
+    "personality": {"traits": ["kind", "proud", "gossip"]},
+    "appearance": {"seed": 7933, "build": "stout", "age": 52.0, "feminine": 1.0, "hair": "grey_bound_in_a_clay_stiff_cloth", "notes": "a leather apron grey to the knees with dried slip, sleeves rolled, forearms burnt in old pale patches, a bone stylus behind her ear"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/name_kiln", "activity": "sleep", "spot": "odile_bench"},
+      {"days": "all", "hour": 6, "place": "core:poi/name_kiln", "activity": "work", "spot": "odile_bench", "notes": "pressing names at the bench"},
+      {"days": "all", "hour": 12, "place": "core:poi/name_kiln", "activity": "eat", "spot": "odile_bench"},
+      {"days": "all", "hour": 13, "place": "core:poi/name_kiln", "activity": "work", "spot": "odile_bench", "notes": "drawing the kiln and hanging the day's tiles"},
+      {"days": "all", "hour": 21, "place": "core:poi/name_kiln", "activity": "idle", "spot": "odile_bench"}
+    ]
+  },
+  {
+    "id": "core:npc/pell_hoddy",
+    "name": "Pell Hoddy",
+    "home_place": "core:poi/smoke_hood",
+    "dialogue": "core:dialogue/pell_hoddy",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "A lay brother of the Tolling Order who has worked the lever of the Smoke-Speakers' Hood for twenty years, sleeping under the gantry. He can read the whole heath's smoke from the top of it, every chapter-house's straw-fire and every scavenger's cookfire, and he knows where everybody is and what they are saying, and has nobody to tell.",
+    "unique_habit": "Counts under his breath in longs and shorts, even when he is talking, and taps them on whatever is to hand.",
+    "personality": {"traits": ["gossip", "pious", "humble"]},
+    "appearance": {"seed": 7944, "build": "wiry", "age": 47.0, "feminine": 0.0, "hair": "black_going_grey_under_a_smoke_stained_hood", "notes": "the Order's grey gone brown at the shoulders with smoke, leather gloves to the elbow, eyes always narrowed, a knotted cord at his belt with the code on it"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/smoke_hood", "activity": "sleep", "spot": "pell_lever"},
+      {"days": "all", "hour": 5, "place": "core:poi/smoke_hood", "activity": "work", "spot": "pell_lever", "notes": "the dawn calls"},
+      {"days": "all", "hour": 12, "place": "core:poi/smoke_hood", "activity": "eat", "spot": "pell_lever"},
+      {"days": "all", "hour": 13, "place": "core:poi/smoke_hood", "activity": "work", "spot": "pell_lever"},
+      {"days": "all", "hour": 21, "place": "core:poi/smoke_hood", "activity": "idle", "spot": "pell_lever"}
+    ]
+  },
+  {
+    "id": "core:npc/wenna_thrope",
+    "name": "Wenna Thrope",
+    "home_place": "core:poi/the_ash_dial",
+    "dialogue": "core:dialogue/wenna_thrope",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "The Order's dial-reader on the west heath, a novice who was sent to learn the dial from the old reader and buried him a year later and stayed. She reads the shadow, rings the count on a hand-bell for the heath to hear, and keeps a tally of every hour in chalk on a board. She has worked out the Builders' numbers on the stones for herself and is very pleased about it.",
+    "unique_habit": "Glances at the shadow whenever anybody says anything, as if the time might have changed what it means.",
+    "personality": {"traits": ["proud", "brave", "cynical"]},
+    "appearance": {"seed": 7955, "build": "slight", "age": 26.0, "feminine": 1.0, "hair": "brown_cropped_short_against_the_ash", "notes": "a novice's grey with the sleeves cut off at the elbow, a brass hand-bell on a strap across her chest, chalk on both hands"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_ash_dial", "activity": "sleep", "spot": "wenna_bell"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_ash_dial", "activity": "work", "spot": "wenna_bell", "notes": "reading the shadow, ringing the hours"},
+      {"days": "all", "hour": 12, "place": "core:poi/the_ash_dial", "activity": "eat", "spot": "wenna_bell"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_ash_dial", "activity": "work", "spot": "wenna_bell"},
+      {"days": "all", "hour": 20, "place": "core:poi/the_ash_dial", "activity": "idle", "spot": "wenna_bell"}
+    ]
+  },
+  {
+    "id": "core:npc/aud_venn",
+    "name": "Aud Venn",
+    "home_place": "core:poi/the_fallen_head",
+    "dialogue": "core:dialogue/aud_venn",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "A sister of the Tolling Order and its hearer: the one sent when something on the heath makes a sound it should not. She came to the Fallen Head the day after Pell Hoddy's smoke, and has sat by its mouth since with a slate, writing down what it sings. She is not frightened of it. She is frightened of what the Order will do when it reads the slate.",
+    "unique_habit": "Writes with her eyes shut, one hand flat on the slate to feel where the lines go.",
+    "personality": {"traits": ["quiet", "brave", "pious", "kind"]},
+    "appearance": {"seed": 7966, "build": "tall", "age": 38.0, "feminine": 1.0, "hair": "dark_braided_and_pinned", "notes": "the Order's grey with a hearer's white cord round the neck, a slate on a strap, chalk-dust to the elbow, a small bronze bell with its clapper tied"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/the_fallen_head", "activity": "work", "spot": "aud_camp", "notes": "listening at the mouth: it sings at night"},
+      {"days": "all", "hour": 6, "place": "core:poi/the_fallen_head", "activity": "sleep", "spot": "aud_camp"},
+      {"days": "all", "hour": 13, "place": "core:poi/the_fallen_head", "activity": "eat", "spot": "aud_camp"},
+      {"days": "all", "hour": 14, "place": "core:poi/the_fallen_head", "activity": "work", "spot": "aud_camp", "notes": "copying the night's slate fair"}
+    ]
+  },
+  {
+    "id": "core:npc/ama_reedwright",
+    "name": "Ama Reedwright",
+    "home_place": "core:poi/cistern_of_isse",
+    "dialogue": "core:dialogue/ama_reedwright",
+    "no_radiant": true,
+    "faction": "core:faction/reed_council",
+    "bio": "A stilt-walker of Isseva who heard from a Sayer that the Cistern of Isse had water in it again, and walked two regions to see it, on her stilts as far as the ash and on her feet after. The reedfolk say Isse walked up this stair out of the marsh; Ama has come to see if anything is walking up it now. She has not gone down. She says it is not hers to go down.",
+    "unique_habit": "Stands on one leg when she is thinking, like a heron, and does not seem to notice she is doing it.",
+    "personality": {"traits": ["pious", "humble", "quiet"]},
+    "appearance": {"seed": 7977, "build": "lean_and_long_legged", "age": 33.0, "feminine": 1.0, "hair": "black_wound_with_reed_cord", "notes": "Sedgish dyed blue at the hems gone grey with ash, her stilts tied on her back like a quiver, bare feet, a gourd on a cord"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/cistern_of_isse", "activity": "sleep", "spot": "ama_well"},
+      {"days": "all", "hour": 6, "place": "core:poi/cistern_of_isse", "activity": "pray", "spot": "ama_well", "notes": "listening down the stair"},
+      {"days": "all", "hour": 12, "place": "core:poi/cistern_of_isse", "activity": "eat", "spot": "ama_well"},
+      {"days": "all", "hour": 13, "place": "core:poi/cistern_of_isse", "activity": "idle", "spot": "ama_well"}
+    ]
+  },
+  {
+    "id": "core:npc/corra_dunn",
+    "name": "Corra Dunn",
+    "home_place": "core:poi/leaving_lines",
+    "dialogue": "core:dialogue/corra_dunn",
+    "no_radiant": true,
+    "bio": "A dyer from Merrowby who came south after her husband walked into the Hush in the spring, to walk after him. She got as far as the Leaving-Lines, hung up her red coat, and found she could not roll in the ash. She has sat by the basin three days with the coat over her head on the line, deciding.",
+    "unique_habit": "Rubs the ash between her fingers and looks at it, the way a dyer looks at a dye, and says what colour it would take.",
+    "personality": {"traits": ["timid", "kind", "gossip"]},
+    "appearance": {"seed": 7988, "build": "plump", "age": 44.0, "feminine": 1.0, "hair": "auburn_going_grey_tied_in_a_dyers_scarf", "notes": "a Vale shift, her hands stained madder-red to the wrist that no washing gets out, barefoot, a pack beside her with the dyes still in it"},
+    "schedule": [
+      {"days": "all", "hour": 0, "place": "core:poi/leaving_lines", "activity": "sleep", "spot": "corra_basin"},
+      {"days": "all", "hour": 7, "place": "core:poi/leaving_lines", "activity": "idle", "spot": "corra_basin", "notes": "sitting by the ash-basin, deciding"},
+      {"days": "all", "hour": 12, "place": "core:poi/leaving_lines", "activity": "eat", "spot": "corra_basin"},
+      {"days": "all", "hour": 13, "place": "core:poi/leaving_lines", "activity": "idle", "spot": "corra_basin"}
+    ]
+  },
+  {
+    "id": "core:npc/hessa_lowe",
+    "name": "Hessa Lowe",
+    "home_place": "core:poi/silk_vents",
+    "dialogue": "core:dialogue/hessa_lowe",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "The moth-wife of the Silk Vents, who spins the ash-moths' silk for the Tolling Order's habits as her mother did and her mother's mother. She sleeps by day and works from dusk, when the moths come down to her lamp, and talks to them while she works, and to nobody else much.",
+    "unique_habit": "Holds very still whenever a moth lands on her, which is often, and finishes her sentence only after it has gone.",
+    "personality": {
+      "traits": [
+        "quiet",
+        "kind",
+        "humble"
+      ]
+    },
+    "appearance": {
+      "seed": 8011,
+      "build": "small",
+      "age": 61.0,
+      "feminine": 1.0,
+      "hair": "grey_under_a_netted_veil",
+      "notes": "a veil of fine grey net over her hair and shoulders against the moths, the Order's grey of her own spinning, spindle-calloused fingers, moth-dust on her sleeves like flour"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/silk_vents",
+        "activity": "work",
+        "spot": "hessa_wheel",
+        "notes": "spinning by the lamp"
+      },
+      {
+        "days": "all",
+        "hour": 5,
+        "place": "core:poi/silk_vents",
+        "activity": "sleep",
+        "spot": "hessa_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/silk_vents",
+        "activity": "eat",
+        "spot": "hessa_wheel"
+      },
+      {
+        "days": "all",
+        "hour": 14,
+        "place": "core:poi/silk_vents",
+        "activity": "work",
+        "spot": "hessa_wheel",
+        "notes": "gathering the cocoons off the racks"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/brin_callow",
+    "name": "Brin Callow",
+    "home_place": "core:poi/gentle_fold",
+    "dialogue": "core:dialogue/brin_callow",
+    "no_radiant": true,
+    "faction": "core:faction/tolling_order",
+    "bio": "A novice of the Tolling Order, seventeen, sent to the Gentle Fold for his second winter because he reads aloud well and is not easily frightened. He reads the Greyfold names to the wights at dusk until they lie down, and has begun to know some of them by their faces, which the Order told him not to.",
+    "unique_habit": "Reads everything aloud under his breath, notices, labels, the strokes on a waystone, as if practising.",
+    "personality": {
+      "traits": [
+        "brave",
+        "kind",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 8022,
+      "build": "gangly",
+      "age": 17.0,
+      "feminine": 0.0,
+      "hair": "straw_fair_shorn_for_the_order",
+      "notes": "a novice's grey too big for him, rope sandals, the Greyfold roll in an oilcloth satchel across his chest, ink on his lip from licking the pen"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/gentle_fold",
+        "activity": "sleep",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 7,
+        "place": "core:poi/gentle_fold",
+        "activity": "work",
+        "spot": "brin_stand",
+        "notes": "mending the blankets, walling the fold"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/gentle_fold",
+        "activity": "eat",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/gentle_fold",
+        "activity": "idle",
+        "spot": "brin_stand"
+      },
+      {
+        "days": "all",
+        "hour": 18,
+        "place": "core:poi/gentle_fold",
+        "activity": "pray",
+        "spot": "brin_stand",
+        "notes": "reading the names"
+      }
+    ]
+  },
+  {
+    "id": "core:npc/joss_fennick",
+    "name": "Joss Fennick",
+    "home_place": "core:poi/cinderhowe",
+    "dialogue": "core:dialogue/joss_fennick",
+    "no_radiant": true,
+    "bio": "An obsidian-knapper of Pilgrim's Ash whose grandmother cut the Cinderhowe galleries and did not come out of them in the last fire. He has knapped other men's glass for twenty years, and come back to the foot of the cone with his own tools to sit by the adit and wait for the nerve to go in.",
+    "unique_habit": "Turns a flake of glass over and over in his fingers while he talks, testing its edge on his thumbnail, and never cuts himself.",
+    "personality": {
+      "traits": [
+        "timid",
+        "generous",
+        "gossip"
+      ]
+    },
+    "appearance": {
+      "seed": 8033,
+      "build": "broad",
+      "age": 45.0,
+      "feminine": 0.0,
+      "hair": "black_cropped_with_glass_dust_in_it",
+      "notes": "a leather knapper's apron and a pad on his left thigh scarred with a thousand cuts, a hide bag of hammerstones, black glass dust in every crease of his hands"
+    },
+    "schedule": [
+      {
+        "days": "all",
+        "hour": 0,
+        "place": "core:poi/cinderhowe",
+        "activity": "sleep",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 6,
+        "place": "core:poi/cinderhowe",
+        "activity": "work",
+        "spot": "joss_floor",
+        "notes": "knapping at the foot of the cone"
+      },
+      {
+        "days": "all",
+        "hour": 12,
+        "place": "core:poi/cinderhowe",
+        "activity": "eat",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 13,
+        "place": "core:poi/cinderhowe",
+        "activity": "work",
+        "spot": "joss_floor"
+      },
+      {
+        "days": "all",
+        "hour": 21,
+        "place": "core:poi/cinderhowe",
+        "activity": "idle",
+        "spot": "joss_floor"
+      }
+    ]
+  }
+]

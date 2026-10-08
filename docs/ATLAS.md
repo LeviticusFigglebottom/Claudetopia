@@ -61,7 +61,7 @@ on this side of a closing range's crest.
 | density | **10.6 locations a walkable km²** |
 | distance to the nearest location | mean **159 m**, 95% of the ground within **295 m**, furthest **501 m** (a col on the Wall's face) |
 | ground more than 400 m from anything | **0.1%** of the walkable country, in three slivers of under 0.01 km² each |
-| roads | 85, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 38 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the three tracks of world life phase 2, about 550 m of new way between them, are not yet in the km) |
+| roads | 105, **80 km**: 5 highway (3 km), 21 road (25 km), 18 lane (13 km), 58 track (36 km), 2 causeway (1.6 km), 1 stair (0.6 km) (the three tracks of world life phase 2 and the nineteen of the novel round, about 5.1 km of new way between them, are not yet in the km) |
 | road more than 250 m from a location | none further than **289 m** (the Lake Road west of the Stride's Foot) |
 
 The brief's rule was no walkable point more than about 400 m from somewhere notable, and nothing
@@ -269,6 +269,18 @@ them for the large places: from the Elderhold-Rookhold track up onto the scarp t
 and from the Skarl Bridge-Ormhold track over the ridge to the Charter Delf's shaft head. Each is
 laid to its settlement or bridge, so it runs on the older track's trunk and parts from it at the
 turning, where the build's fingerpost names it.
+
+**The novel round's tracks** (w4096l) are laid the same way, nineteen of them, each from a new place to the
+nearer settlement end of its nearest road, turning onto it where the old line passes closest (or straight
+to the settlement where that is its street): Wassail Knap to Hazelcombe; the Great Barn, the Scarecrow
+Moot and the Witness Elms to Rookdown; the Knar to Grandfather Hollow; the Thornwell and the Pannage
+Pound to Hazelwick; the Silk Walk to Ormhold; the Casting Dell to Rookhold; the Fallen Head to the Last
+Camp; Cinderhowe to the West Walk; Corbie Stack to the Fallen Hand; the Unmade Giant to Ghastfell, down
+120 m of fellside from its plateau; the Saltmound to Gullhithe; Fathom Shears to Tollmere along the
+island's tail; the Great Dredge to Oulea; the Keel-Barrow to Saeva; Hask's Ropewalk and the Unwinding to
+Nauvissa. A track that would cut across country after its turning has via points every 100 m along its
+trunk, so it parts from the older road once. None ends at a POI another road already ends at, since a
+second road there would move the first's dead end into the place's middle.
 
 ### Hearthvale: harvest gold
 

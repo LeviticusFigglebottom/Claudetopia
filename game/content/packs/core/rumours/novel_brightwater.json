@@ -1,0 +1,112 @@
+[
+  {
+    "id": "core:rumour/long_glass",
+    "name": "The clerk who counts the Mere",
+    "tone": "strange",
+    "text": "There's a brass telescope as long as a barge on the north brow, the Tallymen's Long Glass, that they counted the boats through before the Stride had its gate. The old clerk still counts them, every boat on the Mere, by day and by their lights at night, and sends the count to the Row, who never read it. He lets you look for a copper. You can see the whole Mere from it.",
+    "variants": [
+      "Old Squire at the Long Glass says there's a boat on the Mere every night with no light on it, and it's spoiling his count."
+    ],
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/cold_baths",
+    "name": "Taking the Cold",
+    "tone": "warm",
+    "text": "The guildsmen go out to the bathing-machines on the south shingle below the Stride's Foot and take the Cold for their humours: hauled out in a striped hut on wheels and down the steps into the Mere. Hepzibah Cole counts them under. She bets a mark nobody stays for the thirty, and the last man who did came up with a drowned silver mark in his fist.",
+    "variants": [
+      "Everything said on the Row is said first in Hepzibah Cole's bathing-machines, going out or coming back. She never repeats it. She's paid not to."
+    ],
+    "tags": [
+      "brightwater"
+    ]
+  },
+  {
+    "id": "core:rumour/widows_keels",
+    "name": "The drowned-board",
+    "tone": "grim",
+    "text": "Out past Willow Isle on the south-west shingle there are three boats turned keel-up for houses, and a board by the water chalked with every boat lost off that shore since the Charter. Grisel Mew goes over the names every evening. Her own son's is the newest, and Hesper Kettle's boy swears he saw that boat tied up behind the Saltmound in the dark.",
+    "variants": [
+      "Buy your smoked eel at the Widows' Keels, not on the Row. Cheaper, and the old woman says thank you."
+    ],
+    "tags": [
+      "brightwater",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/charter_scale",
+    "name": "Four stone light",
+    "tone": "cold",
+    "text": "The Charter Scale's still standing on the south shore by the Stride's Foot, the great beam that weighed every boat that came to Tollmere, and Prudence Gauge still keeps it true. She says the salt barges come down four stone light, every one of them, and the Saltmound's seals were never broken. A Weighmaster who can't make a sum come out is a Weighmaster who won't sleep.",
+    "variants": [
+      "Bring the Charter Scale's beam level with the iron weights and the Weighmaster puts your name in her ledger as somebody who can count."
+    ],
+    "tags": [
+      "brightwater"
+    ]
+  },
+  {
+    "id": "core:rumour/cormorant_perches",
+    "name": "Birds named after taxes",
+    "tone": "strange",
+    "text": "Corbin Vell fishes with cormorants off the south-east shore, fourteen of them, all named after taxes. They bring up pike and rings and Tallymen's seals off the bottom. And at dusk some of them fly across the water to the city with something tied to their legs, and nobody on the Stride ever looks twice at a cormorant.",
+    "variants": [],
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/pearl_beds",
+    "name": "One shell in two hundred",
+    "tone": "warm",
+    "text": "The great mussels at the Wold Water's mouth make pearls, one shell in two hundred, and the waders have heaped the empty ones on the east shingle so long the middens are taller than they are. A girl of eleven opens shells there for her mother, who's in the Undercroft for nineteen marks. She'll let you open one from her heap for half of what's in it.",
+    "variants": [],
+    "tags": [
+      "brightwater"
+    ]
+  },
+  {
+    "id": "core:rumour/dumb_fair",
+    "name": "The fair where nobody speaks",
+    "tone": "strange",
+    "text": "There's a fair every night on the south-east shore inside a ring of black screens, and nothing in it is said aloud. Salt with no seal, rope with no red, Hush sayings in jars. You pay in knocks. The Tallymen know where it is. Everybody knows where it is. Nobody has ever heard it.",
+    "variants": [
+      "If you go to the Dumb Fair, keep your mouth shut. The Hush-wife will put a finger on your lips the first time. There isn't a second time."
+    ],
+    "tags": [
+      "brightwater",
+      "strange"
+    ]
+  },
+  {
+    "id": "core:rumour/saltmound",
+    "name": "The King of Salt",
+    "tone": "grim",
+    "text": "You'll have seen the Saltmound white on the west shore, the Charter's tithe-salt heaped under seal. Old Marrow the salt-reeve swears his seals are whole, and they are. But there are boats at the back of it at night, toward the water, and a man who calls himself the Salt-King, and Gullhithe's poorest are paid in salt.",
+    "variants": [
+      "Every barge out of the Saltmound weighs four stone light at the Charter Scale. Every barge. Somebody's counting."
+    ],
+    "tags": [
+      "brightwater",
+      "grim"
+    ]
+  },
+  {
+    "id": "core:rumour/fathom_shears",
+    "name": "The Patience came up empty",
+    "tone": "grim",
+    "text": "The Fathom Company's bell went down off the west tail three weeks ago with Master Lisle and four men after the Undersong, the drowned bell in the Quarter under the Mere, and came up with nobody in it, ringing. It's rung by itself every hour since. His daughter keeps the windlass and won't let anyone take the chain off it.",
+    "variants": [
+      "They say the Drowned Quarter under the Mere is dry, forty fathom down; the water stops at its doors. The salvors go down in a bell and walk its streets."
+    ],
+    "tags": [
+      "brightwater",
+      "grim"
+    ]
+  }
+]

@@ -66,6 +66,19 @@ const SHOT_DIR := "user://captures/shots"
 const COUNTRY_STALL_FRAMES := 120
 const COUNTRY_STALL_S := 10.0
 const COUNTRY_CAP_S := 600.0
+## The loading caption's watch. A caption waiting on something that never comes is a game that looks
+## alive and is not (the owner's Continue after a change of settings, 2026-10-02): every frame it is
+## up, `loading_wait()` says what it waits on, in words and with its counts, and while that changes
+## the load is moving. Unchanged for LOADING_QUIET_S, it is reported (the log and so the ErrorLog,
+## and the startup trace) with what it is waiting on and the state round it, said on the caption,
+## and a way back to the title is offered under it. The load goes on meanwhile: a machine that is
+## only slow carries on, and the note goes again as soon as it moves.
+const LOADING_QUIET_S := 60.0
+## Still unchanged this long, it is reported again, as an error.
+const LOADING_STUCK_S := 300.0
+const TITLE_SCENE := "res://ui/menus/main_menu.tscn"
+## The Settings autoload's script, for its static helpers.
+const SETTINGS_SCRIPT := preload("res://core/settings.gd")
 
 var hud_layer: CanvasLayer
 var dialogue_layer: CanvasLayer
@@ -98,6 +111,20 @@ var _mouse_was_captured := false
 var _holding_for_country := false
 ## How the last hold ended, for a probe or a test: see wait_for_country.
 var last_country_wait: Dictionary = {}
+## The caption's watch (LOADING_QUIET_S): what it waited on last frame, since when, when it went up,
+## and what it was reported stuck on ("" while it is moving).
+var _loading_wait := ""
+var _loading_wait_ms := 0
+var _loading_up_ms := 0
+var _loading_stuck := ""
+var _loading_stuck_said := false
+var _loading_note: Label
+var _loading_back: Button
+## What the loading caption was last reported stuck on, and for how long: {what, quiet_s, up_s, state}.
+var last_loading_stuck: Dictionary = {}
+
+## The loading caption has waited LOADING_QUIET_S on one thing (`what`) without it moving.
+signal loading_stuck(what: String, quiet_s: float)
 
 
 func _ready() -> void:
@@ -244,8 +271,30 @@ func _build_loading() -> void:
 	_loading_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_loading_progress)
 
+	# what the watch says when the load has stopped moving, and the way back (LOADING_QUIET_S)
+	_loading_note = Label.new()
+	_loading_note.name = "LoadingNote"
+	_loading_note.theme_type_variation = &"Small"
+	_loading_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loading_note.custom_minimum_size = Vector2(500, 0)
+	_loading_note.visible = false
+	col.add_child(_loading_note)
+	_loading_back = Button.new()
+	_loading_back.name = "LoadingBack"
+	_loading_back.text = "Back to the title"
+	_loading_back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_loading_back.visible = false
+	_loading_back.pressed.connect(back_to_title.bind(true))
+	col.add_child(_loading_back)
+
 
 func _show_loading(line: String) -> void:
+	if not _loading.visible:
+		_loading_up_ms = Time.get_ticks_msec()
+		_loading_wait = ""
+		_loading_wait_ms = _loading_up_ms
+		_set_loading_stuck("")
 	_loading_line.text = line
 	_loading_progress.text = _loading_progress_text()
 	_loading.theme = theme_for(theme_variant)
@@ -419,6 +468,141 @@ func wait_for_country(progress: Callable, clock := Callable(), stall_frames := C
 func _process(_delta: float) -> void:
 	if _loading != null and _loading.visible and _loading_progress != null:
 		_loading_progress.text = _loading_progress_text()
+		_watch_loading(Time.get_ticks_msec())
+
+
+# --- the loading caption's watch ----------------------------------------------------------
+
+## What the loading caption is waiting on, in words with its counts: the world's scene to come in,
+## the step the world is standing up on (with the reads going and waiting), a body, the country
+## round the body, or the fade itself. "" when the caption is not up.
+func loading_wait() -> String:
+	if not is_loading_shown():
+		return ""
+	var world := _world_node()
+	var scene := get_tree().current_scene
+	if world == null or not is_instance_valid(world) or not world.is_inside_tree() or bool(world.get("vista")):
+		return "the world's scene to come in (the scene is %s)" % (scene.scene_file_path if scene != null else "none")
+	var reads := ThreadedLoads.counts()
+	if not bool(world.get("is_world_ready")):
+		return "the world to stand up: %s (%d reads going, %d waiting)" % [str(world.get("standing")), reads.x, reads.y]
+	var body := get_tree().get_first_node_in_group("player") as Node3D
+	if body == null:
+		return "a body to stand in the world"
+	if _holding_for_country:
+		var near := near_ring_progress(body)
+		return "the country round the body: %d of %d near cells and towns" % [near.x, near.y]
+	return "the fade to lift (the screen is %s)" % ("black" if is_faded_out() else "clear")
+
+
+## A frame of the caption's watch, at `now` (milliseconds; a test gives its own clock).
+func _watch_loading(now: int) -> void:
+	var what := loading_wait()
+	# moving: what it waits on changed, or the world built a piece, or a read began or ended
+	var reads := ThreadedLoads.counts()
+	var key := "%s|%d|%d,%d,%d" % [what, WorldPace.built, reads.x, reads.y, ThreadedLoads.left_over()]
+	if key != _loading_wait:
+		_loading_wait = key
+		_loading_wait_ms = now
+		if _loading_stuck != "":
+			Log.info("UI", "the loading caption is moving again: %s" % what)
+			_set_loading_stuck("")
+		return
+	var quiet_s := (now - _loading_wait_ms) / 1000.0
+	if _loading_stuck == "" and quiet_s >= LOADING_QUIET_S:
+		_report_loading_stuck(what, quiet_s, (now - _loading_up_ms) / 1000.0, false)
+	elif _loading_stuck != "" and not _loading_stuck_said and quiet_s >= LOADING_STUCK_S:
+		_report_loading_stuck(what, quiet_s, (now - _loading_up_ms) / 1000.0, true)
+		_loading_stuck_said = true
+
+
+## Says where a load has stopped: on the caption, with the way back, and in the log (the ErrorLog
+## writes it to the player's session file) and the startup trace, with the state round it.
+func _report_loading_stuck(what: String, quiet_s: float, up_s: float, again: bool) -> void:
+	var world := _world_node()
+	var stood: Variant = {}
+	if world != null and is_instance_valid(world):
+		stood = world.get("stand_up_ms")
+	var state := {
+		"scene": get_tree().current_scene.scene_file_path if get_tree().current_scene != null else "",
+		"paused": get_tree().paused,
+		"stood_up_ms": stood,
+		"reads": ThreadedLoads.counts(), "left_over": ThreadedLoads.left_over(),
+		"read_limit": ThreadedLoads.limit(), "reserved": ThreadedLoads.reserved,
+		"safe_mode": SafeMode.why if SafeMode.active else "off",
+		"pending_load": str(GameState.get_flag("_pending_load_slot", "")),
+		"settings_off_default": SETTINGS_SCRIPT.off_default(Settings.data),
+	}
+	last_loading_stuck = {"what": what, "quiet_s": quiet_s, "up_s": up_s, "state": state}
+	var line := "the loading caption has waited %.0f s on %s (up %.0f s): %s" % [quiet_s, what, up_s, JSON.stringify(state)]
+	if again:
+		Log.error("UI", line)
+	else:
+		Log.warn("UI", line)
+	StartupTrace.note("LOADING: %s" % line, StartupTrace.memory(true))
+	_set_loading_stuck(what)
+	loading_stuck.emit(what, quiet_s)
+
+
+func _set_loading_stuck(what: String) -> void:
+	_loading_stuck = what
+	if what == "":
+		_loading_stuck_said = false
+	if _loading_note == null:
+		return
+	_loading_note.visible = what != ""
+	_loading_back.visible = what != ""
+	if what == "":
+		return
+	_loading_note.text = "This is taking longer than it should. Still waiting on %s." % what
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_loading_back.grab_focus()
+
+
+## Whether the caption is offering the way back to the title (the load has stopped moving).
+func is_loading_stuck() -> bool:
+	return _loading_stuck != ""
+
+
+## Goes to the scene at `path` once it is read, read on the loader's threads while frames go on
+## being drawn (the caption's bell sways), and never waits for the read on the main thread. A
+## `change_scene_to_file` reads its scene here and now, and when the title's country had asked for
+## the world's scene a moment before (TitleVista, on its first frames) that read was still going: the
+## main thread waited on a worker, and a worker reading a texture can wait for the main thread to end
+## its frame (docs/FIRST_LAUNCH.md, "The click that froze the title"). Returns the error, if any.
+func change_scene_when_read(path: String) -> Error:
+	if not ResourceLoader.exists(path):
+		return ERR_FILE_NOT_FOUND
+	if ResourceLoader.has_cached(path):
+		# read already (the title's country took it): nothing to wait for
+		return get_tree().change_scene_to_packed(ResourceLoader.load(path) as PackedScene)
+	# ahead of the hundreds of props the title's country may have asked for
+	ThreadedLoads.request(path, true)
+	while ThreadedLoads.status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		await get_tree().process_frame
+	var packed := ThreadedLoads.take(path) as PackedScene
+	if packed == null:
+		# the loader refused it (never on a scene that exists): read it here, as before
+		packed = load(path) as PackedScene
+	if packed == null:
+		return ERR_CANT_OPEN
+	return get_tree().change_scene_to_packed(packed)
+
+
+## From a load that has stopped moving to the title: whatever was standing up goes with the scene
+## (a world stops at its next step and lets its reads finish on their own), nothing is paused, the
+## slot that was asked for is let go, and the title comes up clear.
+func back_to_title(change_scene := true) -> void:
+	Log.warn("UI", "back to the title from a load waiting on %s" % (_loading_stuck if _loading_stuck != "" else loading_wait()))
+	StartupTrace.note("LOADING: back to the title", "")
+	close_all()
+	get_tree().paused = false
+	GameState.clear_flag("_pending_load_slot")
+	_set_loading_stuck("")
+	_hide_loading()
+	fade_from_black(0.3)
+	if change_scene and ResourceLoader.exists(TITLE_SCENE):
+		get_tree().change_scene_to_file.call_deferred(TITLE_SCENE)
 
 
 ## Whether the loading caption is on the screen.
@@ -668,6 +852,12 @@ func _on_player_spawned(player: Node) -> void:
 	# and the country around it has arrived, and not before.
 	if _fade.visible:
 		await _wait_for_the_country(player)
+		# the world's first frames drawn under the caption, a layer a frame, so the lift is not onto
+		# one frame that draws (and compiles) everything at once; a film warms its own picture
+		var world := _world_node()
+		if world != null and is_instance_valid(world) and world.has_method("warm_in") \
+				and get_tree().get_first_node_in_group("cinematic") == null:
+			await world.call("warm_in")
 		fade_from_black(0.8)
 
 

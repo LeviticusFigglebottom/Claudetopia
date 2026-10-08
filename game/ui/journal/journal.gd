@@ -22,12 +22,16 @@ var _selected := ""
 var _entries: Array[Dictionary] = []
 var _review_bestiary: Array = []
 var _review_people: Array = []
+## The quest the page opens at: `quest` in the args, else the quest of the HUD's notice up now or
+## just gone (QuestNotice.recent_quest), so the journal key on a notice opens at that quest.
+var _open_at := ""
 
 
 func setup(args: Dictionary) -> void:
 	_tab = int(args.get("tab", 0))
 	_review_bestiary = args.get("bestiary", [])
 	_review_people = args.get("people", [])
+	_open_at = str(args.get("quest", ""))
 	if is_inside_tree():
 		_show_tab(_tab)
 
@@ -88,6 +92,11 @@ func _show_tab(index: int) -> void:
 		_tab_buttons[i].modulate = Color(1, 1, 1, 1.0 if i == _tab else 0.55)
 	_entries = _gather()
 	_selected = str(_entries[0].get("id", "")) if not _entries.is_empty() else ""
+	if _tab == 0:
+		var want := _open_at if _open_at != "" else QuestNotice.recent_quest()
+		for e in _entries:
+			if want != "" and str(e.get("id", "")) == want:
+				_selected = want
 	_rebuild_list()
 	_rebuild_detail()
 	if not _tab_buttons.is_empty():
@@ -508,3 +517,8 @@ func _detail_book(e: Dictionary) -> void:
 	var id := str(e.get("id", ""))
 	open.pressed.connect(func() -> void: UI.open("book", {"book_id": id}))
 	_detail_box.add_child(open)
+
+
+## The entry open on the page (a quest id on the Quests tab): for the tests.
+func selected_entry() -> String:
+	return _selected

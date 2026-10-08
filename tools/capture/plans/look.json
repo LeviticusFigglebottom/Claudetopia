@@ -5,9 +5,9 @@
    "label": "hearthvale_approach_dusk",
    "region": "core:region/hearthvale",
    "pos": [
-    405.4,
-    91.2,
-    1700.7
+    412.4,
+    94.9,
+    1717.3
    ],
    "look_at": [
     250.0,
@@ -59,9 +59,9 @@
    "label": "hearthvale_whitecut_falls",
    "region": "core:region/hearthvale",
    "pos": [
-    -56.9,
-    36.8,
-    951.6
+    -50.1,
+    29.0,
+    966.9
    ],
    "look_at": [
     -40.0,
@@ -102,7 +102,7 @@
    "region": "core:region/brightwater",
    "pos": [
     -590.0,
-    12.2,
+    19.2,
     266.4
    ],
    "look_at": [
@@ -174,7 +174,7 @@
    "region": "core:region/sedgemire",
    "pos": [
     -2390.9,
-    18.5,
+    7.5,
     -70.1
    ],
    "look_at": [
@@ -192,12 +192,12 @@
    "region": "core:region/briarwold",
    "pos": [
     3908.3,
-    368.4,
+    376.0,
     1051.8
    ],
    "look_at": [
     3190.1,
-    359.4,
+    367.0,
     874.9
    ],
    "fov": 62.0,
@@ -209,9 +209,9 @@
    "label": "briarwold_foxfire_falls",
    "region": "core:region/briarwold",
    "pos": [
-    2434.9,
-    104.4,
-    246.9
+    2435.7,
+    106.6,
+    238.2
    ],
    "look_at": [
     2460.0,
@@ -276,7 +276,7 @@
    "region": "core:region/cinderlea",
    "pos": [
     -89.8,
-    103.5,
+    106.0,
     3006.8
    ],
    "look_at": [
