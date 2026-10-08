@@ -58,6 +58,16 @@ not the game's: `Atmosphere.quiet` keeps `weather_changed` (and with it the whol
 new game with the streaming paced and fails on any wait or caption after the first picture; the CPU
 probe's `FILM|` lines measure it (tools_gd/cpu_probe.gd). The title's vista streams the same way.
 
+The picture is drawn into the window's own pixels at the preset's render scale, never a smaller
+viewport stretched up: `render_report()` says what each frame was drawn at, the log gives it once a
+shot ("drawn at 1920x1080 in a 1920x1080 window"), and the capture runner writes it beside every
+frame. The game's settings are tuned for a body five metres from what it looks at, and the films
+look at the country from 100 to 700 m, so on High and Painted a film is drawn with `Graphics.FILM`
+over the settings while it holds the screen: 4x MSAA, the meshes' and trees' detail twice as far
+(2.5x on Painted), the sun's shadows to 700 m (1000 m). Low, Medium and a Custom drawn below the
+window keep their own settings; the render scale is never touched. `_restore_globals` gives the
+settings' own back. `--no-film-picture`, or a capture plan's `"film_ab": true`, shows the difference.
+
 The tree is never paused: the villages the camera passes go on with their day. The streamer
 follows the camera with `report_regions` off, because a region change seeds rumours, moves the
 music and titles the HUD, and the camera is not a traveller.

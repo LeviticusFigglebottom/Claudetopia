@@ -1564,6 +1564,10 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	# film's picture over them (Graphics.FILM): a before and after from one world
 	var ab := bool(spec.get("film_ab", false))
 	var only: Array = spec.get("shots", [])
+	# `"wait_frames"` and `"lod_frames"` cap the frames a moment waits for its cells and for the trees'
+	# levels: on the software renderer a frame of a wide shot is seconds, and the defaults are minutes
+	var wait_max := int(spec.get("wait_frames", MAX_WAIT_FRAMES))
+	var lod_max := int(spec.get("lod_frames", 900))
 	var shots := CinematicDef.shots_of(cin.def)
 	var rows: Array = []
 	var index := 0
@@ -1583,7 +1587,7 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				cin.set_film_picture(bool(take[1]))
 			cin.scrub(i, u)
 			var waited := 0
-			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
+			while waited < wait_max and not cin.ready_to_show():
 				await get_tree().process_frame
 				waited += 1
 			var ready := cin.ready_to_show()
@@ -1595,7 +1599,7 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 			await RenderingServer.frame_post_draw
 			# the trees go to the levels the film's detail asks for a few at a time (WorldStreamer.update_lods)
 			var lod_frames := 0
-			while lod_frames < 900 and not _world.streamer.lods_settled():
+			while lod_frames < lod_max and not _world.streamer.lods_settled():
 				await get_tree().process_frame
 				lod_frames += 1
 			await RenderingServer.frame_post_draw
@@ -1624,18 +1628,27 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 			})
 			if not ready and not black:
 				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
-			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing" % [file, cam.y - ground,
-					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y])
+			var rr: Dictionary = (rows[rows.size() - 1] as Dictionary)["render"]
+			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing; drawn at %s in a %s window, %dx edges, trees x%.2f, shadows %d m" % [file, cam.y - ground,
+					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y,
+					CinematicPlayer._wxh(rr.get("render_3d", [])), CinematicPlayer._wxh(rr.get("window", [])),
+					int(rr.get("msaa", 0)), float(rr.get("tree_lod_bias", 0.0)), int(rr.get("sun_shadow_m", 0.0))])
+			# written as it goes, so a run cut short still leaves what it shot
+			_write_cinematic_json(id, rows)
 			index += 1
 	cin.release()
-	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
-		f.close()
+	_write_cinematic_json(id, rows)
 	for failure in _failures:
 		Log.error("Capture", failure)
 	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
 	return 1 if not _failures.is_empty() else 0
+
+
+func _write_cinematic_json(id: String, rows: Array) -> void:
+	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
+		f.close()
 
 
 ## A cinematic block with `"play": true` plays the film as the pause menu's replay does, in real
