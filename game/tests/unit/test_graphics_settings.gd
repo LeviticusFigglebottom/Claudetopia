@@ -552,3 +552,30 @@ func test_ground_texture_quality_follows_the_choice_then_the_gpu() -> void:
 	assert_false(GrassInstancer.takes("core:region/skerrow", "res://assets/models/flora/skerrow_grass_clump_a/skerrow_grass_clump_a.glb"),
 			"nor another region's grass")
 	GrassInstancer.active = false
+
+
+## A film's picture (Graphics.FILM): High and Painted are lifted, never lowered and never given a
+## render scale of their own; Low and Medium, and a Custom drawn below the window, are left as they
+## are, because they are what a small GPU can afford.
+func test_a_film_lifts_high_and_painted_and_leaves_low_and_medium_alone() -> void:
+	for preset: String in ["low", "medium"]:
+		var g := Graphics.preset_values(preset)
+		g["preset"] = preset
+		assert_eq(Graphics.film_tier(g), "", "%s has no film tier" % preset)
+		assert_eq(Graphics.film_values(g), g, "%s: a film keeps the settings" % preset)
+	for preset: String in ["high", "painted"]:
+		var g := Graphics.preset_values(preset)
+		g["preset"] = preset
+		var f := Graphics.film_values(g)
+		assert_eq(f["render_scale"], g["render_scale"], "%s: the render scale is the preset's own" % preset)
+		assert_eq(int(f["msaa"]), 2, "%s: 4x edges in a film" % preset)
+		assert_false(bool(f["fxaa"]), "%s: no FXAA blur over MSAA" % preset)
+		for key: String in g:
+			if typeof(g[key]) in [TYPE_INT, TYPE_FLOAT] and key != "msaa":
+				assert_true(float(f[key]) >= float(g[key]), "%s: %s is never lowered for a film" % [preset, key])
+		assert_true(float(f["lod_bias"]) >= 2.0 and float(f["shadow_distance"]) >= 2.7, "%s: detail and shadows reach the subject" % preset)
+	var custom := Graphics.preset_values("high")
+	custom["preset"] = "custom"
+	assert_eq(Graphics.film_tier(custom), "high", "a Custom at the window's size is lifted as High")
+	custom["render_scale"] = 0.8
+	assert_eq(Graphics.film_tier(custom), "", "a Custom drawn below the window is left alone")

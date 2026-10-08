@@ -509,8 +509,13 @@ void fragment() {
 			near_s = far_s;
 			far_s *= 1.4;
 		}
+		// The crossing is then halved down to a few metres. Halved twice, it was found to a tenth
+		// of the last stride (30 to 60 m over the Mere), the same for a run of neighbouring pixels
+		// and then a stride further for the next run: the far shore came back from the lake as
+		// rectangles stepped against each other, which a film's wide view over the water showed
+		// as a picture drawn at a fraction of its size. Six halvings, four taps more a pixel.
 		if (found) {
-			for (int k = 0; k < 2; k++) {
+			for (int k = 0; k < 6; k++) {
 				float mid = 0.5 * (near_s + far_s);
 				if (texture(mask_tex, world_uv(v_world.xz + hdir * mid)).r < 0.5) {
 					far_s = mid;

@@ -431,6 +431,57 @@ static func apply_viewport(vp: Viewport, g: Dictionary, r := "") -> void:
 	vp.mesh_lod_threshold = base_threshold / maxf(float(g.get("lod_bias", 1.0)), 0.1)
 
 
+# --- a film's picture --------------------------------------------------------------------------
+
+## What a film (CinematicPlayer) is drawn with on High and Painted while it holds the screen, over
+## the settings' own values: it never lowers one. The films look at the country from 100 to 700 m
+## through a narrower lens than the player's, where the game's own settings are tuned for a body
+## five metres from what it looks at: the sun's shadows (260 m) stopped short of nearly every
+## shot's subject, the trees were pictures (impostors) from 150 m and the meshes dropped to their
+## coarser levels at four pixels of error, and 2x MSAA left the roof lines and the masts stepped.
+## The render scale is the preset's own, never more and never less. Low and Medium (and a Custom
+## that draws below the window) keep their settings: they are what a small GPU can afford, and a
+## film is no time to find out it cannot.
+##   msaa            4x edges;
+##   lod_bias        trees keep their meshes, and meshes their shape, twice as far (half the
+##                   mesh-LOD threshold in pixels);
+##   shadow_distance the sun's shadows reach 700 m (High) or 1000 m (Painted), over the subject.
+const FILM := {
+	"high": {"msaa": 2, "lod_bias": 2.0, "shadow_distance": 2.7},
+	"painted": {"msaa": 2, "lod_bias": 2.5, "shadow_distance": 3.85},
+}
+
+
+## Which of FILM a graphics section gets: its preset's, a Custom drawn at the window's size with sun
+## shadows gets High's, and anything else ("") none.
+static func film_tier(g: Dictionary) -> String:
+	var preset := str(g.get("preset", DEFAULT_PRESET))
+	if FILM.has(preset):
+		return preset
+	if preset == "custom" and float(g.get("render_scale", 1.0)) >= 0.999 and bool(g.get("shadows", true)):
+		return "high"
+	return ""
+
+
+## The graphics section a film is drawn with: `g` with FILM's tier over it, each knob raised and
+## never lowered; `g` itself, copied, where there is no tier.
+static func film_values(g: Dictionary) -> Dictionary:
+	var out := g.duplicate()
+	var tier := film_tier(g)
+	if tier == "":
+		return out
+	var lift: Dictionary = FILM[tier]
+	for key: String in lift:
+		if key == "msaa":
+			out[key] = maxi(int(g.get(key, 1)), int(lift[key]))
+		else:
+			out[key] = maxf(float(g.get(key, 1.0)), float(lift[key]))
+	# MSAA does the edges: FXAA over it would only soften the picture
+	if int(out.get("msaa", 0)) > 0:
+		out["fxaa"] = false
+	return out
+
+
 # --- the menus' pace ---------------------------------------------------------------------------
 
 ## Screens up with no game behind them (the title, the Naming). While one is, the frame rate is held

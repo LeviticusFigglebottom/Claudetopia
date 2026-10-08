@@ -119,6 +119,8 @@ var overrides: Array[String] = []
 var horizon := true
 ## `--no-sight`: a cinematic's shots ask only for the rings round their camera and what they look
 ## at, as before ShotSight (CinematicPlayer.sight_streaming), for a before and after of bare ground.
+## `--no-film-picture`: a cinematic is drawn with the graphics settings as they stand, not with
+## Graphics.FILM over them (CinematicPlayer.film_picture), for a before and after.
 ## `--measure=<frames>`: after each shot's exposure the game is left running that many frames and
 ## timed (PerfMeasure): the wall clock and the main thread's CPU a frame, the process and physics
 ## steps, what is drawn, memory and nodes, into the shot's `timing` in perf.json. A plan's `walks`
@@ -166,6 +168,9 @@ func _ready() -> void:
 		elif a == "--no-sight":
 			# a cinematic's shots ask only for the rings round their camera, as before ShotSight
 			CinematicPlayer.sight_streaming = false
+		elif a == "--no-film-picture":
+			# a cinematic drawn with the settings as they stand, as before Graphics.FILM
+			CinematicPlayer.film_picture = false
 	# a measuring tool never writes the player's settings.cfg, preset or no preset
 	Settings.persist = false
 	if preset != "":
@@ -1549,11 +1554,20 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 	# the body drops the last half-metre onto the ground before the last shot is composed on it
 	for i in 40:
 		await get_tree().physics_frame
+	if bool(spec.get("play", false)):
+		return await _play_cinematic(id, player)
 	var cin := CinematicPlayer.new()
 	_world.add_child(cin)
 	await cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.SCRUB)
 	var samples: Array = spec.get("samples", [0.0, 0.5, 1.0])
+	# `"film_ab": true` shoots every frame twice, with the settings as they stand and with the
+	# film's picture over them (Graphics.FILM): a before and after from one world
+	var ab := bool(spec.get("film_ab", false))
 	var only: Array = spec.get("shots", [])
+	# `"wait_frames"` and `"lod_frames"` cap the frames a moment waits for its cells and for the trees'
+	# levels: on the software renderer a frame of a wide shot is seconds, and the defaults are minutes
+	var wait_max := int(spec.get("wait_frames", MAX_WAIT_FRAMES))
+	var lod_max := int(spec.get("lod_frames", 900))
 	var shots := CinematicDef.shots_of(cin.def)
 	var rows: Array = []
 	var index := 0
@@ -1563,11 +1577,17 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 		if not only.is_empty() and not only.has(sid):
 			continue
 		var black := bool(shot.get("black", false))
+		var takes: Array = []
 		for u_v in ([0.5] if black else samples):
-			var u := float(u_v)
+			for film: bool in ([false, true] if ab else [true]):
+				takes.append([float(u_v), film])
+		for take: Array in takes:
+			var u := float(take[0])
+			if ab:
+				cin.set_film_picture(bool(take[1]))
 			cin.scrub(i, u)
 			var waited := 0
-			while waited < MAX_WAIT_FRAMES and not cin.ready_to_show():
+			while waited < wait_max and not cin.ready_to_show():
 				await get_tree().process_frame
 				waited += 1
 			var ready := cin.ready_to_show()
@@ -1577,7 +1597,14 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				await get_tree().process_frame
 				frames += 1
 			await RenderingServer.frame_post_draw
-			var file := "%02d_%s_%03d.png" % [index, sid, int(round(u * 100.0))]
+			# the trees go to the levels the film's detail asks for a few at a time (WorldStreamer.update_lods)
+			var lod_frames := 0
+			while lod_frames < lod_max and not _world.streamer.lods_settled():
+				await get_tree().process_frame
+				lod_frames += 1
+			await RenderingServer.frame_post_draw
+			var file := "%02d_%s_%03d%s.png" % [index, sid, int(round(u * 100.0)),
+					("_film" if bool(take[1]) else "_plain") if ab else ""]
 			var img := get_viewport().get_texture().get_image()
 			if img == null or img.save_png("%s/%s" % [out_dir, file]) != OK:
 				_failures.append("cannot write %s" % file)
@@ -1594,18 +1621,79 @@ func _shoot_cinematic(spec: Dictionary) -> int:
 				"loaded": _world.streamer.loaded_count(),
 				"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 				"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
+				# what the frame was drawn at, against the window (CinematicPlayer.render_report)
+				"film_picture": bool(take[1]) if ab else CinematicPlayer.film_picture,
+				"render": cin.render_report(),
+				"image": [img.get_width(), img.get_height()] if img != null else [0, 0],
 			})
 			if not ready and not black:
 				_failures.append("%s: its cells were not standing after %d frames" % [file, waited])
-			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing" % [file, cam.y - ground,
-					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y])
+			var rr: Dictionary = (rows[rows.size() - 1] as Dictionary)["render"]
+			Log.info("Capture", "%s  %.1f m above the ground, %s, %d of the %d cells it sees standing; drawn at %s in a %s window, %dx edges, trees x%.2f, shadows %d m" % [file, cam.y - ground,
+					"ready" if ready else "NOT READY", cin.sight_standing().x, cin.sight_standing().y,
+					CinematicPlayer._wxh(rr.get("render_3d", [])), CinematicPlayer._wxh(rr.get("window", [])),
+					int(rr.get("msaa", 0)), float(rr.get("tree_lod_bias", 0.0)), int(rr.get("sun_shadow_m", 0.0))])
+			# written as it goes, so a run cut short still leaves what it shot
+			_write_cinematic_json(id, rows)
 			index += 1
 	cin.release()
-	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
-		f.close()
+	_write_cinematic_json(id, rows)
 	for failure in _failures:
 		Log.error("Capture", failure)
 	Log.info("Capture", "%d cinematic frames written to %s" % [index, out_dir])
 	return 1 if not _failures.is_empty() else 0
+
+
+func _write_cinematic_json(id: String, rows: Array) -> void:
+	var f := FileAccess.open("%s/cinematic.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows}, "  "))
+		f.close()
+
+
+## A cinematic block with `"play": true` plays the film as the pause menu's replay does, in real
+## time, and writes down what every drawn frame was drawn at (CinematicPlayer.render_report) into
+## <out>/cinematic_play.json, with the first frame past each shot's middle on disk: the render size a
+## player gets, measured frame by frame rather than at a scrubbed pose.
+func _play_cinematic(id: String, player: Node3D) -> int:
+	var cin := CinematicPlayer.new()
+	cin.name = "Replay"
+	_world.add_child(cin)
+	cin.begin(_world, player, ContentDB.get_def(id), CinematicPlayer.Mode.REPLAY)
+	var rows: Array = []
+	var shot_at := -1
+	var shot_saved := false
+	var frame := 0
+	var until := Time.get_ticks_msec() + 900000
+	var off_window := 0
+	while is_instance_valid(cin) and cin.phase_name() != "DONE" and Time.get_ticks_msec() < until:
+		await RenderingServer.frame_post_draw
+		if not is_instance_valid(cin):
+			break
+		frame += 1
+		var r := cin.render_report()
+		var shots := CinematicDef.shots_of(cin.def)
+		var i := cin.current_shot()
+		var sid := str((shots[i] as Dictionary).get("id", "")) if i >= 0 and i < shots.size() else ""
+		var row := {"frame": frame, "phase": cin.phase_name(), "shot": sid, "t": snappedf(cin.shot_time(), 0.01), "render": r}
+		if cin.phase_name() == "PLAY" and r.get("render_3d", []) != r.get("window", []):
+			off_window += 1
+		if i != shot_at:
+			shot_at = i
+			shot_saved = false
+		var dur := float((shots[i] as Dictionary).get("duration", 1.0)) if i >= 0 and i < shots.size() else 1.0
+		if not shot_saved and cin.phase_name() == "PLAY" and cin.shot_time() >= dur * 0.5:
+			shot_saved = true
+			var img := get_viewport().get_texture().get_image()
+			var file := "play_%02d_%s.png" % [i, sid]
+			if img != null and img.save_png("%s/%s" % [out_dir, file]) == OK:
+				row["file"] = file
+				row["image"] = [img.get_width(), img.get_height()]
+		rows.append(row)
+	var f := FileAccess.open("%s/cinematic_play.json" % out_dir, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"cinematic": id, "frames": rows, "frames_off_window": off_window}, "  "))
+		f.close()
+	Log.info("Capture", "played %s: %d frames drawn, %d of them in a picture not drawn at the window's size"
+			% [id, frame, off_window])
+	return 0

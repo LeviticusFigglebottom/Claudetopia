@@ -127,7 +127,23 @@ func _state(w: World) -> Dictionary:
 		"body_moves": player.is_physics_processing(),
 		"terrain_follows": str(w.terrain_node.call("get_camera").name) if w.terrain_node != null and w.terrain_node.call("get_camera") != null else "",
 		"cinematics": _tree().get_nodes_in_group(CinematicPlayer.GROUP).size(),
+		# the picture the film lifts (Graphics.FILM) and must give back
+		"msaa": int(_tree().root.msaa_3d),
+		"fxaa": int(_tree().root.screen_space_aa),
+		"render_scale": snappedf(_tree().root.scaling_3d_scale, 0.001),
+		"mesh_lod_threshold": snappedf(_tree().root.mesh_lod_threshold, 0.001),
+		"tree_lod_bias": snappedf(w.streamer.lod_bias, 0.001),
+		"sun_shadow_m": snappedf(_sun_shadow_reach(), 0.1),
 	}
+
+
+func _sun_shadow_reach() -> float:
+	var reach := 0.0
+	for node in _tree().get_nodes_in_group(Graphics.LIGHTS):
+		var light := node as DirectionalLight3D
+		if light != null and light.shadow_enabled:
+			reach = maxf(reach, light.directional_shadow_max_distance)
+	return reach
 
 
 func _same(a: Dictionary, b: Dictionary, what: String) -> void:
@@ -691,3 +707,68 @@ func test_a_prompt_let_go_before_its_fade_began_does_not_appear() -> void:
 	assert_true(overlay.prompt_shown(), "and a key held shows it")
 	_tree().root.remove_child(overlay)
 	overlay.queue_free()
+
+
+## The owner's report (2026-10-02): "the intro cinematics are at very low resolution". Every frame a
+## film shows is drawn into the window's own pixels, scaled by the preset's render scale and by
+## nothing else, through the film's own camera, with the streaming and Terrain3D's clipmap round
+## that camera rather than round the body. On High it is drawn with Graphics.FILM over the settings
+## (4x MSAA, the meshes' and trees' detail twice as far, the sun's shadows over the subject); on
+## Medium, what an integrated GPU is given, with the settings as they stand. Either way everything is
+## given back when it ends.
+func test_every_frame_of_a_film_is_drawn_at_the_window_size_round_its_own_camera() -> void:
+	if not _built():
+		return
+	var own_graphics: Dictionary = (Settings.data.get("graphics", {}) as Dictionary).duplicate()
+	var persisted := Settings.persist
+	Settings.persist = false
+	for preset: String in ["high", "medium"]:
+		Settings.apply_graphics_preset(preset)
+		var g: Dictionary = Settings.data["graphics"]
+		var scale := float(g["render_scale"])
+		var lifted := Graphics.film_values(g)
+		Social.reset_for_new_game()
+		GameState.reset_for_new_game(14)
+		var w := _world()
+		await w.world_ready
+		await _settle()
+		w.streamer.cells_per_frame = 12
+		var player := _player(w)
+		var feet := player.global_position
+		feet.y = w.provider.get_height(feet.x, feet.z)
+		_before(w, feet)
+		await _settle(30)
+		var before := _state(w)
+		var frames: Array = []
+		var run := await _run(w, CinematicPlayer.Mode.REPLAY, func(c: CinematicPlayer) -> bool:
+			if c.phase_name() == "PLAY":
+				frames.append(c.render_report())
+			return c.current_shot() == 4 and c.phase_name() == "PLAY")
+		assert_true(bool(run["finished"]), "%s: the replay ends" % preset)
+		# a picture a shot at least: on the software renderer under load a shot can be two or three frames
+		assert_true(frames.size() >= 4, "%s: pictures were shown (%d frames)" % [preset, frames.size()])
+		var base := float(ProjectSettings.get_setting("rendering/mesh_lod/lod_change/threshold_pixels", 1.0))
+		var wrong := 0
+		for r: Dictionary in frames:
+			var win: Array = r["window"]
+			var want := [int(round(int(win[0]) * scale)), int(round(int(win[1]) * scale))]
+			if r["frame"] != win or r["render_3d"] != want or not bool(r["camera_is_film"]) \
+					or not bool(r["streams_round_film"]) or (w.terrain_node != null and not bool(r["terrain_round_film"])) \
+					or int(r["msaa"]) != [0, 2, 4, 8][int(lifted["msaa"])] \
+					or absf(float(r["mesh_lod_threshold"]) - base / float(lifted["lod_bias"])) > 0.01 \
+					or absf(float(r["tree_lod_bias"]) - float(lifted["lod_bias"])) > 0.01:
+				if wrong == 0:
+					assert_true(false, "%s: a film frame drawn as %s, wanted %s at %.2f of the window, 4x edges on High" % [preset, r, want, scale])
+				wrong += 1
+		assert_eq(wrong, 0, "%s: every film frame at the window's size times the render scale, round the film's camera" % preset)
+		if preset == "high":
+			var reach := float((frames[frames.size() - 1] as Dictionary)["sun_shadow_m"])
+			assert_true(reach >= 600.0 or reach == 0.0, "high: the sun's shadows reach the subject (%.0f m)" % reach)
+			assert_eq(int(lifted["msaa"]), 2, "high: a film has 4x edges")
+		else:
+			assert_eq(lifted, g, "medium: a film keeps the settings it is given")
+		_same(run["state"], before, "%s: after the film" % preset)
+		await _drop(w)
+	Settings.data["graphics"] = own_graphics
+	Graphics.apply(own_graphics, _tree())
+	Settings.persist = persisted
